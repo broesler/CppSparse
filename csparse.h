@@ -23,11 +23,17 @@ class COOMatrix
 {
     std::vector<double> v_;  // numerical values, size nzmax
     std::vector<csint> i_;   // row indices, size nzmax
-    std::vector<csint> j_;   // column pointers (CSC size n+1) or column indices (triplet size nzmax)
+    std::vector<csint> j_;   // column indices (triplet size nzmax)
     csint nnz_ = 0;          // number of entries
     csint M_ = 0;            // number of rows
     csint N_ = 0;            // number of columns
     csint nzmax_ = 0;        // maximum number of entries
+
+    inline void print_elems_(std::ostream& os, csint start, csint end) const
+    {
+        for (csint k = start; k < end; k++)
+            os << "(" << i_[k] << ", " << j_[k] << "): " << v_[k] << std::endl;
+    }
 
     public:
         // Constructors

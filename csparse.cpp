@@ -7,13 +7,9 @@
  *
  *============================================================================*/
 
+#include <cassert>
+
 #include "csparse.h"
-
-
-// #define PRINT_ELEMS(a, b) {\
-//     for (csint k = (a); k < (b); k++) \
-//         os << "(" << i_[k] << ", " << j_[k] << "): " << v_[k] << std::endl;\
-// }
 
 
 /*------------------------------------------------------------------------------
@@ -21,7 +17,11 @@
  *----------------------------------------------------------------------------*/
 COOMatrix::COOMatrix() {};
 
-// Construct a COOMatrix from arrays of values and coordinates
+/** Construct a COOMatrix from arrays of values and coordinates
+ *
+ * The entries are *not* sorted in any order, and duplicates are allowed. Any
+ * duplicates will be summed.
+ */
 COOMatrix::COOMatrix(
     const std::vector<double>& v,
     const std::vector<csint>& i,
@@ -33,22 +33,63 @@ COOMatrix::COOMatrix(
       nnz_(v_.size()),
       M_(*std::max_element(i_.begin(), i_.end()) + 1),
       N_(*std::max_element(j_.begin(), j_.end()) + 1),
-      nzmax_(M_ * N_)
+      nzmax_(nnz_)  // minimum storage
 {}
 
 
 /*------------------------------------------------------------------------------
  *         Accessors
  *----------------------------------------------------------------------------*/
-csint COOMatrix::nnz() { return nnz_; }
-csint COOMatrix::nzmax() { return nzmax_; }
+csint COOMatrix::nnz() const { return nnz_; }
+csint COOMatrix::nzmax() const { return nzmax_; }
 
-std::array<csint, 2> COOMatrix::shape()
+std::array<csint, 2> COOMatrix::shape() const
 {
     return std::array<csint, 2> {M_, N_};
 }
 
-// Printing
+// Element accessors
+// TODO somewhere we need to check for duplicate entries so that we can make
+// assumptions about nzmax_ vs nnz_.
+
+/** Assign a value to a set of indices.
+ *
+ * @param i, j  integer indices of the matrix
+ * @return pointer to the values array where the element will be added
+ */
+double& COOMatrix::operator()(csint i, csint j)
+{
+    // Since arrays are *not* sorted, need to find index of (i, j)... but linear
+    // search leads to O(N^2) insertion! We should just return a reference to
+    // the end of the array, doubling in size if needed.
+    csint cap = v_.capacity();
+    if (nnz_ >= cap) {
+        nzmax_ = 2 * cap;
+        v_.reserve(nzmax_);
+        i_.reserve(nzmax_);
+        j_.reserve(nzmax_);
+    }
+
+    csint p = nnz_;  // index of next element
+    i_[p] = i;
+    j_[p] = j;
+
+    nnz_++;  // FIXME wrong for duplicate entries
+    M_ = std::max(M_, i+1);
+    N_ = std::max(N_, j+1);
+
+    return v_[p];  // pointer to next available space
+}
+
+double COOMatrix::operator()(csint i, csint j) const
+{
+    throw std::runtime_error("COOMatrix does not support item selection.");
+}
+
+
+/*------------------------------------------------------------------------------
+ *         Printing
+ *----------------------------------------------------------------------------*/
 void COOMatrix::print(std::ostream& os, bool verbose, csint threshold) const
 {
     if (nnz_ == 0) {
@@ -59,7 +100,7 @@ void COOMatrix::print(std::ostream& os, bool verbose, csint threshold) const
     os << "<COOrdinate sparse matrix" << std::endl;
     os << "        with " << nnz_ << " stored elements "
         << "and shape (" << M_ << ", " << N_ << ")>" << std::endl;
-    
+
     if (verbose) {
         if (nnz_ < threshold) {
             // Print all elements

@@ -53,9 +53,12 @@ class COOMatrix
         );
 
         // Accessors
-        csint nnz();                   // number of non-zeros
-        csint nzmax();                 // maximum number of non-zeros
-        std::array<csint, 2> shape();  // the dimensions of the matrix
+        csint nnz() const;                   // number of non-zeros
+        csint nzmax() const;                 // maximum number of non-zeros
+        std::array<csint, 2> shape() const;  // the dimensions of the matrix
+
+        double& operator()(csint, csint);
+        double operator()(csint, csint) const;
 
         // Other
         void print(

@@ -36,6 +36,24 @@ int main(void)
     B.print(cout, true);
     cout << B;
 
+    // Assign an existing element
+    B(3, 3) = 56.0;
+    cout << B;
+    cout << "B has " << B.nnz() << " entries." << endl;
+    cout << "B can hold " << B.nzmax() << " entries." << endl;
+    cout << "B has shape (" << B_shape[0] << ", " << B_shape[1] << ")" << endl;
+
+    // Assign a new element
+    B(4, 3) = 69.0;
+    cout << B;
+    cout << "B has " << B.nnz() << " entries." << endl;
+    cout << "B can hold " << B.nzmax() << " entries." << endl;
+    cout << "B has shape (" << B_shape[0] << ", " << B_shape[1] << ")" << endl;
+
+    // FIXME either should throw runtime error?
+    // double x = B(4, 3);
+    // cout << "B(4, 3) = " << B(4, 3) << endl;
+
     return 0;
 }
 

@@ -21,6 +21,7 @@ typedef std::size_t csint;
 
 class COOMatrix
 {
+    // Private members
     std::vector<double> v_;  // numerical values, size nzmax
     std::vector<csint> i_;   // row indices, size nzmax
     std::vector<csint> j_;   // column indices (triplet size nzmax)
@@ -51,6 +52,8 @@ class COOMatrix
             const std::vector<csint>&,
             const std::vector<csint>&
         );
+
+        COOMatrix(std::istream& fp);
 
         // Accessors
         csint nnz() const;                   // number of non-zeros

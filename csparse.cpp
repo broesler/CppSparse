@@ -8,6 +8,7 @@
  *============================================================================*/
 
 #include <cassert>
+#include <sstream>
 
 #include "csparse.h"
 
@@ -37,6 +38,32 @@ COOMatrix::COOMatrix(
 {}
 
 
+/** Read a triplet format matrix from a file.
+ *
+ * The file is expected to be in "triplet format" `(i, j, v)`, where `(i, j)`
+ * are the index coordinates, and `v` is the value to be assigned.
+ *
+ * @param fp    a reference to the file stream.
+ * @throws std::runtime_error if file format is not in triplet format
+ */
+COOMatrix::COOMatrix(std::istream& fp)
+{
+    csint i, j;
+    double v;
+
+    while (fp) {
+        std::string line;
+        std::getline(fp, line);
+        if (!line.empty()) {
+            std::stringstream ss(line);
+            if (!(ss >> i >> j >> v))
+                throw std::runtime_error("File is not in (i, j, v) format!");
+            else
+                assign(i, j, v);
+        }
+    }
+}
+
 /*------------------------------------------------------------------------------
  *         Accessors
  *----------------------------------------------------------------------------*/
@@ -48,11 +75,15 @@ std::array<csint, 2> COOMatrix::shape() const
     return std::array<csint, 2> {M_, N_};
 }
 
-// Element accessors
-// TODO somewhere we need to check for duplicate entries so that we can make
-// assumptions about nzmax_ vs nnz_.
-
-/** Assign a value to a set of indices.
+/** Assign a value to a pair of indices.
+ *
+ * Note that there is no argument checking other than for positive indices.
+ * Assigning to an index that is outside of the dimensions of the matrix will
+ * just increase the size of the matrix accordingly.
+ *
+ * Duplicate entries are also allowed to ease incremental construction of
+ * matrices from files, or, e.g., finite element applications. Duplicates will be
+ * summed upon compression to sparse column/row form.
  *
  * @param i, j  integer indices of the matrix
  * @param v     the value to be assigned
@@ -62,23 +93,17 @@ std::array<csint, 2> COOMatrix::shape() const
  */
 void COOMatrix::assign(csint i, csint j, double v)
 {
-    // Since arrays are *not* sorted, need to find index of (i, j)... but linear
-    // search leads to O(N^2) insertion! We should just return a reference to
-    // the end of the array, doubling in size if needed.
-    csint cap = v_.capacity();
-    if (nnz_ >= cap) {
-        nzmax_ = 2 * cap;
-        v_.reserve(nzmax_);
-        i_.reserve(nzmax_);
-        j_.reserve(nzmax_);
-    }
+    assert ((i >= 0) && (j >= 0));
 
-    csint p = nnz_;  // index of next element
-    i_[p] = i;
-    j_[p] = j;
-    v_[p] = v;
+    i_.push_back(i);
+    j_.push_back(j);
+    v_.push_back(v);
 
-    nnz_++;  // FIXME wrong for duplicate entries
+    assert(v_.size() == i_.size());
+    assert(v_.size() == j_.size());
+
+    nnz_ = v_.size();
+    nzmax_ = v_.capacity();  // auto-doubles if nnz_ > nzmax_
     M_ = std::max(M_, i+1);
     N_ = std::max(N_, j+1);
 }

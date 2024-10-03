@@ -8,6 +8,8 @@
  *============================================================================*/
 
 #include <iostream>
+#include <fstream>
+#include <string>
 
 #include "csparse.h"
 
@@ -49,6 +51,11 @@ int main(void)
     cout << "B has " << B.nnz() << " entries." << endl;
     cout << "B can hold " << B.nzmax() << " entries." << endl;
     cout << "B has shape (" << B_shape[0] << ", " << B_shape[1] << ")" << endl;
+
+    // Read from a file
+    std::ifstream fp("./data/t1");
+    COOMatrix C(fp);
+    cout << "C = \n" << C;  // FIXME possible duplicate entry (2, 1): 1.7 at end?
 
     return 0;
 }

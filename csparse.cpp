@@ -10,6 +10,12 @@
 #include "csparse.h"
 
 
+// #define PRINT_ELEMS(a, b) {\
+//     for (csint k = (a); k < (b); k++) \
+//         os << "(" << i_[k] << ", " << j_[k] << "): " << v_[k] << std::endl;\
+// }
+
+
 /*------------------------------------------------------------------------------
  *     Constructors
  *----------------------------------------------------------------------------*/
@@ -43,7 +49,7 @@ std::array<csint, 2> COOMatrix::shape()
 }
 
 // Printing
-void COOMatrix::print(bool verbose, csint threshold, std::ostream& os)
+void COOMatrix::print(std::ostream& os, bool verbose, csint threshold) const
 {
     if (nnz_ == 0) {
         os << "(null)" << std::endl;
@@ -72,6 +78,13 @@ void COOMatrix::print(bool verbose, csint threshold, std::ostream& os)
         }
     }
 }
+
+std::ostream& operator<<(std::ostream& os, const COOMatrix& A)
+{
+    A.print(os, true);  // verbose printing assumed
+    return os;
+}
+
 
 /*==============================================================================
  *============================================================================*/

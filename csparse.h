@@ -53,12 +53,14 @@ class COOMatrix
 
         // Other
         void print(
+            std::ostream& os=std::cout,
             bool verbose=false,
-            csint threshold=1000,
-            std::ostream& os=std::cout
-        );
+            csint threshold=1000
+        ) const;
 };
 
+// Operator overloads
+std::ostream& operator<<(std::ostream&, const COOMatrix&);
 
 #endif
 

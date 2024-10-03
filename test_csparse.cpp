@@ -31,8 +31,10 @@ int main(void)
     std::array<csint, 2> B_shape = B.shape();
     cout << "B has shape (" << B_shape[0] << ", " << B_shape[1] << ")" << endl;
 
+    // Test printing
     B.print();
-    B.print(true);
+    B.print(cout, true);
+    cout << B;
 
     return 0;
 }

@@ -1,4 +1,6 @@
 .types.vim
+*.dSYM/
 data/
 # Executables
 test_csparse
+test_stdvector

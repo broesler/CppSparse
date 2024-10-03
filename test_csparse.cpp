@@ -32,6 +32,7 @@ int main(void)
     cout << "B has shape (" << B_shape[0] << ", " << B_shape[1] << ")" << endl;
 
     B.print();
+    B.print(true);
 
     return 0;
 }

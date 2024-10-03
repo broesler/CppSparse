@@ -43,7 +43,7 @@ std::array<csint, 2> COOMatrix::shape()
 }
 
 // Printing
-void COOMatrix::print(bool verbose, std::ostream& os)
+void COOMatrix::print(bool verbose, csint threshold, std::ostream& os)
 {
     if (nnz_ == 0) {
         os << "(null)" << std::endl;
@@ -54,7 +54,23 @@ void COOMatrix::print(bool verbose, std::ostream& os)
     os << "        with " << nnz_ << " stored elements "
         << "and shape (" << M_ << ", " << N_ << ")>" << std::endl;
     
-    // TODO if (verbose) print all elements
+    if (verbose) {
+        if (nnz_ < threshold) {
+            // Print all elements
+            for (csint k = 0; k < nnz_; k++)
+                os << "(" << i_[k] << ", " << j_[k] << "): " << v_[k] << std::endl;
+
+        } else {
+            // Print just the first and last 3 non-zero elements
+            for (csint k = 0; k < 3; k++)
+                os << "(" << i_[k] << ", " << j_[k] << "): " << v_[k] << std::endl;
+
+            os << "..." << std::endl;
+
+            for (csint k = nnz_ - 3; k < nnz_; k++)
+                os << "(" << i_[k] << ", " << j_[k] << "): " << v_[k] << std::endl;
+        }
+    }
 }
 
 /*==============================================================================

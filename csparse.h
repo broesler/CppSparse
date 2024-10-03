@@ -24,7 +24,7 @@ class COOMatrix
     std::vector<double> v_;  // numerical values, size nzmax
     std::vector<csint> i_;   // row indices, size nzmax
     std::vector<csint> j_;   // column pointers (CSC size n+1) or column indices (triplet size nzmax)
-    csint nnz_ = 0;           // number of entries
+    csint nnz_ = 0;          // number of entries
     csint M_ = 0;            // number of rows
     csint N_ = 0;            // number of columns
     csint nzmax_ = 0;        // maximum number of entries
@@ -52,7 +52,11 @@ class COOMatrix
         std::array<csint, 2> shape();  // the dimensions of the matrix
 
         // Other
-        void print(bool verbose=false, std::ostream& os=std::cout);
+        void print(
+            bool verbose=false,
+            csint threshold=1000,
+            std::ostream& os=std::cout
+        );
 };
 
 

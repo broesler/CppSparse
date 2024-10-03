@@ -31,7 +31,7 @@ COOMatrix::COOMatrix(
       i_(i),
       j_(j),
       nnz_(v_.size()),
-      M_(*std::max_element(i_.begin(), i_.end()) + 1),
+      M_(*std::max_element(i_.begin(), i_.end()) + 1),  // zero-based indexing
       N_(*std::max_element(j_.begin(), j_.end()) + 1),
       nzmax_(nnz_)  // minimum storage
 {}
@@ -55,9 +55,12 @@ std::array<csint, 2> COOMatrix::shape() const
 /** Assign a value to a set of indices.
  *
  * @param i, j  integer indices of the matrix
+ * @param v     the value to be assigned
  * @return pointer to the values array where the element will be added
+ *
+ * @see cs_entry Davis p 12.
  */
-double& COOMatrix::operator()(csint i, csint j)
+void COOMatrix::assign(csint i, csint j, double v)
 {
     // Since arrays are *not* sorted, need to find index of (i, j)... but linear
     // search leads to O(N^2) insertion! We should just return a reference to
@@ -73,19 +76,12 @@ double& COOMatrix::operator()(csint i, csint j)
     csint p = nnz_;  // index of next element
     i_[p] = i;
     j_[p] = j;
+    v_[p] = v;
 
     nnz_++;  // FIXME wrong for duplicate entries
     M_ = std::max(M_, i+1);
     N_ = std::max(N_, j+1);
-
-    return v_[p];  // pointer to next available space
 }
-
-double COOMatrix::operator()(csint i, csint j) const
-{
-    throw std::runtime_error("COOMatrix does not support item selection.");
-}
-
 
 /*------------------------------------------------------------------------------
  *         Printing

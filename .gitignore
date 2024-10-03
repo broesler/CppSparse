@@ -1,1 +1,4 @@
+.types.vim
+data/
+# Executables
 test_csparse

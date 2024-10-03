@@ -57,8 +57,8 @@ class COOMatrix
         csint nzmax() const;                 // maximum number of non-zeros
         std::array<csint, 2> shape() const;  // the dimensions of the matrix
 
-        double& operator()(csint, csint);
-        double operator()(csint, csint) const;
+        void assign(csint, csint, double);  // assign an element of the matrix
+        // double operator()(csint, csint) const;
 
         // Other
         void print(

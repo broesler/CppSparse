@@ -11,26 +11,48 @@
 #ifndef _CSPARSE_H_
 #define _CSPARSE_H_
 
+#include <array>
+#include <cstdlib>
+#include <iostream>
 #include <vector>
 
-typedef uint64_t csint;
+typedef std::size_t csint;
 
 
 class COOMatrix
 {
-    csint nzmax_;            // maximum number of entries
-    csint M_;                // number of rows
-    csint N_;                // number of columns
-    std::vector<csint> p_;   // column pointers (CSC size n+1) or column indices (triplet size nzmax)
+    std::vector<double> v_;  // numerical values, size nzmax
     std::vector<csint> i_;   // row indices, size nzmax
-    std::vector<double> x_;  // numerical values, size nzmax
-    csint nz_;               // number of entries
+    std::vector<csint> j_;   // column pointers (CSC size n+1) or column indices (triplet size nzmax)
+    csint nnz_ = 0;           // number of entries
+    csint M_ = 0;            // number of rows
+    csint N_ = 0;            // number of columns
+    csint nzmax_ = 0;        // maximum number of entries
 
     public:
-        COOMatrix();
+        // Constructors
+        COOMatrix();  // NOTE need default since we have others
 
-        csint nnz();  // number of non-zeros
-        std::array<csint, 2> shape(); // the dimensions of the matrix
+        // Do not need other "Rule of Five" since we have no pointers
+        // COOMatrix(const COOMatrix&);
+        // COOMatrix& operator=(COOMatrix);
+        // COOMatrix(COOMatrix&&);
+        // ~COOMatrix();
+        // friend void swap(COOMatrix&, COOMatrix&);
+
+        COOMatrix(
+            const std::vector<double>&,
+            const std::vector<csint>&,
+            const std::vector<csint>&
+        );
+
+        // Accessors
+        csint nnz();                   // number of non-zeros
+        csint nzmax();                 // maximum number of non-zeros
+        std::array<csint, 2> shape();  // the dimensions of the matrix
+
+        // Other
+        void print(bool verbose=false, std::ostream& os=std::cout);
 };
 
 

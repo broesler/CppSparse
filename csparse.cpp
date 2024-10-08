@@ -34,7 +34,7 @@ COOMatrix::COOMatrix(
       nnz_(v_.size()),
       M_(*std::max_element(i_.begin(), i_.end()) + 1),  // zero-based indexing
       N_(*std::max_element(j_.begin(), j_.end()) + 1),
-      nzmax_(nnz_)  // minimum storage
+      nzmax_(v_.capacity())  // minimum storage
 {}
 
 
@@ -46,7 +46,11 @@ COOMatrix::COOMatrix(csint M, csint N, csint nzmax)
     : M_(M),
       N_(N),
       nzmax_(nzmax)
-{}
+{
+    v_.reserve(nzmax_);
+    i_.reserve(nzmax_);
+    j_.reserve(nzmax_);
+}
 
 
 /** Read a triplet format matrix from a file.

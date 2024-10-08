@@ -42,8 +42,7 @@ int main(void)
     COOMatrix B(v, i, j);
     cout << "B has " << B.nnz() << " entries." << endl;
     cout << "B can hold " << B.nzmax() << " entries." << endl;
-    std::array<csint, 2> B_shape = B.shape();
-    cout << "B has shape (" << B_shape[0] << ", " << B_shape[1] << ")" << endl;
+    cout << "B has shape (" << B.shape()[0] << ", " << B.shape()[1] << ")" << endl;
 
     // Print the internals via getters
     cout << "Printing B arrays..." << endl;
@@ -74,14 +73,14 @@ int main(void)
     cout << B;
     cout << "B has " << B.nnz() << " entries." << endl;
     cout << "B can hold " << B.nzmax() << " entries." << endl;
-    cout << "B has shape (" << B_shape[0] << ", " << B_shape[1] << ")" << endl;
+    cout << "B has shape (" << B.shape()[0] << ", " << B.shape()[1] << ")" << endl;
 
-    // Assign a new element
+    // Assign a new element that changes the dimensions
     B.assign(4, 3, 69.0);
     cout << B;
     cout << "B has " << B.nnz() << " entries." << endl;
     cout << "B can hold " << B.nzmax() << " entries." << endl;
-    cout << "B has shape (" << B_shape[0] << ", " << B_shape[1] << ")" << endl;
+    cout << "B has shape (" << B.shape()[0] << ", " << B.shape()[1] << ")" << endl;
 
     // Read from a file
     std::ifstream fp("./data/t1");

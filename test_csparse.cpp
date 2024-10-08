@@ -58,9 +58,14 @@ int main(void)
     COOMatrix C(fp);
     cout << "C = \n" << C;
 
-    // Make new for given shape
+    // Make new for given shape and nzmax
     COOMatrix D(56, 37);
     cout << "D = \n" << D;
+    cout << "D can hold " << D.nzmax() << " entries." << endl;
+
+    COOMatrix E(56, 37, (int) 1e4);
+    cout << "E = \n" << E;
+    cout << "E can hold " << E.nzmax() << " entries." << endl;
 
     return 0;
 }

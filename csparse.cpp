@@ -42,9 +42,10 @@ COOMatrix::COOMatrix(
  *
  * @param M, N  integer dimensions of the rows and columns
  */
-COOMatrix::COOMatrix(csint M, csint N)
+COOMatrix::COOMatrix(csint M, csint N, csint nzmax)
     : M_(M),
-      N_(N)
+      N_(N),
+      nzmax_(nzmax)
 {}
 
 

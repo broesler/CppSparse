@@ -53,7 +53,7 @@ class COOMatrix
             const std::vector<csint>&
         );
 
-        COOMatrix(csint, csint);
+        COOMatrix(csint, csint, csint nzmax=0);
         COOMatrix(std::istream& fp);
 
         // Accessors

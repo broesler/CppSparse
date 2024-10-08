@@ -28,6 +28,7 @@ class COOMatrix
     csint nnz_ = 0;          // number of entries
     csint M_ = 0;            // number of rows
     csint N_ = 0;            // number of columns
+    // TODO may not need this value since std::vector auto-resizes!
     csint nzmax_ = 0;        // maximum number of entries
 
     inline void print_elems_(std::ostream& os, csint start, csint end) const
@@ -37,7 +38,7 @@ class COOMatrix
     }
 
     public:
-        // Constructors
+        // ---------- Constructors
         COOMatrix();  // NOTE need default since we have others
 
         // Do not need other "Rule of Five" since we have no pointers
@@ -47,16 +48,17 @@ class COOMatrix
         // ~COOMatrix();
         // friend void swap(COOMatrix&, COOMatrix&);
 
+        // Provide data and coordinates as vectors
         COOMatrix(
             const std::vector<double>&,
             const std::vector<csint>&,
             const std::vector<csint>&
         );
 
-        COOMatrix(csint, csint, csint nzmax=0);
-        COOMatrix(std::istream& fp);
+        COOMatrix(csint, csint, csint nzmax=0);  // allocate dims + nzmax
+        COOMatrix(std::istream& fp);             // from file
 
-        // Accessors
+        // ---------- Accessors
         csint nnz() const;                   // number of non-zeros
         csint nzmax() const;                 // maximum number of non-zeros
         std::array<csint, 2> shape() const;  // the dimensions of the matrix
@@ -66,7 +68,7 @@ class COOMatrix
         const std::vector<double>& data() const;
 
         void assign(csint, csint, double);  // assign an element of the matrix
-        // double operator()(csint, csint) const;
+        // double operator()(csint, csint) const;  // throw runtime error?
 
         // ---------- Math Operations
         COOMatrix T() const;  // transpose a copy

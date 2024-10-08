@@ -7,6 +7,7 @@
  *
  *============================================================================*/
 
+#include <cassert>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -55,7 +56,11 @@ int main(void)
     // Read from a file
     std::ifstream fp("./data/t1");
     COOMatrix C(fp);
-    cout << "C = \n" << C;  // FIXME possible duplicate entry (2, 1): 1.7 at end?
+    cout << "C = \n" << C;
+
+    // Make new for given shape
+    COOMatrix D(56, 37);
+    cout << "D = \n" << D;
 
     return 0;
 }

@@ -38,6 +38,16 @@ COOMatrix::COOMatrix(
 {}
 
 
+/** Allocate a triplet format matrix for a given shape
+ *
+ * @param M, N  integer dimensions of the rows and columns
+ */
+COOMatrix::COOMatrix(csint M, csint N)
+    : M_(M),
+      N_(N)
+{}
+
+
 /** Read a triplet format matrix from a file.
  *
  * The file is expected to be in "triplet format" `(i, j, v)`, where `(i, j)`
@@ -113,11 +123,6 @@ void COOMatrix::assign(csint i, csint j, double v)
  *----------------------------------------------------------------------------*/
 void COOMatrix::print(std::ostream& os, bool verbose, csint threshold) const
 {
-    if (nnz_ == 0) {
-        os << "(null)" << std::endl;
-        return;
-    }
-
     os << "<COOrdinate sparse matrix" << std::endl;
     os << "        with " << nnz_ << " stored elements "
         << "and shape (" << M_ << ", " << N_ << ")>" << std::endl;

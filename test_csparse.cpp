@@ -82,6 +82,18 @@ int main(void)
     cout << "B can hold " << B.nzmax() << " entries." << endl;
     cout << "B has shape (" << B.shape()[0] << ", " << B.shape()[1] << ")" << endl;
 
+    // Tranpose
+    COOMatrix B_transpose = B.T();  // copy
+    cout << "B.T() by copy = " << endl << B_transpose;
+    assert (&B != &B_transpose);
+
+    // FIXME these don't work?
+    // COOMatrix B_T = B.T();  // transpose in place
+    // cout << "B_T = " << endl << B_T;
+    // assert (&B == &B_T);
+    // B.T();  // transpose in place
+    // cout << "B.T() in-place + print B = " << endl << B;
+
     // Read from a file
     std::ifstream fp("./data/t1");
     COOMatrix C(fp);

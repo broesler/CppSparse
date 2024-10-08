@@ -68,7 +68,10 @@ class COOMatrix
         void assign(csint, csint, double);  // assign an element of the matrix
         // double operator()(csint, csint) const;
 
-        // Other
+        // ---------- Math Operations
+        COOMatrix T() const;  // transpose a copy
+
+        // ---------- Other
         void print(
             std::ostream& os=std::cout,
             bool verbose=false,

@@ -17,6 +17,17 @@
 using namespace std;
 
 
+// FIXME "no member 'span' in namespace 'std'??
+// template <typename T>
+// inline void print_vec(std::vector<T> v) {
+//     cout << "[";
+//     for (const auto& x : std::span(v.begin(), v.end() - 1)) {
+//         cout << x << ", ";
+//     }
+//     cout << v.back() << "]" << endl;
+// }
+
+
 int main(void)
 {
     COOMatrix A;
@@ -33,6 +44,25 @@ int main(void)
     cout << "B can hold " << B.nzmax() << " entries." << endl;
     std::array<csint, 2> B_shape = B.shape();
     cout << "B has shape (" << B_shape[0] << ", " << B_shape[1] << ")" << endl;
+
+    // Print the internals via getters
+    cout << "Printing B arrays..." << endl;
+    // cout << "B.row = ";
+    // print_vec<csint>(B.row());
+    // cout << "B.column = ";
+    // print_vec<csint>(B.column());
+    // cout << "B.data = ";
+    // print_vec<double>(B.data());
+
+    std::vector<csint> Brow = B.row();
+    std::vector<csint> Bcol = B.column();
+    std::vector<double> Bdata = B.data();
+    for (int k = 0; k < B.nnz(); k++) {
+        cout << "(" << Brow[k] << ", " << Bcol[k] << "): " << Bdata[k] << endl;
+    }
+
+    cout << "done." << endl;
+    // Brow[0] = 99;  // allowed, but no effect on B since getters return a copy
 
     // Test printing
     B.print();

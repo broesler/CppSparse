@@ -86,6 +86,11 @@ std::array<csint, 2> COOMatrix::shape() const
     return std::array<csint, 2> {M_, N_};
 }
 
+const std::vector<csint>& COOMatrix::row() const { return i_; }
+const std::vector<csint>& COOMatrix::column() const { return j_; }
+const std::vector<double>& COOMatrix::data() const { return v_; }
+
+
 /** Assign a value to a pair of indices.
  *
  * Note that there is no argument checking other than for positive indices.

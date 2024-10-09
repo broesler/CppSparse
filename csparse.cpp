@@ -33,23 +33,22 @@ COOMatrix::COOMatrix(
       j_(j),
       nnz_(v_.size()),
       M_(*std::max_element(i_.begin(), i_.end()) + 1),  // zero-based indexing
-      N_(*std::max_element(j_.begin(), j_.end()) + 1),
-      nzmax_(v_.capacity())  // minimum storage
+      N_(*std::max_element(j_.begin(), j_.end()) + 1)
 {}
 
 
 /** Allocate a triplet format matrix for a given shape
  *
  * @param M, N  integer dimensions of the rows and columns
+ * @param nzmax integer capacity of space to reserve for non-zeros
  */
 COOMatrix::COOMatrix(csint M, csint N, csint nzmax)
     : M_(M),
-      N_(N),
-      nzmax_(nzmax)
+      N_(N)
 {
-    v_.reserve(nzmax_);
-    i_.reserve(nzmax_);
-    j_.reserve(nzmax_);
+    v_.reserve(nzmax);
+    i_.reserve(nzmax);
+    j_.reserve(nzmax);
 }
 
 
@@ -83,7 +82,7 @@ COOMatrix::COOMatrix(std::istream& fp)
  *         Accessors
  *----------------------------------------------------------------------------*/
 csint COOMatrix::nnz() const { return nnz_; }
-csint COOMatrix::nzmax() const { return nzmax_; }
+csint COOMatrix::nzmax() const { return v_.capacity(); }
 
 std::array<csint, 2> COOMatrix::shape() const
 {
@@ -123,7 +122,6 @@ void COOMatrix::assign(csint i, csint j, double v)
     assert(v_.size() == j_.size());
 
     nnz_ = v_.size();
-    nzmax_ = v_.capacity();  // auto-doubles if nnz_ > nzmax_
     M_ = std::max(M_, i+1);
     N_ = std::max(N_, j+1);
 }

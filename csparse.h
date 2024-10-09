@@ -22,14 +22,12 @@ typedef std::size_t csint;
 class COOMatrix
 {
     // Private members
-    std::vector<double> v_;  // numerical values, size nzmax
+    std::vector<double> v_;  // numerical values, size nzmax (auto doubles)
     std::vector<csint> i_;   // row indices, size nzmax
-    std::vector<csint> j_;   // column indices (triplet size nzmax)
+    std::vector<csint> j_;   // column indices, size nzmax
     csint nnz_ = 0;          // number of entries
     csint M_ = 0;            // number of rows
     csint N_ = 0;            // number of columns
-    // TODO may not need this value since std::vector auto-resizes!
-    csint nzmax_ = 0;        // maximum number of entries
 
     inline void print_elems_(std::ostream& os, csint start, csint end) const
     {

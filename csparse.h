@@ -82,6 +82,62 @@ class COOMatrix
 // Operator overloads
 std::ostream& operator<<(std::ostream&, const COOMatrix&);
 
+
+// class CSCMatrix
+// {
+//     // Private members
+//     std::vector<double> v_;  // numerical values, size nzmax
+//     std::vector<csint> i_;   // row indices, size nzmax
+//     std::vector<csint> p_;   // column pointers (CSC size N_);
+//     csint nnz_ = 0;          // number of entries
+//     csint M_ = 0;            // number of rows
+//     csint N_ = 0;            // number of columns
+
+//     // FIXME
+//     // inline void print_elems_(std::ostream& os, csint start, csint end) const
+//     // {
+//     //     for (csint k = start; k < end; k++)
+//     //         os << "(" << i_[k] << ", " << j_[k] << "): " << v_[k] << std::endl;
+//     // }
+
+//     public:
+//         // ---------- Constructors
+//         CSCMatrix();
+
+//         // Provide data and coordinates as vectors
+//         CSCMatrix(
+//             const std::vector<double>&,
+//             const std::vector<csint>&,
+//             const std::vector<csint>&
+//         );
+
+//         CSCMatrix(csint, csint, csint nzmax=0);  // allocate dims + nzmax
+//         CSCMatrix(std::istream& fp);             // from file
+
+//         // ---------- Accessors
+//         csint nnz() const;                   // number of non-zeros
+//         std::array<csint, 2> shape() const;  // the dimensions of the matrix
+
+//         const std::vector<csint>& row() const;     // indices and data
+//         const std::vector<csint>& column() const;
+//         const std::vector<double>& data() const;
+
+//         void assign(csint, csint, double);  // assign an element of the matrix
+//         // double operator()(csint, csint) const;  // throw runtime error?
+
+//         // ---------- Math Operations
+//         CSCMatrix T() const;  // transpose a copy
+
+//         // ---------- Other
+//         void print(
+//             std::ostream& os=std::cout,
+//             bool verbose=false,
+//             csint threshold=1000
+//         ) const;
+// };
+
+
+
 #endif
 
 //==============================================================================

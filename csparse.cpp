@@ -18,10 +18,16 @@
  *----------------------------------------------------------------------------*/
 COOMatrix::COOMatrix() {};
 
-/** Construct a COOMatrix from arrays of values and coordinates
+/** Construct a COOMatrix from arrays of values and coordinates.
  *
  * The entries are *not* sorted in any order, and duplicates are allowed. Any
  * duplicates will be summed.
+ *
+ * The matrix shape `(M, N)` will be inferred from the maximum indices given.
+ *
+ * @param v the values of the entries in the matrix
+ * @param i, j the non-negative integer row and column indices of the values
+ * @return a new COOMatrix object
  */
 COOMatrix::COOMatrix(
     const std::vector<double>& v,
@@ -37,7 +43,7 @@ COOMatrix::COOMatrix(
 {}
 
 
-/** Allocate a triplet format matrix for a given shape
+/** Allocate a COOMatrix for a given shape and number of non-zeros.
  *
  * @param M, N  integer dimensions of the rows and columns
  * @param nzmax integer capacity of space to reserve for non-zeros
@@ -52,7 +58,7 @@ COOMatrix::COOMatrix(csint M, csint N, csint nzmax)
 }
 
 
-/** Read a triplet format matrix from a file.
+/** Read a COOMatrix matrix from a file.
  *
  * The file is expected to be in "triplet format" `(i, j, v)`, where `(i, j)`
  * are the index coordinates, and `v` is the value to be assigned.
@@ -106,7 +112,6 @@ const std::vector<double>& COOMatrix::data() const { return v_; }
  *
  * @param i, j  integer indices of the matrix
  * @param v     the value to be assigned
- * @return pointer to the values array where the element will be added
  *
  * @see cs_entry Davis p 12.
  */
@@ -138,8 +143,15 @@ COOMatrix COOMatrix::T() const
 
 
 /*------------------------------------------------------------------------------
- *         Printing
+ *         Other
  *----------------------------------------------------------------------------*/
+/** Print the matrix
+ *
+ * @param os          the output stream, defaults to std::cout
+ * @param verbose     if True, print all non-zeros and their coordinates
+ * @param threshold   if `nnz > threshold`, print only the first and last
+ *        3 entries in the matrix. Otherwise, print all entries.
+ */
 void COOMatrix::print(std::ostream& os, bool verbose, csint threshold) const
 {
     os << "<COOrdinate sparse matrix" << std::endl;

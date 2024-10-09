@@ -11,22 +11,10 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-// #include <span>
 
 #include "csparse.h"
 
 using namespace std;
-
-
-// FIXME "no member 'span' in namespace 'std'??
-// template <typename T>
-// inline void print_vec(std::vector<T> v) {
-//     cout << "[";
-//     for (const auto& x : std::span(v.begin(), v.end() - 1)) {
-//         cout << x << ", ";
-//     }
-//     cout << v.back() << "]" << endl;
-// }
 
 
 int main(void)
@@ -47,13 +35,6 @@ int main(void)
 
     // Print the internals via getters
     cout << "Printing B arrays..." << endl;
-    // cout << "B.row = ";
-    // print_vec<csint>(B.row());
-    // cout << "B.column = ";
-    // print_vec<csint>(B.column());
-    // cout << "B.data = ";
-    // print_vec<double>(B.data());
-
     std::vector<csint> Brow = B.row();
     std::vector<csint> Bcol = B.column();
     std::vector<double> Bdata = B.data();

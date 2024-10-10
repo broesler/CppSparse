@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <sstream>
+#include <numeric>
 
 #include "csparse.h"
 
@@ -82,12 +83,38 @@ const std::vector<double>& CSCMatrix::data() const { return v_; }
 ----------------------------------------------------------------------------*/
 /** Transpose the matrix as a copy.
  * 
+ * This operation can be viewed as converting a Compressed Sparse Column matrix
+ * into a Compressed Sparse Row matrix.
+ *
  * @return new CSCMatrix object with transposed rows and columns.
  */
-// CSCMatrix CSCMatrix::T() const
-// {
-//     return CSCMatrix(this->v_, this->p_, this->i_);
-// }
+CSCMatrix CSCMatrix::T() const
+{
+    csint nnz_ = nnz();
+    std::vector<double> data(nnz_);
+    std::vector<csint> indices(nnz_), indptr(N_ + 1), ws(N_);
+
+    // Compute number of elements in each row
+    for (csint p = 0; p < nnz_; p++)
+        ws[i_[p]]++;
+
+    // Row pointers are the cumulative sum of the counts, starting with 0
+    std::partial_sum(ws.begin(), ws.end(), indptr.begin() + 1);
+
+    // Also copy the cumulative sum back into the workspace for iteration
+    ws = indptr;
+
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            // place A(i, j) as C(j, i)
+            csint q = ws[i_[p]]++;
+            indices[q] = j;
+            data[q] = v_[p];
+        }
+    }
+
+    return CSCMatrix {data, indices, indptr, {N_, M_}};
+}
 
 
 /*------------------------------------------------------------------------------

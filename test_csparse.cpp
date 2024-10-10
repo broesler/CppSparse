@@ -90,6 +90,9 @@ int main(void)
     CSCMatrix C = B.tocsc();
     cout << "C = \n" << C;
 
+    // Transpose
+    cout << "C.T = \n" << C.T();
+
     return 0;
 }
 

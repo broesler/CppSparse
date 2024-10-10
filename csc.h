@@ -61,7 +61,7 @@ class CSCMatrix
         // void assign(csint, csint, double);  // assign an element of the matrix
 
         // ---------- Math Operations
-        // CSCMatrix T() const;  // transpose a copy
+        CSCMatrix T() const;  // transpose a copy
 
         // ---------- Other
         void print(

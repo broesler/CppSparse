@@ -69,18 +69,6 @@ int main(void)
     cout << "B.T() by copy = " << endl << B_transpose;
     assert (&B != &B_transpose);
 
-    // FIXME these don't work?
-    // COOMatrix B_T = B.T();  // transpose in place
-    // cout << "B_T = " << endl << B_T;
-    // assert (&B == &B_T);
-    // B.T();  // transpose in place
-    // cout << "B.T() in-place + print B = " << endl << B;
-
-    // Read from a file
-    std::ifstream fp("./data/t1");
-    COOMatrix C(fp);
-    cout << "C = \n" << C;
-
     // Make new for given shape and nzmax
     COOMatrix D(56, 37);
     cout << "D = \n" << D;
@@ -89,6 +77,18 @@ int main(void)
     COOMatrix E(56, 37, (int) 1e4);
     cout << "E = \n" << E;
     cout << "E can hold " << E.nzmax() << " entries." << endl;
+
+    // Read from a file
+    std::ifstream fp("./data/t1");
+    COOMatrix F(fp);
+    cout << "F = \n" << F;
+
+    // Test conversion
+    B = COOMatrix(v, i, j);
+    cout << "B = \n" << B;
+
+    CSCMatrix C = B.tocsc();
+    // cout << "C = \n" << C;
 
     return 0;
 }

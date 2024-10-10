@@ -1,5 +1,5 @@
 /*==============================================================================
- *     File: csparse.cpp
+ *     File: coo.cpp
  *  Created: 2024-10-01 21:07
  *   Author: Bernie Roesler
  *
@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <sstream>
+#include <numeric>
 
 #include "csparse.h"
 
@@ -130,10 +131,76 @@ void COOMatrix::assign(csint i, csint j, double v)
 }
 
 
+/** Convert a coordinate format matrix to a compressed sparse column matrix.
+ *
+ * The columns are not guaranteed to be sorted, and duplicates are allowed.
+ *
+ * @return a copy of the `COOMatrix` in CSC format.
+ */
+CSCMatrix COOMatrix::tocsc() const
+{
+    csint k, p, nnz_ = nnz();
+    std::vector<double> data(nnz_);
+    std::vector<csint> indices(nnz_), indptr(N_), ws(N_);
+
+    // Compute number of elements in each column
+    for (k = 0; k < nnz_; k++)
+        ws[j_[k]]++;
+
+    // Column pointers are the cumulative sum of the counts, starting with 0
+    std::partial_sum(ws.begin(), ws.end(), indptr.begin() + 1);
+
+    // Also copy the cumulative sum back into the workspace for iteration
+    ws = indptr;
+
+    std::cout << "i_ = [";
+    for (auto x : i_) std::cout << x << ", ";
+    std::cout << "]" << std::endl;
+
+    std::cout << "j_ = [";
+    for (auto x : j_) std::cout << x << ", ";
+    std::cout << "]" << std::endl;
+
+    std::cout << "v_ = [";
+    for (auto x : v_) std::cout << x << ", ";
+    std::cout << "]" << std::endl;
+
+    for (k = 0; k < nnz_; k++) {
+        // A(i, j) is the pth entry in the CSC matrix
+        p = ws[j_[k]]++;     // "pointer" to the current element's column
+        indices[p] = i_[k];
+        data[p] = v_[k];
+    }
+
+    std::cout << "the data are:" << std::endl; 
+
+    std::cout << "ws = [";
+    for (auto x : ws) std::cout << x << ", ";
+    std::cout << "]" << std::endl;
+
+    std::cout << "indptr = [";
+    for (auto x : indptr) std::cout << x << ", ";
+    std::cout << "]" << std::endl;
+
+    std::cout << "indices = [";
+    for (auto x : indices) std::cout << x << ", ";
+    std::cout << "]" << std::endl;
+
+    std::cout << "data = [";
+    for (auto x : data) std::cout << x << ", ";
+    std::cout << "]" << std::endl;
+
+    return CSCMatrix {data, indices, indptr, this->shape()};
+}
+
+
 /*------------------------------------------------------------------------------
-       Math Operations 
+       Math Operations
 ----------------------------------------------------------------------------*/
-// Transpose the matrix as a copy
+/** Transpose the matrix as a copy.
+ *
+ * @return new COOMatrix object with transposed rows and columns.
+ */
 COOMatrix COOMatrix::T() const
 {
     return COOMatrix(this->v_, this->j_, this->i_);
@@ -141,7 +208,7 @@ COOMatrix COOMatrix::T() const
 
 
 /*------------------------------------------------------------------------------
- *         Other
+ *         Printing
  *----------------------------------------------------------------------------*/
 /** Print the matrix
  *

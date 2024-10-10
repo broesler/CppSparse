@@ -88,7 +88,7 @@ int main(void)
     cout << "B = \n" << B;
 
     CSCMatrix C = B.tocsc();
-    // cout << "C = \n" << C;
+    cout << "C = \n" << C;
 
     return 0;
 }

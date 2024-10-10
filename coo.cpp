@@ -141,7 +141,7 @@ CSCMatrix COOMatrix::tocsc() const
 {
     csint k, p, nnz_ = nnz();
     std::vector<double> data(nnz_);
-    std::vector<csint> indices(nnz_), indptr(N_), ws(N_);
+    std::vector<csint> indices(nnz_), indptr(N_ + 1), ws(N_);
 
     // Compute number of elements in each column
     for (k = 0; k < nnz_; k++)
@@ -153,6 +153,7 @@ CSCMatrix COOMatrix::tocsc() const
     // Also copy the cumulative sum back into the workspace for iteration
     ws = indptr;
 
+#ifdef DEBUG
     std::cout << "i_ = [";
     for (auto x : i_) std::cout << x << ", ";
     std::cout << "]" << std::endl;
@@ -164,6 +165,7 @@ CSCMatrix COOMatrix::tocsc() const
     std::cout << "v_ = [";
     for (auto x : v_) std::cout << x << ", ";
     std::cout << "]" << std::endl;
+#endif
 
     for (k = 0; k < nnz_; k++) {
         // A(i, j) is the pth entry in the CSC matrix
@@ -172,6 +174,7 @@ CSCMatrix COOMatrix::tocsc() const
         data[p] = v_[k];
     }
 
+#ifdef DEBUG
     std::cout << "the data are:" << std::endl; 
 
     std::cout << "ws = [";
@@ -189,6 +192,7 @@ CSCMatrix COOMatrix::tocsc() const
     std::cout << "data = [";
     for (auto x : data) std::cout << x << ", ";
     std::cout << "]" << std::endl;
+#endif
 
     return CSCMatrix {data, indices, indptr, this->shape()};
 }

@@ -21,12 +21,15 @@ class CSCMatrix
     csint M_ = 0;            // number of rows
     csint N_ = 0;            // number of columns
 
-    // TODO implement start/end
     inline void print_elems_(std::ostream& os, csint start, csint end) const
     {
-        for (csint j = 0; j < N_; j++) {
+        csint n = 0;  // number of elements printed
+        for (csint j = 0; j <= N_; j++) {
             for (csint p = p_[j]; p < p_[j + 1]; p++) {
-                os << "(" << i_[p] << ", " << j << "): " << v_[p] << std::endl;
+                if ((n >= start) && (n < end)) {
+                    os << "(" << i_[p] << ", " << j << "): " << v_[p] << std::endl;
+                }
+                n++;
             }
         }
     }

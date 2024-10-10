@@ -25,7 +25,6 @@ class COOMatrix
     std::vector<double> v_;  // numerical values, size nzmax (auto doubles)
     std::vector<csint> i_;   // row indices, size nzmax
     std::vector<csint> j_;   // column indices, size nzmax
-    csint nnz_ = 0;          // number of entries
     csint M_ = 0;            // number of rows
     csint N_ = 0;            // number of columns
 

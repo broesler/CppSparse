@@ -37,7 +37,6 @@ COOMatrix::COOMatrix(
     : v_(v),
       i_(i),
       j_(j),
-      nnz_(v_.size()),
       M_(*std::max_element(i_.begin(), i_.end()) + 1),  // zero-based indexing
       N_(*std::max_element(j_.begin(), j_.end()) + 1)
 {}
@@ -87,7 +86,7 @@ COOMatrix::COOMatrix(std::istream& fp)
 /*------------------------------------------------------------------------------
  *         Accessors
  *----------------------------------------------------------------------------*/
-csint COOMatrix::nnz() const { return nnz_; }
+csint COOMatrix::nnz() const { return v_.size(); }
 csint COOMatrix::nzmax() const { return v_.capacity(); }
 
 std::array<csint, 2> COOMatrix::shape() const
@@ -126,7 +125,6 @@ void COOMatrix::assign(csint i, csint j, double v)
     assert(v_.size() == i_.size());
     assert(v_.size() == j_.size());
 
-    nnz_ = v_.size();
     M_ = std::max(M_, i+1);
     N_ = std::max(N_, j+1);
 }
@@ -154,6 +152,7 @@ COOMatrix COOMatrix::T() const
  */
 void COOMatrix::print(std::ostream& os, bool verbose, csint threshold) const
 {
+    csint nnz_ = nnz();
     os << "<COOrdinate sparse matrix" << std::endl;
     os << "        with " << nnz_ << " stored elements "
         << "and shape (" << M_ << ", " << N_ << ")>" << std::endl;

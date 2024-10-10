@@ -54,37 +54,12 @@ CSCMatrix::CSCMatrix(csint M, csint N, csint nzmax)
     : M_(M),
       N_(N)
 {
+    // TODO change these to just v_(nzmax) etc. in initialization list
     v_.reserve(nzmax);
     i_.reserve(nzmax);
     p_.reserve(N_);
 }
 
-
-// /** Read a CSCMatrix matrix from a file.
-//  *
-//  * The file is expected to be in "triplet format" `(i, j, v)`, where `(i, j)`
-//  * are the index coordinates, and `v` is the value to be assigned.
-//  *
-//  * @param fp    a reference to the file stream.
-//  * @throws std::runtime_error if file format is not in triplet format
-//  */
-// CSCMatrix::CSCMatrix(std::istream& fp)
-// {
-//     csint i, j;
-//     double v;
-
-//     while (fp) {
-//         std::string line;
-//         std::getline(fp, line);
-//         if (!line.empty()) {
-//             std::stringstream ss(line);
-//             if (!(ss >> i >> j >> v))
-//                 throw std::runtime_error("File is not in (i, j, v) format!");
-//             else
-//                 assign(i, j, v);
-//         }
-//     }
-// }
 
 /*------------------------------------------------------------------------------
  *         Accessors
@@ -100,37 +75,6 @@ std::array<csint, 2> CSCMatrix::shape() const
 const std::vector<csint>& CSCMatrix::indices() const { return i_; }
 const std::vector<csint>& CSCMatrix::indptr() const { return p_; }
 const std::vector<double>& CSCMatrix::data() const { return v_; }
-
-
-// /** Assign a value to a pair of indices.
-//  *
-//  * Note that there is no argument checking other than for positive indices.
-//  * Assigning to an index that is outside of the dimensions of the matrix will
-//  * just increase the size of the matrix accordingly.
-//  *
-//  * Duplicate entries are also allowed to ease incremental construction of
-//  * matrices from files, or, e.g., finite element applications. Duplicates will be
-//  * summed upon compression to sparse column/row form.
-//  *
-//  * @param i, j  integer indices of the matrix
-//  * @param v     the value to be assigned
-//  *
-//  * @see cs_entry Davis p 12.
-//  */
-// void CSCMatrix::assign(csint i, csint j, double v)
-// {
-//     assert ((i >= 0) && (j >= 0));
-
-//     i_.push_back(i);
-//     p_.push_back(j);
-//     v_.push_back(v);
-
-//     assert(v_.size() == i_.size());
-//     assert(v_.size() == p_.size());
-
-//     M_ = std::max(M_, i+1);
-//     N_ = std::max(N_, j+1);
-// }
 
 
 /*------------------------------------------------------------------------------

@@ -47,7 +47,6 @@ class CSCMatrix
         );
 
         CSCMatrix(csint, csint, csint nzmax=0);  // allocate dims + nzmax
-        // CSCMatrix(std::istream& fp);             // from file
 
         // ---------- Accessors
         csint nnz() const;                   // number of non-zeros
@@ -57,8 +56,6 @@ class CSCMatrix
         const std::vector<csint>& indices() const;     // indices and data
         const std::vector<csint>& indptr() const;
         const std::vector<double>& data() const;
-
-        // void assign(csint, csint, double);  // assign an element of the matrix
 
         // ---------- Math Operations
         CSCMatrix T() const;  // transpose a copy

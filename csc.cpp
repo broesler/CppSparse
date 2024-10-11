@@ -115,16 +115,14 @@ CSCMatrix CSCMatrix::T() const
 }
 
 
-/** Sum duplicate entries.
- *
- */
+/** Sum duplicate entries in place. */
 CSCMatrix& CSCMatrix::sum_duplicates()
 {
-    csint nz = 0;
+    csint nz = 0;  // count actual number of non-zeros (excluding dups)
     std::vector<int> ws(M_, -1);                   // row i not yet seen
 
     for (csint j = 0; j < N_; j++) {
-        int q = nz;                                // column j will start at q
+        int q = nz;                                  // column j will start at q
         for (csint p = p_[j]; p < p_[j + 1]; p++) {
             csint i = i_[p];                         // A(i, j) is nonzero
             if (ws[i] >= q) {
@@ -139,9 +137,9 @@ CSCMatrix& CSCMatrix::sum_duplicates()
     }
 
     p_[N_] = nz;                                     // finalize A
-    v_.shrink_to_fit();                              // deallocate memory
-    i_.shrink_to_fit();
-    p_.shrink_to_fit();
+    v_.resize(nz);                                   // deallocate memory
+    i_.resize(nz);
+    p_.resize(nz);
 
     return *this;
 }

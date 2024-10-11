@@ -42,7 +42,8 @@ class COOMatrix
         COOMatrix(
             const std::vector<double>&,
             const std::vector<csint>&,
-            const std::vector<csint>&
+            const std::vector<csint>&,
+            const std::array<csint, 2>& shape={0, 0}
         );
 
         COOMatrix(csint, csint, csint nzmax=0);  // allocate dims + nzmax

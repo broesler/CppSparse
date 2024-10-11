@@ -33,14 +33,15 @@ COOMatrix::COOMatrix() {};
 COOMatrix::COOMatrix(
     const std::vector<double>& v,
     const std::vector<csint>& i,
-    const std::vector<csint>& j
+    const std::vector<csint>& j,
+    const std::array<csint, 2>& shape
     )
     : v_(v),
       i_(i),
       j_(j),
-      M_(*std::max_element(i_.begin(), i_.end()) + 1),  // zero-based indexing
-      N_(*std::max_element(j_.begin(), j_.end()) + 1)
-{}
+      M_(shape[0] ? shape[0] : *std::max_element(i_.begin(), i_.end()) + 1),
+      N_(shape[1] ? shape[1] : *std::max_element(j_.begin(), j_.end()) + 1)
+{}  // TODO add input checking here if any indices > M-1, N-1.
 
 
 /** Allocate a COOMatrix for a given shape and number of non-zeros.
@@ -49,13 +50,12 @@ COOMatrix::COOMatrix(
  * @param nzmax integer capacity of space to reserve for non-zeros
  */
 COOMatrix::COOMatrix(csint M, csint N, csint nzmax)
-    : M_(M),
-      N_(N)
-{
-    v_.reserve(nzmax);
-    i_.reserve(nzmax);
-    j_.reserve(nzmax);
-}
+    : v_(nzmax),
+      i_(nzmax),
+      j_(nzmax),
+      M_(M),
+      N_(N) 
+{}
 
 
 /** Read a COOMatrix matrix from a file.

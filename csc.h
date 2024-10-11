@@ -62,6 +62,7 @@ class CSCMatrix
 
         // ---------- Math Operations
         CSCMatrix T() const;  // transpose a copy
+        CSCMatrix& sum_duplicates();
 
         // ---------- Other
         void print(

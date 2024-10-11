@@ -93,6 +93,13 @@ int main(void)
     // Transpose
     cout << "C.T = \n" << C.T();
 
+    // Sum Duplicates
+    B.assign(0, 2, 99.0);
+    B.assign(3, 0, 99.0);
+    B.assign(2, 1, 99.0);
+    C = B.tocsc().sum_duplicates();
+    cout << "C = \n" << C;
+
     return 0;
 }
 

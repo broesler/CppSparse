@@ -214,6 +214,19 @@ COOMatrix COOMatrix::T() const
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/
+/** Print elements of the matrix between `start` and `end`.
+ *
+ * @param os          the output stream, defaults to std::cout
+ * @param start, end  print the all elements where `p ∈ [start, end]`, counting
+ *        column-wise.
+ */
+void COOMatrix::print_elems_(std::ostream& os, csint start, csint end) const
+{
+    for (csint k = start; k < end; k++)
+        os << "(" << i_[k] << ", " << j_[k] << "): " << v_[k] << std::endl;
+}
+
+
 /** Print the matrix
  *
  * @param os          the output stream, defaults to std::cout

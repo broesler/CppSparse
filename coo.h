@@ -22,11 +22,7 @@ class COOMatrix
     csint M_ = 0;            // number of rows
     csint N_ = 0;            // number of columns
 
-    inline void print_elems_(std::ostream& os, csint start, csint end) const
-    {
-        for (csint k = start; k < end; k++)
-            os << "(" << i_[k] << ", " << j_[k] << "): " << v_[k] << std::endl;
-    }
+    void print_elems_(std::ostream&, csint, csint) const;
 
     public:
         // ---------- Constructors

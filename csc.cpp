@@ -148,6 +148,26 @@ CSCMatrix& CSCMatrix::sum_duplicates()
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/
+/** Print elements of the matrix between `start` and `end`.
+ *
+ * @param os          the output stream, defaults to std::cout
+ * @param start, end  print the all elements where `p ∈ [start, end]`, counting
+ *        column-wise.
+ */
+void CSCMatrix::print_elems_(std::ostream& os, csint start, csint end) const
+{
+    csint n = 0;  // number of elements printed
+    for (csint j = 0; j <= N_; j++) {
+        for (csint p = p_[j]; p < p_[j + 1]; p++) {
+            if ((n >= start) && (n < end)) {
+                os << "(" << i_[p] << ", " << j << "): " << v_[p] << std::endl;
+            }
+            n++;
+        }
+    }
+}
+
+
 /** Print the matrix
  *
  * @param os          the output stream, defaults to std::cout

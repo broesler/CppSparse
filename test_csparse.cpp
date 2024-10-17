@@ -10,7 +10,6 @@
 #include <cassert>
 #include <iostream>
 #include <fstream>
-// #include <string>
 
 #include "csparse.h"
 
@@ -90,15 +89,40 @@ int main(void)
     CSCMatrix C = B.tocsc();
     cout << "C = \n" << C;
 
+    // TODO test whether transpose, droptol, etc. change the original if we do
+    // an assignment
+
     // Transpose
     cout << "C.T = \n" << C.T();
 
     // Sum Duplicates
-    B.assign(0, 2, 99.0);
-    B.assign(3, 0, 99.0);
-    B.assign(2, 1, 99.0);
+    B.assign(0, 2, 100.0);
+    B.assign(3, 0, 100.0);
+    B.assign(2, 1, 100.0);
     C = B.tocsc().sum_duplicates();
     cout << "C = \n" << C;
+
+    // Test droptol
+    C = COOMatrix(v, i, j).tocsc().droptol(2.0);
+    cout << "C = \n" << C;
+
+    // TODO have assign return "*this" so we can chain assignments
+    // Test dropzeros
+    // C = COOMatrix(v, i, j)
+    //     .assign(0, 1, 0.0)
+    //     .assign(2, 1, 0.0)
+    //     .assign(3, 1, 0.0)
+    //     .tocsc();
+
+    B = COOMatrix(v, i, j);
+    B.assign(0, 1, 0.0);
+    B.assign(2, 1, 0.0);
+    B.assign(3, 1, 0.0);
+    C = B.tocsc();
+
+    cout << "C with zeros = \n" << C;
+    C.dropzeros();
+    cout << "C without zeros = \n" << C;
 
     return 0;
 }

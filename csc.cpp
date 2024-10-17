@@ -145,6 +145,74 @@ CSCMatrix& CSCMatrix::sum_duplicates()
 }
 
 
+/** Keep matrix entries for which `fkeep` returns true.
+ *
+ * @param fk a boolean function that acts on each element. If `fk` returns
+ *        `true`, that element will be kept in the matrix. The function `fk` has
+ *        four parameters:
+ *        @param i, j integer indices of the element
+ *        @param v the value of the element
+ *        @param other a void pointer for any additional argument (*i.e.*
+ *               a non-zero tolerance against which to compare)
+ *        @return keep a boolean that is true if the element `A(i, j)` should be
+ *                kept in the matrix.
+ * @param other a pointer to the additional argument in `fk`.
+ */
+CSCMatrix& CSCMatrix::fkeep(
+    bool (*fk) (csint, csint, double, void *),
+    void *other
+)
+{ 
+    csint nz = 0;  // count actual number of non-zeros
+
+    for (csint j = 0; j < N_; j++) {
+        csint p = p_[j];  // get current location of column j
+        p_[j] = nz;       // record new location of column j
+        for (; p < p_[j+1]; p++) {
+            if (fk(i_[p], j, v_[p], other)) {
+                v_[nz] = v_[p];  // keep A(i, j)
+                i_[nz++] = i_[p];
+            }
+        }
+    }
+
+    p_[N_] = nz;    // finalize A
+    v_.resize(nz);  // deallocate memory TODO rewrite as `realloc`
+    i_.resize(nz);
+    p_.resize(nz);
+
+    return *this;
+};
+
+
+/** Return true if A(i, j) is non-zero */
+bool CSCMatrix::nonzero(csint i, csint j, double Aij, void *other)
+{
+    return (Aij != 0);
+}
+
+
+/** Drop any exactly zero entries from the matrix. */
+CSCMatrix& CSCMatrix::dropzeros()
+{
+    return fkeep(&nonzero, nullptr);
+}
+
+
+/** Return true if abs(A(i j)) > tol */
+bool CSCMatrix::abs_gt_tol(csint i, csint j, double Aij, void *tol)
+{
+    return (std::fabs(Aij) > *((double *) tol));
+}
+
+
+/** Drop any entries within `tol` of zero. */
+CSCMatrix& CSCMatrix::droptol(double tol)
+{
+    return fkeep(&abs_gt_tol, &tol);
+}
+
+
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/

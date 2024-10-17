@@ -51,6 +51,19 @@ class CSCMatrix
         CSCMatrix T() const;  // transpose a copy
         CSCMatrix& sum_duplicates();
 
+        // Keep or remove entries
+        CSCMatrix& fkeep(
+            bool (*fk) (csint, csint, double, void *),
+            void *other
+        );
+
+        CSCMatrix& dropzeros();
+        CSCMatrix& droptol(double);
+
+        // TODO possibly make these private? Or define in SparseMatrix base.
+        static bool nonzero(csint, csint, double, void *);
+        static bool abs_gt_tol(csint, csint, double, void *);
+
         // ---------- Other
         void print(
             std::ostream& os=std::cout,

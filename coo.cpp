@@ -224,7 +224,7 @@ COOMatrix COOMatrix::T() const
 void COOMatrix::print(std::ostream& os, bool verbose, csint threshold) const
 {
     csint nnz_ = nnz();
-    os << "<COOrdinate sparse matrix" << std::endl;
+    os << "<" << format_desc_ << " matrix" << std::endl;
     os << "        with " << nnz_ << " stored elements "
         << "and shape (" << M_ << ", " << N_ << ")>" << std::endl;
 

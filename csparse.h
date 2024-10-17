@@ -14,9 +14,10 @@
 #include <array>
 #include <cstdlib>
 #include <iostream>
+#include <string>
 #include <vector>
 
-typedef std::size_t csint;
+typedef std::size_t csint;  // TODO just change to "int" for simplicity
 
 #include "csc.h"  // must be first for conversion
 #include "coo.h"

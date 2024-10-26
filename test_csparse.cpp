@@ -66,9 +66,9 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         REQUIRE(A.nnz() == 10);
         REQUIRE(A.nzmax() >= 10);
         REQUIRE(A.shape() == std::array<csint, 2>{4, 4});
-        REQUIRE_THAT(A.row(), Equals(i));
-        REQUIRE_THAT(A.column(), Equals(j));
-        REQUIRE_THAT(A.data(), Equals(v));
+        REQUIRE(A.row() == i);
+        REQUIRE(A.column() == j);
+        REQUIRE(A.data() == v);
     }
 
     SECTION("Test printing") {
@@ -131,8 +131,8 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
     SECTION("Tranpose") {
         COOMatrix A_T = A.T();  // copy
 
-        REQUIRE_THAT(A_T.row(), Equals(j));
-        REQUIRE_THAT(A_T.column(), Equals(i));
+        REQUIRE(A_T.row() == j);
+        REQUIRE(A_T.column() == i);
         REQUIRE(&A != &A_T);
     }
 
@@ -161,9 +161,9 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
             REQUIRE(C.nnz() == 10);
             REQUIRE(C.nzmax() >= 10);
             REQUIRE(C.shape() == std::array<csint, 2>{4, 4});
-            REQUIRE_THAT(C.indptr(), Equals(indptr_expect));
-            REQUIRE_THAT(C.indices(), Equals(indices_expect));
-            REQUIRE_THAT(C.data(), Equals(data_expect));
+            REQUIRE(C.indptr() == indptr_expect);
+            REQUIRE(C.indices() == indices_expect);
+            REQUIRE(C.data() == data_expect);
         }
 
         // SECTION("Transpose") {

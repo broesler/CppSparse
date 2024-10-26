@@ -21,6 +21,9 @@
 
 using namespace std;
 using Catch::Matchers::Equals;
+using Catch::Matchers::WithinAbs;
+
+// constexpr double tol = 1e-16;
 
 
 TEST_CASE("Test COOMatrix Constructors", "[COOMatrix]")
@@ -72,7 +75,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         std::stringstream s;
 
         SECTION("Print short") {
-            std::string expect = 
+            std::string expect =
                 "<COOrdinate Sparse matrix\n"
                 "        with 10 stored elements and shape (4, 4)>\n";
 
@@ -145,56 +148,73 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         REQUIRE(A.data() == F.data());
     }
 
+    // TODO move these tests to a separate TEST_CASE
+    SECTION("Test conversion to CSCMatrix") {
+        CSCMatrix C = A.tocsc();
+
+        // cout << "C = \n" << C;
+        SECTION("Test attributes") {
+            std::vector<csint> indptr_expect  = {  0,             3,             6,        8,  10};
+            std::vector<csint> indices_expect = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
+            std::vector<double> data_expect   = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
+
+            REQUIRE(C.nnz() == 10);
+            REQUIRE(C.nzmax() >= 10);
+            REQUIRE(C.shape() == std::array<csint, 2>{4, 4});
+            REQUIRE_THAT(C.indptr(), Equals(indptr_expect));
+            REQUIRE_THAT(C.indices(), Equals(indices_expect));
+            REQUIRE_THAT(C.data(), Equals(data_expect));
+        }
+
+        // SECTION("Transpose") {
+        //     cout << "C.T = \n" << C.T();
+        // }
+
+        SECTION("Sum duplicates") {
+            A.assign(0, 2, 100.0);
+            A.assign(3, 0, 100.0);
+            A.assign(2, 1, 100.0);
+            C = A.tocsc().sum_duplicates();
+
+            // TODO implement indexing into CSCMatrix
+            // REQUIRE_THAT(C(0, 2), WithinAbs(103.2, tol));
+            // REQUIRE_THAT(C(3, 0), WithinAbs(103.5, tol));
+            // REQUIRE_THAT(C(2, 1), WithinAbs(101.7, tol));
+        }
+
+        SECTION("Test droptol") {
+            C = COOMatrix(v, i, j).tocsc().droptol(2.0);
+
+            // TODO write custom Matcher to assert all C >= 2.0
+        }
+
+        SECTION("Test dropzeros") {
+            // TODO have assign return "*this" so we can chain assignments
+            // Test dropzeros
+            // C = COOMatrix(v, i, j)
+            //     .assign(0, 1, 0.0)
+            //     .assign(2, 1, 0.0)
+            //     .assign(3, 1, 0.0)
+            //     .tocsc();
+
+            // Assign explicit zeros
+            A.assign(0, 1, 0.0);
+            A.assign(2, 1, 0.0);
+            A.assign(3, 1, 0.0);
+            C = A.tocsc();
+
+            // cout << "C with zeros = \n" << C;
+            C.dropzeros();
+            // cout << "C without zeros = \n" << C;
+            // TODO assert that C.data() does not contain any zeros.
+        }
+    }
+
+    // TODO test whether transpose, droptol, etc. change the original if we do
+    // an assignment
+
 }
 
-// TODO convert all of these into actual unit tests
-// int main(void)
-// {
-
-//     // Test conversion
-//     A = COOMatrix(v, i, j);
-//     cout << "A = \n" << A;
-
-//     CSCMatrix C = A.tocsc();
-//     cout << "C = \n" << C;
-
-//     // TODO test whether transpose, droptol, etc. change the original if we do
-//     // an assignment
-
-//     // Transpose
-//     cout << "C.T = \n" << C.T();
-
-//     // Sum Duplicates
-//     A.assign(0, 2, 100.0);
-//     A.assign(3, 0, 100.0);
-//     A.assign(2, 1, 100.0);
-//     C = A.tocsc().sum_duplicates();
-//     cout << "C = \n" << C;
-
-//     // Test droptol
-//     C = COOMatrix(v, i, j).tocsc().droptol(2.0);
-//     cout << "C = \n" << C;
-
-//     // TODO have assign return "*this" so we can chain assignments
-//     // Test dropzeros
-//     // C = COOMatrix(v, i, j)
-//     //     .assign(0, 1, 0.0)
-//     //     .assign(2, 1, 0.0)
-//     //     .assign(3, 1, 0.0)
-//     //     .tocsc();
-
-//     A = COOMatrix(v, i, j);
-//     A.assign(0, 1, 0.0);
-//     A.assign(2, 1, 0.0);
-//     A.assign(3, 1, 0.0);
-//     C = A.tocsc();
-
-//     cout << "C with zeros = \n" << C;
-//     C.dropzeros();
-//     cout << "C without zeros = \n" << C;
-
-//     return 0;
-// }
 
 /*==============================================================================
  *============================================================================*/

@@ -240,6 +240,19 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
             REQUIRE(C.data() == data_expect);
         }
 
+        SECTION("Test indexing") {
+            std::vector<csint> indptr = C.indptr();
+            std::vector<csint> indices = C.indices();
+            std::vector<double> data = C.data();
+            csint N = C.shape()[1];
+
+            for (csint j = 0; j < N; j++) {
+                for (csint p = indptr[j]; p < indptr[j+1]; p++) {
+                    REQUIRE( C(indices[p], j) == data[p] );
+                }
+            }
+        }
+
         // TODO test the transpose -> use indexing to test A(i, j) == A(j, i)?
         // SECTION("Transpose") {
         //     cout << "C.T = \n" << C.T();

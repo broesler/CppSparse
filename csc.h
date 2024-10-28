@@ -47,6 +47,10 @@ class CSCMatrix
         const std::vector<csint>& indptr() const;
         const std::vector<double>& data() const;
 
+        // Access an element by index, but do not change its value
+        const double operator()(csint, csint) const;
+        // double& operator()(csint, csint);
+
         // ---------- Math Operations
         CSCMatrix T() const;  // transpose a copy
         CSCMatrix& sum_duplicates();

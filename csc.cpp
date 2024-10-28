@@ -75,18 +75,20 @@ const std::vector<csint>& CSCMatrix::indices() const { return i_; }
 const std::vector<csint>& CSCMatrix::indptr() const { return p_; }
 const std::vector<double>& CSCMatrix::data() const { return v_; }
 
+// NOTE this code assumes that columns are *not* sorted, so it will search
+// through *every* element in a column. If columns were sorted, and there were
+// no duplicates allowed, we could also terminate and return 0 after i_[p] > i;
 const double CSCMatrix::operator()(csint i, csint j) const
 {
+    double out = 0;
+
     for (csint p = p_[j]; p < p_[j+1]; p++) {
-        // NOTE this code assumes that columns are *not* sorted, so it will
-        // search through *every* element in a column. If columns were sorted,
-        // we could also terminate and return 0 after i_[p] > i;
         if (i_[p] == i) {
-            return v_[p];
+            out += v_[p];  // sum duplicate entries
         }
     }
 
-    return 0.0;
+    return out;
 }
 
 

@@ -26,7 +26,9 @@ using Catch::Matchers::WithinAbs;
 constexpr double tol = 1e-16;
 
 // TODO figure out how to use the "spaceship" operator<=> to define all
-// of the comparisons in one fell swoop?
+// of the comparisons in one fell swoop? 
+// A: May only work if we define a wrapper class on std::vector and define the
+//    operator within the class vs. scalars.
 
 /** Return a boolean vector comparing each individual element.
  *
@@ -74,6 +76,8 @@ std::vector<bool> compare_vec(
     return out;
 }
 
+// Create the comparison operators by passing the single comparison function to
+// our vector comparison function.
 std::vector<bool> operator>=(const std::vector<double>& vec, const double c)
 {
     return compare_vec(vec, c, std::greater_equal<double>());
@@ -185,13 +189,13 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         }
     }
 
-    SECTION("Assign an existing element") {
+    SECTION("Assign an existing element to create a duplicate") {
         A.assign(3, 3, 56.0);
 
         REQUIRE(A.nnz() == 11);
         REQUIRE(A.nzmax() >= 11);
         REQUIRE(A.shape() == std::array<csint, 2>{4, 4});
-        // TODO implement a private "search" function to ensure it exists?
+        // REQUIRE_THAT(A(3, 3), WithinAbs(57.0, tol));
     }
 
     SECTION("Assign a new element that changes the dimensions") {
@@ -200,6 +204,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         REQUIRE(A.nnz() == 11);
         REQUIRE(A.nzmax() >= 11);
         REQUIRE(A.shape() == std::array<csint, 2>{5, 4});
+        // REQUIRE_THAT(A(4, 3), WithinAbs(69.0, tol));
     }
 
     SECTION("Tranpose") {
@@ -240,7 +245,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
             REQUIRE(C.data() == data_expect);
         }
 
-        SECTION("Test indexing") {
+        SECTION("Test indexing: no duplicates") {
             std::vector<csint> indptr = C.indptr();
             std::vector<csint> indices = C.indices();
             std::vector<double> data = C.data();
@@ -248,20 +253,33 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
 
             for (csint j = 0; j < N; j++) {
                 for (csint p = indptr[j]; p < indptr[j+1]; p++) {
-                    REQUIRE( C(indices[p], j) == data[p] );
+                    REQUIRE(C(indices[p], j) == data[p]);
                 }
             }
+
         }
 
-        // FIXME fails?
+        SECTION("Test indexing: with a duplicate") {
+            A.assign(3, 3, 56.0);
+            C = A.tocsc();
+
+            REQUIRE_THAT(C(3, 3), WithinAbs(57.0, tol));
+        }
+
         // Test the transpose -> use indexing to test A(i, j) == A(j, i)
         SECTION("Transpose") {
+            CSCMatrix C_T = C.T();
+
             csint M, N;
             std::tie(M, N) = C.shape();
 
+            REQUIRE(C.nnz() == C_T.nnz());
+            REQUIRE(M == C_T.shape()[1]);
+            REQUIRE(N == C_T.shape()[0]);
+
             for (csint i = 0; i < M; i++) {
                 for (csint j = 0; j < N; j++) {
-                    REQUIRE( C(i, j) == C(j, i) );
+                    REQUIRE(C(i, j) == C_T(j, i));
                 }
             }
         }

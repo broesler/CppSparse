@@ -12,6 +12,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_all.hpp>
 
+// #include <compare>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -20,10 +21,83 @@
 #include "csparse.h"
 
 using namespace std;
-using Catch::Matchers::Equals;
-using Catch::Matchers::WithinAbs;
+// using Catch::Matchers::WithinAbs;
 
 // constexpr double tol = 1e-16;
+
+// TODO figure out how to use the "spaceship" operator<=> to define all
+// of the comparisons in one fell swoop?
+
+/** Return a boolean vector comparing each individual element.
+ *
+ * @param vec   a vector of doubles.
+ * @param c     the value against which to compare
+ * @return out  a vector whose elements are vec[i] <=> c.
+ */
+// std::vector<bool> operator<=>(const std::vector<double>& vec, const double c)
+// {
+//     std::vector<bool> out(vec.size());
+
+//     for (auto const& v : vec) {
+//         if (v < c) {
+//             out.push_back(std::strong_ordering::less);
+//         } else if (v > c) {
+//             out.push_back(std::strong_ordering::greater);
+//         } else {
+//             out.push_back(std::strong_ordering::equal);
+//         }
+//     }
+
+//     return out;
+// }
+
+
+/** Return a boolean vector comparing each individual element.
+ *
+ * @param vec   a vector of doubles
+ * @param c     the value against which to compare
+ * @param comp  the comparison function for elements of the vector and scalar
+ *
+ * @return out  a vector whose elements are vec[i] <=> c.
+ */
+std::vector<bool> compare_vec(
+        const std::vector<double>& vec,
+        const double c,
+        std::function<bool(double, double)> comp
+    )
+{
+    std::vector<bool> out;
+    out.reserve(vec.size());
+    for (const auto& v : vec) {
+        out.push_back(comp(v, c));
+    }
+    return out;
+}
+
+std::vector<bool> operator>=(const std::vector<double>& vec, const double c)
+{
+    return compare_vec(vec, c, std::greater_equal<double>());
+}
+
+std::vector<bool> operator!=(const std::vector<double>& vec, const double c)
+{
+    return compare_vec(vec, c, std::not_equal_to<double>());
+}
+
+
+/** Return true if all elements of a vector are true.
+ *
+ * @param vec a boolean vector.
+ * @return true if all elements of the vector are true.
+ */
+bool all(const std::vector<bool>& vec)
+{
+    for (const auto& x : vec)
+        if (!x)
+            return false;
+
+    return true;
+}
 
 
 TEST_CASE("Test COOMatrix Constructors", "[COOMatrix]")
@@ -166,6 +240,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
             REQUIRE(C.data() == data_expect);
         }
 
+        // TODO test the transpose -> use indexing to test A(i, j) == A(j, i)?
         // SECTION("Transpose") {
         //     cout << "C.T = \n" << C.T();
         // }
@@ -185,7 +260,8 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         SECTION("Test droptol") {
             C = COOMatrix(v, i, j).tocsc().droptol(2.0);
 
-            // TODO write custom Matcher to assert all C >= 2.0
+            // TODO write custom Matcher to assert all C >= 2.0?
+            REQUIRE(all(C.data() >= 2.0));
         }
 
         SECTION("Test dropzeros") {
@@ -202,11 +278,9 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
             A.assign(2, 1, 0.0);
             A.assign(3, 1, 0.0);
             C = A.tocsc();
-
-            // cout << "C with zeros = \n" << C;
             C.dropzeros();
-            // cout << "C without zeros = \n" << C;
-            // TODO assert that C.data() does not contain any zeros.
+
+            REQUIRE(all(C.data() != 0.0));
         }
     }
 

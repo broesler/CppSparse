@@ -21,9 +21,9 @@
 #include "csparse.h"
 
 using namespace std;
-// using Catch::Matchers::WithinAbs;
+using Catch::Matchers::WithinAbs;
 
-// constexpr double tol = 1e-16;
+constexpr double tol = 1e-16;
 
 // TODO figure out how to use the "spaceship" operator<=> to define all
 // of the comparisons in one fell swoop?
@@ -253,10 +253,18 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
             }
         }
 
-        // TODO test the transpose -> use indexing to test A(i, j) == A(j, i)?
-        // SECTION("Transpose") {
-        //     cout << "C.T = \n" << C.T();
-        // }
+        // FIXME fails?
+        // Test the transpose -> use indexing to test A(i, j) == A(j, i)
+        SECTION("Transpose") {
+            csint M, N;
+            std::tie(M, N) = C.shape();
+
+            for (csint i = 0; i < M; i++) {
+                for (csint j = 0; j < N; j++) {
+                    REQUIRE( C(i, j) == C(j, i) );
+                }
+            }
+        }
 
         SECTION("Sum duplicates") {
             A.assign(0, 2, 100.0);
@@ -264,16 +272,14 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
             A.assign(2, 1, 100.0);
             C = A.tocsc().sum_duplicates();
 
-            // TODO implement indexing into CSCMatrix
-            // REQUIRE_THAT(C(0, 2), WithinAbs(103.2, tol));
-            // REQUIRE_THAT(C(3, 0), WithinAbs(103.5, tol));
-            // REQUIRE_THAT(C(2, 1), WithinAbs(101.7, tol));
+            REQUIRE_THAT(C(0, 2), WithinAbs(103.2, tol));
+            REQUIRE_THAT(C(3, 0), WithinAbs(103.5, tol));
+            REQUIRE_THAT(C(2, 1), WithinAbs(101.7, tol));
         }
 
         SECTION("Test droptol") {
             C = COOMatrix(v, i, j).tocsc().droptol(2.0);
 
-            // TODO write custom Matcher to assert all C >= 2.0?
             REQUIRE(all(C.data() >= 2.0));
         }
 

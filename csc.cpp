@@ -153,9 +153,9 @@ CSCMatrix& CSCMatrix::sum_duplicates()
     }
 
     p_[N_] = nz;                                     // finalize A
-    v_.resize(nz);                                   // deallocate memory
+    p_.resize(N_);
     i_.resize(nz);
-    p_.resize(nz);
+    v_.resize(nz);                                   // deallocate memory
 
     return *this;
 }
@@ -193,9 +193,9 @@ CSCMatrix& CSCMatrix::fkeep(
     }
 
     p_[N_] = nz;    // finalize A
-    v_.resize(nz);  // deallocate memory TODO rewrite as `realloc`
+    p_.resize(N_);
     i_.resize(nz);
-    p_.resize(nz);
+    v_.resize(nz);  // deallocate memory TODO rewrite as `realloc`
 
     return *this;
 };
@@ -295,6 +295,93 @@ std::vector<double> operator+(
 }
 
 // TODO operator- for unary vector and vector-vector
+
+
+/** Matrix-matrix multiplication
+ *
+ * @param A, B  the CSC-format matrices to multiply.
+ *        A is size M x K, B is size K x N.
+ *
+ * @return C    a CSC-format matrix of size M x N. 
+ *         C.nnz() <= A.nnz() + B.nnz().
+ */
+CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B)
+{
+    csint M, Ka, Kb, N;
+    std::tie(M, Ka) = A.shape();
+    std::tie(Kb, N) = B.shape();
+    assert(Ka == Kb);
+
+    // NOTE See Problem 2.20 for how to compute nnz(A*B)
+    CSCMatrix C(M, N, A.nnz() + B.nnz());  // output
+
+    // Allocate workspaces
+    std::vector<csint> w(M);
+    std::vector<double> x(M);
+
+    csint nnz = 0;  // track total number of non-zeros in C
+
+    for (csint j = 0; j < N; j++) {
+        C.p_[j] = nnz;  // column j of C starts here 
+
+        // Compute x += beta * A(:, j) for each non-zero row in B.
+        for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
+            nnz = scatter(A, B.i_[p], B.v_[p], w, x, j+1, C, nnz);
+        }
+
+        // Gather values into the correct locations in C
+        for (csint p = C.p_[j]; p < nnz; p++) {
+            C.v_[p] = x[C.i_[p]];
+        }
+    }
+
+    // Finalize and deallocate unused memory
+    C.p_[N] = nnz;
+    C.p_.resize(N);
+    C.i_.resize(nnz);
+    C.v_.resize(nnz);
+
+    return C;
+}
+
+
+/** Compute x += beta * A(:, j).
+ *
+ * @param A     CSC matrix by which to multiply
+ * @param j     column index of `A`
+ * @param beta  scalar value by which to multiply `A`
+ * @param w, x  workspace vectors of row indices and values, respectively
+ * @param mark  separator index for `w`. All `w[i] < mark`are row indices that
+ *              are not yet in `Cj`.
+ * @param C     CSC matrix where output non-zero pattern is stored
+ * @param nnz   current number of non-zeros in `C`.
+ *
+ * @return nnz  updated number of non-zeros in `C`.
+ */
+csint scatter(
+    const CSCMatrix& A,
+    csint j,
+    double beta,
+    std::vector<csint>& w,
+    std::vector<double>& x,
+    csint mark,
+    CSCMatrix& C,
+    csint nnz
+    )
+{
+    for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+        csint i = A.i_[p];           // A(i, j) is non-zero
+        if (w[i] < mark) {
+            w[i] = mark;             // i is new entry in column j
+            C.i_[nnz++] = i;         // add i to pattern of C(:, j)
+            x[i] = beta * A.v_[p];   // x[i] = beta * A(i, j)
+        } else {
+            x[i] += beta * A.v_[p];  // i exists in C(:, j) already
+        }
+    }
+
+    return nnz;
+}
 
 
 /*------------------------------------------------------------------------------

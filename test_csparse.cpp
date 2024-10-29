@@ -319,6 +319,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
     // an assignment
 }
 
+
 TEST_CASE("Matrix-vector multiply + addition.", "[math]")
 {
     std::vector<csint>  i = {0, 1, 2};
@@ -336,6 +337,55 @@ TEST_CASE("Matrix-vector multiply + addition.", "[math]")
     // REQUIRE(-y == std::vector<double>{-9, -6, -1});
 }
 
+
+TEST_CASE("Matrix-matrix multiply + addition.", "[math]")
+{
+    // >>> A
+    // ===
+    // array([[1, 2, 3, 4],
+    //        [5, 6, 7, 8]])
+    // >>> B
+    // ===
+    // array([[ 1,  2,  3],
+    //        [ 4,  5,  6],
+    //        [ 7,  8,  9],
+    //        [10, 11, 12]])
+    // >>> A @ B
+    // ===
+    // array([[ 70,  80,  90],
+    //        [158, 184, 210]])
+
+    CSCMatrix A = COOMatrix(
+        std::vector<double> {1, 2, 3, 4, 5, 6, 7, 8},  // vals
+        std::vector<csint>  {0, 0, 0, 0, 1, 1, 1, 1},  // rows
+        std::vector<csint>  {0, 1, 2, 3, 0, 1, 2, 3}   // cols
+    ).tocsc();
+
+    CSCMatrix B = COOMatrix(
+        std::vector<double> {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12},  // vals
+        std::vector<csint>  {0, 0, 0, 1, 1, 1, 2, 2, 2,  3,  3,  3},  // rows
+        std::vector<csint>  {0, 1, 2, 0, 1, 2, 0, 1, 2,  0,  1,  2}   // cols
+    ).tocsc();
+
+    CSCMatrix expect = COOMatrix(
+        std::vector<double> {70, 80, 90, 158, 184, 210},  // vals
+        std::vector<csint>  { 0,  0,  0,   1,   1,   1},  // rows
+        std::vector<csint>  { 0,  1,  2,   0,   1,   2}   // cols
+    ).tocsc();
+
+    CSCMatrix C = A * B;
+    csint M, N;
+    std::tie(M, N) = C.shape();
+
+    REQUIRE(M == A.shape()[0]);
+    REQUIRE(N == B.shape()[1]);
+
+    for (csint i = 0; i < M; i++) {
+        for (csint j = 0; j < M; j++) {
+            REQUIRE(C(i, j) == expect(i, j));
+        }
+    }
+}
 
 /*==============================================================================
  *============================================================================*/

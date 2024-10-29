@@ -68,17 +68,24 @@ class CSCMatrix
         static bool nonzero(csint, csint, double, void *);
         static bool abs_gt_tol(csint, csint, double, void *);
 
-        // Matrix-vector multiply
+        // Matrix-vector multiply and add via C-style function
         friend std::vector<double> gaxpy(
             const CSCMatrix&,
             const std::vector<double>&,
             std::vector<double>
         );
 
+        // Matrix-vector multiply operator overload
         friend std::vector<double> operator*(
-            const CSCMatrix& A,
-            const std::vector<double>& x
+            const CSCMatrix&,
+            const std::vector<double>&
         );
+
+        // TODO implement algorithm
+        friend CSCMatrix operator*(const CSCMatrix&, const CSCMatrix&);
+
+        friend csint scatter(const CSCMatrix&, csint, double,
+            std::vector<csint>&, std::vector<double>&, csint, CSCMatrix&, csint);
 
         // ---------- Other
         void print(

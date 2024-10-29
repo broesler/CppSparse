@@ -75,6 +75,11 @@ class CSCMatrix
             std::vector<double>
         );
 
+        friend std::vector<double> operator*(
+            const CSCMatrix& A,
+            const std::vector<double>& x
+        );
+
         // ---------- Other
         void print(
             std::ostream& os=std::cout,
@@ -89,6 +94,10 @@ class CSCMatrix
  *----------------------------------------------------------------------------*/
 std::ostream& operator<<(std::ostream&, const CSCMatrix&);
 
+std::vector<double> operator+(
+    const std::vector<double>&,
+    const std::vector<double>&
+);
 
 #endif
 

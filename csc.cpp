@@ -254,6 +254,49 @@ std::vector<double> gaxpy(
 };
 
 
+/** Matrix-vector right-multiply. */
+std::vector<double> operator*(const CSCMatrix& A, const std::vector<double>& x)
+{
+    assert(A.N_ == x.size()); 
+
+    std::vector<double> out(x.size());
+
+    for (csint j = 0; j < A.N_; j++) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            out[A.i_[p]] = A.v_[p] * x[j];
+        }
+    }
+
+    return out;
+}
+
+
+// TODO test left-multiply
+// std::vector<double> operator*(const std::vector<double>& x, const CSCMatrix& A)
+// {
+//     return (A.T() * x).T
+// }
+
+/** Vector-vector addition */
+std::vector<double> operator+(
+    const std::vector<double>& a,
+    const std::vector<double>& b
+    )
+{
+    assert(a.size() == b.size());
+
+    std::vector<double> out(a.size());
+
+    for (csint i = 0; i < a.size(); i++) {
+        out[i] = a[i] + b[i];
+    }
+
+    return out;
+}
+
+// TODO operator- for unary vector and vector-vector
+
+
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/

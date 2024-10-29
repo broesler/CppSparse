@@ -336,7 +336,10 @@ TEST_CASE("Matrix-vector multiply + addition.", "[math]")
     std::vector<double> y = {9, 6, 1};
 
     REQUIRE(gaxpy(A, x, y) == std::vector<double>{10, 10, 10});
-    // REQUIRE((A * x + y) == {10, 10, 10});
+    REQUIRE((A * x) == std::vector<double>{1, 4, 9});
+    REQUIRE((A * x + y) == std::vector<double>{10, 10, 10});
+    // REQUIRE((A * x - y) == std::vector<double>{-8, -2, -8});
+    // REQUIRE(-y == std::vector<double>{-9, -6, -1});
 }
 
 

@@ -338,7 +338,7 @@ TEST_CASE("Matrix-vector multiply + addition.", "[math]")
 }
 
 
-TEST_CASE("Matrix-matrix multiply + addition.", "[math]")
+TEST_CASE("Matrix-matrix multiply.", "[math]")
 {
     // >>> A
     // ===
@@ -381,7 +381,7 @@ TEST_CASE("Matrix-matrix multiply + addition.", "[math]")
     REQUIRE(N == B.shape()[1]);
 
     for (csint i = 0; i < M; i++) {
-        for (csint j = 0; j < M; j++) {
+        for (csint j = 0; j < N; j++) {
             REQUIRE(C(i, j) == expect(i, j));
         }
     }

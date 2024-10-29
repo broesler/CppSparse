@@ -68,6 +68,13 @@ class CSCMatrix
         static bool nonzero(csint, csint, double, void *);
         static bool abs_gt_tol(csint, csint, double, void *);
 
+        // Matrix-vector multiply
+        friend std::vector<double> gaxpy(
+            const CSCMatrix&,
+            const std::vector<double>&,
+            std::vector<double>
+        );
+
         // ---------- Other
         void print(
             std::ostream& os=std::cout,
@@ -77,6 +84,9 @@ class CSCMatrix
 };
 
 
+/*------------------------------------------------------------------------------
+ *          Free Functions
+ *----------------------------------------------------------------------------*/
 std::ostream& operator<<(std::ostream&, const CSCMatrix&);
 
 

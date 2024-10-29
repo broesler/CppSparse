@@ -229,6 +229,31 @@ CSCMatrix& CSCMatrix::droptol(double tol)
 }
 
 
+/** Matrix-vector multiply `y = Ax + y`.
+ *
+ * @param A  a sparse matrix
+ * @param x  a dense multiplying vector
+ * @param y  a dense adding vector which will be used for the output
+ *
+ * @return y a copy of the updated vector
+ */
+std::vector<double> gaxpy(
+    const CSCMatrix& A,
+    const std::vector<double>& x,
+    std::vector<double> y
+    )
+{
+    assert(A.N_ == x.size()); 
+    assert(x.size() == y.size()); 
+    for (csint j = 0; j < A.N_; j++) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            y[A.i_[p]] += A.v_[p] * x[j];
+        }
+    }
+    return y;
+};
+
+
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/

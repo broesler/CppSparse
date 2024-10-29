@@ -323,7 +323,20 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
 
     // TODO test whether transpose, droptol, etc. change the original if we do
     // an assignment
+}
 
+TEST_CASE("Matrix-vector multiply + addition.", "[math]")
+{
+    std::vector<csint>  i = {0, 1, 2};
+    std::vector<csint>  j = {0, 1, 2};
+    std::vector<double> v = {1, 2, 3};
+    CSCMatrix A = COOMatrix(v, i, j).tocsc();
+
+    std::vector<double> x = {1, 2, 3};
+    std::vector<double> y = {9, 6, 1};
+
+    REQUIRE(gaxpy(A, x, y) == std::vector<double>{10, 10, 10});
+    // REQUIRE((A * x + y) == {10, 10, 10});
 }
 
 

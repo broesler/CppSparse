@@ -115,7 +115,7 @@ const std::vector<double>& COOMatrix::data() const { return v_; }
  *
  * @see cs_entry Davis p 12.
  */
-void COOMatrix::assign(csint i, csint j, double v)
+COOMatrix& COOMatrix::assign(csint i, csint j, double v)
 {
     assert ((i >= 0) && (j >= 0));
 
@@ -128,6 +128,8 @@ void COOMatrix::assign(csint i, csint j, double v)
 
     M_ = std::max(M_, i+1);
     N_ = std::max(N_, j+1);
+
+    return *this;
 }
 
 

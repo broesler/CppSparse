@@ -55,7 +55,7 @@ class COOMatrix
         const std::vector<csint>& column() const;
         const std::vector<double>& data() const;
 
-        void assign(csint, csint, double);  // assign an element of the matrix
+        COOMatrix& assign(csint, csint, double);  // assign an element of the matrix
 
         // ---------- Format Conversions
         CSCMatrix tocsc() const;  // convert to CSC format

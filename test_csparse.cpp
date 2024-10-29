@@ -260,8 +260,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         }
 
         SECTION("Test indexing: with a duplicate") {
-            A.assign(3, 3, 56.0);
-            C = A.tocsc();
+            C = A.assign(3, 3, 56.0).tocsc();
 
             REQUIRE_THAT(C(3, 3), WithinAbs(57.0, tol));
         }
@@ -285,10 +284,11 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         }
 
         SECTION("Sum duplicates") {
-            A.assign(0, 2, 100.0);
-            A.assign(3, 0, 100.0);
-            A.assign(2, 1, 100.0);
-            C = A.tocsc().sum_duplicates();
+            C = A.assign(0, 2, 100.0)
+                 .assign(3, 0, 100.0)
+                 .assign(2, 1, 100.0)
+                 .tocsc()
+                 .sum_duplicates();
 
             REQUIRE_THAT(C(0, 2), WithinAbs(103.2, tol));
             REQUIRE_THAT(C(3, 0), WithinAbs(103.5, tol));
@@ -302,19 +302,13 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         }
 
         SECTION("Test dropzeros") {
-            // TODO have assign return "*this" so we can chain assignments
-            // Test dropzeros
-            // C = COOMatrix(v, i, j)
-            //     .assign(0, 1, 0.0)
-            //     .assign(2, 1, 0.0)
-            //     .assign(3, 1, 0.0)
-            //     .tocsc();
-
             // Assign explicit zeros
-            A.assign(0, 1, 0.0);
-            A.assign(2, 1, 0.0);
-            A.assign(3, 1, 0.0);
-            C = A.tocsc();
+            C = COOMatrix(v, i, j)
+                .assign(0, 1, 0.0)
+                .assign(2, 1, 0.0)
+                .assign(3, 1, 0.0)
+                .tocsc();
+
             C.dropzeros();
 
             REQUIRE(all(C.data() != 0.0));

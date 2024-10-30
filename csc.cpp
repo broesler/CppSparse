@@ -296,8 +296,50 @@ std::vector<double> operator+(
 
 // TODO operator- for unary vector and vector-vector
 
+/** Scale a vector by a scalar */
+std::vector<double> operator*(const double c, const std::vector<double>& vec)
+{
+    std::vector<double> out(vec);
+    for (auto& x : out) {
+        x *= c;
+    }
+    return out;
+}
+
+
+std::vector<double> operator*(const std::vector<double>& vec, const double c)
+{
+    return c * vec;
+}
+
+
+std::vector<double>& operator*=(std::vector<double>& vec, const double c)
+{
+    for (auto& x : vec) {
+        x *= c;
+    }
+    return vec;
+}
+
+/** Scale a matrix by a scalar */
+CSCMatrix operator*(const double c, const CSCMatrix& A)
+{
+    CSCMatrix out(A.v_, A.i_, A.p_, A.shape());
+    out.v_ *= c;
+    return out;
+}
+
+
+CSCMatrix operator*(const CSCMatrix& A, const double c)
+{
+    return c * A;
+}
+
+
 
 /** Matrix-matrix multiplication
+ *
+ * @note This function does *not* return a matrix with sorted columns!
  *
  * @param A, B  the CSC-format matrices to multiply.
  *        A is size M x K, B is size K x N.
@@ -344,6 +386,87 @@ CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B)
     return C;
 }
 
+
+/** Add two matrices (and optionally scale them) `C = alpha * A + beta * B`.
+ * 
+ * @param A, B  the CSC matrices
+ * @param alpha, beta  scalar multipliers
+ *
+ * @return out a CSC matrix
+ */
+CSCMatrix add(
+    const CSCMatrix& A, const CSCMatrix& B,
+    double alpha=1.0, double beta=1.0
+    )
+{
+    assert(A.shape() == B.shape());
+    csint M, N;
+    std::tie(M, N) = A.shape();
+
+    // NOTE See Problem 2.20 for how to compute nnz(A*B)
+    CSCMatrix C(M, N, A.nnz() + B.nnz());  // output
+
+    // Allocate workspaces
+    std::vector<csint> w(M);
+    std::vector<double> x(M);
+
+    csint nnz = 0;  // track total number of non-zeros in C
+
+    for (csint j = 0; j < N; j++) {
+        C.p_[j] = nnz;  // column j of C starts here
+        nnz = scatter(A, j, alpha, w, x, j+1, C, nnz);  // alpha * A(:, j)
+        nnz = scatter(B, j,  beta, w, x, j+1, C, nnz);  //  beta * B(:, j)
+
+        // Gather results into the correct column of C
+        for (csint p = C.p_[j]; p < nnz; p++) {
+            C.v_[p] = x[C.i_[p]];
+        }
+    }
+
+    // Finalize and deallocate unused memory
+    C.p_[N] = nnz;
+    C.p_.resize(N);
+    C.i_.resize(nnz);
+    C.v_.resize(nnz);
+
+    return C;
+}
+
+
+CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B)
+{
+    assert(A.shape() == B.shape());
+    csint M, N;
+    std::tie(M, N) = A.shape();
+
+    // NOTE See Problem 2.20 for how to compute nnz(A*B)
+    CSCMatrix C(M, N, A.nnz() + B.nnz());  // output
+
+    // Allocate workspaces
+    std::vector<csint> w(M);
+    std::vector<double> x(M);
+
+    csint nnz = 0;  // track total number of non-zeros in C
+
+    for (csint j = 0; j < N; j++) {
+        C.p_[j] = nnz;  // column j of C starts here
+        nnz = scatter(A, j, 1, w, x, j+1, C, nnz);  // A(:, j)
+        nnz = scatter(B, j, 1, w, x, j+1, C, nnz);  // B(:, j)
+
+        // Gather results into the correct column of C
+        for (csint p = C.p_[j]; p < nnz; p++) {
+            C.v_[p] = x[C.i_[p]];
+        }
+    }
+
+    // Finalize and deallocate unused memory
+    C.p_[N] = nnz;
+    C.p_.resize(N);
+    C.i_.resize(nnz);
+    C.v_.resize(nnz);
+
+    return C;
+}
 
 /** Compute x += beta * A(:, j).
  *

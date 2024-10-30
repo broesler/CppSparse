@@ -81,8 +81,13 @@ class CSCMatrix
             const std::vector<double>&
         );
 
-        // TODO implement algorithm
         friend CSCMatrix operator*(const CSCMatrix&, const CSCMatrix&);
+        friend CSCMatrix operator*(const double, const CSCMatrix&);
+        friend CSCMatrix operator*(const CSCMatrix&, const double);
+
+        // Matrix-matrix multiply via C-style function
+        friend CSCMatrix add(const CSCMatrix&, const CSCMatrix&, double, double);
+        friend CSCMatrix operator+(const CSCMatrix&, const CSCMatrix&);
 
         friend csint scatter(const CSCMatrix&, csint, double,
             std::vector<csint>&, std::vector<double>&, csint, CSCMatrix&, csint);
@@ -105,6 +110,10 @@ std::vector<double> operator+(
     const std::vector<double>&,
     const std::vector<double>&
 );
+
+std::vector<double> operator*(const double, const std::vector<double>&);
+std::vector<double> operator*(const std::vector<double>&, const double);
+std::vector<double>& operator*=(std::vector<double>&, const double);
 
 #endif
 

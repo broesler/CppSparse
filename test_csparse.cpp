@@ -387,5 +387,90 @@ TEST_CASE("Matrix-matrix multiply.", "[math]")
     }
 }
 
+
+TEST_CASE("Scaling by a constant", "[math]")
+{
+    std::vector<csint> i{{0, 0, 0, 1, 1, 1}};  // rows
+    std::vector<csint> j{{0, 1, 2, 0, 1, 2}};  // cols
+
+    CSCMatrix A = COOMatrix(
+        std::vector<double> {1, 2, 3, 4, 5, 6},
+        i, j
+    ).tocsc();
+
+    CSCMatrix expect = COOMatrix(
+        std::vector<double> {0.1, 0.2, 0.3, 0.4, 0.5, 0.6},
+        i, j
+    ).tocsc();
+
+    csint M, N;
+    std::tie(M, N) = A.shape();
+
+    // Test operator overloading
+    CSCMatrix C = 0.1 * A;
+
+    for (csint i = 0; i < M; i++) {
+        for (csint j = 0; j < N; j++) {
+            REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
+        }
+    }
+}
+
+
+TEST_CASE("Matrix-matrix addition.", "[math]")
+{
+    // >>> A
+    // ===
+    // array([[1, 2, 3],
+    //        [4, 5, 6]])
+    // >>> B
+    // ===
+    // array([[1, 1, 1]  
+    //        [1, 1, 1]])
+    // >>> 0.1 * B + 9.0 * C
+    // ===
+    // array([[9.1, 9.2, 9.3],
+    //        [9.4, 9.5, 9.6]])
+
+    std::vector<csint> i{{0, 0, 0, 1, 1, 1}};  // rows
+    std::vector<csint> j{{0, 1, 2, 0, 1, 2}};  // cols
+
+    CSCMatrix A = COOMatrix(
+        std::vector<double> {1, 2, 3, 4, 5, 6},
+        i, j
+    ).tocsc();
+
+    CSCMatrix B = COOMatrix(
+        std::vector<double> {1, 1, 1, 1, 1, 1},
+        i, j
+    ).tocsc();
+
+    CSCMatrix expect = COOMatrix(
+        std::vector<double> {9.1, 9.2, 9.3, 9.4, 9.5, 9.6},
+        i, j
+    ).tocsc();
+
+    csint M, N;
+    std::tie(M, N) = A.shape();
+
+    // Test function definition
+    CSCMatrix Cf = add(A, B, 0.1, 9.0);
+    
+    // Test operator overloading
+    CSCMatrix C = 0.1 * A + 9.0 * B;
+    // cout << "C = \n" << C << endl;  // FIXME infinite loop?
+
+    // TODO rewrite these element-tests to compare the entire matrix, so that
+    // when we have a failure, we can see the indices
+    for (csint i = 0; i < M; i++) {
+        for (csint j = 0; j < N; j++) {
+            REQUIRE(Cf(i, j) == expect(i, j));
+            REQUIRE(C(i, j) == expect(i, j));
+        }
+    }
+}
+
+
+
 /*==============================================================================
  *============================================================================*/

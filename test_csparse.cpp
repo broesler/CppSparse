@@ -21,9 +21,11 @@
 #include "csparse.h"
 
 using namespace std;
+using Catch::Matchers::AllTrue;
 using Catch::Matchers::WithinAbs;
 
 constexpr double tol = 1e-16;
+
 
 // TODO figure out how to use the "spaceship" operator<=> to define all
 // of the comparisons in one fell swoop? 
@@ -76,6 +78,7 @@ std::vector<bool> compare_vec(
     return out;
 }
 
+
 // Create the comparison operators by passing the single comparison function to
 // our vector comparison function.
 std::vector<bool> operator>=(const std::vector<double>& vec, const double c)
@@ -83,24 +86,10 @@ std::vector<bool> operator>=(const std::vector<double>& vec, const double c)
     return compare_vec(vec, c, std::greater_equal<double>());
 }
 
+
 std::vector<bool> operator!=(const std::vector<double>& vec, const double c)
 {
     return compare_vec(vec, c, std::not_equal_to<double>());
-}
-
-
-/** Return true if all elements of a vector are true.
- *
- * @param vec a boolean vector.
- * @return true if all elements of the vector are true.
- */
-bool all(const std::vector<bool>& vec)
-{
-    for (const auto& x : vec)
-        if (!x)
-            return false;
-
-    return true;
 }
 
 
@@ -178,12 +167,12 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
                 "(2, 1): 1.7\n";
 
             SECTION("Print from function") {
-                A.print(s, true);
+                A.print(s, true);  // FIXME memory leak?
                 REQUIRE(s.str() == expect);
             }
 
             SECTION("Print from operator<< overload") {
-                s << A;
+                s << A;  // FIXME memory leak?
                 REQUIRE(s.str() == expect);
             }
         }
@@ -298,7 +287,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         SECTION("Test droptol") {
             C = COOMatrix(v, i, j).tocsc().droptol(2.0);
 
-            REQUIRE(all(C.data() >= 2.0));
+            REQUIRE_THAT(C.data() >= 2.0, AllTrue());
         }
 
         SECTION("Test dropzeros") {
@@ -311,7 +300,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
 
             C.dropzeros();
 
-            REQUIRE(all(C.data() != 0.0));
+            REQUIRE_THAT(C.data() != 0.0, AllTrue());
         }
     }
 
@@ -373,7 +362,7 @@ TEST_CASE("Matrix-matrix multiply.", "[math]")
         std::vector<csint>  { 0,  1,  2,   0,   1,   2}   // cols
     ).tocsc();
 
-    CSCMatrix C = A * B;
+    CSCMatrix C = A * B;  // FIXME heap overflow
     csint M, N;
     std::tie(M, N) = C.shape();
 

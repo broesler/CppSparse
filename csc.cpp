@@ -154,8 +154,8 @@ CSCMatrix& CSCMatrix::sum_duplicates()
 
     p_[N_] = nz;                                     // finalize A
     p_.resize(N_ + 1);
-    i_.resize(nz);
-    v_.resize(nz);                                   // deallocate memory
+    i_.resize(nnz);
+    v_.resize(nnz);                                   // deallocate memory
 
     return *this;
 }
@@ -194,8 +194,8 @@ CSCMatrix& CSCMatrix::fkeep(
 
     p_[N_] = nz;    // finalize A
     p_.resize(N_ + 1);
-    i_.resize(nz);
-    v_.resize(nz);  // deallocate memory TODO rewrite as `realloc`
+    i_.resize(nnz);
+    v_.resize(nnz);  // deallocate memory TODO rewrite as `realloc`
 
     return *this;
 };
@@ -361,24 +361,24 @@ CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B)
     std::vector<csint> w(M);
     std::vector<double> x(M);
 
-    csint nnz = 0;  // track total number of non-zeros in C
+    csint nz = 0;  // track total number of non-zeros in C
 
     for (csint j = 0; j < N; j++) {
-        C.p_[j] = nnz;  // column j of C starts here 
+        C.p_[j] = nz;  // column j of C starts here 
 
         // Compute x += beta * A(:, j) for each non-zero row in B.
         for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
-            nnz = scatter(A, B.i_[p], B.v_[p], w, x, j+1, C, nnz);
+            nz = scatter(A, B.i_[p], B.v_[p], w, x, j+1, C, nz);
         }
 
         // Gather values into the correct locations in C
-        for (csint p = C.p_[j]; p < nnz; p++) {
+        for (csint p = C.p_[j]; p < nz; p++) {
             C.v_[p] = x[C.i_[p]];
         }
     }
 
     // Finalize and deallocate unused memory
-    C.p_[N] = nnz;
+    C.p_[N] = nz;
     C.p_.resize(N + 1);
     C.i_.resize(nnz);
     C.v_.resize(nnz);
@@ -410,21 +410,21 @@ CSCMatrix add(
     std::vector<csint> w(M);
     std::vector<double> x(M);
 
-    csint nnz = 0;  // track total number of non-zeros in C
+    csint nz = 0;  // track total number of non-zeros in C
 
     for (csint j = 0; j < N; j++) {
-        C.p_[j] = nnz;  // column j of C starts here
-        nnz = scatter(A, j, alpha, w, x, j+1, C, nnz);  // alpha * A(:, j)
-        nnz = scatter(B, j,  beta, w, x, j+1, C, nnz);  //  beta * B(:, j)
+        C.p_[j] = nz;  // column j of C starts here
+        nz = scatter(A, j, alpha, w, x, j+1, C, nz);  // alpha * A(:, j)
+        nz = scatter(B, j,  beta, w, x, j+1, C, nz);  //  beta * B(:, j)
 
         // Gather results into the correct column of C
-        for (csint p = C.p_[j]; p < nnz; p++) {
+        for (csint p = C.p_[j]; p < nz; p++) {
             C.v_[p] = x[C.i_[p]];
         }
     }
 
     // Finalize and deallocate unused memory
-    C.p_[N] = nnz;
+    C.p_[N] = nz;
     C.p_.resize(N + 1);
     C.i_.resize(nnz);
     C.v_.resize(nnz);
@@ -446,21 +446,21 @@ CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B)
     std::vector<csint> w(M);
     std::vector<double> x(M);
 
-    csint nnz = 0;  // track total number of non-zeros in C
+    csint nz = 0;  // track total number of non-zeros in C
 
     for (csint j = 0; j < N; j++) {
-        C.p_[j] = nnz;  // column j of C starts here
-        nnz = scatter(A, j, 1, w, x, j+1, C, nnz);  // A(:, j)
-        nnz = scatter(B, j, 1, w, x, j+1, C, nnz);  // B(:, j)
+        C.p_[j] = nz;  // column j of C starts here
+        nz = scatter(A, j, 1, w, x, j+1, C, nz);  // A(:, j)
+        nz = scatter(B, j, 1, w, x, j+1, C, nz);  // B(:, j)
 
         // Gather results into the correct column of C
-        for (csint p = C.p_[j]; p < nnz; p++) {
+        for (csint p = C.p_[j]; p < nz; p++) {
             C.v_[p] = x[C.i_[p]];
         }
     }
 
     // Finalize and deallocate unused memory
-    C.p_[N] = nnz;
+    C.p_[N] = nz;
     C.p_.resize(N + 1);
     C.i_.resize(nnz);
     C.v_.resize(nnz);
@@ -477,9 +477,9 @@ CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B)
  * @param mark  separator index for `w`. All `w[i] < mark`are row indices that
  *              are not yet in `Cj`.
  * @param C     CSC matrix where output non-zero pattern is stored
- * @param nnz   current number of non-zeros in `C`.
+ * @param nz   current number of non-zeros in `C`.
  *
- * @return nnz  updated number of non-zeros in `C`.
+ * @return nz  updated number of non-zeros in `C`.
  */
 csint scatter(
     const CSCMatrix& A,
@@ -489,21 +489,21 @@ csint scatter(
     std::vector<double>& x,
     csint mark,
     CSCMatrix& C,
-    csint nnz
+    csint nz
     )
 {
     for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
         csint i = A.i_[p];           // A(i, j) is non-zero
         if (w[i] < mark) {
             w[i] = mark;             // i is new entry in column j
-            C.i_[nnz++] = i;         // add i to pattern of C(:, j)
+            C.i_[nz++] = i;         // add i to pattern of C(:, j)
             x[i] = beta * A.v_[p];   // x[i] = beta * A(i, j)
         } else {
             x[i] += beta * A.v_[p];  // i exists in C(:, j) already
         }
     }
 
-    return nnz;
+    return nz;
 }
 
 
@@ -534,7 +534,7 @@ void CSCMatrix::print_elems_(std::ostream& os, csint start, csint end) const
  *
  * @param os          the output stream, defaults to std::cout
  * @param verbose     if True, print all non-zeros and their coordinates
- * @param threshold   if `nnz > threshold`, print only the first and last
+ * @param threshold   if `nz > threshold`, print only the first and last
  *        3 entries in the matrix. Otherwise, print all entries.
  */
 void CSCMatrix::print(std::ostream& os, bool verbose, csint threshold) const

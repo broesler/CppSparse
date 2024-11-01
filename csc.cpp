@@ -519,7 +519,7 @@ csint scatter(
 void CSCMatrix::print_elems_(std::ostream& os, csint start, csint end) const
 {
     csint n = 0;  // number of elements printed
-    for (csint j = 0; j <= N_; j++) {
+    for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j + 1]; p++) {
             if ((n >= start) && (n < end)) {
                 os << "(" << i_[p] << ", " << j << "): " << v_[p] << std::endl;

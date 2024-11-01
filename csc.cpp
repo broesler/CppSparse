@@ -54,7 +54,7 @@ CSCMatrix::CSCMatrix(
 CSCMatrix::CSCMatrix(csint M, csint N, csint nzmax)
     : v_(nzmax),
       i_(nzmax),
-      p_(N),
+      p_(N + 1),
       M_(M),
       N_(N)
 {}
@@ -153,7 +153,7 @@ CSCMatrix& CSCMatrix::sum_duplicates()
     }
 
     p_[N_] = nz;                                     // finalize A
-    p_.resize(N_);
+    p_.resize(N_ + 1);
     i_.resize(nz);
     v_.resize(nz);                                   // deallocate memory
 
@@ -193,7 +193,7 @@ CSCMatrix& CSCMatrix::fkeep(
     }
 
     p_[N_] = nz;    // finalize A
-    p_.resize(N_);
+    p_.resize(N_ + 1);
     i_.resize(nz);
     v_.resize(nz);  // deallocate memory TODO rewrite as `realloc`
 
@@ -379,7 +379,7 @@ CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B)
 
     // Finalize and deallocate unused memory
     C.p_[N] = nnz;
-    C.p_.resize(N);
+    C.p_.resize(N + 1);
     C.i_.resize(nnz);
     C.v_.resize(nnz);
 
@@ -425,7 +425,7 @@ CSCMatrix add(
 
     // Finalize and deallocate unused memory
     C.p_[N] = nnz;
-    C.p_.resize(N);
+    C.p_.resize(N + 1);
     C.i_.resize(nnz);
     C.v_.resize(nnz);
 
@@ -461,7 +461,7 @@ CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B)
 
     // Finalize and deallocate unused memory
     C.p_[N] = nnz;
-    C.p_.resize(N);
+    C.p_.resize(N + 1);
     C.i_.resize(nnz);
     C.v_.resize(nnz);
 

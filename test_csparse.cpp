@@ -176,6 +176,10 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
                 REQUIRE(s.str() == expect);
             }
         }
+
+        // Clear the stringstream to prevent memory leaks
+        s.str("");
+        s.clear();
     }
 
     SECTION("Assign an existing element to create a duplicate") {
@@ -272,6 +276,10 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
                     REQUIRE(s.str() == expect);
                 }
             }
+
+            // Clear the stringstream to prevent memory leaks
+            s.str("");
+            s.clear();
         }
 
         SECTION("Test indexing: no duplicates") {

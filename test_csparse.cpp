@@ -327,6 +327,8 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         SECTION("Test droptol") {
             C = COOMatrix(v, i, j).tocsc().droptol(2.0);
 
+            REQUIRE(C.nnz() == 6);
+            REQUIRE(C.shape() == std::array<csint, 2>{4, 4});
             REQUIRE_THAT(C.data() >= 2.0, AllTrue());
         }
 
@@ -338,8 +340,11 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
                 .assign(3, 1, 0.0)
                 .tocsc();
 
+            REQUIRE(C.nnz() == 13);
+
             C.dropzeros();
 
+            REQUIRE(C.nnz() == 10);
             REQUIRE_THAT(C.data() != 0.0, AllTrue());
         }
     }

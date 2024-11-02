@@ -13,9 +13,10 @@ CFLAGS = -Wall -pedantic -std=c++20
 # BREW := $(shell brew --prefix)  # FIXME adds space? run command only once
 BREW = /opt/homebrew
 
-INCL = $(wildcard *.h)
-SRC = $(wildcard *.cpp)
-OBJ = $(SRC:%.cpp=%.o)
+INCL := $(wildcard *.h)
+SRC := $(wildcard *.cpp)
+SRC := $(filter-out test_stdvector.cpp, $(SRC))
+OBJ := $(SRC:%.cpp=%.o)
 
 # -----------------------------------------------------------------------------
 #        Make options 

@@ -38,6 +38,8 @@ class CSCMatrix
 
         CSCMatrix(csint, csint, csint nzmax=0);  // allocate dims + nzmax
 
+        CSCMatrix& realloc(csint nzmax=0);       // re-allocate vectors
+
         // ---------- Accessors
         csint nnz() const;                   // number of non-zeros
         csint nzmax() const;                 // maximum number of non-zeros

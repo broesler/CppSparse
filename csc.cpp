@@ -7,8 +7,6 @@
  *
  *============================================================================*/
 
-#include <cassert>
-#include <sstream>
 #include <numeric>
 
 #include "csparse.h"
@@ -296,50 +294,6 @@ std::vector<double> operator*(const CSCMatrix& A, const std::vector<double>& x)
 //     return (A.T() * x).T
 // }
 
-/** Vector-vector addition */
-std::vector<double> operator+(
-    const std::vector<double>& a,
-    const std::vector<double>& b
-    )
-{
-    assert(a.size() == b.size());
-
-    std::vector<double> out(a.size());
-
-    for (csint i = 0; i < a.size(); i++) {
-        out[i] = a[i] + b[i];
-    }
-
-    return out;
-}
-
-// TODO operator- for unary vector and vector-vector
-
-/** Scale a vector by a scalar */
-std::vector<double> operator*(const double c, const std::vector<double>& vec)
-{
-    std::vector<double> out(vec);
-    for (auto& x : out) {
-        x *= c;
-    }
-    return out;
-}
-
-
-std::vector<double> operator*(const std::vector<double>& vec, const double c)
-{
-    return c * vec;
-}
-
-
-std::vector<double>& operator*=(std::vector<double>& vec, const double c)
-{
-    for (auto& x : vec) {
-        x *= c;
-    }
-    return vec;
-}
-
 /** Scale a matrix by a scalar */
 CSCMatrix operator*(const double c, const CSCMatrix& A)
 {
@@ -353,7 +307,6 @@ CSCMatrix operator*(const CSCMatrix& A, const double c)
 {
     return c * A;
 }
-
 
 
 /** Matrix-matrix multiplication
@@ -560,7 +513,7 @@ void CSCMatrix::print(std::ostream& os, bool verbose, csint threshold) const
     if (verbose) {
         if (nnz_ < threshold) {
             // Print all elements
-            print_elems_(os, 0, nnz_);
+            print_elems_(os, 0, nnz_);  // FIXME memory leak?
         } else {
             // Print just the first and last 3 non-zero elements
             print_elems_(os, 0, 3);
@@ -569,6 +522,7 @@ void CSCMatrix::print(std::ostream& os, bool verbose, csint threshold) const
         }
     }
 }
+
 
 std::ostream& operator<<(std::ostream& os, const CSCMatrix& A)
 {

@@ -108,14 +108,6 @@ class CSCMatrix
  *----------------------------------------------------------------------------*/
 std::ostream& operator<<(std::ostream&, const CSCMatrix&);
 
-std::vector<double> operator+(
-    const std::vector<double>&,
-    const std::vector<double>&
-);
-
-std::vector<double> operator*(const double, const std::vector<double>&);
-std::vector<double> operator*(const std::vector<double>&, const double);
-std::vector<double>& operator*=(std::vector<double>&, const double);
 
 #endif
 

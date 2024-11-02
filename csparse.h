@@ -12,6 +12,7 @@
 #define _CSPARSE_H_
 
 #include <array>
+#include <cassert>
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -19,6 +20,7 @@
 
 typedef std::uint64_t csint;  // TODO just change to "int" for simplicity?
 
+#include "utils.h"
 #include "csc.h"  // must be first for conversion
 #include "coo.h"
 

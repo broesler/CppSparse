@@ -19,6 +19,10 @@ std::vector<double> operator*(const double, const std::vector<double>&);
 std::vector<double> operator*(const std::vector<double>&, const double);
 std::vector<double>& operator*=(std::vector<double>&, const double);
 
+std::vector<double> pvec(const std::vector<csint>, const std::vector<double>);
+std::vector<double> ipvec(const std::vector<csint>, const std::vector<double>);
+
+std::vector<csint> inv_permute(const std::vector<csint>);
 
 #endif
 

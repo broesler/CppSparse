@@ -93,6 +93,42 @@ std::vector<bool> operator!=(const std::vector<double>& vec, const double c)
 }
 
 
+/*------------------------------------------------------------------------------
+ *         Test Utilities
+ *----------------------------------------------------------------------------*/
+TEST_CASE("Test vector ops", "[vector]")
+{
+    std::vector<double> a = {1, 2, 3};
+
+    SECTION("Scale a vector") {
+        std::vector<double> expect = {2, 4, 6};
+
+        REQUIRE((2 * a) == expect);
+        REQUIRE((a * 2) == expect);
+    }
+
+    SECTION("Add two vectors") {
+        std::vector<double> b = {4, 5, 6};
+
+        REQUIRE((a + b) == std::vector<double>{5, 7, 9});
+    }
+}
+
+
+TEST_CASE("Test vector permutations", "[vector]")
+{
+    std::vector<double> b = {0, 1, 2, 3, 4};
+    std::vector<csint> p = {2, 0, 1, 4, 3};
+
+    REQUIRE(pvec(p, b) == std::vector<double>{2, 0, 1, 4, 3});
+    REQUIRE(ipvec(p, b) == std::vector<double>{1, 2, 0, 4, 3});
+    REQUIRE(inv_permute(p) == std::vector<csint>{1, 2, 0, 4, 3});
+}
+
+
+/*------------------------------------------------------------------------------
+ *         Test Matrix Functions 
+ *----------------------------------------------------------------------------*/
 TEST_CASE("Test COOMatrix Constructors", "[COOMatrix]")
 {
     SECTION("Empty constructor") {

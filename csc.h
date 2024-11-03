@@ -94,6 +94,9 @@ class CSCMatrix
         friend csint scatter(const CSCMatrix&, csint, double,
             std::vector<csint>&, std::vector<double>&, csint, CSCMatrix&, csint);
 
+        // Permutations
+        CSCMatrix permute(const std::vector<csint>, const std::vector<csint>) const;
+
         // ---------- Other
         void print(
             std::ostream& os=std::cout,

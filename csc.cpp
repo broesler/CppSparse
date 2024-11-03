@@ -473,6 +473,36 @@ csint scatter(
 }
 
 
+/** Permute a matrix \f$ C = PAQ \f$.
+ *
+ * @note In Matlab, this call is `C = A(p, q)`.
+ *
+ * @param p_inv, q  *inverse* row and (non-inverse) column permutation vectors.
+ *        `p_inv` is length `M` and `q` is length `N`, where `A` is `M`-by-`N`.
+ *
+ * @return C  permuted matrix
+ */
+CSCMatrix CSCMatrix::permute(const std::vector<csint> p_inv, const std::vector<csint> q) const
+{
+    CSCMatrix C(M_, N_, nnz());
+    csint nz = 0;
+
+    for (csint k = 0; k < N_; k++) {
+        C.p_[k] = nz;                   // column k of C is column q[k] of A
+        csint j = q[k];
+
+        for (csint t = p_[j]; t < p_[j+1]; t++) {
+            C.v_[nz] = v_[t];           // row i of A is row p_inv[i] of C
+            C.i_[nz++] = p_inv[i_[t]];
+        }
+    }
+
+    C.p_[N_] = nz;
+
+    return C;
+}
+
+
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/

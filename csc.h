@@ -97,6 +97,8 @@ class CSCMatrix
         // Permutations
         CSCMatrix permute(const std::vector<csint>, const std::vector<csint>) const;
 
+        double norm() const;
+
         // ---------- Other
         void print(
             std::ostream& os=std::cout,

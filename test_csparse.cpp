@@ -391,6 +391,10 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
             REQUIRE(C.nnz() == 10);
             REQUIRE_THAT(C.data() != 0.0, AllTrue());
         }
+
+        SECTION("Test 1-norm") {
+            REQUIRE_THAT(C.norm(), WithinAbs(11.1, tol));
+        }
     }
 
     // TODO test whether transpose, droptol, etc. change the original if we do

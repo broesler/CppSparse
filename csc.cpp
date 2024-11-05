@@ -7,6 +7,7 @@
  *
  *============================================================================*/
 
+#include <cmath>
 #include <numeric>
 
 #include "csparse.h"
@@ -500,6 +501,28 @@ CSCMatrix CSCMatrix::permute(const std::vector<csint> p_inv, const std::vector<c
     C.p_[N_] = nz;
 
     return C;
+}
+
+
+/** Compute the 1-norm of the matrix.
+ *
+ * The 1-norm is defined as \f$ \|A\|_1 = \max_j \sum_{i=1}^{m} |a_{ij}| \f$.
+ */
+double CSCMatrix::norm() const
+{
+    double the_norm = 0;
+
+    for (csint j = 0; j < N_; j++) {
+        double s = 0;
+
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            s += std::fabs(v_[p]);
+        }
+
+        the_norm = std::max(the_norm, s);
+    }
+
+    return the_norm;
 }
 
 

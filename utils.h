@@ -24,6 +24,11 @@ std::vector<double> ipvec(const std::vector<csint>, const std::vector<double>);
 
 std::vector<csint> inv_permute(const std::vector<csint>);
 
+std::vector<csint> cumsum(std::vector<csint>&);
+
+template <typename T>
+void print_vec(const std::vector<T>& vec);
+
 #endif
 
 //==============================================================================

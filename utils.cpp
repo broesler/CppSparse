@@ -7,6 +7,8 @@
  *
  *============================================================================*/
 
+#include <numeric>
+
 #include "csparse.h"
 
 
@@ -126,6 +128,41 @@ std::vector<csint> inv_permute(const std::vector<csint> p)
     return out;
 }
 
+
+/** Compute the cumulative sum of a vector, starting with 0, and also copy the
+ * result back into the vector.
+ *
+ * @param w  a reference to a vector (typically a "workspace")
+ *
+ * @return p  the cumulative sum of `w`.
+ */
+std::vector<csint> cumsum(std::vector<csint>& w)
+{
+    std::vector<csint> out(w.size() + 1);
+
+    // Row pointers are the cumulative sum of the counts, starting with 0
+    std::partial_sum(w.begin(), w.end(), out.begin() + 1);
+
+    // Also copy the cumulative sum back into the workspace for iteration
+    w = out;
+
+    return out;
+}
+
+
+/** Print a std::vector. */
+template <typename T>
+void print_vec(const std::vector<T>& vec)
+{
+    std::cout << "[";
+    for (int i = 0; i < vec.size(); i++) {
+        std::cout << vec[i];
+        if (i < vec.size() - 1) {
+            std::cout << ", ";
+        }
+    }
+    std::cout << "]" << std::endl;
+}
 
 
 /*==============================================================================

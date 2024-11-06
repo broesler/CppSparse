@@ -8,7 +8,6 @@
  *============================================================================*/
 
 #include <cmath>
-#include <numeric>
 
 #include "csparse.h"
 
@@ -134,11 +133,9 @@ CSCMatrix CSCMatrix::T() const
     for (csint p = 0; p < nnz_; p++)
         ws[i_[p]]++;
 
-    // Row pointers are the cumulative sum of the counts, starting with 0
-    std::partial_sum(ws.begin(), ws.end(), indptr.begin() + 1);
-
+    // Row pointers are the cumulative sum of the counts, starting with 0.
     // Also copy the cumulative sum back into the workspace for iteration
-    ws = indptr;
+    indptr = cumsum(ws);
 
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {
@@ -504,7 +501,6 @@ CSCMatrix CSCMatrix::permute(const std::vector<csint> p_inv, const std::vector<c
 }
 
 
-
 /** Permute a symmetric matrix with only the upper triangular part stored.
  *
  * @param p_inv  *inverse* permutation vector. Both rows and columns are
@@ -534,11 +530,9 @@ CSCMatrix CSCMatrix::symperm(const std::vector<csint> p_inv) const
         }
     }
 
-    // Row pointers are the cumulative sum of the counts, starting with 0
-    std::partial_sum(w.begin(), w.end(), C.p_.begin() + 1);
-
+    // Row pointers are the cumulative sum of the counts, starting with 0.
     // Also copy the cumulative sum back into the workspace for iteration
-    w = C.p_;
+    C.p_ = cumsum(w);
 
     for (csint j = 0; j < N_; j++) {
         csint j2 = p_inv[j];  // column j of A is column j2 of C

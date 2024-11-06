@@ -37,14 +37,14 @@ class COOMatrix
 
         // Provide data and coordinates as vectors
         COOMatrix(
-            const std::vector<double>&,
-            const std::vector<csint>&,
-            const std::vector<csint>&,
+            const std::vector<double>& vals,
+            const std::vector<csint>& rows,
+            const std::vector<csint>& cols,
             const std::array<csint, 2>& shape={0, 0}
         );
 
-        COOMatrix(csint, csint, csint nzmax=0);  // allocate dims + nzmax
-        COOMatrix(std::istream& fp);             // from file
+        COOMatrix(csint M, csint N, csint nzmax=0);  // allocate dims + nzmax
+        COOMatrix(std::istream& fp);                 // from file
 
         // ---------- Accessors
         csint nnz() const;                   // number of non-zeros
@@ -55,7 +55,7 @@ class COOMatrix
         const std::vector<csint>& column() const;
         const std::vector<double>& data() const;
 
-        COOMatrix& assign(csint, csint, double);  // assign an element of the matrix
+        COOMatrix& assign(csint i, csint j, double v);  // assign an element
 
         // ---------- Format Conversions
         CSCMatrix tocsc() const;  // convert to CSC format

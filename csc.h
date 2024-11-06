@@ -22,7 +22,7 @@ class CSCMatrix
     csint M_ = 0;            // number of rows
     csint N_ = 0;            // number of columns
 
-    void print_elems_(std::ostream&, csint, csint) const;
+    void print_elems_(std::ostream& os, csint start, csint end) const;
 
     public:
         // ---------- Constructors
@@ -30,13 +30,13 @@ class CSCMatrix
 
         // Provide data, coordinates, and shsape as vectors
         CSCMatrix(
-            const std::vector<double>&,
-            const std::vector<csint>&,
-            const std::vector<csint>&,
-            const std::array<csint, 2>&
+            const std::vector<double>& vals,
+            const std::vector<csint>& indices,
+            const std::vector<csint>& indptr,
+            const std::array<csint, 2>& shape
         );
 
-        CSCMatrix(csint, csint, csint nzmax=0);  // allocate dims + nzmax
+        CSCMatrix(csint M, csint N, csint nzmax=0);  // allocate dims + nzmax
 
         CSCMatrix& realloc(csint nzmax=0);       // re-allocate vectors
 
@@ -50,7 +50,7 @@ class CSCMatrix
         const std::vector<double>& data() const;
 
         // Access an element by index, but do not change its value
-        const double operator()(csint, csint) const;
+        const double operator()(csint i, csint j) const;
         // double& operator()(csint, csint);
 
         // ---------- Math Operations
@@ -59,7 +59,7 @@ class CSCMatrix
 
         // Keep or remove entries
         CSCMatrix& fkeep(
-            bool (*fk) (csint, csint, double, void *),
+            bool (*fk) (csint i, csint j, double Aij, void *tol),
             void *other
         );
 
@@ -67,32 +67,45 @@ class CSCMatrix
         CSCMatrix& droptol(double);
 
         // TODO possibly make these private? Or define in SparseMatrix base.
-        static bool nonzero(csint, csint, double, void *);
-        static bool abs_gt_tol(csint, csint, double, void *);
+        static bool nonzero(csint i, csint j, double Aij, void *tol);
+        static bool abs_gt_tol(csint i, csint j, double Aij, void *tol);
 
         // Matrix-vector multiply and add via C-style function
         friend std::vector<double> gaxpy(
-            const CSCMatrix&,
-            const std::vector<double>&,
-            std::vector<double>
+            const CSCMatrix& A,
+            const std::vector<double>& x,
+            std::vector<double> y
         );
 
         // Matrix-vector multiply operator overload
-        std::vector<double> dot(const std::vector<double>&) const;
-        CSCMatrix dot(const CSCMatrix&) const;
-        CSCMatrix dot(const double) const;
+        std::vector<double> dot(const std::vector<double>& x) const;
+        CSCMatrix dot(const CSCMatrix& B) const;
+        CSCMatrix dot(const double c) const;
 
-        // Matrix-matrix multiply via C-style function
-        CSCMatrix add(const CSCMatrix&) const;
-        friend CSCMatrix add_scaled(const CSCMatrix&, const CSCMatrix&, double, double);
+        // Matrix-matrix add via C-style function
+        CSCMatrix add(const CSCMatrix& B) const;
+        friend CSCMatrix add_scaled(
+            const CSCMatrix& A,
+            const CSCMatrix& B,
+            double alpha,
+            double beta
+        );
 
         // Helper for add and multiply
-        friend csint scatter(const CSCMatrix&, csint, double,
-            std::vector<csint>&, std::vector<double>&, csint, CSCMatrix&, csint);
+        friend csint scatter(
+            const CSCMatrix& A,
+            csint j,
+            double beta,
+            std::vector<csint>& w,
+            std::vector<double>& x,
+            csint mark,
+            CSCMatrix& C,
+            csint nz
+        );
 
         // Permutations
-        CSCMatrix permute(const std::vector<csint>, const std::vector<csint>) const;
-        CSCMatrix symperm(const std::vector<csint>) const;
+        CSCMatrix permute(const std::vector<csint> p_inv, const std::vector<csint> q) const;
+        CSCMatrix symperm(const std::vector<csint> p_inv) const;
 
         double norm() const;
 

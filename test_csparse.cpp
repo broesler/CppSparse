@@ -115,6 +115,17 @@ TEST_CASE("Test vector ops", "[vector]")
 }
 
 
+TEST_CASE("Test cumsum", "[vector]")
+{
+    std::vector<csint> a = {1, 1, 1, 1};
+    std::vector<csint> c = cumsum(a);
+    std::vector<csint> expect = {0, 1, 2, 3, 4};
+    REQUIRE(c == expect);
+    REQUIRE(a == expect);  // result also copied into input!!
+    REQUIRE(&a != &c);
+}
+
+
 TEST_CASE("Test vector permutations", "[vector]")
 {
     std::vector<double> b = {0, 1, 2, 3, 4};

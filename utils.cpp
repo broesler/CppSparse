@@ -73,8 +73,8 @@ std::vector<double>& operator*=(std::vector<double>& vec, const double c)
  * @return x  `x = Pb` the permuted vector, like `x = p(b)` in Matlab.
  */
 std::vector<double> pvec(
-    const std::vector<csint> p,
-    const std::vector<double> b
+    const std::vector<csint>& p,
+    const std::vector<double>& b
     )
 {
     std::vector<double> x(b.size());
@@ -95,8 +95,8 @@ std::vector<double> pvec(
  * @return x  `x = Pb` the permuted vector, like `x = p(b)` in Matlab.
  */
 std::vector<double> ipvec(
-    const std::vector<csint> p,
-    const std::vector<double> b
+    const std::vector<csint>& p,
+    const std::vector<double>& b
     )
 {
     std::vector<double> x(b.size());
@@ -118,7 +118,7 @@ std::vector<double> ipvec(
  *
  * @return pinv  inverse permutation vector
  */
-std::vector<csint> inv_permute(const std::vector<csint> p)
+std::vector<csint> inv_permute(const std::vector<csint>& p)
 {
     std::vector<csint> out(p.size());
 
@@ -132,9 +132,9 @@ std::vector<csint> inv_permute(const std::vector<csint> p)
 /** Compute the cumulative sum of a vector, starting with 0, and also copy the
  * result back into the vector.
  *
- * @param w  a reference to a vector (typically a "workspace")
+ * @param[in,out] w  a reference to a vector of length N.
  *
- * @return p  the cumulative sum of `w`.
+ * @return p  the cumulative sum of `w`, of length N + 1.
  */
 std::vector<csint> cumsum(std::vector<csint>& w)
 {

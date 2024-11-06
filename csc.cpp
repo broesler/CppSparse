@@ -362,9 +362,11 @@ CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B)
  *
  * @return out a CSC matrix
  */
-CSCMatrix add(
-    const CSCMatrix& A, const CSCMatrix& B,
-    double alpha=1.0, double beta=1.0
+CSCMatrix add_scaled(
+    const CSCMatrix& A,
+    const CSCMatrix& B,
+    double alpha=1.0,
+    double beta=1.0
     )
 {
     assert(A.shape() == B.shape());
@@ -399,14 +401,15 @@ CSCMatrix add(
 }
 
 
-CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B)
+/** Add a matrix B. */
+CSCMatrix CSCMatrix::add(const CSCMatrix& B) const
 {
-    assert(A.shape() == B.shape());
+    assert(shape() == B.shape());
     csint M, N;
-    std::tie(M, N) = A.shape();
+    std::tie(M, N) = shape();
 
     // NOTE See Problem 2.20 for how to compute nnz(A*B)
-    CSCMatrix C(M, N, A.nnz() + B.nnz());  // output
+    CSCMatrix C(M, N, nnz() + B.nnz());  // output
 
     // Allocate workspaces
     std::vector<csint> w(M);
@@ -416,8 +419,8 @@ CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B)
 
     for (csint j = 0; j < N; j++) {
         C.p_[j] = nz;  // column j of C starts here
-        nz = scatter(A, j, 1, w, x, j+1, C, nz);  // A(:, j)
-        nz = scatter(B, j, 1, w, x, j+1, C, nz);  // B(:, j)
+        nz = scatter(*this, j, 1, w, x, j+1, C, nz);  // A(:, j)
+        nz = scatter(    B, j, 1, w, x, j+1, C, nz);  // B(:, j)
 
         // Gather results into the correct column of C
         for (csint p = C.p_[j]; p < nz; p++) {
@@ -431,6 +434,13 @@ CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B)
 
     return C;
 }
+
+
+CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B)
+{
+    return A.add(B);
+}
+
 
 /** Compute x += beta * A(:, j).
  *

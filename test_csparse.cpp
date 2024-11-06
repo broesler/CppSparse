@@ -547,7 +547,7 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
     std::tie(M, N) = A.shape();
 
     // Test function definition
-    CSCMatrix Cf = add(A, B, 0.1, 9.0);
+    CSCMatrix Cf = add_scaled(A, B, 0.1, 9.0);
     
     // Test operator overloading
     CSCMatrix C = 0.1 * A + 9.0 * B;

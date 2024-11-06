@@ -78,18 +78,14 @@ class CSCMatrix
         );
 
         // Matrix-vector multiply operator overload
-        friend std::vector<double> operator*(
-            const CSCMatrix&,
-            const std::vector<double>&
-        );
-
+        friend std::vector<double> operator*(const CSCMatrix&, const std::vector<double>&);
         friend CSCMatrix operator*(const CSCMatrix&, const CSCMatrix&);
         friend CSCMatrix operator*(const double, const CSCMatrix&);
         friend CSCMatrix operator*(const CSCMatrix&, const double);
 
         // Matrix-matrix multiply via C-style function
-        friend CSCMatrix add(const CSCMatrix&, const CSCMatrix&, double, double);
-        friend CSCMatrix operator+(const CSCMatrix&, const CSCMatrix&);
+        CSCMatrix add(const CSCMatrix&) const;
+        friend CSCMatrix add_scaled(const CSCMatrix&, const CSCMatrix&, double, double);
 
         friend csint scatter(const CSCMatrix&, csint, double,
             std::vector<csint>&, std::vector<double>&, csint, CSCMatrix&, csint);
@@ -112,6 +108,9 @@ class CSCMatrix
 /*------------------------------------------------------------------------------
  *          Free Functions
  *----------------------------------------------------------------------------*/
+CSCMatrix operator+(const CSCMatrix&, const CSCMatrix&);
+
+
 std::ostream& operator<<(std::ostream&, const CSCMatrix&);
 
 #endif

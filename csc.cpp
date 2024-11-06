@@ -270,15 +270,15 @@ std::vector<double> gaxpy(
 
 
 /** Matrix-vector right-multiply. */
-std::vector<double> operator*(const CSCMatrix& A, const std::vector<double>& x)
+std::vector<double> CSCMatrix::dot(const std::vector<double>& x) const
 {
-    assert(A.N_ == x.size()); 
+    assert(N_ == x.size()); 
 
     std::vector<double> out(x.size());
 
-    for (csint j = 0; j < A.N_; j++) {
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
-            out[A.i_[p]] = A.v_[p] * x[j];
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            out[i_[p]] = v_[p] * x[j];
         }
     }
 
@@ -293,17 +293,11 @@ std::vector<double> operator*(const CSCMatrix& A, const std::vector<double>& x)
 // }
 
 /** Scale a matrix by a scalar */
-CSCMatrix operator*(const double c, const CSCMatrix& A)
+CSCMatrix CSCMatrix::dot(const double c) const
 {
-    CSCMatrix out(A.v_, A.i_, A.p_, A.shape());
+    CSCMatrix out(v_, i_, p_, shape());
     out.v_ *= c;
     return out;
-}
-
-
-CSCMatrix operator*(const CSCMatrix& A, const double c)
-{
-    return c * A;
 }
 
 
@@ -317,15 +311,15 @@ CSCMatrix operator*(const CSCMatrix& A, const double c)
  * @return C    a CSC-format matrix of size M x N. 
  *         C.nnz() <= A.nnz() + B.nnz().
  */
-CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B)
+CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
 {
     csint M, Ka, Kb, N;
-    std::tie(M, Ka) = A.shape();
+    std::tie(M, Ka) = shape();
     std::tie(Kb, N) = B.shape();
     assert(Ka == Kb);
 
     // NOTE See Problem 2.20 for how to compute nnz(A*B)
-    CSCMatrix C(M, N, A.nnz() + B.nnz());  // output
+    CSCMatrix C(M, N, nnz() + B.nnz());  // output
 
     // Allocate workspaces
     std::vector<csint> w(M);
@@ -338,7 +332,7 @@ CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B)
 
         // Compute x += beta * A(:, j) for each non-zero row in B.
         for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
-            nz = scatter(A, B.i_[p], B.v_[p], w, x, j+1, C, nz);
+            nz = scatter(*this, B.i_[p], B.v_[p], w, x, j+1, C, nz);
         }
 
         // Gather values into the correct locations in C
@@ -354,6 +348,14 @@ CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B)
     return C;
 }
 
+
+// Operators
+std::vector<double> operator*(const CSCMatrix& A, const std::vector<double>& x) 
+{ return A.dot(x); }
+
+CSCMatrix operator*(const CSCMatrix& A, const double c) { return A.dot(c); }
+CSCMatrix operator*(const double c, const CSCMatrix& A) { return A.dot(c); }
+CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B) { return A.dot(B); }
 
 /** Add two matrices (and optionally scale them) `C = alpha * A + beta * B`.
  * 

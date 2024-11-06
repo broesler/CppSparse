@@ -117,7 +117,7 @@ const std::vector<double>& COOMatrix::data() const { return v_; }
  */
 COOMatrix& COOMatrix::assign(csint i, csint j, double v)
 {
-    assert ((i >= 0) && (j >= 0));
+    assert((i >= 0) && (j >= 0));
 
     i_.push_back(i);
     j_.push_back(j);
@@ -224,8 +224,9 @@ COOMatrix COOMatrix::T() const
  */
 void COOMatrix::print_elems_(std::ostream& os, csint start, csint end) const
 {
-    for (csint k = start; k < end; k++)
+    for (csint k = start; k < end; k++) {
         os << "(" << i_[k] << ", " << j_[k] << "): " << v_[k] << std::endl;
+    }
 }
 
 
@@ -246,7 +247,7 @@ void COOMatrix::print(std::ostream& os, bool verbose, csint threshold) const
     if (verbose) {
         if (nnz_ < threshold) {
             // Print all elements
-            print_elems_(os, 0, nnz_);
+            print_elems_(os, 0, nnz_);  // FIXME memory leak?
         } else {
             // Print just the first and last 3 non-zero elements
             print_elems_(os, 0, 3);

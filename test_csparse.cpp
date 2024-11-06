@@ -556,10 +556,9 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
 TEST_CASE("Test matrix permutation", "[permute]")
 {
     // Matrix with 1, 2, 3, 4 on the diagonal
-    std::vector<csint>  i = {0, 1, 2, 3};
-    std::vector<csint>  j = {0, 1, 2, 3};
-    std::vector<double> v = {1, 2, 3, 4};
-    CSCMatrix A = COOMatrix(v, i, j).tocsc();
+    std::vector<csint>  rows = {0, 1, 2, 3};
+    std::vector<double> vals = {1, 2, 3, 4};
+    CSCMatrix A = COOMatrix(vals, rows, rows).tocsc();
 
     SECTION("Test no-op") {
         std::vector<csint> p = {0, 1, 2, 3};
@@ -569,7 +568,8 @@ TEST_CASE("Test matrix permutation", "[permute]")
 
         CSCMatrix C = A.permute(p_inv, q);
 
-        REQUIRE(A.shape() == C.shape());
+        REQUIRE(C.nnz() == A.nnz());
+        REQUIRE(C.shape() == A.shape());
 
         csint M, N;
         std::tie(M, N) = A.shape();
@@ -588,16 +588,40 @@ TEST_CASE("Test matrix permutation", "[permute]")
         std::vector<csint> p_inv = inv_permute(p);
         std::vector<csint> q_inv = inv_permute(q);
 
-        CSCMatrix expect = COOMatrix(v, p_inv, q_inv).tocsc();
+        CSCMatrix expect = COOMatrix(vals, p_inv, q_inv).tocsc();
+
         CSCMatrix C = A.permute(p_inv, q);
 
-        REQUIRE(A.shape() == C.shape());
+        REQUIRE(C.nnz() == A.nnz());
+        REQUIRE(C.shape() == A.shape());
 
         csint M, N;
         std::tie(M, N) = A.shape();
 
         for (csint i = 0; i < M; i++) {
             for (csint j = 0; j < N; j++) {
+                REQUIRE(C(i, j) == expect(i, j));
+            }
+        }
+    }
+
+    SECTION("Test symperm") {
+        // Test actual permutation
+        std::vector<csint> p = {3, 0, 2, 1};
+        std::vector<double> expect_v = {4, 1, 3, 2};
+
+        CSCMatrix expect = COOMatrix(expect_v, rows, rows).tocsc();
+
+        std::vector<csint> p_inv = inv_permute(p);
+
+        CSCMatrix C = A.symperm(p_inv);
+
+        REQUIRE(C.nnz() == A.nnz());
+        REQUIRE(C.shape() == A.shape());
+
+        csint N = p.size();
+        for (csint i = 0; i < N; i++) {
+            for (csint j = i; j < N; j++) {
                 REQUIRE(C(i, j) == expect(i, j));
             }
         }

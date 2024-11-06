@@ -504,6 +504,62 @@ CSCMatrix CSCMatrix::permute(const std::vector<csint> p_inv, const std::vector<c
 }
 
 
+
+/** Permute a symmetric matrix with only the upper triangular part stored.
+ *
+ * @param p_inv  *inverse* permutation vector. Both rows and columns are
+ *        permuted with this vector to retain symmetry.
+ *
+ * @return C  permuted matrix
+ */
+CSCMatrix CSCMatrix::symperm(const std::vector<csint> p_inv) const
+{
+    assert(M_ == N_);  // matrix must be square. Symmetry not checked.
+
+    CSCMatrix C(N_, N_, nnz());
+    std::vector<csint> w(N_);  // workspace for column counts
+
+    // Count entries in each column of C
+    for (csint j = 0; j < N_; j++) {
+        csint j2 = p_inv[j];  // column j of A is column j2 of C
+
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            csint i = i_[p];
+
+            if (i > j) 
+                continue;   // skip lower triangular part of A
+
+            csint i2 = p_inv[i];    // row i of A is row i2 of C
+            w[std::max(i2, j2)]++;  // column count of C
+        }
+    }
+
+    // Row pointers are the cumulative sum of the counts, starting with 0
+    std::partial_sum(w.begin(), w.end(), C.p_.begin() + 1);
+
+    // Also copy the cumulative sum back into the workspace for iteration
+    w = C.p_;
+
+    for (csint j = 0; j < N_; j++) {
+        csint j2 = p_inv[j];  // column j of A is column j2 of C
+
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            csint i = i_[p];
+
+            if (i > j)
+                continue;   // skip lower triangular part of A
+
+            csint i2 = p_inv[i];  // row i of A is row i2 of C
+            csint q = w[std::max(i2, j2)]++;
+            C.i_[q] = std::min(i2, j2);
+            C.v_[q] = v_[p];
+        }
+    }
+
+    return C;
+}
+
+
 /** Compute the 1-norm of the matrix.
  *
  * The 1-norm is defined as \f$ \|A\|_1 = \max_j \sum_{i=1}^{m} |a_{ij}| \f$.

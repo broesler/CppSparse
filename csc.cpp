@@ -269,6 +269,34 @@ std::vector<double> gaxpy(
 };
 
 
+/** Matrix transpose-vector multiply `y = A.T x + y`.
+ *
+ * See: Davis, Exercise 2.1. Compute \f$ A^T x + y \f$ without explicitly
+ * computing the transpose.
+ *
+ * @param A  a sparse matrix
+ * @param x  a dense multiplying vector
+ * @param y[in,out]  a dense adding vector which will be used for the output
+ *
+ * @return y a copy of the updated vector
+ */
+std::vector<double> gatxpy(
+    const CSCMatrix& A,
+    const std::vector<double>& x,
+    std::vector<double> y
+    )
+{
+    assert(A.N_ == x.size()); 
+    assert(x.size() == y.size()); 
+    for (csint j = 0; j < A.N_; j++) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            y[j] += A.v_[p] * x[A.i_[p]];
+        }
+    }
+    return y;
+};
+
+
 /** Matrix-vector right-multiply. */
 std::vector<double> CSCMatrix::dot(const std::vector<double>& x) const
 {

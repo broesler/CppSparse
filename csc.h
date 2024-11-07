@@ -77,6 +77,12 @@ class CSCMatrix
             std::vector<double> y
         );
 
+        friend std::vector<double> gatxpy(
+            const CSCMatrix& A,
+            const std::vector<double>& x,
+            std::vector<double> y
+        );
+
         // Matrix-vector multiply operator overload
         std::vector<double> dot(const std::vector<double>& x) const;
         CSCMatrix dot(const CSCMatrix& B) const;

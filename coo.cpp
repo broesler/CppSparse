@@ -210,12 +210,17 @@ CSCMatrix COOMatrix::tocsc() const { return CSCMatrix(*this); }
 ----------------------------------------------------------------------------*/
 /** Transpose the matrix as a copy.
  *
+ * See: Davis, Exercise 2.6.
+ *
  * @return new COOMatrix object with transposed rows and columns.
  */
-COOMatrix COOMatrix::T() const
+COOMatrix COOMatrix::transpose() const
 {
     return COOMatrix(this->v_, this->j_, this->i_);
 }
+
+
+COOMatrix COOMatrix::T() const { return this->transpose(); }
 
 
 /*------------------------------------------------------------------------------

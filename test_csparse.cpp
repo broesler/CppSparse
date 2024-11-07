@@ -289,10 +289,13 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
     }
 
     SECTION("Tranpose") {
-        COOMatrix A_T = A.T();  // copy
+        COOMatrix A_T = A.transpose();
+        COOMatrix A_TT = A.T();
 
         REQUIRE(A_T.row() == j);
         REQUIRE(A_T.column() == i);
+        REQUIRE(A_T.row() == A_TT.row());
+        REQUIRE(A_T.column() == A_TT.column());
         REQUIRE(&A != &A_T);
     }
 
@@ -408,7 +411,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
 
     // Test the transpose -> use indexing to test A(i, j) == A(j, i)
     SECTION("Transpose") {
-        CSCMatrix C_T = C.T();
+        CSCMatrix C_T = C.transpose();
 
         csint M, N;
         std::tie(M, N) = C.shape();

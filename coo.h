@@ -70,7 +70,8 @@ class COOMatrix
         CSCMatrix tocsc() const;  // convert to CSC format
 
         // ---------- Math Operations
-        COOMatrix T() const;  // transpose a copy
+        COOMatrix transpose() const;  // transpose a copy
+        COOMatrix T() const;
 
         // ---------- Other
         void print(

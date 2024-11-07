@@ -60,7 +60,9 @@ class CSCMatrix
         COOMatrix tocoo() const;  // Exercise 2.2 Matlab's find.
 
         // ---------- Math Operations
-        CSCMatrix T() const;  // transpose a copy
+        CSCMatrix transpose() const;  // transpose a copy
+        CSCMatrix T() const;          // transpose a copy
+
         CSCMatrix& sum_duplicates();
 
         // Keep or remove entries

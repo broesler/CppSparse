@@ -160,7 +160,7 @@ COOMatrix CSCMatrix::tocoo() const { return COOMatrix(*this); }
  *
  * @return new CSCMatrix object with transposed rows and columns.
  */
-CSCMatrix CSCMatrix::T() const
+CSCMatrix CSCMatrix::transpose() const
 {
     csint nnz_ = nnz();
     std::vector<double> data(nnz_);
@@ -185,6 +185,9 @@ CSCMatrix CSCMatrix::T() const
 
     return CSCMatrix {data, indices, indptr, {N_, M_}};
 }
+
+
+CSCMatrix CSCMatrix::T() const { return this->transpose(); }
 
 
 /** Sum duplicate entries in place. */

@@ -25,6 +25,8 @@ class CSCMatrix
     void print_elems_(std::ostream& os, csint start, csint end) const;
 
     public:
+        friend class COOMatrix;
+
         // ---------- Constructors
         CSCMatrix();
 
@@ -55,7 +57,6 @@ class CSCMatrix
         // double& operator()(csint, csint);
 
         // ---------- Format Conversions
-        friend class COOMatrix;
         COOMatrix tocoo() const;  // Exercise 2.2 Matlab's find.
 
         // ---------- Math Operations

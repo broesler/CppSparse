@@ -375,6 +375,8 @@ std::vector<double> sym_gaxpy(
 /** Scale the rows and columns of a matrix by \f$ A = RAC \f$, where *R* and *C*
  * are diagonal matrices.
  *
+ * See: Davis, Exercise 2.4.
+ *
  * @param r, c  vectors of length M and N, respectively, representing the
  * diagonals of R and C, where A is size M-by-N.
  *
@@ -485,6 +487,7 @@ CSCMatrix operator*(const CSCMatrix& A, const double c) { return A.dot(c); }
 CSCMatrix operator*(const double c, const CSCMatrix& A) { return A.dot(c); }
 CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B) { return A.dot(B); }
 
+
 /** Add two matrices (and optionally scale them) `C = alpha * A + beta * B`.
  * 
  * @param A, B  the CSC matrices
@@ -566,10 +569,7 @@ CSCMatrix CSCMatrix::add(const CSCMatrix& B) const
 }
 
 
-CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B)
-{
-    return A.add(B);
-}
+CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B) { return A.add(B); }
 
 
 /** Compute x += beta * A(:, j).

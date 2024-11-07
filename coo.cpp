@@ -7,7 +7,6 @@
  *
  *============================================================================*/
 
-#include <cassert>
 #include <sstream>
 #include <numeric>
 
@@ -138,6 +137,8 @@ const std::vector<double>& COOMatrix::data() const { return v_; }
  *
  * @param i, j  integer indices of the matrix
  * @param v     the value to be assigned
+ *
+ * @return A    a reference to itself for method chaining.
  *
  * @see cs_entry Davis p 12.
  */

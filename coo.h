@@ -25,6 +25,8 @@ class COOMatrix
     void print_elems_(std::ostream&, csint, csint) const;
 
     public:
+        friend class CSCMatrix;
+
         // ---------- Constructors
         COOMatrix();  // NOTE need default since we have others
 
@@ -60,7 +62,6 @@ class COOMatrix
         COOMatrix& assign(csint i, csint j, double v);  // assign an element
 
         // ---------- Format Conversions
-        friend class CSCMatrix;
         CSCMatrix tocsc() const;  // convert to CSC format
 
         // ---------- Math Operations

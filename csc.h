@@ -53,6 +53,9 @@ class CSCMatrix
         const double operator()(csint i, csint j) const;
         // double& operator()(csint, csint);
 
+        // ---------- Format Conversions
+        COOMatrix tocoo() const;  // Exercise 2.2 Matlab's find.
+
         // ---------- Math Operations
         CSCMatrix T() const;  // transpose a copy
         CSCMatrix& sum_duplicates();

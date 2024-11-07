@@ -20,8 +20,12 @@
 
 typedef std::uint64_t csint;  // TODO just change to "int" for simplicity?
 
+// Pre-declare classes for type conversions
+class COOMatrix;
+class CSCMatrix;
+
 #include "utils.h"
-#include "csc.h"  // must be first for conversion
+#include "csc.h"
 #include "coo.h"
 
 #endif

@@ -113,6 +113,31 @@ const double CSCMatrix::operator()(csint i, csint j) const
 }
 
 
+/** Convert a compressed sparse column matrix to a coordinate (triplet) format
+ * matrix.
+ *
+ * See: Davis, Exercise 2.2.
+ *
+ * @return a copy of the `CSCMatrix` in COO (triplet) format.
+ */
+COOMatrix CSCMatrix::tocoo() const
+{
+    csint nz = 0, nnz_ = nnz();
+    std::vector<csint> rows(nnz_), cols(nnz_);
+    std::vector<double> vals(nnz_);
+
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            rows[nz] = i_[p];
+            cols[nz] = j;
+            vals[nz++] = v_[p];
+        }
+    }
+
+    return COOMatrix {vals, rows, cols, this->shape()};
+}
+
+
 /*------------------------------------------------------------------------------
        Math Operations
 ----------------------------------------------------------------------------*/

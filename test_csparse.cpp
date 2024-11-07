@@ -430,6 +430,22 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
     SECTION("Test 1-norm") {
         REQUIRE_THAT(C.norm(), WithinAbs(11.1, tol));
     }
+
+    // Exercise 2.2
+    SECTION("Test Conversion to COOMatrix") {
+        // Columns are sorted, but not rows
+        std::vector<csint>  expect_i = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
+        std::vector<csint>  expect_j = {  0,   0,   0,   1,   1,   1,   2,   2,   3,   3};
+        std::vector<double> expect_v = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
+
+        COOMatrix B = C.tocoo();
+        REQUIRE(B.nnz() == 10);
+        REQUIRE(B.nzmax() >= 10);
+        REQUIRE(B.shape() == std::array<csint, 2>{4, 4});
+        REQUIRE(B.row() == expect_i);
+        REQUIRE(B.column() == expect_j);
+        REQUIRE(B.data() == expect_v);
+    }
 }
 
 // TODO test whether transpose, droptol, etc. change the original if we do

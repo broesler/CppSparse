@@ -278,7 +278,7 @@ std::vector<double> CSCMatrix::dot(const std::vector<double>& x) const
 
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {
-            out[i_[p]] = v_[p] * x[j];
+            out[i_[p]] += v_[p] * x[j];
         }
     }
 

@@ -24,7 +24,7 @@ using namespace std;
 using Catch::Matchers::AllTrue;
 using Catch::Matchers::WithinAbs;
 
-constexpr double tol = 1e-16;
+constexpr double tol = 1e-14;
 
 
 // TODO figure out how to use the "spaceship" operator<=> to define all
@@ -90,6 +90,23 @@ std::vector<bool> operator>=(const std::vector<double>& vec, const double c)
 std::vector<bool> operator!=(const std::vector<double>& vec, const double c)
 {
     return compare_vec(vec, c, std::not_equal_to<double>());
+}
+
+
+std::vector<bool> is_close(
+    const std::vector<double>& a,
+    const std::vector<double>& b,
+    const double tol=1e-15
+    )
+{
+    assert(a.size() == b.size());
+
+    std::vector<bool> out(a.size());
+    for (int i = 0; i < a.size(); i++) {
+        out[i] = (std::fabs(a[i] - b[i]) < tol);
+    }
+
+    return out;
 }
 
 
@@ -266,168 +283,205 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         REQUIRE(A.column() == F.column());
         REQUIRE(A.data() == F.data());
     }
+}
 
-    // TODO move these tests to a separate TEST_CASE
-    SECTION("Test conversion to CSCMatrix") {
-        CSCMatrix C = A.tocsc();
 
-        // cout << "C = \n" << C;
-        SECTION("Test attributes") {
-            std::vector<csint> indptr_expect  = {  0,             3,             6,        8,  10};
-            std::vector<csint> indices_expect = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
-            std::vector<double> data_expect   = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
+TEST_CASE("Test CSCMatrix", "[CSCMatrix]") 
+{
+    // See Davis pp 7-8, Eqn (2.1)
+    std::vector<csint>  i = {2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
+    std::vector<csint>  j = {2,    0,    3,    2,    1,    0,    1,    3,    0,    1};
+    std::vector<double> v = {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7};
+    COOMatrix A(v, i, j);
+    CSCMatrix C = A.tocsc();
 
-            REQUIRE(C.nnz() == 10);
-            REQUIRE(C.nzmax() >= 10);
-            REQUIRE(C.shape() == std::array<csint, 2>{4, 4});
-            REQUIRE(C.indptr() == indptr_expect);
-            REQUIRE(C.indices() == indices_expect);
-            REQUIRE(C.data() == data_expect);
+    // cout << "C = \n" << C;
+    SECTION("Test attributes") {
+        std::vector<csint> indptr_expect  = {  0,             3,             6,        8,  10};
+        std::vector<csint> indices_expect = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
+        std::vector<double> data_expect   = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
+
+        REQUIRE(C.nnz() == 10);
+        REQUIRE(C.nzmax() >= 10);
+        REQUIRE(C.shape() == std::array<csint, 2>{4, 4});
+        REQUIRE(C.indptr() == indptr_expect);
+        REQUIRE(C.indices() == indices_expect);
+        REQUIRE(C.data() == data_expect);
+    }
+
+    SECTION ("Test CSCMatrix printing") {
+        std::stringstream s;
+
+        SECTION("Print short") {
+            std::string expect =
+                "<Compressed Sparse Column matrix\n"
+                "        with 10 stored elements and shape (4, 4)>\n";
+
+            C.print(s);  // default verbose=false
+
+            REQUIRE(s.str() == expect);
         }
 
-        SECTION ("Test CSCMatrix printing") {
-            std::stringstream s;
+        SECTION("Print verbose") {
+            std::string expect =
+                "<Compressed Sparse Column matrix\n"
+                "        with 10 stored elements and shape (4, 4)>\n"
+                "(1, 0): 3.1\n"
+                "(3, 0): 3.5\n"
+                "(0, 0): 4.5\n"
+                "(1, 1): 2.9\n"
+                "(3, 1): 0.4\n"
+                "(2, 1): 1.7\n"
+                "(2, 2): 3\n"
+                "(0, 2): 3.2\n"
+                "(3, 3): 1\n"
+                "(1, 3): 0.9\n";
 
-            SECTION("Print short") {
-                std::string expect =
-                    "<Compressed Sparse Column matrix\n"
-                    "        with 10 stored elements and shape (4, 4)>\n";
-
-                C.print(s);  // default verbose=false
-
+            SECTION("Print from function") {
+                C.print(s, true);  // FIXME memory leak?
                 REQUIRE(s.str() == expect);
             }
 
-            SECTION("Print verbose") {
-                std::string expect =
-                    "<Compressed Sparse Column matrix\n"
-                    "        with 10 stored elements and shape (4, 4)>\n"
-                    "(1, 0): 3.1\n"
-                    "(3, 0): 3.5\n"
-                    "(0, 0): 4.5\n"
-                    "(1, 1): 2.9\n"
-                    "(3, 1): 0.4\n"
-                    "(2, 1): 1.7\n"
-                    "(2, 2): 3\n"
-                    "(0, 2): 3.2\n"
-                    "(3, 3): 1\n"
-                    "(1, 3): 0.9\n";
-
-                SECTION("Print from function") {
-                    C.print(s, true);  // FIXME memory leak?
-                    REQUIRE(s.str() == expect);
-                }
-
-                SECTION("Print from operator<< overload") {
-                    s << C;  // FIXME memory leak?
-                    REQUIRE(s.str() == expect);
-                }
+            SECTION("Print from operator<< overload") {
+                s << C;  // FIXME memory leak?
+                REQUIRE(s.str() == expect);
             }
-
-            // Clear the stringstream to prevent memory leaks
-            s.str("");
-            s.clear();
         }
 
-        SECTION("Test indexing: no duplicates") {
-            std::vector<csint> indptr = C.indptr();
-            std::vector<csint> indices = C.indices();
-            std::vector<double> data = C.data();
-            csint N = C.shape()[1];
+        // Clear the stringstream to prevent memory leaks
+        s.str("");
+        s.clear();
+    }
 
+    SECTION("Test indexing: no duplicates") {
+        std::vector<csint> indptr = C.indptr();
+        std::vector<csint> indices = C.indices();
+        std::vector<double> data = C.data();
+        csint N = C.shape()[1];
+
+        for (csint j = 0; j < N; j++) {
+            for (csint p = indptr[j]; p < indptr[j+1]; p++) {
+                REQUIRE(C(indices[p], j) == data[p]);
+            }
+        }
+
+    }
+
+    SECTION("Test indexing: with a duplicate") {
+        C = A.assign(3, 3, 56.0).tocsc();
+
+        REQUIRE_THAT(C(3, 3), WithinAbs(57.0, tol));
+    }
+
+    // Test the transpose -> use indexing to test A(i, j) == A(j, i)
+    SECTION("Transpose") {
+        CSCMatrix C_T = C.T();
+
+        csint M, N;
+        std::tie(M, N) = C.shape();
+
+        REQUIRE(C.nnz() == C_T.nnz());
+        REQUIRE(M == C_T.shape()[1]);
+        REQUIRE(N == C_T.shape()[0]);
+
+        for (csint i = 0; i < M; i++) {
             for (csint j = 0; j < N; j++) {
-                for (csint p = indptr[j]; p < indptr[j+1]; p++) {
-                    REQUIRE(C(indices[p], j) == data[p]);
-                }
+                REQUIRE(C(i, j) == C_T(j, i));
             }
-
-        }
-
-        SECTION("Test indexing: with a duplicate") {
-            C = A.assign(3, 3, 56.0).tocsc();
-
-            REQUIRE_THAT(C(3, 3), WithinAbs(57.0, tol));
-        }
-
-        // Test the transpose -> use indexing to test A(i, j) == A(j, i)
-        SECTION("Transpose") {
-            CSCMatrix C_T = C.T();
-
-            csint M, N;
-            std::tie(M, N) = C.shape();
-
-            REQUIRE(C.nnz() == C_T.nnz());
-            REQUIRE(M == C_T.shape()[1]);
-            REQUIRE(N == C_T.shape()[0]);
-
-            for (csint i = 0; i < M; i++) {
-                for (csint j = 0; j < N; j++) {
-                    REQUIRE(C(i, j) == C_T(j, i));
-                }
-            }
-        }
-
-        SECTION("Sum duplicates") {
-            C = A.assign(0, 2, 100.0)
-                 .assign(3, 0, 100.0)
-                 .assign(2, 1, 100.0)
-                 .tocsc()
-                 .sum_duplicates();
-
-            REQUIRE_THAT(C(0, 2), WithinAbs(103.2, tol));
-            REQUIRE_THAT(C(3, 0), WithinAbs(103.5, tol));
-            REQUIRE_THAT(C(2, 1), WithinAbs(101.7, tol));
-        }
-
-        SECTION("Test droptol") {
-            C = COOMatrix(v, i, j).tocsc().droptol(2.0);
-
-            REQUIRE(C.nnz() == 6);
-            REQUIRE(C.shape() == std::array<csint, 2>{4, 4});
-            REQUIRE_THAT(C.data() >= 2.0, AllTrue());
-        }
-
-        SECTION("Test dropzeros") {
-            // Assign explicit zeros
-            C = COOMatrix(v, i, j)
-                .assign(0, 1, 0.0)
-                .assign(2, 1, 0.0)
-                .assign(3, 1, 0.0)
-                .tocsc();
-
-            REQUIRE(C.nnz() == 13);
-
-            C.dropzeros();
-
-            REQUIRE(C.nnz() == 10);
-            REQUIRE_THAT(C.data() != 0.0, AllTrue());
-        }
-
-        SECTION("Test 1-norm") {
-            REQUIRE_THAT(C.norm(), WithinAbs(11.1, tol));
         }
     }
 
-    // TODO test whether transpose, droptol, etc. change the original if we do
-    // an assignment
+    SECTION("Sum duplicates") {
+        C = A.assign(0, 2, 100.0)
+             .assign(3, 0, 100.0)
+             .assign(2, 1, 100.0)
+             .tocsc()
+             .sum_duplicates();
+
+        REQUIRE_THAT(C(0, 2), WithinAbs(103.2, tol));
+        REQUIRE_THAT(C(3, 0), WithinAbs(103.5, tol));
+        REQUIRE_THAT(C(2, 1), WithinAbs(101.7, tol));
+    }
+
+    SECTION("Test droptol") {
+        C = COOMatrix(v, i, j).tocsc().droptol(2.0);
+
+        REQUIRE(C.nnz() == 6);
+        REQUIRE(C.shape() == std::array<csint, 2>{4, 4});
+        REQUIRE_THAT(C.data() >= 2.0, AllTrue());
+    }
+
+    SECTION("Test dropzeros") {
+        // Assign explicit zeros
+        C = COOMatrix(v, i, j)
+            .assign(0, 1, 0.0)
+            .assign(2, 1, 0.0)
+            .assign(3, 1, 0.0)
+            .tocsc();
+
+        REQUIRE(C.nnz() == 13);
+
+        C.dropzeros();
+
+        REQUIRE(C.nnz() == 10);
+        REQUIRE_THAT(C.data() != 0.0, AllTrue());
+    }
+
+    SECTION("Test 1-norm") {
+        REQUIRE_THAT(C.norm(), WithinAbs(11.1, tol));
+    }
 }
+
+// TODO test whether transpose, droptol, etc. change the original if we do
+// an assignment
 
 
 TEST_CASE("Matrix-vector multiply + addition.", "[math]")
 {
-    std::vector<csint>  i = {0, 1, 2};
-    std::vector<csint>  j = {0, 1, 2};
-    std::vector<double> v = {1, 2, 3};
-    CSCMatrix A = COOMatrix(v, i, j).tocsc();
+    SECTION("Test a symmetric (diagonal) matrix.") {
+        std::vector<csint>  i = {0, 1, 2};
+        std::vector<csint>  j = {0, 1, 2};
+        std::vector<double> v = {1, 2, 3};
+        CSCMatrix A = COOMatrix(v, i, j).tocsc();
 
-    std::vector<double> x = {1, 2, 3};
-    std::vector<double> y = {9, 6, 1};
+        std::vector<double> x = {1, 2, 3};
+        std::vector<double> y = {9, 6, 1};
 
-    REQUIRE(gaxpy(A, x, y) == std::vector<double>{10, 10, 10});
-    REQUIRE((A * x) == std::vector<double>{1, 4, 9});
-    REQUIRE((A * x + y) == std::vector<double>{10, 10, 10});
-    // REQUIRE((A * x - y) == std::vector<double>{-8, -2, -8});
-    // REQUIRE(-y == std::vector<double>{-9, -6, -1});
+        // A @ x + y
+        std::vector<double> expect_Ax   = {1, 4, 9};
+        std::vector<double> expect_Axpy = {10, 10, 10};
+
+        REQUIRE_THAT(is_close(gaxpy(A, x, y), expect_Axpy, tol), AllTrue());
+        // REQUIRE_THAT(is_close(gatxpy(A.T(), x, y), expect_Axpy), AllTrue());
+        REQUIRE_THAT(is_close(A.dot(x), expect_Ax, tol), AllTrue());
+        REQUIRE_THAT(is_close((A * x), expect_Ax, tol), AllTrue());
+        REQUIRE_THAT(is_close((A * x + y), expect_Axpy, tol), AllTrue());
+        // REQUIRE((A * x - y) == std::vector<double>{-8, -2, -8});
+        // REQUIRE(-y == std::vector<double>{-9, -6, -1});
+    }
+
+    SECTION("Test an arbitrary non-symmetric matrix.") {
+        // See Davis pp 7-8, Eqn (2.1)
+        std::vector<csint>  i = {2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
+        std::vector<csint>  j = {2,    0,    3,    2,    1,    0,    1,    3,    0,    1};
+        std::vector<double> v = {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7};
+        CSCMatrix A = COOMatrix(v, i, j).tocsc();
+
+        std::vector<double> x = {1, 2, 3, 4};
+        std::vector<double> y = {1, 1, 1, 1};
+        std::vector<double> zero = {0, 0, 0, 0};
+
+        // A @ x + y
+        std::vector<double> expect_Ax   = {14.1, 12.5, 12.4,  8.3};
+        std::vector<double> expect_Axpy = {15.1, 13.5, 13.4,  9.3};
+
+        REQUIRE_THAT(is_close(gaxpy(A, x, zero), expect_Ax, tol), AllTrue());
+        REQUIRE_THAT(is_close(gaxpy(A, x, y), expect_Axpy, tol), AllTrue());
+        // REQUIRE_THAT(is_close(gatxpy(A.T(), x, y), expect_Axpy, tol), AllTrue());
+        REQUIRE_THAT(is_close(A.dot(x), expect_Ax, tol), AllTrue());
+        REQUIRE_THAT(is_close((A * x), expect_Ax, tol), AllTrue());
+        REQUIRE_THAT(is_close((A * x + y), expect_Axpy, tol), AllTrue());
+    }
 }
 
 

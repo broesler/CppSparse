@@ -165,65 +165,7 @@ COOMatrix& COOMatrix::assign(csint i, csint j, double v)
  *
  * @return a copy of the `COOMatrix` in CSC format.
  */
-CSCMatrix COOMatrix::tocsc() const
-{
-    csint k, p, nnz_ = nnz();
-    std::vector<double> data(nnz_);
-    std::vector<csint> indices(nnz_), indptr(N_ + 1), ws(N_);
-
-    // Compute number of elements in each column
-    for (k = 0; k < nnz_; k++)
-        ws[j_[k]]++;
-
-    // Column pointers are the cumulative sum of the counts, starting with 0
-    std::partial_sum(ws.begin(), ws.end(), indptr.begin() + 1);
-
-    // Also copy the cumulative sum back into the workspace for iteration
-    ws = indptr;
-
-#ifdef DEBUG
-    std::cout << "i_ = [";
-    for (auto x : i_) std::cout << x << ", ";
-    std::cout << "]" << std::endl;
-
-    std::cout << "j_ = [";
-    for (auto x : j_) std::cout << x << ", ";
-    std::cout << "]" << std::endl;
-
-    std::cout << "v_ = [";
-    for (auto x : v_) std::cout << x << ", ";
-    std::cout << "]" << std::endl;
-#endif
-
-    for (k = 0; k < nnz_; k++) {
-        // A(i, j) is the pth entry in the CSC matrix
-        p = ws[j_[k]]++;     // "pointer" to the current element's column
-        indices[p] = i_[k];
-        data[p] = v_[k];
-    }
-
-#ifdef DEBUG
-    std::cout << "the data are:" << std::endl; 
-
-    std::cout << "ws = [";
-    for (auto x : ws) std::cout << x << ", ";
-    std::cout << "]" << std::endl;
-
-    std::cout << "indptr = [";
-    for (auto x : indptr) std::cout << x << ", ";
-    std::cout << "]" << std::endl;
-
-    std::cout << "indices = [";
-    for (auto x : indices) std::cout << x << ", ";
-    std::cout << "]" << std::endl;
-
-    std::cout << "data = [";
-    for (auto x : data) std::cout << x << ", ";
-    std::cout << "]" << std::endl;
-#endif
-
-    return CSCMatrix {data, indices, indptr, this->shape()};
-}
+CSCMatrix COOMatrix::tocsc() const { return CSCMatrix(*this); }
 
 
 /*------------------------------------------------------------------------------

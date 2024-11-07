@@ -58,6 +58,33 @@ CSCMatrix::CSCMatrix(csint M, csint N, csint nzmax)
 {}
 
 
+CSCMatrix::CSCMatrix(const COOMatrix& A)
+    : v_(A.nnz()),
+      i_(A.nnz()),
+      p_(A.shape()[1] + 1)
+{
+    // Get the shape
+    std::tie(M_, N_) = A.shape();
+
+    csint nnz_ = A.nnz();
+    std::vector<csint> ws(N_);  // workspace
+
+    // Compute number of elements in each column
+    for (csint k = 0; k < nnz_; k++)
+        ws[A.j_[k]]++;
+
+    // Column pointers are the cumulative sum
+    p_ = cumsum(ws);
+
+    for (csint k = 0; k < nnz_; k++) {
+        // A(i, j) is the pth entry in the CSC matrix
+        csint p = ws[A.j_[k]]++;  // "pointer" to the current element's column
+        i_[p] = A.i_[k];
+        v_[p] = A.v_[k];
+    }
+}
+
+
 /** Reallocate a CSCMatrix to a new number of non-zeros.
  *
  * @param A      matrix to be resized

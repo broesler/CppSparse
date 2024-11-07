@@ -301,12 +301,25 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         std::vector<csint> indices_expect = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
         std::vector<double> data_expect   = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
 
-        REQUIRE(C.nnz() == 10);
-        REQUIRE(C.nzmax() >= 10);
-        REQUIRE(C.shape() == std::array<csint, 2>{4, 4});
-        REQUIRE(C.indptr() == indptr_expect);
-        REQUIRE(C.indices() == indices_expect);
-        REQUIRE(C.data() == data_expect);
+        SECTION("As constructor") {
+            CSCMatrix B(A);
+
+            REQUIRE(B.nnz() == 10);
+            REQUIRE(B.nzmax() >= 10);
+            REQUIRE(B.shape() == std::array<csint, 2>{4, 4});
+            REQUIRE(B.indptr() == indptr_expect);
+            REQUIRE(B.indices() == indices_expect);
+            REQUIRE(B.data() == data_expect);
+        }
+
+        SECTION("As function") {
+            REQUIRE(C.nnz() == 10);
+            REQUIRE(C.nzmax() >= 10);
+            REQUIRE(C.shape() == std::array<csint, 2>{4, 4});
+            REQUIRE(C.indptr() == indptr_expect);
+            REQUIRE(C.indices() == indices_expect);
+            REQUIRE(C.data() == data_expect);
+        }
     }
 
     SECTION ("Test CSCMatrix printing") {

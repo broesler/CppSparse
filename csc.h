@@ -37,6 +37,7 @@ class CSCMatrix
         );
 
         CSCMatrix(csint M, csint N, csint nzmax=0);  // allocate dims + nzmax
+        CSCMatrix(const COOMatrix& A);
 
         CSCMatrix& realloc(csint nzmax=0);       // re-allocate vectors
 

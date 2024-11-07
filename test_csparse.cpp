@@ -496,6 +496,7 @@ TEST_CASE("Matrix-vector multiply + addition.", "[math]")
 
         REQUIRE_THAT(is_close(gaxpy(A, x, y), expect_Axpy, tol), AllTrue());
         REQUIRE_THAT(is_close(gatxpy(A.T(), x, y), expect_Axpy), AllTrue());
+        REQUIRE_THAT(is_close(sym_gaxpy(A, x, y), expect_Axpy, tol), AllTrue());
         REQUIRE_THAT(is_close(A.dot(x), expect_Ax, tol), AllTrue());
         REQUIRE_THAT(is_close((A * x), expect_Ax, tol), AllTrue());
         REQUIRE_THAT(is_close((A * x + y), expect_Axpy, tol), AllTrue());
@@ -524,6 +525,22 @@ TEST_CASE("Matrix-vector multiply + addition.", "[math]")
         REQUIRE_THAT(is_close(A.dot(x), expect_Ax, tol), AllTrue());
         REQUIRE_THAT(is_close((A * x), expect_Ax, tol), AllTrue());
         REQUIRE_THAT(is_close((A * x + y), expect_Axpy, tol), AllTrue());
+    }
+
+    SECTION("Test an arbitrary symmetric matrix.") {
+        // See Davis pp 7-8, Eqn (2.1)
+        std::vector<csint>  i = {  0,   1,   3,   0,   1,   2,   1,   2,   0,   3};
+        std::vector<csint>  j = {  0,   0,   0,   1,   1,   1,   2,   2,   3,   3};
+        std::vector<double> v = {4.5, 3.1, 3.5, 3.1, 2.9, 1.7, 1.7, 3.0, 3.5, 1.0};
+        CSCMatrix A = COOMatrix(v, i, j).tocsc();
+
+        std::vector<double> x = {1, 2, 3, 4};
+        std::vector<double> y = {1, 1, 1, 1};
+
+        // A @ x + y
+        std::vector<double> expect_Axpy = {25.7, 15.0, 13.4,  8.5};
+
+        REQUIRE_THAT(is_close(sym_gaxpy(A, x, y), expect_Axpy, tol), AllTrue());
     }
 }
 

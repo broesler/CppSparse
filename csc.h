@@ -39,7 +39,7 @@ class CSCMatrix
         CSCMatrix(csint M, csint N, csint nzmax=0);  // allocate dims + nzmax
         CSCMatrix(const COOMatrix& A);
 
-        CSCMatrix& realloc(csint nzmax=0);       // re-allocate vectors
+        CSCMatrix& realloc(csint nzmax=0);           // re-allocate vectors
 
         // ---------- Accessors
         csint nnz() const;                   // number of non-zeros
@@ -88,7 +88,14 @@ class CSCMatrix
             std::vector<double> y
         );
 
-        // Matrix-vector multiply operator overload
+        // Exercise 2.3
+        friend std::vector<double> sym_gaxpy(
+            const CSCMatrix& A,
+            const std::vector<double>& x,
+            std::vector<double> y
+        );
+
+        // Multiply
         std::vector<double> dot(const std::vector<double>& x) const;
         CSCMatrix dot(const CSCMatrix& B) const;
         CSCMatrix dot(const double c) const;

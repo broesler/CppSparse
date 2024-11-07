@@ -334,6 +334,45 @@ std::vector<double> gatxpy(
 };
 
 
+/** Matrix-vector multiply `y = Ax + y` for symmetric A (\f$ A = A^T \f$).
+ *
+ * See: Davis, Exercise 2.3.
+ *
+ * @param A  a sparse symmetric matrix, only `A(i, j)` where `j >= i` is stored.
+ * @param x  a dense multiplying vector
+ * @param y  a dense adding vector which will be used for the output
+ *
+ * @return y a copy of the updated vector
+ */
+std::vector<double> sym_gaxpy(
+    const CSCMatrix& A,
+    const std::vector<double>& x,
+    std::vector<double> y
+    )
+{
+    assert(A.M_ == A.N_);  // matrix must be square to be symmetric 
+    assert(A.N_ == x.size()); 
+    assert(x.size() == y.size()); 
+    for (csint j = 0; j < A.N_; j++) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            csint i = A.i_[p];
+
+            if (i > j)
+                continue;  // skip lower triangular
+
+            // Add the upper triangular elements
+            y[i] += A.v_[p] * x[j];
+
+            // If off-diagonal, also add the symmetric element
+            if (i < j)
+                y[j] += A.v_[p] * x[i];
+        }
+    }
+    return y;
+};
+
+
+
 /** Matrix-vector right-multiply. */
 std::vector<double> CSCMatrix::dot(const std::vector<double>& x) const
 {

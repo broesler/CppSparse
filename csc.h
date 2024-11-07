@@ -95,6 +95,9 @@ class CSCMatrix
             std::vector<double> y
         );
 
+        // Scale
+        CSCMatrix scale(const std::vector<double>& r, const std::vector<double> c) const;
+
         // Multiply
         std::vector<double> dot(const std::vector<double>& x) const;
         CSCMatrix dot(const CSCMatrix& B) const;

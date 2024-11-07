@@ -372,6 +372,30 @@ std::vector<double> sym_gaxpy(
 };
 
 
+/** Scale the rows and columns of a matrix by \f$ A = RAC \f$, where *R* and *C*
+ * are diagonal matrices.
+ *
+ * @param r, c  vectors of length M and N, respectively, representing the
+ * diagonals of R and C, where A is size M-by-N.
+ *
+ * @return RAC the scaled matrix
+ */
+CSCMatrix CSCMatrix::scale(const std::vector<double>& r, const std::vector<double> c) const
+{
+    assert(r.size() == M_);
+    assert(c.size() == N_);
+
+    CSCMatrix out(*this);
+
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            out.v_[p] *= r[i_[p]] * c[j];
+        }
+    }
+
+    return out;
+}
+
 
 /** Matrix-vector right-multiply. */
 std::vector<double> CSCMatrix::dot(const std::vector<double>& x) const

@@ -27,6 +27,15 @@ using Catch::Matchers::WithinAbs;
 constexpr double tol = 1e-14;
 
 
+COOMatrix davis_21_coo() {
+    // See Davis pp 7-8, Eqn (2.1)
+    std::vector<csint>  i = {2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
+    std::vector<csint>  j = {2,    0,    3,    2,    1,    0,    1,    3,    0,    1};
+    std::vector<double> v = {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7};
+    return COOMatrix {v, i, j};
+}
+
+
 // TODO figure out how to use the "spaceship" operator<=> to define all
 // of the comparisons in one fell swoop? 
 // A: May only work if we define a wrapper class on std::vector and define the
@@ -288,11 +297,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
 
 TEST_CASE("Test CSCMatrix", "[CSCMatrix]") 
 {
-    // See Davis pp 7-8, Eqn (2.1)
-    std::vector<csint>  i = {2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
-    std::vector<csint>  j = {2,    0,    3,    2,    1,    0,    1,    3,    0,    1};
-    std::vector<double> v = {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7};
-    COOMatrix A(v, i, j);
+    COOMatrix A = davis_21_coo();
     CSCMatrix C = A.tocsc();
 
     // cout << "C = \n" << C;
@@ -417,7 +422,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
     }
 
     SECTION("Test droptol") {
-        C = COOMatrix(v, i, j).tocsc().droptol(2.0);
+        C = davis_21_coo().tocsc().droptol(2.0);
 
         REQUIRE(C.nnz() == 6);
         REQUIRE(C.shape() == std::array<csint, 2>{4, 4});
@@ -426,7 +431,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
 
     SECTION("Test dropzeros") {
         // Assign explicit zeros
-        C = COOMatrix(v, i, j)
+        C = davis_21_coo()
             .assign(0, 1, 0.0)
             .assign(2, 1, 0.0)
             .assign(3, 1, 0.0)
@@ -505,11 +510,7 @@ TEST_CASE("Matrix-vector multiply + addition.", "[math]")
     }
 
     SECTION("Test an arbitrary non-symmetric matrix.") {
-        // See Davis pp 7-8, Eqn (2.1)
-        std::vector<csint>  i = {2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
-        std::vector<csint>  j = {2,    0,    3,    2,    1,    0,    1,    3,    0,    1};
-        std::vector<double> v = {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7};
-        CSCMatrix A = COOMatrix(v, i, j).tocsc();
+        CSCMatrix A = davis_21_coo().tocsc();
 
         std::vector<double> x = {1, 2, 3, 4};
         std::vector<double> y = {1, 1, 1, 1};
@@ -580,7 +581,7 @@ TEST_CASE("Matrix-matrix multiply.", "[math]")
         std::vector<csint>  { 0,  1,  2,   0,   1,   2}   // cols
     ).tocsc();
 
-    CSCMatrix C = A * B;  // FIXME heap overflow
+    CSCMatrix C = A * B;
     csint M, N;
     std::tie(M, N) = C.shape();
 
@@ -619,6 +620,36 @@ TEST_CASE("Scaling by a constant", "[math]")
     for (csint i = 0; i < M; i++) {
         for (csint j = 0; j < N; j++) {
             REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
+        }
+    }
+}
+
+TEST_CASE("Scale rows and columns", "[math]")
+{
+    CSCMatrix A = davis_21_coo().tocsc();
+
+    // Diagonals of R and C to compute RAC
+    std::vector<double> r = {1, 2, 3, 4},
+                        c = {1.0, 0.5, 0.25, 0.125};
+
+    // expect_RAC = array([[ 4.5  ,  0.   ,  0.8  ,  0.   ],
+    //                     [ 6.2  ,  2.9  ,  0.   ,  0.225],
+    //                     [ 0.   ,  2.55 ,  2.25 ,  0.   ],
+    //                     [14.   ,  0.8  ,  0.   ,  0.5  ]])
+
+    std::vector<csint> expect_i = {0, 1, 3, 1, 2, 3, 0, 2, 1, 3};
+    std::vector<csint> expect_j = {0, 0, 0, 1, 1, 1, 2, 2, 3, 3};
+    std::vector<double> expect_v = {4.5, 6.2, 14.0, 2.9, 2.55, 0.8, 0.8, 2.25, 0.225, 0.5};
+    CSCMatrix expect_RAC = COOMatrix(expect_v, expect_i, expect_j).tocsc();
+
+    CSCMatrix RAC = A.scale(r, c);
+
+    csint M, N;
+    std::tie(M, N) = A.shape();
+
+    for (csint i = 0; i < M; i++) {
+        for (csint j = 0; j < N; j++) {
+            REQUIRE_THAT(RAC(i, j), WithinAbs(expect_RAC(i, j), tol));
         }
     }
 }
@@ -665,7 +696,7 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
     
     // Test operator overloading
     CSCMatrix C = 0.1 * A + 9.0 * B;
-    // cout << "C = \n" << C << endl;  // FIXME infinite loop?
+    // cout << "C = \n" << C << endl;
 
     // TODO rewrite these element-tests to compare the entire matrix, so that
     // when we have a failure, we can see the indices

@@ -58,6 +58,32 @@ COOMatrix::COOMatrix(csint M, csint N, csint nzmax)
 {}
 
 
+/** Convert a CSCMatrix to a COOMatrix, like Matlab's `find`.
+ *
+ * @see CSCMatrix::tocoo()
+ *
+ * @param A a CSCMatrix.
+ * @return C the equivalent matrix in triplet form.
+ */
+COOMatrix::COOMatrix(const CSCMatrix& A)
+    : v_(A.nnz()),
+      i_(A.nnz()),
+      j_(A.nnz())
+{
+    // Get the shape
+    std::tie(M_, N_) = A.shape();
+    // Get all elements in column order
+    csint nz = 0;
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            i_[nz] = A.i_[p];
+            j_[nz] = j;
+            v_[nz++] = A.v_[p];
+        }
+    }
+}
+
+
 /** Read a COOMatrix matrix from a file.
  *
  * The file is expected to be in "triplet format" `(i, j, v)`, where `(i, j)`

@@ -54,6 +54,7 @@ class CSCMatrix
         // double& operator()(csint, csint);
 
         // ---------- Format Conversions
+        friend class COOMatrix;
         COOMatrix tocoo() const;  // Exercise 2.2 Matlab's find.
 
         // ---------- Math Operations

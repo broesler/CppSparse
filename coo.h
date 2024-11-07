@@ -46,6 +46,8 @@ class COOMatrix
         COOMatrix(csint M, csint N, csint nzmax=0);  // allocate dims + nzmax
         COOMatrix(std::istream& fp);                 // from file
 
+        COOMatrix(const CSCMatrix& A);               // Exercise 2.2, Matlab's find
+
         // ---------- Accessors
         csint nnz() const;                   // number of non-zeros
         csint nzmax() const;                 // maximum number of non-zeros
@@ -58,6 +60,7 @@ class COOMatrix
         COOMatrix& assign(csint i, csint j, double v);  // assign an element
 
         // ---------- Format Conversions
+        friend class CSCMatrix;
         CSCMatrix tocsc() const;  // convert to CSC format
 
         // ---------- Math Operations

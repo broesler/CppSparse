@@ -273,6 +273,21 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         // REQUIRE_THAT(A(4, 3), WithinAbs(69.0, tol));
     }
 
+    // Exercise 2.5
+    SECTION("Assign a dense submatrix") {
+        std::vector<csint> rows = {2, 3, 4};
+        std::vector<csint> cols = {4, 5, 6};
+        std::vector<double> vals = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+        A.assign(rows, cols, vals);
+
+        REQUIRE(A.nnz() == 19);
+        REQUIRE(A.nzmax() >= 19);
+        REQUIRE(A.shape() == std::array<csint, 2>{5, 7});
+        // cout << "A = " << endl << A;  // rows sorted
+        // cout << "A.tocsc() = " << endl << A.tocsc();  // cols sorted
+    }
+
     SECTION("Tranpose") {
         COOMatrix A_T = A.T();  // copy
 
@@ -623,6 +638,7 @@ TEST_CASE("Scaling by a constant", "[math]")
         }
     }
 }
+
 
 TEST_CASE("Scale rows and columns", "[math]")
 {

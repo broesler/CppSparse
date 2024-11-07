@@ -160,6 +160,42 @@ COOMatrix& COOMatrix::assign(csint i, csint j, double v)
 }
 
 
+/** Assign a dense submatrix to vectors of indices.
+ *
+ * See: Davis, Exercise 2.5.
+ *
+ * @param i, j  vectors of integer indices of length `N`.
+ * @param v     dense submatrix of size `N`-by-`N`, in column-major order.
+ *
+ * @return A    a reference to itself for method chaining.
+ *
+ * @see cs_entry Davis p 12.
+ */
+COOMatrix& COOMatrix::assign(
+    std::vector<csint> rows,
+    std::vector<csint> cols,
+    std::vector<double> vals
+    )
+{
+    assert(rows.size() == cols.size());
+    csint N = rows.size();
+    assert(vals.size() == (N * N));
+
+    for (csint i = 0; i < N; i++) {
+        for (csint j = 0; j < N; j++) {
+            i_.push_back(rows[i]);
+            j_.push_back(cols[j]);
+            v_.push_back(vals[i + j*N]);  // column-major order
+        }
+    }
+
+    M_ = std::max(M_, *std::max_element(rows.begin(), rows.end()) + 1);
+    N_ = std::max(N_, *std::max_element(cols.begin(), cols.end()) + 1);
+
+    return *this;
+}
+
+
 /** Convert a coordinate format matrix to a compressed sparse column matrix.
  *
  * The columns are not guaranteed to be sorted, and duplicates are allowed.

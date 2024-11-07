@@ -60,6 +60,11 @@ class COOMatrix
         const std::vector<double>& data() const;
 
         COOMatrix& assign(csint i, csint j, double v);  // assign an element
+        COOMatrix& assign(
+            std::vector<csint> i,
+            std::vector<csint> j,
+            std::vector<double> v
+        );  // assign a dense submatrix (Exercise 2.5)
 
         // ---------- Format Conversions
         CSCMatrix tocsc() const;  // convert to CSC format

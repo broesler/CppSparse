@@ -427,6 +427,19 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         }
     }
 
+    SECTION("Sort rows/columns with two transposes") {
+        CSCMatrix Cs = C.sort();
+
+        std::vector<csint> indptr_expect  = {  0,             3,             6,        8,  10};
+        std::vector<csint> indices_expect = {  0,   1,   3,   1,   2,   3,   0,   2,   1,   3};
+        std::vector<double> data_expect   = {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0};
+
+        REQUIRE(Cs.indptr() == indptr_expect);
+        REQUIRE(Cs.indices() == indices_expect);
+        REQUIRE(Cs.data() == data_expect);
+        // cout << "Cs = " << endl << Cs;
+    }
+
     SECTION("Sum duplicates") {
         C = A.assign(0, 2, 100.0)
              .assign(3, 0, 100.0)

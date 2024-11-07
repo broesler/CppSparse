@@ -151,7 +151,7 @@ COOMatrix CSCMatrix::tocoo() const { return COOMatrix(*this); }
 
 
 /*------------------------------------------------------------------------------
-       Math Operations
+       Format Operations
 ----------------------------------------------------------------------------*/
 /** Transpose the matrix as a copy.
  *
@@ -187,7 +187,18 @@ CSCMatrix CSCMatrix::transpose() const
 }
 
 
+// Alias for transpose
 CSCMatrix CSCMatrix::T() const { return this->transpose(); }
+
+// TODO transpose in-place? Then we can sort in-place?
+// Or just use the version of `sort` that uses quicksort directly.
+
+
+/** Sort rows and columns in a copy. */
+CSCMatrix CSCMatrix::sort() const
+{
+    return this->transpose().transpose();
+}
 
 
 /** Sum duplicate entries in place. */
@@ -284,6 +295,9 @@ CSCMatrix& CSCMatrix::droptol(double tol)
 }
 
 
+/*------------------------------------------------------------------------------
+       Math Operations
+----------------------------------------------------------------------------*/
 /** Matrix-vector multiply `y = Ax + y`.
  *
  * @param A  a sparse matrix

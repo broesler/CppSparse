@@ -74,6 +74,8 @@ class COOMatrix
         COOMatrix transpose() const;  // transpose a copy
         COOMatrix T() const;
 
+        std::vector<double> dot(const std::vector<double>& x) const;
+
         // ---------- Other
         void print(
             std::ostream& os=std::cout,
@@ -85,6 +87,7 @@ class COOMatrix
 // Operator overloads
 std::ostream& operator<<(std::ostream&, const COOMatrix&);
 
+std::vector<double> operator*(const COOMatrix&, const std::vector<double>&);
 
 #endif
 

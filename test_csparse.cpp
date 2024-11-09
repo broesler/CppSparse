@@ -598,7 +598,8 @@ TEST_CASE("Matrix-vector multiply + addition.", "[math]")
     }
 
     SECTION("Test an arbitrary non-symmetric matrix.") {
-        CSCMatrix A = davis_21_coo().compress();
+        COOMatrix Ac = davis_21_coo();
+        CSCMatrix A = Ac.compress();
 
         std::vector<double> x = {1, 2, 3, 4};
         std::vector<double> y = {1, 1, 1, 1};
@@ -611,9 +612,14 @@ TEST_CASE("Matrix-vector multiply + addition.", "[math]")
         REQUIRE_THAT(is_close(gaxpy(A, x, zero), expect_Ax, tol), AllTrue());
         REQUIRE_THAT(is_close(gaxpy(A, x, y), expect_Axpy, tol), AllTrue());
         REQUIRE_THAT(is_close(gatxpy(A.T(), x, y), expect_Axpy, tol), AllTrue());
+
         REQUIRE_THAT(is_close(A.dot(x), expect_Ax, tol), AllTrue());
         REQUIRE_THAT(is_close((A * x), expect_Ax, tol), AllTrue());
         REQUIRE_THAT(is_close((A * x + y), expect_Axpy, tol), AllTrue());
+
+        // Test COOMatrix
+        REQUIRE_THAT(is_close(Ac.dot(x), expect_Ax, tol), AllTrue());
+        REQUIRE_THAT(is_close((Ac * x), expect_Ax, tol), AllTrue());
     }
 
     SECTION("Test an arbitrary symmetric matrix.") {

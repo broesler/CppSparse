@@ -251,6 +251,21 @@ COOMatrix COOMatrix::transpose() const
 COOMatrix COOMatrix::T() const { return this->transpose(); }
 
 
+std::vector<double> COOMatrix::dot(const std::vector<double>& x) const
+{
+    assert(N_ == x.size());
+    std::vector<double> out(x.size());
+
+    for (csint p = 0; p < nnz(); p++) {
+        out[i_[p]] += v_[p] * x[j_[p]];
+    }
+
+    return out;
+}
+
+std::vector<double> operator*(const COOMatrix& A, const std::vector<double>& x)
+{ return A.dot(x); }
+
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/

@@ -22,6 +22,7 @@ class CSCMatrix
     csint M_ = 0;            // number of rows
     csint N_ = 0;            // number of columns
     bool has_sorted_indices_ = false;
+    bool has_canonical_format_ = false;
 
     void print_elems_(std::ostream& os, csint start, csint end) const;
 
@@ -50,6 +51,7 @@ class CSCMatrix
         std::array<csint, 2> shape() const;  // the dimensions of the matrix
 
         bool has_sorted_indices() const;
+        bool has_canonical_format() const;
 
         const std::vector<csint>& indices() const;     // indices and data
         const std::vector<csint>& indptr() const;

@@ -67,7 +67,7 @@ class COOMatrix
         );  // assign a dense submatrix (Exercise 2.5)
 
         // ---------- Format Conversions
-        CSCMatrix tocsc() const;  // convert to CSC format
+        CSCMatrix compress() const;  // convert to raw CSC format
 
         // ---------- Math Operations
         COOMatrix transpose() const;  // transpose a copy

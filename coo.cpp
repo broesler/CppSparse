@@ -202,7 +202,44 @@ COOMatrix& COOMatrix::assign(
  *
  * @return a copy of the `COOMatrix` in CSC format.
  */
-CSCMatrix COOMatrix::tocsc() const { return CSCMatrix(*this); }
+CSCMatrix COOMatrix::compress() const 
+{
+    csint nnz_ = nnz();
+    CSCMatrix C(M_, N_, nnz_);
+    std::vector<csint> ws(N_);  // workspace
+
+    // Compute number of elements in each column
+    for (csint k = 0; k < nnz_; k++)
+        ws[j_[k]]++;
+
+    // Column pointers are the cumulative sum
+    C.p_ = cumsum(ws);
+
+    for (csint k = 0; k < nnz_; k++) {
+        // A(i, j) is the pth entry in the CSC matrix
+        csint p = ws[j_[k]]++;  // "pointer" to the current element's column
+        C.i_[p] = i_[k];
+        C.v_[p] = v_[k];
+    }
+
+    return C;
+}
+
+
+// TODO
+/** Create a canonical format CSCMatrix from a COOMatrix.
+ *
+ * See: Davis, Exercise 2.9
+ */
+// CSCMatrix COOMatrix::tocsc() const
+// {
+//     CSCMatrix A = this->compress()
+//                     .sum_duplicates()
+//                     .dropzeros()
+//                     .sorted();
+//     A.has_canonical_format_ = true;
+//     return A;
+// }
 
 
 /*------------------------------------------------------------------------------

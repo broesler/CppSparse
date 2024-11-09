@@ -58,6 +58,7 @@ CSCMatrix::CSCMatrix(csint M, csint N, csint nzmax)
 {}
 
 
+// TODO rewrite this constructor as a member function `compress`.
 /** Convert a coordinate format matrix to a compressed sparse column matrix.
  *
  * The columns are not guaranteed to be sorted, and duplicates are allowed.
@@ -130,6 +131,7 @@ const std::vector<csint>& CSCMatrix::indptr() const { return p_; }
 const std::vector<double>& CSCMatrix::data() const { return v_; }
 
 bool CSCMatrix::has_sorted_indices() const { return has_sorted_indices_; }
+bool CSCMatrix::has_canonical_format() const { return has_canonical_format_; }
 
 // NOTE this code assumes that columns are *not* sorted, so it will search
 // through *every* element in a column. If columns were sorted, and there were

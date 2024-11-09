@@ -299,7 +299,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         REQUIRE(A.nzmax() >= 19);
         REQUIRE(A.shape() == std::array<csint, 2>{5, 7});
         // cout << "A = " << endl << A;  // rows sorted
-        // cout << "A.tocsc() = " << endl << A.tocsc();  // cols sorted
+        // cout << "A.compress() = " << endl << A.compress();  // cols sorted
     }
 
     SECTION("Tranpose") {
@@ -330,7 +330,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
 TEST_CASE("Test CSCMatrix", "[CSCMatrix]") 
 {
     COOMatrix A = davis_21_coo();
-    CSCMatrix C = A.tocsc();
+    CSCMatrix C = A.compress();
 
     // cout << "C = \n" << C;
     SECTION("Test attributes") {
@@ -338,16 +338,17 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         std::vector<csint> indices_expect = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
         std::vector<double> data_expect   = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
 
-        SECTION("As constructor") {
-            CSCMatrix B(A);
+        // FIXME constructor will now return canonical format
+        // SECTION("As constructor") {
+        //     CSCMatrix B(A);
 
-            REQUIRE(B.nnz() == 10);
-            REQUIRE(B.nzmax() >= 10);
-            REQUIRE(B.shape() == std::array<csint, 2>{4, 4});
-            REQUIRE(B.indptr() == indptr_expect);
-            REQUIRE(B.indices() == indices_expect);
-            REQUIRE(B.data() == data_expect);
-        }
+        //     REQUIRE(B.nnz() == 10);
+        //     REQUIRE(B.nzmax() >= 10);
+        //     REQUIRE(B.shape() == std::array<csint, 2>{4, 4});
+        //     REQUIRE(B.indptr() == indptr_expect);
+        //     REQUIRE(B.indices() == indices_expect);
+        //     REQUIRE(B.data() == data_expect);
+        // }
 
         SECTION("As function") {
             REQUIRE(C.nnz() == 10);
@@ -418,7 +419,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
     }
 
     SECTION("Test indexing: with a duplicate") {
-        C = A.assign(3, 3, 56.0).tocsc();
+        C = A.assign(3, 3, 56.0).compress();
 
         REQUIRE_THAT(C(3, 3), WithinAbs(57.0, tol));
     }
@@ -470,7 +471,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         C = A.assign(0, 2, 100.0)
              .assign(3, 0, 100.0)
              .assign(2, 1, 100.0)
-             .tocsc()
+             .compress()
              .sum_duplicates();
 
         REQUIRE_THAT(C(0, 2), WithinAbs(103.2, tol));
@@ -479,7 +480,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
     }
 
     SECTION("Test droptol") {
-        C = davis_21_coo().tocsc().droptol(2.0);
+        C = davis_21_coo().compress().droptol(2.0);
 
         REQUIRE(C.nnz() == 6);
         REQUIRE(C.shape() == std::array<csint, 2>{4, 4});
@@ -492,7 +493,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
             .assign(0, 1, 0.0)
             .assign(2, 1, 0.0)
             .assign(3, 1, 0.0)
-            .tocsc();
+            .compress();
 
         REQUIRE(C.nnz() == 13);
 
@@ -547,7 +548,7 @@ TEST_CASE("Matrix-vector multiply + addition.", "[math]")
         std::vector<csint>  i = {0, 1, 2};
         std::vector<csint>  j = {0, 1, 2};
         std::vector<double> v = {1, 2, 3};
-        CSCMatrix A = COOMatrix(v, i, j).tocsc();
+        CSCMatrix A = COOMatrix(v, i, j).compress();
 
         std::vector<double> x = {1, 2, 3};
         std::vector<double> y = {9, 6, 1};
@@ -567,7 +568,7 @@ TEST_CASE("Matrix-vector multiply + addition.", "[math]")
     }
 
     SECTION("Test an arbitrary non-symmetric matrix.") {
-        CSCMatrix A = davis_21_coo().tocsc();
+        CSCMatrix A = davis_21_coo().compress();
 
         std::vector<double> x = {1, 2, 3, 4};
         std::vector<double> y = {1, 1, 1, 1};
@@ -590,7 +591,7 @@ TEST_CASE("Matrix-vector multiply + addition.", "[math]")
         std::vector<csint>  i = {  0,   1,   3,   0,   1,   2,   1,   2,   0,   3};
         std::vector<csint>  j = {  0,   0,   0,   1,   1,   1,   2,   2,   3,   3};
         std::vector<double> v = {4.5, 3.1, 3.5, 3.1, 2.9, 1.7, 1.7, 3.0, 3.5, 1.0};
-        CSCMatrix A = COOMatrix(v, i, j).tocsc();
+        CSCMatrix A = COOMatrix(v, i, j).compress();
 
         std::vector<double> x = {1, 2, 3, 4};
         std::vector<double> y = {1, 1, 1, 1};
@@ -624,19 +625,19 @@ TEST_CASE("Matrix-matrix multiply.", "[math]")
         std::vector<double> {1, 2, 3, 4, 5, 6, 7, 8},  // vals
         std::vector<csint>  {0, 0, 0, 0, 1, 1, 1, 1},  // rows
         std::vector<csint>  {0, 1, 2, 3, 0, 1, 2, 3}   // cols
-    ).tocsc();
+    ).compress();
 
     CSCMatrix B = COOMatrix(
         std::vector<double> {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12},  // vals
         std::vector<csint>  {0, 0, 0, 1, 1, 1, 2, 2, 2,  3,  3,  3},  // rows
         std::vector<csint>  {0, 1, 2, 0, 1, 2, 0, 1, 2,  0,  1,  2}   // cols
-    ).tocsc();
+    ).compress();
 
     CSCMatrix expect = COOMatrix(
         std::vector<double> {70, 80, 90, 158, 184, 210},  // vals
         std::vector<csint>  { 0,  0,  0,   1,   1,   1},  // rows
         std::vector<csint>  { 0,  1,  2,   0,   1,   2}   // cols
-    ).tocsc();
+    ).compress();
 
     CSCMatrix C = A * B;
     csint M, N;
@@ -661,12 +662,12 @@ TEST_CASE("Scaling by a constant", "[math]")
     CSCMatrix A = COOMatrix(
         std::vector<double> {1, 2, 3, 4, 5, 6},
         i, j
-    ).tocsc();
+    ).compress();
 
     CSCMatrix expect = COOMatrix(
         std::vector<double> {0.1, 0.2, 0.3, 0.4, 0.5, 0.6},
         i, j
-    ).tocsc();
+    ).compress();
 
     csint M, N;
     std::tie(M, N) = A.shape();
@@ -684,7 +685,7 @@ TEST_CASE("Scaling by a constant", "[math]")
 
 TEST_CASE("Scale rows and columns", "[math]")
 {
-    CSCMatrix A = davis_21_coo().tocsc();
+    CSCMatrix A = davis_21_coo().compress();
 
     // Diagonals of R and C to compute RAC
     std::vector<double> r = {1, 2, 3, 4},
@@ -698,7 +699,7 @@ TEST_CASE("Scale rows and columns", "[math]")
     std::vector<csint> expect_i = {0, 1, 3, 1, 2, 3, 0, 2, 1, 3};
     std::vector<csint> expect_j = {0, 0, 0, 1, 1, 1, 2, 2, 3, 3};
     std::vector<double> expect_v = {4.5, 6.2, 14.0, 2.9, 2.55, 0.8, 0.8, 2.25, 0.225, 0.5};
-    CSCMatrix expect_RAC = COOMatrix(expect_v, expect_i, expect_j).tocsc();
+    CSCMatrix expect_RAC = COOMatrix(expect_v, expect_i, expect_j).compress();
 
     CSCMatrix RAC = A.scale(r, c);
 
@@ -734,17 +735,17 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
     CSCMatrix A = COOMatrix(
         std::vector<double> {1, 2, 3, 4, 5, 6},
         i, j
-    ).tocsc();
+    ).compress();
 
     CSCMatrix B = COOMatrix(
         std::vector<double> {1, 1, 1, 1, 1, 1},
         i, j
-    ).tocsc();
+    ).compress();
 
     CSCMatrix expect = COOMatrix(
         std::vector<double> {9.1, 9.2, 9.3, 9.4, 9.5, 9.6},
         i, j
-    ).tocsc();
+    ).compress();
 
     csint M, N;
     std::tie(M, N) = A.shape();
@@ -772,7 +773,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
     // Matrix with 1, 2, 3, 4 on the diagonal
     std::vector<csint>  rows = {0, 1, 2, 3};
     std::vector<double> vals = {1, 2, 3, 4};
-    CSCMatrix A = COOMatrix(vals, rows, rows).tocsc();
+    CSCMatrix A = COOMatrix(vals, rows, rows).compress();
 
     SECTION("Test no-op") {
         std::vector<csint> p = {0, 1, 2, 3};
@@ -802,7 +803,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
         std::vector<csint> p_inv = inv_permute(p);
         std::vector<csint> q_inv = inv_permute(q);
 
-        CSCMatrix expect = COOMatrix(vals, p_inv, q_inv).tocsc();
+        CSCMatrix expect = COOMatrix(vals, p_inv, q_inv).compress();
 
         CSCMatrix C = A.permute(p_inv, q);
 
@@ -824,7 +825,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
         std::vector<csint> p = {3, 0, 2, 1};
         std::vector<double> expect_v = {4, 1, 3, 2};
 
-        CSCMatrix expect = COOMatrix(expect_v, rows, rows).tocsc();
+        CSCMatrix expect = COOMatrix(expect_v, rows, rows).compress();
 
         std::vector<csint> p_inv = inv_permute(p);
 

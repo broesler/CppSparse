@@ -17,6 +17,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <ranges>
 
 #include "csparse.h"
 
@@ -922,6 +923,73 @@ TEST_CASE("Test matrix permutation", "[permute]")
             }
         }
     }
+}
+
+
+TEST_CASE("Test band function")
+{
+    csint N = 6;
+    csint nnz = N*N;
+
+    // CSCMatrix A = ones((N, N)); // TODO
+    std::vector<csint> r(N);
+    std::iota(r.begin(), r.end(), 0);  // sequence to repeat
+
+    std::vector<csint> rows;
+    rows.reserve(nnz);
+
+    std::vector<csint> cols;
+    cols.reserve(nnz);
+
+    std::vector<double> vals(nnz, 1);
+
+    // Repeat {0, 1, 2, 3, 0, 1, 2, 3, ...}
+    for (csint i = 0; i < N; i++) {
+        for (auto& x : r) {
+            rows.push_back(x);
+        }
+    }
+
+    // Repeat {0, 0, 0, 1, 1, 1, 2, 2, 2, ...}
+    for (auto& x : r) {
+        for (csint i = 0; i < N; i++) {
+            cols.push_back(x);
+        }
+    }
+
+    CSCMatrix A = COOMatrix(vals, rows, cols).tocsc();
+
+    SECTION("Test main diagonal") {
+        int kl = 0,
+            ku = 0;
+
+        COOMatrix Ab = A.band(kl, ku).tocoo();
+
+        std::vector<csint> expect_rows = {0, 1, 2, 3, 4, 5};
+        std::vector<csint> expect_cols = {0, 1, 2, 3, 4, 5};
+        std::vector<double> expect_data(expect_rows.size(), 1);
+
+        CHECK(Ab.nnz() == N);
+        CHECK(Ab.row() == expect_rows);
+        CHECK(Ab.column() == expect_cols);
+        REQUIRE(Ab.data() == expect_data);
+    }
+
+    // SECTION("Test arbitrary diagonals") {
+    //     int kl = -3,
+    //         ku = 2;
+
+    //     COOMatrix Ab = A.band(kl, ku).tocoo();
+
+    //     std::vector<csint> expect_rows = {0, 1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 2, 3, 4, 5};
+    //     std::vector<csint> expect_cols = {0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5};
+    //     std::vector<double> expect_data(expect_rows.size(), 1);
+
+    //     CHECK(Ab.nnz() == 27);
+    //     CHECK(Ab.row() == expect_rows);
+    //     CHECK(Ab.column() == expect_cols);
+    //     REQUIRE(Ab.data() == expect_data);
+    // }
 }
 
 

@@ -396,6 +396,31 @@ CSCMatrix& CSCMatrix::droptol(double tol)
 }
 
 
+/** Return true if `A(i, j)` is within the diagonals `limits = {lower, upper}`. */
+bool CSCMatrix::in_band(csint i, csint j, double Aij, void *limits)
+{
+    int kl, ku;
+    std::tie(kl, ku) = *((std::array<int, 2> *) limits);
+    return ((i <= (j - kl)) && (i >= (j - ku)));
+};
+
+
+/** Keep any entries within the specified band.
+ *
+ * @param kl, ku  the lower and upper diagonals within which to keep entries.
+ * The main diagonal is 0, with sub-diagonals < 0, and super-diagonals > 0.
+ *
+ * @return a copy of the matrix with entries removed.
+ */
+CSCMatrix CSCMatrix::band(const int kl, const int ku)
+{
+    assert(kl <= ku);
+    std::array<int, 2> limits {kl, ku};
+
+    return fkeep(&in_band, &limits);
+}
+
+
 /*------------------------------------------------------------------------------
        Math Operations
 ----------------------------------------------------------------------------*/

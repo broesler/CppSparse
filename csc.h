@@ -60,7 +60,7 @@ class CSCMatrix
 
         // Access an element by index, but do not change its value
         const double operator()(csint i, csint j) const;
-        // double& operator()(csint, csint);
+        // double& operator()(csint, csint);  // assignment
 
         // ---------- Format Conversions
         COOMatrix tocoo() const;  // Exercise 2.2 Matlab's find.
@@ -69,8 +69,8 @@ class CSCMatrix
         CSCMatrix transpose() const;  // transpose a copy
         CSCMatrix T() const;          // transpose a copy
 
-        CSCMatrix sort() const;
-        CSCMatrix& sorted();
+        CSCMatrix sort() const;  // Exercise 2.7
+        CSCMatrix& sorted();     // Exercise 2.8
 
         CSCMatrix& sum_duplicates();
 
@@ -81,7 +81,11 @@ class CSCMatrix
         );
 
         CSCMatrix& dropzeros();
-        CSCMatrix& droptol(double);
+        CSCMatrix& droptol(double tol);
+
+        // Exercise 2.15
+        static bool in_band(csint i, csint j, double Aij, void *limits);
+        CSCMatrix band(const int kl, const int ku);
 
         // TODO possibly make these private? Or define in SparseMatrix base.
         static bool nonzero(csint i, csint j, double Aij, void *tol);

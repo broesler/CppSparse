@@ -128,22 +128,19 @@ bool CSCMatrix::has_sorted_indices() const { return has_sorted_indices_; }
 bool CSCMatrix::has_canonical_format() const { return has_canonical_format_; }
 
 
+/** Return the value of the requested element */
 const double CSCMatrix::operator()(csint i, csint j) const
 {
     if (has_canonical_format_) {
-        // TODO implement binary search for readability?
+        csint p = p_[j];  // pointer to the row indices of column j
+        std::span rows{i_.begin() + p, p_[j+1] - p};  // view of row indices
 
-        // Using the STL:
-        // Find the index of the requested element, if it exists
-        csint p = p_[j],
-              pn = p_[j+1];
-        csint d = pn - p;
-        std::span rows{i_.begin() + p, d};
+        // Binary search for t <= i
+        auto t = std::lower_bound(rows.begin(), rows.end(), i);
 
-        auto t = std::find(rows.begin(), rows.end(), i);
-
-        if (t != rows.end()) {
-            csint idx = std::distance(rows.begin(), t);
+        // Check that we actually found the index t == i
+        if (t != rows.end() && *t == i) {
+            auto idx = std::distance(rows.begin(), t);
             return v_[p + idx];
         } else {
             return 0.0;

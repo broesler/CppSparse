@@ -59,7 +59,7 @@ COOMatrix::COOMatrix(csint M, csint N, csint nzmax)
 
 /** Convert a CSCMatrix to a COOMatrix, like Matlab's `find`.
  *
- * @see CSCMatrix::tocoo()
+ * @see CSCMatrix::tocoo(), cs_find (Davis, Exercise 2.2)
  *
  * @param A a CSCMatrix.
  * @return C the equivalent matrix in triplet form.

@@ -58,6 +58,12 @@ CSCMatrix::CSCMatrix(csint M, csint N, csint nzmax)
 {}
 
 
+/** Convert a coordinate format matrix to a compressed sparse column matrix.
+ *
+ * The columns are not guaranteed to be sorted, and duplicates are allowed.
+ *
+ * @return a copy of the `COOMatrix` in CSC format.
+ */
 CSCMatrix::CSCMatrix(const COOMatrix& A)
     : v_(A.nnz()),
       i_(A.nnz()),

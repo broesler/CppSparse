@@ -64,6 +64,7 @@ class CSCMatrix
         CSCMatrix T() const;          // transpose a copy
 
         CSCMatrix sort() const;
+        CSCMatrix& sorted();
 
         CSCMatrix& sum_duplicates();
 

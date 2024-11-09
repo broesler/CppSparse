@@ -150,20 +150,5 @@ std::vector<csint> cumsum(std::vector<csint>& w)
 }
 
 
-/** Print a std::vector. */
-template <typename T>
-void print_vec(const std::vector<T>& vec)
-{
-    std::cout << "[";
-    for (int i = 0; i < vec.size(); i++) {
-        std::cout << vec[i];
-        if (i < vec.size() - 1) {
-            std::cout << ", ";
-        }
-    }
-    std::cout << "]" << std::endl;
-}
-
-
 /*==============================================================================
  *============================================================================*/

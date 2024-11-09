@@ -163,6 +163,20 @@ TEST_CASE("Test vector permutations", "[vector]")
 }
 
 
+TEST_CASE("Test argsort.", "[vector]")
+{
+    SECTION("Test vector of doubles") {
+        std::vector<double> v = {5.6, 6.9, 42.0, 1.7, 9.0};
+        REQUIRE(argsort(v) == std::vector<csint> {3, 0, 1, 4, 2});
+    }
+
+    SECTION("Test vector of ints") {
+        std::vector<int> v = {5, 6, 42, 1, 9};
+        REQUIRE(argsort(v) == std::vector<csint> {3, 0, 1, 4, 2});
+    }
+}
+
+
 /*------------------------------------------------------------------------------
  *         Test Matrix Functions 
  *----------------------------------------------------------------------------*/
@@ -427,17 +441,27 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         }
     }
 
-    SECTION("Sort rows/columns with two transposes") {
-        CSCMatrix Cs = C.sort();
-
+    SECTION("Sort rows/columns") {
         std::vector<csint> indptr_expect  = {  0,             3,             6,        8,  10};
         std::vector<csint> indices_expect = {  0,   1,   3,   1,   2,   3,   0,   2,   1,   3};
         std::vector<double> data_expect   = {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0};
 
-        REQUIRE(Cs.indptr() == indptr_expect);
-        REQUIRE(Cs.indices() == indices_expect);
-        REQUIRE(Cs.data() == data_expect);
-        // cout << "Cs = " << endl << Cs;
+        SECTION("Two transposes") {
+            CSCMatrix Cs = C.sort();
+            // cout << "Cs = " << endl << Cs;
+
+            REQUIRE(Cs.indptr() == indptr_expect);
+            REQUIRE(Cs.indices() == indices_expect);
+            REQUIRE(Cs.data() == data_expect);
+        }
+
+        SECTION("Qsort") {
+            CSCMatrix Cs = C.sorted();
+
+            REQUIRE(Cs.indptr() == indptr_expect);
+            REQUIRE(Cs.indices() == indices_expect);
+            REQUIRE(Cs.data() == data_expect);
+        }
     }
 
     SECTION("Sum duplicates") {

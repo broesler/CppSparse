@@ -10,6 +10,8 @@
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
+#include <numeric>  // std::iota
+
 std::vector<double> operator+(
     const std::vector<double>&,
     const std::vector<double>&
@@ -26,8 +28,42 @@ std::vector<csint> inv_permute(const std::vector<csint>&);
 
 std::vector<csint> cumsum(std::vector<csint>&);
 
+
+/*------------------------------------------------------------------------------
+ *         Declare Template Functions
+ *----------------------------------------------------------------------------*/
+/** Print a std::vector. */
 template <typename T>
-void print_vec(const std::vector<T>& vec);
+void print_vec(const std::vector<T>& vec)
+{
+    std::cout << "[";
+    for (int i = 0; i < vec.size(); i++) {
+        std::cout << vec[i];
+        if (i < vec.size() - 1) {
+            std::cout << ", ";
+        }
+    }
+    std::cout << "]" << std::endl;
+}
+
+
+/** Sort the indices of a vector. */
+template <typename T>
+std::vector<csint> argsort(const std::vector<T>& vec)
+{
+    std::vector<csint> idx(vec.size());
+    std::iota(idx.begin(), idx.end(), 0);
+
+    // Sort the indices by referencing the vector
+    std::sort(
+        idx.begin(),
+        idx.end(),
+        [&vec](csint i, csint j) { return vec[i] < vec[j]; }
+    );
+
+    return idx;
+}
+
 
 #endif
 

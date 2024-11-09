@@ -390,7 +390,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         s.clear();
     }
 
-    SECTION("Test indexing: no duplicates") {
+    SECTION("Test indexing") {
         std::vector<csint> indptr = C.indptr();
         std::vector<csint> indices = C.indices();
         std::vector<double> data = C.data();
@@ -570,6 +570,19 @@ TEST_CASE("Test canonical format", "[CSCMatrix][COOMatrix]")
         REQUIRE(C.indptr() == B.indptr());
         REQUIRE(C.indices() == B.indices());
         REQUIRE(C.data() == B.data());
+    }
+
+    SECTION("Test indexing") {
+        std::vector<csint> indptr = C.indptr();
+        std::vector<csint> indices = C.indices();
+        std::vector<double> data = C.data();
+        csint N = C.shape()[1];
+
+        for (csint j = 0; j < N; j++) {
+            for (csint p = indptr[j]; p < indptr[j+1]; p++) {
+                REQUIRE(C(indices[p], j) == data[p]);
+            }
+        }
     }
 }
 

@@ -125,21 +125,35 @@ const std::vector<double>& CSCMatrix::data() const { return v_; }
 bool CSCMatrix::has_sorted_indices() const { return has_sorted_indices_; }
 bool CSCMatrix::has_canonical_format() const { return has_canonical_format_; }
 
-// TODO update this function to check has_canonical_format
-// NOTE this code assumes that columns are *not* sorted, so it will search
-// through *every* element in a column. If columns were sorted, and there were
-// no duplicates allowed, we could also terminate and return 0 after i_[p] > i;
+
 const double CSCMatrix::operator()(csint i, csint j) const
 {
-    double out = 0;
+    if (has_canonical_format_) {
 
-    for (csint p = p_[j]; p < p_[j+1]; p++) {
-        if (i_[p] == i) {
-            out += v_[p];  // sum duplicate entries
+        // TODO implement binary search over row indices
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            if (i_[p] == i) {
+                return v_[p];
+            } else if (i_[p] > i) {
+                break;
+            }
         }
-    }
 
-    return out;
+        return 0.0;
+
+    } else {
+        // NOTE this code assumes that columns are *not* sorted, so it will
+        // search through *every* element in a column.
+        double out = 0;
+
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            if (i_[p] == i) {
+                out += v_[p];  // sum duplicate entries
+            }
+        }
+
+        return out;
+    }
 }
 
 

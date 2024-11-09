@@ -175,28 +175,27 @@ COOMatrix CSCMatrix::tocoo() const { return COOMatrix(*this); }
  */
 CSCMatrix CSCMatrix::transpose() const
 {
-    csint nnz_ = nnz();
-    std::vector<double> data(nnz_);
-    std::vector<csint> indices(nnz_), indptr(N_ + 1), ws(N_);
+    std::vector<csint> ws(N_);   // workspace
+    CSCMatrix C(N_, M_, nnz());  // output
 
     // Compute number of elements in each row
-    for (csint p = 0; p < nnz_; p++)
+    for (csint p = 0; p < nnz(); p++)
         ws[i_[p]]++;
 
     // Row pointers are the cumulative sum of the counts, starting with 0.
     // Also copy the cumulative sum back into the workspace for iteration
-    indptr = cumsum(ws);
+    C.p_ = cumsum(ws);
 
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             // place A(i, j) as C(j, i)
             csint q = ws[i_[p]]++;
-            indices[q] = j;
-            data[q] = v_[p];
+            C.i_[q] = j;
+            C.v_[q] = v_[p];
         }
     }
 
-    return CSCMatrix {data, indices, indptr, {N_, M_}};
+    return C;
 }
 
 

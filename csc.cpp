@@ -58,37 +58,29 @@ CSCMatrix::CSCMatrix(csint M, csint N, csint nzmax)
 {}
 
 
-// TODO rewrite this constructor to create canonical format
-/** Convert a coordinate format matrix to a compressed sparse column matrix.
+/** Convert a coordinate format matrix to a compressed sparse column matrix in
+ * canonical format.
  *
- * The columns are not guaranteed to be sorted, and duplicates are allowed.
+ * The columns are guaranteed to be sorted, no duplicates are allowed, and no
+ * numerically zero entries are allowed.
  *
- * @return a copy of the `COOMatrix` in CSC format.
+ * See: Davis, Exercise 2.9.
+ *
+ * @return a copy of the `COOMatrix` in canonical CSC format.
  */
 CSCMatrix::CSCMatrix(const COOMatrix& A)
-    : v_(A.nnz()),
-      i_(A.nnz()),
-      p_(A.shape()[1] + 1)
 {
-    // Get the shape
-    std::tie(M_, N_) = A.shape();
+    CSCMatrix C = A.compress();
+    p_ = C.p_;
+    i_ = C.i_;
+    v_ = C.v_;
+    M_ = C.M_;
+    N_ = C.N_;
 
-    csint nnz_ = A.nnz();
-    std::vector<csint> ws(N_);  // workspace
-
-    // Compute number of elements in each column
-    for (csint k = 0; k < nnz_; k++)
-        ws[A.j_[k]]++;
-
-    // Column pointers are the cumulative sum
-    p_ = cumsum(ws);
-
-    for (csint k = 0; k < nnz_; k++) {
-        // A(i, j) is the pth entry in the CSC matrix
-        csint p = ws[A.j_[k]]++;  // "pointer" to the current element's column
-        i_[p] = A.i_[k];
-        v_[p] = A.v_[k];
-    }
+    sum_duplicates();
+    dropzeros();
+    sorted();
+    has_canonical_format_ = true;
 }
 
 

@@ -230,15 +230,7 @@ CSCMatrix COOMatrix::compress() const
  *
  * See: Davis, Exercise 2.9
  */
-CSCMatrix COOMatrix::tocsc() const
-{
-    CSCMatrix A = this->compress()
-                    .sum_duplicates()
-                    .dropzeros()
-                    .sorted();
-    A.has_canonical_format_ = true;
-    return A;
-}
+CSCMatrix COOMatrix::tocsc() const { return CSCMatrix(*this); }
 
 
 /*------------------------------------------------------------------------------

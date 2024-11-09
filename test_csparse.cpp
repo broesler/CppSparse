@@ -546,7 +546,7 @@ TEST_CASE("Test canonical format", "[CSCMatrix][COOMatrix]")
     REQUIRE(A.nnz() == 16);
 
     // Convert to canonical format
-    CSCMatrix C = A.tocsc();
+    CSCMatrix C = A.tocsc();  // as member function
 
     // Duplicates summed
     REQUIRE(C.nnz() == 10);
@@ -562,6 +562,13 @@ TEST_CASE("Test canonical format", "[CSCMatrix][COOMatrix]")
     // Flags set
     REQUIRE(C.has_sorted_indices());
     REQUIRE(C.has_canonical_format());
+
+    SECTION("Test constructor") {
+        CSCMatrix B(A);
+        REQUIRE(C.indptr() == B.indptr());
+        REQUIRE(C.indices() == B.indices());
+        REQUIRE(C.data() == B.data());
+    }
 }
 
 

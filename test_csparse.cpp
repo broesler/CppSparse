@@ -450,6 +450,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
             CSCMatrix Cs = C.sort();
             // cout << "Cs = " << endl << Cs;
 
+            REQUIRE(Cs.has_sorted_indices());
             REQUIRE(Cs.indptr() == indptr_expect);
             REQUIRE(Cs.indices() == indices_expect);
             REQUIRE(Cs.data() == data_expect);
@@ -458,6 +459,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         SECTION("Qsort") {
             CSCMatrix Cs = C.sorted();
 
+            REQUIRE(Cs.has_sorted_indices());
             REQUIRE(Cs.indptr() == indptr_expect);
             REQUIRE(Cs.indices() == indices_expect);
             REQUIRE(Cs.data() == data_expect);

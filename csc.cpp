@@ -123,6 +123,8 @@ const std::vector<csint>& CSCMatrix::indices() const { return i_; }
 const std::vector<csint>& CSCMatrix::indptr() const { return p_; }
 const std::vector<double>& CSCMatrix::data() const { return v_; }
 
+bool CSCMatrix::has_sorted_indices() const { return has_sorted_indices_; }
+
 // NOTE this code assumes that columns are *not* sorted, so it will search
 // through *every* element in a column. If columns were sorted, and there were
 // no duplicates allowed, we could also terminate and return 0 after i_[p] > i;
@@ -157,6 +159,11 @@ COOMatrix CSCMatrix::tocoo() const { return COOMatrix(*this); }
  *
  * This operation can be viewed as converting a Compressed Sparse Column matrix
  * into a Compressed Sparse Row matrix.
+ *
+ * This function takes 
+ *   - O(N) extra space for the workspace
+ *   - O(M * N + nnz) time
+ *       == nnz column counts + N columns * M potential non-zeros per column
  *
  * @return new CSCMatrix object with transposed rows and columns.
  */
@@ -197,12 +204,23 @@ CSCMatrix CSCMatrix::T() const { return this->transpose(); }
 /** Sort rows and columns in a copy. */
 CSCMatrix CSCMatrix::sort() const
 {
-    return this->transpose().transpose();
+    CSCMatrix C = this->transpose().transpose();
+    C.has_sorted_indices_ = true;
+    return C;
 }
 
 
 
-/** Sort rows and columns in place using std::sort */
+/** Sort rows and columns in place using std::sort.
+ *
+ * This function takes
+ *   - O(3*M) extra space ==
+ *       2 workspaces for row indices and values + vector of sorted indices
+ *   - O(N * M log M) time ==
+ *       sort a length M vector for each of N columns
+ *
+ * @return a reference to the object for method chaining
+ */
 CSCMatrix& CSCMatrix::sorted()
 {
     for (csint j = 0; j < N_; j++) {
@@ -233,6 +251,8 @@ CSCMatrix& CSCMatrix::sorted()
             v_[p + i] = x[idx[i]];
         }
     }
+
+    has_sorted_indices_ = true;
 
     return *this;
 }

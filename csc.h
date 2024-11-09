@@ -21,6 +21,7 @@ class CSCMatrix
     std::vector<csint> p_;   // column pointers (CSC size N_);
     csint M_ = 0;            // number of rows
     csint N_ = 0;            // number of columns
+    bool has_sorted_indices_ = false;
 
     void print_elems_(std::ostream& os, csint start, csint end) const;
 
@@ -47,6 +48,8 @@ class CSCMatrix
         csint nnz() const;                   // number of non-zeros
         csint nzmax() const;                 // maximum number of non-zeros
         std::array<csint, 2> shape() const;  // the dimensions of the matrix
+
+        bool has_sorted_indices() const;
 
         const std::vector<csint>& indices() const;     // indices and data
         const std::vector<csint>& indptr() const;

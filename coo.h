@@ -68,6 +68,7 @@ class COOMatrix
 
         // ---------- Format Conversions
         CSCMatrix compress() const;  // convert to raw CSC format
+        CSCMatrix tocsc() const;     // convert to canonical CSC format
 
         // ---------- Math Operations
         COOMatrix transpose() const;  // transpose a copy

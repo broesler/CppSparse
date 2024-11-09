@@ -58,7 +58,7 @@ CSCMatrix::CSCMatrix(csint M, csint N, csint nzmax)
 {}
 
 
-// TODO rewrite this constructor as a member function `compress`.
+// TODO rewrite this constructor to create canonical format
 /** Convert a coordinate format matrix to a compressed sparse column matrix.
  *
  * The columns are not guaranteed to be sorted, and duplicates are allowed.

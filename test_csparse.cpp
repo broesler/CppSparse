@@ -338,26 +338,12 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         std::vector<csint> indices_expect = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
         std::vector<double> data_expect   = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
 
-        // FIXME constructor will now return canonical format
-        // SECTION("As constructor") {
-        //     CSCMatrix B(A);
-
-        //     REQUIRE(B.nnz() == 10);
-        //     REQUIRE(B.nzmax() >= 10);
-        //     REQUIRE(B.shape() == std::array<csint, 2>{4, 4});
-        //     REQUIRE(B.indptr() == indptr_expect);
-        //     REQUIRE(B.indices() == indices_expect);
-        //     REQUIRE(B.data() == data_expect);
-        // }
-
-        SECTION("As function") {
-            REQUIRE(C.nnz() == 10);
-            REQUIRE(C.nzmax() >= 10);
-            REQUIRE(C.shape() == std::array<csint, 2>{4, 4});
-            REQUIRE(C.indptr() == indptr_expect);
-            REQUIRE(C.indices() == indices_expect);
-            REQUIRE(C.data() == data_expect);
-        }
+        REQUIRE(C.nnz() == 10);
+        REQUIRE(C.nzmax() >= 10);
+        REQUIRE(C.shape() == std::array<csint, 2>{4, 4});
+        REQUIRE(C.indptr() == indptr_expect);
+        REQUIRE(C.indices() == indices_expect);
+        REQUIRE(C.data() == data_expect);
     }
 
     SECTION ("Test CSCMatrix printing") {
@@ -540,6 +526,43 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
 
 // TODO test whether transpose, droptol, etc. change the original if we do
 // an assignment
+
+TEST_CASE("Test canonical format", "[CSCMatrix][COOMatrix]")
+{
+    std::vector<csint> indptr_expect  = {  0,               3,                 6,        8,  10};
+    std::vector<csint> indices_expect = {  0,   1,     3,   1,     2,   3,     0,   2,   1,   3};
+    std::vector<double> data_expect   = {4.5, 3.1, 103.5, 2.9, 101.7, 0.4, 103.2, 3.0, 0.9, 1.0};
+
+    COOMatrix A = (
+        davis_21_coo()        // unsorted matrix
+        .assign(0, 2, 100.0)  // assign duplicates
+        .assign(3, 0, 100.0)
+        .assign(2, 1, 100.0)
+        .assign(0, 1, 0.0)    // assign zero entries
+        .assign(2, 2, 0.0)
+        .assign(3, 1, 0.0)
+    );
+
+    REQUIRE(A.nnz() == 16);
+
+    // Convert to canonical format
+    CSCMatrix C = A.tocsc();
+
+    // Duplicates summed
+    REQUIRE(C.nnz() == 10);
+    REQUIRE_THAT(C(0, 2), WithinAbs(103.2, tol));
+    REQUIRE_THAT(C(3, 0), WithinAbs(103.5, tol));
+    REQUIRE_THAT(C(2, 1), WithinAbs(101.7, tol));
+    // No non-zeros
+    REQUIRE_THAT(C.data() != 0.0, AllTrue());
+    // Sorted entries
+    REQUIRE(C.indptr() == indptr_expect);
+    REQUIRE(C.indices() == indices_expect);
+    REQUIRE(C.data() == data_expect);
+    // Flags set
+    REQUIRE(C.has_sorted_indices());
+    REQUIRE(C.has_canonical_format());
+}
 
 
 TEST_CASE("Matrix-vector multiply + addition.", "[math]")

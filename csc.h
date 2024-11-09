@@ -52,6 +52,7 @@ class CSCMatrix
 
         bool has_sorted_indices() const;
         bool has_canonical_format() const;
+        bool is_symmetric() const;  // Exercise 2.13
 
         const std::vector<csint>& indices() const;     // indices and data
         const std::vector<csint>& indptr() const;

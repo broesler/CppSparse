@@ -125,6 +125,7 @@ const std::vector<double>& CSCMatrix::data() const { return v_; }
 bool CSCMatrix::has_sorted_indices() const { return has_sorted_indices_; }
 bool CSCMatrix::has_canonical_format() const { return has_canonical_format_; }
 
+// TODO update this function to check has_canonical_format
 // NOTE this code assumes that columns are *not* sorted, so it will search
 // through *every* element in a column. If columns were sorted, and there were
 // no duplicates allowed, we could also terminate and return 0 after i_[p] > i;
@@ -142,6 +143,35 @@ const double CSCMatrix::operator()(csint i, csint j) const
 }
 
 
+/** Returns true if `A(i, j) == A(i, j)` for all `i, j`.
+ *
+ * See: Davis, Exercise 2.13.
+ *
+ * @return true if the matrix is symmetric.
+ */
+bool CSCMatrix::is_symmetric() const 
+{
+    assert(has_canonical_format_);
+
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            csint i = i_[p];
+
+            if (i == j) 
+                continue;  // skip diagonal
+            
+            if (v_[p] != (*this)(j, i))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+
+/*------------------------------------------------------------------------------
+       Format Operations
+----------------------------------------------------------------------------*/
 /** Convert a compressed sparse column matrix to a coordinate (triplet) format
  * matrix.
  *
@@ -151,10 +181,6 @@ const double CSCMatrix::operator()(csint i, csint j) const
  */
 COOMatrix CSCMatrix::tocoo() const { return COOMatrix(*this); }
 
-
-/*------------------------------------------------------------------------------
-       Format Operations
-----------------------------------------------------------------------------*/
 /** Transpose the matrix as a copy.
  *
  * This operation can be viewed as converting a Compressed Sparse Column matrix

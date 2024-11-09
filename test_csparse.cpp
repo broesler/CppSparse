@@ -527,6 +527,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
 // TODO test whether transpose, droptol, etc. change the original if we do
 // an assignment
 
+
 TEST_CASE("Test canonical format", "[CSCMatrix][COOMatrix]")
 {
     std::vector<csint> indptr_expect  = {  0,               3,                 6,        8,  10};
@@ -562,6 +563,7 @@ TEST_CASE("Test canonical format", "[CSCMatrix][COOMatrix]")
     // Flags set
     REQUIRE(C.has_sorted_indices());
     REQUIRE(C.has_canonical_format());
+    REQUIRE_FALSE(C.is_symmetric());
 
     SECTION("Test constructor") {
         CSCMatrix B(A);
@@ -572,6 +574,36 @@ TEST_CASE("Test canonical format", "[CSCMatrix][COOMatrix]")
 }
 
 
+TEST_CASE("Test is_symmetric.") {
+    std::vector<csint>  i = {0, 1, 2};
+    std::vector<csint>  j = {0, 1, 2};
+    std::vector<double> v = {1, 2, 3};
+
+    SECTION("Test diagonal matrix") {
+        CSCMatrix A = COOMatrix(v, i, j).tocsc();
+        REQUIRE(A.is_symmetric());
+    }
+
+    SECTION("Test non-symmetric matrix with off-diagonals") {
+        CSCMatrix A = COOMatrix(v, i, j)
+                       .assign(0, 1, 1.0)
+                       .tocsc();
+        REQUIRE_FALSE(A.is_symmetric());
+    }
+
+    SECTION("Test symmetric matrix with off-diagonals") {
+        CSCMatrix A = COOMatrix(v, i, j)
+                       .assign(0, 1, 1.0)
+                       .assign(1, 0, 1.0)
+                       .tocsc();
+        REQUIRE(A.is_symmetric());
+    }
+}
+
+
+/*------------------------------------------------------------------------------
+ *          Math Operations
+ *----------------------------------------------------------------------------*/
 TEST_CASE("Matrix-vector multiply + addition.", "[math]")
 {
     SECTION("Test a symmetric (diagonal) matrix.") {

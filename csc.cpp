@@ -7,7 +7,9 @@
  *
  *============================================================================*/
 
+#include <algorithm>
 #include <cmath>
+#include <span>
 
 #include "csparse.h"
 
@@ -129,17 +131,23 @@ bool CSCMatrix::has_canonical_format() const { return has_canonical_format_; }
 const double CSCMatrix::operator()(csint i, csint j) const
 {
     if (has_canonical_format_) {
+        // TODO implement binary search for readability?
 
-        // TODO implement binary search over row indices
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
-            if (i_[p] == i) {
-                return v_[p];
-            } else if (i_[p] > i) {
-                break;
-            }
+        // Using the STL:
+        // Find the index of the requested element, if it exists
+        csint p = p_[j],
+              pn = p_[j+1];
+        csint d = pn - p;
+        std::span rows{i_.begin() + p, d};
+
+        auto t = std::find(rows.begin(), rows.end(), i);
+
+        if (t != rows.end()) {
+            csint idx = std::distance(rows.begin(), t);
+            return v_[p + idx];
+        } else {
+            return 0.0;
         }
-
-        return 0.0;
 
     } else {
         // NOTE this code assumes that columns are *not* sorted, so it will

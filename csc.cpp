@@ -399,9 +399,11 @@ CSCMatrix& CSCMatrix::droptol(double tol)
 /** Return true if `A(i, j)` is within the diagonals `limits = {lower, upper}`. */
 bool CSCMatrix::in_band(csint i, csint j, double Aij, void *limits)
 {
-    int kl, ku;
+    int ii = (int) i,  // cast to signed int to preserve signs
+        jj = (int) j;
+    int kl, ku;        // extract lower/upper diagonals
     std::tie(kl, ku) = *((std::array<int, 2> *) limits);
-    return ((i <= (j - kl)) && (i >= (j - ku)));
+    return ((ii <= (jj - kl)) && (ii >= (jj - ku)));
 };
 
 

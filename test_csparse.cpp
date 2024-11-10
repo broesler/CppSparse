@@ -975,21 +975,23 @@ TEST_CASE("Test band function")
         REQUIRE(Ab.data() == expect_data);
     }
 
-    // SECTION("Test arbitrary diagonals") {
-    //     int kl = -3,
-    //         ku = 2;
+    SECTION("Test arbitrary diagonals") {
+        int kl = -3,
+            ku = 2;
 
-    //     COOMatrix Ab = A.band(kl, ku).tocoo();
+        // CSCMatrix Ab = A.band(kl, ku);
+        // cout << Ab;
+        COOMatrix Ab = A.band(kl, ku).tocoo();
 
-    //     std::vector<csint> expect_rows = {0, 1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 2, 3, 4, 5};
-    //     std::vector<csint> expect_cols = {0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5};
-    //     std::vector<double> expect_data(expect_rows.size(), 1);
+        std::vector<csint> expect_rows = {0, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 2, 3, 4, 5, 3, 4, 5};
+        std::vector<csint> expect_cols = {0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5};
+        std::vector<double> expect_data(expect_rows.size(), 1);
 
-    //     CHECK(Ab.nnz() == 27);
-    //     CHECK(Ab.row() == expect_rows);
-    //     CHECK(Ab.column() == expect_cols);
-    //     REQUIRE(Ab.data() == expect_data);
-    // }
+        CHECK(Ab.nnz() == 27);
+        CHECK(Ab.row() == expect_rows);
+        CHECK(Ab.column() == expect_cols);
+        REQUIRE(Ab.data() == expect_data);
+    }
 }
 
 

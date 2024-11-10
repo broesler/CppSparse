@@ -413,6 +413,8 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
 
     // Test the transpose -> use indexing to test A(i, j) == A(j, i)
     SECTION("Transpose") {
+        // lambda to test on M == N, M < N, M > N
+        auto transpose_test = [](CSCMatrix C) {
         CSCMatrix C_T = C.transpose();
 
         csint M, N;
@@ -426,6 +428,19 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
             for (csint j = 0; j < N; j++) {
                 REQUIRE(C(i, j) == C_T(j, i));
             }
+        }
+        };
+
+        SECTION("Test square matrix M == N") {
+            transpose_test(C);  // shape = {4, 4}
+        }
+
+        SECTION("Test non-square matrix M < N") {
+            transpose_test(A.assign(0, 4, 1.6).compress()); // shape = {4, 5}
+        }
+
+        SECTION("Test non-square matrix M > N") {
+            transpose_test(A.assign(4, 0, 1.6).compress()); // shape = {5, 4}
         }
     }
 

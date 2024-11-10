@@ -259,7 +259,7 @@ COOMatrix CSCMatrix::tocoo() const { return COOMatrix(*this); }
  */
 CSCMatrix CSCMatrix::transpose() const
 {
-    std::vector<csint> ws(N_);   // workspace
+    std::vector<csint> ws(M_);   // workspace
     CSCMatrix C(N_, M_, nnz());  // output
 
     // Compute number of elements in each row

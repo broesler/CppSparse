@@ -26,6 +26,8 @@ class CSCMatrix
 
     void print_elems_(std::ostream& os, csint start, csint end) const;
 
+    void trans_(CSCMatrix& C, std::vector<csint>& w);
+
     public:
         friend class COOMatrix;
 

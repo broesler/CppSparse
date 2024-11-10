@@ -369,7 +369,29 @@ CSCMatrix& CSCMatrix::sort()
     // Also copy the cumulative sum back into the workspace for iteration
     C.p_ = cumsum(w);
 
-    // TODO refactor these loops into a function? C = this->trans_(w)
+    // Transpose the values from *this to C
+    trans_(C, w);
+
+    // ----- second transpose
+    // Copy column counts to avoid repeat work
+    w = p_;
+
+    // Transpose the values from C to *this
+    C.trans_(*this, w);
+
+    has_sorted_indices_ = true;
+
+    return *this;
+}
+
+
+/** Helper function to actually transpose the values.
+ *
+ * @param C[in,out]  reference to the matrix into which values will be placed
+ * @param w[in,out]  workspace containing row counts of calling object
+ */
+void CSCMatrix::trans_(CSCMatrix& C, std::vector<csint>& w)
+{
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             // place A(i, j) as C(j, i)
@@ -378,24 +400,6 @@ CSCMatrix& CSCMatrix::sort()
             C.v_[q] = v_[p];
         }
     }
-
-    // ----- second transpose
-    // Copy column counts to avoid repeat work
-    w = p_;
-
-    // TODO refactor into function *this = C.trans_(w)
-    for (csint j = 0; j < C.N_; j++) {
-        for (csint p = C.p_[j]; p < C.p_[j+1]; p++) {
-            // place C(i, j) as A(j, i)
-            csint q = w[C.i_[p]]++;
-            i_[q] = j;
-            v_[q] = C.v_[p];
-        }
-    }
-
-    has_sorted_indices_ = true;
-
-    return *this;
 }
 
 

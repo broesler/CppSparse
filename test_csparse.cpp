@@ -415,20 +415,20 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
     SECTION("Transpose") {
         // lambda to test on M == N, M < N, M > N
         auto transpose_test = [](CSCMatrix C) {
-        CSCMatrix C_T = C.transpose();
+            CSCMatrix C_T = C.transpose();
 
-        csint M, N;
-        std::tie(M, N) = C.shape();
+            csint M, N;
+            std::tie(M, N) = C.shape();
 
-        REQUIRE(C.nnz() == C_T.nnz());
-        REQUIRE(M == C_T.shape()[1]);
-        REQUIRE(N == C_T.shape()[0]);
+            REQUIRE(C.nnz() == C_T.nnz());
+            REQUIRE(M == C_T.shape()[1]);
+            REQUIRE(N == C_T.shape()[0]);
 
-        for (csint i = 0; i < M; i++) {
-            for (csint j = 0; j < N; j++) {
-                REQUIRE(C(i, j) == C_T(j, i));
+            for (csint i = 0; i < M; i++) {
+                for (csint j = 0; j < N; j++) {
+                    REQUIRE(C(i, j) == C_T(j, i));
+                }
             }
-        }
         };
 
         SECTION("Test square matrix M == N") {
@@ -445,36 +445,32 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
     }
 
     SECTION("Sort rows/columns") {
-        std::vector<csint> indptr_expect  = {  0,             3,             6,        8,  10};
-        std::vector<csint> indices_expect = {  0,   1,   3,   1,   2,   3,   0,   2,   1,   3};
-        std::vector<double> data_expect   = {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0};
+        // Test on non-square matrix M != N
+        C = A.assign(0, 4, 1.6).compress();  // {4, 5}
 
-        SECTION("Two transposes") {
-            CSCMatrix Cs = C.tsort();
-            // cout << "Cs = " << endl << Cs;
+        auto sort_test = [](CSCMatrix Cs) {
+            std::array<csint, 2> shape_expect = {4, 5};
+            std::vector<csint> indptr_expect  = {  0,             3,             6,        8,       10, 11};
+            std::vector<csint> indices_expect = {  0,   1,   3,   1,   2,   3,   0,   2,   1,   3,   0};
+            std::vector<double> data_expect   = {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0, 1.6};
 
+            REQUIRE(Cs.shape() == shape_expect);
             REQUIRE(Cs.has_sorted_indices());
             REQUIRE(Cs.indptr() == indptr_expect);
             REQUIRE(Cs.indices() == indices_expect);
             REQUIRE(Cs.data() == data_expect);
+        };
+
+        SECTION("Two transposes") {
+            sort_test(C.tsort());
         }
 
         SECTION("qsort") {
-            CSCMatrix Cs = C.qsort();
-
-            REQUIRE(Cs.has_sorted_indices());
-            REQUIRE(Cs.indptr() == indptr_expect);
-            REQUIRE(Cs.indices() == indices_expect);
-            REQUIRE(Cs.data() == data_expect);
+            sort_test(C.qsort());
         }
 
         SECTION("Efficient two transposes") {
-            CSCMatrix Cs = C.sort();
-
-            REQUIRE(Cs.has_sorted_indices());
-            REQUIRE(Cs.indptr() == indptr_expect);
-            REQUIRE(Cs.indices() == indices_expect);
-            REQUIRE(Cs.data() == data_expect);
+            sort_test(C.sort());
         }
     }
 

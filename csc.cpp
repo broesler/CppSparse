@@ -286,9 +286,6 @@ CSCMatrix CSCMatrix::transpose() const
 // Alias for transpose
 CSCMatrix CSCMatrix::T() const { return this->transpose(); }
 
-// TODO transpose in-place? Then we can sort in-place?
-// Or just use the version of `sort` that uses quicksort directly.
-
 
 /** Sort rows and columns in a copy via two transposes.
  *
@@ -351,17 +348,17 @@ CSCMatrix& CSCMatrix::qsort()
 }
 
 
-/** Sort rows and columns in a copy via two transposes, but more efficiently
- * than calling `transpose` twice.
+/** Sort rows and columns in place two transposes, but more efficiently than
+ * calling `transpose` twice.
  *
  * See: Davis, Exercise 2.11.
  *
- * @return C  a copy of the matrix with sorted columns.
+ * @return A  a reference to the matrix, now with sorted columns.
  */
 CSCMatrix& CSCMatrix::sort()
 {
     // ----- first transpose
-    std::vector<csint> w(N_);   // workspace
+    std::vector<csint> w(M_);   // workspace
     CSCMatrix C(N_, M_, nnz());  // intermediate transpose
 
     // Compute number of elements in each row
@@ -372,6 +369,7 @@ CSCMatrix& CSCMatrix::sort()
     // Also copy the cumulative sum back into the workspace for iteration
     C.p_ = cumsum(w);
 
+    // TODO refactor these loops into a function? C = this->trans_(w)
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             // place A(i, j) as C(j, i)
@@ -382,16 +380,13 @@ CSCMatrix& CSCMatrix::sort()
     }
 
     // ----- second transpose
-    // Reset workspace
-    w.clear();
-    w.resize(M_);
-
     // Copy column counts to avoid repeat work
     w = p_;
 
-    for (csint j = 0; j < N_; j++) {
+    // TODO refactor into function *this = C.trans_(w)
+    for (csint j = 0; j < C.N_; j++) {
         for (csint p = C.p_[j]; p < C.p_[j+1]; p++) {
-            // place A(i, j) as A(j, i)
+            // place C(i, j) as A(j, i)
             csint q = w[C.i_[p]]++;
             i_[q] = j;
             v_[q] = C.v_[p];

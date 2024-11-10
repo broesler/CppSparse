@@ -68,10 +68,11 @@ class CSCMatrix
 
         // ---------- Math Operations
         CSCMatrix transpose() const;  // transpose a copy
-        CSCMatrix T() const;          // transpose a copy
+        CSCMatrix T() const;          // transpose a copy (alias)
 
-        CSCMatrix sort() const;  // Exercise 2.7
-        CSCMatrix& sorted();     // Exercise 2.8
+        CSCMatrix tsort() const;      //  Exercise 2.7
+        CSCMatrix& qsort();           //  Exercise 2.8 sort in-place
+        CSCMatrix& sort();            //  Exercise 2.11 efficient sort in-place
 
         CSCMatrix& sum_duplicates();
 

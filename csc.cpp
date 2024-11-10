@@ -81,7 +81,7 @@ CSCMatrix::CSCMatrix(const COOMatrix& A)
 
     sum_duplicates();
     dropzeros();
-    sorted();
+    sort();
     has_canonical_format_ = true;
 }
 
@@ -244,6 +244,7 @@ bool CSCMatrix::is_symmetric() const
  */
 COOMatrix CSCMatrix::tocoo() const { return COOMatrix(*this); }
 
+
 /** Transpose the matrix as a copy.
  *
  * This operation can be viewed as converting a Compressed Sparse Column matrix
@@ -289,8 +290,13 @@ CSCMatrix CSCMatrix::T() const { return this->transpose(); }
 // Or just use the version of `sort` that uses quicksort directly.
 
 
-/** Sort rows and columns in a copy. */
-CSCMatrix CSCMatrix::sort() const
+/** Sort rows and columns in a copy via two transposes.
+ *
+ * See: Davis, Exercise 2.7.
+ *
+ * @return C  a copy of the matrix with sorted columns.
+ */
+CSCMatrix CSCMatrix::tsort() const
 {
     CSCMatrix C = this->transpose().transpose();
     C.has_sorted_indices_ = true;
@@ -298,18 +304,17 @@ CSCMatrix CSCMatrix::sort() const
 }
 
 
-
 /** Sort rows and columns in place using std::sort.
  *
  * This function takes
  *   - O(3*M) extra space ==
  *       2 workspaces for row indices and values + vector of sorted indices
- *   - O(N * M log M) time ==
+ *   - O(N * M log M + nnz) time ==
  *       sort a length M vector for each of N columns
  *
  * @return a reference to the object for method chaining
  */
-CSCMatrix& CSCMatrix::sorted()
+CSCMatrix& CSCMatrix::qsort()
 {
     for (csint j = 0; j < N_; j++) {
         // Pointers to the rows
@@ -337,6 +342,59 @@ CSCMatrix& CSCMatrix::sorted()
         for (csint i = 0; i < Nc; i++) {
             i_[p + i] = w[idx[i]];
             v_[p + i] = x[idx[i]];
+        }
+    }
+
+    has_sorted_indices_ = true;
+
+    return *this;
+}
+
+
+/** Sort rows and columns in a copy via two transposes, but more efficiently
+ * than calling `transpose` twice.
+ *
+ * See: Davis, Exercise 2.11.
+ *
+ * @return C  a copy of the matrix with sorted columns.
+ */
+CSCMatrix& CSCMatrix::sort()
+{
+    // ----- first transpose
+    std::vector<csint> w(N_);   // workspace
+    CSCMatrix C(N_, M_, nnz());  // intermediate transpose
+
+    // Compute number of elements in each row
+    for (csint p = 0; p < nnz(); p++)
+        w[i_[p]]++;
+
+    // Row pointers are the cumulative sum of the counts, starting with 0.
+    // Also copy the cumulative sum back into the workspace for iteration
+    C.p_ = cumsum(w);
+
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            // place A(i, j) as C(j, i)
+            csint q = w[i_[p]]++;
+            C.i_[q] = j;
+            C.v_[q] = v_[p];
+        }
+    }
+
+    // ----- second transpose
+    // Reset workspace
+    w.clear();
+    w.resize(M_);
+
+    // Copy column counts to avoid repeat work
+    w = p_;
+
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = C.p_[j]; p < C.p_[j+1]; p++) {
+            // place A(i, j) as A(j, i)
+            csint q = w[C.i_[p]]++;
+            i_[q] = j;
+            v_[q] = C.v_[p];
         }
     }
 
@@ -664,6 +722,8 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
     C.p_[N] = nz;
     C.realloc();
 
+    // TODO put into canonical format and test
+
     return C;
 }
 
@@ -718,6 +778,8 @@ CSCMatrix add_scaled(
     // Finalize and deallocate unused memory
     C.p_[N] = nz;
     C.realloc();
+
+    // TODO put into canonical format and test
 
     return C;
 }

@@ -435,7 +435,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         std::vector<double> data_expect   = {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0};
 
         SECTION("Two transposes") {
-            CSCMatrix Cs = C.sort();
+            CSCMatrix Cs = C.tsort();
             // cout << "Cs = " << endl << Cs;
 
             REQUIRE(Cs.has_sorted_indices());
@@ -444,8 +444,17 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
             REQUIRE(Cs.data() == data_expect);
         }
 
-        SECTION("Qsort") {
-            CSCMatrix Cs = C.sorted();
+        SECTION("qsort") {
+            CSCMatrix Cs = C.qsort();
+
+            REQUIRE(Cs.has_sorted_indices());
+            REQUIRE(Cs.indptr() == indptr_expect);
+            REQUIRE(Cs.indices() == indices_expect);
+            REQUIRE(Cs.data() == data_expect);
+        }
+
+        SECTION("Efficient two transposes") {
+            CSCMatrix Cs = C.sort();
 
             REQUIRE(Cs.has_sorted_indices());
             REQUIRE(Cs.indptr() == indptr_expect);
@@ -1004,7 +1013,6 @@ TEST_CASE("Test CSC from dense column-major") {
     };
 
     CSCMatrix A {dense_mat, 4, 4};
-    cout << A;
 
     CSCMatrix expect_A = davis_21_coo().tocsc();
 

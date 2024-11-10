@@ -263,6 +263,7 @@ std::vector<double> COOMatrix::dot(const std::vector<double>& x) const
     return out;
 }
 
+// Exercise 2.10
 std::vector<double> operator*(const COOMatrix& A, const std::vector<double>& x)
 { return A.dot(x); }
 

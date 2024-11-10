@@ -98,6 +98,7 @@ class CSCMatrix
             std::vector<double> y
         );
 
+        // Exercise 2.1
         friend std::vector<double> gatxpy(
             const CSCMatrix& A,
             const std::vector<double>& x,
@@ -111,7 +112,7 @@ class CSCMatrix
             std::vector<double> y
         );
 
-        // Scale
+        // Exercise 2.4
         CSCMatrix scale(const std::vector<double>& r, const std::vector<double> c) const;
 
         // Multiply

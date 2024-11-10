@@ -67,11 +67,11 @@ class COOMatrix
         );  // assign a dense submatrix (Exercise 2.5)
 
         // ---------- Format Conversions
-        CSCMatrix compress() const;  // convert to raw CSC format
-        CSCMatrix tocsc() const;     // convert to canonical CSC format
+        CSCMatrix compress() const;  // raw CSC format (no sorting, duplicates)
+        CSCMatrix tocsc() const;     // canonical CSC format, Exercise 2.9
 
         // ---------- Math Operations
-        COOMatrix transpose() const;  // transpose a copy
+        COOMatrix transpose() const;  // transpose a copy, Exercise 2.6
         COOMatrix T() const;
 
         std::vector<double> dot(const std::vector<double>& x) const;
@@ -87,6 +87,7 @@ class COOMatrix
 // Operator overloads
 std::ostream& operator<<(std::ostream&, const COOMatrix&);
 
+// Exercise 2.10
 std::vector<double> operator*(const COOMatrix&, const std::vector<double>&);
 
 #endif

@@ -86,6 +86,50 @@ CSCMatrix::CSCMatrix(const COOMatrix& A)
 }
 
 
+/** Create a sparse copy of a dense matrix in column-major fomr.
+ *
+ * @param A a dense matrix in column-major form
+ * @param M, N the size of the matrix
+ *
+ * @return C a compressed sparse column version of the matrix
+ */
+CSCMatrix::CSCMatrix(const std::vector<double>& A, csint M, csint N)
+    : M_(M),
+      N_(N)
+{
+    assert(A.size() == (M * N));  // ensure input is valid
+
+    // Allocate memory
+    v_.reserve(A.size());
+    i_.reserve(A.size());
+    p_.reserve(N);
+
+    csint nz = 0;  // count number of non-zeros
+
+    for (csint j = 0; j < N; j++) {
+        p_.push_back(nz);
+
+        for (csint i = 0; i < M; i++) {
+            double val = A[i + j * N];  // linear index for column-major order
+
+            // Only store non-zeros
+            if (val != 0.0) {
+                i_.push_back(i);
+                v_.push_back(val);
+                nz++;
+            }
+        }
+    }
+
+    // Finalize and free unused space
+    p_.push_back(nz);
+    realloc();
+
+    has_sorted_indices_ = true;    // guaranteed by algorithm
+    has_canonical_format_ = true;  // guaranteed by input format
+}
+
+
 /** Reallocate a CSCMatrix to a new number of non-zeros.
  *
  * @param A      matrix to be resized

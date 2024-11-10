@@ -41,7 +41,8 @@ class CSCMatrix
         );
 
         CSCMatrix(csint M, csint N, csint nzmax=0);  // allocate dims + nzmax
-        CSCMatrix(const COOMatrix& A);
+        CSCMatrix(const COOMatrix& A);               // Exercise 2.2
+        CSCMatrix(const std::vector<double>& A, csint M, csint N);  // Exercise 2.16
 
         CSCMatrix& realloc(csint nzmax=0);           // re-allocate vectors
 

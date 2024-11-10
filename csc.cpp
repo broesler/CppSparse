@@ -259,21 +259,21 @@ COOMatrix CSCMatrix::tocoo() const { return COOMatrix(*this); }
  */
 CSCMatrix CSCMatrix::transpose() const
 {
-    std::vector<csint> ws(M_);   // workspace
+    std::vector<csint> w(M_);   // workspace
     CSCMatrix C(N_, M_, nnz());  // output
 
     // Compute number of elements in each row
     for (csint p = 0; p < nnz(); p++)
-        ws[i_[p]]++;
+        w[i_[p]]++;
 
     // Row pointers are the cumulative sum of the counts, starting with 0.
     // Also copy the cumulative sum back into the workspace for iteration
-    C.p_ = cumsum(ws);
+    C.p_ = cumsum(w);
 
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             // place A(i, j) as C(j, i)
-            csint q = ws[i_[p]]++;
+            csint q = w[i_[p]]++;
             C.i_[q] = j;
             C.v_[q] = v_[p];
         }
@@ -369,7 +369,6 @@ CSCMatrix& CSCMatrix::sort()
     // Also copy the cumulative sum back into the workspace for iteration
     C.p_ = cumsum(w);
 
-    // TODO refactor these loops into a function? C = this->trans_(w)
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             // place A(i, j) as C(j, i)
@@ -383,7 +382,6 @@ CSCMatrix& CSCMatrix::sort()
     // Copy column counts to avoid repeat work
     w = p_;
 
-    // TODO refactor into function *this = C.trans_(w)
     for (csint j = 0; j < C.N_; j++) {
         for (csint p = C.p_[j]; p < C.p_[j+1]; p++) {
             // place C(i, j) as A(j, i)
@@ -403,16 +401,16 @@ CSCMatrix& CSCMatrix::sort()
 CSCMatrix& CSCMatrix::sum_duplicates()
 {
     csint nz = 0;  // count actual number of non-zeros (excluding dups)
-    std::vector<int> ws(M_, -1);                      // row i not yet seen
+    std::vector<int> w(M_, -1);                      // row i not yet seen
 
     for (csint j = 0; j < N_; j++) {
         int q = nz;                                  // column j will start at q
         for (csint p = p_[j]; p < p_[j + 1]; p++) {
             csint i = i_[p];                          // A(i, j) is nonzero
-            if (ws[i] >= q) {
-                v_[ws[i]] += v_[p];                   // A(i, j) is a duplicate
+            if (w[i] >= q) {
+                v_[w[i]] += v_[p];                   // A(i, j) is a duplicate
             } else {
-                ws[i] = nz;                          // record where row i occurs
+                w[i] = nz;                          // record where row i occurs
                 i_[nz] = i;                          // keep A(i, j)
                 v_[nz++] = v_[p];
             }

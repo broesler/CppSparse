@@ -313,30 +313,28 @@ CSCMatrix CSCMatrix::tsort() const
  */
 CSCMatrix& CSCMatrix::qsort()
 {
+    // Allocate workspaces
+    std::vector<csint> w(nnz());
+    std::vector<double> x(nnz());
+
     for (csint j = 0; j < N_; j++) {
         // Pointers to the rows
         csint p = p_[j],
               pn = p_[j+1];
 
-        assert(pn > p);
-        csint Nc = pn - p;  // number of elements in the column
-
-        // TODO allocate workspaces outside of loop (size M_) and have argsort
-        // take a length argument to just sort the correct subset?
-
-        // Allocate clean workspaces
-        std::vector<csint> w(Nc);
-        std::vector<double> x(Nc);
+        // clear workspaces
+        w.clear();
+        x.clear();
 
         // Copy the row indices and values into the workspace
-        std::copy(i_.begin() + p, i_.begin() + pn, w.begin());
-        std::copy(v_.begin() + p, v_.begin() + pn, x.begin());
+        std::copy(i_.begin() + p, i_.begin() + pn, std::back_inserter(w));
+        std::copy(v_.begin() + p, v_.begin() + pn, std::back_inserter(x));
 
         // argsort the rows to get indices
         std::vector<csint> idx = argsort(w);
 
         // Re-assign the values
-        for (csint i = 0; i < Nc; i++) {
+        for (csint i = 0; i < idx.size(); i++) {
             i_[p + i] = w[idx[i]];
             v_[p + i] = x[idx[i]];
         }

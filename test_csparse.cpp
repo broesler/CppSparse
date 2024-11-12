@@ -608,6 +608,7 @@ TEST_CASE("Test canonical format", "[CSCMatrix][COOMatrix]")
 }
 
 
+// Exercise 2.13
 TEST_CASE("Test is_symmetric.") {
     std::vector<csint>  i = {0, 1, 2};
     std::vector<csint>  j = {0, 1, 2};
@@ -750,9 +751,31 @@ TEST_CASE("Matrix-matrix multiply.", "[math]")
 
     for (csint i = 0; i < M; i++) {
         for (csint j = 0; j < N; j++) {
-            REQUIRE(C(i, j) == expect(i, j));
+            REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
         }
     }
+}
+
+
+// Exercise 2.18
+TEST_CASE("Sparse Vector-Vector Multiply", "[math]")
+{
+    // Sparse column vectors *without* sorting columns.
+    CSCMatrix x = COOMatrix(
+        std::vector<double> {4.5, 3.1, 3.5, 2.9, 1.7, 0.4},
+        std::vector<csint>  {0, 1, 3, 5, 6, 7},
+        std::vector<csint>  (6, 0)
+    ).compress();
+
+    CSCMatrix y = COOMatrix(
+        std::vector<double> {3.2, 3.0, 0.9, 1.0},
+        std::vector<csint>  {0, 2, 5, 7},
+        std::vector<csint>  (4, 0)
+    ).compress();
+
+    double expect = 17.41;
+
+    REQUIRE_THAT(x.T().dot(y), WithinAbs(expect, tol));
 }
 
 
@@ -1054,6 +1077,7 @@ TEST_CASE("Test validity check")
     A = C.assign(0, 1, 0.0).compress();
     REQUIRE_FALSE(A.is_valid(!SORTED, VALUES));
 }
+
 
 
 /*==============================================================================

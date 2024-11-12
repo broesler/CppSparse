@@ -158,6 +158,12 @@ class CSCMatrix
             bool verbose=false,
             csint threshold=1000
         ) const;
+
+        // Type conversions
+        operator double() const {
+            assert((M_ == 1) && (N_ == 1));
+            return v_[0];
+        }
 };
 
 

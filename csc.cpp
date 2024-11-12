@@ -719,6 +719,49 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
 }
 
 
+// Exercise 2.18
+double CSCMatrix::vecdot(const CSCMatrix& y) const
+{
+    assert((N_ == 1) && (y.N_ == 1));  // both must be column vectors
+    assert(M_ == y.M_);
+    double z = 0.0;
+
+    if (has_sorted_indices_ && y.has_sorted_indices_) {
+        csint p = 0, q = 0;  // pointer to row index of each vector
+
+        while ((p < nnz()) && (q < y.nnz())) {
+            csint i = i_[p];    // row index of each vector
+            csint j = y.i_[q];
+
+            if (i == j) {
+                z += v_[p++] * y.v_[q++];
+            } else if (i < j) {
+                p++;
+            } else {  // (j < i)
+                q++;
+            }
+        }
+
+    } else {  // unsorted indices
+        std::vector<double> w(M_);  // workspace
+
+        // Expand this vector
+        for (csint p = 0; p < nnz(); p++) {
+            w[i_[p]] = v_[p];
+        }
+
+        // Multiply by non-zero entries in y and sum
+        for (csint q = 0; q < y.nnz(); q++) {
+            csint i = y.i_[q];
+            if (w[i] != 0) {
+                z += w[i] * y.v_[q];
+            }
+        }
+    }
+
+    return z;
+}
+
 // Operators
 std::vector<double> operator*(const CSCMatrix& A, const std::vector<double>& x) 
 { return A.dot(x); }

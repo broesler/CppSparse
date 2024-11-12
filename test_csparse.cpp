@@ -775,7 +775,18 @@ TEST_CASE("Sparse Vector-Vector Multiply", "[math]")
 
     double expect = 17.41;
 
-    REQUIRE_THAT(x.T().dot(y), WithinAbs(expect, tol));
+    SECTION("Test unsorted indices") {
+        CHECK_THAT(x.T() * y, WithinAbs(expect, tol));
+        REQUIRE_THAT(x.vecdot(y), WithinAbs(expect, tol));
+    }
+
+    SECTION("Test sorted indices") {
+        x.sort();
+        y.sort();
+
+        CHECK_THAT(x.T() * y, WithinAbs(expect, tol));
+        REQUIRE_THAT(x.vecdot(y), WithinAbs(expect, tol));
+    }
 }
 
 

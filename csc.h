@@ -149,6 +149,9 @@ class CSCMatrix
 
         double norm() const;
 
+        // Exercise 2.12 "cs_ok"
+        bool is_valid(const bool sorted=false, const bool values=false) const;
+
         // ---------- Other
         void print(
             std::ostream& os=std::cout,

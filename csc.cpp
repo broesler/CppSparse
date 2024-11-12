@@ -958,6 +958,52 @@ double CSCMatrix::norm() const
 }
 
 
+// TODO raise appropriate errors with informative messages
+/** Check a matrix for valid compressed sparse column format.
+ *
+ * See: Davis, Exercise 2.12 "cs_ok"
+ *
+ * @param sorted  if true, check if columns are sorted.
+ * @param values  if true, check if values exist and are all non-zero.
+ *
+ * @return true if matrix is valid compressed sparse column format.
+ */
+bool CSCMatrix::is_valid(const bool sorted, const bool values) const
+{
+    // Check number of columns
+    if (p_.size() != (N_ + 1)) {
+        // std::cout << "Columns inconsistent!" << std::endl;
+        return false;
+    }
+
+    // TODO not sure how we're supposed to use O(M) space? Column counts can't
+    // be independently checked.
+
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            csint i = i_[p];
+
+            if (i > M_) {
+                // std::cout << "Invalid row index!" << std::endl;
+                return false;  // invalid row index
+            }
+
+            if (sorted && (p < (p_[j+1] - 1)) && (i > i_[p+1])) {
+                // std::cout << "Columns not sorted!" << std::endl;
+                return false;  // not sorted in ascending order
+            }
+
+            if (values && v_[p] == 0.0) {
+                // std::cout << "Explicit zeros!" << std::endl;
+                return false;  // no zeros allowed
+            }
+        }
+    }
+
+    return true;
+}
+
+
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/

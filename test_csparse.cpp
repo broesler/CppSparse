@@ -38,7 +38,7 @@ COOMatrix davis_21_coo() {
 
 
 // TODO figure out how to use the "spaceship" operator<=> to define all
-// of the comparisons in one fell swoop? 
+// of the comparisons in one fell swoop?
 // A: May only work if we define a wrapper class on std::vector and define the
 //    operator within the class vs. scalars.
 
@@ -179,7 +179,7 @@ TEST_CASE("Test argsort.", "[vector]")
 
 
 /*------------------------------------------------------------------------------
- *         Test Matrix Functions 
+ *         Test Matrix Functions
  *----------------------------------------------------------------------------*/
 TEST_CASE("Test COOMatrix Constructors", "[COOMatrix]")
 {
@@ -328,7 +328,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
 }
 
 
-TEST_CASE("Test CSCMatrix", "[CSCMatrix]") 
+TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
 {
     COOMatrix A = davis_21_coo();
     CSCMatrix C = A.compress();
@@ -454,10 +454,10 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
             std::vector<csint> indices_expect = {  0,   1,   3,   1,   2,   3,   0,   2,   1,   3,   0};
             std::vector<double> data_expect   = {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0, 1.6};
 
-            REQUIRE(Cs.shape() == shape_expect);
-            REQUIRE(Cs.has_sorted_indices());
-            REQUIRE(Cs.indptr() == indptr_expect);
-            REQUIRE(Cs.indices() == indices_expect);
+            CHECK(Cs.shape() == shape_expect);
+            CHECK(Cs.has_sorted_indices());
+            CHECK(Cs.indptr() == indptr_expect);
+            CHECK(Cs.indices() == indices_expect);
             REQUIRE(Cs.data() == data_expect);
         };
 
@@ -824,7 +824,7 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
     //        [4, 5, 6]])
     // >>> B
     // ===
-    // array([[1, 1, 1]  
+    // array([[1, 1, 1]
     //        [1, 1, 1]])
     // >>> 0.1 * B + 9.0 * C
     // ===
@@ -854,7 +854,7 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
 
     // Test function definition
     CSCMatrix Cf = add_scaled(A, B, 0.1, 9.0);
-    
+
     // Test operator overloading
     CSCMatrix C = 0.1 * A + 9.0 * B;
     // cout << "C = \n" << C << endl;
@@ -1015,7 +1015,8 @@ TEST_CASE("Test band function")
 }
 
 
-TEST_CASE("Test CSC from dense column-major") {
+TEST_CASE("Test CSC from dense column-major")
+{
     std::vector<double> dense_mat = {
         4.5, 3.1, 0.0, 3.5,
         0.0, 2.9, 1.7, 0.4,
@@ -1033,6 +1034,26 @@ TEST_CASE("Test CSC from dense column-major") {
     REQUIRE(A.data() == expect_A.data());
 }
 
+
+TEST_CASE("Test validity check")
+{
+    COOMatrix C = davis_21_coo();
+    CSCMatrix A = davis_21_coo().compress();
+
+    constexpr bool SORTED = true;
+    constexpr bool VALUES = true;
+
+    REQUIRE(A.is_valid());
+    REQUIRE_FALSE(A.is_valid(SORTED));
+    REQUIRE_FALSE(A.is_valid(SORTED));
+
+    REQUIRE(A.sort().is_valid(SORTED));
+    REQUIRE(A.sort().is_valid(SORTED, VALUES));  // no non-zeros
+
+    // Add explicit non-zeros
+    A = C.assign(0, 1, 0.0).compress();
+    REQUIRE_FALSE(A.is_valid(!SORTED, VALUES));
+}
 
 
 /*==============================================================================

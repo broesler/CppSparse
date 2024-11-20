@@ -22,7 +22,7 @@ class COOMatrix
     csint M_ = 0;            // number of rows
     csint N_ = 0;            // number of columns
 
-    void print_elems_(std::ostream&, csint, csint) const;
+    void print_elems_(std::ostream& os, const csint start, const csint end) const;
 
     public:
         friend class CSCMatrix;
@@ -79,8 +79,8 @@ class COOMatrix
         // ---------- Other
         void print(
             std::ostream& os=std::cout,
-            bool verbose=false,
-            csint threshold=1000
+            const bool verbose=false,
+            const csint threshold=1000
         ) const;
 };
 

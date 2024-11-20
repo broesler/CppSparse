@@ -24,7 +24,7 @@ class CSCMatrix
     bool has_sorted_indices_ = false;
     bool has_canonical_format_ = false;
 
-    void print_elems_(std::ostream& os, csint start, csint end) const;
+    void print_elems_(std::ostream& os, const csint start, const csint end) const;
 
     public:
         friend class COOMatrix;
@@ -157,8 +157,8 @@ class CSCMatrix
         // ---------- Other
         void print(
             std::ostream& os=std::cout,
-            bool verbose=false,
-            csint threshold=1000
+            const bool verbose=false,
+            const csint threshold=1000
         ) const;
 
         // Type conversions

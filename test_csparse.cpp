@@ -819,6 +819,7 @@ TEST_CASE("Scaling by a constant", "[math]")
 }
 
 
+// Exercise 2.4
 TEST_CASE("Scale rows and columns", "[math]")
 {
     CSCMatrix A = davis_21_coo().compress();
@@ -980,6 +981,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
 }
 
 
+// Exercise 2.15
 TEST_CASE("Test band function")
 {
     csint N = 6;
@@ -1049,6 +1051,7 @@ TEST_CASE("Test band function")
 }
 
 
+// Exercise 2.16
 TEST_CASE("Test CSC from dense column-major")
 {
     std::vector<double> dense_mat = {
@@ -1069,6 +1072,7 @@ TEST_CASE("Test CSC from dense column-major")
 }
 
 
+// Exercise 2.12 "cs_ok"
 TEST_CASE("Test validity check")
 {
     COOMatrix C = davis_21_coo();

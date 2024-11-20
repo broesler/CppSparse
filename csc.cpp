@@ -88,6 +88,8 @@ CSCMatrix::CSCMatrix(const COOMatrix& A)
 
 /** Create a sparse copy of a dense matrix in column-major fomr.
  *
+ * See: Davis, Exercise 2.16.
+ *
  * @param A a dense matrix in column-major form
  * @param M, N the size of the matrix
  *
@@ -719,7 +721,16 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
 }
 
 
-// Exercise 2.18
+/** Multiply two sparse column vectors \f$ c = x^T y \f$.
+ *
+ * See: Davis, Exercise 2.18
+ *
+ * @param x, y two column vectors stored as CSCMatrices. The number of columns
+ *        in each argument must be 1.
+ *
+ * @return c  the dot product `x.T() * y`, but computed more efficiently than
+ *         the complete matrix dot product.
+ */
 double CSCMatrix::vecdot(const CSCMatrix& y) const
 {
     assert((N_ == 1) && (y.N_ == 1));  // both must be column vectors
@@ -763,9 +774,7 @@ double CSCMatrix::vecdot(const CSCMatrix& y) const
 }
 
 // Operators
-std::vector<double> operator*(const CSCMatrix& A, const std::vector<double>& x) 
-{ return A.dot(x); }
-
+std::vector<double> operator*(const CSCMatrix& A, const std::vector<double>& x) { return A.dot(x); }
 CSCMatrix operator*(const CSCMatrix& A, const double c) { return A.dot(c); }
 CSCMatrix operator*(const double c, const CSCMatrix& A) { return A.dot(c); }
 CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B) { return A.dot(B); }
@@ -1056,7 +1065,7 @@ bool CSCMatrix::is_valid(const bool sorted, const bool values) const
  * @param start, end  print the all elements where `p ∈ [start, end]`, counting
  *        column-wise.
  */
-void CSCMatrix::print_elems_(std::ostream& os, csint start, csint end) const
+void CSCMatrix::print_elems_(std::ostream& os, const csint start, const csint end) const
 {
     csint n = 0;  // number of elements printed
     for (csint j = 0; j < N_; j++) {
@@ -1077,7 +1086,7 @@ void CSCMatrix::print_elems_(std::ostream& os, csint start, csint end) const
  * @param threshold   if `nz > threshold`, print only the first and last
  *        3 entries in the matrix. Otherwise, print all entries.
  */
-void CSCMatrix::print(std::ostream& os, bool verbose, csint threshold) const
+void CSCMatrix::print(std::ostream& os, const bool verbose, const csint threshold) const
 {
     csint nnz_ = nnz();
     os << "<" << format_desc_ << " matrix" << std::endl;

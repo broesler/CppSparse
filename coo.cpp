@@ -276,7 +276,7 @@ std::vector<double> operator*(const COOMatrix& A, const std::vector<double>& x)
  * @param start, end  print the all elements where `p ∈ [start, end]`, counting
  *        column-wise.
  */
-void COOMatrix::print_elems_(std::ostream& os, csint start, csint end) const
+void COOMatrix::print_elems_(std::ostream& os, const csint start, const csint end) const
 {
     for (csint k = start; k < end; k++) {
         os << "(" << i_[k] << ", " << j_[k] << "): " << v_[k] << std::endl;
@@ -291,7 +291,7 @@ void COOMatrix::print_elems_(std::ostream& os, csint start, csint end) const
  * @param threshold   if `nnz > threshold`, print only the first and last
  *        3 entries in the matrix. Otherwise, print all entries.
  */
-void COOMatrix::print(std::ostream& os, bool verbose, csint threshold) const
+void COOMatrix::print(std::ostream& os, const bool verbose, const csint threshold) const
 {
     csint nnz_ = nnz();
     os << "<" << format_desc_ << " matrix" << std::endl;

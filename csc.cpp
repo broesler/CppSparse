@@ -535,8 +535,8 @@ std::vector<double> gaxpy(
     std::vector<double> y
     )
 {
-    assert(A.N_ == x.size()); 
-    assert(x.size() == y.size()); 
+    assert(A.M_ == y.size());  // addition
+    assert(A.N_ == x.size());  // multiplication
     for (csint j = 0; j < A.N_; j++) {
         for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
             y[A.i_[p]] += A.v_[p] * x[j];
@@ -563,8 +563,8 @@ std::vector<double> gatxpy(
     std::vector<double> y
     )
 {
-    assert(A.N_ == x.size()); 
-    assert(x.size() == y.size()); 
+    assert(A.M_ == x.size());  // multiplication
+    assert(A.N_ == y.size());  // addition
     for (csint j = 0; j < A.N_; j++) {
         for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
             y[j] += A.v_[p] * x[A.i_[p]];
@@ -644,7 +644,7 @@ std::vector<double> CSCMatrix::dot(const std::vector<double>& x) const
 {
     assert(N_ == x.size()); 
 
-    std::vector<double> out(x.size());
+    std::vector<double> out(M_);
 
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {

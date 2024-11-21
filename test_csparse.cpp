@@ -655,6 +655,23 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
         REQUIRE_THAT(is_close((A * x + y),         expect_Axpy, tol), AllTrue());
     };
 
+    SECTION("Test a non-square matrix.") {
+        CSCMatrix A = COOMatrix(
+            std::vector<double> {1, 1, 2},
+            std::vector<csint>  {0, 1, 2},
+            std::vector<csint>  {0, 1, 1}
+        ).tocsc();
+
+        std::vector<double> x = {1, 2};
+        std::vector<double> y = {1, 2, 3};
+
+        // A @ x + y
+        std::vector<double> expect_Ax   = {1, 2, 4};
+        std::vector<double> expect_Axpy = {2, 4, 7};
+
+        multiply_test(A, x, y, expect_Ax, expect_Axpy);
+    }
+
     SECTION("Test a symmetric (diagonal) matrix.") {
         CSCMatrix A = COOMatrix(
             std::vector<double> {1, 2, 3},

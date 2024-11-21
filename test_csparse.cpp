@@ -448,7 +448,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         // Test on non-square matrix M != N
         C = A.assign(0, 4, 1.6).compress();  // {4, 5}
 
-        auto sort_test = [](CSCMatrix Cs) {
+        auto sort_test = [](const CSCMatrix& Cs) {
             std::array<csint, 2> shape_expect = {4, 5};
             std::vector<csint> indptr_expect  = {  0,             3,             6,        8,       10, 11};
             std::vector<csint> indices_expect = {  0,   1,   3,   1,   2,   3,   0,   2,   1,   3,   0};
@@ -516,31 +516,28 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
 
     // Exercise 2.2
     SECTION("Test Conversion to COOMatrix") {
+        auto convert_test = [](const COOMatrix& B) {
         // Columns are sorted, but not rows
         std::vector<csint>  expect_i = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
         std::vector<csint>  expect_j = {  0,   0,   0,   1,   1,   1,   2,   2,   3,   3};
         std::vector<double> expect_v = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
 
-        SECTION("As constructor") {
-            COOMatrix B(C);  // via constructor
-                            //
             REQUIRE(B.nnz() == 10);
             REQUIRE(B.nzmax() >= 10);
             REQUIRE(B.shape() == std::array<csint, 2>{4, 4});
             REQUIRE(B.row() == expect_i);
             REQUIRE(B.column() == expect_j);
             REQUIRE(B.data() == expect_v);
+        };
+
+        SECTION("As constructor") {
+            COOMatrix B(C);  // via constructor
+            convert_test(B);
         }
 
         SECTION("As function") {
             COOMatrix B = C.tocoo();  // via member function
-
-            REQUIRE(B.nnz() == 10);
-            REQUIRE(B.nzmax() >= 10);
-            REQUIRE(B.shape() == std::array<csint, 2>{4, 4});
-            REQUIRE(B.row() == expect_i);
-            REQUIRE(B.column() == expect_j);
-            REQUIRE(B.data() == expect_v);
+            convert_test(B);
         }
     }
 }
@@ -639,13 +636,31 @@ TEST_CASE("Test is_symmetric.") {
 /*------------------------------------------------------------------------------
  *          Math Operations
  *----------------------------------------------------------------------------*/
-TEST_CASE("Matrix-vector multiply + addition.", "[math]")
+TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
 {
+    auto multiply_test = [](
+        const CSCMatrix& A,
+        const std::vector<double>& x,
+        const std::vector<double>& y,
+        const std::vector<double>& expect_Ax,
+        const std::vector<double>& expect_Axpy
+        )
+    {
+        std::vector<double> zero(y.size());
+        REQUIRE_THAT(is_close(gaxpy(A, x, zero),   expect_Ax,   tol), AllTrue());
+        REQUIRE_THAT(is_close(gaxpy(A, x, y),      expect_Axpy, tol), AllTrue());
+        REQUIRE_THAT(is_close(gatxpy(A.T(), x, y), expect_Axpy, tol), AllTrue());
+        REQUIRE_THAT(is_close(A.dot(x),            expect_Ax,   tol), AllTrue());
+        REQUIRE_THAT(is_close((A * x),             expect_Ax,   tol), AllTrue());
+        REQUIRE_THAT(is_close((A * x + y),         expect_Axpy, tol), AllTrue());
+    };
+
     SECTION("Test a symmetric (diagonal) matrix.") {
-        std::vector<csint>  i = {0, 1, 2};
-        std::vector<csint>  j = {0, 1, 2};
-        std::vector<double> v = {1, 2, 3};
-        CSCMatrix A = COOMatrix(v, i, j).compress();
+        CSCMatrix A = COOMatrix(
+            std::vector<double> {1, 2, 3},
+            std::vector<csint>  {0, 1, 2},
+            std::vector<csint>  {0, 1, 2} 
+        ).compress();
 
         std::vector<double> x = {1, 2, 3};
         std::vector<double> y = {9, 6, 1};
@@ -654,14 +669,8 @@ TEST_CASE("Matrix-vector multiply + addition.", "[math]")
         std::vector<double> expect_Ax   = {1, 4, 9};
         std::vector<double> expect_Axpy = {10, 10, 10};
 
-        REQUIRE_THAT(is_close(gaxpy(A, x, y), expect_Axpy, tol), AllTrue());
-        REQUIRE_THAT(is_close(gatxpy(A.T(), x, y), expect_Axpy), AllTrue());
+        multiply_test(A, x, y, expect_Ax, expect_Axpy);
         REQUIRE_THAT(is_close(sym_gaxpy(A, x, y), expect_Axpy, tol), AllTrue());
-        REQUIRE_THAT(is_close(A.dot(x), expect_Ax, tol), AllTrue());
-        REQUIRE_THAT(is_close((A * x), expect_Ax, tol), AllTrue());
-        REQUIRE_THAT(is_close((A * x + y), expect_Axpy, tol), AllTrue());
-        // REQUIRE((A * x - y) == std::vector<double>{-8, -2, -8});
-        // REQUIRE(-y == std::vector<double>{-9, -6, -1});
     }
 
     SECTION("Test an arbitrary non-symmetric matrix.") {
@@ -670,19 +679,12 @@ TEST_CASE("Matrix-vector multiply + addition.", "[math]")
 
         std::vector<double> x = {1, 2, 3, 4};
         std::vector<double> y = {1, 1, 1, 1};
-        std::vector<double> zero = {0, 0, 0, 0};
 
         // A @ x + y
         std::vector<double> expect_Ax   = {14.1, 12.5, 12.4,  8.3};
         std::vector<double> expect_Axpy = {15.1, 13.5, 13.4,  9.3};
 
-        REQUIRE_THAT(is_close(gaxpy(A, x, zero), expect_Ax, tol), AllTrue());
-        REQUIRE_THAT(is_close(gaxpy(A, x, y), expect_Axpy, tol), AllTrue());
-        REQUIRE_THAT(is_close(gatxpy(A.T(), x, y), expect_Axpy, tol), AllTrue());
-
-        REQUIRE_THAT(is_close(A.dot(x), expect_Ax, tol), AllTrue());
-        REQUIRE_THAT(is_close((A * x), expect_Ax, tol), AllTrue());
-        REQUIRE_THAT(is_close((A * x + y), expect_Axpy, tol), AllTrue());
+        multiply_test(A, x, y, expect_Ax, expect_Axpy);
 
         // Test COOMatrix
         REQUIRE_THAT(is_close(Ac.dot(x), expect_Ax, tol), AllTrue());

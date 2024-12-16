@@ -871,11 +871,11 @@ CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B) { return A.add(B); }
  * @param A     CSC matrix by which to multiply
  * @param j     column index of `A`
  * @param beta  scalar value by which to multiply `A`
- * @param w, x  workspace vectors of row indices and values, respectively
+ * @param[in,out] w, x  workspace vectors of row indices and values, respectively
  * @param mark  separator index for `w`. All `w[i] < mark`are row indices that
  *              are not yet in `Cj`.
- * @param C     CSC matrix where output non-zero pattern is stored
- * @param nz   current number of non-zeros in `C`.
+ * @param[in,out] C    CSC matrix where output non-zero pattern is stored
+ * @param[in,out] nz   current number of non-zeros in `C`.
  *
  * @return nz  updated number of non-zeros in `C`.
  */

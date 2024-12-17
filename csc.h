@@ -143,7 +143,8 @@ class CSCMatrix
             std::vector<double>& x,
             csint mark,
             CSCMatrix& C,
-            csint nz
+            csint nz,
+            bool fs
         );
 
         // Permutations

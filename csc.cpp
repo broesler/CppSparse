@@ -697,13 +697,16 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
 
     csint nz = 0;  // track total number of non-zeros in C
 
+    bool fs = true;  // Exercise 2.19 -- first call to scatter
+
     for (csint j = 0; j < N; j++) {
         C.p_[j] = nz;  // column j of C starts here 
 
         // Compute x = A @ B[:, j]
         for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
             // Compute x += A[:, B.i_[p]] * B.v_[p]
-            nz = scatter(*this, B.i_[p], B.v_[p], w, x, j+1, C, nz);
+            nz = scatter(*this, B.i_[p], B.v_[p], w, x, j+1, C, nz, fs);
+            fs = false;
         }
 
         // Gather values into the correct locations in C
@@ -810,10 +813,13 @@ CSCMatrix add_scaled(
 
     csint nz = 0;  // track total number of non-zeros in C
 
+    bool fs = true;  // Exercise 2.19 -- first call to scatter
+
     for (csint j = 0; j < N; j++) {
         C.p_[j] = nz;  // column j of C starts here
-        nz = scatter(A, j, alpha, w, x, j+1, C, nz);  // alpha * A(:, j)
-        nz = scatter(B, j,  beta, w, x, j+1, C, nz);  //  beta * B(:, j)
+        nz = scatter(A, j, alpha, w, x, j+1, C, nz, fs);  // alpha * A(:, j)
+        fs = false;
+        nz = scatter(B, j,  beta, w, x, j+1, C, nz, fs);  //  beta * B(:, j)
 
         // Gather results into the correct column of C
         for (csint p = C.p_[j]; p < nz; p++) {
@@ -847,10 +853,13 @@ CSCMatrix CSCMatrix::add(const CSCMatrix& B) const
 
     csint nz = 0;  // track total number of non-zeros in C
 
+    bool fs = true;  // Exercise 2.19 -- first call to scatter
+
     for (csint j = 0; j < N; j++) {
         C.p_[j] = nz;  // column j of C starts here
-        nz = scatter(*this, j, 1, w, x, j+1, C, nz);  // A(:, j)
-        nz = scatter(    B, j, 1, w, x, j+1, C, nz);  // B(:, j)
+        nz = scatter(*this, j, 1, w, x, j+1, C, nz, fs);  // A(:, j)
+        fs = false;
+        nz = scatter(    B, j, 1, w, x, j+1, C, nz, fs);  // B(:, j)
 
         // Gather results into the correct column of C
         for (csint p = C.p_[j]; p < nz; p++) {
@@ -884,6 +893,7 @@ CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B) { return A.add(B); }
  *              are not yet in `Cj`.
  * @param[in,out] C    CSC matrix where output non-zero pattern is stored
  * @param[in,out] nz   current number of non-zeros in `C`.
+ * @param fs    first call to scatter
  *
  * @return nz  updated number of non-zeros in `C`.
  */
@@ -895,23 +905,32 @@ csint scatter(
     std::vector<double>& x,
     csint mark,
     CSCMatrix& C,
-    csint nz
+    csint nz,
+    bool fs
     )
 {
-    for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
-        csint i = A.i_[p];           // A(i, j) is non-zero
-        if (w[i] < mark) {
+    if (fs) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            csint i = A.i_[p];       // A(i, j) is non-zero
             w[i] = mark;             // i is new entry in column j
-            C.i_[nz++] = i;          // add i to pattern of C(:, j)
-            x[i] = beta * A.v_[p];   // x[i] = beta * A(i, j)
-        } else {
-            x[i] += beta * A.v_[p];  // i exists in C(:, j) already
+            C.i_[nz++] = i;          // add i to sparsity pattern of C(:, j)
+            x[i] = beta * A.v_[p];   // x = beta * A(i, j)
+        }
+    } else {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            csint i = A.i_[p];           // A(i, j) is non-zero
+            if (w[i] < mark) {
+                w[i] = mark;             // i is new entry in column j
+                C.i_[nz++] = i;          // add i to pattern of C(:, j)
+                x[i] = beta * A.v_[p];   // x = beta * A(i, j)
+            } else {
+                x[i] += beta * A.v_[p];  // i exists in C(:, j) already
+            }
         }
     }
 
     return nz;
 }
-
 
 /** Permute a matrix \f$ C = PAQ \f$.
  *

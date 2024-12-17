@@ -763,8 +763,6 @@ TEST_CASE("Matrix-matrix multiply.", "[math]")
 
         CSCMatrix C = E * A;
 
-        cout << "C = " << C;
-
         csint M, N;
         std::tie(M, N) = C.shape();
 

@@ -700,8 +700,9 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
     for (csint j = 0; j < N; j++) {
         C.p_[j] = nz;  // column j of C starts here 
 
-        // Compute x += beta * A(:, j) for each non-zero row in B.
+        // Compute x = A @ B[:, j]
         for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
+            // Compute x += A[:, B.i_[p]] * B.v_[p]
             nz = scatter(*this, B.i_[p], B.v_[p], w, x, j+1, C, nz);
         }
 
@@ -716,6 +717,8 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
     C.realloc();
 
     // TODO put into canonical format and test
+    // C = C.dropzeros().sort();
+    // C.has_canonical_format_ = true;
 
     return C;
 }
@@ -866,7 +869,12 @@ CSCMatrix CSCMatrix::add(const CSCMatrix& B) const
 CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B) { return A.add(B); }
 
 
-/** Compute x += beta * A(:, j).
+/** Compute ``x += beta * A(:, j)``.
+ *
+ * This function also updates ``w``, sets the sparsity pattern in ``C._i``, and
+ * returns updated ``nz``. The values corresponding to ``C._i`` are accumulated
+ * in ``x``, and then gathered in the calling function, so that we can account
+ * for any duplicate entries.
  *
  * @param A     CSC matrix by which to multiply
  * @param j     column index of `A`
@@ -894,7 +902,7 @@ csint scatter(
         csint i = A.i_[p];           // A(i, j) is non-zero
         if (w[i] < mark) {
             w[i] = mark;             // i is new entry in column j
-            C.i_[nz++] = i;         // add i to pattern of C(:, j)
+            C.i_[nz++] = i;          // add i to pattern of C(:, j)
             x[i] = beta * A.v_[p];   // x[i] = beta * A(i, j)
         } else {
             x[i] += beta * A.v_[p];  // i exists in C(:, j) already

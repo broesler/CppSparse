@@ -517,10 +517,10 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
     // Exercise 2.2
     SECTION("Test Conversion to COOMatrix") {
         auto convert_test = [](const COOMatrix& B) {
-        // Columns are sorted, but not rows
-        std::vector<csint>  expect_i = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
-        std::vector<csint>  expect_j = {  0,   0,   0,   1,   1,   1,   2,   2,   3,   3};
-        std::vector<double> expect_v = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
+            // Columns are sorted, but not rows
+            std::vector<csint>  expect_i = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
+            std::vector<csint>  expect_j = {  0,   0,   0,   1,   1,   1,   2,   2,   3,   3};
+            std::vector<double> expect_v = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
 
             REQUIRE(B.nnz() == 10);
             REQUIRE(B.nzmax() >= 10);
@@ -687,7 +687,7 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
         std::vector<double> expect_Axpy = {10, 10, 10};
 
         multiply_test(A, x, y, expect_Ax, expect_Axpy);
-        REQUIRE_THAT(is_close(sym_gaxpy(A, x, y), expect_Axpy, tol), AllTrue());
+        REQUIRE_THAT(is_close(sym_gaxpy(A, x, y),  expect_Axpy, tol), AllTrue());
     }
 
     SECTION("Test an arbitrary non-symmetric matrix.") {
@@ -705,7 +705,7 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
 
         // Test COOMatrix
         REQUIRE_THAT(is_close(Ac.dot(x), expect_Ax, tol), AllTrue());
-        REQUIRE_THAT(is_close((Ac * x), expect_Ax, tol), AllTrue());
+        REQUIRE_THAT(is_close((Ac * x),  expect_Ax, tol), AllTrue());
     }
 
     SECTION("Test an arbitrary symmetric matrix.") {
@@ -728,49 +728,101 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
 
 TEST_CASE("Matrix-matrix multiply.", "[math]")
 {
-    // >>> A
-    // ===
-    // array([[1, 2, 3, 4],
-    //        [5, 6, 7, 8]])
-    // >>> B
-    // ===
-    // array([[ 1,  2,  3],
-    //        [ 4,  5,  6],
-    //        [ 7,  8,  9],
-    //        [10, 11, 12]])
-    // >>> A @ B
-    // ===
-    // array([[ 70,  80,  90],
-    //        [158, 184, 210]])
+    SECTION("Test square matrices") {
+        // See: Strang, p 25
+        // E = [[ 1, 0, 0],
+        //      [-2, 1, 0],
+        //      [ 0, 0, 1]]
+        //
+        // A = [[ 2, 1, 1],
+        //      [ 4,-6, 0],
+        //      [-2, 7, 2]]
+        //
+        // EA = [[ 2, 1, 1],
+        //       [ 0,-8,-2],
+        //       [-2, 7, 2]]
 
-    CSCMatrix A = COOMatrix(
-        std::vector<double> {1, 2, 3, 4, 5, 6, 7, 8},  // vals
-        std::vector<csint>  {0, 0, 0, 0, 1, 1, 1, 1},  // rows
-        std::vector<csint>  {0, 1, 2, 3, 0, 1, 2, 3}   // cols
-    ).compress();
+        // Build matrices with sorted columns
+        CSCMatrix E = COOMatrix(
+            std::vector<double> {1, -2, 1, 1},  // vals
+            std::vector<csint>  {0,  1, 1, 2},  // rows
+            std::vector<csint>  {0,  0, 1, 2}   // cols
+        ).tocsc();
 
-    CSCMatrix B = COOMatrix(
-        std::vector<double> {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12},  // vals
-        std::vector<csint>  {0, 0, 0, 1, 1, 1, 2, 2, 2,  3,  3,  3},  // rows
-        std::vector<csint>  {0, 1, 2, 0, 1, 2, 0, 1, 2,  0,  1,  2}   // cols
-    ).compress();
+        CSCMatrix A = COOMatrix(
+            std::vector<double> {2, 4, -2, 1, -6, 7, 1, 2},  // vals
+            std::vector<csint>  {0, 1,  2, 0,  1, 2, 0, 2},  // rows
+            std::vector<csint>  {0, 0,  0, 1,  1, 1, 2, 2}   // cols
+        ).tocsc();
 
-    CSCMatrix expect = COOMatrix(
-        std::vector<double> {70, 80, 90, 158, 184, 210},  // vals
-        std::vector<csint>  { 0,  0,  0,   1,   1,   1},  // rows
-        std::vector<csint>  { 0,  1,  2,   0,   1,   2}   // cols
-    ).compress();
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {2, -2, 1, -8, 7, 1, -2, 2},  // vals
+            std::vector<csint>  {0,  2, 0,  1, 2, 0,  1, 2},  // rows
+            std::vector<csint>  {0,  0, 1,  1, 1, 2,  2, 2}   // cols
+        ).tocsc();
 
-    CSCMatrix C = A * B;
-    csint M, N;
-    std::tie(M, N) = C.shape();
+        CSCMatrix C = E * A;
 
-    REQUIRE(M == A.shape()[0]);
-    REQUIRE(N == B.shape()[1]);
+        cout << "C = " << C;
 
-    for (csint i = 0; i < M; i++) {
-        for (csint j = 0; j < N; j++) {
-            REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
+        csint M, N;
+        std::tie(M, N) = C.shape();
+
+        REQUIRE(M == E.shape()[0]);
+        REQUIRE(N == A.shape()[1]);
+
+        for (csint i = 0; i < M; i++) {
+            for (csint j = 0; j < N; j++) {
+                REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
+            }
+        }
+    }
+
+    SECTION("Test arbitrary size matrices") {
+        // >>> A
+        // ===
+        // array([[1, 2, 3, 4],
+        //        [5, 6, 7, 8]])
+        // >>> B
+        // ===
+        // array([[ 1,  2,  3],
+        //        [ 4,  5,  6],
+        //        [ 7,  8,  9],
+        //        [10, 11, 12]])
+        // >>> A @ B
+        // ===
+        // array([[ 70,  80,  90],
+        //        [158, 184, 210]])
+
+        CSCMatrix A = COOMatrix(
+            std::vector<double> {1, 2, 3, 4, 5, 6, 7, 8},  // vals
+            std::vector<csint>  {0, 0, 0, 0, 1, 1, 1, 1},  // rows
+            std::vector<csint>  {0, 1, 2, 3, 0, 1, 2, 3}   // cols
+        ).compress();
+
+        CSCMatrix B = COOMatrix(
+            std::vector<double> {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12},  // vals
+            std::vector<csint>  {0, 0, 0, 1, 1, 1, 2, 2, 2,  3,  3,  3},  // rows
+            std::vector<csint>  {0, 1, 2, 0, 1, 2, 0, 1, 2,  0,  1,  2}   // cols
+        ).compress();
+
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {70, 80, 90, 158, 184, 210},  // vals
+            std::vector<csint>  { 0,  0,  0,   1,   1,   1},  // rows
+            std::vector<csint>  { 0,  1,  2,   0,   1,   2}   // cols
+        ).compress();
+
+        CSCMatrix C = A * B;
+        csint M, N;
+        std::tie(M, N) = C.shape();
+
+        REQUIRE(M == A.shape()[0]);
+        REQUIRE(N == B.shape()[1]);
+
+        for (csint i = 0; i < M; i++) {
+            for (csint j = 0; j < N; j++) {
+                REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
+            }
         }
     }
 }

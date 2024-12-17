@@ -727,6 +727,85 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
 }
 
 
+/** Matrix-matrix multiplication with two passes
+ *
+ * See: Davis, Exercise 2.20.
+ *
+ * @note This function does *not* return a matrix with sorted columns!
+ *
+ * @param A, B  the CSC-format matrices to multiply.
+ *        A is size M x K, B is size K x N.
+ *
+ * @return C    a CSC-format matrix of size M x N. 
+ *         C.nnz() <= A.nnz() + B.nnz().
+ */
+CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
+{
+    csint M, Ka, Kb, N;
+    std::tie(M, Ka) = shape();
+    std::tie(Kb, N) = B.shape();
+    assert(Ka == Kb);
+
+    // Allocate workspace
+    std::vector<csint> w(M);
+
+    // Compute nnz(A*B) by counting non-zeros in each column of C
+    csint nz_C = 0;
+
+    for (csint j = 0; j < N; j++) {
+        csint mark = j + 1;
+        for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
+            // Scatter, but without x or C
+            csint k = B.i_[p];  // B(k, j) is non-zero
+            for (csint pa = p_[k]; pa < p_[k+1]; pa++) {
+                csint i = i_[pa];     // A(i, k) is non-zero
+                if (w[i] < mark) {
+                    w[i] = mark;     // i is new entry in column k
+                    nz_C++;         // count non-zeros in C, but don't compute
+                }
+            }
+        }
+    }
+
+    std::cout << "nz_C = " << nz_C << std::endl;
+
+    // Allocate the correct size output matrix
+    CSCMatrix C(M, N, nz_C);
+
+    // Compute the actual multiplication
+    std::fill(w.begin(), w.end(), 0);  // reset workspace
+    std::vector<double> x(M);
+
+    csint nz = 0;  // track total number of non-zeros in C
+    bool fs = true;  // first call to scatter
+
+    for (csint j = 0; j < N; j++) {
+        C.p_[j] = nz;  // column j of C starts here 
+
+        // Compute x = A @ B[:, j]
+        for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
+            // Compute x += A[:, B.i_[p]] * B.v_[p]
+            nz = scatter(*this, B.i_[p], B.v_[p], w, x, j+1, C, nz, fs);
+            fs = false;
+        }
+
+        // Gather values into the correct locations in C
+        for (csint p = C.p_[j]; p < nz; p++) {
+            C.v_[p] = x[C.i_[p]];
+        }
+    }
+
+    // Finalize and deallocate unused memory
+    C.p_[N] = nz;
+    C.realloc();
+
+    // TODO put into canonical format and test
+    // C = C.dropzeros().sort();
+    // C.has_canonical_format_ = true;
+
+    return C;
+}
+
 /** Multiply two sparse column vectors \f$ c = x^T y \f$.
  *
  * See: Davis, Exercise 2.18

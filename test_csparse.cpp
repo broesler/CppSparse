@@ -761,18 +761,33 @@ TEST_CASE("Matrix-matrix multiply.", "[math]")
             std::vector<csint>  {0,  0, 1,  1, 1, 2,  2, 2}   // cols
         ).tocsc();
 
-        CSCMatrix C = E * A;
+        auto multiply_test = [](
+            const CSCMatrix& C,
+            const CSCMatrix& E,
+            const CSCMatrix& A,
+            const CSCMatrix& expect
+        ) {
+            csint M, N;
+            std::tie(M, N) = C.shape();
 
-        csint M, N;
-        std::tie(M, N) = C.shape();
+            REQUIRE(M == E.shape()[0]);
+            REQUIRE(N == A.shape()[1]);
 
-        REQUIRE(M == E.shape()[0]);
-        REQUIRE(N == A.shape()[1]);
-
-        for (csint i = 0; i < M; i++) {
-            for (csint j = 0; j < N; j++) {
-                REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
+            for (csint i = 0; i < M; i++) {
+                for (csint j = 0; j < N; j++) {
+                    REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
+                }
             }
+        };
+
+        SECTION("Test CSCMatrix::dot (aka cs_multiply)") {
+            CSCMatrix C = E * A;
+            multiply_test(C, E, A, expect);
+        }
+
+        SECTION("Test dot_2x two-pass multiply") {
+            CSCMatrix C = E.dot_2x(A);
+            multiply_test(C, E, A, expect);
         }
     }
 

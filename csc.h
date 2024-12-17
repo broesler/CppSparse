@@ -117,12 +117,14 @@ class CSCMatrix
         // Exercise 2.4
         CSCMatrix scale(const std::vector<double>& r, const std::vector<double> c) const;
 
-        // Multiply
+        // Multiply (see cs_multiply)
         std::vector<double> dot(const std::vector<double>& x) const;
         CSCMatrix dot(const double c) const;
         CSCMatrix dot(const CSCMatrix& B) const;
 
         double vecdot(const CSCMatrix& y) const;  // Exercise 2.18 cs_dot
+
+        CSCMatrix dot_2x(const CSCMatrix& B) const;  // Exercise 2.20
 
         // Matrix-matrix add via C-style function
         CSCMatrix add(const CSCMatrix& B) const;

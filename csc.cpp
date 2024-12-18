@@ -144,6 +144,7 @@ CSCMatrix& CSCMatrix::realloc(csint nzmax)
 {
     csint Z = (nzmax <= 0) ? p_[N_] : nzmax;
 
+    // TODO review uses and potentially use "reserve" when Z > nnz()
     p_.resize(N_ + 1);  // always contains N_ columns + nz
     i_.resize(Z);
     v_.resize(Z);
@@ -673,7 +674,7 @@ CSCMatrix CSCMatrix::dot(const double c) const
 
 /** Matrix-matrix multiplication
  *
- * @note This function does *not* return a matrix with sorted columns!
+ * @note This function may *not* return a matrix with sorted columns!
  *
  * @param A, B  the CSC-format matrices to multiply.
  *        A is size M x K, B is size K x N.
@@ -731,7 +732,7 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
  *
  * See: Davis, Exercise 2.20.
  *
- * @note This function does *not* return a matrix with sorted columns!
+ * @note This function may *not* return a matrix with sorted columns!
  *
  * @param A, B  the CSC-format matrices to multiply.
  *        A is size M x K, B is size K x N.
@@ -766,8 +767,6 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
             }
         }
     }
-
-    std::cout << "nz_C = " << nz_C << std::endl;
 
     // Allocate the correct size output matrix
     CSCMatrix C(M, N, nz_C);
@@ -867,7 +866,7 @@ CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B) { return A.dot(B); }
 
 /** Add two matrices (and optionally scale them) `C = alpha * A + beta * B`.
  * 
- * @note This function does *not* return a matrix with sorted columns!
+ * @note This function may *not* return a matrix with sorted columns!
  *
  * @param A, B  the CSC matrices
  * @param alpha, beta  scalar multipliers

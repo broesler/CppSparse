@@ -1173,6 +1173,38 @@ bool CSCMatrix::is_valid(const bool sorted, const bool values) const
 }
 
 
+/** Concatenate two matrices horizontally.
+ *
+ * @note This function may *not* return a matrix with sorted columns!
+ *
+ * @param A, B  the CSC matrices to concatenate. They must have the same number
+ *        of rows.
+ *
+ * @return C  the concatenated matrix.
+ */
+CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
+{
+    assert(A.M_ == B.M_);
+
+    // Copy the first matrix
+    CSCMatrix C = A;
+    C.N_ += B.N_;
+    C.realloc(A.nnz() + B.nnz());
+
+    // Copy the second matrix
+    for (csint j = 0; j < B.N_; j++) {
+        C.p_[A.N_ + j] = B.p_[j] + A.nnz();
+    }
+
+    std::copy(B.i_.begin(), B.i_.end(), C.i_.begin() + A.nnz());
+    std::copy(B.v_.begin(), B.v_.end(), C.v_.begin() + A.nnz());
+
+    C.p_[A.N_ + B.N_] = A.nnz() + B.nnz();
+
+    return C;
+}
+
+
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/

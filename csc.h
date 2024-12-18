@@ -166,6 +166,10 @@ class CSCMatrix
         // Exercise 2.12 "cs_ok"
         bool is_valid(const bool sorted=false, const bool values=false) const;
 
+        // Exercise 2.22 concatenation (see cs_hcat, cs_vcat)
+        friend CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B);
+        // friend CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B);
+
         // ---------- Other
         void print(
             std::ostream& os=std::cout,

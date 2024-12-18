@@ -28,7 +28,8 @@ using Catch::Matchers::WithinAbs;
 constexpr double tol = 1e-14;
 
 
-COOMatrix davis_21_coo() {
+COOMatrix davis_21_coo() 
+{
     // See Davis pp 7-8, Eqn (2.1)
     std::vector<csint>  i = {2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
     std::vector<csint>  j = {2,    0,    3,    2,    1,    0,    1,    3,    0,    1};
@@ -36,6 +37,33 @@ COOMatrix davis_21_coo() {
     return COOMatrix {v, i, j};
 }
 
+// See: Strang, p 25
+// E = [[ 1, 0, 0],
+//      [-2, 1, 0],
+//      [ 0, 0, 1]]
+//
+// A = [[ 2, 1, 1],
+//      [ 4,-6, 0],
+//      [-2, 7, 2]]
+
+// Build matrices with sorted columns
+CSCMatrix E_mat() 
+{
+    return COOMatrix(
+        std::vector<double> {1, -2, 1, 1},  // vals
+        std::vector<csint>  {0,  1, 1, 2},  // rows
+        std::vector<csint>  {0,  0, 1, 2}   // cols
+    ).tocsc();
+}
+
+CSCMatrix A_mat() 
+{
+    return COOMatrix(
+        std::vector<double> {2, 4, -2, 1, -6, 7, 1, 2},  // vals
+        std::vector<csint>  {0, 1,  2, 0,  1, 2, 0, 2},  // rows
+        std::vector<csint>  {0, 0,  0, 1,  1, 1, 2, 2}   // cols
+    ).tocsc();
+}
 
 // TODO figure out how to use the "spaceship" operator<=> to define all
 // of the comparisons in one fell swoop?
@@ -729,31 +757,14 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
 TEST_CASE("Matrix-matrix multiply.", "[math]")
 {
     SECTION("Test square matrices") {
+        // Build matrices with sorted columns
+        CSCMatrix E = E_mat();
+        CSCMatrix A = A_mat();
+
         // See: Strang, p 25
-        // E = [[ 1, 0, 0],
-        //      [-2, 1, 0],
-        //      [ 0, 0, 1]]
-        //
-        // A = [[ 2, 1, 1],
-        //      [ 4,-6, 0],
-        //      [-2, 7, 2]]
-        //
         // EA = [[ 2, 1, 1],
         //       [ 0,-8,-2],
         //       [-2, 7, 2]]
-
-        // Build matrices with sorted columns
-        CSCMatrix E = COOMatrix(
-            std::vector<double> {1, -2, 1, 1},  // vals
-            std::vector<csint>  {0,  1, 1, 2},  // rows
-            std::vector<csint>  {0,  0, 1, 2}   // cols
-        ).tocsc();
-
-        CSCMatrix A = COOMatrix(
-            std::vector<double> {2, 4, -2, 1, -6, 7, 1, 2},  // vals
-            std::vector<csint>  {0, 1,  2, 0,  1, 2, 0, 2},  // rows
-            std::vector<csint>  {0, 0,  0, 1,  1, 1, 2, 2}   // cols
-        ).tocsc();
 
         CSCMatrix expect = COOMatrix(
             std::vector<double> {2, -2, 1, -8, 7, 1, -2, 2},  // vals
@@ -1231,6 +1242,53 @@ TEST_CASE("Test validity check")
 }
 
 
+// Exercise 2.22 "hcat" and "vcat"
+TEST_CASE("Test concatentation")
+{
+    CSCMatrix E = E_mat();
+    CSCMatrix A = A_mat();
+
+    auto concat_test = [](
+        const CSCMatrix& C,
+        const CSCMatrix& expect
+    ) {
+        csint M, N;
+        std::tie(M, N) = C.shape();
+
+        REQUIRE(C.shape() == expect.shape());
+        REQUIRE(C.nnz() == expect.nnz());
+
+        for (csint i = 0; i < M; i++) {
+            for (csint j = 0; j < N; j++) {
+                REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
+            }
+        }
+    };
+
+    SECTION("Test horizontal concatenation") {
+        CSCMatrix expect = CSCMatrix(
+            std::vector<double> {1, -2, 1, 1, 2, 4, -2, 1, -6, 7,  1,  2},
+            std::vector<csint>  {0,  1, 1, 2, 0, 1,  2, 0,  1, 2,  0,  2},
+            std::vector<csint>  {0,     2, 3, 4,        7,        10, 12},
+            std::array<csint, 2>{3, 6}
+        );
+
+        CSCMatrix C = hstack(E, A);
+
+        cout << C;
+        concat_test(C, expect);
+    }
+
+    // SECTION("Test vertical concatenation") {
+    //     CSCMatrix expect = CSCMatrix(
+    //         std::vector<double> {1, -2, 1, 1, 2, 4, -2, 1, -6, 7,  1,  2},
+    //         std::vector<csint>  {0,  1, 1, 2, 0, 1,  2, 0,  1, 2,  0,  2},
+    //         std::vector<csint>  {0,     2, 3, 4,        7,        10, 12}
+    //     );
+    //     CSCMatrix C = vstack(A, B);
+    //     concat_test(C, expect);
+    // }
+}
 
 /*==============================================================================
  *============================================================================*/

@@ -170,6 +170,14 @@ class CSCMatrix
         friend CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B);
         friend CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B);
 
+        // Exercise 2.23 slice with contiguous indices
+        CSCMatrix slice(
+            const csint i_start,
+            const csint i_end,
+            const csint j_start,
+            const csint j_end
+        ) const;
+
         // ---------- Other
         void print(
             std::ostream& os=std::cout,

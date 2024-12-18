@@ -1290,6 +1290,47 @@ TEST_CASE("Test concatentation")
         matrix_compare(C, expect);
     }
 }
+
+
+// Exercise 2.23 slicing with contiguous indices
+TEST_CASE("Test slicing")
+{
+    CSCMatrix A = davis_21_coo().tocsc();
+
+    SECTION("Test row slicing") {
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {3.1, 2.9, 1.7, 3.0, 0.9},
+            std::vector<csint>  {  0,   0,   1,   1,   0},
+            std::vector<csint>  {  0,   1,   1,   2,   3}
+        ).tocsc();
+
+        CSCMatrix C = A.slice(1, 3, 0, A.shape()[1]);
+        matrix_compare(C, expect);
+    }
+
+    SECTION("Test column slicing") {
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {2.9, 1.7, 0.4, 3.2, 3.0},
+            std::vector<csint>  {  1,   2,   3,   0,   2},
+            std::vector<csint>  {  0,   0,   0,   1,   1}
+        ).tocsc();
+
+        CSCMatrix C = A.slice(0, A.shape()[0], 1, 3);
+        matrix_compare(C, expect);
+    }
+
+    SECTION("Test row and column slicing") {
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {2.9, 1.7, 3.0, 0.9},
+            std::vector<csint>  {  0,   1,   1,   0},
+            std::vector<csint>  {  0,   0,   1,   2}
+        ).tocsc();
+
+        CSCMatrix C = A.slice(1, 3, 1, 4);
+        matrix_compare(C, expect);
+    }
+}
+
     }
 }
 

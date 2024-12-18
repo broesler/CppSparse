@@ -1248,6 +1248,55 @@ CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
     C = C.dropzeros().sort();
     C.has_canonical_format_ = true;
 
+/** Slice a matrix by row and column.
+ *
+ * @param i_start, i_end  the row indices to keep, where `i ∈ [i_start, i_end)`.
+ * @param j_start, j_end  the column indices to keep, where `j ∈ [j_start,
+ *        j_end)`.
+ *
+ * @return C  the submatrix A(i_start:i_end, j_start:j_end).
+ */
+CSCMatrix CSCMatrix::slice(
+    const csint i_start,
+    const csint i_end,
+    const csint j_start,
+    const csint j_end
+    ) const
+{
+    // TODO may be able to relax last condition and return empty matrix?
+    assert((i_start >= 0) && (i_end <= M_) && (i_start < i_end));
+    assert((j_start >= 0) && (j_end <= N_) && (j_start < j_end));
+
+    CSCMatrix C(i_end - i_start, j_end - j_start, nnz());
+
+    csint nz = 0;
+
+    for (csint j = j_start; j < j_end; j++) {
+        C.p_[j - j_start] = nz;  // column j of C starts here
+
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            csint i = i_[p];
+
+            if ((i >= i_start) && (i < i_end)) {
+                C.i_[nz] = i - i_start;
+                C.v_[nz] = v_[p];
+                nz++;
+            }
+        }
+    }
+
+    C.p_[C.N_] = nz;
+    C.realloc();
+
+    if (!has_canonical_format_) {
+        C = C.dropzeros().sort();
+    }
+    C.has_canonical_format_ = true;
+
+    return C;
+}
+
+
 
     return C;
 }

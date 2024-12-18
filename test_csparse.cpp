@@ -65,6 +65,26 @@ CSCMatrix A_mat()
     ).tocsc();
 }
 
+
+/** Compare two matrices for equality.
+ *
+ * @note This function expects the matrices to be in canonical form.
+ *
+ * @param C       the matrix to test
+ * @param expect  the expected matrix
+ */
+auto matrix_compare(const CSCMatrix& C, const CSCMatrix& expect)
+{
+    REQUIRE(C.has_canonical_format());
+    REQUIRE(expect.has_canonical_format());
+    CHECK(C.nnz() == expect.nnz());
+    CHECK(C.shape() == expect.shape());
+    CHECK(C.indptr() == expect.indptr());
+    CHECK(C.indices() == expect.indices());
+    REQUIRE(C.data() == expect.data());
+}
+
+
 // TODO figure out how to use the "spaceship" operator<=> to define all
 // of the comparisons in one fell swoop?
 // A: May only work if we define a wrapper class on std::vector and define the
@@ -1248,23 +1268,6 @@ TEST_CASE("Test concatentation")
     CSCMatrix E = E_mat();
     CSCMatrix A = A_mat();
 
-    auto concat_test = [](
-        const CSCMatrix& C,
-        const CSCMatrix& expect
-    ) {
-        csint M, N;
-        std::tie(M, N) = C.shape();
-
-        REQUIRE(C.shape() == expect.shape());
-        REQUIRE(C.nnz() == expect.nnz());
-
-        for (csint i = 0; i < M; i++) {
-            for (csint j = 0; j < N; j++) {
-                REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
-            }
-        }
-    };
-
     SECTION("Test horizontal concatenation") {
         CSCMatrix expect = COOMatrix(
             std::vector<double> {1, -2, 1, 1, 2, 4, -2, 1, -6, 7,  1, 2},
@@ -1273,8 +1276,7 @@ TEST_CASE("Test concatentation")
         ).tocsc();
 
         CSCMatrix C = hstack(E, A);
-
-        concat_test(C, expect);
+        matrix_compare(C, expect);
     }
 
     SECTION("Test vertical concatenation") {
@@ -1285,7 +1287,9 @@ TEST_CASE("Test concatentation")
         ).tocsc();
 
         CSCMatrix C = vstack(E, A);
-        concat_test(C, expect);
+        matrix_compare(C, expect);
+    }
+}
     }
 }
 

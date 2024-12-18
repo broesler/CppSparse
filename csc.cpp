@@ -883,15 +883,13 @@ CSCMatrix add_scaled(
     csint M, N;
     std::tie(M, N) = A.shape();
 
-    // NOTE See Problem 2.20 for how to compute nnz(A*B)
     CSCMatrix C(M, N, A.nnz() + B.nnz());  // output
 
     // Allocate workspaces
     std::vector<csint> w(M);
     std::vector<double> x(M);
 
-    csint nz = 0;  // track total number of non-zeros in C
-
+    csint nz = 0;    // track total number of non-zeros in C
     bool fs = true;  // Exercise 2.19 -- first call to scatter
 
     for (csint j = 0; j < N; j++) {
@@ -919,38 +917,7 @@ CSCMatrix add_scaled(
 /** Add a matrix B. */
 CSCMatrix CSCMatrix::add(const CSCMatrix& B) const
 {
-    assert(shape() == B.shape());
-    csint M, N;
-    std::tie(M, N) = shape();
-
-    // NOTE See Problem 2.20 for how to compute nnz(A*B)
-    CSCMatrix C(M, N, nnz() + B.nnz());  // output
-
-    // Allocate workspaces
-    std::vector<csint> w(M);
-    std::vector<double> x(M);
-
-    csint nz = 0;  // track total number of non-zeros in C
-
-    bool fs = true;  // Exercise 2.19 -- first call to scatter
-
-    for (csint j = 0; j < N; j++) {
-        C.p_[j] = nz;  // column j of C starts here
-        nz = scatter(*this, j, 1, w, x, j+1, C, nz, fs);  // A(:, j)
-        fs = false;
-        nz = scatter(    B, j, 1, w, x, j+1, C, nz, fs);  // B(:, j)
-
-        // Gather results into the correct column of C
-        for (csint p = C.p_[j]; p < nz; p++) {
-            C.v_[p] = x[C.i_[p]];
-        }
-    }
-
-    // Finalize and deallocate unused memory
-    C.p_[N] = nz;
-    C.realloc();
-
-    return C;
+    return add_scaled(*this, B, 1.0, 1.0);
 }
 
 

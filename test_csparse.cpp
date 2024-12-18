@@ -1266,28 +1266,27 @@ TEST_CASE("Test concatentation")
     };
 
     SECTION("Test horizontal concatenation") {
-        CSCMatrix expect = CSCMatrix(
-            std::vector<double> {1, -2, 1, 1, 2, 4, -2, 1, -6, 7,  1,  2},
-            std::vector<csint>  {0,  1, 1, 2, 0, 1,  2, 0,  1, 2,  0,  2},
-            std::vector<csint>  {0,     2, 3, 4,        7,        10, 12},
-            std::array<csint, 2>{3, 6}
-        );
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {1, -2, 1, 1, 2, 4, -2, 1, -6, 7,  1, 2},
+            std::vector<csint>  {0,  1, 1, 2, 0, 1,  2, 0,  1, 2,  0, 2},
+            std::vector<csint>  {0,  0, 1, 2, 3, 3,  3, 4,  4, 4,  5, 5}
+        ).tocsc();
 
         CSCMatrix C = hstack(E, A);
 
-        cout << C;
         concat_test(C, expect);
     }
 
-    // SECTION("Test vertical concatenation") {
-    //     CSCMatrix expect = CSCMatrix(
-    //         std::vector<double> {1, -2, 1, 1, 2, 4, -2, 1, -6, 7,  1,  2},
-    //         std::vector<csint>  {0,  1, 1, 2, 0, 1,  2, 0,  1, 2,  0,  2},
-    //         std::vector<csint>  {0,     2, 3, 4,        7,        10, 12}
-    //     );
-    //     CSCMatrix C = vstack(A, B);
-    //     concat_test(C, expect);
-    // }
+    SECTION("Test vertical concatenation") {
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {1, -2, 1, 1, 2, 4, -2, 1, -6, 7,  1, 2},
+            std::vector<csint>  {0,  1, 1, 2, 3, 4,  5, 3,  4, 5,  3, 5},
+            std::vector<csint>  {0,  0, 1, 2, 0, 0,  0, 1,  1, 1,  2, 2}
+        ).tocsc();
+
+        CSCMatrix C = vstack(E, A);
+        concat_test(C, expect);
+    }
 }
 
 /*==============================================================================

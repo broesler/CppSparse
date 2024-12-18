@@ -1198,7 +1198,51 @@ CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
     std::copy(B.i_.begin(), B.i_.end(), C.i_.begin() + A.nnz());
     std::copy(B.v_.begin(), B.v_.end(), C.v_.begin() + A.nnz());
 
-    C.p_[A.N_ + B.N_] = A.nnz() + B.nnz();
+    C.p_[C.N_] = A.nnz() + B.nnz();
+
+    // TODO put into canonical format and test
+
+    return C;
+}
+
+/** Concatenate two matrices vertically.
+ *
+ * @note This function may *not* return a matrix with sorted columns!
+ *
+ * @param A, B  the CSC matrices to concatenate. They must have the same number
+ *        of columns.
+ *
+ * @return C  the concatenated matrix.
+ */
+CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
+{
+    assert(A.N_ == B.N_);
+
+    CSCMatrix C(A.M_ + B.M_, A.N_, A.nnz() + B.nnz());
+
+    csint nz = 0;
+
+    for (csint j = 0; j < C.N_; j++) {
+        C.p_[j] = nz;  // column j of C starts here
+
+        // Copy column j from the first matrix
+        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            C.i_[nz] = A.i_[p];
+            C.v_[nz] = A.v_[p];
+            nz++;
+        }
+
+        // Copy column j from the second matrix
+        for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
+            C.i_[A.p_[j+1] + p] = A.M_ + B.i_[p];
+            C.v_[A.p_[j+1] + p] = B.v_[p];
+            nz++;
+        }
+    }
+
+    C.p_[C.N_] = nz;
+
+    // TODO put into canonical format and test
 
     return C;
 }

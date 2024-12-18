@@ -168,7 +168,7 @@ class CSCMatrix
 
         // Exercise 2.22 concatenation (see cs_hcat, cs_vcat)
         friend CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B);
-        // friend CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B);
+        friend CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B);
 
         // ---------- Other
         void print(

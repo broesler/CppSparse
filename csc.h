@@ -178,6 +178,12 @@ class CSCMatrix
             const csint j_end
         ) const;
 
+        // Exercise 2.24 index with arbitrary indices
+        CSCMatrix index(
+            const std::vector<csint>& rows,
+            const std::vector<csint>& cols
+        ) const;
+
         // ---------- Other
         void print(
             std::ostream& os=std::cout,

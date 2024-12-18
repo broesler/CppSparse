@@ -1301,6 +1301,51 @@ CSCMatrix CSCMatrix::slice(
 }
 
 
+/** Index a matrix by row and column.
+ *
+ * @param i, j vectors of the row and column indices to keep. The indices need
+ *        not be consecutive, or sorted. Duplicates are allowed.
+ *
+ * @return C  the submatrix of A of dimension `length(i)`-by-`length(j)`.
+ */
+CSCMatrix CSCMatrix::index(
+    const std::vector<csint>& rows,
+    const std::vector<csint>& cols
+    ) const
+{
+    CSCMatrix C(rows.size(), cols.size(), nnz());
+
+    csint nz = 0;
+    std::unordered_map<csint, bool> row_map;
+
+    for (csint j = 0; j < cols.size(); j++) {
+        C.p_[j] = nz;  // column j of C starts here
+
+        for (csint p = p_[cols[j]]; p < p_[cols[j]+1]; p++) {
+            csint i = i_[p];
+
+            // TODO std::find is a linear search. Instead, cache found row
+            // indices for faster lookup.
+            // logic: if i is in map, or i is in rows, then keep
+            // if ((row_map.find(i) == row_map.end()) &&
+            //     (std::find(rows.begin(), rows.end(), i) == rows.end())) {
+            //     continue;
+            // } else {
+            auto row_i = std::find(rows.begin(), rows.end(), i);
+            if (row_i != rows.end()) {
+                row_map[i] = true;
+                C.i_[nz] = row_i - rows.begin();
+                C.v_[nz] = v_[p];
+                nz++;
+            }
+        }
+    }
+
+    C.p_[C.N_] = nz;
+    C.realloc();
+
+    C = C.dropzeros().sort();
+    C.has_canonical_format_ = true;
 
     return C;
 }

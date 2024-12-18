@@ -937,53 +937,106 @@ TEST_CASE("Scale rows and columns", "[math]")
 
 TEST_CASE("Matrix-matrix addition.", "[math]")
 {
-    // >>> A
-    // ===
-    // array([[1, 2, 3],
-    //        [4, 5, 6]])
-    // >>> B
-    // ===
-    // array([[1, 1, 1]
-    //        [1, 1, 1]])
-    // >>> 0.1 * B + 9.0 * C
-    // ===
-    // array([[9.1, 9.2, 9.3],
-    //        [9.4, 9.5, 9.6]])
+    SECTION("Test non-square matrices") {
+        // >>> A
+        // ===
+        // array([[1, 2, 3],
+        //        [4, 5, 6]])
+        // >>> B
+        // ===
+        // array([[1, 1, 1]
+        //        [1, 1, 1]])
+        // >>> 0.1 * B + 9.0 * C
+        // ===
+        // array([[9.1, 9.2, 9.3],
+        //        [9.4, 9.5, 9.6]])
 
-    std::vector<csint> i{{0, 0, 0, 1, 1, 1}};  // rows
-    std::vector<csint> j{{0, 1, 2, 0, 1, 2}};  // cols
+        std::vector<csint> i{{0, 0, 0, 1, 1, 1}};  // rows
+        std::vector<csint> j{{0, 1, 2, 0, 1, 2}};  // cols
 
-    CSCMatrix A = COOMatrix(
-        std::vector<double> {1, 2, 3, 4, 5, 6},
-        i, j
-    ).compress();
+        CSCMatrix A = COOMatrix(
+            std::vector<double> {1, 2, 3, 4, 5, 6},
+            i, j
+        ).compress();
 
-    CSCMatrix B = COOMatrix(
-        std::vector<double> {1, 1, 1, 1, 1, 1},
-        i, j
-    ).compress();
+        CSCMatrix B = COOMatrix(
+            std::vector<double> {1, 1, 1, 1, 1, 1},
+            i, j
+        ).compress();
 
-    CSCMatrix expect = COOMatrix(
-        std::vector<double> {9.1, 9.2, 9.3, 9.4, 9.5, 9.6},
-        i, j
-    ).compress();
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {9.1, 9.2, 9.3, 9.4, 9.5, 9.6},
+            i, j
+        ).compress();
 
-    csint M, N;
-    std::tie(M, N) = A.shape();
+        csint M, N;
+        std::tie(M, N) = A.shape();
 
-    // Test function definition
-    CSCMatrix Cf = add_scaled(A, B, 0.1, 9.0);
+        // Test function definition
+        CSCMatrix Cf = add_scaled(A, B, 0.1, 9.0);
 
-    // Test operator overloading
-    CSCMatrix C = 0.1 * A + 9.0 * B;
-    // cout << "C = \n" << C << endl;
+        // Test operator overloading
+        CSCMatrix C = 0.1 * A + 9.0 * B;
+        // cout << "C = \n" << C << endl;
 
-    // TODO rewrite these element-tests to compare the entire matrix, so that
-    // when we have a failure, we can see the indices
-    for (csint i = 0; i < M; i++) {
-        for (csint j = 0; j < N; j++) {
-            REQUIRE(Cf(i, j) == expect(i, j));
-            REQUIRE(C(i, j) == expect(i, j));
+        // TODO rewrite these element-tests to compare the entire matrix, so that
+        // when we have a failure, we can see the indices
+        for (csint i = 0; i < M; i++) {
+            for (csint j = 0; j < N; j++) {
+                REQUIRE(Cf(i, j) == expect(i, j));
+                REQUIRE(C(i, j) == expect(i, j));
+            }
+        }
+    }
+
+    SECTION("Test sparse column vectors") {
+        CSCMatrix a = COOMatrix(
+            std::vector<double> {4.5, 3.1, 3.5, 2.9, 0.4},
+            std::vector<csint>  {0, 1, 3, 5, 7},
+            std::vector<csint>  (5, 0)
+        ).tocsc();
+
+        CSCMatrix b = COOMatrix(
+            std::vector<double> {3.2, 3.0, 0.9, 1.0},
+            std::vector<csint>  {0, 2, 5, 7},
+            std::vector<csint>  (4, 0)
+        ).tocsc();
+
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {7.7, 3.1, 3.0, 3.5, 3.8, 1.4},
+            std::vector<csint>  {0, 1, 2, 3, 5, 7},
+            std::vector<csint>  (6, 0)
+        ).tocsc();
+
+        csint M, N;
+        std::tie(M, N) = a.shape();
+
+        SECTION("Test operator") {
+            CSCMatrix C = a + b;
+
+            REQUIRE(C.shape() == a.shape());
+
+            for (csint i = 0; i < M; i++) {
+                for (csint j = 0; j < N; j++) {
+                    REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
+                }
+            }
+        }
+
+        // Exercise 2.21
+        SECTION("Test saxpy") {
+            std::vector<csint> expect_w(M);
+            for (auto i : expect.indices()) {
+                expect_w[i] = 1;
+            }
+
+            // Initialize workspaces
+            std::vector<csint> w(M);
+            std::vector<double> x(M);
+
+            w = saxpy(a, b, w, x);
+
+            REQUIRE(w == expect_w);
         }
     }
 }

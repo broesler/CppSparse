@@ -867,6 +867,8 @@ CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B) { return A.dot(B); }
 
 /** Add two matrices (and optionally scale them) `C = alpha * A + beta * B`.
  * 
+ * @note This function does *not* return a matrix with sorted columns!
+ *
  * @param A, B  the CSC matrices
  * @param alpha, beta  scalar multipliers
  *
@@ -914,6 +916,46 @@ CSCMatrix add_scaled(
 }
 
 
+/** Add two sparse column vectors \f$ z = x + y \f$.
+ *
+ * See: Davis, Exercise 2.21
+ *
+ * @param x, y two column vectors stored as CSCMatrices. The number of columns
+ *        in each argument must be 1.
+ *
+ * @return z  the sum of the two vectors, but computed more efficiently than
+ *         the complete matrix addition.
+ */
+std::vector<csint> saxpy(
+    const CSCMatrix& a,
+    const CSCMatrix& b,
+    std::vector<csint>& w,
+    std::vector<double>& x
+    )
+{
+    assert(a.shape() == b.shape());
+    assert((a.N_ == 1) && (b.N_ == 1));  // both must be column vectors
+
+    for (csint p = 0; p < a.nnz(); p++) {
+        csint i = a.i_[p];
+        w[i] = 1;        // mark as non-zero
+        x[i] = a.v_[p];  // copy x into w
+    }
+
+    for (csint p = 0; p < b.nnz(); p++) {
+        csint i = b.i_[p];
+        if (w[i] == 0) {
+            w[i] = 1;         // mark as non-zero
+            x[i] = b.v_[p];   // copy b into w
+        } else {
+            x[i] += b.v_[p];  // add b to x
+        }
+    }
+
+    return w;
+}
+
+
 /** Add a matrix B. */
 CSCMatrix CSCMatrix::add(const CSCMatrix& B) const
 {
@@ -956,6 +998,7 @@ csint scatter(
     )
 {
     if (fs) {
+        // If it's the first call, we can just copy the (scaled) column
         for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
             csint i = A.i_[p];       // A(i, j) is non-zero
             w[i] = mark;             // i is new entry in column j
@@ -963,6 +1006,7 @@ csint scatter(
             x[i] = beta * A.v_[p];   // x = beta * A(i, j)
         }
     } else {
+        // Otherwise, we need to accumulate the values
         for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
             csint i = A.i_[p];           // A(i, j) is non-zero
             if (w[i] < mark) {

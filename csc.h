@@ -136,6 +136,14 @@ class CSCMatrix
             double beta
         );
 
+        // Exercise 2.21
+        friend std::vector<csint> saxpy(
+            const CSCMatrix& a,
+            const CSCMatrix& b,
+            std::vector<csint>& w,
+            std::vector<double>& x
+        );
+
         // Helper for add and multiply
         friend csint scatter(
             const CSCMatrix& A,

@@ -1200,7 +1200,9 @@ CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
 
     C.p_[C.N_] = A.nnz() + B.nnz();
 
-    // TODO put into canonical format and test
+    // Put into canonical format
+    C = C.dropzeros().sort();
+    C.has_canonical_format_ = true;
 
     return C;
 }
@@ -1242,7 +1244,10 @@ CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
 
     C.p_[C.N_] = nz;
 
-    // TODO put into canonical format and test
+    // Put into canonical format
+    C = C.dropzeros().sort();
+    C.has_canonical_format_ = true;
+
 
     return C;
 }

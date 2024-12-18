@@ -1200,8 +1200,9 @@ CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
 
     C.p_[C.N_] = A.nnz() + B.nnz();
 
-    // Put into canonical format
-    C = C.dropzeros().sort();
+    if (!A.has_canonical_format_ || !B.has_canonical_format_) {
+        C = C.dropzeros().sort();
+    }
     C.has_canonical_format_ = true;
 
     return C;
@@ -1244,9 +1245,12 @@ CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
 
     C.p_[C.N_] = nz;
 
-    // Put into canonical format
     C = C.dropzeros().sort();
     C.has_canonical_format_ = true;
+
+    return C;
+}
+
 
 /** Slice a matrix by row and column.
  *

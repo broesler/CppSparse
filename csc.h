@@ -32,7 +32,7 @@ class CSCMatrix
         // ---------- Constructors
         CSCMatrix();
 
-        // Provide data, coordinates, and shsape as vectors
+        // Provide data, coordinates, and shape as vectors
         CSCMatrix(
             const std::vector<double>& vals,
             const std::vector<csint>& indices,
@@ -61,8 +61,11 @@ class CSCMatrix
         const std::vector<double>& data() const;
 
         // Access an element by index, but do not change its value
-        const double operator()(csint i, csint j) const;
-        // double& operator()(csint, csint);  // assignment
+        const double operator()(const csint i, const csint j) const;
+        // double& operator()(const csint i, const csint j);  // assignment
+
+        // Assign an element by index
+        CSCMatrix& assign(const csint i, const csint j, const double v);
 
         // ---------- Format Conversions
         COOMatrix tocoo() const;  // Exercise 2.2 Matlab's find.

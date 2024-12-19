@@ -209,7 +209,7 @@ bool CSCMatrix::has_canonical_format() const { return has_canonical_format_; }
  *
  * @return the value of the element at `(i, j)`.
  */
-const double CSCMatrix::operator()(csint i, csint j) const
+const double CSCMatrix::operator()(const csint i, const csint j) const
 {
     // Assert indices are in-bounds
     assert(i >= 0 && i < M_);
@@ -246,6 +246,153 @@ const double CSCMatrix::operator()(csint i, csint j) const
     }
 }
 
+
+
+/** Set the value of the requested element `A(i, j) = 56`.
+ *
+ * This function takes O(log M) time if the columns are sorted, and O(M) time
+ * if they are not.
+ *
+ * @param i, j the row and column indices of the element to access.
+ *
+ * @return the value of the element at `(i, j)`.
+ */
+// double& CSCMatrix::operator()(const csint i, const csint j)
+// {
+//     // Assert indices are in-bounds
+//     assert(i >= 0 && i < M_);
+//     assert(j >= 0 && j < N_);
+
+//     if (has_canonical_format_) {
+//         csint p = p_[j];  // pointer to the row indices of column j
+//         std::span rows{i_.begin() + p, p_[j+1] - p};  // view of row indices
+
+//         // Binary search for t <= i
+//         auto t = std::lower_bound(rows.begin(), rows.end(), i);
+//         auto idx = std::distance(rows.begin(), t);
+//         csint q = p + idx;
+
+//         // Check that we actually found the index t == i
+//         if (t != rows.end() && *t == i) {
+//             return v_[q];
+//         } else {
+//             // Value does not exist, so add it here.
+//             i_.insert(i_.begin() + q, i);
+//             v_.insert(v_.begin() + q, 0.0);
+
+//             // Increment all subsequent pointers
+//             for (csint k = j + 1; k < p_.size(); k++) {
+//                 p_[k]++;
+//             }
+
+//             return v_[q];
+//         }
+
+//     } else {
+//         // Linear search for the element
+//         csint q;
+//         bool found = false;
+
+//         for (csint p = p_[j]; p < p_[j+1]; p++) {
+//             if (i_[p] == i) {
+//                 if (!found) {
+//                     q = p;
+//                     found = true;
+//                 } else {
+//                     v_[p] = 0;  // zero out duplicates
+//                 }
+//             }
+//         }
+
+//         if (found) {
+//             return v_[q];
+//         } else {
+//             // Columns are not sorted, so we can just add the element at the
+//             // beginning of the column.
+//             i_.insert(i_.begin() + p_[j], i);
+//             v_.insert(v_.begin() + p_[j], 0.0);
+
+//             // Increment all subsequent pointers
+//             for (csint k = j + 1; k < p_.size(); k++) {
+//                 p_[k]++;
+//             }
+
+//             return v_[p_[j]];
+//         }
+//     }
+// }
+
+
+/** Assign a value to a specific element in the matrix.
+ *
+ * This function takes O(log M) time if the columns are sorted, and O(M) time
+ * if they are not.
+ *
+ * @param i, j the row and column indices of the element to access.
+ * @param v the value to be assigned.
+ *
+ * @return a reference to itself for method chaining.
+ */
+CSCMatrix& CSCMatrix::assign(const csint i, const csint j, const double v)
+{
+    // Assert indices are in-bounds
+    assert(i >= 0 && i < M_);
+    assert(j >= 0 && j < N_);
+
+    if (has_canonical_format_) {
+        csint p = p_[j];  // pointer to the row indices of column j
+        std::span rows{i_.begin() + p, p_[j+1] - p};  // view of row indices
+
+        // Binary search for t <= i
+        auto t = std::lower_bound(rows.begin(), rows.end(), i);
+        auto idx = std::distance(rows.begin(), t);
+        csint q = p + idx;
+
+        // Check that we actually found the index t == i
+        if (t != rows.end() && *t == i) {
+            v_[q] = v;
+        } else {
+            // Value does not exist, so add it here.
+            i_.insert(i_.begin() + q, i);
+            v_.insert(v_.begin() + q, v);
+
+            // Increment all subsequent pointers
+            for (csint k = j + 1; k < p_.size(); k++) {
+                p_[k]++;
+            }
+        }
+
+    } else {
+        // Linear search for the element
+        bool found = false;
+
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            if (i_[p] == i) {
+                if (!found) {
+                    v_[p] = v;
+                    found = true;
+                } else {
+                    v_[p] = 0;  // zero out duplicates
+                }
+            }
+        }
+
+        if (!found) {
+            // Columns are not sorted, so we can just add the element at the
+            // beginning of the column.
+            i_.insert(i_.begin() + p_[j], i);
+            v_.insert(v_.begin() + p_[j], v);
+
+            // Increment all subsequent pointers
+            for (csint k = j + 1; k < p_.size(); k++) {
+                p_[k]++;
+            }
+        }
+
+    }
+
+    return *this;
+}
 
 /** Returns true if `A(i, j) == A(i, j)` for all `i, j`.
  *

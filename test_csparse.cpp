@@ -1375,5 +1375,54 @@ TEST_CASE("Test non-contiguous indexing")
     }
 }
 
+
+// Exercise 2.25 indexing for assignment
+TEST_CASE("Test indexing for assignment.")
+{
+    auto test_assignment = [](
+        CSCMatrix& A,
+        const csint i,
+        const csint j,
+        const double v,
+        const bool is_existing
+    )
+    {
+        csint nnz = A.nnz();
+
+        A.assign(i, j, v);
+
+        if (is_existing) {
+            CHECK(A.nnz() == nnz);
+        } else {
+            CHECK(A.nnz() == nnz + 1);
+        }
+        REQUIRE(A(i, j) == v);
+    };
+
+    SECTION("Canonical format") {
+        CSCMatrix A = davis_21_coo().tocsc();
+        
+        SECTION("Re-assign existing element") {
+            test_assignment(A, 2, 1, 56.0, true);
+        }
+
+        SECTION("Add a new element") {
+            test_assignment(A, 0, 1, 56.0, false);
+        }
+    }
+
+    SECTION("Non-canonical format") {
+        CSCMatrix A = davis_21_coo().compress();
+        
+        SECTION("Re-assign existing element") {
+            test_assignment(A, 2, 1, 56.0, true);
+        }
+
+        SECTION("Add a new element") {
+            test_assignment(A, 0, 1, 56.0, false);
+        }
+    }
+}
+
 /*==============================================================================
  *============================================================================*/

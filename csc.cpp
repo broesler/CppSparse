@@ -173,6 +173,18 @@ const std::vector<csint>& CSCMatrix::indices() const { return i_; }
 const std::vector<csint>& CSCMatrix::indptr() const { return p_; }
 const std::vector<double>& CSCMatrix::data() const { return v_; }
 
+
+/** Convert a CSCMatrix to canonical format.
+ *
+ * The columns are guaranteed to be sorted, no duplicates are allowed, and no
+ * numerically zero entries are allowed.
+ *
+ * This function takes O(M + N + nnz) time.
+ *
+ * See: Davis, Exercise 2.9.
+ *
+ * @return a copy of the `CSCMatrix` in canonical format.
+ */
 CSCMatrix CSCMatrix::to_canonical() const
 {
     CSCMatrix C = *this;
@@ -182,11 +194,21 @@ CSCMatrix CSCMatrix::to_canonical() const
     C.has_canonical_format_ = true;
     return C;
 }
+
+
 bool CSCMatrix::has_sorted_indices() const { return has_sorted_indices_; }
 bool CSCMatrix::has_canonical_format() const { return has_canonical_format_; }
 
 
-/** Return the value of the requested element */
+/** Return the value of the requested element.
+ *
+ * This function takes O(log M) time if the columns are sorted, and O(M) time
+ * if they are not.
+ *
+ * @param i, j the row and column indices of the element to access.
+ *
+ * @return the value of the element at `(i, j)`.
+ */
 const double CSCMatrix::operator()(csint i, csint j) const
 {
     // Assert indices are in-bounds

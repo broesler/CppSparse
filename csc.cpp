@@ -187,6 +187,10 @@ bool CSCMatrix::has_canonical_format() const { return has_canonical_format_; }
 /** Return the value of the requested element */
 const double CSCMatrix::operator()(csint i, csint j) const
 {
+    // Assert indices are in-bounds
+    assert(i >= 0 && i < M_);
+    assert(j >= 0 && j < N_);
+
     if (has_canonical_format_) {
         csint p = p_[j];  // pointer to the row indices of column j
         std::span rows{i_.begin() + p, p_[j+1] - p};  // view of row indices
@@ -203,8 +207,9 @@ const double CSCMatrix::operator()(csint i, csint j) const
         }
 
     } else {
-        // NOTE this code assumes that columns are *not* sorted, so it will
-        // search through *every* element in a column.
+        // NOTE this code assumes that columns are *not* sorted, and that
+        // duplicate entries may exist, so it will search through *every*
+        // element in a column.
         double out = 0;
 
         for (csint p = p_[j]; p < p_[j+1]; p++) {
@@ -1319,34 +1324,65 @@ CSCMatrix CSCMatrix::index(
     const std::vector<csint>& cols
     ) const
 {
-    CSCMatrix C(rows.size(), cols.size(), nnz());
+    COOMatrix C(rows.size(), cols.size(), nnz());
 
-    csint nz = 0;
-
-    for (csint j = 0; j < cols.size(); j++) {
-        C.p_[j] = nz;  // column j of C starts here
-
-        // Iterate over `rows` and find the corresponding indices in `i_`.
-        for (csint k = 0; k < rows.size(); k++) {
-            // Linear search over the row indices. The indices are not assumed
-            // to be sorted.
-            for (csint p = p_[cols[j]]; p < p_[cols[j]+1]; p++) {
-                csint i = i_[p];
-
-                if (rows[k] == i) {
-                    C.i_[nz] = k;
-                    C.v_[nz] = v_[p];
-                    nz++;
-                }
-            }
+    for (csint i = 0; i < rows.size(); i++) {
+        for (csint j = 0; j < cols.size(); j++) {
+            C.assign(i, j, (*this)(rows[i], cols[j]));
         }
     }
 
-    C.p_[C.N_] = nz;
-    C.realloc();
-
-    return C.to_canonical();
+    return C.tocsc();
 }
+
+
+/** Index a matrix by row and column.
+ *
+ * @param i, j vectors of the row and column indices to keep. The indices need
+ *        not be consecutive, or sorted. Duplicates are allowed.
+ *
+ * @return C  the submatrix of A of dimension `length(i)`-by-`length(j)`.
+ */
+// CSCMatrix CSCMatrix::index(
+//     const std::vector<csint>& rows,
+//     const std::vector<csint>& cols
+//     ) const
+// {
+//     // TODO assert all indices are within bounds
+//     CSCMatrix C(rows.size(), cols.size(), nnz());
+
+//     csint nz = 0;
+
+//     for (csint j = 0; j < cols.size(); j++) {
+//         C.p_[j] = nz;  // column j of C starts here
+
+//         // Iterate over `rows` and find the corresponding indices in `i_`.
+//         for (csint k = 0; k < rows.size(); k++) {
+//             // TODO not sure why this doesn't work?
+//             // C.i_[nz] = k;
+//             // C.v_[nz] = (*this)(rows[k], cols[j]);
+//             // nz++;
+
+//             // TODO use binary search if A.has_canonical_format_
+//             // Linear search over the row indices. The indices are not assumed
+//             // to be sorted. They *are* assumed to be unique (no duplicates).
+//             for (csint p = p_[cols[j]]; p < p_[cols[j]+1]; p++) {
+//                 csint i = i_[p];
+
+//                 if (rows[k] == i) {
+//                     C.i_[nz] = k;
+//                     C.v_[nz] = v_[p];
+//                     nz++;
+//                 }
+//             }
+//         }
+//     }
+
+//     C.p_[C.N_] = nz;
+//     C.realloc();
+
+//     return C.to_canonical();
+// }
 
 
 /*------------------------------------------------------------------------------

@@ -1336,12 +1336,11 @@ CSCMatrix CSCMatrix::slice(
 }
 
 
-// TODO figure out efficiency of each approach (aka general efficiency of
-// converting to canonical format)
-
-/** Index a matrix by row and column using COOMatrix construction.
+/** Select a submatrix by row and column indices, using COOMatrix construction.
  *
- * This function takes O(M + N + nnz) time (to sort the indices in `tocsc`).
+ * This function takes O(|rows| + |cols| + M + N) time (to sort the indices in
+ * `tocsc`) + O(log M) time if the columns are sorted, and + O(M) time if they
+ * are not.
  *
  * @param i, j vectors of the row and column indices to keep. The indices need
  *        not be consecutive, or sorted. Duplicates are allowed.
@@ -1365,7 +1364,10 @@ CSCMatrix CSCMatrix::index_lazy(
 }
 
 
-/** Index a matrix by row and column.
+/** Select a submatrix by row and column indices.
+ *
+ * This function takes O(|rows| + |cols|) + O(log M) time if the columns are
+ * sorted, and + O(M) time if they are not.
  *
  * @param i, j vectors of the row and column indices to keep. The indices need
  *        not be consecutive, or sorted. Duplicates are allowed.
@@ -1382,53 +1384,26 @@ CSCMatrix CSCMatrix::index(
     csint nz = 0;
 
     for (csint j = 0; j < cols.size(); j++) {
-        assert((cols[j] >= 0) && (cols[j] < N_));
         C.p_[j] = nz;  // column j of C starts here
 
         // Iterate over `rows` and find the corresponding indices in `i_`.
         for (csint k = 0; k < rows.size(); k++) {
-            assert((rows[k] >= 0) && (rows[k] < M_));
-            // TODO not sure why this doesn't work?
-            // C.i_[nz] = k;
-            // C.v_[nz] = (*this)(rows[k], cols[j]);
-            // nz++;
-
-            if (has_canonical_format_) {
-                // Use binary search
-                csint p = p_[cols[j]];  // pointer to the row indices of column j
-                csint i = rows[k];
-                std::span row_ids{i_.begin() + p, p_[cols[j]+1] - p};  // view of row indices
-
-                // Binary search for t <= i
-                auto t = std::lower_bound(row_ids.begin(), row_ids.end(), i);
-
-                // Check that we actually found the index t == i
-                if ((t != row_ids.end()) && (*t == i)) {
-                    auto idx = std::distance(row_ids.begin(), t);
-                    C.i_[nz] = k;
-                    C.v_[nz] = v_[p + idx];
-                    nz++;
-                }
-
-            } else {
-                // Linear search over the row indices. The indices are not assumed
-                // to be sorted. They *are* assumed to be unique (no duplicates).
-                for (csint p = p_[cols[j]]; p < p_[cols[j]+1]; p++) {
-                    csint i = i_[p];
-                    if (rows[k] == i) {
-                        C.i_[nz] = k;
-                        C.v_[nz] = v_[p];
-                        nz++;
-                    }
-                }
+            double val = (*this)(rows[k], cols[j]);
+            if (val != 0) {
+                C.i_[nz] = k;
+                C.v_[nz] = val;
+                nz++;
             }
         }
     }
 
     C.p_[C.N_] = nz;
     C.realloc();
+    
+    // Canonical format guaranteed by construction
+    C.has_canonical_format_ = true;
 
-    return C.to_canonical();
+    return C;
 }
 
 

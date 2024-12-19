@@ -1326,16 +1326,18 @@ CSCMatrix CSCMatrix::index(
     for (csint j = 0; j < cols.size(); j++) {
         C.p_[j] = nz;  // column j of C starts here
 
-        for (csint p = p_[cols[j]]; p < p_[cols[j]+1]; p++) {
-            csint i = i_[p];
+        // Iterate over `rows` and find the corresponding indices in `i_`.
+        for (csint k = 0; k < rows.size(); k++) {
+            // Linear search over the row indices. The indices are not assumed
+            // to be sorted.
+            for (csint p = p_[cols[j]]; p < p_[cols[j]+1]; p++) {
+                csint i = i_[p];
 
-            // FIXME find does not work for duplicate indices, since it returns
-            // the first occurrence.
-            auto row_i = std::find(rows.begin(), rows.end(), i);
-            if (row_i != rows.end()) {
-                C.i_[nz] = row_i - rows.begin();
-                C.v_[nz] = v_[p];
-                nz++;
+                if (rows[k] == i) {
+                    C.i_[nz] = k;
+                    C.v_[nz] = v_[p];
+                    nz++;
+                }
             }
         }
     }

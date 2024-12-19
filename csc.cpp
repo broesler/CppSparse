@@ -248,7 +248,8 @@ const double CSCMatrix::operator()(const csint i, const csint j) const
 
 
 
-/** Set the value of the requested element `A(i, j) = 56`.
+/** Return a reference to the value of the requested element for use in
+ * assignment, e.g. `A(i, j) = 56.0`.
  *
  * This function takes O(log M) time if the columns are sorted, and O(M) time
  * if they are not.
@@ -353,13 +354,7 @@ CSCMatrix& CSCMatrix::assign(const csint i, const csint j, const double v)
             v_[q] = v;
         } else {
             // Value does not exist, so add it here.
-            i_.insert(i_.begin() + q, i);
-            v_.insert(v_.begin() + q, v);
-
-            // Increment all subsequent pointers
-            for (csint k = j + 1; k < p_.size(); k++) {
-                p_[k]++;
-            }
+            this->insert(i, j, v, q);
         }
 
     } else {
@@ -380,19 +375,38 @@ CSCMatrix& CSCMatrix::assign(const csint i, const csint j, const double v)
         if (!found) {
             // Columns are not sorted, so we can just add the element at the
             // beginning of the column.
-            i_.insert(i_.begin() + p_[j], i);
-            v_.insert(v_.begin() + p_[j], v);
-
-            // Increment all subsequent pointers
-            for (csint k = j + 1; k < p_.size(); k++) {
-                p_[k]++;
-            }
+            this->insert(i, j, v, p_[j]);
         }
 
     }
 
     return *this;
 }
+
+
+/** Insert a single element at a specified location.
+ *
+ * @param i, j the row and column indices of the element to access.
+ * @param v the value to be assigned.
+ * @param p the pointer to the column in the matrix.
+ */
+void CSCMatrix::insert(
+    const csint i,
+	const csint j,
+	const double v,
+	const csint p
+    )
+{
+    i_.insert(i_.begin() + p, i);
+    v_.insert(v_.begin() + p, v);
+
+    // Increment all subsequent pointers
+    for (csint k = j + 1; k < p_.size(); k++) {
+        p_[k]++;
+    }
+}
+
+
 
 /** Returns true if `A(i, j) == A(i, j)` for all `i, j`.
  *

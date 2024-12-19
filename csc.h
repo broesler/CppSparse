@@ -67,6 +67,9 @@ class CSCMatrix
         // Assign an element by index
         CSCMatrix& assign(const csint i, const csint j, const double v);
 
+        // Helper for assign
+        void insert(const csint i, const csint j, const double v, const csint p);
+
         // ---------- Format Conversions
         COOMatrix tocoo() const;  // Exercise 2.2 Matlab's find.
 

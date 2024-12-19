@@ -1337,7 +1337,7 @@ TEST_CASE("Test non-contiguous indexing")
 {
     CSCMatrix A = davis_21_coo().tocsc();
 
-    SECTION("Test indexing with no duplicates") {
+    SECTION("Test indexing without duplicates") {
         CSCMatrix C = A.index({2, 0}, {0, 3, 2});
 
         CSCMatrix expect = COOMatrix(
@@ -1346,6 +1346,20 @@ TEST_CASE("Test non-contiguous indexing")
             std::vector<csint>  {  0,   2,   2},
             std::array<csint, 2>{2, 3}
         ).tocsc();
+
+        matrix_compare(C, expect);
+    }
+
+    SECTION("Test indexing with duplicates") {
+        CSCMatrix C = A.index({2, 0, 1, 1}, {0, 3, 2});
+
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {4.5, 3.1, 3.1, 0.9, 0.9, 3.2, 3.0},
+            std::vector<csint>  {  1,   2,   3,   2,   3,   1,   0},
+            std::vector<csint>  {  0,   0,   0,   1,   1,   2,   2}
+        ).tocsc();
+
+        cout << C;
 
         matrix_compare(C, expect);
     }

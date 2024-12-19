@@ -1350,7 +1350,7 @@ TEST_CASE("Test non-contiguous indexing")
         matrix_compare(C, expect);
     }
 
-    SECTION("Test indexing with duplicates") {
+    SECTION("Test indexing with duplicate rows") {
         CSCMatrix C = A.index({2, 0, 1, 1}, {0, 3, 2});
 
         CSCMatrix expect = COOMatrix(
@@ -1359,7 +1359,17 @@ TEST_CASE("Test non-contiguous indexing")
             std::vector<csint>  {  0,   0,   0,   1,   1,   2,   2}
         ).tocsc();
 
-        cout << C;
+        matrix_compare(C, expect);
+    }
+
+    SECTION("Test indexing with duplicate columns") {
+        CSCMatrix C = A.index({2, 0}, {0, 3, 2, 0});
+
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {4.5, 3.2, 3.0, 4.5},
+            std::vector<csint>  {  1,   1,   0,   1},
+            std::vector<csint>  {  0,   2,   2,   3}
+        ).tocsc();
 
         matrix_compare(C, expect);
     }

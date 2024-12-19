@@ -25,7 +25,7 @@ all: test_csparse
 
 test: OPT = -I$(BREW)/include 
 test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
-test: CFLAGS += -Og -glldb #-fsanitize=address
+test: CFLAGS += -glldb #-Og #-fsanitize=address
 test: test_csparse
 
 debug: CFLAGS += -DDEBUG -glldb -Og -fno-inline -fsanitize=address,leak

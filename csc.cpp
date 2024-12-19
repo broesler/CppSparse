@@ -171,6 +171,15 @@ const std::vector<csint>& CSCMatrix::indices() const { return i_; }
 const std::vector<csint>& CSCMatrix::indptr() const { return p_; }
 const std::vector<double>& CSCMatrix::data() const { return v_; }
 
+CSCMatrix CSCMatrix::to_canonical() const
+{
+    CSCMatrix C = *this;
+    C.sum_duplicates();
+    C.dropzeros();
+    C.sort();
+    C.has_canonical_format_ = true;
+    return C;
+}
 bool CSCMatrix::has_sorted_indices() const { return has_sorted_indices_; }
 bool CSCMatrix::has_canonical_format() const { return has_canonical_format_; }
 
@@ -809,7 +818,7 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
  *
  * See: Davis, Exercise 2.18
  *
- * @param x, y two column vectors stored as CSCMatrices. The number of columns
+ * @param x, y two column vectors stored as a CSCMatrix. The number of columns
  *        in each argument must be 1.
  *
  * @return c  the dot product `x.T() * y`, but computed more efficiently than
@@ -919,7 +928,7 @@ CSCMatrix add_scaled(
  *
  * See: Davis, Exercise 2.21
  *
- * @param x, y two column vectors stored as CSCMatrices. The number of columns
+ * @param x, y two column vectors stored as a CSCMatrix. The number of columns
  *        in each argument must be 1.
  *
  * @return z  the sum of the two vectors, but computed more efficiently than
@@ -1201,7 +1210,7 @@ CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
     C.p_[C.N_] = A.nnz() + B.nnz();
 
     if (!A.has_canonical_format_ || !B.has_canonical_format_) {
-        C = C.dropzeros().sort();
+        C = C.to_canonical();
     }
     C.has_canonical_format_ = true;
 
@@ -1245,10 +1254,7 @@ CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
 
     C.p_[C.N_] = nz;
 
-    C = C.dropzeros().sort();
-    C.has_canonical_format_ = true;
-
-    return C;
+    return C.to_canonical();
 }
 
 
@@ -1293,7 +1299,7 @@ CSCMatrix CSCMatrix::slice(
     C.realloc();
 
     if (!has_canonical_format_) {
-        C = C.dropzeros().sort();
+        C = C.to_canonical();
     }
     C.has_canonical_format_ = true;
 
@@ -1316,7 +1322,6 @@ CSCMatrix CSCMatrix::index(
     CSCMatrix C(rows.size(), cols.size(), nnz());
 
     csint nz = 0;
-    std::unordered_map<csint, bool> row_map;
 
     for (csint j = 0; j < cols.size(); j++) {
         C.p_[j] = nz;  // column j of C starts here
@@ -1324,16 +1329,10 @@ CSCMatrix CSCMatrix::index(
         for (csint p = p_[cols[j]]; p < p_[cols[j]+1]; p++) {
             csint i = i_[p];
 
-            // TODO std::find is a linear search. Instead, cache found row
-            // indices for faster lookup.
-            // logic: if i is in map, or i is in rows, then keep
-            // if ((row_map.find(i) == row_map.end()) &&
-            //     (std::find(rows.begin(), rows.end(), i) == rows.end())) {
-            //     continue;
-            // } else {
+            // FIXME find does not work for duplicate indices, since it returns
+            // the first occurrence.
             auto row_i = std::find(rows.begin(), rows.end(), i);
             if (row_i != rows.end()) {
-                row_map[i] = true;
                 C.i_[nz] = row_i - rows.begin();
                 C.v_[nz] = v_[p];
                 nz++;
@@ -1344,10 +1343,7 @@ CSCMatrix CSCMatrix::index(
     C.p_[C.N_] = nz;
     C.realloc();
 
-    C = C.dropzeros().sort();
-    C.has_canonical_format_ = true;
-
-    return C;
+    return C.to_canonical();
 }
 
 

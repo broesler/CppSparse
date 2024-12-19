@@ -66,6 +66,8 @@ CSCMatrix::CSCMatrix(csint M, csint N, csint nzmax)
  * The columns are guaranteed to be sorted, no duplicates are allowed, and no
  * numerically zero entries are allowed.
  *
+ * This function takes O(M + N + nnz) time.
+ *
  * See: Davis, Exercise 2.9.
  *
  * @return a copy of the `COOMatrix` in canonical CSC format.
@@ -79,9 +81,9 @@ CSCMatrix::CSCMatrix(const COOMatrix& A)
     M_ = C.M_;
     N_ = C.N_;
 
-    sum_duplicates();
-    dropzeros();
-    sort();
+    sum_duplicates();  // O(N) space, O(nnz) time
+    dropzeros();       // O(nnz) time
+    sort();            // O(M) space, O(M + N + nnz) time
     has_canonical_format_ = true;
 }
 
@@ -229,7 +231,7 @@ const double CSCMatrix::operator()(csint i, csint j) const
  *
  * @return true if the matrix is symmetric.
  */
-bool CSCMatrix::is_symmetric() const 
+bool CSCMatrix::is_symmetric() const
 {
     assert(has_canonical_format_);
 
@@ -237,9 +239,9 @@ bool CSCMatrix::is_symmetric() const
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             csint i = i_[p];
 
-            if (i == j) 
+            if (i == j)
                 continue;  // skip diagonal
-            
+
             if (v_[p] != (*this)(j, i))
                 return false;
         }
@@ -267,9 +269,9 @@ COOMatrix CSCMatrix::tocoo() const { return COOMatrix(*this); }
  * This operation can be viewed as converting a Compressed Sparse Column matrix
  * into a Compressed Sparse Row matrix.
  *
- * This function takes 
+ * This function takes
  *   - O(N) extra space for the workspace
- *   - O(M * N + nnz) time
+ *   - O(M + N + nnz) time
  *       == nnz column counts + N columns * M potential non-zeros per column
  *
  * @return new CSCMatrix object with transposed rows and columns.
@@ -366,6 +368,8 @@ CSCMatrix& CSCMatrix::qsort()
 /** Sort rows and columns in place two transposes, but more efficiently than
  * calling `transpose` twice.
  *
+ * This function takes O(M) extra space and O(M * N + nnz) time.
+ *
  * See: Davis, Exercise 2.11.
  *
  * @return A  a reference to the matrix, now with sorted columns.
@@ -412,7 +416,14 @@ CSCMatrix& CSCMatrix::sort()
 }
 
 
-/** Sum duplicate entries in place. */
+/** Sum duplicate entries in place.
+ *
+ * This function takes
+ *   - O(N) extra space for the workspace
+ *   - O(nnz) time
+ *
+ * @return a reference to the object for method chaining
+ */
 CSCMatrix& CSCMatrix::sum_duplicates()
 {
     csint nz = 0;  // count actual number of non-zeros (excluding dups)
@@ -457,7 +468,7 @@ CSCMatrix& CSCMatrix::fkeep(
     bool (*fk) (csint, csint, double, void *),
     void *other
 )
-{ 
+{
     csint nz = 0;  // count actual number of non-zeros
 
     for (csint j = 0; j < N_; j++) {
@@ -485,7 +496,12 @@ bool CSCMatrix::nonzero(csint i, csint j, double Aij, void *other)
 }
 
 
-/** Drop any exactly zero entries from the matrix. */
+/** Drop any exactly zero entries from the matrix.
+ *
+ * This function takes O(nnz) time.
+ *
+ * @return a reference to the object for method chaining
+ */
 CSCMatrix& CSCMatrix::dropzeros()
 {
     return fkeep(&nonzero, nullptr);
@@ -499,7 +515,15 @@ bool CSCMatrix::abs_gt_tol(csint i, csint j, double Aij, void *tol)
 }
 
 
-/** Drop any entries within `tol` of zero. */
+/** Drop any entries within `tol` of zero.
+ *
+ * This function takes O(nnz) time.
+ *
+ * @param tol the tolerance against which to compare the absolute value of the
+ *        matrix entries.
+ *
+ * @return a reference to the object for method chaining
+ */
 CSCMatrix& CSCMatrix::droptol(double tol)
 {
     return fkeep(&abs_gt_tol, &tol);
@@ -605,9 +629,9 @@ std::vector<double> sym_gaxpy(
     std::vector<double> y
     )
 {
-    assert(A.M_ == A.N_);  // matrix must be square to be symmetric 
-    assert(A.N_ == x.size()); 
-    assert(x.size() == y.size()); 
+    assert(A.M_ == A.N_);  // matrix must be square to be symmetric
+    assert(A.N_ == x.size());
+    assert(x.size() == y.size());
     for (csint j = 0; j < A.N_; j++) {
         for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
             csint i = A.i_[p];
@@ -657,7 +681,7 @@ CSCMatrix CSCMatrix::scale(const std::vector<double>& r, const std::vector<doubl
 /** Matrix-vector right-multiply. */
 std::vector<double> CSCMatrix::dot(const std::vector<double>& x) const
 {
-    assert(N_ == x.size()); 
+    assert(N_ == x.size());
 
     std::vector<double> out(M_);
 
@@ -693,7 +717,7 @@ CSCMatrix CSCMatrix::dot(const double c) const
  * @param A, B  the CSC-format matrices to multiply.
  *        A is size M x K, B is size K x N.
  *
- * @return C    a CSC-format matrix of size M x N. 
+ * @return C    a CSC-format matrix of size M x N.
  *         C.nnz() <= A.nnz() + B.nnz().
  */
 CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
@@ -715,7 +739,7 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
     bool fs = true;  // Exercise 2.19 -- first call to scatter
 
     for (csint j = 0; j < N; j++) {
-        C.p_[j] = nz;  // column j of C starts here 
+        C.p_[j] = nz;  // column j of C starts here
 
         // Compute x = A @ B[:, j]
         for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
@@ -751,7 +775,7 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
  * @param A, B  the CSC-format matrices to multiply.
  *        A is size M x K, B is size K x N.
  *
- * @return C    a CSC-format matrix of size M x N. 
+ * @return C    a CSC-format matrix of size M x N.
  *         C.nnz() <= A.nnz() + B.nnz().
  */
 CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
@@ -793,7 +817,7 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
     bool fs = true;  // first call to scatter
 
     for (csint j = 0; j < N; j++) {
-        C.p_[j] = nz;  // column j of C starts here 
+        C.p_[j] = nz;  // column j of C starts here
 
         // Compute x = A @ B[:, j]
         for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
@@ -879,7 +903,7 @@ CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B) { return A.dot(B); }
 
 
 /** Add two matrices (and optionally scale them) `C = alpha * A + beta * B`.
- * 
+ *
  * @note This function may *not* return a matrix with sorted columns!
  *
  * @param A, B  the CSC matrices
@@ -1086,7 +1110,7 @@ CSCMatrix CSCMatrix::symperm(const std::vector<csint> p_inv) const
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             csint i = i_[p];
 
-            if (i > j) 
+            if (i > j)
                 continue;   // skip lower triangular part of A
 
             csint i2 = p_inv[i];    // row i of A is row i2 of C
@@ -1317,6 +1341,8 @@ CSCMatrix CSCMatrix::slice(
 
 /** Index a matrix by row and column using COOMatrix construction.
  *
+ * This function takes O(M + N + nnz) time (to sort the indices in `tocsc`).
+ *
  * @param i, j vectors of the row and column indices to keep. The indices need
  *        not be consecutive, or sorted. Duplicates are allowed.
  *
@@ -1351,31 +1377,49 @@ CSCMatrix CSCMatrix::index(
     const std::vector<csint>& cols
     ) const
 {
-    // TODO assert all indices are within bounds
     CSCMatrix C(rows.size(), cols.size(), nnz());
 
     csint nz = 0;
 
     for (csint j = 0; j < cols.size(); j++) {
+        assert((cols[j] >= 0) && (cols[j] < N_));
         C.p_[j] = nz;  // column j of C starts here
 
         // Iterate over `rows` and find the corresponding indices in `i_`.
         for (csint k = 0; k < rows.size(); k++) {
+            assert((rows[k] >= 0) && (rows[k] < M_));
             // TODO not sure why this doesn't work?
             // C.i_[nz] = k;
             // C.v_[nz] = (*this)(rows[k], cols[j]);
             // nz++;
 
-            // TODO use binary search if A.has_canonical_format_
-            // Linear search over the row indices. The indices are not assumed
-            // to be sorted. They *are* assumed to be unique (no duplicates).
-            for (csint p = p_[cols[j]]; p < p_[cols[j]+1]; p++) {
-                csint i = i_[p];
+            if (has_canonical_format_) {
+                // Use binary search
+                csint p = p_[cols[j]];  // pointer to the row indices of column j
+                csint i = rows[k];
+                std::span row_ids{i_.begin() + p, p_[cols[j]+1] - p};  // view of row indices
 
-                if (rows[k] == i) {
+                // Binary search for t <= i
+                auto t = std::lower_bound(row_ids.begin(), row_ids.end(), i);
+
+                // Check that we actually found the index t == i
+                if ((t != row_ids.end()) && (*t == i)) {
+                    auto idx = std::distance(row_ids.begin(), t);
                     C.i_[nz] = k;
-                    C.v_[nz] = v_[p];
+                    C.v_[nz] = v_[p + idx];
                     nz++;
+                }
+
+            } else {
+                // Linear search over the row indices. The indices are not assumed
+                // to be sorted. They *are* assumed to be unique (no duplicates).
+                for (csint p = p_[cols[j]]; p < p_[cols[j]+1]; p++) {
+                    csint i = i_[p];
+                    if (rows[k] == i) {
+                        C.i_[nz] = k;
+                        C.v_[nz] = v_[p];
+                        nz++;
+                    }
                 }
             }
         }

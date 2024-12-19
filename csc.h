@@ -180,11 +180,6 @@ class CSCMatrix
         ) const;
 
         // Exercise 2.24 index with arbitrary indices
-        CSCMatrix index_lazy(
-            const std::vector<csint>& rows,
-            const std::vector<csint>& cols
-        ) const;
-
         CSCMatrix index(
             const std::vector<csint>& rows,
             const std::vector<csint>& cols

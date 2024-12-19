@@ -1358,34 +1358,6 @@ CSCMatrix CSCMatrix::slice(
 }
 
 
-/** Select a submatrix by row and column indices, using COOMatrix construction.
- *
- * This function takes O(|rows| + |cols| + M + N) time (to sort the indices in
- * `tocsc`) + O(log M) time if the columns are sorted, and + O(M) time if they
- * are not.
- *
- * @param i, j vectors of the row and column indices to keep. The indices need
- *        not be consecutive, or sorted. Duplicates are allowed.
- *
- * @return C  the submatrix of A of dimension `length(i)`-by-`length(j)`.
- */
-CSCMatrix CSCMatrix::index_lazy(
-    const std::vector<csint>& rows,
-    const std::vector<csint>& cols
-    ) const
-{
-    COOMatrix C(rows.size(), cols.size(), nnz());
-
-    for (csint i = 0; i < rows.size(); i++) {
-        for (csint j = 0; j < cols.size(); j++) {
-            C.assign(i, j, (*this)(rows[i], cols[j]));
-        }
-    }
-
-    return C.tocsc();
-}
-
-
 /** Select a submatrix by row and column indices.
  *
  * This function takes O(|rows| + |cols|) + O(log M) time if the columns are

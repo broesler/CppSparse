@@ -324,6 +324,33 @@ CSCMatrix& CSCMatrix::assign(csint i, csint j, double v)
 }
 
 
+/** Assign a dense matrix to the CSCMatrix at the specified locations.
+ *
+ * See: Davis, Exercise 2.25.
+ *
+ * @param rows, cols the row and column indices of the elements to access.
+ * @param C the dense matrix to be assigned.
+ *
+ * @return a reference to itself for method chaining.
+ */
+CSCMatrix& CSCMatrix::assign(
+    const std::vector<csint>& rows,
+    const std::vector<csint>& cols,
+    const std::vector<double>& C
+    )
+{
+    assert(C.size() == rows.size() * cols.size());
+
+    for (csint i = 0; i < rows.size(); i++) {
+        for (csint j = 0; j < cols.size(); j++) {
+            (*this)(rows[i], cols[j]) = C[i + j * rows.size()];
+        }
+    }
+
+    return *this;
+}
+
+
 /** Insert a single element at a specified location.
  *
  * @param i, j the row and column indices of the element to access.

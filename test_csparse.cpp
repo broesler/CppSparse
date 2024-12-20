@@ -1379,7 +1379,7 @@ TEST_CASE("Test non-contiguous indexing")
 
 
 // Exercise 2.25 indexing for assignment
-TEST_CASE("Test indexing for assignment.")
+TEST_CASE("Test indexing for single assignment.")
 {
     auto test_assignment = [](
         CSCMatrix& A,
@@ -1424,7 +1424,25 @@ TEST_CASE("Test indexing for assignment.")
             test_assignment(A, 0, 1, 56.0, false);
         }
     }
+
+    SECTION("Test multiple assignment") {
+        CSCMatrix A = davis_21_coo().tocsc();
+
+        std::vector<csint> rows = {2, 0};
+        std::vector<csint> cols = {0, 3, 2};
+        std::vector<double> vals = {100, 101, 102, 103, 104, 105};
+
+        A.assign(rows, cols, vals);
+
+        for (csint i = 0; i < rows.size(); i++) {
+            for (csint j = 0; j < cols.size(); j++) {
+                REQUIRE(A(rows[i], cols[j]) == vals[i + j * rows.size()]);
+            }
+        }
+    }
 }
+
+
 
 /*==============================================================================
  *============================================================================*/

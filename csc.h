@@ -66,6 +66,11 @@ class CSCMatrix
 
         // Exercise 2.25 assign by index
         CSCMatrix& assign(csint i, csint j, double v);
+        CSCMatrix& assign(
+            const std::vector<csint>& i,
+            const std::vector<csint>& j,
+            const std::vector<double>& C  // dense column-major
+        );
 
         // Helper for assign and operator()
         double& insert(csint i, csint j, double v, csint p);

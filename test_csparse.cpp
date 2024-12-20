@@ -379,7 +379,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
 TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
 {
     COOMatrix A = davis_21_coo();
-    CSCMatrix C = A.compress();
+    CSCMatrix C = A.compress();  // unsorted columns
 
     // cout << "C = \n" << C;
     SECTION("Test attributes") {
@@ -439,7 +439,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         s.clear();
     }
 
-    SECTION("Test indexing") {
+    SECTION("Test indexing: unsorted, without duplicates") {
         std::vector<csint> indptr = C.indptr();
         std::vector<csint> indices = C.indices();
         std::vector<double> data = C.data();
@@ -453,10 +453,12 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
 
     }
 
-    SECTION("Test indexing: with a duplicate") {
+    SECTION("Test indexing: unsorted, with a duplicate") {
         C = A.assign(3, 3, 56.0).compress();
 
-        REQUIRE_THAT(C(3, 3), WithinAbs(57.0, tol));
+        // FIXME "double& operator()" function is being called when we are
+        // trying to compare the value. Not sure why.
+        REQUIRE_THAT(C(3, 3), WithinAbs(57.0, tol));  // calls double&
     }
 
     // Test the transpose -> use indexing to test A(i, j) == A(j, i)

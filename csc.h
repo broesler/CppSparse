@@ -61,8 +61,8 @@ class CSCMatrix
         const std::vector<double>& data() const;
 
         // Access an element by index, but do not change its value
-        const double operator()(const csint i, const csint j) const;
-        // double& operator()(const csint i, const csint j);  // assignment
+        const double operator()(const csint i, const csint j) const;  // v = A(i, j)
+        double& operator()(const csint i, const csint j);             // A(i, j) = v
 
         // Assign an element by index
         CSCMatrix& assign(const csint i, const csint j, const double v);

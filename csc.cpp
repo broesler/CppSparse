@@ -216,10 +216,8 @@ const double CSCMatrix::operator()(const csint i, const csint j) const
     assert(j >= 0 && j < N_);
 
     if (has_canonical_format_) {
-        csint p = p_[j];  // pointer to the row indices of column j
-
         // Binary search for t <= i
-        auto start = i_.begin() + p;
+        auto start = i_.begin() + p_[j];
         auto end = i_.begin() + p_[j+1];
 
         auto t = std::lower_bound(start, end, i);
@@ -257,72 +255,57 @@ const double CSCMatrix::operator()(const csint i, const csint j) const
  *
  * @param i, j the row and column indices of the element to access.
  *
- * @return the value of the element at `(i, j)`.
+ * @return a reference to the value of the element at `(i, j)`.
  */
-// double& CSCMatrix::operator()(const csint i, const csint j)
-// {
-//     // Assert indices are in-bounds
-//     assert(i >= 0 && i < M_);
-//     assert(j >= 0 && j < N_);
+double& CSCMatrix::operator()(const csint i, const csint j)
+{
+    // Assert indices are in-bounds
+    assert(i >= 0 && i < M_);
+    assert(j >= 0 && j < N_);
 
-//     if (has_canonical_format_) {
-//         csint p = p_[j];  // pointer to the row indices of column j
-//         std::span rows{i_.begin() + p, p_[j+1] - p};  // view of row indices
+    if (has_canonical_format_) {
+        // Binary search for t <= i
+        auto start = i_.begin() + p_[j];
+        auto end = i_.begin() + p_[j+1];
 
-//         // Binary search for t <= i
-//         auto t = std::lower_bound(rows.begin(), rows.end(), i);
-//         auto idx = std::distance(rows.begin(), t);
-//         csint q = p + idx;
+        auto t = std::lower_bound(start, end, i);
 
-//         // Check that we actually found the index t == i
-//         if (t != rows.end() && *t == i) {
-//             return v_[q];
-//         } else {
-//             // Value does not exist, so add it here.
-//             i_.insert(i_.begin() + q, i);
-//             v_.insert(v_.begin() + q, 0.0);
+        auto k = std::distance(i_.begin(), t);
 
-//             // Increment all subsequent pointers
-//             for (csint k = j + 1; k < p_.size(); k++) {
-//                 p_[k]++;
-//             }
+        // Check that we actually found the index t == i
+        if (t != end && *t == i) {
+            return v_[k];
+        } else {
+            // Value does not exist, so add a place-holder here.
+            return this->insert(i, j, 0.0, k);
+        }
 
-//             return v_[q];
-//         }
+    } else {
+        // Linear search for the element
+        csint k;
+        bool found = false;
 
-//     } else {
-//         // Linear search for the element
-//         csint q;
-//         bool found = false;
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            if (i_[p] == i) {
+                if (!found) {
+                    k = p;  // store the index of the element
+                    found = true;
+                } else {
+                    v_[k] += v_[p];  // accumulate duplicates here
+                    v_[p] = 0;       // zero out duplicates
+                }
+            }
+        }
 
-//         for (csint p = p_[j]; p < p_[j+1]; p++) {
-//             if (i_[p] == i) {
-//                 if (!found) {
-//                     q = p;
-//                     found = true;
-//                 } else {
-//                     v_[p] = 0;  // zero out duplicates
-//                 }
-//             }
-//         }
-
-//         if (found) {
-//             return v_[q];
-//         } else {
-//             // Columns are not sorted, so we can just add the element at the
-//             // beginning of the column.
-//             i_.insert(i_.begin() + p_[j], i);
-//             v_.insert(v_.begin() + p_[j], 0.0);
-
-//             // Increment all subsequent pointers
-//             for (csint k = j + 1; k < p_.size(); k++) {
-//                 p_[k]++;
-//             }
-
-//             return v_[p_[j]];
-//         }
-//     }
-// }
+        if (found) {
+            return v_[k];
+        } else {
+            // Columns are not sorted, so we can just insert the element at the
+            // beginning of the column.
+            return this->insert(i, j, 0.0, p_[j]);
+        }
+    }
+}
 
 
 /** Assign a value to a specific element in the matrix.
@@ -391,8 +374,10 @@ CSCMatrix& CSCMatrix::assign(const csint i, const csint j, const double v)
  * @param i, j the row and column indices of the element to access.
  * @param v the value to be assigned.
  * @param p the pointer to the column in the matrix.
+ *
+ * @return a reference to the inserted value.
  */
-void CSCMatrix::insert(
+double& CSCMatrix::insert(
     const csint i,
 	const csint j,
 	const double v,
@@ -406,6 +391,8 @@ void CSCMatrix::insert(
     for (csint k = j + 1; k < p_.size(); k++) {
         p_[k]++;
     }
+
+    return v_[p];
 }
 
 

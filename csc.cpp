@@ -217,15 +217,16 @@ const double CSCMatrix::operator()(const csint i, const csint j) const
 
     if (has_canonical_format_) {
         csint p = p_[j];  // pointer to the row indices of column j
-        std::span rows{i_.begin() + p, p_[j+1] - p};  // view of row indices
 
         // Binary search for t <= i
-        auto t = std::lower_bound(rows.begin(), rows.end(), i);
+        auto start = i_.begin() + p;
+        auto end = i_.begin() + p_[j+1];
+
+        auto t = std::lower_bound(start, end, i);
 
         // Check that we actually found the index t == i
-        if (t != rows.end() && *t == i) {
-            auto idx = std::distance(rows.begin(), t);
-            return v_[p + idx];
+        if (t != end && *t == i) {
+            return v_[std::distance(i_.begin(), t)];
         } else {
             return 0.0;
         }
@@ -234,7 +235,7 @@ const double CSCMatrix::operator()(const csint i, const csint j) const
         // NOTE this code assumes that columns are *not* sorted, and that
         // duplicate entries may exist, so it will search through *every*
         // element in a column.
-        double out = 0;
+        double out = 0.0;
 
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             if (i_[p] == i) {
@@ -342,19 +343,21 @@ CSCMatrix& CSCMatrix::assign(const csint i, const csint j, const double v)
 
     if (has_canonical_format_) {
         csint p = p_[j];  // pointer to the row indices of column j
-        std::span rows{i_.begin() + p, p_[j+1] - p};  // view of row indices
 
         // Binary search for t <= i
-        auto t = std::lower_bound(rows.begin(), rows.end(), i);
-        auto idx = std::distance(rows.begin(), t);
-        csint q = p + idx;
+        auto start = i_.begin() + p;
+        auto end = i_.begin() + p_[j+1];
+
+        auto t = std::lower_bound(start, end, i);
+
+        csint k = std::distance(i_.begin(), t);  // index of the element
 
         // Check that we actually found the index t == i
-        if (t != rows.end() && *t == i) {
-            v_[q] = v;
+        if (t != end && *t == i) {
+            v_[k] = v;
         } else {
             // Value does not exist, so add it here.
-            this->insert(i, j, v, q);
+            this->insert(i, j, v, k);
         }
 
     } else {
@@ -377,7 +380,6 @@ CSCMatrix& CSCMatrix::assign(const csint i, const csint j, const double v)
             // beginning of the column.
             this->insert(i, j, v, p_[j]);
         }
-
     }
 
     return *this;

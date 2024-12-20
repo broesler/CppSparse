@@ -9,7 +9,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <span>
 
 #include "csparse.h"
 
@@ -209,7 +208,7 @@ bool CSCMatrix::has_canonical_format() const { return has_canonical_format_; }
  *
  * @return the value of the element at `(i, j)`.
  */
-const double CSCMatrix::operator()(const csint i, const csint j) const
+const double CSCMatrix::operator()(csint i, csint j) const
 {
     // Assert indices are in-bounds
     assert(i >= 0 && i < M_);
@@ -318,53 +317,9 @@ double& CSCMatrix::operator()(const csint i, const csint j)
  *
  * @return a reference to itself for method chaining.
  */
-CSCMatrix& CSCMatrix::assign(const csint i, const csint j, const double v)
+CSCMatrix& CSCMatrix::assign(csint i, csint j, double v)
 {
-    // Assert indices are in-bounds
-    assert(i >= 0 && i < M_);
-    assert(j >= 0 && j < N_);
-
-    if (has_canonical_format_) {
-        csint p = p_[j];  // pointer to the row indices of column j
-
-        // Binary search for t <= i
-        auto start = i_.begin() + p;
-        auto end = i_.begin() + p_[j+1];
-
-        auto t = std::lower_bound(start, end, i);
-
-        csint k = std::distance(i_.begin(), t);  // index of the element
-
-        // Check that we actually found the index t == i
-        if (t != end && *t == i) {
-            v_[k] = v;
-        } else {
-            // Value does not exist, so add it here.
-            this->insert(i, j, v, k);
-        }
-
-    } else {
-        // Linear search for the element
-        bool found = false;
-
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
-            if (i_[p] == i) {
-                if (!found) {
-                    v_[p] = v;
-                    found = true;
-                } else {
-                    v_[p] = 0;  // zero out duplicates
-                }
-            }
-        }
-
-        if (!found) {
-            // Columns are not sorted, so we can just add the element at the
-            // beginning of the column.
-            this->insert(i, j, v, p_[j]);
-        }
-    }
-
+    (*this)(i, j) = v;
     return *this;
 }
 
@@ -377,12 +332,7 @@ CSCMatrix& CSCMatrix::assign(const csint i, const csint j, const double v)
  *
  * @return a reference to the inserted value.
  */
-double& CSCMatrix::insert(
-    const csint i,
-	const csint j,
-	const double v,
-	const csint p
-    )
+double& CSCMatrix::insert(csint i, csint j, double v, csint p)
 {
     i_.insert(i_.begin() + p, i);
     v_.insert(v_.begin() + p, v);

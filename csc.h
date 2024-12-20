@@ -199,7 +199,7 @@ class CSCMatrix
         ) const;
 
         // Type conversions
-        operator double() const {
+        operator const double() const {
             assert((M_ == 1) && (N_ == 1));
             return v_[0];
         }

@@ -351,6 +351,35 @@ CSCMatrix& CSCMatrix::assign(
 }
 
 
+/** Assign a sparse matrix to the CSCMatrix at the specified locations.
+ *
+ * See: Davis, Exercise 2.25.
+ *
+ * @param rows, cols the row and column indices of the elements to access.
+ * @param C the sparse matrix to be assigned.
+ *
+ * @return a reference to itself for method chaining.
+ */
+CSCMatrix& CSCMatrix::assign(
+    const std::vector<csint>& rows,
+    const std::vector<csint>& cols,
+    const CSCMatrix& C
+    )
+{
+    assert(C.M_ == rows.size());
+    assert(C.N_ == cols.size());
+
+    for (csint j = 0; j < cols.size(); j++) {
+        for (csint p = C.p_[j]; p < C.p_[j+1]; p++) {
+            csint i = C.i_[p];
+            (*this)(rows[i], cols[j]) = C.v_[p];
+        }
+    }
+
+    return *this;
+}
+
+
 /** Insert a single element at a specified location.
  *
  * @param i, j the row and column indices of the element to access.

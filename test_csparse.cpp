@@ -1430,13 +1430,33 @@ TEST_CASE("Test indexing for single assignment.")
 
         std::vector<csint> rows = {2, 0};
         std::vector<csint> cols = {0, 3, 2};
-        std::vector<double> vals = {100, 101, 102, 103, 104, 105};
 
-        A.assign(rows, cols, vals);
+        SECTION("Dense assignment") {
+            std::vector<double> vals = {100, 101, 102, 103, 104, 105};
 
-        for (csint i = 0; i < rows.size(); i++) {
-            for (csint j = 0; j < cols.size(); j++) {
-                REQUIRE(A(rows[i], cols[j]) == vals[i + j * rows.size()]);
+            A.assign(rows, cols, vals);
+
+            for (csint i = 0; i < rows.size(); i++) {
+                for (csint j = 0; j < cols.size(); j++) {
+                    REQUIRE(A(rows[i], cols[j]) == vals[i + j * rows.size()]);
+                }
+            }
+        }
+
+        SECTION("Sparse assignment") {
+            const CSCMatrix C = CSCMatrix(
+                std::vector<double> {100, 101, 102, 103, 104, 105},
+                std::vector<csint> {0, 1, 0, 1, 0, 1},
+                std::vector<csint> {0, 2, 4, 6},
+                std::array<csint, 2>{2, 3}
+            );
+
+            A.assign(rows, cols, C);
+
+            for (csint i = 0; i < rows.size(); i++) {
+                for (csint j = 0; j < cols.size(); j++) {
+                    REQUIRE(A(rows[i], cols[j]) == C(i, j));
+                }
             }
         }
     }

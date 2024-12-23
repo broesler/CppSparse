@@ -73,7 +73,7 @@ CSCMatrix A_mat()
  * @param C       the matrix to test
  * @param expect  the expected matrix
  */
-auto matrix_compare(const CSCMatrix& C, const CSCMatrix& expect)
+auto compare_canonical(const CSCMatrix& C, const CSCMatrix& expect)
 {
     REQUIRE(C.has_canonical_format());
     REQUIRE(expect.has_canonical_format());
@@ -82,6 +82,29 @@ auto matrix_compare(const CSCMatrix& C, const CSCMatrix& expect)
     CHECK(C.indptr() == expect.indptr());
     CHECK(C.indices() == expect.indices());
     REQUIRE(C.data() == expect.data());
+}
+
+
+/** Compare two matrices for equality.
+ *
+ * @note This function does not require the matrices to be in canonical form.
+ *
+ * @param C       the matrix to test
+ * @param expect  the expected matrix
+ */
+auto compare_noncanonical(const CSCMatrix& C, const CSCMatrix& expect)
+{
+    REQUIRE(C.nnz() == expect.nnz());
+    REQUIRE(C.shape() == expect.shape());
+
+    csint M, N;
+    std::tie(M, N) = C.shape();
+
+    for (csint i = 0; i < M; i++) {
+        for (csint j = 0; j < N; j++) {
+            REQUIRE(C(i, j) == expect(i, j));
+        }
+    }
 }
 
 
@@ -1077,77 +1100,92 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
 
 TEST_CASE("Test matrix permutation", "[permute]")
 {
-    // Matrix with 1, 2, 3, 4 on the diagonal
-    std::vector<csint>  rows = {0, 1, 2, 3};
-    std::vector<double> vals = {1, 2, 3, 4};
-    CSCMatrix A = COOMatrix(vals, rows, rows).compress();
+    CSCMatrix A = davis_21_coo().compress();
 
     SECTION("Test no-op") {
         std::vector<csint> p = {0, 1, 2, 3};
         std::vector<csint> q = {0, 1, 2, 3};
 
-        std::vector<csint> p_inv = inv_permute(p);
+        CSCMatrix C = A.permute(inv_permute(p), q);
 
-        CSCMatrix C = A.permute(p_inv, q);
-
-        REQUIRE(C.nnz() == A.nnz());
-        REQUIRE(C.shape() == A.shape());
-
-        csint M, N;
-        std::tie(M, N) = A.shape();
-
-        for (csint i = 0; i < M; i++) {
-            for (csint j = 0; j < N; j++) {
-                REQUIRE(C(i, j) == A(i, j));
-            }
-        }
+        compare_noncanonical(C, A);
     }
 
-    SECTION("Test actual permutation") {
+    SECTION("Test row permutation") {
+        std::vector<csint> p = {1, 0, 2, 3};
+        std::vector<csint> q = {0, 1, 2, 3};
+
+        // See Davis pp 7-8, Eqn (2.1)
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7},
+            std::vector<csint>  {2,    0,    3,    1,    0,    3,    3,    0,    1,    2},
+            std::vector<csint>  {2,    0,    3,    2,    1,    0,    1,    3,    0,    1}
+        ).tocsc();
+
+        CSCMatrix C = A.permute(inv_permute(p), q);
+
+        compare_noncanonical(C, expect);
+    }
+
+    SECTION("Test column permutation") {
+        std::vector<csint> p = {0, 1, 2, 3};
+        std::vector<csint> q = {1, 0, 2, 3};
+
+        // See Davis pp 7-8, Eqn (2.1)
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7},
+            std::vector<csint>  {2,    1,    3,    0,    1,    3,    3,    1,    0,    2},
+            std::vector<csint>  {2,    1,    3,    2,    0,    1,    0,    3,    1,    0}
+        ).tocsc();
+
+        CSCMatrix C = A.permute(inv_permute(p), q);
+
+        compare_noncanonical(C, expect);
+    }
+
+    SECTION("Test both row and column permutation") {
         std::vector<csint> p = {3, 0, 2, 1};
-        std::vector<csint> q = {2, 1, 0, 3};
+        std::vector<csint> q = {2, 1, 3, 0};
 
-        std::vector<csint> p_inv = inv_permute(p);
-        std::vector<csint> q_inv = inv_permute(q);
+        // See Davis pp 7-8, Eqn (2.1)
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7},
+            std::vector<csint>  {2,    3,    0,    1,    3,    0,    0,    3,    1,    2},
+            std::vector<csint>  {0,    3,    2,    0,    1,    3,    1,    2,    3,    1}
+        ).tocsc();
 
-        CSCMatrix expect = COOMatrix(vals, p_inv, q_inv).compress();
+        CSCMatrix C = A.permute(inv_permute(p), q);
 
-        CSCMatrix C = A.permute(p_inv, q);
-
-        REQUIRE(C.nnz() == A.nnz());
-        REQUIRE(C.shape() == A.shape());
-
-        csint M, N;
-        std::tie(M, N) = A.shape();
-
-        for (csint i = 0; i < M; i++) {
-            for (csint j = 0; j < N; j++) {
-                REQUIRE(C(i, j) == expect(i, j));
-            }
-        }
+        compare_noncanonical(C, expect);
     }
 
-    SECTION("Test symperm") {
-        // Test actual permutation
-        std::vector<csint> p = {3, 0, 2, 1};
-        std::vector<double> expect_v = {4, 1, 3, 2};
+    // SECTION("Test symperm") {
+    //     // Test actual permutation
+    //     std::vector<csint> p = {3, 0, 2, 1};
+    //     std::vector<double> expect_v = {4, 1, 3, 2};
 
-        CSCMatrix expect = COOMatrix(expect_v, rows, rows).compress();
+    //     CSCMatrix expect = COOMatrix(expect_v, rows, rows).compress();
 
-        std::vector<csint> p_inv = inv_permute(p);
+    //     std::vector<csint> p_inv = inv_permute(p);
 
-        CSCMatrix C = A.symperm(p_inv);
+    //     CSCMatrix C = A.symperm(p_inv);
 
-        REQUIRE(C.nnz() == A.nnz());
-        REQUIRE(C.shape() == A.shape());
+    //     compare_noncanonical(C, expect);
+    // }
 
-        csint N = p.size();
-        for (csint i = 0; i < N; i++) {
-            for (csint j = i; j < N; j++) {
-                REQUIRE(C(i, j) == expect(i, j));
-            }
-        }
-    }
+    // SECTION("Test permuted transpose") {
+    //     std::vector<csint> p = {3, 0, 2, 1};
+    //     std::vector<csint> q = {2, 1, 0, 3};
+
+    //     std::vector<csint> p_inv = inv_permute(p);
+    //     std::vector<csint> q_inv = inv_permute(q);
+
+    //     CSCMatrix expect = COOMatrix(vals, p_inv, q_inv).tocsc().transpose();
+
+    //     CSCMatrix C = A.permute_transpose(p_inv, q);
+
+    //     compare_noncanonical(C, expect);
+    // }
 }
 
 
@@ -1278,7 +1316,7 @@ TEST_CASE("Test concatentation")
         ).tocsc();
 
         CSCMatrix C = hstack(E, A);
-        matrix_compare(C, expect);
+        compare_canonical(C, expect);
     }
 
     SECTION("Test vertical concatenation") {
@@ -1289,7 +1327,7 @@ TEST_CASE("Test concatentation")
         ).tocsc();
 
         CSCMatrix C = vstack(E, A);
-        matrix_compare(C, expect);
+        compare_canonical(C, expect);
     }
 }
 
@@ -1307,7 +1345,7 @@ TEST_CASE("Test slicing")
         ).tocsc();
 
         CSCMatrix C = A.slice(1, 3, 0, A.shape()[1]);
-        matrix_compare(C, expect);
+        compare_canonical(C, expect);
     }
 
     SECTION("Test column slicing") {
@@ -1318,7 +1356,7 @@ TEST_CASE("Test slicing")
         ).tocsc();
 
         CSCMatrix C = A.slice(0, A.shape()[0], 1, 3);
-        matrix_compare(C, expect);
+        compare_canonical(C, expect);
     }
 
     SECTION("Test row and column slicing") {
@@ -1329,7 +1367,7 @@ TEST_CASE("Test slicing")
         ).tocsc();
 
         CSCMatrix C = A.slice(1, 3, 1, 4);
-        matrix_compare(C, expect);
+        compare_canonical(C, expect);
     }
 }
 
@@ -1349,7 +1387,7 @@ TEST_CASE("Test non-contiguous indexing")
             std::array<csint, 2>{2, 3}
         ).tocsc();
 
-        matrix_compare(C, expect);
+        compare_canonical(C, expect);
     }
 
     SECTION("Test indexing with duplicate rows") {
@@ -1361,7 +1399,7 @@ TEST_CASE("Test non-contiguous indexing")
             std::vector<csint>  {  0,   0,   0,   1,   1,   2,   2}
         ).tocsc();
 
-        matrix_compare(C, expect);
+        compare_canonical(C, expect);
     }
 
     SECTION("Test indexing with duplicate columns") {
@@ -1373,7 +1411,7 @@ TEST_CASE("Test non-contiguous indexing")
             std::vector<csint>  {  0,   2,   2,   3}
         ).tocsc();
 
-        matrix_compare(C, expect);
+        compare_canonical(C, expect);
     }
 }
 

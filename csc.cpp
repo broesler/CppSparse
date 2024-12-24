@@ -1237,6 +1237,7 @@ csint scatter(
     return nz;
 }
 
+
 /** Permute a matrix \f$ C = PAQ \f$.
  *
  * @note In Matlab, this call is `C = A(p, q)`.
@@ -1313,6 +1314,44 @@ CSCMatrix CSCMatrix::symperm(const std::vector<csint> p_inv) const
             csint q = w[std::max(i2, j2)]++;
             C.i_[q] = std::min(i2, j2);
             C.v_[q] = v_[p];
+        }
+    }
+
+    return C;
+}
+
+
+/** Permute and transpose a matrix \f$ C = PA^TQ \f$.
+ *
+ * @note In Matlab, this call is `C = A(p, q)'`.
+ *
+ * @param p_inv, q  *inverse* row and (non-inverse) column permutation vectors.
+ *        `p_inv` is length `M` and `q` is length `N`, where `A` is `M`-by-`N`.
+ *
+ * @return C  permuted and transposed matrix
+ */
+CSCMatrix CSCMatrix::permute_transpose(
+    const std::vector<csint>& p_inv,
+    const std::vector<csint>& q
+    ) const
+{
+    std::vector<csint> w(M_);    // workspace
+    CSCMatrix C(N_, M_, nnz());  // output
+
+    // Compute number of elements in each permuted row
+    for (csint p = 0; p < nnz(); p++)
+        w[p_inv[i_[p]]]++;
+
+    C.p_ = cumsum(w);
+
+    // place A(i, j) as C(j, i) (permuted)
+    for (csint k = 0; k < N_; k++) {
+        csint j = q[k];  // take the permuted column
+
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            csint t = w[p_inv[i_[p]]]++;
+            C.i_[t] = j;
+            C.v_[t] = v_[p];
         }
     }
 

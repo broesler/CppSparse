@@ -28,7 +28,7 @@ using Catch::Matchers::WithinAbs;
 constexpr double tol = 1e-14;
 
 
-COOMatrix davis_21_coo() 
+COOMatrix davis_21_coo()
 {
     // See Davis pp 7-8, Eqn (2.1)
     std::vector<csint>  i = {2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
@@ -47,7 +47,7 @@ COOMatrix davis_21_coo()
 //      [-2, 7, 2]]
 
 // Build matrices with sorted columns
-CSCMatrix E_mat() 
+CSCMatrix E_mat()
 {
     return COOMatrix(
         std::vector<double> {1, -2, 1, 1},  // vals
@@ -56,7 +56,7 @@ CSCMatrix E_mat()
     ).tocsc();
 }
 
-CSCMatrix A_mat() 
+CSCMatrix A_mat()
 {
     return COOMatrix(
         std::vector<double> {2, 4, -2, 1, -6, 7, 1, 2},  // vals
@@ -749,7 +749,7 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
         CSCMatrix A = COOMatrix(
             std::vector<double> {1, 2, 3},
             std::vector<csint>  {0, 1, 2},
-            std::vector<csint>  {0, 1, 2} 
+            std::vector<csint>  {0, 1, 2}
         ).compress();
 
         std::vector<double> x = {1, 2, 3};
@@ -1192,13 +1192,13 @@ TEST_CASE("Test matrix permutation", "[permute]")
     }
 
     SECTION("Test row-permuted transpose") {
-        std::vector<csint> p = {1, 0, 2, 3};
+        std::vector<csint> p = {3, 0, 1, 2};
         std::vector<csint> q = {0, 1, 2, 3};
 
         // See Davis pp 7-8, Eqn (2.1)
         CSCMatrix expect = COOMatrix(
             std::vector<double> {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7},
-            std::vector<csint>  {2,    0,    3,    1,    0,    3,    3,    0,    1,    2},
+            std::vector<csint>  {3,    2,    0,    1,    2,    0,    0,    2,    1,    3},
             std::vector<csint>  {2,    0,    3,    2,    1,    0,    1,    3,    0,    1}
         ).tocsc().T();
 
@@ -1209,16 +1209,19 @@ TEST_CASE("Test matrix permutation", "[permute]")
 
     SECTION("Test column-permuted transpose") {
         std::vector<csint> p = {0, 1, 2, 3};
-        std::vector<csint> q = {1, 0, 2, 3};
+        std::vector<csint> q = {3, 0, 1, 2};
 
         // See Davis pp 7-8, Eqn (2.1)
         CSCMatrix expect = COOMatrix(
             std::vector<double> {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7},
             std::vector<csint>  {2,    1,    3,    0,    1,    3,    3,    1,    0,    2},
-            std::vector<csint>  {2,    1,    3,    2,    0,    1,    0,    3,    1,    0}
+            std::vector<csint>  {3,    1,    0,    3,    2,    1,    2,    0,    1,    2}
         ).tocsc().T();
 
         CSCMatrix C = A.permute_transpose(inv_permute(p), q);
+
+        cout << "expect = \n" << expect << endl;
+        cout << "C = \n" << C.to_canonical() << endl;
 
         compare_noncanonical(C, expect);
     }
@@ -1496,7 +1499,7 @@ TEST_CASE("Test indexing for single assignment.")
 
     SECTION("Canonical format") {
         CSCMatrix A = davis_21_coo().tocsc();
-        
+
         SECTION("Re-assign existing element") {
             test_assignment(A, 2, 1, 56.0, true);
         }
@@ -1508,7 +1511,7 @@ TEST_CASE("Test indexing for single assignment.")
 
     SECTION("Non-canonical format") {
         CSCMatrix A = davis_21_coo().compress();
-        
+
         SECTION("Re-assign existing element") {
             test_assignment(A, 2, 1, 56.0, true);
         }

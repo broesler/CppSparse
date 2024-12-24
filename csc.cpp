@@ -1345,12 +1345,10 @@ CSCMatrix CSCMatrix::permute_transpose(
     C.p_ = cumsum(w);
 
     // place A(i, j) as C(j, i) (permuted)
-    for (csint k = 0; k < N_; k++) {
-        csint j = q[k];  // take the permuted column
-
+    for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             csint t = w[p_inv[i_[p]]]++;
-            C.i_[t] = j;
+            C.i_[t] = q[j];  // permuted column
             C.v_[t] = v_[p];
         }
     }

@@ -829,6 +829,43 @@ std::vector<double> sym_gaxpy(
 };
 
 
+
+/** Matrix multiply `Y = AX + Y` for column-major dense matrices `X` and `Y`.
+ *
+ * See: Davis, Exercise 2.27(a).
+ *
+ * @param A  a sparse matrix
+ * @param X  a dense multiplying matrix in column-major order
+ * @param[in,out] Y  a dense adding matrix which will be used for the output
+ *
+ * @return Y a copy of the updated matrix
+ */
+std::vector<double> gaxpy_col(
+    const CSCMatrix& A,
+    const std::vector<double>& X,
+    std::vector<double> Y
+    )
+{
+    assert(X.size() % A.N_ == 0);  // check that X.size() is a multiple of A.N_
+    assert(Y.size() == A.M_ * (X.size() / A.N_));
+
+    csint K = X.size() / A.N_;  // number of columns in X
+
+    // For each column of X
+    for (csint k = 0; k < K; k++) {
+        // Compute one column of Y (see gaxpy)
+        for (csint j = 0; j < A.N_; j++) {
+            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+                // Indexing in column-major order
+                Y[A.i_[p] + k * A.M_] += A.v_[p] * X[j + k * A.N_];
+            }
+        }
+    }
+
+    return Y;
+}
+
+
 /** Scale the rows and columns of a matrix by \f$ A = RAC \f$, where *R* and *C*
  * are diagonal matrices.
  *

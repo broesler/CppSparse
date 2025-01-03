@@ -799,6 +799,27 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
 }
 
 
+// Exercise 2.27
+TEST_CASE("Matrix-(dense) matrix multiply + addition.")
+{
+    SECTION("Test identity op") {
+        CSCMatrix A = A_mat(); 
+
+        std::vector<double> I = {
+            1, 0, 0,
+            0, 1, 0,
+            0, 0, 1
+        };
+
+        std::vector<double> Z(9, 0);
+
+        CSCMatrix expect = A;
+
+        compare_canonical(CSCMatrix(gaxpy_col(A, I, Z), 3, 3), expect);
+    }
+}
+
+
 TEST_CASE("Matrix-matrix multiply.", "[math]")
 {
     SECTION("Test square matrices") {

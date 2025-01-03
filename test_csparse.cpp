@@ -1181,12 +1181,13 @@ TEST_CASE("Test matrix permutation", "[permute]")
         compare_noncanonical(C, expect);
     }
 
+    // Exercise 2.26
     SECTION("Test non-permuted transpose") {
         std::vector<csint> p = {0, 1, 2, 3};
         std::vector<csint> q = {0, 1, 2, 3};
 
         CSCMatrix expect = A.T();
-        CSCMatrix C = A.permute_transpose(inv_permute(p), q);
+        CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
         compare_noncanonical(C, expect);
     }
@@ -1202,7 +1203,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
             std::vector<csint>  {2,    0,    3,    2,    1,    0,    1,    3,    0,    1}
         ).tocsc().T();
 
-        CSCMatrix C = A.permute_transpose(inv_permute(p), q);
+        CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
         compare_noncanonical(C, expect);
     }
@@ -1220,30 +1221,24 @@ TEST_CASE("Test matrix permutation", "[permute]")
 
         CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
-        cout << "expect = \n" << expect << endl;
-        cout << "C = \n" << C.to_canonical() << endl;
-
         compare_noncanonical(C, expect);
     }
 
-    // SECTION("Test permuted transpose") {
-    //     std::vector<csint> p = {3, 0, 2, 1};
-    //     std::vector<csint> q = {2, 1, 3, 0};
+    SECTION("Test permuted transpose") {
+        std::vector<csint> p = {3, 0, 2, 1};
+        std::vector<csint> q = {2, 1, 3, 0};
 
-    //     // See Davis pp 7-8, Eqn (2.1)
-    //     CSCMatrix expect = COOMatrix(
-    //         std::vector<double> {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7},
-    //         std::vector<csint>  {2,    3,    0,    1,    3,    0,    0,    3,    1,    2},
-    //         std::vector<csint>  {0,    3,    2,    0,    1,    3,    1,    2,    3,    1}
-    //     ).tocsc().T();
+        // See Davis pp 7-8, Eqn (2.1)
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7},
+            std::vector<csint>  {2,    3,    0,    1,    3,    0,    0,    3,    1,    2},
+            std::vector<csint>  {0,    3,    2,    0,    1,    3,    1,    2,    3,    1}
+        ).tocsc().T();
 
-    //     CSCMatrix C = A.permute_transpose(inv_permute(p), q);
+        CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
-    //     cout << "expect = \n" << expect << endl;
-    //     cout << "C = \n" << C.to_canonical() << endl;
-
-    //     compare_noncanonical(C, expect);
-    // }
+        compare_noncanonical(C, expect);
+    }
 }
 
 

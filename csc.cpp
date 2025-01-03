@@ -1247,8 +1247,12 @@ csint scatter(
  *
  * @return C  permuted matrix
  */
-CSCMatrix CSCMatrix::permute(const std::vector<csint> p_inv, const std::vector<csint> q) const
+CSCMatrix CSCMatrix::permute(
+    const std::vector<csint> p_inv,
+    const std::vector<csint> q
+    ) const
 {
+    // TODO check lengths of p_inv and q
     CSCMatrix C(M_, N_, nnz());
     csint nz = 0;
 
@@ -1323,6 +1327,8 @@ CSCMatrix CSCMatrix::symperm(const std::vector<csint> p_inv) const
 
 /** Permute and transpose a matrix \f$ C = PA^TQ \f$.
  *
+ * See: Davis, Exercise 2.26.
+ *
  * @note In Matlab, this call is `C = A(p, q)'`.
  *
  * @param p_inv, q_inv  *inverse* row and column permutation vectors.
@@ -1354,6 +1360,7 @@ CSCMatrix CSCMatrix::permute_transpose(
         }
     }
 
+    // TODO convert to canonical format
     return C;
 }
 

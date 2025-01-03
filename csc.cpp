@@ -855,9 +855,14 @@ std::vector<double> gaxpy_col(
     for (csint k = 0; k < K; k++) {
         // Compute one column of Y (see gaxpy)
         for (csint j = 0; j < A.N_; j++) {
-            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
-                // Indexing in column-major order
-                Y[A.i_[p] + k * A.M_] += A.v_[p] * X[j + k * A.N_];
+            double x_val = X[j + k * A.N_];  // cache value
+
+            // Only compute if x_val is non-zero
+            if (x_val != 0.0) {
+                for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+                    // Indexing in column-major order
+                    Y[A.i_[p] + k * A.M_] += A.v_[p] * x_val;
+                }
             }
         }
     }

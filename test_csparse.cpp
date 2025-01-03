@@ -1218,7 +1218,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
             std::vector<csint>  {3,    1,    0,    3,    2,    1,    2,    0,    1,    2}
         ).tocsc().T();
 
-        CSCMatrix C = A.permute_transpose(inv_permute(p), q);
+        CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
         cout << "expect = \n" << expect << endl;
         cout << "C = \n" << C.to_canonical() << endl;

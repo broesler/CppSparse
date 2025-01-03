@@ -1325,20 +1325,21 @@ CSCMatrix CSCMatrix::symperm(const std::vector<csint> p_inv) const
  *
  * @note In Matlab, this call is `C = A(p, q)'`.
  *
- * @param p_inv, q  *inverse* row and (non-inverse) column permutation vectors.
+ * @param p_inv, q_inv  *inverse* row and column permutation vectors.
  *        `p_inv` is length `M` and `q` is length `N`, where `A` is `M`-by-`N`.
  *
  * @return C  permuted and transposed matrix
  */
 CSCMatrix CSCMatrix::permute_transpose(
     const std::vector<csint>& p_inv,
-    const std::vector<csint>& q
+    const std::vector<csint>& q_inv
     ) const
 {
+    // TODO check lengths of p_inv and q
     std::vector<csint> w(M_);    // workspace
     CSCMatrix C(N_, M_, nnz());  // output
 
-    // Compute number of elements in each permuted row
+    // Compute number of elements in each permuted row (aka column of C)
     for (csint p = 0; p < nnz(); p++)
         w[p_inv[i_[p]]]++;
 
@@ -1348,7 +1349,7 @@ CSCMatrix CSCMatrix::permute_transpose(
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             csint t = w[p_inv[i_[p]]]++;
-            C.i_[t] = q[j];  // permuted column
+            C.i_[t] = q_inv[j];
             C.v_[t] = v_[p];
         }
     }

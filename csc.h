@@ -184,7 +184,7 @@ class CSCMatrix
         // Exercise 2.26 permuted transpose
         CSCMatrix permute_transpose(
             const std::vector<csint>& p_inv,
-            const std::vector<csint>& q
+            const std::vector<csint>& q_inv
         ) const;
 
         double norm() const;

@@ -446,22 +446,31 @@ COOMatrix CSCMatrix::tocoo() const { return COOMatrix(*this); }
  *
  * See: Davis, Exercise 2.16.
  *
+ * @param order the order of the array, either 'F' for Fortran (column-major)
+ *       or 'C' for C (row-major).
+ *
  * @return a copy of the matrix as a dense column-major array.
  */
-std::vector<double> CSCMatrix::toarray() const
+std::vector<double> CSCMatrix::toarray(const char order) const
 {
     std::vector<double> A(M_ * N_, 0.0);
+    csint idx;
 
-    if (has_canonical_format_) {
-        for (csint j = 0; j < N_; j++) {
-            for (csint p = p_[j]; p < p_[j+1]; p++) {
-                A[i_[p] + j * M_] = v_[p];
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            // Column- vs row-major order
+            if (order == 'F') {
+                idx = i_[p] + j * M_;
+            } else if (order == 'C') {
+                idx = j + i_[p] * N_;
+            } else {
+                throw std::invalid_argument("Invalid order argument. Use 'F' or 'C'.");
             }
-        }
-    } else {
-        for (csint j = 0; j < N_; j++) {
-            for (csint p = p_[j]; p < p_[j+1]; p++) {
-                A[i_[p] + j * M_] += v_[p];  // account for duplicates
+
+            if (has_canonical_format_) {
+                A[idx] = v_[p];
+            } else {
+                A[idx] += v_[p];  // account for duplicates
             }
         }
     }

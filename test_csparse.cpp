@@ -816,20 +816,37 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
 // Exercise 2.27
 TEST_CASE("Matrix-(dense) matrix multiply + addition.")
 {
-    SECTION("Test identity op") {
-        CSCMatrix A = A_mat(); 
+    CSCMatrix A = davis_21_coo().compress();
 
+    SECTION("Test identity op") {
         std::vector<double> I = {
-            1, 0, 0,
-            0, 1, 0,
-            0, 0, 1
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
         };
 
-        std::vector<double> Z(9, 0);
+        std::vector<double> Z(16, 0);
 
         CSCMatrix expect = A;
 
-        compare_canonical(CSCMatrix(gaxpy_col(A, I, Z), 3, 3), expect);
+        compare_noncanonical(CSCMatrix(gaxpy_col(A, I, Z), 4, 4), expect);
+    }
+
+    SECTION("Test arbitrary square matrix") {
+        std::vector<double> A_dense = A.toarray();
+
+        // A.T @ A + A
+        std::vector<double> expect = {
+            46.61, 13.49, 14.4 ,  9.79,
+            10.39, 14.36,  6.8 ,  3.41,
+            17.6 ,  5.1 , 22.24,  0.0 ,
+             6.29,  3.91,  0.0 ,  2.81
+        };
+
+        std::vector<double> C = gaxpy_col(A.T(), A_dense, A_dense); 
+
+        REQUIRE_THAT(is_close(C, expect, tol), AllTrue());
     }
 }
 

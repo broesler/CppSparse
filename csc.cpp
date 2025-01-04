@@ -786,17 +786,21 @@ CSCMatrix CSCMatrix::band(const int kl, const int ku)
 std::vector<double> gaxpy(
     const CSCMatrix& A,
     const std::vector<double>& x,
-    std::vector<double> y
+    const std::vector<double>& y
     )
 {
     assert(A.M_ == y.size());  // addition
     assert(A.N_ == x.size());  // multiplication
+
+    std::vector<double> out = y;  // copy the input vector
+
     for (csint j = 0; j < A.N_; j++) {
         for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
-            y[A.i_[p]] += A.v_[p] * x[j];
+            out[A.i_[p]] += A.v_[p] * x[j];
         }
     }
-    return y;
+
+    return out;
 };
 
 
@@ -814,17 +818,21 @@ std::vector<double> gaxpy(
 std::vector<double> gatxpy(
     const CSCMatrix& A,
     const std::vector<double>& x,
-    std::vector<double> y
+    const std::vector<double>& y
     )
 {
     assert(A.M_ == x.size());  // multiplication
     assert(A.N_ == y.size());  // addition
+
+    std::vector<double> out = y;  // copy the input vector
+
     for (csint j = 0; j < A.N_; j++) {
         for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
-            y[j] += A.v_[p] * x[A.i_[p]];
+            out[j] += A.v_[p] * x[A.i_[p]];
         }
     }
-    return y;
+
+    return out;
 };
 
 
@@ -841,12 +849,15 @@ std::vector<double> gatxpy(
 std::vector<double> sym_gaxpy(
     const CSCMatrix& A,
     const std::vector<double>& x,
-    std::vector<double> y
+    const std::vector<double>& y
     )
 {
     assert(A.M_ == A.N_);  // matrix must be square to be symmetric
     assert(A.N_ == x.size());
     assert(x.size() == y.size());
+
+    std::vector<double> out = y;  // copy the input vector
+
     for (csint j = 0; j < A.N_; j++) {
         for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
             csint i = A.i_[p];
@@ -855,14 +866,15 @@ std::vector<double> sym_gaxpy(
                 continue;  // skip lower triangular
 
             // Add the upper triangular elements
-            y[i] += A.v_[p] * x[j];
+            out[i] += A.v_[p] * x[j];
 
             // If off-diagonal, also add the symmetric element
             if (i < j)
-                y[j] += A.v_[p] * x[i];
+                out[j] += A.v_[p] * x[i];
         }
     }
-    return y;
+
+    return out;
 };
 
 
@@ -880,11 +892,13 @@ std::vector<double> sym_gaxpy(
 std::vector<double> gaxpy_col(
     const CSCMatrix& A,
     const std::vector<double>& X,
-    std::vector<double> Y
+    const std::vector<double>& Y
     )
 {
     assert(X.size() % A.N_ == 0);  // check that X.size() is a multiple of A.N_
     assert(Y.size() == A.M_ * (X.size() / A.N_));
+
+    std::vector<double> out = Y;  // copy the input matrix
 
     csint K = X.size() / A.N_;  // number of columns in X
 
@@ -898,13 +912,13 @@ std::vector<double> gaxpy_col(
             if (x_val != 0.0) {
                 for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
                     // Indexing in column-major order
-                    Y[A.i_[p] + k * A.M_] += A.v_[p] * x_val;
+                    out[A.i_[p] + k * A.M_] += A.v_[p] * x_val;
                 }
             }
         }
     }
 
-    return Y;
+    return out;
 }
 
 
@@ -921,7 +935,7 @@ std::vector<double> gaxpy_col(
 std::vector<double> gaxpy_row(
     const CSCMatrix& A,
     const std::vector<double>& X,
-    std::vector<double> Y
+    const std::vector<double>& Y
     )
 {
     assert(X.size() % A.N_ == 0);  // check that X.size() is a multiple of A.N_

@@ -117,35 +117,35 @@ class CSCMatrix
         friend std::vector<double> gaxpy(
             const CSCMatrix& A,
             const std::vector<double>& x,
-            std::vector<double> y
+            const std::vector<double>& y
         );
 
         // Exercise 2.1
         friend std::vector<double> gatxpy(
             const CSCMatrix& A,
             const std::vector<double>& x,
-            std::vector<double> y
+            const std::vector<double>& y
         );
 
         // Exercise 2.3
         friend std::vector<double> sym_gaxpy(
             const CSCMatrix& A,
             const std::vector<double>& x,
-            std::vector<double> y
+            const std::vector<double>& y
         );
 
         // Exercise 2.27(a) cs_gaxpy with matrix x, y in column-major order
         friend std::vector<double> gaxpy_col(
             const CSCMatrix& A,
             const std::vector<double>& X,
-            std::vector<double> Y
+            const std::vector<double>& Y
         );
 
         // Exercise 2.27(b) cs_gaxpy with matrix x, y in row-major order
         friend std::vector<double> gaxpy_row(
             const CSCMatrix& A,
             const std::vector<double>& X,
-            std::vector<double> Y
+            const std::vector<double>& Y
         );
 
         // Exercise 2.4

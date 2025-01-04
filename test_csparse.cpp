@@ -613,6 +613,20 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
             convert_test(B);
         }
     }
+
+    // Exercise 2.16 (inverse)
+    SECTION("Test conversion to dense array") {
+        // Column-major order
+        std::vector<double> expect = {
+            4.5, 3.1, 0.0, 3.5,
+            0.0, 2.9, 1.7, 0.4,
+            3.2, 0. , 3.0, 0.0,
+            0.0, 0.9, 0.0, 1.0
+        };
+
+        REQUIRE(A.tocsc().toarray() == expect);  // canonical form
+        REQUIRE(C.toarray() == expect);          // non-canonical form
+    }
 }
 
 // TODO test whether transpose, droptol, etc. change the original if we do

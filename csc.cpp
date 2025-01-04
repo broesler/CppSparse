@@ -442,6 +442,30 @@ bool CSCMatrix::is_symmetric() const
 COOMatrix CSCMatrix::tocoo() const { return COOMatrix(*this); }
 
 
+/** Convert a CSCMatrix to a dense column-major array.
+ *
+ * See: Davis, Exercise 2.16.
+ *
+ * @return a copy of the matrix as a dense column-major array.
+ */
+std::vector<double> CSCMatrix::toarray() const
+{
+    std::vector<double> A(M_ * N_, 0.0);
+
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            if (has_canonical_format_) {
+                A[i_[p] + j * M_] = v_[p];
+            } else {
+                A[i_[p] + j * M_] += v_[p];  // account for duplicates
+            }
+        }
+    }
+
+    return A;
+}
+
+
 /** Transpose the matrix as a copy.
  *
  * This operation can be viewed as converting a Compressed Sparse Column matrix

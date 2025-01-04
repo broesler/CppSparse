@@ -83,6 +83,8 @@ class CSCMatrix
         // ---------- Format Conversions
         COOMatrix tocoo() const;  // Exercise 2.2 Matlab's find.
 
+        std::vector<double> toarray() const;  // inverse of Exercise 2.16
+
         // ---------- Math Operations
         CSCMatrix transpose() const;  // transpose a copy
         CSCMatrix T() const;          // transpose a copy (alias)

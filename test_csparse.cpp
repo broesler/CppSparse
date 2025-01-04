@@ -877,6 +877,22 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
 
         REQUIRE_THAT(is_close(C, expect, tol), AllTrue());
     }
+
+    SECTION("Test arbitrary square matrix in block column-major format") {
+        std::vector<double> A_dense = A.toarray();
+
+        // A.T @ A + A in column-major format
+        std::vector<double> expect = {
+            46.61, 13.49, 14.4 ,  9.79,
+            10.39, 14.36,  6.8 ,  3.41,
+            17.6 ,  5.1 , 22.24,  0.0 ,
+             6.29,  3.91,  0.0 ,  2.81
+        };
+
+        std::vector<double> C = gaxpy_block(A.T(), A_dense, A_dense); 
+
+        REQUIRE_THAT(is_close(C, expect, tol), AllTrue());
+    }
 }
 
 

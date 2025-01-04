@@ -922,6 +922,56 @@ std::vector<double> gaxpy_col(
 }
 
 
+/** Matrix multiply `Y = AX + Y` for column-major dense matrices `X` and `Y`,
+ * but operate on blocks of columns.
+ *
+ * See: Davis, Exercise 2.27(c).
+ *
+ * @param A  a sparse matrix
+ * @param X  a dense multiplying matrix in column-major order
+ * @param[in,out] Y  a dense adding matrix which will be used for the output
+ *
+ * @return Y a copy of the updated matrix
+ */
+std::vector<double> gaxpy_block(
+    const CSCMatrix& A,
+    const std::vector<double>& X,
+    const std::vector<double>& Y
+    )
+{
+    assert(X.size() % A.N_ == 0);  // check that X.size() is a multiple of A.N_
+    assert(Y.size() == A.M_ * (X.size() / A.N_));
+
+    std::vector<double> out = Y;  // copy the input matrix
+
+    csint K = X.size() / A.N_;  // number of columns in X
+
+    const csint BLOCK_SIZE = 32;  // block size for column operations
+
+    // For each column of X
+    for (csint k = 0; k < K; k++) {
+        // Take a block of columns
+        for (csint j_start = 0; j_start < A.N_; j_start += BLOCK_SIZE) {
+            csint j_end = std::min(j_start + BLOCK_SIZE, A.N_);
+            // Compute one column of Y (see gaxpy)
+            for (csint j = j_start; j < j_end; j++) {
+                double x_val = X[j + k * A.N_];  // cache value
+
+                // Only compute if x_val is non-zero
+                if (x_val != 0.0) {
+                    for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+                        // Indexing in column-major order
+                        out[A.i_[p] + k * A.M_] += A.v_[p] * x_val;
+                    }
+                }
+            }
+        }
+    }
+
+    return out;
+}
+
+
 /** Matrix multiply `Y = AX + Y` for row-major dense matrices `X` and `Y`.
  *
  * See: Davis, Exercise 2.27(b).

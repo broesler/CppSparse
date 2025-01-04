@@ -148,6 +148,14 @@ class CSCMatrix
             const std::vector<double>& Y
         );
 
+        // Exercise 2.27(c) cs_gaxpy with matrix x, y in column-major order, but
+        // operating on blocks of columns
+        friend std::vector<double> gaxpy_block(
+            const CSCMatrix& A,
+            const std::vector<double>& X,
+            const std::vector<double>& Y
+        );
+
         // Exercise 2.4
         CSCMatrix scale(const std::vector<double>& r, const std::vector<double> c) const;
 

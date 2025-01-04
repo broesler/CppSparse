@@ -452,11 +452,15 @@ std::vector<double> CSCMatrix::toarray() const
 {
     std::vector<double> A(M_ * N_, 0.0);
 
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
-            if (has_canonical_format_) {
+    if (has_canonical_format_) {
+        for (csint j = 0; j < N_; j++) {
+            for (csint p = p_[j]; p < p_[j+1]; p++) {
                 A[i_[p] + j * M_] = v_[p];
-            } else {
+            }
+        }
+    } else {
+        for (csint j = 0; j < N_; j++) {
+            for (csint p = p_[j]; p < p_[j+1]; p++) {
                 A[i_[p] + j * M_] += v_[p];  // account for duplicates
             }
         }

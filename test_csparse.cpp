@@ -846,10 +846,10 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
         compare_noncanonical(CSCMatrix(gaxpy_col(A, I, Z), 4, 4), expect);
     }
 
-    SECTION("Test arbitrary square matrix") {
+    SECTION("Test arbitrary square matrix in column-major format") {
         std::vector<double> A_dense = A.toarray();
 
-        // A.T @ A + A
+        // A.T @ A + A in column-major format
         std::vector<double> expect = {
             46.61, 13.49, 14.4 ,  9.79,
             10.39, 14.36,  6.8 ,  3.41,
@@ -858,6 +858,22 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
         };
 
         std::vector<double> C = gaxpy_col(A.T(), A_dense, A_dense); 
+
+        REQUIRE_THAT(is_close(C, expect, tol), AllTrue());
+    }
+
+    SECTION("Test arbitrary square matrix in row-major format") {
+        std::vector<double> A_dense = A.toarray('C');
+
+        // A.T @ A + A in row-major format
+        std::vector<double> expect = {
+            46.61, 10.39, 17.6 ,  6.29,
+            13.49, 14.36,  5.1 ,  3.91,
+            14.4 ,  6.8 , 22.24,  0.0 ,
+             9.79,  3.41,  0.0 ,  2.81
+        };
+
+        std::vector<double> C = gaxpy_row(A.T(), A_dense, A_dense); 
 
         REQUIRE_THAT(is_close(C, expect, tol), AllTrue());
     }

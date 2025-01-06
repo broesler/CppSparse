@@ -5,3 +5,4 @@ data/
 # Executables
 test_csparse
 test_stdvector
+gaxpy_perf

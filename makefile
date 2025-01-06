@@ -15,13 +15,16 @@ BREW = /opt/homebrew
 
 INCL := $(wildcard *.h)
 SRC := $(wildcard *.cpp)
-SRC := $(filter-out test_stdvector.cpp, $(SRC))
+SRC := $(filter-out test_stdvector.cpp gaxpy_perf.cpp, $(SRC))
 OBJ := $(SRC:%.cpp=%.o)
+
+GAXPY_SRC := $(filter-out test_stdvector.cpp test_csparse.cpp, $(wildcard *.cpp))
+GAXPY_OBJ := $(GAXPY_SRC:%.cpp=%.o)
 
 # -----------------------------------------------------------------------------
 #        Make options 
 # -----------------------------------------------------------------------------
-all: test_csparse
+all: test_csparse gaxpy_perf
 
 test: OPT = -I$(BREW)/include 
 test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
@@ -31,11 +34,15 @@ test: test_csparse
 debug: CFLAGS += -DDEBUG -glldb -Og -fno-inline -fsanitize=address,leak
 debug: all
 
+
 # -----------------------------------------------------------------------------
 #         Compile and Link
 # -----------------------------------------------------------------------------
 test_csparse: % : %.o $(OBJ)
 	$(CC) $(CFLAGS) $(OPT) -o $@ $^ $(LDLIBS)
+
+gaxpy_perf: $(GAXPY_OBJ)
+	$(CC) $(CFLAGS) $(OPT) -o $@ $^
 
 # Objects depend on source and headers
 %.o : %.cpp $(INCL)
@@ -48,6 +55,8 @@ clean:
 	rm -f *.o
 	rm -rf *.dSYM/
 	rm -f test_csparse
+	rm -f test_stdvector
+	rm -f gaxpy_perf
 
 #==============================================================================
 #==============================================================================

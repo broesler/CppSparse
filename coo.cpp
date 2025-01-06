@@ -9,6 +9,7 @@
 
 #include <sstream>
 #include <numeric>
+#include <random>
 
 #include "csparse.h"
 
@@ -108,6 +109,39 @@ COOMatrix::COOMatrix(std::istream& fp)
         }
     }
 }
+
+
+/** Create a random sparse matrix.
+ *
+ * @param M, N  the dimensions of the matrix
+ * @param density  the fraction of non-zero elements
+ * @param seed  the random seed
+ *
+ * @return a random sparse matrix
+ */
+COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
+{
+    csint nzmax = M * N * density;
+    COOMatrix A(M, N, nzmax);
+
+    if (seed == 0)
+        seed = std::random_device{}();
+
+    std::default_random_engine rng(seed);
+    std::uniform_int_distribution<csint> row_dist(0, M - 1);
+    std::uniform_int_distribution<csint> col_dist(0, N - 1);
+    std::uniform_real_distribution<double> value_dist(0.0, 1.0);
+
+    for (csint k = 0; k < nzmax; k++) {
+        csint i = row_dist(rng);
+        csint j = col_dist(rng);
+        double v = value_dist(rng);
+        A.assign(i, j, v);
+    }
+
+    return A;
+}
+
 
 /*------------------------------------------------------------------------------
  *         Accessors

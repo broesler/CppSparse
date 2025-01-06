@@ -50,6 +50,10 @@ class COOMatrix
 
         COOMatrix(const CSCMatrix& A);               // Exercise 2.2, Matlab's find
 
+        // See Exercise 2.27 performance testing
+        static COOMatrix random(csint M, csint N, double density=0.1,
+                                unsigned int seed=0);
+
         // ---------- Accessors
         csint nnz() const;                   // number of non-zeros
         csint nzmax() const;                 // maximum number of non-zeros

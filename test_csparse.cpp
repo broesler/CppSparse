@@ -419,6 +419,16 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
 
         REQUIRE(A.toarray('C') == expect);
     }
+
+    SECTION("Generate random matrix") {
+        double density = 0.25;
+        csint M = 5, N = 10;
+        unsigned int seed = 56;  // seed for reproducibility
+        COOMatrix A = COOMatrix::random(M, N, density, seed);
+
+        REQUIRE(A.shape() == std::array<csint, 2>{M, N});
+        REQUIRE(A.nnz() == (csint)(density * M * N));
+    }
 }
 
 

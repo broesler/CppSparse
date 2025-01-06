@@ -70,6 +70,8 @@ class COOMatrix
         CSCMatrix compress() const;  // raw CSC format (no sorting, duplicates)
         CSCMatrix tocsc() const;     // canonical CSC format, Exercise 2.9
 
+        std::vector<double> toarray(const char order='F') const;
+
         // ---------- Math Operations
         COOMatrix transpose() const;  // transpose a copy, Exercise 2.6
         COOMatrix T() const;

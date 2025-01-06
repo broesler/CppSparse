@@ -396,6 +396,29 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         REQUIRE(A.column() == F.column());
         REQUIRE(A.data() == F.data());
     }
+
+    SECTION("Conversion to dense array: Column-major") {
+        std::vector<double> expect = {
+            4.5, 3.1, 0.0, 3.5,
+            0.0, 2.9, 1.7, 0.4,
+            3.2, 0.0, 3.0, 0.0,
+            0.0, 0.9, 0.0, 1.0
+        };
+
+        REQUIRE(A.toarray() == expect);
+        REQUIRE(A.toarray('F') == expect);
+    }
+
+    SECTION("Conversion to dense array: Row-major") {
+        std::vector<double> expect = {
+            4.5, 0.0, 3.2, 0.0,
+            3.1, 2.9, 0.0, 0.9,
+            0.0, 1.7, 3.0, 0.0,
+            3.5, 0.4, 0.0, 1.0
+        };
+
+        REQUIRE(A.toarray('C') == expect);
+    }
 }
 
 

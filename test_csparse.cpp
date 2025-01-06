@@ -857,9 +857,11 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
              6.29,  3.91,  0.0 ,  2.81
         };
 
-        std::vector<double> C = gaxpy_col(A.T(), A_dense, A_dense); 
+        std::vector<double> C_col = gaxpy_col(A.T(), A_dense, A_dense); 
+        std::vector<double> C_block = gaxpy_block(A.T(), A_dense, A_dense); 
 
-        REQUIRE_THAT(is_close(C, expect, tol), AllTrue());
+        REQUIRE_THAT(is_close(C_col, expect, tol), AllTrue());
+        REQUIRE_THAT(is_close(C_block, expect, tol), AllTrue());
     }
 
     SECTION("Test arbitrary square matrix in row-major format") {
@@ -878,20 +880,40 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
         REQUIRE_THAT(is_close(C, expect, tol), AllTrue());
     }
 
-    SECTION("Test arbitrary square matrix in block column-major format") {
+    SECTION("Test non-square matrix in column-major format.") {
+        CSCMatrix Ab = A.slice(0, 4, 0, 3);  // {4, 3}
+        std::vector<double> Ac_dense = A.slice(0, 3, 0, 4).toarray();
         std::vector<double> A_dense = A.toarray();
 
-        // A.T @ A + A in column-major format
+        // Ab @ Ac + A in column-major format
         std::vector<double> expect = {
-            46.61, 13.49, 14.4 ,  9.79,
-            10.39, 14.36,  6.8 ,  3.41,
-            17.6 ,  5.1 , 22.24,  0.0 ,
-             6.29,  3.91,  0.0 ,  2.81
+            24.75, 26.04,  5.27, 20.49,
+             5.44, 11.31, 11.73,  1.56,
+            27.2 ,  9.92, 12.0 , 11.2 ,
+             0.0 ,  3.51,  1.53,  1.36
         };
 
-        std::vector<double> C = gaxpy_block(A.T(), A_dense, A_dense); 
+        REQUIRE_THAT(is_close(gaxpy_col(Ab, Ac_dense, A_dense), expect, tol),
+                     AllTrue());
+        REQUIRE_THAT(is_close(gaxpy_block(Ab, Ac_dense, A_dense), expect, tol),
+                     AllTrue());
+    }
 
-        REQUIRE_THAT(is_close(C, expect, tol), AllTrue());
+    SECTION("Test non-square matrix in row-major format.") {
+        CSCMatrix Ab = A.slice(0, 4, 0, 3);  // {4, 3}
+        std::vector<double> Ac_dense = A.slice(0, 3, 0, 4).toarray('C');
+        std::vector<double> A_dense = A.toarray('C');
+
+        // Ab @ Ac + A in row-major format
+        std::vector<double> expect = {
+            24.75,  5.44, 27.2 ,  0.0 ,
+            26.04, 11.31,  9.92,  3.51,
+             5.27, 11.73, 12.0 ,  1.53,
+            20.49,  1.56, 11.2 ,  1.36
+        };
+
+        REQUIRE_THAT(is_close(gaxpy_row(Ab, Ac_dense, A_dense), expect, tol),
+                     AllTrue());
     }
 }
 

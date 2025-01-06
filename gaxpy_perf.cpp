@@ -19,7 +19,6 @@
 
 #include "csparse.h"
 
-using namespace std;
 
 // Define a struct to hold the results of the performance tests
 struct TestResults {
@@ -56,34 +55,46 @@ int main()
 
     // NOTE These lines work (gaxpy_col recognized)
     std::vector<double> C = gaxpy_col(A, X_col, Y_col);
-    print_vec(C);
+    // print_vec(C);
 
     // Run the tests
-    using GaxpyFunc = std::function<
-        std::vector<double>(
-            const CSCMatrix&,
-            const std::vector<double>&,
-            const std::vector<double>&
-        )
-    >;
-
     // FIXME gaxpy_col, etc. gives "undefined identifier" error
-    std::map<string, GaxpyFunc> gaxpy_funcs = {
-        {"gaxpy_col", gaxpy_col},
-        {"gaxpy_row", gaxpy_row},
-        {"gaxpy_block", gaxpy_block}
-    };
+    // using GaxpyFunc = std::function<
+    //     std::vector<double>(
+    //         const CSCMatrix&,
+    //         const std::vector<double>&,
+    //         const std::vector<double>&
+    //     )
+    // >;
 
-    std::map<string, TestResults> res;
+    // std::unordered_map<std::string, GaxpyFunc> gaxpy_funcs = {
+    //     {"gaxpy_col", gaxpy_col},
+    //     {"gaxpy_row", gaxpy_row},
+    //     {"gaxpy_block", gaxpy_block}
+    // };
 
-    for (const auto& pair : gaxpy_funcs) {
-        std::string name = pair.first;
-        auto gaxpy_func = pair.second;
+    std::array<std::string, 3> names = {"gaxpy_col", "gaxpy_row", "gaxpy_block"};
+    std::unordered_map<std::string, TestResults> res;
+
+    // for (const auto& pair : gaxpy_funcs) {
+        // std::string name = pair.first;
+        // auto gaxpy_func = pair.second;
+
+    for (const auto& name : names) {
 
         // Compute and time the function
         auto start = std::chrono::high_resolution_clock::now();
 
-        std::vector<double> Y_out = gaxpy_func(A, X_col, Y_col);
+        if (name == "gaxpy_col") {
+            std::vector<double> Y_out = gaxpy_col(A, X_col, Y_col);
+        } else if (name == "gaxpy_row") {
+            std::vector<double> Y_out = gaxpy_row(A, X_col, Y_col);
+        } else if (name == "gaxpy_block") {
+            std::vector<double> Y_out = gaxpy_block(A, X_col, Y_col);
+        } else {
+            std::cerr << "Invalid function name: '" << name << "'" << std::endl;
+            throw std::invalid_argument("");
+        }
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
@@ -91,6 +102,8 @@ int main()
         // Store results
         res[name].Ns.push_back(N);
         res[name].times.push_back(elapsed.count());
+
+        std::cout << "Elapsed time: " << elapsed.count() << " s" << std::endl;
     }
 
     return EXIT_SUCCESS;

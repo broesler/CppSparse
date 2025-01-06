@@ -272,7 +272,7 @@ TEST_CASE("Test COOMatrix Constructors", "[COOMatrix]")
     SECTION("Allocate new from shape and nzmax") {
         int nzmax = 1e4;
         COOMatrix A(56, 37, nzmax);
-        REQUIRE(A.nnz() == nzmax);
+        REQUIRE(A.nnz() == 0);
         REQUIRE(A.nzmax() >= nzmax);
         REQUIRE(A.shape() == std::array<csint, 2>{56, 37});
     }

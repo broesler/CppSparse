@@ -49,13 +49,13 @@ COOMatrix::COOMatrix(
  * @param nzmax integer capacity of space to reserve for non-zeros
  */
 COOMatrix::COOMatrix(csint M, csint N, csint nzmax)
-    : v_(nzmax),
-      i_(nzmax),
-      j_(nzmax),
-      M_(M),
+    : M_(M),
       N_(N) 
-{}
-
+{
+    v_.reserve(nzmax);
+    i_.reserve(nzmax);
+    j_.reserve(nzmax);
+}
 
 /** Convert a CSCMatrix to a COOMatrix, like Matlab's `find`.
  *

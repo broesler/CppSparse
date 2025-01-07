@@ -1706,6 +1706,72 @@ TEST_CASE("Test indexing for single assignment.")
 }
 
 
+// Exercise 2.29
+TEST_CASE("Test adding empty rows and columns to a CSCMatrix.")
+{
+    CSCMatrix A = davis_21_coo().tocsc();
+    int k = 3;  // number of rows/columns to add
+
+    SECTION("Add empty rows to top") {
+        CSCMatrix C = A.add_empty_top(k);
+
+        std::vector<csint> expect_indices = A.indices();
+        for (auto& x : expect_indices) {
+            x += k;
+        }
+
+        REQUIRE(C.nnz() == A.nnz());
+        REQUIRE(C.shape()[0] == A.shape()[0] + k);
+        REQUIRE(C.shape()[1] == A.shape()[1]);
+        REQUIRE(C.indptr() == A.indptr());
+        REQUIRE(C.indices() == expect_indices);
+    }
+
+    SECTION("Add empty rows to bottom") {
+        CSCMatrix C = A.add_empty_bottom(k);
+
+        REQUIRE(C.nnz() == A.nnz());
+        REQUIRE(C.shape()[0] == A.shape()[0] + k);
+        REQUIRE(C.shape()[1] == A.shape()[1]);
+        REQUIRE(C.indptr() == A.indptr());
+        REQUIRE(C.indices() == A.indices());
+    }
+
+    SECTION("Add empty columns to left") {
+        CSCMatrix C = A.add_empty_left(k);
+
+        std::vector<csint> expect_indptr(k, 0);
+        expect_indptr.insert(
+            expect_indptr.end(),
+            A.indptr().begin(),
+            A.indptr().end()
+        );
+
+        REQUIRE(C.nnz() == A.nnz());
+        REQUIRE(C.shape()[0] == A.shape()[0]);
+        REQUIRE(C.shape()[1] == A.shape()[1] + k);
+        REQUIRE(C.indptr() == expect_indptr);
+        REQUIRE(C.indices() == A.indices());
+    }
+
+    SECTION("Add empty columns to right") {
+        CSCMatrix C = A.add_empty_right(k);
+
+        std::vector<csint> expect_indptr = A.indptr();
+        std::vector<csint> nnzs(k, A.nnz());
+        expect_indptr.insert(
+            expect_indptr.end(),
+            nnzs.begin(),
+            nnzs.end()
+        );
+
+        REQUIRE(C.nnz() == A.nnz());
+        REQUIRE(C.shape()[0] == A.shape()[0]);
+        REQUIRE(C.shape()[1] == A.shape()[1] + k);
+        REQUIRE(C.indptr() == expect_indptr);
+        REQUIRE(C.indices() == A.indices());
+    }
+}
 
 /*==============================================================================
  *============================================================================*/

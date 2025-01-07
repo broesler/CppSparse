@@ -235,6 +235,12 @@ class CSCMatrix
             const std::vector<csint>& cols
         ) const;
 
+        // Exercise 2.28 add empty rows or columns
+        CSCMatrix add_empty_top(const csint k) const;
+        CSCMatrix add_empty_bottom(const csint k) const;
+        CSCMatrix add_empty_left(const csint k) const;
+        CSCMatrix add_empty_right(const csint k) const;
+
         // ---------- Other
         void print(
             std::ostream& os=std::cout,

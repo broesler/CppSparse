@@ -1788,6 +1788,62 @@ CSCMatrix CSCMatrix::index(
 }
 
 
+/** Add empty rows to the top of the matrix.
+ *
+ * See: Davis, Exercise 2.29.
+ *
+ * @param k  the number of rows to add.
+ *
+ * @return C  the matrix with `k` empty rows added to the top.
+ */
+CSCMatrix CSCMatrix::add_empty_top(const csint k) const
+{
+    return vstack(CSCMatrix(k, N_), *this);
+}
+
+
+/** Add empty rows to the bottom of the matrix.
+ *
+ * See: Davis, Exercise 2.29.
+ *
+ * @param k  the number of rows to add.
+ *
+ * @return C  the matrix with `k` empty rows added to the bottom.
+ */
+CSCMatrix CSCMatrix::add_empty_bottom(const csint k) const
+{
+    return vstack(*this, CSCMatrix(k, N_));
+}
+
+
+/** Add empty rows to the left of the matrix.
+ *
+ * See: Davis, Exercise 2.29.
+ *
+ * @param k  the number of rows to add.
+ *
+ * @return C  the matrix with `k` empty rows added to the left.
+ */
+CSCMatrix CSCMatrix::add_empty_left(const csint k) const
+{
+    return hstack(CSCMatrix(M_, k), *this);
+}
+
+
+/** Add empty rows to the right of the matrix.
+ *
+ * See: Davis, Exercise 2.29.
+ *
+ * @param k  the number of rows to add.
+ *
+ * @return C  the matrix with `k` empty rows added to the right.
+ */
+CSCMatrix CSCMatrix::add_empty_right(const csint k) const
+{
+    return hstack(*this, CSCMatrix(M_, k));
+}
+
+
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/

@@ -15,10 +15,30 @@
 #include <chrono>
 #include <functional>
 #include <map>
-#include <unordered_map>
 
 #include "csparse.h"
 
+
+// Define function prototypes here to make them visible to main()
+// See: 
+// <https://stackoverflow.com/questions/69558521/friend-function-name-undefined>
+std::vector<double> gaxpy_col(
+    const CSCMatrix& A,
+    const std::vector<double>& X,
+    const std::vector<double>& Y
+);
+
+std::vector<double> gaxpy_row(
+    const CSCMatrix& A,
+    const std::vector<double>& X,
+    const std::vector<double>& Y
+);
+
+std::vector<double> gaxpy_block(
+    const CSCMatrix& A,
+    const std::vector<double>& X,
+    const std::vector<double>& Y
+);
 
 // Define a struct to hold the results of the performance tests
 struct TestResults {
@@ -53,48 +73,31 @@ int main()
     std::vector<double> X_row = X.toarray('C');
     std::vector<double> Y_row = Y.toarray('C');
 
-    // NOTE These lines work (gaxpy_col recognized)
-    std::vector<double> C = gaxpy_col(A, X_col, Y_col);
-    // print_vec(C);
-
     // Run the tests
-    // FIXME gaxpy_col, etc. gives "undefined identifier" error
-    // using GaxpyFunc = std::function<
-    //     std::vector<double>(
-    //         const CSCMatrix&,
-    //         const std::vector<double>&,
-    //         const std::vector<double>&
-    //     )
-    // >;
+    using gaxpy_prototype = std::function<
+        std::vector<double>(
+            const CSCMatrix&,
+            const std::vector<double>&,
+            const std::vector<double>&
+        )
+    >;
 
-    // std::unordered_map<std::string, GaxpyFunc> gaxpy_funcs = {
-    //     {"gaxpy_col", gaxpy_col},
-    //     {"gaxpy_row", gaxpy_row},
-    //     {"gaxpy_block", gaxpy_block}
-    // };
+    std::map<std::string, gaxpy_prototype> gaxpy_funcs = {
+        {"gaxpy_col", gaxpy_col},
+        {"gaxpy_row", gaxpy_row},
+        {"gaxpy_block", gaxpy_block}
+    };
+    std::map<std::string, TestResults> res;
 
-    std::array<std::string, 3> names = {"gaxpy_col", "gaxpy_row", "gaxpy_block"};
-    std::unordered_map<std::string, TestResults> res;
-
-    // for (const auto& pair : gaxpy_funcs) {
-        // std::string name = pair.first;
-        // auto gaxpy_func = pair.second;
-
-    for (const auto& name : names) {
+    // TODO swap N and func loops so we're accessing one results slot at a time
+    for (const auto& pair : gaxpy_funcs) {
+        std::string name = pair.first;
+        auto gaxpy_func = pair.second;
 
         // Compute and time the function
         auto start = std::chrono::high_resolution_clock::now();
 
-        if (name == "gaxpy_col") {
-            std::vector<double> Y_out = gaxpy_col(A, X_col, Y_col);
-        } else if (name == "gaxpy_row") {
-            std::vector<double> Y_out = gaxpy_row(A, X_col, Y_col);
-        } else if (name == "gaxpy_block") {
-            std::vector<double> Y_out = gaxpy_block(A, X_col, Y_col);
-        } else {
-            std::cerr << "Invalid function name: '" << name << "'" << std::endl;
-            throw std::invalid_argument("");
-        }
+        std::vector<double> Y_out = gaxpy_func(A, X_col, Y_col);
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;

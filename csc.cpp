@@ -1798,7 +1798,15 @@ CSCMatrix CSCMatrix::index(
  */
 CSCMatrix CSCMatrix::add_empty_top(const csint k) const
 {
-    return vstack(CSCMatrix(k, N_), *this);
+    CSCMatrix C = *this;  // copy the matrix
+    C.M_ += k;
+
+    // Increate all row indices by k
+    for (auto& i : C.i_) {
+        i += k;
+    }
+
+    return C;
 }
 
 
@@ -1812,7 +1820,9 @@ CSCMatrix CSCMatrix::add_empty_top(const csint k) const
  */
 CSCMatrix CSCMatrix::add_empty_bottom(const csint k) const
 {
-    return vstack(*this, CSCMatrix(k, N_));
+    CSCMatrix C = *this;  // copy the matrix
+    C.M_ += k;
+    return C;
 }
 
 
@@ -1826,7 +1836,10 @@ CSCMatrix CSCMatrix::add_empty_bottom(const csint k) const
  */
 CSCMatrix CSCMatrix::add_empty_left(const csint k) const
 {
-    return hstack(CSCMatrix(M_, k), *this);
+    CSCMatrix C = *this;  // copy the matrix
+    C.N_ += k;
+    C.p_.insert(C.p_.begin(), k, 0);  // insert k zeros at the beginning
+    return C;
 }
 
 
@@ -1840,7 +1853,10 @@ CSCMatrix CSCMatrix::add_empty_left(const csint k) const
  */
 CSCMatrix CSCMatrix::add_empty_right(const csint k) const
 {
-    return hstack(*this, CSCMatrix(M_, k));
+    CSCMatrix C = *this;  // copy the matrix
+    C.N_ += k;
+    C.p_.insert(C.p_.end(), k, nnz());  // insert k nnz() at the end
+    return C;
 }
 
 

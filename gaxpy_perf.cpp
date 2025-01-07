@@ -50,7 +50,7 @@ struct TimeStats {
     std::vector<double> mean;
     std::vector<double> std_dev;
 
-    TimeStats() : mean(), std_dev() {};
+    TimeStats() {};
     TimeStats(const int N) {
         mean.reserve(N);
         std_dev.reserve(N);
@@ -171,8 +171,10 @@ int main()
         std::cout << "done." << std::endl;
 
 
-    // Write the results to a file
-    const std::string filename = "gaxpy_perf.json";
+    //--------------------------------------------------------------------------
+    //        Write the results to a file
+    //--------------------------------------------------------------------------
+    const std::string filename = "./plots/gaxpy_perf.json";
 
     if (VERBOSE)
         std::cout << "Writing results to '" << filename << "'..." << std::endl;

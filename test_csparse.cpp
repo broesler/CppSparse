@@ -510,11 +510,13 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
     }
 
     SECTION("Test indexing: unsorted, with a duplicate") {
-        C = A.assign(3, 3, 56.0).compress();
+        const CSCMatrix C = A.assign(3, 3, 56.0).compress();
 
-        // FIXME "double& operator()" function is being called when we are
+        // NOTE "double& operator()" function is being called when we are
         // trying to compare the value. Not sure why.
-        REQUIRE_THAT(C(3, 3), WithinAbs(57.0, tol));  // calls double&
+        // A: The non-const version is called when C is non-const. If C is
+        // const, then the const version is called.
+        REQUIRE_THAT(C(3, 3), WithinAbs(57.0, tol));
     }
 
     // Test the transpose -> use indexing to test A(i, j) == A(j, i)

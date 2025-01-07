@@ -13,6 +13,8 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 
+SAVE_FIG = False
+
 with open('gaxpy_perf.json', 'r') as f:
     data = json.load(f)
 
@@ -37,6 +39,9 @@ ax.set_xlabel('Number of Columns')
 ax.set_ylabel('Time (s)')
 
 plt.show()
+
+if SAVE_FIG:
+    fig.savefig('gaxpy_perf.png')
 
 # =============================================================================
 # =============================================================================

@@ -1005,7 +1005,7 @@ std::vector<double> gaxpy_row(
             if (x_val != 0.0) {
                 for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
                     // Indexing in row-major order
-                    out[k + A.i_[p] * A.M_] += A.v_[p] * x_val;
+                    out[k + A.i_[p] * K] += A.v_[p] * x_val;
                 }
             }
         }

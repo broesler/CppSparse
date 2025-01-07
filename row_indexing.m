@@ -11,9 +11,9 @@
 
 clear;
 
-% Ms = [10, 20, 50, 100, 200, 500, 1000];
-Ms = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
-density = 0.1;
+Ms = [10, 20, 50, 100, 200, 500, 1000];
+% Ms = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
+density = 0.2;
 N_samples = 7;
 
 times = zeros(length(Ms), 1);
@@ -23,6 +23,8 @@ figure(1); clf; hold on;
 
 % Create a random sparse matrix and time row indexing
 for M = Ms
+    disp(['M = ', num2str(M)]);
+
     A = create_sparse_matrix(M, M, density);
 
     row_times = zeros(N_samples, M);
@@ -38,14 +40,17 @@ for M = Ms
 
     times(M == Ms) = mean(mean(row_times));
 
-    if M == 5000
+    if M == 1000
         % Plot the distribution of times for each row
         % hist(mean(row_times, 1));
 
         % Plot the of times for each row
-        scatter(1:M, mean(row_times, 1), 'marker', '.');
+        scatter(1, mean(row_times(:, 1)), 'marker', 'x', 'MarkerEdgeColor', '#D95319');
+        scatter(2:M-1, mean(row_times(:, 2:end-1), 1), 'marker', '.', 'MarkerEdgeColor', '#0072BD');
+        scatter(M, mean(row_times(:, end)), 'marker', 'x', 'MarkerEdgeColor', '#D95319');
         xlabel('Row index');
         ylabel('Time to index row (s)');
+        title(sprintf('Density = %0.2f', density));
     end
 
     % Compute the sum of the log of each column size

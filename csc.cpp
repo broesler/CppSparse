@@ -642,10 +642,10 @@ CSCMatrix& CSCMatrix::sort()
 CSCMatrix& CSCMatrix::sum_duplicates()
 {
     csint nz = 0;  // count actual number of non-zeros (excluding dups)
-    std::vector<int> w(M_, -1);                      // row i not yet seen
+    std::vector<csint> w(M_, -1);                      // row i not yet seen
 
     for (csint j = 0; j < N_; j++) {
-        int q = nz;                                  // column j will start at q
+        csint q = nz;                                  // column j will start at q
         for (csint p = p_[j]; p < p_[j + 1]; p++) {
             csint i = i_[p];                          // A(i, j) is nonzero
             if (w[i] >= q) {
@@ -748,11 +748,9 @@ CSCMatrix& CSCMatrix::droptol(double tol)
 /** Return true if `A(i, j)` is within the diagonals `limits = {lower, upper}`. */
 bool CSCMatrix::in_band(csint i, csint j, double Aij, void *limits)
 {
-    int ii = (int) i,  // cast to signed int to preserve signs
-        jj = (int) j;
-    int kl, ku;        // extract lower/upper diagonals
-    std::tie(kl, ku) = *((std::array<int, 2> *) limits);
-    return ((ii <= (jj - kl)) && (ii >= (jj - ku)));
+    csint kl, ku;        // extract lower/upper diagonals
+    std::tie(kl, ku) = *((std::array<csint, 2> *) limits);
+    return ((i <= (j - kl)) && (i >= (j - ku)));
 };
 
 
@@ -763,10 +761,10 @@ bool CSCMatrix::in_band(csint i, csint j, double Aij, void *limits)
  *
  * @return a copy of the matrix with entries removed.
  */
-CSCMatrix CSCMatrix::band(const int kl, const int ku)
+CSCMatrix CSCMatrix::band(const csint kl, const csint ku)
 {
     assert(kl <= ku);
-    std::array<int, 2> limits {kl, ku};
+    std::array<csint, 2> limits {kl, ku};
 
     return fkeep(&in_band, &limits);
 }
@@ -2030,7 +2028,7 @@ std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
 
     std::vector<double> x = b;
 
-    for (int j = L.N_ - 1; j >= 0; j--) {
+    for (csint j = L.N_ - 1; j >= 0; j--) {
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
             x[j] -= L.v_[p] * x[L.i_[p]];
         }
@@ -2059,7 +2057,7 @@ std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
 
     std::vector<double> x = b;
 
-    for (int j = U.N_ - 1; j >= 0; j--) {
+    for (csint j = U.N_ - 1; j >= 0; j--) {
         x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
         for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
             x[U.i_[p]] -= U.v_[p] * x[j];

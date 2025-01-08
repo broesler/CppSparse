@@ -106,7 +106,7 @@ class CSCMatrix
 
         // Exercise 2.15
         static bool in_band(csint i, csint j, double Aij, void *limits);
-        CSCMatrix band(const int kl, const int ku);
+        CSCMatrix band(csint kl, csint ku);
 
         // TODO possibly make these private? Or define in SparseMatrix base.
         static bool nonzero(csint i, csint j, double Aij, void *tol);

@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-typedef std::uint64_t csint;  // TODO just change to "int" for simplicity?
+typedef std::int64_t csint;  // TODO just change to "int" for simplicity?
 
 // Pre-declare classes for type conversions
 class COOMatrix;

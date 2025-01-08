@@ -6,3 +6,4 @@ data/
 test_csparse
 test_stdvector
 gaxpy_perf
+gatxpy_perf

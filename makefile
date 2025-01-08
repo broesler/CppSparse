@@ -24,7 +24,7 @@ GAXPY_OBJ := $(GAXPY_SRC:%.cpp=%.o)
 # -----------------------------------------------------------------------------
 #        Make options 
 # -----------------------------------------------------------------------------
-all: test_csparse gaxpy_perf
+all: test_csparse gaxpy_perf gatxpy_perf
 
 test: OPT = -I$(BREW)/include 
 test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
@@ -33,6 +33,8 @@ test: test_csparse
 
 # gaxpy_perf: CFLAGS += -glldb -fno-inline -fsanitize=address
 gaxpy_perf: CFLAGS += -O3
+
+gatxpy_perf: CFLAGS += -DGATXPY -O3 
 
 debug: CFLAGS += -DDEBUG -glldb -Og -fno-inline -fsanitize=address,leak
 debug: all
@@ -45,6 +47,9 @@ test_csparse: % : %.o $(OBJ)
 	$(CC) $(CFLAGS) $(OPT) -o $@ $^ $(LDLIBS)
 
 gaxpy_perf: $(GAXPY_OBJ)
+	$(CC) $(CFLAGS) $(OPT) -o $@ $^
+
+gatxpy_perf: $(GAXPY_OBJ)
 	$(CC) $(CFLAGS) $(OPT) -o $@ $^
 
 # Objects depend on source and headers

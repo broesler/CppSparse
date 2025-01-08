@@ -21,29 +21,39 @@
 #include "csparse.h"
 
 
-const bool VERBOSE = true;
-const unsigned int SEED = 565656;
-
 // Define function prototypes here to make them visible to main()
 // See: 
 // <https://stackoverflow.com/questions/69558521/friend-function-name-undefined>
+#ifdef GATXPY
+std::vector<double> gatxpy_col(
+#else
 std::vector<double> gaxpy_col(
+#endif
     const CSCMatrix& A,
     const std::vector<double>& X,
     const std::vector<double>& Y
 );
 
+#ifdef GATXPY
+std::vector<double> gatxpy_row(
+#else
 std::vector<double> gaxpy_row(
+#endif
     const CSCMatrix& A,
     const std::vector<double>& X,
     const std::vector<double>& Y
 );
 
+#ifdef GATXPY
+std::vector<double> gatxpy_block(
+#else
 std::vector<double> gaxpy_block(
+#endif
     const CSCMatrix& A,
     const std::vector<double>& X,
     const std::vector<double>& Y
 );
+
 
 // Define a structure to store the mean and standard deviation of the times
 struct TimeStats {
@@ -58,8 +68,62 @@ struct TimeStats {
 };
 
 
+// Write the results to a JSON file
+void write_json_results(
+    const std::string filename,
+    const std::vector<int>& Ns,
+    const std::map<std::string, TimeStats>& times
+    )
+{
+    // Open the file and check for success
+    std::ofstream fp(filename);
+    if (!fp.is_open()) {
+        std::cerr << "Error: could not open file " << filename << std::endl;
+        return;
+    }
+
+    // Opening brace
+    fp << "{\n";
+
+    // Write the Ns vector first
+    fp << "  \"Ns\": ";
+    print_vec(Ns, fp, ",\n");
+
+    // Write the result times
+    for (auto it = times.begin(); it != times.end(); it++) {
+        const std::string name = it->first;
+        const TimeStats ts = it->second;
+
+        fp << "  \"" << name << "\": {\n";
+        fp << "    \"mean\": ";
+        print_vec(ts.mean, fp, ",\n");
+
+        fp << "    \"std_dev\": ";
+        print_vec(ts.std_dev, fp, "\n");
+
+        if (std::next(it) == times.end())  // last entry in sorted map
+            fp << "  }\n";
+        else
+            fp << "  },\n";
+    }
+
+    // Closing brace
+    fp << "}\n";
+    fp.close();
+}
+
+
 int main()
 {
+    // Declare constants
+    const bool VERBOSE = true;
+    const unsigned int SEED = 565656;
+#ifdef GATXPY
+    const std::string filename = "./plots/gatxpy_perf.json";
+#else
+    const std::string filename = "./plots/gaxpy_perf.json";
+#endif
+
     // Run the tests
     using gaxpy_prototype = std::function<
         std::vector<double>(
@@ -70,16 +134,22 @@ int main()
     >;
 
     const std::map<std::string, gaxpy_prototype> gaxpy_funcs = {
+#ifdef GATXPY
+        {"gatxpy_col", gatxpy_col},
+        {"gatxpy_row", gatxpy_row},
+        {"gatxpy_block", gatxpy_block}
+#else
         {"gaxpy_col", gaxpy_col},
         {"gaxpy_row", gaxpy_row},
         {"gaxpy_block", gaxpy_block}
+#endif
     };
 
     // Store the results
     std::map<std::string, TimeStats> times;
 
     // const std::vector<int> Ns = {10, 100, 1000};
-    const std::vector<int> Ns = {10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000};
+    const std::vector<int> Ns = {10, 20, 50, 100, 200, 500, 1000, 2000, 5000};
     const float density = 0.1;  // density of the sparse matrix
 
     // Time sampling
@@ -105,7 +175,10 @@ int main()
             // int M = N, K = N;  // square matrices
 
             // Create a large, sparse matrix
-            const CSCMatrix A = COOMatrix::random(M, N, density, SEED).tocsc();
+            CSCMatrix A = COOMatrix::random(M, N, density, SEED).tocsc();
+#ifdef GATXPY
+            A = A.T();
+#endif
 
             // Create a compatible random, dense matrix
             const COOMatrix X = COOMatrix::random(N, K, density, SEED);
@@ -170,61 +243,13 @@ int main()
     if (VERBOSE)
         std::cout << "done." << std::endl;
 
-
     //--------------------------------------------------------------------------
     //        Write the results to a file
     //--------------------------------------------------------------------------
-    const std::string filename = "./plots/gaxpy_perf.json";
-
     if (VERBOSE)
         std::cout << "Writing results to '" << filename << "'..." << std::endl;
 
-    std::ofstream fp(filename);
-
-    // Opening brace
-    fp << "{\n";
-
-    // Write the Ns vector first
-    fp << "  \"Ns\": [";
-    for (int i = 0; i < Ns.size(); i++) {
-        fp << Ns[i];
-        if (i < Ns.size() - 1)
-            fp << ", ";
-    }
-    fp << "],\n";
-
-    // Write the result times
-    for (const auto& pair : times) {
-        const std::string name = pair.first;
-        const TimeStats ts = pair.second;
-
-        fp << "  \"" << name << "\": {\n";
-        fp << "    \"mean\": [";
-        for (int i = 0; i < ts.mean.size(); i++) {
-            fp << ts.mean[i];
-            if (i < ts.mean.size() - 1)
-                fp << ", ";
-        }
-        fp << "],\n";
-
-        fp << "    \"std_dev\": [";
-        for (int i = 0; i < ts.std_dev.size(); i++) {
-            fp << ts.std_dev[i];
-            if (i < ts.std_dev.size() - 1)
-                fp << ", ";
-        }
-        fp << "]\n";
-
-        if (name == "gaxpy_row")  // last entry in sorted map
-            fp << "  }\n";
-        else
-            fp << "  },\n";
-    }
-
-    // Closing brace
-    fp << "}\n";
-
-    fp.close();
+    write_json_results(filename, Ns, times);
 
     if (VERBOSE)
         std::cout << "done." << std::endl;

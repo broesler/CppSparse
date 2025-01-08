@@ -13,9 +13,12 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 
-SAVE_FIG = False
+SAVE_FIG = True
 
-with open('gaxpy_perf.json', 'r') as f:
+# filestem = 'gaxpy_perf'
+filestem = 'gatxpy_perf'
+
+with open(f"./plots/{filestem}.json", 'r') as f:
     data = json.load(f)
 
 Ns = data['Ns']  # N values
@@ -26,7 +29,7 @@ del data
 # Plot the data
 fig, ax = plt.subplots(num=1, clear=True)
 for key in times:
-    ax.plot(Ns, times[key]['mean'], marker='.', label=key)
+    ax.plot(Ns, times[key]['mean'], marker='o', label=key)
     ax.errorbar(Ns, times[key]['mean'],
                 yerr=times[key]['std_dev'], fmt='none')
 
@@ -41,7 +44,7 @@ ax.set_ylabel('Time (s)')
 plt.show()
 
 if SAVE_FIG:
-    fig.savefig('./data/gaxpy_perf.png')
+    fig.savefig(f"./plots/{filestem}.png")
 
 # =============================================================================
 # =============================================================================

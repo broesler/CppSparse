@@ -34,16 +34,16 @@ std::vector<csint> cumsum(std::vector<csint>&);
  *----------------------------------------------------------------------------*/
 /** Print a std::vector. */
 template <typename T>
-void print_vec(const std::vector<T>& vec)
+void print_vec(const std::vector<T>& vec, std::ostream& os=std::cout, const std::string end="\n")
 {
-    std::cout << "[";
+    os << "[";
     for (int i = 0; i < vec.size(); i++) {
-        std::cout << vec[i];
+        os << vec[i];
         if (i < vec.size() - 1) {
-            std::cout << ", ";
+            os << ", ";
         }
     }
-    std::cout << "]" << std::endl;
+    os << "]" << end;
 }
 
 

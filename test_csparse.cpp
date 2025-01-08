@@ -21,7 +21,6 @@
 
 #include "csparse.h"
 
-using namespace std;
 using Catch::Matchers::AllTrue;
 using Catch::Matchers::WithinAbs;
 
@@ -370,8 +369,8 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         REQUIRE(A.nnz() == 19);
         REQUIRE(A.nzmax() >= 19);
         REQUIRE(A.shape() == std::array<csint, 2>{5, 7});
-        // cout << "A = " << endl << A;  // rows sorted
-        // cout << "A.compress() = " << endl << A.compress();  // cols sorted
+        // std::cout << "A = " << std::endl << A;  // rows sorted
+        // std::cout << "A.compress() = " << std::endl << A.compress();  // cols sorted
     }
 
     SECTION("Tranpose") {
@@ -437,7 +436,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
     COOMatrix A = davis_21_coo();
     CSCMatrix C = A.compress();  // unsorted columns
 
-    // cout << "C = \n" << C;
+    // std::cout << "C = \n" << C;
     SECTION("Test attributes") {
         std::vector<csint> indptr_expect  = {  0,             3,             6,        8,  10};
         std::vector<csint> indices_expect = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
@@ -676,9 +675,6 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         REQUIRE(C.toarray('C') == expect);          // non-canonical form
     }
 }
-
-// TODO test whether transpose, droptol, etc. change the original if we do
-// an assignment
 
 
 TEST_CASE("Test canonical format", "[CSCMatrix][COOMatrix]")
@@ -1200,16 +1196,10 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
 
         // Test operator overloading
         CSCMatrix C = 0.1 * A + 9.0 * B;
-        // cout << "C = \n" << C << endl;
+        // std::cout << "C = \n" << C << std::endl;
 
-        // TODO rewrite these element-tests to compare the entire matrix, so that
-        // when we have a failure, we can see the indices
-        for (csint i = 0; i < M; i++) {
-            for (csint j = 0; j < N; j++) {
-                REQUIRE(Cf(i, j) == expect(i, j));
-                REQUIRE(C(i, j) == expect(i, j));
-            }
-        }
+        compare_noncanonical(C, expect);
+        compare_noncanonical(Cf, expect);
     }
 
     SECTION("Test sparse column vectors") {
@@ -1464,7 +1454,7 @@ TEST_CASE("Test band function")
             ku = 2;
 
         // CSCMatrix Ab = A.band(kl, ku);
-        // cout << Ab;
+        // std::cout << Ab;
         COOMatrix Ab = A.band(kl, ku).tocoo();
 
         std::vector<csint> expect_rows = {0, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 2, 3, 4, 5, 3, 4, 5};

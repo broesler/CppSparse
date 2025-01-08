@@ -27,6 +27,7 @@ class CSCMatrix;
 #include "utils.h"
 #include "csc.h"
 #include "coo.h"
+#include "tri_solve.h"
 
 #endif
 

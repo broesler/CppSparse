@@ -3,8 +3,7 @@
 // Created: 2024-10-09 20:57
 //  Author: Bernie Roesler
 //
-//  Description: The header file for the CSparse++ package with definitions of
-//    the matrix classes and associated functions.
+//  Description: Implements the compressed sparse column matrix class.
 //
 //==============================================================================
 

@@ -262,6 +262,12 @@ class CSCMatrix
         CSCMatrix add_empty_left(const csint k) const;
         CSCMatrix add_empty_right(const csint k) const;
 
+        //----------------------------------------------------------------------
+        //        Matrix Solutions
+        //----------------------------------------------------------------------
+        friend std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b);
+        friend std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b);
+
         // ---------- Other
         void print(
             std::ostream& os=std::cout,

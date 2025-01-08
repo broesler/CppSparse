@@ -15,12 +15,14 @@ import numpy as np
 
 SAVE_FIG = True
 
-# filestem = 'gaxpy_perf'
-filestem = 'gatxpy_perf'
+filestem = 'gaxpy_perf'
+# filestem = 'gatxpy_perf'
 
 with open(f"./plots/{filestem}.json", 'r') as f:
     data = json.load(f)
 
+density = data['density']
+del data['density']
 Ns = data['Ns']  # N values
 del data['Ns']
 times = data     # all other values are the times
@@ -40,6 +42,7 @@ ax.legend()
 
 ax.set_xlabel('Number of Columns')
 ax.set_ylabel('Time (s)')
+ax.set_title(f"{filestem.split('_')[0]}, density {density}")
 
 plt.show()
 

@@ -71,6 +71,7 @@ struct TimeStats {
 // Write the results to a JSON file
 void write_json_results(
     const std::string filename,
+    const double density,
     const std::vector<int>& Ns,
     const std::map<std::string, TimeStats>& times
     )
@@ -85,7 +86,10 @@ void write_json_results(
     // Opening brace
     fp << "{\n";
 
-    // Write the Ns vector first
+    // Write the density
+    fp << "  \"density\": " << density << ",\n";
+
+    // Write the Ns vector
     fp << "  \"Ns\": ";
     print_vec(Ns, fp, ",\n");
 
@@ -150,7 +154,7 @@ int main()
 
     // const std::vector<int> Ns = {10, 100, 1000};
     const std::vector<int> Ns = {10, 20, 50, 100, 200, 500, 1000, 2000, 5000};
-    const float density = 0.1;  // density of the sparse matrix
+    const float density = 0.25;  // density of the sparse matrix
 
     // Time sampling
     const int N_repeats = 1;
@@ -249,7 +253,7 @@ int main()
     if (VERBOSE)
         std::cout << "Writing results to '" << filename << "'..." << std::endl;
 
-    write_json_results(filename, Ns, times);
+    write_json_results(filename, density, Ns, times);
 
     if (VERBOSE)
         std::cout << "done." << std::endl;

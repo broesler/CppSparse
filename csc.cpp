@@ -1985,6 +1985,10 @@ CSCMatrix CSCMatrix::add_empty_right(const csint k) const
  *----------------------------------------------------------------------------*/
 /** Forward solve a lower-triangular system \f$ Lx = b \f$.
  *
+ * @note This function assumes that the diagonal entry of `L` is always present
+ * and is the first entry in each column. Otherwise, the row indices in each
+ * column of `L` may appear in any order.
+ *
  * @param L  a lower-triangular matrix
  * @param b  a dense vector
  *
@@ -2010,6 +2014,10 @@ std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
 
 /** Backsolve a lower-triangular system \f$ L^Tx = b \f$.
  *
+ * @note This function assumes that the diagonal entry of `L` is always present
+ * and is the first entry in each column. Otherwise, the row indices in each
+ * column of `L` may appear in any order.
+ *
  * @param L  a lower-triangular matrix
  * @param b  a dense vector
  *
@@ -2022,7 +2030,7 @@ std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
 
     std::vector<double> x = b;
 
-    for (csint j = L.N_ - 1; j >= 0; j--) {
+    for (int j = L.N_ - 1; j >= 0; j--) {
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
             x[j] -= L.v_[p] * x[L.i_[p]];
         }
@@ -2031,6 +2039,65 @@ std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
 
     return x;
 }
+
+
+/** Backsolve an upper-triangular system \f$ Ux = b \f$.
+ *
+ * @note This function assumes that the diagonal entry of `U` is always present
+ * and is the last entry in each column. Otherwise, the row indices in each
+ * column of `U` may appear in any order.
+ *
+ * @param U  an upper-triangular matrix
+ * @param b  a dense vector
+ *
+ * @return x  the solution vector
+ */
+std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
+{
+    assert(U.M_ == U.N_);
+    assert(U.M_ == b.size());
+
+    std::vector<double> x = b;
+
+    for (int j = U.N_ - 1; j >= 0; j--) {
+        x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
+        for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
+            x[U.i_[p]] -= U.v_[p] * x[j];
+        }
+    }
+
+    return x;
+}
+
+
+/** Forward solve an upper-triangular system \f$ U^T x = b \f$.
+ *
+ * @note This function assumes that the diagonal entry of `U` is always present
+ * and is the last entry in each column. Otherwise, the row indices in each
+ * column of `U` may appear in any order.
+ *
+ * @param U  an upper-triangular matrix
+ * @param b  a dense vector
+ *
+ * @return x  the solution vector
+ */
+std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
+{
+    assert(U.M_ == U.N_);
+    assert(U.M_ == b.size());
+
+    std::vector<double> x = b;
+
+    for (csint j = 0; j < U.N_; j++) {
+        for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
+            x[j] -= U.v_[p] * x[U.i_[p]];
+        }
+        x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
+    }
+
+    return x;
+}
+
 
 /*------------------------------------------------------------------------------
  *         Printing

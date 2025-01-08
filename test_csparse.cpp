@@ -1778,5 +1778,54 @@ TEST_CASE("Test adding empty rows and columns to a CSCMatrix.")
     }
 }
 
+
+/*------------------------------------------------------------------------------
+ *          Matrix Solutions
+ *----------------------------------------------------------------------------*/
+TEST_CASE("Test triangular solve with dense RHS")
+{
+    const CSCMatrix L = COOMatrix(
+        std::vector<double> {1, 2, 3, 4, 5, 6},
+        std::vector<csint>  {0, 1, 1, 2, 2, 2},
+        std::vector<csint>  {0, 0, 1, 0, 1, 2}
+    ).tocsc();
+
+    const CSCMatrix U = L.T();
+
+    const std::vector<double> expect = {1, 1, 1};
+
+    SECTION("Forward solve L x = b") {
+        const std::vector<double> b = {1, 5, 15};  // row sums of L
+        const std::vector<double> x = lsolve(L, b);
+
+        REQUIRE(x.size() == expect.size());
+        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    }
+
+    SECTION("Backsolve L.T x = b") {
+        const std::vector<double> b = {7, 8, 6};  // row sums of L.T == col sums of L
+        const std::vector<double> x = ltsolve(L, b);
+
+        REQUIRE(x.size() == expect.size());
+        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    }
+
+    SECTION("Backsolve U x = b") {
+        const std::vector<double> b = {7, 8, 6};  // row sums of L.T == col sums of L
+        const std::vector<double> x = usolve(U, b);
+
+        REQUIRE(x.size() == expect.size());
+        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    }
+
+    SECTION("Forward solve U.T x = b") {
+        const std::vector<double> b = {1, 5, 15};  // row sums of L
+        const std::vector<double> x = utsolve(U, b);
+
+        REQUIRE(x.size() == expect.size());
+        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    }
+}
+
 /*==============================================================================
  *============================================================================*/

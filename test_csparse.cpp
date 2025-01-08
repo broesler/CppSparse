@@ -879,6 +879,7 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
         CSCMatrix expect = A;
 
         compare_noncanonical(CSCMatrix(gaxpy_col(A, I, Z), 4, 4), expect);
+        compare_noncanonical(CSCMatrix(gatxpy_col(A.T(), I, Z), 4, 4), expect);
     }
 
     SECTION("Test arbitrary square matrix in column-major format") {
@@ -894,9 +895,13 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
 
         std::vector<double> C_col = gaxpy_col(A.T(), A_dense, A_dense); 
         std::vector<double> C_block = gaxpy_block(A.T(), A_dense, A_dense); 
+        std::vector<double> CT_col = gatxpy_col(A, A_dense, A_dense);
+        std::vector<double> CT_block = gatxpy_block(A, A_dense, A_dense); 
 
         REQUIRE_THAT(is_close(C_col, expect, tol), AllTrue());
         REQUIRE_THAT(is_close(C_block, expect, tol), AllTrue());
+        REQUIRE_THAT(is_close(CT_col, expect, tol), AllTrue());
+        REQUIRE_THAT(is_close(CT_block, expect, tol), AllTrue());
     }
 
     SECTION("Test arbitrary square matrix in row-major format") {
@@ -911,8 +916,10 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
         };
 
         std::vector<double> C = gaxpy_row(A.T(), A_dense, A_dense); 
+        std::vector<double> CT = gatxpy_row(A, A_dense, A_dense);
 
         REQUIRE_THAT(is_close(C, expect, tol), AllTrue());
+        REQUIRE_THAT(is_close(CT, expect, tol), AllTrue());
     }
 
     SECTION("Test non-square matrix in column-major format.") {
@@ -932,6 +939,10 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
                      AllTrue());
         REQUIRE_THAT(is_close(gaxpy_block(Ab, Ac_dense, A_dense), expect, tol),
                      AllTrue());
+        REQUIRE_THAT(is_close(gatxpy_col(Ab.T(), Ac_dense, A_dense), expect, tol),
+                     AllTrue());
+        REQUIRE_THAT(is_close(gatxpy_block(Ab.T(), Ac_dense, A_dense), expect, tol),
+                     AllTrue());
     }
 
     SECTION("Test non-square matrix in row-major format.") {
@@ -948,6 +959,8 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
         };
 
         REQUIRE_THAT(is_close(gaxpy_row(Ab, Ac_dense, A_dense), expect, tol),
+                     AllTrue());
+        REQUIRE_THAT(is_close(gatxpy_row(Ab.T(), Ac_dense, A_dense), expect, tol),
                      AllTrue());
     }
 }

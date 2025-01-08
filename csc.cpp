@@ -878,7 +878,6 @@ std::vector<double> sym_gaxpy(
 };
 
 
-
 /** Matrix multiply `Y = AX + Y` for column-major dense matrices `X` and `Y`.
  *
  * See: Davis, Exercise 2.27(a).
@@ -1007,6 +1006,127 @@ std::vector<double> gaxpy_row(
                     // Indexing in row-major order
                     out[k + A.i_[p] * K] += A.v_[p] * x_val;
                 }
+            }
+        }
+    }
+
+    return out;
+}
+
+
+/** Matrix multiply `Y = A.T X + Y` for column-major dense matrices `X` and `Y`.
+ *
+ * See: Davis, Exercise 2.28(a).
+ *
+ * @param A  a sparse matrix
+ * @param X  a dense multiplying matrix in column-major order
+ * @param[in,out] Y  a dense adding matrix which will be used for the output
+ *
+ * @return Y a copy of the updated matrix
+ */
+std::vector<double> gatxpy_col(
+    const CSCMatrix& A,
+    const std::vector<double>& X,
+    const std::vector<double>& Y
+    )
+{
+    assert(X.size() % A.M_ == 0);  // check that X.size() is a multiple of A.M_
+    assert(Y.size() == A.N_ * (X.size() / A.M_));
+
+    std::vector<double> out = Y;  // copy the input matrix
+
+    csint K = X.size() / A.M_;  // number of columns in X
+
+    // For each column of X
+    for (csint k = 0; k < K; k++) {
+        // Compute one column of Y (see gaxpy)
+        for (csint j = 0; j < A.N_; j++) {
+            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+                // Indexing in column-major order
+                out[j + k * A.N_] += A.v_[p] * X[A.i_[p] + k * A.M_];
+            }
+        }
+    }
+
+    return out;
+}
+
+
+/** Matrix multiply `Y = A.T X + Y` for column-major dense matrices `X` and `Y`,
+ * but operate on blocks of columns.
+ *
+ * See: Davis, Exercise 2.28(c).
+ *
+ * @param A  a sparse matrix
+ * @param X  a dense multiplying matrix in column-major order
+ * @param[in,out] Y  a dense adding matrix which will be used for the output
+ *
+ * @return Y a copy of the updated matrix
+ */
+std::vector<double> gatxpy_block(
+    const CSCMatrix& A,
+    const std::vector<double>& X,
+    const std::vector<double>& Y
+    )
+{
+    assert(X.size() % A.M_ == 0);  // check that X.size() is a multiple of A.N_
+    assert(Y.size() == A.N_ * (X.size() / A.M_));
+
+    std::vector<double> out = Y;  // copy the input matrix
+
+    csint K = X.size() / A.M_;  // number of columns in X
+
+    const csint BLOCK_SIZE = 32;  // block size for column operations
+
+    // For each column of X
+    for (csint k = 0; k < K; k++) {
+        // Take a block of columns
+        for (csint j_start = 0; j_start < A.N_; j_start += BLOCK_SIZE) {
+            csint j_end = std::min(j_start + BLOCK_SIZE, A.N_);
+            // Compute one column of Y (see gaxpy)
+            for (csint j = j_start; j < j_end; j++) {
+                for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+                    // Indexing in column-major order
+                    out[j + k * A.N_] += A.v_[p] * X[A.i_[p] + k * A.M_];
+                }
+            }
+        }
+    }
+
+    return out;
+}
+
+
+/** Matrix multiply `Y = A.T X + Y` for row-major dense matrices `X` and `Y`.
+ *
+ * See: Davis, Exercise 2.27(b).
+ *
+ * @param A  a sparse matrix
+ * @param X  a dense multiplying matrix in row-major order
+ * @param[in,out] Y  a dense adding matrix which will be used for the output
+ *
+ * @return Y a copy of the updated matrix
+ */
+std::vector<double> gatxpy_row(
+    const CSCMatrix& A,
+    const std::vector<double>& X,
+    const std::vector<double>& Y
+    )
+{
+    assert(X.size() % A.M_ == 0);  // check that X.size() is a multiple of A.N_
+    assert(Y.size() == A.N_ * (X.size() / A.M_));
+
+    std::vector<double> out = Y;  // copy the input matrix
+
+    csint K = X.size() / A.M_;  // number of columns in X
+
+    // For each column of X
+    for (csint k = 0; k < K; k++) {
+        // Compute one column of Y (see gaxpy)
+        for (csint j = 0; j < A.N_; j++) {
+            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+                // Indexing in row-major order
+                out[k + j * K] += A.v_[p] * X[k + A.i_[p] * K];
             }
         }
     }

@@ -156,6 +156,28 @@ class CSCMatrix
             const std::vector<double>& Y
         );
 
+        // Exercise 2.28(a) cs_gatxpy with matrix x, y in column-major order
+        friend std::vector<double> gatxpy_col(
+            const CSCMatrix& A,
+            const std::vector<double>& X,
+            const std::vector<double>& Y
+        );
+
+        // Exercise 2.28(b) cs_gatxpy with matrix x, y in row-major order
+        friend std::vector<double> gatxpy_row(
+            const CSCMatrix& A,
+            const std::vector<double>& X,
+            const std::vector<double>& Y
+        );
+
+        // Exercise 2.28(c) cs_gatxpy with matrix x, y in column-major order, but
+        // operating on blocks of columns
+        friend std::vector<double> gatxpy_block(
+            const CSCMatrix& A,
+            const std::vector<double>& X,
+            const std::vector<double>& Y
+        );
+
         // Exercise 2.4
         CSCMatrix scale(const std::vector<double>& r, const std::vector<double> c) const;
 

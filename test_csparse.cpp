@@ -15,6 +15,8 @@
 // #include <compare>
 #include <iostream>
 #include <fstream>
+#include <numeric>   // for std::iota
+#include <iterator>  // for std::back_inserter
 #include <string>
 #include <sstream>
 #include <ranges>
@@ -889,10 +891,10 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
              6.29,  3.91,  0.0 ,  2.81
         };
 
-        std::vector<double> C_col = gaxpy_col(A.T(), A_dense, A_dense); 
-        std::vector<double> C_block = gaxpy_block(A.T(), A_dense, A_dense); 
+        std::vector<double> C_col = gaxpy_col(A.T(), A_dense, A_dense);
+        std::vector<double> C_block = gaxpy_block(A.T(), A_dense, A_dense);
         std::vector<double> CT_col = gatxpy_col(A, A_dense, A_dense);
-        std::vector<double> CT_block = gatxpy_block(A, A_dense, A_dense); 
+        std::vector<double> CT_block = gatxpy_block(A, A_dense, A_dense);
 
         REQUIRE_THAT(is_close(C_col, expect, tol), AllTrue());
         REQUIRE_THAT(is_close(C_block, expect, tol), AllTrue());
@@ -911,7 +913,7 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
              9.79,  3.41,  0.0 ,  2.81
         };
 
-        std::vector<double> C = gaxpy_row(A.T(), A_dense, A_dense); 
+        std::vector<double> C = gaxpy_row(A.T(), A_dense, A_dense);
         std::vector<double> CT = gatxpy_row(A, A_dense, A_dense);
 
         REQUIRE_THAT(is_close(C, expect, tol), AllTrue());
@@ -1824,6 +1826,51 @@ TEST_CASE("Test triangular solve with dense RHS")
 
         REQUIRE(x.size() == expect.size());
         REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    }
+}
+
+
+TEST_CASE("Reachability and DFS")
+{
+    // Define a lower-triangular matrix L with arbitrary non-zeros
+    std::vector<csint> rows = {2, 3, 4, 6, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 11,
+        11, 12, 12, 12, 12, 13, 13};
+    std::vector<csint> cols = {0, 1, 1, 1, 2, 2, 3, 4, 5, 5, 6, 6,  7,  8,  8,
+        9,  9,  9, 10, 10, 11, 12};
+
+    // Add the diagonals
+    std::vector<csint> diags;
+    std::iota(diags.begin(), diags.end(), 0);
+    rows.insert(rows.end(), diags.begin(), diags.end());
+    cols.insert(cols.end(), diags.begin(), diags.end());
+
+    // Number of values
+    std::vector<double> vals(rows.size(), 1);
+
+    CSCMatrix L = COOMatrix(vals, rows, cols).tocsc();
+    csint N = L.shape()[0];
+
+    // Define the rhs matrix B
+    CSCMatrix B(N, 1);
+
+    // Define the output vectors xi, and x
+    std::vector<csint> xi(N);
+
+    SECTION("Test reachability") {
+        // Assign non-zeros to rows 4 and 6 in column 0
+        B.assign(3, 0, 1.0);
+        std::vector<csint> expect = {3, 8, 11, 12, 13};
+
+        // Fill xi
+        int top = reach(L, B, 0, xi);
+        std::cout << "top = " << top << std::endl;
+        std::cout << "xi = ";
+        print_vec(xi);
+
+        // Get the reachable indices
+        std::vector<csint> reachable(xi.begin() + top, xi.begin() + N);
+
+        REQUIRE(reachable == expect);
     }
 }
 

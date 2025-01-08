@@ -2097,6 +2097,172 @@ std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
 }
 
 
+/** Solve a triangular system \f$ Lx = b_k \f$ for column `k` of `B`.
+ *
+ * @note If `lo` is non-zero, this function assumes that the diagonal entry of
+ * `L` is always present and is the first entry in each column. Otherwise, the
+ * row indices in each column of `L` may appear in any order.
+ * If `lo` is zero, the function assumes that the diagonal entry of `U` is
+ * always present and is the last entry in each column.
+ *
+ * @param G  a triangular matrix
+ * @param B  a dense matrix
+ * @param k  the column index of `B` to solve
+ * @param xi[out]  the row indices of the non-zero entries in `x`. This is
+ *        a vector of length `2*G.N_` that is also used as a workspace. The
+ *        first `G.N_` entries hold the output stack and the recursion stack for
+ *        `j`. The second `G.N_` entries hold the stack for `p` in `dfs`.
+ *        The row indices of the non-zero entries in `x` are stored in
+ *        `xi[top:G.N_-1]` on output.
+ * @param x[out]  the numerical values of the solution vector
+ * @param lo  the lower bound of the diagonal entries of `G`. If `lo` is
+ *        non-zero, the function solves \f$ Lx = b_k`, otherwise it solves
+ *        \f$ Ux = b_k \f$.
+ *
+ * @return top  the index of `xi` where the non-zero entries of `x` begin. They
+ *         are located from `top` through `G.N_ - 1`.
+ */
+int spsolve(
+    CSCMatrix& G,
+    const CSCMatrix& B,
+    csint k,
+    std::vector<csint>& xi,
+    std::vector<double>& x,
+    std::optional<bool> lo 
+    )
+{
+    if (!lo.has_value()) {
+        lo = true;
+    }
+
+    int top = reach(G, B, k, xi);  // xi[top:N-1] = Reach(B[:, k])
+    // Clear x
+    for (csint p = top; p < G.N_; p++) {
+        x[xi[p]] = 0.0;
+    }
+    // scatter B(:, k) into x
+    for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
+        x[B.i_[p]] = B.v_[p];
+    }
+    // Solve Lx = b_k or Ux = b_k
+    for (csint px = top; px < G.N_; px++) {
+        csint j = xi[px];                        // x(j) is nonzero
+        csint J = j;  // j maps to col J of G (NOTE ignore for now)
+        if (J < 0) {
+            continue;                                // x(j) is not in the pattern of G
+        }
+        x[j] /= G.v_[lo ? G.p_[J] : G.p_[J+1] - 1];  // x(j) /= G(j, j)
+        csint p = lo ? G.p_[J] + 1 : G.p_[J];        // lo: L(j,j) 1st entry
+        csint q = lo ? G.p_[J+1]   : G.p_[J+1] - 1;  // up: U(j,j) last entry
+        for (; p < q; p++) {
+            x[G.i_[p]] -= G.v_[p] * x[j];            // x[i] -= G(i, j) * x[j]
+        }
+    }
+
+    return top;
+}
+
+
+/** Compute the reachability indices of a column `k` in a sparse matrix `B`,
+ * given a sparse matrix `G`.
+ *
+ * @param G  a sparse matrix that defines the graph
+ * @param B  a sparse matrix containing the RHS in column `k`
+ * @param k  the column index of `B` containing the RHS
+ * @param xi[out]  the row indices of the non-zero entries in `x`. This is
+ *        a vector of length `2*G.N_` that is also used as a workspace. The
+ *        first `G.N_` entries hold the output stack and the recursion stack for
+ *        `j`. The second `G.N_` entries hold the stack for `p` in `dfs`.
+ *        The row indices of the non-zero entries in `x` are stored in
+ *        `xi[top:G.N_-1]` on output.
+ *
+ * @return top  the index of `xi` where the non-zero entries of `x` begin. They
+ *         are located from `top` through `G.N_ - 1`.
+ */
+int reach(
+    CSCMatrix& G,
+    const CSCMatrix& B,
+    csint k,
+    std::vector<csint>& xi
+    )
+{
+    csint top = G.N_;  // top of the stack
+
+    for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
+        if (!marked(G.p_[B.i_[p]])) {
+            top = dfs(B.i_[p], G, top, xi, xi.data() + G.N_);
+        }
+    }
+
+    // Restore G
+    for (csint p = top; p < G.N_; p++) {
+        mark(G.p_[xi[p]]);
+    }
+
+    return top;
+}
+
+
+/** Perform depth-first search on a graph.
+ *
+ * @param G  a sparse matrix that defines the graph
+ * @param j  the starting node
+ * @param xi[out]  the row indices of the non-zero entries in `x`. This is
+ *        a vector of length `2*G.N_` that is also used as a workspace. The
+ *        first `G.N_` entries hold the output stack and the recursion stack for
+ *        `j`. The second `G.N_` entries hold the stack for `p` in `dfs`.
+ *        The row indices of the non-zero entries in `x` are stored in
+ *        `xi[top:G.N_-1]` on output.
+ *
+ * @return top  the index of `xi` where the non-zero entries of `x` begin. They
+ *         are located from `top` through `G.N_ - 1`.
+ */
+int dfs(
+    csint j,
+    CSCMatrix& G,
+    int top,
+    std::vector<csint>& xi,
+    csint *pstack
+    )
+{
+    assert(pstack);
+    bool done = false;  // true if no unvisited neighbors
+    int head = 0;       // top of the recursion stack
+    xi[0] = j;          // initialize the recursion stack
+
+    while (head >= 0) {
+        j = xi[head];  // get j from the top of the recursion stack
+        csint jnew = j;  // j maps to col jnew of G (NOTE ignore p_inv for now)
+
+        if (!marked(G.p_[j])) {
+            mark(G.p_[j]);  // mark node j as visited
+            pstack[head] = (jnew < 0) ? 0 : unflip(G.p_[jnew]);
+        }
+
+        done = true;  // node j done if no unvisited neighbors
+        csint p2 = (jnew < 0) ? 0 : unflip(G.p_[jnew+1]);
+
+        // examine all neighbors of j
+        for (csint p = pstack[head]; p < p2; p++) {
+            csint i = G.i_[p];       // consider neighbor node i
+            if (!marked(G.p_[i])) {
+                pstack[head] = p;    // pause dfs of node j
+                xi[++head] = i;      // start dfs at node i
+                done = false;        // node j has unvisited neighbors
+                break;
+            }
+        }
+
+        if (done) {
+            head--;         // node j is done; pop it from the stack
+            xi[--top] = j;  // node j is the next on the output stack
+        }
+    }
+
+    return top;
+}
+
+
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/

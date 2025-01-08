@@ -270,6 +270,31 @@ class CSCMatrix
         friend std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b);
         friend std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b);
 
+        // Sparse matrix solve
+        friend int spsolve(
+            CSCMatrix& G,
+	        const CSCMatrix& B,
+	        csint k,
+	        std::vector<csint>& xi,
+	        std::vector<double>& x,
+	        std::optional<bool> lo  // solve Lx = B[:, k] by default
+        );
+
+        friend int reach(
+            CSCMatrix& G,
+            const CSCMatrix& B,
+            csint k,
+            std::vector<csint>& xi
+        );
+
+        friend int dfs(
+            csint j,
+            CSCMatrix& G,
+            int top,
+            std::vector<csint>& xi,
+            csint *pstack
+        );
+
         // ---------- Other
         void print(
             std::ostream& os=std::cout,
@@ -296,6 +321,12 @@ CSCMatrix operator*(const CSCMatrix&, const double);
 CSCMatrix operator*(const double, const CSCMatrix&);
 
 std::ostream& operator<<(std::ostream&, const CSCMatrix&);
+
+// Helper functions for spsolve
+inline static csint flip(csint i) { return -i - 2; }
+inline static csint unflip(csint i) { return i < 0 ? flip(i) : i; }
+inline static bool marked(csint i) { return i < 0; }
+inline static void mark(csint& i) { i = flip(i); }
 
 #endif
 

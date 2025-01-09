@@ -1853,6 +1853,28 @@ TEST_CASE("Reachability and DFS")
     // Define the rhs matrix B
     CSCMatrix B(N, 1);
 
+    SECTION("dfs from a single node") {
+        // Assign non-zeros to rows 3 and 5 in column 0
+        csint j = 3;
+        B.assign(j, 0, 1.0);
+        std::vector<csint> expect = {3, 8, 11, 12, 13};
+
+        // std::vector<csint> xi = dfs(L, B, 0);
+        std::vector<csint> xi(2*N, -1);  // need not be initialized!!
+        int top = dfs(j, L, N, xi, xi.data() + N);
+
+        std::cout << "xi = ";
+        print_vec(xi);
+        std::cout << "top = " << top << std::endl;
+
+        std::vector<csint> reachable(xi.begin() + top, xi.begin() + N);
+
+        std::cout << "reachable = ";
+        print_vec(reachable);
+
+        REQUIRE(reachable == expect);
+    }
+
     SECTION("Reachability from a single node") {
         // Assign non-zeros to rows 3 and 5 in column 0
         B.assign(3, 0, 1.0);

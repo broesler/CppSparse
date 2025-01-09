@@ -2154,12 +2154,6 @@ int spsolve(
 }
 
 
-// TODO rewrite `dfs` function use separate `xi` and `pstack` in `dfs` stacks,
-// and move elements between them.
-//
-// Write out a trace of the Reach(4) call in the example in Davis, p. 35 to see
-// how the algorithm works.
-
 /** Compute the reachability indices of a column `k` in a sparse matrix `B`,
  * given a sparse matrix `G`.
  *
@@ -2177,7 +2171,7 @@ int spsolve(
  *         are located from `top` through `G.N_ - 1`.
  */
 std::vector<csint> reach(
-    CSCMatrix& G,
+    const CSCMatrix& G,
     const CSCMatrix& B,
     csint k
     )
@@ -2185,23 +2179,25 @@ std::vector<csint> reach(
     csint top = G.N_;  // top of the stack
     std::vector<csint> xi;  // workspace
     xi.reserve(2 * G.N_);
+    std::vector<bool> is_marked(G.N_, false);  // workspace
 
     for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
-        if (!marked(G.p_[B.i_[p]])) {
+        if (!is_marked[G.p_[B.i_[p]]]) {
             // Use xi.data() + G.N_ as the pointer to the second stack
-            top = dfs(B.i_[p], G, top, xi, xi.data() + G.N_);
+            top = dfs(B.i_[p], G, top, xi, xi.data() + G.N_, is_marked);
         }
-    }
-
-    // Restore G
-    for (csint p = top; p < G.N_; p++) {
-        mark(G.p_[xi[p]]);
     }
 
     // Return the row indices of the non-zero entries in x
     return std::vector<csint>(xi.begin() + top, xi.begin() + G.N_);
 }
 
+
+// TODO rewrite `dfs` function use separate `xi` and `pstack` in `dfs` stacks,
+// and move elements between them.
+//
+// Write out a trace of the Reach(4) call in the example in Davis, p. 35 to see
+// how the algorithm works.
 
 /** Perform depth-first search on a graph.
  *
@@ -2219,10 +2215,11 @@ std::vector<csint> reach(
  */
 int dfs(
     csint j,
-    CSCMatrix& G,
+    const CSCMatrix& G,
     int top,
     std::vector<csint>& xi,
-    csint *pstack
+    csint *pstack,
+    std::vector<bool>& is_marked
     )
 {
     assert(pstack);
@@ -2234,18 +2231,18 @@ int dfs(
         j = xi[head];  // get j from the top of the recursion stack
         csint jnew = j;  // j maps to col jnew of G (NOTE ignore p_inv for now)
 
-        if (!marked(G.p_[j])) {
-            mark(G.p_[j]);  // mark node j as visited
-            pstack[head] = (jnew < 0) ? 0 : unflip(G.p_[jnew]);
+        if (!is_marked[G.p_[j]]) {
+            is_marked[G.p_[j]] = true;  // mark node j as visited
+            pstack[head] = (jnew < 0) ? 0 : G.p_[jnew];
         }
 
         done = true;  // node j done if no unvisited neighbors
-        csint p2 = (jnew < 0) ? 0 : unflip(G.p_[jnew+1]);
+        csint p2 = (jnew < 0) ? 0 : G.p_[jnew+1];
 
         // examine all neighbors of j
         for (csint p = pstack[head]; p < p2; p++) {
             csint i = G.i_[p];       // consider neighbor node i
-            if (!marked(G.p_[i])) {
+            if (!is_marked[G.p_[i]]) {
                 pstack[head] = p;    // pause dfs of node j
                 xi[++head] = i;      // start dfs at node i
                 done = false;        // node j has unvisited neighbors

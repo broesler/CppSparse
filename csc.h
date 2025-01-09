@@ -281,17 +281,18 @@ class CSCMatrix
         );
 
         friend std::vector<csint> reach(
-            CSCMatrix& G,
+            const CSCMatrix& G,
             const CSCMatrix& B,
             csint k
         );
 
         friend int dfs(
             csint j,
-            CSCMatrix& G,
+            const CSCMatrix& G,
             int top,
             std::vector<csint>& xi,
-            csint *pstack
+            csint *pstack,
+            std::vector<bool>& is_marked
         );
 
         // ---------- Other
@@ -320,12 +321,6 @@ CSCMatrix operator*(const CSCMatrix&, const double);
 CSCMatrix operator*(const double, const CSCMatrix&);
 
 std::ostream& operator<<(std::ostream&, const CSCMatrix&);
-
-// Helper functions for spsolve
-inline static csint flip(csint i) { return -i - 2; }
-inline static csint unflip(csint i) { return i < 0 ? flip(i) : i; }
-inline static bool marked(csint i) { return i < 0; }
-inline static void mark(csint& i) { i = flip(i); }
 
 #endif
 

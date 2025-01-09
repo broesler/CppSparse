@@ -1861,7 +1861,8 @@ TEST_CASE("Reachability and DFS")
 
         // std::vector<csint> xi = dfs(L, B, 0);
         std::vector<csint> xi(2*N, -1);  // need not be initialized!!
-        int top = dfs(j, L, N, xi, xi.data() + N);
+        std::vector<bool> marked(N, false);
+        int top = dfs(j, L, N, xi, xi.data() + N, marked);
 
         std::cout << "xi = ";
         print_vec(xi);

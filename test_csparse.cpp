@@ -1856,7 +1856,12 @@ TEST_CASE("Reachability and DFS")
     // Define the output vector xi
     std::vector<csint> xi(2*N);
 
-    SECTION("Test reachability from a single node") {
+    SECTION("Reachability from a single node") {
+        // std::cout << "L = \n" << std::endl;
+        // print_vec(L.indptr());
+        // print_vec(L.indices());
+        // print_vec(L.data());
+
         // Assign non-zeros to rows 3 and 5 in column 0
         B.assign(3, 0, 1.0);
         std::vector<csint> expect = {3, 8, 11, 12, 13};
@@ -1864,21 +1869,48 @@ TEST_CASE("Reachability and DFS")
         // Fill xi
         int top = reach(L, B, 0, xi);
 
-        // Get the reachable indices
+        // Get the reachable indices (# reachable == N - top)
         std::vector<csint> reachable(xi.begin() + top, xi.begin() + N);
 
-        REQUIRE_THAT(reachable, UnorderedEquals(expect));
+        REQUIRE(reachable == expect);
     }
 
-    SECTION("Test reachability from multiple nodes") {
+    SECTION("Reachability from multiple nodes") {
         // Assign non-zeros to rows 3 and 5 in column 0
-        B.assign(3, 0, 1.0).assign(5, 0, 1.0);
+        B = B.assign(3, 0, 1.0).assign(5, 0, 1.0).to_canonical();
         std::vector<csint> expect = {5, 9, 10, 3, 8, 11, 12, 13};
 
         int top = reach(L, B, 0, xi);
         std::vector<csint> reachable(xi.begin() + top, xi.begin() + N);
 
-        REQUIRE_THAT(reachable, UnorderedEquals(expect));
+        REQUIRE(reachable == expect);
+    }
+
+    SECTION("spsolve with dense RHS") {
+        // Create RHS from sums of rows of L, so that x == ones(N)
+        std::vector<double> b = {1., 1., 2., 2., 2., 1., 2., 3., 4., 4., 3., 3., 5., 3.};
+        for (int i = 0; i < N; i++) {
+            B.assign(i, 0, b[i]);
+        }
+        std::vector<double> expect(N, 1.0);
+
+        std::vector<double> x(N);  // output vector
+        spsolve(L, B, 0, xi, x, true);
+
+        REQUIRE(x == expect);
+    }
+
+    SECTION("spsolve with sparse RHS") {
+        // RHS is just B with non-zeros in the first column
+        B.assign(3, 0, 1.0);
+
+        std::vector<double> expect = { 0.,  0.,  0.,  1.,  0.,  0.,  0.,  0., -1.,  0.,  0.,  1.,  0.,  0.};
+
+        // output initialized to 0.0, since spsolve only touches the non-zeros.
+        std::vector<double> x(N);
+        spsolve(L, B, 0, xi, x, true);
+
+        REQUIRE(x == expect);
     }
 }
 

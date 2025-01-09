@@ -2160,15 +2160,8 @@ int spsolve(
  * @param G  a sparse matrix that defines the graph
  * @param B  a sparse matrix containing the RHS in column `k`
  * @param k  the column index of `B` containing the RHS
- * @param xi[out]  the row indices of the non-zero entries in `x`. This is
- *        a vector of length `2*G.N_` that is also used as a workspace. The
- *        first `G.N_` entries hold the output stack and the recursion stack for
- *        `j`. The second `G.N_` entries hold the stack for `p` in `dfs`.
- *        The row indices of the non-zero entries in `x` are stored in
- *        `xi[top:G.N_]` on output.
- *
- * @return top  the index of `xi` where the non-zero entries of `x` begin. They
- *         are located from `top` through `G.N_ - 1`.
+ * 
+ * @return xi  the row indices of the non-zero entries in `x`.
  */
 std::vector<csint> reach(
     const CSCMatrix& G,
@@ -2176,87 +2169,78 @@ std::vector<csint> reach(
     csint k
     )
 {
-    csint top = G.N_;  // top of the stack
-    std::vector<csint> xi;  // workspace
-    xi.reserve(2 * G.N_);
-    std::vector<bool> is_marked(G.N_, false);  // workspace
+    std::vector<bool> is_marked(G.N_, false);
+    std::vector<csint> xi;
+    xi.reserve(G.N_);
 
     for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
-        if (!is_marked[G.p_[B.i_[p]]]) {
-            // Use xi.data() + G.N_ as the pointer to the second stack
-            top = dfs(B.i_[p], G, top, xi, xi.data() + G.N_, is_marked);
+        csint j = B.i_[p];  // consider nonzero B(j, k)
+        if (!is_marked[j]) {
+            dfs(G, j, is_marked, xi);
         }
     }
 
-    // Return the row indices of the non-zero entries in x
-    return std::vector<csint>(xi.begin() + top, xi.begin() + G.N_);
+    // FIXME xi returned in reverse order.
+    return xi;
 }
 
-
-// TODO rewrite `dfs` function use separate `xi` and `pstack` in `dfs` stacks,
-// and move elements between them.
-//
-// Write out a trace of the Reach(4) call in the example in Davis, p. 35 to see
-// how the algorithm works.
 
 /** Perform depth-first search on a graph.
  *
  * @param G  a sparse matrix that defines the graph
  * @param j  the starting node
- * @param xi[out]  the row indices of the non-zero entries in `x`. This is
- *        a vector of length `2*G.N_` that is also used as a workspace. The
- *        first `G.N_` entries hold the output stack and the recursion stack for
- *        `j`. The second `G.N_` entries hold the stack for `p` in `dfs`.
- *        The row indices of the non-zero entries in `x` are stored in
- *        `xi[top:G.N_-1]` on output.
+ * @param is_marked  a boolean vector of length `G.N_` that marks visited nodes
+ * @param[in,out] xi  the row indices of the non-zero entries in `x`.
  *
- * @return top  the index of `xi` where the non-zero entries of `x` begin. They
- *         are located from `top` through `G.N_ - 1`.
+ * @return xi  a reference to the row indices of the non-zero entries in `x`.
  */
-int dfs(
-    csint j,
+std::vector<csint>& dfs(
     const CSCMatrix& G,
-    int top,
-    std::vector<csint>& xi,
-    csint *pstack,
-    std::vector<bool>& is_marked
+    csint j,
+    std::vector<bool>& is_marked,
+    std::vector<csint>& xi
     )
 {
-    assert(pstack);
-    bool done = false;  // true if no unvisited neighbors
-    int head = 0;       // top of the recursion stack
-    xi[0] = j;          // initialize the recursion stack
+    std::vector<csint> rstack, pstack;  // recursion and pause stacks
+    rstack.reserve(G.N_);
+    pstack.reserve(G.N_);
 
-    while (head >= 0) {
-        j = xi[head];  // get j from the top of the recursion stack
+    rstack.push_back(j);       // initialize the recursion stack
+
+    bool done = false;  // true if no unvisited neighbors
+
+    while (!rstack.empty()) {
+        j = rstack.back();  // get j from the top of the recursion stack
         csint jnew = j;  // j maps to col jnew of G (NOTE ignore p_inv for now)
 
-        if (!is_marked[G.p_[j]]) {
-            is_marked[G.p_[j]] = true;  // mark node j as visited
-            pstack[head] = (jnew < 0) ? 0 : G.p_[jnew];
+        if (!is_marked[j]) {
+            is_marked[j] = true;  // mark node j as visited
+            pstack.push_back((jnew < 0) ? 0 : G.p_[jnew]);
         }
 
         done = true;  // node j done if no unvisited neighbors
-        csint p2 = (jnew < 0) ? 0 : G.p_[jnew+1];
+        csint q = (jnew < 0) ? 0 : G.p_[jnew+1];
 
         // examine all neighbors of j
-        for (csint p = pstack[head]; p < p2; p++) {
-            csint i = G.i_[p];       // consider neighbor node i
-            if (!is_marked[G.p_[i]]) {
-                pstack[head] = p;    // pause dfs of node j
-                xi[++head] = i;      // start dfs at node i
-                done = false;        // node j has unvisited neighbors
+        for (csint p = pstack.back(); p < q; p++) {
+            csint i = G.i_[p];        // consider neighbor node i
+            if (!is_marked[i]) {
+                pstack.back() = p;    // pause dfs of node j
+                rstack.push_back(i);  // start dfs at node i
+                done = false;         // node j has unvisited neighbors
                 break;
             }
         }
 
         if (done) {
-            head--;         // node j is done; pop it from the stack
-            xi[--top] = j;  // node j is the next on the output stack
+            pstack.pop_back();
+            rstack.pop_back();  // node j is done; pop it from the stack
+            xi.push_back(j);    // node j is the next on the output stack
         }
     }
 
-    return top;
+    // FIXME xi returned in reverse order.
+    return xi;
 }
 
 

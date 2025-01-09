@@ -286,13 +286,11 @@ class CSCMatrix
             csint k
         );
 
-        friend int dfs(
-            csint j,
+        friend std::vector<csint>& dfs(
             const CSCMatrix& G,
-            int top,
-            std::vector<csint>& xi,
-            csint *pstack,
-            std::vector<bool>& is_marked
+            csint j,
+            std::vector<bool>& is_marked,
+            std::vector<csint>& xi
         );
 
         // ---------- Other

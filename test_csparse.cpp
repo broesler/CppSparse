@@ -1853,37 +1853,24 @@ TEST_CASE("Reachability and DFS")
     // Define the rhs matrix B
     CSCMatrix B(N, 1);
 
-    // Define the output vector xi
-    std::vector<csint> xi(2*N);
-
     SECTION("Reachability from a single node") {
-        // std::cout << "L = \n" << std::endl;
-        // print_vec(L.indptr());
-        // print_vec(L.indices());
-        // print_vec(L.data());
-
         // Assign non-zeros to rows 3 and 5 in column 0
         B.assign(3, 0, 1.0);
         std::vector<csint> expect = {3, 8, 11, 12, 13};
 
-        // Fill xi
-        int top = reach(L, B, 0, xi);
+        std::vector<csint> xi = reach(L, B, 0);
 
-        // Get the reachable indices (# reachable == N - top)
-        std::vector<csint> reachable(xi.begin() + top, xi.begin() + N);
-
-        REQUIRE(reachable == expect);
+        REQUIRE(xi == expect);
     }
 
     SECTION("Reachability from multiple nodes") {
         // Assign non-zeros to rows 3 and 5 in column 0
-        B = B.assign(3, 0, 1.0).assign(5, 0, 1.0).to_canonical();
+        B.assign(3, 0, 1.0).assign(5, 0, 1.0).to_canonical();
         std::vector<csint> expect = {5, 9, 10, 3, 8, 11, 12, 13};
 
-        int top = reach(L, B, 0, xi);
-        std::vector<csint> reachable(xi.begin() + top, xi.begin() + N);
+        std::vector<csint> xi = reach(L, B, 0);
 
-        REQUIRE(reachable == expect);
+        REQUIRE(xi == expect);
     }
 
     SECTION("spsolve with dense RHS") {
@@ -1895,7 +1882,7 @@ TEST_CASE("Reachability and DFS")
         std::vector<double> expect(N, 1.0);
 
         std::vector<double> x(N);  // output vector
-        spsolve(L, B, 0, xi, x, true);
+        spsolve(L, B, 0, x, true);
 
         REQUIRE(x == expect);
     }
@@ -1908,7 +1895,7 @@ TEST_CASE("Reachability and DFS")
 
         // output initialized to 0.0, since spsolve only touches the non-zeros.
         std::vector<double> x(N);
-        spsolve(L, B, 0, xi, x, true);
+        spsolve(L, B, 0, x, true);
 
         REQUIRE(x == expect);
     }

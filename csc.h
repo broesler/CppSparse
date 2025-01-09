@@ -275,16 +275,15 @@ class CSCMatrix
             CSCMatrix& G,
 	        const CSCMatrix& B,
 	        csint k,
-	        std::vector<csint>& xi,
+	        // std::vector<csint>& xi,
 	        std::vector<double>& x,
-	        std::optional<bool> lo  // solve Lx = B[:, k] by default
+	        bool lo
         );
 
-        friend int reach(
+        friend std::vector<csint> reach(
             CSCMatrix& G,
             const CSCMatrix& B,
-            csint k,
-            std::vector<csint>& xi
+            csint k
         );
 
         friend int dfs(

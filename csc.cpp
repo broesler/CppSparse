@@ -2118,27 +2118,26 @@ int spsolve(
     CSCMatrix& G,
     const CSCMatrix& B,
     csint k,
-    std::vector<csint>& xi,
+    // std::vector<csint>& xi,  // TODO figure out how to return xi and x
     std::vector<double>& x,
-    std::optional<bool> lo 
+    bool lo
     )
 {
-    if (!lo.has_value()) {
-        lo = true;
+    // Populate xi with the non-zero indices of x
+    std::vector<csint> xi = reach(G, B, k);
+
+    // Clear non-zeros of x
+    for (auto& i : xi) {
+        x[i] = 0.0;
     }
 
-    int top = reach(G, B, k, xi);  // xi[top:N-1] = Reach(B[:, k])
-    // Clear x
-    for (csint p = top; p < G.N_; p++) {
-        x[xi[p]] = 0.0;
-    }
     // scatter B(:, k) into x
     for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
         x[B.i_[p]] = B.v_[p];
     }
+
     // Solve Lx = b_k or Ux = b_k
-    for (csint px = top; px < G.N_; px++) {
-        csint j = xi[px];                        // x(j) is nonzero
+    for (auto& j : xi) {  // x(j) is nonzero
         csint J = j;  // j maps to col J of G (NOTE ignore for now)
         if (J < 0) {
             continue;                                // x(j) is not in the pattern of G
@@ -2151,9 +2150,15 @@ int spsolve(
         }
     }
 
-    return top;
+    return 0;
 }
 
+
+// TODO rewrite `dfs` function use separate `xi` and `pstack` in `dfs` stacks,
+// and move elements between them.
+//
+// Write out a trace of the Reach(4) call in the example in Davis, p. 35 to see
+// how the algorithm works.
 
 /** Compute the reachability indices of a column `k` in a sparse matrix `B`,
  * given a sparse matrix `G`.
@@ -2166,22 +2171,24 @@ int spsolve(
  *        first `G.N_` entries hold the output stack and the recursion stack for
  *        `j`. The second `G.N_` entries hold the stack for `p` in `dfs`.
  *        The row indices of the non-zero entries in `x` are stored in
- *        `xi[top:G.N_-1]` on output.
+ *        `xi[top:G.N_]` on output.
  *
  * @return top  the index of `xi` where the non-zero entries of `x` begin. They
  *         are located from `top` through `G.N_ - 1`.
  */
-int reach(
+std::vector<csint> reach(
     CSCMatrix& G,
     const CSCMatrix& B,
-    csint k,
-    std::vector<csint>& xi
+    csint k
     )
 {
     csint top = G.N_;  // top of the stack
+    std::vector<csint> xi;  // workspace
+    xi.reserve(2 * G.N_);
 
     for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
         if (!marked(G.p_[B.i_[p]])) {
+            // Use xi.data() + G.N_ as the pointer to the second stack
             top = dfs(B.i_[p], G, top, xi, xi.data() + G.N_);
         }
     }
@@ -2191,7 +2198,8 @@ int reach(
         mark(G.p_[xi[p]]);
     }
 
-    return top;
+    // Return the row indices of the non-zero entries in x
+    return std::vector<csint>(xi.begin() + top, xi.begin() + G.N_);
 }
 
 

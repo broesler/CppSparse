@@ -50,7 +50,7 @@ class CSCMatrix
         csint nzmax() const;                 // maximum number of non-zeros
         std::array<csint, 2> shape() const;  // the dimensions of the matrix
 
-        CSCMatrix to_canonical() const;
+        CSCMatrix& to_canonical();
         bool has_sorted_indices() const;
         bool has_canonical_format() const;
         bool is_symmetric() const;  // Exercise 2.13

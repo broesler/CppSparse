@@ -166,7 +166,7 @@ const std::vector<csint>& CSCMatrix::indptr() const { return p_; }
 const std::vector<double>& CSCMatrix::data() const { return v_; }
 
 
-/** Convert a CSCMatrix to canonical format.
+/** Convert a CSCMatrix to canonical format in-place.
  *
  * The columns are guaranteed to be sorted, no duplicates are allowed, and no
  * numerically zero entries are allowed.
@@ -175,16 +175,15 @@ const std::vector<double>& CSCMatrix::data() const { return v_; }
  *
  * See: Davis, Exercise 2.9.
  *
- * @return a copy of the `CSCMatrix` in canonical format.
+ * @return a reference to itself for method chaining.
  */
-CSCMatrix CSCMatrix::to_canonical() const
+CSCMatrix& CSCMatrix::to_canonical()
 {
-    CSCMatrix C = *this;
-    C.sum_duplicates();
-    C.dropzeros();
-    C.sort();
-    C.has_canonical_format_ = true;
-    return C;
+    sum_duplicates();
+    dropzeros();
+    sort();
+    has_canonical_format_ = true;
+    return *this;
 }
 
 

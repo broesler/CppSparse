@@ -25,6 +25,7 @@
 
 using Catch::Matchers::AllTrue;
 using Catch::Matchers::WithinAbs;
+using Catch::Matchers::UnorderedEquals;
 
 constexpr double tol = 1e-14;
 
@@ -1832,45 +1833,52 @@ TEST_CASE("Test triangular solve with dense RHS")
 
 TEST_CASE("Reachability and DFS")
 {
+    csint N = 14;  // size of L
+
     // Define a lower-triangular matrix L with arbitrary non-zeros
-    std::vector<csint> rows = {2, 3, 4, 6, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 11,
-        11, 12, 12, 12, 12, 13, 13};
-    std::vector<csint> cols = {0, 1, 1, 1, 2, 2, 3, 4, 5, 5, 6, 6,  7,  8,  8,
-        9,  9,  9, 10, 10, 11, 12};
+    std::vector<csint> rows = {2, 3, 4, 6, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 11, 11, 12, 12, 12, 12, 13, 13};
+    std::vector<csint> cols = {0, 1, 2, 1, 2, 4, 1, 3, 5, 5, 6, 7,  6,  9,  8, 10,  8,  9, 10, 11,  9, 12};
 
     // Add the diagonals
-    std::vector<csint> diags;
+    std::vector<csint> diags(N);
     std::iota(diags.begin(), diags.end(), 0);
     rows.insert(rows.end(), diags.begin(), diags.end());
     cols.insert(cols.end(), diags.begin(), diags.end());
 
-    // Number of values
+    // All values are 1 (system mot actually solved)
     std::vector<double> vals(rows.size(), 1);
 
     CSCMatrix L = COOMatrix(vals, rows, cols).tocsc();
-    csint N = L.shape()[0];
 
     // Define the rhs matrix B
     CSCMatrix B(N, 1);
 
-    // Define the output vectors xi, and x
-    std::vector<csint> xi(N);
+    // Define the output vector xi
+    std::vector<csint> xi(2*N);
 
-    SECTION("Test reachability") {
-        // Assign non-zeros to rows 4 and 6 in column 0
+    SECTION("Test reachability from a single node") {
+        // Assign non-zeros to rows 3 and 5 in column 0
         B.assign(3, 0, 1.0);
         std::vector<csint> expect = {3, 8, 11, 12, 13};
 
         // Fill xi
         int top = reach(L, B, 0, xi);
-        std::cout << "top = " << top << std::endl;
-        std::cout << "xi = ";
-        print_vec(xi);
 
         // Get the reachable indices
         std::vector<csint> reachable(xi.begin() + top, xi.begin() + N);
 
-        REQUIRE(reachable == expect);
+        REQUIRE_THAT(reachable, UnorderedEquals(expect));
+    }
+
+    SECTION("Test reachability from multiple nodes") {
+        // Assign non-zeros to rows 3 and 5 in column 0
+        B.assign(3, 0, 1.0).assign(5, 0, 1.0);
+        std::vector<csint> expect = {5, 9, 10, 3, 8, 11, 12, 13};
+
+        int top = reach(L, B, 0, xi);
+        std::vector<csint> reachable(xi.begin() + top, xi.begin() + N);
+
+        REQUIRE_THAT(reachable, UnorderedEquals(expect));
     }
 }
 

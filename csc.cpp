@@ -71,15 +71,8 @@ CSCMatrix::CSCMatrix(csint M, csint N, csint nzmax)
  *
  * @return a copy of the `COOMatrix` in canonical CSC format.
  */
-CSCMatrix::CSCMatrix(const COOMatrix& A)
+CSCMatrix::CSCMatrix(const COOMatrix& A) : CSCMatrix(A.compress())
 {
-    CSCMatrix C = A.compress();
-    p_ = C.p_;
-    i_ = C.i_;
-    v_ = C.v_;
-    M_ = C.M_;
-    N_ = C.N_;
-
     sum_duplicates();  // O(N) space, O(nnz) time
     dropzeros();       // O(nnz) time
     sort();            // O(M) space, O(M + N + nnz) time

@@ -32,7 +32,36 @@ std::vector<double> operator+(
     return out;
 }
 
-// TODO operator- for unary vector and vector-vector
+/** Unary minus operator for a vector */
+std::vector<double> operator-(const std::vector<double>& a)
+{
+    std::vector<double> out(a.size());
+
+    for (csint i = 0; i < a.size(); i++) {
+        out[i] = -a[i];
+    }
+
+    return out;
+}
+
+
+/** Vector-vector subtraction */
+std::vector<double> operator-(
+    const std::vector<double>& a,
+    const std::vector<double>& b
+    )
+{
+    assert(a.size() == b.size());
+
+    std::vector<double> out(a.size());
+
+    for (csint i = 0; i < a.size(); i++) {
+        out[i] = a[i] - b[i];
+    }
+
+    return out;
+}
+
 
 /** Scale a vector by a scalar */
 std::vector<double> operator*(const double c, const std::vector<double>& vec)

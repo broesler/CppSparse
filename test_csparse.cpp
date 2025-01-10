@@ -211,6 +211,16 @@ TEST_CASE("Test vector ops", "[vector]")
 
         REQUIRE((a + b) == std::vector<double>{5, 7, 9});
     }
+
+    SECTION("Negate a vector") {
+        REQUIRE(-a == std::vector<double>{-1, -2, -3});
+    }
+
+    SECTION("Subtract two vectors") {
+        std::vector<double> b = {4, 5, 6};
+
+        REQUIRE((a - b) == std::vector<double>{-3, -3, -3});
+    }
 }
 
 

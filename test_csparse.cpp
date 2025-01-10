@@ -99,8 +99,7 @@ auto compare_noncanonical(const CSCMatrix& C, const CSCMatrix& expect)
     REQUIRE(C.nnz() == expect.nnz());
     REQUIRE(C.shape() == expect.shape());
 
-    csint M, N;
-    std::tie(M, N) = C.shape();
+    auto [M, N] = C.shape();
 
     for (csint i = 0; i < M; i++) {
         for (csint j = 0; j < N; j++) {
@@ -526,8 +525,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         auto transpose_test = [](CSCMatrix C) {
             CSCMatrix C_T = C.transpose();
 
-            csint M, N;
-            std::tie(M, N) = C.shape();
+            auto [M, N] = C.shape();
 
             REQUIRE(C.nnz() == C_T.nnz());
             REQUIRE(M == C_T.shape()[1]);
@@ -988,8 +986,7 @@ TEST_CASE("Matrix-matrix multiply.", "[math]")
             const CSCMatrix& A,
             const CSCMatrix& expect
         ) {
-            csint M, N;
-            std::tie(M, N) = C.shape();
+            auto [M, N] = C.shape();
 
             REQUIRE(M == E.shape()[0]);
             REQUIRE(N == A.shape()[1]);
@@ -1047,8 +1044,7 @@ TEST_CASE("Matrix-matrix multiply.", "[math]")
         ).compress();
 
         CSCMatrix C = A * B;
-        csint M, N;
-        std::tie(M, N) = C.shape();
+        auto [M, N] = C.shape();
 
         REQUIRE(M == A.shape()[0]);
         REQUIRE(N == B.shape()[1]);
@@ -1110,8 +1106,7 @@ TEST_CASE("Scaling by a constant", "[math]")
         i, j
     ).compress();
 
-    csint M, N;
-    std::tie(M, N) = A.shape();
+    auto [M, N] = A.shape();
 
     // Test operator overloading
     CSCMatrix C = 0.1 * A;
@@ -1145,8 +1140,7 @@ TEST_CASE("Scale rows and columns", "[math]")
 
     CSCMatrix RAC = A.scale(r, c);
 
-    csint M, N;
-    std::tie(M, N) = A.shape();
+    auto [M, N] = A.shape();
 
     for (csint i = 0; i < M; i++) {
         for (csint j = 0; j < N; j++) {
@@ -1190,9 +1184,6 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
             i, j
         ).compress();
 
-        csint M, N;
-        std::tie(M, N) = A.shape();
-
         // Test function definition
         CSCMatrix Cf = add_scaled(A, B, 0.1, 9.0);
 
@@ -1223,8 +1214,7 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
             std::vector<csint>  (6, 0)
         ).tocsc();
 
-        csint M, N;
-        std::tie(M, N) = a.shape();
+        auto [M, N] = a.shape();
 
         SECTION("Test operator") {
             CSCMatrix C = a + b;

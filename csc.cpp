@@ -740,8 +740,7 @@ CSCMatrix& CSCMatrix::droptol(double tol)
 /** Return true if `A(i, j)` is within the diagonals `limits = {lower, upper}`. */
 bool CSCMatrix::in_band(csint i, csint j, double Aij, void *limits)
 {
-    csint kl, ku;        // extract lower/upper diagonals
-    std::tie(kl, ku) = *((std::array<csint, 2> *) limits);
+    auto [kl, ku] = *((std::array<csint, 2> *) limits);
     return ((i <= (j - kl)) && (i >= (j - ku)));
 };
 
@@ -1196,9 +1195,8 @@ CSCMatrix CSCMatrix::dot(const double c) const
  */
 CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
 {
-    csint M, Ka, Kb, N;
-    std::tie(M, Ka) = shape();
-    std::tie(Kb, N) = B.shape();
+    auto [M, Ka] = shape();
+    auto [Kb, N] = B.shape();
     assert(Ka == Kb);
 
     // NOTE See Problem 2.20 for how to compute nnz(A*B)
@@ -1254,9 +1252,8 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
  */
 CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
 {
-    csint M, Ka, Kb, N;
-    std::tie(M, Ka) = shape();
-    std::tie(Kb, N) = B.shape();
+    auto [M, Ka] = shape();
+    auto [Kb, N] = B.shape();
     assert(Ka == Kb);
 
     // Allocate workspace
@@ -1393,8 +1390,7 @@ CSCMatrix add_scaled(
     )
 {
     assert(A.shape() == B.shape());
-    csint M, N;
-    std::tie(M, N) = A.shape();
+    auto [M, N] = A.shape();
 
     CSCMatrix C(M, N, A.nnz() + B.nnz());  // output
 

@@ -163,10 +163,7 @@ int main()
     // Define temporary vector to store sample times
     std::vector<double> sample_times(N_samples);
 
-    for (const auto& pair : gaxpy_funcs) {
-        const std::string name = pair.first;
-        const auto gaxpy_func = pair.second;
-
+    for (const auto& [name, gaxpy_func] : gaxpy_funcs) {
         // Initialize the results struct
         times[name] = TimeStats(Ns.size());
 

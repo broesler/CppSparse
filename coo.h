@@ -91,10 +91,10 @@ class COOMatrix
 };
 
 // Operator overloads
-std::ostream& operator<<(std::ostream&, const COOMatrix&);
+std::ostream& operator<<(std::ostream& os, const COOMatrix& A);
 
 // Exercise 2.10
-std::vector<double> operator*(const COOMatrix&, const std::vector<double>&);
+std::vector<double> operator*(const COOMatrix& A, const std::vector<double>& x);
 
 #endif
 

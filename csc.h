@@ -310,14 +310,14 @@ class CSCMatrix
 /*------------------------------------------------------------------------------
  *          Free Functions
  *----------------------------------------------------------------------------*/
-CSCMatrix operator+(const CSCMatrix&, const CSCMatrix&);
+CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B);
 
-std::vector<double> operator*(const CSCMatrix&, const std::vector<double>&);
-CSCMatrix operator*(const CSCMatrix&, const CSCMatrix&);
-CSCMatrix operator*(const CSCMatrix&, const double);
-CSCMatrix operator*(const double, const CSCMatrix&);
+std::vector<double> operator*(const CSCMatrix& A, const std::vector<double>& B);
+CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B);
+CSCMatrix operator*(const CSCMatrix& A, const double c);
+CSCMatrix operator*(const double c, const CSCMatrix& A);
 
-std::ostream& operator<<(std::ostream&, const CSCMatrix&);
+std::ostream& operator<<(std::ostream& os, const CSCMatrix& A);
 
 #endif
 

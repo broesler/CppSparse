@@ -2170,17 +2170,19 @@ std::vector<csint> reach(
     )
 {
     std::vector<bool> is_marked(G.N_, false);
-    std::vector<csint> xi;
+    std::vector<csint> xi;  // do not initialize for dfs call!
     xi.reserve(G.N_);
 
     for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
         csint j = B.i_[p];  // consider nonzero B(j, k)
         if (!is_marked[j]) {
-            dfs(G, j, is_marked, xi);
+            xi = dfs(G, j, is_marked, xi);
         }
     }
 
-    // FIXME xi returned in reverse order.
+    // xi is returned from dfs in reverse order, since it is a stack
+    xi.shrink_to_fit();                  // free unused memory
+    std::reverse(xi.begin(), xi.end());  // O(N)
     return xi;
 }
 
@@ -2190,7 +2192,9 @@ std::vector<csint> reach(
  * @param G  a sparse matrix that defines the graph
  * @param j  the starting node
  * @param is_marked  a boolean vector of length `G.N_` that marks visited nodes
- * @param[in,out] xi  the row indices of the non-zero entries in `x`.
+ * @param[in,out] xi  the row indices of the non-zero entries in `x`. This
+ *      vector is used as a stack to store the output. It should not be
+ *      initialized, other than by a previous call to `dfs`.
  *
  * @return xi  a reference to the row indices of the non-zero entries in `x`.
  */
@@ -2239,7 +2243,6 @@ std::vector<csint>& dfs(
         }
     }
 
-    // FIXME xi returned in reverse order.
     return xi;
 }
 

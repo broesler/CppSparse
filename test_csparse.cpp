@@ -1857,16 +1857,13 @@ TEST_CASE("Reachability and DFS")
         // Assign non-zeros to rows 3 and 5 in column 0
         csint j = 3;
         B.assign(j, 0, 1.0);
-        std::vector<csint> expect = {3, 8, 11, 12, 13};
+        std::vector<csint> expect = {13, 12, 11, 8, 3};  // reversed in stack
 
         std::vector<bool> is_marked(N, false);
-        std::vector<csint> xi;  // need not be initialized!!
+        std::vector<csint> xi;  // do not initialize!
         xi.reserve(N);
 
-        dfs(L, j, is_marked, xi);
-
-        std::cout << "xi = ";
-        print_vec(xi);
+        xi = dfs(L, j, is_marked, xi);
 
         REQUIRE(xi == expect);
     }

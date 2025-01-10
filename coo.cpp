@@ -248,6 +248,7 @@ CSCMatrix COOMatrix::compress() const
 
     // Column pointers are the cumulative sum
     C.p_ = cumsum(w);
+    w = C.p_;  // copy back into workspace
 
     for (csint k = 0; k < nnz_; k++) {
         // A(i, j) is the pth entry in the CSC matrix

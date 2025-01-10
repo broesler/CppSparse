@@ -221,7 +221,6 @@ TEST_CASE("Test cumsum", "[vector]")
     std::vector<csint> c = cumsum(a);
     std::vector<csint> expect = {0, 1, 2, 3, 4};
     REQUIRE(c == expect);
-    REQUIRE(a == expect);  // result also copied into input!!
     REQUIRE(&a != &c);
 }
 

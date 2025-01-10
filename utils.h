@@ -12,6 +12,7 @@
 
 #include <numeric>  // std::iota
 
+// TODO include argument names in all function declarations
 std::vector<double> operator+(
     const std::vector<double>&,
     const std::vector<double>&
@@ -26,7 +27,7 @@ std::vector<double> ipvec(const std::vector<csint>&, const std::vector<double>&)
 
 std::vector<csint> inv_permute(const std::vector<csint>&);
 
-std::vector<csint> cumsum(std::vector<csint>&);
+std::vector<csint> cumsum(const std::vector<csint>&);
 
 
 /*------------------------------------------------------------------------------

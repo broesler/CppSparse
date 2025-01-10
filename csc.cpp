@@ -493,8 +493,8 @@ CSCMatrix CSCMatrix::transpose() const
         w[i_[p]]++;
 
     // Row pointers are the cumulative sum of the counts, starting with 0.
-    // Also copy the cumulative sum back into the workspace for iteration
     C.p_ = cumsum(w);
+    w = C.p_;  // copy back into workspace
 
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {
@@ -592,8 +592,8 @@ CSCMatrix& CSCMatrix::sort()
         w[i_[p]]++;
 
     // Row pointers are the cumulative sum of the counts, starting with 0.
-    // Also copy the cumulative sum back into the workspace for iteration
     C.p_ = cumsum(w);
+    w = C.p_;  // copy back into workspace
 
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {
@@ -1598,8 +1598,8 @@ CSCMatrix CSCMatrix::symperm(const std::vector<csint> p_inv) const
     }
 
     // Row pointers are the cumulative sum of the counts, starting with 0.
-    // Also copy the cumulative sum back into the workspace for iteration
     C.p_ = cumsum(w);
+    w = C.p_;  // copy back into workspace
 
     for (csint j = 0; j < N_; j++) {
         csint j2 = p_inv[j];  // column j of A is column j2 of C
@@ -1646,6 +1646,7 @@ CSCMatrix CSCMatrix::permute_transpose(
         w[p_inv[i_[p]]]++;
 
     C.p_ = cumsum(w);
+    w = C.p_;  // copy back into workspace
 
     // place A(i, j) as C(j, i) (permuted)
     for (csint j = 0; j < N_; j++) {

@@ -129,22 +129,18 @@ std::vector<csint> inv_permute(const std::vector<csint>& p)
 }
 
 
-/** Compute the cumulative sum of a vector, starting with 0, and also copy the
- * result back into the vector.
+/** Compute the cumulative sum of a vector, starting with 0.
  *
- * @param[in,out] w  a reference to a vector of length N.
+ * @param w  a reference to a vector of length N.
  *
  * @return p  the cumulative sum of `w`, of length N + 1.
  */
-std::vector<csint> cumsum(std::vector<csint>& w)
+std::vector<csint> cumsum(const std::vector<csint>& w)
 {
     std::vector<csint> out(w.size() + 1);
 
     // Row pointers are the cumulative sum of the counts, starting with 0
     std::partial_sum(w.begin(), w.end(), out.begin() + 1);
-
-    // Also copy the cumulative sum back into the workspace for iteration
-    w = out;
 
     return out;
 }

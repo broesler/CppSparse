@@ -389,9 +389,6 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         std::ifstream fp("./data/t1");
         COOMatrix F(fp);
 
-        // TODO implement A == F? Doesn't really work since we don't make any
-        // guarantees on the order of the elements. It would essentially just
-        // convert them to CSCMatrix, sort columns, and then compare.
         REQUIRE(A.row() == F.row());
         REQUIRE(A.column() == F.column());
         REQUIRE(A.data() == F.data());

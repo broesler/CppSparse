@@ -91,7 +91,7 @@ void write_json_results(
 
     // Write the Ns vector
     fp << "  \"Ns\": ";
-    print_vec(Ns, fp, ",\n");
+    fp << Ns << ",\n";
 
     // Write the result times
     for (auto it = times.begin(); it != times.end(); it++) {
@@ -100,10 +100,10 @@ void write_json_results(
 
         fp << "  \"" << name << "\": {\n";
         fp << "    \"mean\": ";
-        print_vec(ts.mean, fp, ",\n");
+        fp << ts.mean << ",\n";
 
         fp << "    \"std_dev\": ";
-        print_vec(ts.std_dev, fp, "\n");
+        fp << ts.std_dev << "\n";
 
         if (std::next(it) == times.end())  // last entry in sorted map
             fp << "  }\n";
@@ -117,6 +117,9 @@ void write_json_results(
 }
 
 
+/*------------------------------------------------------------------------------
+ *         Main Loop 
+ *----------------------------------------------------------------------------*/
 int main()
 {
     // Declare constants

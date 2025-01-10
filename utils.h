@@ -12,7 +12,6 @@
 
 #include <numeric>  // std::iota
 
-// TODO include argument names in all function declarations
 std::vector<double> operator+(
     const std::vector<double>&,
     const std::vector<double>&
@@ -22,20 +21,23 @@ std::vector<double> operator*(const double, const std::vector<double>&);
 std::vector<double> operator*(const std::vector<double>&, const double);
 std::vector<double>& operator*=(std::vector<double>&, const double);
 
-std::vector<double> pvec(const std::vector<csint>&, const std::vector<double>&);
-std::vector<double> ipvec(const std::vector<csint>&, const std::vector<double>&);
+std::vector<double> pvec(const std::vector<csint>& p, const std::vector<double>& b);
+std::vector<double> ipvec(const std::vector<csint>& p, const std::vector<double>& b);
 
-std::vector<csint> inv_permute(const std::vector<csint>&);
+std::vector<csint> inv_permute(const std::vector<csint>& p);
 
-std::vector<csint> cumsum(const std::vector<csint>&);
-
+std::vector<csint> cumsum(const std::vector<csint>& w);
 
 /*------------------------------------------------------------------------------
  *         Declare Template Functions
  *----------------------------------------------------------------------------*/
 /** Print a std::vector. */
 template <typename T>
-void print_vec(const std::vector<T>& vec, std::ostream& os=std::cout, const std::string end="\n")
+void print_vec(
+    const std::vector<T>& vec,
+    std::ostream& os=std::cout,
+    const std::string end="\n"
+)
 {
     os << "[";
     for (int i = 0; i < vec.size(); i++) {
@@ -45,6 +47,15 @@ void print_vec(const std::vector<T>& vec, std::ostream& os=std::cout, const std:
         }
     }
     os << "]" << end;
+}
+
+
+/** Print a std::vector to an output stream. */
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
+{
+    print_vec(vec, os, "");
+    return os;
 }
 
 

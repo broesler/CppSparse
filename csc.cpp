@@ -138,7 +138,6 @@ CSCMatrix& CSCMatrix::realloc(csint nzmax)
 {
     csint Z = (nzmax <= 0) ? p_[N_] : nzmax;
 
-    // TODO review uses and potentially use "reserve" when Z > nnz()
     p_.resize(N_ + 1);  // always contains N_ columns + nz
     i_.resize(Z);
     v_.resize(Z);
@@ -1168,12 +1167,6 @@ std::vector<double> CSCMatrix::dot(const std::vector<double>& x) const
 }
 
 
-// TODO test left-multiply
-// std::vector<double> operator*(const std::vector<double>& x, const CSCMatrix& A)
-// {
-//     return (A.T() * x).T
-// }
-
 /** Scale a matrix by a scalar */
 CSCMatrix CSCMatrix::dot(const double c) const
 {
@@ -1229,10 +1222,6 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
     // Finalize and deallocate unused memory
     C.p_[N] = nz;
     C.realloc();
-
-    // TODO put into canonical format and test
-    // C = C.dropzeros().sort();
-    // C.has_canonical_format_ = true;
 
     return C;
 }
@@ -1306,10 +1295,6 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
     // Finalize and deallocate unused memory
     C.p_[N] = nz;
     C.realloc();
-
-    // TODO put into canonical format and test
-    // C = C.dropzeros().sort();
-    // C.has_canonical_format_ = true;
 
     return C;
 }
@@ -1416,8 +1401,6 @@ CSCMatrix add_scaled(
     // Finalize and deallocate unused memory
     C.p_[N] = nz;
     C.realloc();
-
-    // TODO put into canonical format and test
 
     return C;
 }
@@ -1544,7 +1527,6 @@ CSCMatrix CSCMatrix::permute(
     const std::vector<csint> q
     ) const
 {
-    // TODO check lengths of p_inv and q
     CSCMatrix C(M_, N_, nnz());
     csint nz = 0;
 
@@ -1633,7 +1615,6 @@ CSCMatrix CSCMatrix::permute_transpose(
     const std::vector<csint>& q_inv
     ) const
 {
-    // TODO check lengths of p_inv and q
     std::vector<csint> w(M_);    // workspace
     CSCMatrix C(N_, M_, nnz());  // output
 
@@ -1653,7 +1634,6 @@ CSCMatrix CSCMatrix::permute_transpose(
         }
     }
 
-    // TODO convert to canonical format
     return C;
 }
 
@@ -1680,7 +1660,6 @@ double CSCMatrix::norm() const
 }
 
 
-// TODO raise appropriate errors with informative messages
 /** Check a matrix for valid compressed sparse column format.
  *
  * See: Davis, Exercise 2.12 "cs_ok"
@@ -1818,7 +1797,6 @@ CSCMatrix CSCMatrix::slice(
     const csint j_end
     ) const
 {
-    // TODO may be able to relax last condition and return empty matrix?
     assert((i_start >= 0) && (i_end <= M_) && (i_start < i_end));
     assert((j_start >= 0) && (j_end <= N_) && (j_start < j_end));
 

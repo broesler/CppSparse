@@ -36,7 +36,7 @@ class CSCMatrix
             const std::vector<double>& vals,
             const std::vector<csint>& indices,
             const std::vector<csint>& indptr,
-            const std::array<csint, 2>& shape
+            const Shape& shape
         );
 
         CSCMatrix(csint M, csint N, csint nzmax=0);  // allocate dims + nzmax
@@ -48,7 +48,7 @@ class CSCMatrix
         // ---------- Accessors
         csint nnz() const;                   // number of non-zeros
         csint nzmax() const;                 // maximum number of non-zeros
-        std::array<csint, 2> shape() const;  // the dimensions of the matrix
+        Shape shape() const;  // the dimensions of the matrix
 
         CSCMatrix& to_canonical();
         bool has_sorted_indices() const;

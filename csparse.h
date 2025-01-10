@@ -18,7 +18,8 @@
 #include <string>
 #include <vector>
 
-typedef std::int64_t csint;  // TODO just change to "int" for simplicity?
+using csint = std::int64_t;
+using Shape = std::array<csint, 2>;
 
 // Pre-declare classes for type conversions
 class COOMatrix;

@@ -269,14 +269,14 @@ TEST_CASE("Test COOMatrix Constructors", "[COOMatrix]")
 
         REQUIRE(A.nnz() == 0);
         REQUIRE(A.nzmax() == 0);
-        REQUIRE(A.shape() == std::array<csint, 2>{0, 0});
+        REQUIRE(A.shape() == Shape{0, 0});
     }
 
     SECTION("Make new from given shape") {
         COOMatrix A(56, 37);
         REQUIRE(A.nnz() == 0);
         REQUIRE(A.nzmax() == 0);
-        REQUIRE(A.shape() == std::array<csint, 2>{56, 37});
+        REQUIRE(A.shape() == Shape{56, 37});
     }
 
     SECTION("Allocate new from shape and nzmax") {
@@ -284,7 +284,7 @@ TEST_CASE("Test COOMatrix Constructors", "[COOMatrix]")
         COOMatrix A(56, 37, nzmax);
         REQUIRE(A.nnz() == 0);
         REQUIRE(A.nzmax() >= nzmax);
-        REQUIRE(A.shape() == std::array<csint, 2>{56, 37});
+        REQUIRE(A.shape() == Shape{56, 37});
     }
 
 }
@@ -301,7 +301,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
     SECTION("Test attributes") {
         REQUIRE(A.nnz() == 10);
         REQUIRE(A.nzmax() >= 10);
-        REQUIRE(A.shape() == std::array<csint, 2>{4, 4});
+        REQUIRE(A.shape() == Shape{4, 4});
         REQUIRE(A.row() == i);
         REQUIRE(A.column() == j);
         REQUIRE(A.data() == v);
@@ -356,7 +356,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
 
         REQUIRE(A.nnz() == 11);
         REQUIRE(A.nzmax() >= 11);
-        REQUIRE(A.shape() == std::array<csint, 2>{4, 4});
+        REQUIRE(A.shape() == Shape{4, 4});
         // REQUIRE_THAT(A(3, 3), WithinAbs(57.0, tol));
     }
 
@@ -365,7 +365,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
 
         REQUIRE(A.nnz() == 11);
         REQUIRE(A.nzmax() >= 11);
-        REQUIRE(A.shape() == std::array<csint, 2>{5, 4});
+        REQUIRE(A.shape() == Shape{5, 4});
         // REQUIRE_THAT(A(4, 3), WithinAbs(69.0, tol));
     }
 
@@ -379,7 +379,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
 
         REQUIRE(A.nnz() == 19);
         REQUIRE(A.nzmax() >= 19);
-        REQUIRE(A.shape() == std::array<csint, 2>{5, 7});
+        REQUIRE(A.shape() == Shape{5, 7});
         // std::cout << "A = " << std::endl << A;  // rows sorted
         // std::cout << "A.compress() = " << std::endl << A.compress();  // cols sorted
     }
@@ -433,7 +433,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         unsigned int seed = 56;  // seed for reproducibility
         COOMatrix A = COOMatrix::random(M, N, density, seed);
 
-        REQUIRE(A.shape() == std::array<csint, 2>{M, N});
+        REQUIRE(A.shape() == Shape{M, N});
         REQUIRE(A.nnz() == (csint)(density * M * N));
     }
 }
@@ -452,7 +452,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
 
         REQUIRE(C.nnz() == 10);
         REQUIRE(C.nzmax() >= 10);
-        REQUIRE(C.shape() == std::array<csint, 2>{4, 4});
+        REQUIRE(C.shape() == Shape{4, 4});
         REQUIRE(C.indptr() == indptr_expect);
         REQUIRE(C.indices() == indices_expect);
         REQUIRE(C.data() == data_expect);
@@ -563,7 +563,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         C = A.assign(0, 4, 1.6).compress();  // {4, 5}
 
         auto sort_test = [](const CSCMatrix& Cs) {
-            std::array<csint, 2> shape_expect = {4, 5};
+            Shape shape_expect = {4, 5};
             std::vector<csint> indptr_expect  = {  0,             3,             6,        8,       10, 11};
             std::vector<csint> indices_expect = {  0,   1,   3,   1,   2,   3,   0,   2,   1,   3,   0};
             std::vector<double> data_expect   = {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0, 1.6};
@@ -604,7 +604,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         C = davis_21_coo().compress().droptol(2.0);
 
         REQUIRE(C.nnz() == 6);
-        REQUIRE(C.shape() == std::array<csint, 2>{4, 4});
+        REQUIRE(C.shape() == Shape{4, 4});
         REQUIRE_THAT(C.data() >= 2.0, AllTrue());
     }
 
@@ -638,7 +638,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
 
             REQUIRE(B.nnz() == 10);
             REQUIRE(B.nzmax() >= 10);
-            REQUIRE(B.shape() == std::array<csint, 2>{4, 4});
+            REQUIRE(B.shape() == Shape{4, 4});
             REQUIRE(B.row() == expect_i);
             REQUIRE(B.column() == expect_j);
             REQUIRE(B.data() == expect_v);
@@ -1593,7 +1593,7 @@ TEST_CASE("Test non-contiguous indexing")
             std::vector<double> {4.5, 3.2, 3.0},
             std::vector<csint>  {  1,   1,   0},
             std::vector<csint>  {  0,   2,   2},
-            std::array<csint, 2>{2, 3}
+            Shape{2, 3}
         ).tocsc();
 
         compare_canonical(C, expect);
@@ -1695,7 +1695,7 @@ TEST_CASE("Test indexing for single assignment.")
                 std::vector<double> {100, 101, 102, 103, 104, 105},
                 std::vector<csint> {0, 1, 0, 1, 0, 1},
                 std::vector<csint> {0, 2, 4, 6},
-                std::array<csint, 2>{2, 3}
+                Shape{2, 3}
             );
 
             A.assign(rows, cols, C);

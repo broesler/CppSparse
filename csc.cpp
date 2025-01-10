@@ -35,7 +35,7 @@ CSCMatrix::CSCMatrix(
     const std::vector<double>& data,
     const std::vector<csint>& indices,
     const std::vector<csint>& indptr,
-    const std::array<csint, 2>& shape
+    const Shape& shape
     )
     : v_(data),
       i_(indices),
@@ -155,9 +155,9 @@ CSCMatrix& CSCMatrix::realloc(csint nzmax)
 csint CSCMatrix::nnz() const { return v_.size(); }
 csint CSCMatrix::nzmax() const { return v_.capacity(); }
 
-std::array<csint, 2> CSCMatrix::shape() const
+Shape CSCMatrix::shape() const
 {
-    return std::array<csint, 2> {M_, N_};
+    return Shape {M_, N_};
 }
 
 const std::vector<csint>& CSCMatrix::indices() const { return i_; }
@@ -739,7 +739,7 @@ CSCMatrix& CSCMatrix::droptol(double tol)
 /** Return true if `A(i, j)` is within the diagonals `limits = {lower, upper}`. */
 bool CSCMatrix::in_band(csint i, csint j, double Aij, void *limits)
 {
-    auto [kl, ku] = *((std::array<csint, 2> *) limits);
+    auto [kl, ku] = *((Shape *) limits);
     return ((i <= (j - kl)) && (i >= (j - ku)));
 };
 
@@ -754,7 +754,7 @@ bool CSCMatrix::in_band(csint i, csint j, double Aij, void *limits)
 CSCMatrix CSCMatrix::band(const csint kl, const csint ku)
 {
     assert(kl <= ku);
-    std::array<csint, 2> limits {kl, ku};
+    Shape limits {kl, ku};
 
     return fkeep(&in_band, &limits);
 }

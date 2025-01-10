@@ -42,7 +42,7 @@ class COOMatrix
             const std::vector<double>& vals,
             const std::vector<csint>& rows,
             const std::vector<csint>& cols,
-            const std::array<csint, 2>& shape={0, 0}
+            const Shape& shape={0, 0}
         );
 
         COOMatrix(csint M, csint N, csint nzmax=0);  // allocate dims + nzmax
@@ -57,7 +57,7 @@ class COOMatrix
         // ---------- Accessors
         csint nnz() const;                   // number of non-zeros
         csint nzmax() const;                 // maximum number of non-zeros
-        std::array<csint, 2> shape() const;  // the dimensions of the matrix
+        Shape shape() const;  // the dimensions of the matrix
 
         const std::vector<csint>& row() const;     // indices and data
         const std::vector<csint>& column() const;

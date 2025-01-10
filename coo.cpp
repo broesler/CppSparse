@@ -34,7 +34,7 @@ COOMatrix::COOMatrix(
     const std::vector<double>& v,
     const std::vector<csint>& i,
     const std::vector<csint>& j,
-    const std::array<csint, 2>& shape
+    const Shape& shape
     )
     : v_(v),
       i_(i),
@@ -149,9 +149,9 @@ COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
 csint COOMatrix::nnz() const { return v_.size(); }
 csint COOMatrix::nzmax() const { return v_.capacity(); }
 
-std::array<csint, 2> COOMatrix::shape() const
+Shape COOMatrix::shape() const
 {
-    return std::array<csint, 2> {M_, N_};
+    return Shape {M_, N_};
 }
 
 const std::vector<csint>& COOMatrix::row() const { return i_; }

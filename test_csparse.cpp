@@ -1896,8 +1896,8 @@ TEST_CASE("Reachability and DFS")
         }
         std::vector<double> expect(N, 1.0);
 
-        std::vector<double> x(N);  // output vector
-        spsolve(L, B, 0, x, true);
+        // Use structured bindings to unpack the result
+        auto [xi, x] = spsolve(L, B, 0, true);
 
         REQUIRE(x == expect);
     }
@@ -1908,9 +1908,8 @@ TEST_CASE("Reachability and DFS")
 
         std::vector<double> expect = { 0.,  0.,  0.,  1.,  0.,  0.,  0.,  0., -1.,  0.,  0.,  1.,  0.,  0.};
 
-        // output initialized to 0.0, since spsolve only touches the non-zeros.
-        std::vector<double> x(N);
-        spsolve(L, B, 0, x, true);
+        // Use structured bindings to unpack the result
+        auto [xi, x] = spsolve(L, B, 0, true);
 
         REQUIRE(x == expect);
     }

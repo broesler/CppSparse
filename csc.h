@@ -271,12 +271,11 @@ class CSCMatrix
         friend std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b);
 
         // Sparse matrix solve
-        friend int spsolve(
-            CSCMatrix& G,
+        friend std::pair<std::vector<csint>, std::vector<double>> 
+        spsolve(
+            const CSCMatrix& G,
 	        const CSCMatrix& B,
 	        csint k,
-	        // std::vector<csint>& xi,
-	        std::vector<double>& x,
 	        bool lo
         );
 

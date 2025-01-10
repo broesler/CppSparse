@@ -2114,17 +2114,16 @@ std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
  * @return top  the index of `xi` where the non-zero entries of `x` begin. They
  *         are located from `top` through `G.N_ - 1`.
  */
-int spsolve(
-    CSCMatrix& G,
+std::pair<std::vector<csint>, std::vector<double>> spsolve(
+    const CSCMatrix& G,
     const CSCMatrix& B,
     csint k,
-    // std::vector<csint>& xi,  // TODO figure out how to return xi and x
-    std::vector<double>& x,
     bool lo
     )
 {
     // Populate xi with the non-zero indices of x
     std::vector<csint> xi = reach(G, B, k);
+    std::vector<double> x(G.N_);  // dense output vector
 
     // Clear non-zeros of x
     for (auto& i : xi) {
@@ -2150,7 +2149,7 @@ int spsolve(
         }
     }
 
-    return 0;
+    return std::make_pair(xi, x);
 }
 
 
@@ -2161,7 +2160,8 @@ int spsolve(
  * @param B  a sparse matrix containing the RHS in column `k`
  * @param k  the column index of `B` containing the RHS
  * 
- * @return xi  the row indices of the non-zero entries in `x`.
+ * @return xi  the row indices of the non-zero entries in `x`, in topological
+ *      order of the graph of G.
  */
 std::vector<csint> reach(
     const CSCMatrix& G,

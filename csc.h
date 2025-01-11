@@ -276,6 +276,10 @@ class CSCMatrix
         friend std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b);
         friend std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b);
 
+        // Exercise 3.8 optimized versions of [lu]solve
+        friend std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b);
+        friend std::vector<double> usolve_opt(const CSCMatrix& L, const std::vector<double>& b);
+
         // Sparse matrix solve
         friend std::pair<std::vector<csint>, std::vector<double>> 
         spsolve(

@@ -14,16 +14,16 @@ CFLAGS = -Wall -pedantic -std=c++20
 BREW = /opt/homebrew
 
 INCL := $(wildcard *.h)
-SRC := $(utils.cpp coo.cpp csc.cpp test_csparse.cpp)
+SRC := test_csparse.cpp utils.cpp coo.cpp csc.cpp
 OBJ := $(SRC:%.cpp=%.o)
 
 info :
 	@echo "SRC: $(SRC)"
 
-GAXPY_SRC := $(filter-out test_csparse.cpp, $(SRC))
+GAXPY_SRC := gaxpy_perf.cpp $(filter-out test_csparse.cpp, $(SRC))
 GAXPY_OBJ := $(GAXPY_SRC:%.cpp=%.o)
 
-LUSOLVE_SRC := $(filter-out test_csparse.cpp, $(SRC))
+LUSOLVE_SRC := lusolve_perf.cpp $(filter-out test_csparse.cpp, $(SRC))
 LUSOLVE_OBJ := $(LUSOLVE_SRC:%.cpp=%.o)
 
 # -----------------------------------------------------------------------------

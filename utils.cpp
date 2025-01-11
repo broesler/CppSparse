@@ -7,8 +7,6 @@
  *
  *============================================================================*/
 
-#include <numeric>
-
 #include "csparse.h"
 
 
@@ -174,6 +172,60 @@ std::vector<csint> cumsum(const std::vector<csint>& w)
     return out;
 }
 
+
+/** Write the results of a performance test to a JSON file.
+ *
+ * @param filename  the name of the file to write
+ * @param density   the density of the matrix
+ * @param Ns        the vector of matrix sizes
+ * @param times     a map of test names to TimeStats objects
+ */
+void write_json_results(
+    const std::string filename,
+    const double density,
+    const std::vector<int>& Ns,
+    const std::map<std::string, TimeStats>& times
+    )
+{
+    // Open the file and check for success
+    std::ofstream fp(filename);
+    if (!fp.is_open()) {
+        std::cerr << "Error: could not open file " << filename << std::endl;
+        return;
+    }
+
+    // Opening brace
+    fp << "{\n";
+
+    // Write the density
+    fp << "  \"density\": " << density << ",\n";
+
+    // Write the Ns vector
+    fp << "  \"Ns\": ";
+    fp << Ns << ",\n";
+
+    // Write the result times
+    for (auto it = times.begin(); it != times.end(); it++) {
+        const std::string name = it->first;
+        const TimeStats ts = it->second;
+
+        fp << "  \"" << name << "\": {\n";
+        fp << "    \"mean\": ";
+        fp << ts.mean << ",\n";
+
+        fp << "    \"std_dev\": ";
+        fp << ts.std_dev << "\n";
+
+        if (std::next(it) == times.end())  // last entry in sorted map
+            fp << "  }\n";
+        else
+            fp << "  },\n";
+    }
+
+    // Closing brace
+    fp << "}\n";
+    fp.close();
+}
 
 /*==============================================================================
  *============================================================================*/

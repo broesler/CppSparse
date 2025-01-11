@@ -10,6 +10,8 @@
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
+#include <fstream>
+#include <map>
 #include <numeric>  // std::iota
 
 std::vector<double> operator+(
@@ -34,6 +36,31 @@ std::vector<double> ipvec(const std::vector<csint>& p, const std::vector<double>
 std::vector<csint> inv_permute(const std::vector<csint>& p);
 
 std::vector<csint> cumsum(const std::vector<csint>& w);
+
+
+/*------------------------------------------------------------------------------
+ *          Performance Testing
+ *----------------------------------------------------------------------------*/
+// Define a structure to store the mean and standard deviation of the times
+struct TimeStats {
+    std::vector<double> mean;
+    std::vector<double> std_dev;
+
+    TimeStats() {};
+    TimeStats(const int N) {
+        mean.reserve(N);
+        std_dev.reserve(N);
+    };
+};
+
+
+void write_json_results(
+    const std::string filename,
+    const double density,
+    const std::vector<int>& Ns,
+    const std::map<std::string, TimeStats>& times
+);
+
 
 /*------------------------------------------------------------------------------
  *         Declare Template Functions

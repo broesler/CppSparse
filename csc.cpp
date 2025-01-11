@@ -2004,20 +2004,9 @@ std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
 
     for (csint j = 0; j < L.N_; j++) {
         x[j] /= L.v_[L.p_[j]];
-
-#ifdef EXERCISE_3_8
-        // Exercise 3.8: improve performance by checking for zeros
-        double x_val = x[j];  // cache value
-        if (x_val != 0) {
-            for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
-                x[L.i_[p]] -= L.v_[p] * x_val;
-            }
-        }
-#else
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
             x[L.i_[p]] -= L.v_[p] * x[j];
         }
-#endif
     }
 
     return x;
@@ -2115,6 +2104,75 @@ std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
             x[j] -= U.v_[p] * x[U.i_[p]];
         }
         x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
+    }
+
+    return x;
+}
+
+
+/** Forward solve a lower-triangular system \f$ Lx = b \f$.
+ *
+ * See: Davis, Exercise 3.8
+ *
+ * @note This function assumes that the diagonal entry of `L` is always present
+ * and is the first entry in each column. Otherwise, the row indices in each
+ * column of `L` may appear in any order.
+ *
+ * @param L  a lower-triangular matrix
+ * @param b  a dense vector
+ *
+ * @return x  the solution vector
+ */
+std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
+{
+    assert(L.M_ == L.N_);
+    assert(L.M_ == b.size());
+
+    std::vector<double> x = b;
+
+    for (csint j = 0; j < L.N_; j++) {
+        x[j] /= L.v_[L.p_[j]];
+
+        // Exercise 3.8: improve performance by checking for zeros
+        double x_val = x[j];  // cache value
+        if (x_val != 0) {
+            for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
+                x[L.i_[p]] -= L.v_[p] * x_val;
+            }
+        }
+    }
+
+    return x;
+}
+
+
+/** Backsolve an upper-triangular system \f$ Ux = b \f$.
+ *
+ * @note This function assumes that the diagonal entry of `U` is always present
+ * and is the last entry in each column. Otherwise, the row indices in each
+ * column of `U` may appear in any order.
+ *
+ * @param U  an upper-triangular matrix
+ * @param b  a dense vector
+ *
+ * @return x  the solution vector
+ */
+std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b)
+{
+    assert(U.M_ == U.N_);
+    assert(U.M_ == b.size());
+
+    std::vector<double> x = b;
+
+    for (csint j = U.N_ - 1; j >= 0; j--) {
+        x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
+
+        double x_val = x[j];  // cache value
+        if (x_val != 0) {
+            for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
+                x[U.i_[p]] -= U.v_[p] * x_val;
+            }
+        }
     }
 
     return x;

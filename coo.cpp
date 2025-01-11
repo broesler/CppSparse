@@ -7,9 +7,9 @@
  *
  *============================================================================*/
 
-#include <sstream>
-#include <numeric>
+#include <algorithm>  // for std::max_element
 #include <random>
+#include <sstream>  // for std::stringstream
 
 #include "csparse.h"
 

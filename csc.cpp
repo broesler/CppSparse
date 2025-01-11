@@ -7,8 +7,8 @@
  *
  *============================================================================*/
 
-#include <algorithm>
-#include <cmath>
+#include <algorithm>  // for std::lower_bound
+#include <cmath>      // for std::fabs
 
 #include "csparse.h"
 

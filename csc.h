@@ -262,6 +262,12 @@ class CSCMatrix
         CSCMatrix add_empty_left(const csint k) const;
         CSCMatrix add_empty_right(const csint k) const;
 
+        // Sum rows or columns
+        std::vector<double> sum_rows() const;
+        std::vector<double> sum_cols() const;
+        // double sum() const;
+        // std::vector<double> sum(const int axis) const;
+
         //----------------------------------------------------------------------
         //        Matrix Solutions
         //----------------------------------------------------------------------

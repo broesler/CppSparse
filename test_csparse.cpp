@@ -1777,6 +1777,29 @@ TEST_CASE("Test adding empty rows and columns to a CSCMatrix.")
 }
 
 
+TEST_CASE("Sum the rows and columns of a matrix")
+{
+    CSCMatrix A = davis_21_coo().tocsc();
+
+    SECTION("Sum the rows") {
+        std::vector<double> expect = {7.7, 6.9, 4.7, 4.9};
+
+        std::vector<double> sums = A.sum_rows();
+
+        REQUIRE(sums.size() == expect.size());
+        REQUIRE(sums == expect);
+    }
+
+    SECTION("Sum the columns") {
+        std::vector<double> expect = {11.1,  5.0,  6.2,  1.9};
+
+        std::vector<double> sums = A.sum_cols();
+
+        REQUIRE(sums.size() == expect.size());
+        REQUIRE(sums == expect);
+    }
+}
+
 /*------------------------------------------------------------------------------
  *          Matrix Solutions
  *----------------------------------------------------------------------------*/

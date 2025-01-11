@@ -1945,6 +1945,42 @@ CSCMatrix CSCMatrix::add_empty_right(const csint k) const
 }
 
 
+/** Sum the rows of a matrix.
+ *
+ * @return out  a vector of length `M` containing the sum of each row.
+ */
+std::vector<double> CSCMatrix::sum_rows() const
+{
+    std::vector<double> out(M_, 0.0);
+
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            out[i_[p]] += v_[p];
+        }
+    }
+
+    return out;
+}
+
+
+/** Sum the columns of a matrix.
+ *
+ * @return out  a vector of length `N` containing the sum of each column.
+ */
+std::vector<double> CSCMatrix::sum_cols() const
+{
+    std::vector<double> out(N_, 0.0);
+
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            out[j] += v_[p];
+        }
+    }
+
+    return out;
+}
+
+
 /*------------------------------------------------------------------------------
  *      Matrix Solutions 
  *----------------------------------------------------------------------------*/

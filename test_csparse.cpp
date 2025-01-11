@@ -1844,6 +1844,7 @@ TEST_CASE("Reachability and DFS")
     std::vector<double> vals(rows.size(), 1);
 
     CSCMatrix L = COOMatrix(vals, rows, cols).tocsc();
+    CSCMatrix U = L.T();
 
     // Define the rhs matrix B
     CSCMatrix B(N, 1);
@@ -1883,7 +1884,7 @@ TEST_CASE("Reachability and DFS")
         REQUIRE(xi == expect);
     }
 
-    SECTION("spsolve with dense RHS") {
+    SECTION("spsolve Lx = b with dense RHS") {
         // Create RHS from sums of rows of L, so that x == ones(N)
         std::vector<double> b = {1., 1., 2., 2., 2., 1., 2., 3., 4., 4., 3., 3., 5., 3.};
         for (int i = 0; i < N; i++) {
@@ -1897,7 +1898,7 @@ TEST_CASE("Reachability and DFS")
         REQUIRE(x == expect);
     }
 
-    SECTION("spsolve with sparse RHS") {
+    SECTION("spsolve Lx = b with sparse RHS") {
         // RHS is just B with non-zeros in the first column
         B.assign(3, 0, 1.0);
 
@@ -1905,6 +1906,17 @@ TEST_CASE("Reachability and DFS")
 
         // Use structured bindings to unpack the result
         auto [xi, x] = spsolve(L, B, 0, true);
+
+        REQUIRE(x == expect);
+    }
+
+    SECTION("spsolve Ux = b with sparse RHS") {
+        // RHS is just B with non-zeros in the first column
+        B.assign(3, 0, 1.0);
+
+        std::vector<double> expect = {0., -1.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.};
+
+        auto [xi, x] = spsolve(U, B, 0, false);
 
         REQUIRE(x == expect);
     }

@@ -14,12 +14,17 @@ CFLAGS = -Wall -pedantic -std=c++20
 BREW = /opt/homebrew
 
 INCL := $(wildcard *.h)
-SRC := $(wildcard *.cpp)
-SRC := $(filter-out test_stdvector.cpp gaxpy_perf.cpp, $(SRC))
+SRC := $(utils.cpp coo.cpp csc.cpp test_csparse.cpp)
 OBJ := $(SRC:%.cpp=%.o)
 
-GAXPY_SRC := $(filter-out test_stdvector.cpp test_csparse.cpp, $(wildcard *.cpp))
+info :
+	@echo "SRC: $(SRC)"
+
+GAXPY_SRC := $(filter-out test_csparse.cpp, $(SRC))
 GAXPY_OBJ := $(GAXPY_SRC:%.cpp=%.o)
+
+LUSOLVE_SRC := $(filter-out test_csparse.cpp, $(SRC))
+LUSOLVE_OBJ := $(LUSOLVE_SRC:%.cpp=%.o)
 
 # -----------------------------------------------------------------------------
 #        Make options 
@@ -35,8 +40,7 @@ gaxpy_perf: CFLAGS += -O3
 
 gatxpy_perf: CFLAGS += -DGATXPY -O3 
 
-lusolve_ex: CFLAGS += -DEXERCISE_3_8
-lusolve_ex: test
+lusolve_perf: CFLAGS += -O3
 
 debug: CFLAGS += -DDEBUG -glldb -Og -fno-inline -fsanitize=address,leak
 debug: all
@@ -54,6 +58,9 @@ gaxpy_perf: $(GAXPY_OBJ)
 gatxpy_perf: $(GAXPY_OBJ)
 	$(CC) $(CFLAGS) $(OPT) -o $@ $^
 
+lusolve_perf: $(LUSOLVE_OBJ)
+	$(CC) $(CFLAGS) $(OPT) -o $@ $^
+
 # Objects depend on source and headers
 %.o : %.cpp $(INCL)
 	$(CC) $(CFLAGS) $(OPT) -c $< -o $@
@@ -68,6 +75,7 @@ clean:
 	rm -f test_stdvector
 	rm -f gaxpy_perf
 	rm -f gatxpy_perf
+	rm -f lusolve_perf
 
 #==============================================================================
 #==============================================================================

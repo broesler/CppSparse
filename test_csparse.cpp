@@ -1592,8 +1592,7 @@ TEST_CASE("Test non-contiguous indexing")
         CSCMatrix expect = COOMatrix(
             std::vector<double> {4.5, 3.2, 3.0},
             std::vector<csint>  {  1,   1,   0},
-            std::vector<csint>  {  0,   2,   2},
-            Shape{2, 3}
+            std::vector<csint>  {  0,   2,   2}
         ).tocsc();
 
         compare_canonical(C, expect);
@@ -1841,7 +1840,7 @@ TEST_CASE("Reachability and DFS")
     rows.insert(rows.end(), diags.begin(), diags.end());
     cols.insert(cols.end(), diags.begin(), diags.end());
 
-    // All values are 1 (system mot actually solved)
+    // All values are 1
     std::vector<double> vals(rows.size(), 1);
 
     CSCMatrix L = COOMatrix(vals, rows, cols).tocsc();

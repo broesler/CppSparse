@@ -33,15 +33,19 @@ COOMatrix::COOMatrix() {};
 COOMatrix::COOMatrix(
     const std::vector<double>& v,
     const std::vector<csint>& i,
-    const std::vector<csint>& j,
-    const Shape& shape
+    const std::vector<csint>& j
     )
     : v_(v),
       i_(i),
       j_(j),
-      M_(shape[0] ? shape[0] : *std::max_element(i_.begin(), i_.end()) + 1),
-      N_(shape[1] ? shape[1] : *std::max_element(j_.begin(), j_.end()) + 1)
-{}  // TODO add input checking here if any indices > M-1, N-1.
+      M_(*std::max_element(i_.begin(), i_.end()) + 1),
+      N_(*std::max_element(j_.begin(), j_.end()) + 1)
+{
+    // Check that all vectors are the same size
+    assert(v_.size() == i_.size());
+    assert(v_.size() == j_.size());
+    assert(M_ > 0 && N_ > 0);
+}
 
 
 /** Allocate a COOMatrix for a given shape and number of non-zeros.
@@ -57,6 +61,7 @@ COOMatrix::COOMatrix(csint M, csint N, csint nzmax)
     i_.reserve(nzmax);
     j_.reserve(nzmax);
 }
+
 
 /** Convert a CSCMatrix to a COOMatrix, like Matlab's `find`.
  *

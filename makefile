@@ -31,10 +31,12 @@ test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
 test: CFLAGS += -glldb #-Og #-fsanitize=address
 test: test_csparse
 
-# gaxpy_perf: CFLAGS += -glldb -fno-inline -fsanitize=address
 gaxpy_perf: CFLAGS += -O3
 
 gatxpy_perf: CFLAGS += -DGATXPY -O3 
+
+lusolve_ex: CFLAGS += -DEXERCISE_3_8
+lusolve_ex: test
 
 debug: CFLAGS += -DDEBUG -glldb -Og -fno-inline -fsanitize=address,leak
 debug: all

@@ -226,10 +226,10 @@ void write_json_results(
 
         fp << "  \"" << name << "\": {\n";
         fp << "    \"mean\": ";
-        fp << ts.mean << ",\n";
+        fp << ts.means << ",\n";
 
         fp << "    \"std_dev\": ";
-        fp << ts.std_dev << "\n";
+        fp << ts.std_devs << "\n";
 
         if (std::next(it) == times.end())  // last entry in sorted map
             fp << "  }\n";

@@ -43,13 +43,13 @@ std::vector<csint> cumsum(const std::vector<csint>& w);
  *----------------------------------------------------------------------------*/
 // Define a structure to store the mean and standard deviation of the times
 struct TimeStats {
-    std::vector<double> mean;
-    std::vector<double> std_dev;
+    std::vector<double> means;
+    std::vector<double> std_devs;
 
     TimeStats() {};
     TimeStats(const int N) {
-        mean.reserve(N);
-        std_dev.reserve(N);
+        means.reserve(N);
+        std_devs.reserve(N);
     };
 };
 
@@ -161,13 +161,13 @@ Stats timeit(
         auto stats = compute_stats(sample_times);
 
         // Store the results
-        ts.mean.push_back(stats.mean);
-        ts.std_dev.push_back(stats.std_dev);
+        ts.means.push_back(stats.mean);
+        ts.std_devs.push_back(stats.std_dev);
     }
 
     // Take the mean over the repeats
-    double μ = std::accumulate(ts.mean.begin(), ts.mean.end(), 0.0) / N_repeats;
-    double σ = std::accumulate(ts.std_dev.begin(), ts.std_dev.end(), 0.0) / N_repeats;
+    double μ = std::accumulate(ts.means.begin(), ts.means.end(), 0.0) / N_repeats;
+    double σ = std::accumulate(ts.std_devs.begin(), ts.std_devs.end(), 0.0) / N_repeats;
 
     return {μ, σ};
 }

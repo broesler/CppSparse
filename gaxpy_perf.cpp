@@ -149,8 +149,8 @@ int main()
             );
 
             // Store results
-            times[name].mean.push_back(ts.mean);
-            times[name].std_dev.push_back(ts.std_dev);
+            times[name].means.push_back(ts.mean);
+            times[name].std_devs.push_back(ts.std_dev);
 
             if (VERBOSE) {
                 std::cout << name

@@ -40,7 +40,7 @@ gaxpy_perf: CFLAGS += -O3
 
 gatxpy_perf: CFLAGS += -DGATXPY -O3 
 
-lusolve_perf: CFLAGS += -O3
+# lusolve_perf: CFLAGS += -O3
 
 debug: CFLAGS += -DDEBUG -glldb -Og -fno-inline -fsanitize=address,leak
 debug: all

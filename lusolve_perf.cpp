@@ -88,46 +88,52 @@ int main()
     // Store the results
     std::map<std::string, TimeStats> times;
 
-    // const std::vector<int> Ns = {10};
-    // const std::vector<int> Ns = {10, 100, 1000};
-    const std::vector<int> Ns = {10, 20, 50, 100, 200, 500, 1000, 2000, 5000};
+    const int N = 2000;
     const float density = 0.4;  // density of the sparse matrix
 
+    const std::vector<float> b_densities = {
+        0.001, 0.002, 0.003, 0.005,
+        0.01, 0.02, 0.03, 0.05, 0.1,
+        0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
+    };
+
     // Time sampling
-    const int N_repeats = 7;
-    const int N_samples = 100;  // adjust for total time ~0.2 s (for 1e6 samples)
+    const int N_repeats = 3;
+    const int N_samples = 10;  // adjust for total time ~0.2 s (for 1e6 samples)
 
     // Initialize the results struct
     for (const auto& name : std::views::keys(lusolve_funcs)) {
-        times[name] = TimeStats(Ns.size());
+        times[name] = TimeStats(b_densities.size());
     }
 
-    for (const int N : Ns) {
-        if (VERBOSE)
-            std::cout << "Running N = " << N << "..." << std::endl;
+    // Create a large, square sparse matrix
+    CSCMatrix A = COOMatrix::random(N, N, density, SEED).tocsc();
 
-        // Create a large, square sparse matrix
-        CSCMatrix A = COOMatrix::random(N, N, density, SEED).tocsc();
+    // Ensure all diagonal elements are non-zero so that L is non-singular
+    for (int i = 0; i < N; i++) {
+        A.assign(i, i, 1.0);
+    }
 
-        // Ensure all diagonal elements are non-zero so that L is non-singular
-        for (int i = 0; i < N; i++) {
-            A.assign(i, i, 1.0);
+    // Take the lower triangular
+    CSCMatrix L = A.band(-N, 0);
+    CSCMatrix U = L.T();
+
+    // Create a dense column vector that is the sum of the rows of L
+    std::vector<double> bL = L.sum_rows();
+    std::vector<double> bU = U.sum_rows();
+
+    // Get times vs increasing sparsity of b. The optimized functions are O(n
+    // + f), whereas the original functions are O(|L|) or O(|U|). The optimized
+    // functions should be faster for sparse b, and the functions should be
+    // identical for dense b.
+    for (const float b_dens : b_densities) {
+        if (VERBOSE) {
+            std::cout << "Running b_dens = " << b_dens << "..." << std::endl;
         }
 
-        // Take the lower triangular
-        CSCMatrix L = A.band(-N, 0);
-        CSCMatrix U = L.T();
-
-        // Create a dense column vector that is the sum of the rows of L
-        std::vector<double> bL = L.sum_rows();
-        std::vector<double> bU = U.sum_rows();
-
-        // TODO get times vs increasing sparsity of b. The optimized functions
-        // are O(n + f), whereas the original functions are O(|L|) or O(|U|).
-        // The optimized functions should be faster for sparse b, and the 
-        // functions should be identical for dense b.
-        zero_random_indices(bL, (size_t)(0.8 * N), SEED);
-        zero_random_indices(bU, (size_t)(0.8 * N), SEED);
+        // Create the sparse RHS vectors
+        zero_random_indices(bL, (size_t)((1 - b_dens) * N), SEED);
+        zero_random_indices(bU, (size_t)((1 - b_dens) * N), SEED);
 
         for (const auto& [name, lusolve_func] : lusolve_funcs) {
             Stats ts = timeit(
@@ -160,7 +166,13 @@ int main()
     if (VERBOSE)
         std::cout << "Writing results to '" << filename << "'..." << std::endl;
 
-    write_json_results(filename, density, Ns, times);
+    // Hack to convert float to int for JSON output
+    std::vector<int> b_out(b_densities.size());
+    for (size_t i = 0; i < b_densities.size(); i++) {
+        b_out[i] = (int)(1000 * b_densities[i]);
+    }
+
+    write_json_results(filename, density, b_out, times);
 
     if (VERBOSE)
         std::cout << "done." << std::endl;

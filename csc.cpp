@@ -2062,19 +2062,9 @@ std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
 
     for (csint j = U.N_ - 1; j >= 0; j--) {
         x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
-
-#ifdef EXERCISE_3_8
-        double x_val = x[j];  // cache value
-        if (x_val != 0) {
-            for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
-                x[U.i_[p]] -= U.v_[p] * x_val;
-            }
-        }
-#else
         for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
             x[U.i_[p]] -= U.v_[p] * x[j];
         }
-#endif
     }
 
     return x;

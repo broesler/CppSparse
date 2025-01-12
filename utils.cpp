@@ -173,6 +173,21 @@ std::vector<csint> cumsum(const std::vector<csint>& w)
 }
 
 
+/** Compute the mean and standard deviation of a vector of samples. */
+Stats compute_stats(const std::vector<double>& samples)
+{
+    int N = samples.size();
+
+    // Compute the mean and std of the samples
+    double mean = std::accumulate(samples.begin(), samples.end(), 0.0) / N;
+
+    double sq_sum = std::inner_product(samples.begin(), samples.end(), samples.begin(), 0.0);
+    double std_dev = std::sqrt(sq_sum / N - mean * mean);
+
+    return {mean, std_dev};
+}
+
+
 /** Write the results of a performance test to a JSON file.
  *
  * @param filename  the name of the file to write

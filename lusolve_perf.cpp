@@ -17,12 +17,14 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <ranges> // for std::views:keys
+#include <random>
 
 #include "csparse.h"
 
 
 // Define function prototypes here to make them visible to main()
-// See: 
+// See:
 // <https://stackoverflow.com/questions/69558521/friend-function-name-undefined>
 std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b);
 std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b);
@@ -30,6 +32,40 @@ std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
 std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b);
 
 
+/** Set a random number of elements in a vector to zero.
+ * 
+ * @param vec the vector to modify
+ * @param N_zeros the number of elements to set to zero
+ * @param seed the random seed
+ */
+void zero_random_indices(
+    std::vector<double>& vec,
+    size_t N_zeros,
+    unsigned int seed=0
+) 
+{
+    // Create list of indices
+    std::vector<size_t> idx(vec.size());
+    std::iota(idx.begin(), idx.end(), 0);  // Fill with 0,1,2,...
+
+    if (seed == 0) {
+        seed = std::random_device()();
+    }
+
+    // Shuffle idx
+    std::default_random_engine rng(seed);
+    std::shuffle(idx.begin(), idx.end(), rng);
+
+    // Set first N_zeros elements to zero
+    for (size_t i = 0; i < N_zeros && i < vec.size(); i++) {
+        vec[idx[i]] = 0.0;
+    }
+}
+
+
+/*------------------------------------------------------------------------------
+ *         Main Function
+ *----------------------------------------------------------------------------*/
 int main()
 {
     // Declare constants
@@ -58,82 +94,58 @@ int main()
     const float density = 0.4;  // density of the sparse matrix
 
     // Time sampling
-    const int N_repeats = 1;
-    const int N_samples = 3;  // should adjust to get total time ~0.2 s
+    const int N_repeats = 7;
+    const int N_samples = 100;  // adjust for total time ~0.2 s (for 1e6 samples)
 
-    // Define temporary vector to store sample times
-    std::vector<double> sample_times(N_samples);
-
-    // TODO swap order of loops so that we only create the matrix once
-    for (const auto& [name, lusolve_func] : lusolve_funcs) {
-        // Initialize the results struct
+    // Initialize the results struct
+    for (const auto& name : std::views::keys(lusolve_funcs)) {
         times[name] = TimeStats(Ns.size());
+    }
 
+    for (const int N : Ns) {
         if (VERBOSE)
-            std::cout << "Running " << name << "..." << std::endl;
+            std::cout << "Running N = " << N << "..." << std::endl;
 
-        for (const int N : Ns) {
-            // Create a large, square sparse matrix
-            CSCMatrix A = COOMatrix::random(N, N, density, SEED).tocsc();
+        // Create a large, square sparse matrix
+        CSCMatrix A = COOMatrix::random(N, N, density, SEED).tocsc();
 
-            // Ensure all diagonal elements are non-zero
-            for (int i = 0; i < N; i++) {
-                A.assign(i, i, 1.0);
-            }
+        // Ensure all diagonal elements are non-zero so that L is non-singular
+        for (int i = 0; i < N; i++) {
+            A.assign(i, i, 1.0);
+        }
 
-            // Take the lower triangular
-            CSCMatrix L = A.band(-N, 0);
-            CSCMatrix U = L.T();
+        // Take the lower triangular
+        CSCMatrix L = A.band(-N, 0);
+        CSCMatrix U = L.T();
 
-            // Create a dense column vector that is the sum of the rows of L
-            const std::vector<double> bL = L.sum_rows();
-            const std::vector<double> bU = U.sum_rows();
+        // Create a dense column vector that is the sum of the rows of L
+        std::vector<double> bL = L.sum_rows();
+        std::vector<double> bU = U.sum_rows();
 
-            const std::vector<double> expect = std::vector<double>(N, 1.0);
+        // TODO get times vs increasing sparsity of b. The optimized functions
+        // are O(n + f), whereas the original functions are O(|L|) or O(|U|).
+        // The optimized functions should be faster for sparse b, and the 
+        // functions should be identical for dense b.
+        zero_random_indices(bL, (size_t)(0.8 * N), SEED);
+        zero_random_indices(bU, (size_t)(0.8 * N), SEED);
 
-            // Run the function r times (sample size) for n loops (samples)
-            TimeStats ts(N_repeats);
-
-            for (int r = 0; r < N_repeats; r++) {
-                for (int s = 0; s < N_samples; s++) {
-                    // Compute and time the function
-                    const auto tic = std::chrono::high_resolution_clock::now();
-
-                    if (name[0] == 'l') {
-                        const std::vector<double> x = lusolve_func(L, bL);
-                    } else {
-                        const std::vector<double> x = lusolve_func(U, bU);
-                    }
-
-                    const auto toc = std::chrono::high_resolution_clock::now();
-                    const std::chrono::duration<double> elapsed = toc - tic;
-
-                    sample_times[s] = elapsed.count();
-                }
-
-                // Compute the mean and std
-                double mean = std::accumulate(sample_times.begin(), sample_times.end(), 0.0) / N_samples;
-
-                double sq_sum = std::inner_product(sample_times.begin(), sample_times.end(), sample_times.begin(), 0.0);
-                double std_dev = std::sqrt(sq_sum / N_samples - mean * mean);
-
-                // Store the results
-                ts.mean.push_back(mean);
-                ts.std_dev.push_back(std_dev);
-            }
-
-            // Take the mean over the repeats
-            double μ = std::accumulate(ts.mean.begin(), ts.mean.end(), 0.0) / N_repeats;
-            double σ = std::accumulate(ts.std_dev.begin(), ts.std_dev.end(), 0.0) / N_repeats;
+        for (const auto& [name, lusolve_func] : lusolve_funcs) {
+            Stats ts = timeit(
+                lusolve_func,
+                N_repeats,
+                N_samples,
+                name.starts_with("l") ? L : U,
+                name.starts_with("l") ? bL : bU
+            );
 
             // Store results
-            times[name].mean.push_back(μ);
-            times[name].std_dev.push_back(σ);
+            times[name].mean.push_back(ts.mean);
+            times[name].std_dev.push_back(ts.std_dev);
 
             if (VERBOSE) {
-                std::cout << "N = " << N 
-                    << ", Time: " << μ
-                    << " ± " << σ << " s" 
+                std::cout << name << (name.ends_with("_opt") ? "" : "    ")
+                    << " = " << std::format("{:.4e}", ts.mean)
+                    << " ± " << std::format("{:.4e}", ts.std_dev) << " s"
                     << std::endl;
             }
         }

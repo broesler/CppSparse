@@ -54,12 +54,23 @@ struct TimeStats {
 };
 
 
+// Basic structure to store mean and standard deviation.
+struct Stats {
+    double mean;
+    double std_dev;
+};
+
+
 void write_json_results(
     const std::string filename,
     const double density,
     const std::vector<int>& Ns,
     const std::map<std::string, TimeStats>& times
 );
+
+
+/** Compute the mean and standard deviation of a vector of samples. */
+Stats compute_stats(const std::vector<double>& samples);
 
 
 /*------------------------------------------------------------------------------
@@ -108,6 +119,57 @@ std::vector<csint> argsort(const std::vector<T>& vec)
     );
 
     return idx;
+}
+
+
+/** Time a function call.
+ *
+ * @param func  the function to time
+ * @param N_repeats  the number of times to repeat the function call
+ * @param N_samples  the number of samples to take
+ * @param args...  any arguments to pass to the function
+ *
+ * @return ts  a TimeStats object with the mean and standard deviation of the
+ *         times taken.
+ */
+template <typename Func, typename... Args>
+Stats timeit(
+    Func func,
+    const int N_repeats = 1,
+    const int N_samples = 7,
+    Args... args
+)
+{
+    TimeStats ts(N_repeats);
+    std::vector<double> sample_times(N_samples);
+
+    for (int r = 0; r < N_repeats; r++) {
+        for (int s = 0; s < N_samples; s++) {
+            // Compute and time the function
+            const auto tic = std::chrono::high_resolution_clock::now();
+
+            // Run the function
+            func(std::forward<Args>(args)...);
+
+            const auto toc = std::chrono::high_resolution_clock::now();
+            const std::chrono::duration<double> elapsed = toc - tic;
+
+            sample_times[s] = elapsed.count();
+        }
+
+        // Compute the mean and std_dev of the sampled times
+        auto stats = compute_stats(sample_times);
+
+        // Store the results
+        ts.mean.push_back(stats.mean);
+        ts.std_dev.push_back(stats.std_dev);
+    }
+
+    // Take the mean over the repeats
+    double μ = std::accumulate(ts.mean.begin(), ts.mean.end(), 0.0) / N_repeats;
+    double σ = std::accumulate(ts.std_dev.begin(), ts.std_dev.end(), 0.0) / N_repeats;
+
+    return {μ, σ};
 }
 
 

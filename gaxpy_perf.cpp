@@ -17,6 +17,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <ranges>  // for std::views:keys
 
 #include "csparse.h"
 
@@ -53,68 +54,6 @@ std::vector<double> gaxpy_block(
     const std::vector<double>& X,
     const std::vector<double>& Y
 );
-
-
-// Define a structure to store the mean and standard deviation of the times
-struct TimeStats {
-    std::vector<double> mean;
-    std::vector<double> std_dev;
-
-    TimeStats() {};
-    TimeStats(const int N) {
-        mean.reserve(N);
-        std_dev.reserve(N);
-    };
-};
-
-
-// Write the results to a JSON file
-void write_json_results(
-    const std::string filename,
-    const double density,
-    const std::vector<int>& Ns,
-    const std::map<std::string, TimeStats>& times
-    )
-{
-    // Open the file and check for success
-    std::ofstream fp(filename);
-    if (!fp.is_open()) {
-        std::cerr << "Error: could not open file " << filename << std::endl;
-        return;
-    }
-
-    // Opening brace
-    fp << "{\n";
-
-    // Write the density
-    fp << "  \"density\": " << density << ",\n";
-
-    // Write the Ns vector
-    fp << "  \"Ns\": ";
-    fp << Ns << ",\n";
-
-    // Write the result times
-    for (auto it = times.begin(); it != times.end(); it++) {
-        const std::string name = it->first;
-        const TimeStats ts = it->second;
-
-        fp << "  \"" << name << "\": {\n";
-        fp << "    \"mean\": ";
-        fp << ts.mean << ",\n";
-
-        fp << "    \"std_dev\": ";
-        fp << ts.std_dev << "\n";
-
-        if (std::next(it) == times.end())  // last entry in sorted map
-            fp << "  }\n";
-        else
-            fp << "  },\n";
-    }
-
-    // Closing brace
-    fp << "}\n";
-    fp.close();
-}
 
 
 /*------------------------------------------------------------------------------
@@ -163,82 +102,60 @@ int main()
     const int N_repeats = 1;
     const int N_samples = 3;  // should adjust to get total time ~0.2 s
 
-    // Define temporary vector to store sample times
-    std::vector<double> sample_times(N_samples);
-
-    for (const auto& [name, gaxpy_func] : gaxpy_funcs) {
-        // Initialize the results struct
+    // Initialize the results struct
+    for (const auto& name : std::views::keys(gaxpy_funcs)) {
         times[name] = TimeStats(Ns.size());
+    }
 
+
+    /*--------------------------------------------------------------------------
+     *         Run the tests 
+     *------------------------------------------------------------------------*/
+    for (const int N : Ns) {
         if (VERBOSE)
-            std::cout << "Running " << name << "..." << std::endl;
+            std::cout << "Running N = " << N << "..." << std::endl;
 
-        for (const int N : Ns) {
-            int M = (int)(0.9 * N);  // number of rows in sparse matrix and added dense matrix
-            int K = (int)(0.8 * N);  // number of columns in multiplied dense matrix
-            // int M = N, K = N;  // square matrices
+        int M = (int)(0.9 * N);  // number of rows in sparse matrix and added dense matrix
+        int K = (int)(0.8 * N);  // number of columns in multiplied dense matrix
+        // int M = N, K = N;  // square matrices
 
-            // Create a large, sparse matrix
-            CSCMatrix A = COOMatrix::random(M, N, density, SEED).tocsc();
+        // Create a large, sparse matrix
+        CSCMatrix A = COOMatrix::random(M, N, density, SEED).tocsc();
 #ifdef GATXPY
-            A = A.T();
+        A = A.T();
 #endif
 
-            // Create a compatible random, dense matrix
-            const COOMatrix X = COOMatrix::random(N, K, density, SEED);
-            const COOMatrix Y = COOMatrix::random(M, K, density, SEED);
+        // Create a compatible random, dense matrix
+        const COOMatrix X = COOMatrix::random(N, K, density, SEED);
+        const COOMatrix Y = COOMatrix::random(M, K, density, SEED);
 
-            // Convert to dense column-major order
-            const std::vector<double> X_col = X.toarray('F');
-            const std::vector<double> Y_col = Y.toarray('F');
+        // Convert to dense column-major order
+        const std::vector<double> X_col = X.toarray('F');
+        const std::vector<double> Y_col = Y.toarray('F');
 
-            // Use same matrices in row-major order
-            const std::vector<double> X_row = X.toarray('C');
-            const std::vector<double> Y_row = Y.toarray('C');
+        // Use same matrices in row-major order
+        const std::vector<double> X_row = X.toarray('C');
+        const std::vector<double> Y_row = Y.toarray('C');
 
-            // Run the function r times (sample size) for n loops (samples)
-            TimeStats ts(N_repeats);
-
-            for (int r = 0; r < N_repeats; r++) {
-                for (int s = 0; s < N_samples; s++) {
-                    // Compute and time the function
-                    const auto tic = std::chrono::high_resolution_clock::now();
-
-                    if (name == "gaxpy_row") {
-                        const std::vector<double> Y_out = gaxpy_func(A, X_row, Y_row);
-                    } else {
-                        const std::vector<double> Y_out = gaxpy_func(A, X_col, Y_col);
-                    }
-
-                    const auto toc = std::chrono::high_resolution_clock::now();
-                    const std::chrono::duration<double> elapsed = toc - tic;
-
-                    sample_times[s] = elapsed.count();
-                }
-
-                // Compute the mean and std
-                double mean = std::accumulate(sample_times.begin(), sample_times.end(), 0.0) / N_samples;
-
-                double sq_sum = std::inner_product(sample_times.begin(), sample_times.end(), sample_times.begin(), 0.0);
-                double std_dev = std::sqrt(sq_sum / N_samples - mean * mean);
-
-                // Store the results
-                ts.mean.push_back(mean);
-                ts.std_dev.push_back(std_dev);
-            }
-
-            // Take the mean over the repeats
-            double μ = std::accumulate(ts.mean.begin(), ts.mean.end(), 0.0) / N_repeats;
-            double σ = std::accumulate(ts.std_dev.begin(), ts.std_dev.end(), 0.0) / N_repeats;
+        for (const auto& [name, gaxpy_func] : gaxpy_funcs) {
+            // Time the function runs
+            Stats ts = timeit(
+                gaxpy_func,
+                N_repeats,
+                N_samples,
+                A,
+                name == "gaxpy_row" ? X_row : X_col,
+                name == "gaxpy_row" ? Y_row : Y_col
+            );
 
             // Store results
-            times[name].mean.push_back(μ);
-            times[name].std_dev.push_back(σ);
+            times[name].mean.push_back(ts.mean);
+            times[name].std_dev.push_back(ts.std_dev);
 
             if (VERBOSE) {
-                std::cout << "N = " << N 
-                    << ", Time: " << μ
-                    << " ± " << σ << " s" 
+                std::cout << name
+                    << ", Time: " << ts.mean
+                    << " ± " << ts.std_dev << " s" 
                     << std::endl;
             }
         }

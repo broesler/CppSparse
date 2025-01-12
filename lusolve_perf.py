@@ -29,14 +29,13 @@ del data
 
 # Plot the data
 fig, ax = plt.subplots(num=1, clear=True)
-for key in times:
-    ax.plot(Ns, times[key]['mean'], marker='o', label=key)
-    ax.errorbar(Ns, times[key]['mean'],
-                yerr=times[key]['std_dev'], fmt='none')
+for i, (key, val) in enumerate(times.items()):
+    ax.errorbar(Ns, val['mean'],
+                yerr=val['std_dev'], ecolor=f"C{i}", fmt='.-', label=key)
 
 ax.set_xscale('log')
 ax.set_yscale('log')
-ax.grid('both')
+ax.grid(which='both')
 ax.legend()
 
 ax.set_xlabel('Number of Columns')

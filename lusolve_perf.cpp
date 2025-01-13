@@ -22,14 +22,20 @@
 
 #include "csparse.h"
 
+using namespace cs;
+
 
 // Define function prototypes here to make them visible to main()
 // See:
 // <https://stackoverflow.com/questions/69558521/friend-function-name-undefined>
+namespace cs {
+
 std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b);
 std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b);
 std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b);
 std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b);
+
+}  // namespace cs
 
 
 /** Set a random number of elements in a vector to zero.

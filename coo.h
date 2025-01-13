@@ -11,6 +11,7 @@
 #ifndef _COO_H_
 #define _COO_H_
 
+namespace cs {
 
 class COOMatrix
 {
@@ -95,7 +96,9 @@ std::ostream& operator<<(std::ostream& os, const COOMatrix& A);
 // Exercise 2.10
 std::vector<double> operator*(const COOMatrix& A, const std::vector<double>& x);
 
-#endif
+}  // namespace cs
+
+#endif  // _COO_H_
 
 //==============================================================================
 //==============================================================================

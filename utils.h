@@ -14,6 +14,8 @@
 #include <map>
 #include <numeric>  // std::iota
 
+namespace cs {
+
 std::vector<double> operator+(
     const std::vector<double>& a,
     const std::vector<double>& b
@@ -172,8 +174,10 @@ Stats timeit(
     return {μ, σ};
 }
 
+} // namespace cs
 
-#endif
+
+#endif  // _UTILS_H_
 
 //==============================================================================
 //==============================================================================

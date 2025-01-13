@@ -10,6 +10,7 @@
 #ifndef _CSC_H_
 #define _CSC_H_
 
+namespace cs {
 
 class CSCMatrix
 {
@@ -329,7 +330,10 @@ CSCMatrix operator*(const double c, const CSCMatrix& A);
 
 std::ostream& operator<<(std::ostream& os, const CSCMatrix& A);
 
-#endif
+
+}  // namespace cs
+
+#endif  // _CSC_H_
 
 //==============================================================================
 //==============================================================================

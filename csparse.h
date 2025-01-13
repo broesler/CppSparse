@@ -20,15 +20,18 @@
 using csint = std::int64_t;
 using Shape = std::array<csint, 2>;
 
-// Pre-declare classes for type conversions
-class COOMatrix;
-class CSCMatrix;
+namespace cs {
+    // Pre-declare classes for type conversions
+    class COOMatrix;
+    class CSCMatrix;
+}  // namespace cs
 
 #include "utils.h"
 #include "csc.h"
 #include "coo.h"
 
-#endif
+
+#endif // _CSPARSE_H_
 
 //==============================================================================
 //==============================================================================

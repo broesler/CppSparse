@@ -23,6 +23,8 @@
 
 #include "csparse.h"
 
+using namespace cs;
+
 using Catch::Matchers::AllTrue;
 using Catch::Matchers::WithinAbs;
 using Catch::Matchers::UnorderedEquals;

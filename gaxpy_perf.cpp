@@ -21,10 +21,14 @@
 
 #include "csparse.h"
 
+using namespace cs;
+
 
 // Define function prototypes here to make them visible to main()
 // See: 
 // <https://stackoverflow.com/questions/69558521/friend-function-name-undefined>
+namespace cs {
+
 #ifdef GATXPY
 std::vector<double> gatxpy_col(
 #else
@@ -54,6 +58,8 @@ std::vector<double> gaxpy_block(
     const std::vector<double>& X,
     const std::vector<double>& Y
 );
+
+}  // namespace cs
 
 
 /*------------------------------------------------------------------------------

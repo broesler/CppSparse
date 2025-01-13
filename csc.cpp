@@ -766,26 +766,24 @@ CSCMatrix CSCMatrix::band(const csint kl, const csint ku)
 ----------------------------------------------------------------------------*/
 /** Matrix-vector multiply `y = Ax + y`.
  *
- * @param A  a sparse matrix
  * @param x  a dense multiplying vector
  * @param y  a dense adding vector which will be used for the output
  *
  * @return y a copy of the updated vector
  */
-std::vector<double> gaxpy(
-    const CSCMatrix& A,
+std::vector<double> CSCMatrix::gaxpy(
     const std::vector<double>& x,
     const std::vector<double>& y
-    )
+    ) const
 {
-    assert(A.M_ == y.size());  // addition
-    assert(A.N_ == x.size());  // multiplication
+    assert(M_ == y.size());  // addition
+    assert(N_ == x.size());  // multiplication
 
     std::vector<double> out = y;  // copy the input vector
 
-    for (csint j = 0; j < A.N_; j++) {
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
-            out[A.i_[p]] += A.v_[p] * x[j];
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            out[i_[p]] += v_[p] * x[j];
         }
     }
 
@@ -793,31 +791,29 @@ std::vector<double> gaxpy(
 };
 
 
-/** Matrix transpose-vector multiply `y = A.T x + y`.
+/** Matrix transpose-vector multiply `y = T x + y`.
  *
  * See: Davis, Exercise 2.1. Compute \f$ A^T x + y \f$ without explicitly
  * computing the transpose.
  *
- * @param A  a sparse matrix
  * @param x  a dense multiplying vector
  * @param y[in,out]  a dense adding vector which will be used for the output
  *
  * @return y a copy of the updated vector
  */
-std::vector<double> gatxpy(
-    const CSCMatrix& A,
+std::vector<double> CSCMatrix::gatxpy(
     const std::vector<double>& x,
     const std::vector<double>& y
-    )
+    ) const
 {
-    assert(A.M_ == x.size());  // multiplication
-    assert(A.N_ == y.size());  // addition
+    assert(M_ == x.size());  // multiplication
+    assert(N_ == y.size());  // addition
 
     std::vector<double> out = y;  // copy the input vector
 
-    for (csint j = 0; j < A.N_; j++) {
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
-            out[j] += A.v_[p] * x[A.i_[p]];
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            out[j] += v_[p] * x[i_[p]];
         }
     }
 
@@ -829,37 +825,35 @@ std::vector<double> gatxpy(
  *
  * See: Davis, Exercise 2.3.
  *
- * @param A  a sparse symmetric matrix, only `A(i, j)` where `j >= i` is stored.
  * @param x  a dense multiplying vector
  * @param y  a dense adding vector which will be used for the output
  *
  * @return y a copy of the updated vector
  */
-std::vector<double> sym_gaxpy(
-    const CSCMatrix& A,
+std::vector<double> CSCMatrix::sym_gaxpy(
     const std::vector<double>& x,
     const std::vector<double>& y
-    )
+    ) const
 {
-    assert(A.M_ == A.N_);  // matrix must be square to be symmetric
-    assert(A.N_ == x.size());
+    assert(M_ == N_);  // matrix must be square to be symmetric
+    assert(N_ == x.size());
     assert(x.size() == y.size());
 
     std::vector<double> out = y;  // copy the input vector
 
-    for (csint j = 0; j < A.N_; j++) {
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
-            csint i = A.i_[p];
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            csint i = i_[p];
 
             if (i > j)
                 continue;  // skip lower triangular
 
             // Add the upper triangular elements
-            out[i] += A.v_[p] * x[j];
+            out[i] += v_[p] * x[j];
 
             // If off-diagonal, also add the symmetric element
             if (i < j)
-                out[j] += A.v_[p] * x[i];
+                out[j] += v_[p] * x[i];
         }
     }
 
@@ -871,36 +865,34 @@ std::vector<double> sym_gaxpy(
  *
  * See: Davis, Exercise 2.27(a).
  *
- * @param A  a sparse matrix
  * @param X  a dense multiplying matrix in column-major order
  * @param[in,out] Y  a dense adding matrix which will be used for the output
  *
  * @return Y a copy of the updated matrix
  */
-std::vector<double> gaxpy_col(
-    const CSCMatrix& A,
+std::vector<double> CSCMatrix::gaxpy_col(
     const std::vector<double>& X,
     const std::vector<double>& Y
-    )
+    ) const
 {
-    assert(X.size() % A.N_ == 0);  // check that X.size() is a multiple of A.N_
-    assert(Y.size() == A.M_ * (X.size() / A.N_));
+    assert(X.size() % N_ == 0);  // check that X.size() is a multiple of N_
+    assert(Y.size() == M_ * (X.size() / N_));
 
     std::vector<double> out = Y;  // copy the input matrix
 
-    csint K = X.size() / A.N_;  // number of columns in X
+    csint K = X.size() / N_;  // number of columns in X
 
     // For each column of X
     for (csint k = 0; k < K; k++) {
         // Compute one column of Y (see gaxpy)
-        for (csint j = 0; j < A.N_; j++) {
-            double x_val = X[j + k * A.N_];  // cache value
+        for (csint j = 0; j < N_; j++) {
+            double x_val = X[j + k * N_];  // cache value
 
             // Only compute if x_val is non-zero
             if (x_val != 0.0) {
-                for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+                for (csint p = p_[j]; p < p_[j+1]; p++) {
                     // Indexing in column-major order
-                    out[A.i_[p] + k * A.M_] += A.v_[p] * x_val;
+                    out[i_[p] + k * M_] += v_[p] * x_val;
                 }
             }
         }
@@ -915,41 +907,39 @@ std::vector<double> gaxpy_col(
  *
  * See: Davis, Exercise 2.27(c).
  *
- * @param A  a sparse matrix
  * @param X  a dense multiplying matrix in column-major order
  * @param[in,out] Y  a dense adding matrix which will be used for the output
  *
  * @return Y a copy of the updated matrix
  */
-std::vector<double> gaxpy_block(
-    const CSCMatrix& A,
+std::vector<double> CSCMatrix::gaxpy_block(
     const std::vector<double>& X,
     const std::vector<double>& Y
-    )
+    ) const
 {
-    assert(X.size() % A.N_ == 0);  // check that X.size() is a multiple of A.N_
-    assert(Y.size() == A.M_ * (X.size() / A.N_));
+    assert(X.size() % N_ == 0);  // check that X.size() is a multiple of N_
+    assert(Y.size() == M_ * (X.size() / N_));
 
     std::vector<double> out = Y;  // copy the input matrix
 
-    csint K = X.size() / A.N_;  // number of columns in X
+    csint K = X.size() / N_;  // number of columns in X
 
     const csint BLOCK_SIZE = 32;  // block size for column operations
 
     // For each column of X
     for (csint k = 0; k < K; k++) {
         // Take a block of columns
-        for (csint j_start = 0; j_start < A.N_; j_start += BLOCK_SIZE) {
-            csint j_end = std::min(j_start + BLOCK_SIZE, A.N_);
+        for (csint j_start = 0; j_start < N_; j_start += BLOCK_SIZE) {
+            csint j_end = std::min(j_start + BLOCK_SIZE, N_);
             // Compute one column of Y (see gaxpy)
             for (csint j = j_start; j < j_end; j++) {
-                double x_val = X[j + k * A.N_];  // cache value
+                double x_val = X[j + k * N_];  // cache value
 
                 // Only compute if x_val is non-zero
                 if (x_val != 0.0) {
-                    for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+                    for (csint p = p_[j]; p < p_[j+1]; p++) {
                         // Indexing in column-major order
-                        out[A.i_[p] + k * A.M_] += A.v_[p] * x_val;
+                        out[i_[p] + k * M_] += v_[p] * x_val;
                     }
                 }
             }
@@ -964,36 +954,34 @@ std::vector<double> gaxpy_block(
  *
  * See: Davis, Exercise 2.27(b).
  *
- * @param A  a sparse matrix
  * @param X  a dense multiplying matrix in row-major order
  * @param[in,out] Y  a dense adding matrix which will be used for the output
  *
  * @return Y a copy of the updated matrix
  */
-std::vector<double> gaxpy_row(
-    const CSCMatrix& A,
+std::vector<double> CSCMatrix::gaxpy_row(
     const std::vector<double>& X,
     const std::vector<double>& Y
-    )
+    ) const
 {
-    assert(X.size() % A.N_ == 0);  // check that X.size() is a multiple of A.N_
-    assert(Y.size() == A.M_ * (X.size() / A.N_));
+    assert(X.size() % N_ == 0);  // check that X.size() is a multiple of N_
+    assert(Y.size() == M_ * (X.size() / N_));
 
     std::vector<double> out = Y;  // copy the input matrix
 
-    csint K = X.size() / A.N_;  // number of columns in X
+    csint K = X.size() / N_;  // number of columns in X
 
     // For each column of X
     for (csint k = 0; k < K; k++) {
         // Compute one column of Y (see gaxpy)
-        for (csint j = 0; j < A.N_; j++) {
+        for (csint j = 0; j < N_; j++) {
             double x_val = X[k + j * K];  // cache value (row-major indexing)
 
             // Only compute if x_val is non-zero
             if (x_val != 0.0) {
-                for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+                for (csint p = p_[j]; p < p_[j+1]; p++) {
                     // Indexing in row-major order
-                    out[k + A.i_[p] * K] += A.v_[p] * x_val;
+                    out[k + i_[p] * K] += v_[p] * x_val;
                 }
             }
         }
@@ -1003,36 +991,34 @@ std::vector<double> gaxpy_row(
 }
 
 
-/** Matrix multiply `Y = A.T X + Y` for column-major dense matrices `X` and `Y`.
+/** Matrix multiply `Y = T X + Y` for column-major dense matrices `X` and `Y`.
  *
  * See: Davis, Exercise 2.28(a).
  *
- * @param A  a sparse matrix
  * @param X  a dense multiplying matrix in column-major order
  * @param[in,out] Y  a dense adding matrix which will be used for the output
  *
  * @return Y a copy of the updated matrix
  */
-std::vector<double> gatxpy_col(
-    const CSCMatrix& A,
+std::vector<double> CSCMatrix::gatxpy_col(
     const std::vector<double>& X,
     const std::vector<double>& Y
-    )
+    ) const
 {
-    assert(X.size() % A.M_ == 0);  // check that X.size() is a multiple of A.M_
-    assert(Y.size() == A.N_ * (X.size() / A.M_));
+    assert(X.size() % M_ == 0);  // check that X.size() is a multiple of M_
+    assert(Y.size() == N_ * (X.size() / M_));
 
     std::vector<double> out = Y;  // copy the input matrix
 
-    csint K = X.size() / A.M_;  // number of columns in X
+    csint K = X.size() / M_;  // number of columns in X
 
     // For each column of X
     for (csint k = 0; k < K; k++) {
         // Compute one column of Y (see gaxpy)
-        for (csint j = 0; j < A.N_; j++) {
-            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+        for (csint j = 0; j < N_; j++) {
+            for (csint p = p_[j]; p < p_[j+1]; p++) {
                 // Indexing in column-major order
-                out[j + k * A.N_] += A.v_[p] * X[A.i_[p] + k * A.M_];
+                out[j + k * N_] += v_[p] * X[i_[p] + k * M_];
             }
         }
     }
@@ -1041,42 +1027,40 @@ std::vector<double> gatxpy_col(
 }
 
 
-/** Matrix multiply `Y = A.T X + Y` for column-major dense matrices `X` and `Y`,
+/** Matrix multiply `Y = T X + Y` for column-major dense matrices `X` and `Y`,
  * but operate on blocks of columns.
  *
  * See: Davis, Exercise 2.28(c).
  *
- * @param A  a sparse matrix
  * @param X  a dense multiplying matrix in column-major order
  * @param[in,out] Y  a dense adding matrix which will be used for the output
  *
  * @return Y a copy of the updated matrix
  */
-std::vector<double> gatxpy_block(
-    const CSCMatrix& A,
+std::vector<double> CSCMatrix::gatxpy_block(
     const std::vector<double>& X,
     const std::vector<double>& Y
-    )
+    ) const
 {
-    assert(X.size() % A.M_ == 0);  // check that X.size() is a multiple of A.N_
-    assert(Y.size() == A.N_ * (X.size() / A.M_));
+    assert(X.size() % M_ == 0);  // check that X.size() is a multiple of N_
+    assert(Y.size() == N_ * (X.size() / M_));
 
     std::vector<double> out = Y;  // copy the input matrix
 
-    csint K = X.size() / A.M_;  // number of columns in X
+    csint K = X.size() / M_;  // number of columns in X
 
     const csint BLOCK_SIZE = 32;  // block size for column operations
 
     // For each column of X
     for (csint k = 0; k < K; k++) {
         // Take a block of columns
-        for (csint j_start = 0; j_start < A.N_; j_start += BLOCK_SIZE) {
-            csint j_end = std::min(j_start + BLOCK_SIZE, A.N_);
+        for (csint j_start = 0; j_start < N_; j_start += BLOCK_SIZE) {
+            csint j_end = std::min(j_start + BLOCK_SIZE, N_);
             // Compute one column of Y (see gaxpy)
             for (csint j = j_start; j < j_end; j++) {
-                for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+                for (csint p = p_[j]; p < p_[j+1]; p++) {
                     // Indexing in column-major order
-                    out[j + k * A.N_] += A.v_[p] * X[A.i_[p] + k * A.M_];
+                    out[j + k * N_] += v_[p] * X[i_[p] + k * M_];
                 }
             }
         }
@@ -1086,36 +1070,34 @@ std::vector<double> gatxpy_block(
 }
 
 
-/** Matrix multiply `Y = A.T X + Y` for row-major dense matrices `X` and `Y`.
+/** Matrix multiply `Y = T X + Y` for row-major dense matrices `X` and `Y`.
  *
  * See: Davis, Exercise 2.27(b).
  *
- * @param A  a sparse matrix
  * @param X  a dense multiplying matrix in row-major order
  * @param[in,out] Y  a dense adding matrix which will be used for the output
  *
  * @return Y a copy of the updated matrix
  */
-std::vector<double> gatxpy_row(
-    const CSCMatrix& A,
+std::vector<double> CSCMatrix::gatxpy_row(
     const std::vector<double>& X,
     const std::vector<double>& Y
-    )
+    ) const
 {
-    assert(X.size() % A.M_ == 0);  // check that X.size() is a multiple of A.N_
-    assert(Y.size() == A.N_ * (X.size() / A.M_));
+    assert(X.size() % M_ == 0);  // check that X.size() is a multiple of N_
+    assert(Y.size() == N_ * (X.size() / M_));
 
     std::vector<double> out = Y;  // copy the input matrix
 
-    csint K = X.size() / A.M_;  // number of columns in X
+    csint K = X.size() / M_;  // number of columns in X
 
     // For each column of X
     for (csint k = 0; k < K; k++) {
         // Compute one column of Y (see gaxpy)
-        for (csint j = 0; j < A.N_; j++) {
-            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+        for (csint j = 0; j < N_; j++) {
+            for (csint p = p_[j]; p < p_[j+1]; p++) {
                 // Indexing in row-major order
-                out[k + j * K] += A.v_[p] * X[k + A.i_[p] * K];
+                out[k + j * K] += v_[p] * X[k + i_[p] * K];
             }
         }
     }
@@ -1210,7 +1192,7 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
         // Compute x = A @ B[:, j]
         for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
             // Compute x += A[:, B.i_[p]] * B.v_[p]
-            nz = scatter(*this, B.i_[p], B.v_[p], w, x, j+1, C, nz, fs);
+            nz = scatter(B.i_[p], B.v_[p], w, x, j+1, C, nz, fs);
             fs = false;
         }
 
@@ -1283,7 +1265,7 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
         // Compute x = A @ B[:, j]
         for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
             // Compute x += A[:, B.i_[p]] * B.v_[p]
-            nz = scatter(*this, B.i_[p], B.v_[p], w, x, j+1, C, nz, fs);
+            nz = scatter(B.i_[p], B.v_[p], w, x, j+1, C, nz, fs);
             fs = false;
         }
 
@@ -1389,9 +1371,9 @@ CSCMatrix add_scaled(
 
     for (csint j = 0; j < N; j++) {
         C.p_[j] = nz;  // column j of C starts here
-        nz = scatter(A, j, alpha, w, x, j+1, C, nz, fs);  // alpha * A(:, j)
+        nz = A.scatter(j, alpha, w, x, j+1, C, nz, fs);  // alpha * A(:, j)
         fs = false;
-        nz = scatter(B, j,  beta, w, x, j+1, C, nz, fs);  //  beta * B(:, j)
+        nz = B.scatter(j,  beta, w, x, j+1, C, nz, fs);  //  beta * B(:, j)
 
         // Gather results into the correct column of C
         for (csint p = C.p_[j]; p < nz; p++) {
@@ -1476,8 +1458,7 @@ CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B) { return A.add(B); }
  *
  * @return nz  updated number of non-zeros in `C`.
  */
-csint scatter(
-    const CSCMatrix& A,
+csint CSCMatrix::scatter(
     csint j,
     double beta,
     std::vector<csint>& w,
@@ -1486,26 +1467,26 @@ csint scatter(
     CSCMatrix& C,
     csint nz,
     bool fs
-    )
+    ) const
 {
     if (fs) {
         // If it's the first call, we can just copy the (scaled) column
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
-            csint i = A.i_[p];       // A(i, j) is non-zero
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            csint i = i_[p];       // A(i, j) is non-zero
             w[i] = mark;             // i is new entry in column j
             C.i_[nz++] = i;          // add i to sparsity pattern of C(:, j)
-            x[i] = beta * A.v_[p];   // x = beta * A(i, j)
+            x[i] = beta * v_[p];   // x = beta * A(i, j)
         }
     } else {
         // Otherwise, we need to accumulate the values
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
-            csint i = A.i_[p];           // A(i, j) is non-zero
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            csint i = i_[p];           // A(i, j) is non-zero
             if (w[i] < mark) {
                 w[i] = mark;             // i is new entry in column j
                 C.i_[nz++] = i;          // add i to pattern of C(:, j)
-                x[i] = beta * A.v_[p];   // x = beta * A(i, j)
+                x[i] = beta * v_[p];   // x = beta * A(i, j)
             } else {
-                x[i] += beta * A.v_[p];  // i exists in C(:, j) already
+                x[i] += beta * v_[p];  // i exists in C(:, j) already
             }
         }
     }
@@ -1996,17 +1977,17 @@ std::vector<double> CSCMatrix::sum_cols() const
  *
  * @return x  the solution vector
  */
-std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
+std::vector<double> CSCMatrix::lsolve(const std::vector<double>& b) const
 {
-    assert(L.M_ == L.N_);
-    assert(L.M_ == b.size());
+    assert(M_ == N_);
+    assert(M_ == b.size());
 
     std::vector<double> x = b;
 
-    for (csint j = 0; j < L.N_; j++) {
-        x[j] /= L.v_[L.p_[j]];
-        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
-            x[L.i_[p]] -= L.v_[p] * x[j];
+    for (csint j = 0; j < N_; j++) {
+        x[j] /= v_[p_[j]];
+        for (csint p = p_[j] + 1; p < p_[j+1]; p++) {
+            x[i_[p]] -= v_[p] * x[j];
         }
     }
 
@@ -2025,18 +2006,18 @@ std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
  *
  * @return x  the solution vector
  */
-std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
+std::vector<double> CSCMatrix::ltsolve(const std::vector<double>& b) const
 {
-    assert(L.M_ == L.N_);
-    assert(L.M_ == b.size());
+    assert(M_ == N_);
+    assert(M_ == b.size());
 
     std::vector<double> x = b;
 
-    for (csint j = L.N_ - 1; j >= 0; j--) {
-        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
-            x[j] -= L.v_[p] * x[L.i_[p]];
+    for (csint j = N_ - 1; j >= 0; j--) {
+        for (csint p = p_[j] + 1; p < p_[j+1]; p++) {
+            x[j] -= v_[p] * x[i_[p]];
         }
-        x[j] /= L.v_[L.p_[j]];
+        x[j] /= v_[p_[j]];
     }
 
     return x;
@@ -2054,17 +2035,17 @@ std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
  *
  * @return x  the solution vector
  */
-std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
+std::vector<double> CSCMatrix::usolve(const std::vector<double>& b) const
 {
-    assert(U.M_ == U.N_);
-    assert(U.M_ == b.size());
+    assert(M_ == N_);
+    assert(M_ == b.size());
 
     std::vector<double> x = b;
 
-    for (csint j = U.N_ - 1; j >= 0; j--) {
-        x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
-        for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
-            x[U.i_[p]] -= U.v_[p] * x[j];
+    for (csint j = N_ - 1; j >= 0; j--) {
+        x[j] /= v_[p_[j+1] - 1];  // diagonal entry
+        for (csint p = p_[j]; p < p_[j+1] - 1; p++) {
+            x[i_[p]] -= v_[p] * x[j];
         }
     }
 
@@ -2083,18 +2064,18 @@ std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
  *
  * @return x  the solution vector
  */
-std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
+std::vector<double> CSCMatrix::utsolve(const std::vector<double>& b) const
 {
-    assert(U.M_ == U.N_);
-    assert(U.M_ == b.size());
+    assert(M_ == N_);
+    assert(M_ == b.size());
 
     std::vector<double> x = b;
 
-    for (csint j = 0; j < U.N_; j++) {
-        for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
-            x[j] -= U.v_[p] * x[U.i_[p]];
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1] - 1; p++) {
+            x[j] -= v_[p] * x[i_[p]];
         }
-        x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
+        x[j] /= v_[p_[j+1] - 1];  // diagonal entry
     }
 
     return x;
@@ -2114,21 +2095,21 @@ std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
  *
  * @return x  the solution vector
  */
-std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
+std::vector<double> CSCMatrix::lsolve_opt(const std::vector<double>& b) const
 {
-    assert(L.M_ == L.N_);
-    assert(L.M_ == b.size());
+    assert(M_ == N_);
+    assert(M_ == b.size());
 
     std::vector<double> x = b;
 
-    for (csint j = 0; j < L.N_; j++) {
-        x[j] /= L.v_[L.p_[j]];
+    for (csint j = 0; j < N_; j++) {
+        x[j] /= v_[p_[j]];
 
         // Exercise 3.8: improve performance by checking for zeros
         double x_val = x[j];  // cache value
         if (x_val != 0) {
-            for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
-                x[L.i_[p]] -= L.v_[p] * x_val;
+            for (csint p = p_[j] + 1; p < p_[j+1]; p++) {
+                x[i_[p]] -= v_[p] * x_val;
             }
         }
     }
@@ -2148,20 +2129,20 @@ std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
  *
  * @return x  the solution vector
  */
-std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b)
+std::vector<double> CSCMatrix::usolve_opt(const std::vector<double>& b) const
 {
-    assert(U.M_ == U.N_);
-    assert(U.M_ == b.size());
+    assert(M_ == N_);
+    assert(M_ == b.size());
 
     std::vector<double> x = b;
 
-    for (csint j = U.N_ - 1; j >= 0; j--) {
-        x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
+    for (csint j = N_ - 1; j >= 0; j--) {
+        x[j] /= v_[p_[j+1] - 1];  // diagonal entry
 
         double x_val = x[j];  // cache value
         if (x_val != 0) {
-            for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
-                x[U.i_[p]] -= U.v_[p] * x_val;
+            for (csint p = p_[j]; p < p_[j+1] - 1; p++) {
+                x[i_[p]] -= v_[p] * x_val;
             }
         }
     }
@@ -2178,7 +2159,6 @@ std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b)
  * If `lo` is zero, the function assumes that the diagonal entry of `U` is
  * always present and is the last entry in each column.
  *
- * @param G  a triangular matrix
  * @param B  a dense matrix
  * @param k  the column index of `B` to solve
  * @param xi[out]  the row indices of the non-zero entries in `x`. This is
@@ -2195,16 +2175,15 @@ std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b)
  * @return top  the index of `xi` where the non-zero entries of `x` begin. They
  *         are located from `top` through `G.N_ - 1`.
  */
-std::pair<std::vector<csint>, std::vector<double>> spsolve(
-    const CSCMatrix& G,
+std::pair<std::vector<csint>, std::vector<double>> CSCMatrix::spsolve(
     const CSCMatrix& B,
     csint k,
     bool lo
-    )
+    ) const
 {
     // Populate xi with the non-zero indices of x
-    std::vector<csint> xi = reach(G, B, k);
-    std::vector<double> x(G.N_);  // dense output vector
+    std::vector<csint> xi = reach(B, k);
+    std::vector<double> x(N_);  // dense output vector
 
     // Clear non-zeros of x
     for (auto& i : xi) {
@@ -2222,11 +2201,11 @@ std::pair<std::vector<csint>, std::vector<double>> spsolve(
         if (J < 0) {
             continue;                                // x(j) is not in the pattern of G
         }
-        x[j] /= G.v_[lo ? G.p_[J] : G.p_[J+1] - 1];  // x(j) /= G(j, j)
-        csint p = lo ? G.p_[J] + 1 : G.p_[J];        // lo: L(j,j) 1st entry
-        csint q = lo ? G.p_[J+1]   : G.p_[J+1] - 1;  // up: U(j,j) last entry
+        x[j] /= v_[lo ? p_[J] : p_[J+1] - 1];  // x(j) /= G(j, j)
+        csint p = lo ? p_[J] + 1 : p_[J];        // lo: L(j,j) 1st entry
+        csint q = lo ? p_[J+1]   : p_[J+1] - 1;  // up: U(j,j) last entry
         for (; p < q; p++) {
-            x[G.i_[p]] -= G.v_[p] * x[j];            // x[i] -= G(i, j) * x[j]
+            x[i_[p]] -= v_[p] * x[j];            // x[i] -= G(i, j) * x[j]
         }
     }
 
@@ -2237,27 +2216,22 @@ std::pair<std::vector<csint>, std::vector<double>> spsolve(
 /** Compute the reachability indices of a column `k` in a sparse matrix `B`,
  * given a sparse matrix `G`.
  *
- * @param G  a sparse matrix that defines the graph
  * @param B  a sparse matrix containing the RHS in column `k`
  * @param k  the column index of `B` containing the RHS
  * 
  * @return xi  the row indices of the non-zero entries in `x`, in topological
- *      order of the graph of G.
+ *      order of the graph of 
  */
-std::vector<csint> reach(
-    const CSCMatrix& G,
-    const CSCMatrix& B,
-    csint k
-    )
+std::vector<csint> CSCMatrix::reach(const CSCMatrix& B, csint k) const
 {
-    std::vector<bool> is_marked(G.N_, false);
+    std::vector<bool> is_marked(N_, false);
     std::vector<csint> xi;  // do not initialize for dfs call!
-    xi.reserve(G.N_);
+    xi.reserve(N_);
 
     for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
         csint j = B.i_[p];  // consider nonzero B(j, k)
         if (!is_marked[j]) {
-            xi = dfs(G, j, is_marked, xi);
+            xi = dfs(j, is_marked, xi);
         }
     }
 
@@ -2270,25 +2244,23 @@ std::vector<csint> reach(
 
 /** Perform depth-first search on a graph.
  *
- * @param G  a sparse matrix that defines the graph
  * @param j  the starting node
- * @param is_marked  a boolean vector of length `G.N_` that marks visited nodes
+ * @param is_marked  a boolean vector of length `N_` that marks visited nodes
  * @param[in,out] xi  the row indices of the non-zero entries in `x`. This
  *      vector is used as a stack to store the output. It should not be
  *      initialized, other than by a previous call to `dfs`.
  *
  * @return xi  a reference to the row indices of the non-zero entries in `x`.
  */
-std::vector<csint>& dfs(
-    const CSCMatrix& G,
+std::vector<csint>& CSCMatrix::dfs(
     csint j,
     std::vector<bool>& is_marked,
     std::vector<csint>& xi
-    )
+    ) const
 {
     std::vector<csint> rstack, pstack;  // recursion and pause stacks
-    rstack.reserve(G.N_);
-    pstack.reserve(G.N_);
+    rstack.reserve(N_);
+    pstack.reserve(N_);
 
     rstack.push_back(j);       // initialize the recursion stack
 
@@ -2300,15 +2272,15 @@ std::vector<csint>& dfs(
 
         if (!is_marked[j]) {
             is_marked[j] = true;  // mark node j as visited
-            pstack.push_back((jnew < 0) ? 0 : G.p_[jnew]);
+            pstack.push_back((jnew < 0) ? 0 : p_[jnew]);
         }
 
         done = true;  // node j done if no unvisited neighbors
-        csint q = (jnew < 0) ? 0 : G.p_[jnew+1];
+        csint q = (jnew < 0) ? 0 : p_[jnew+1];
 
         // examine all neighbors of j
         for (csint p = pstack.back(); p < q; p++) {
-            csint i = G.i_[p];        // consider neighbor node i
+            csint i = i_[p];        // consider neighbor node i
             if (!is_marked[i]) {
                 pstack.back() = p;    // pause dfs of node j
                 rstack.push_back(i);  // start dfs at node i

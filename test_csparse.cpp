@@ -787,9 +787,9 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
         )
     {
         std::vector<double> zero(y.size());
-        REQUIRE_THAT(is_close(gaxpy(A, x, zero),   expect_Ax,   tol), AllTrue());
-        REQUIRE_THAT(is_close(gaxpy(A, x, y),      expect_Axpy, tol), AllTrue());
-        REQUIRE_THAT(is_close(gatxpy(A.T(), x, y), expect_Axpy, tol), AllTrue());
+        REQUIRE_THAT(is_close(A.gaxpy(x, zero),   expect_Ax,   tol), AllTrue());
+        REQUIRE_THAT(is_close(A.gaxpy(x, y),      expect_Axpy, tol), AllTrue());
+        REQUIRE_THAT(is_close(A.T().gatxpy(x, y), expect_Axpy, tol), AllTrue());
         REQUIRE_THAT(is_close(A.dot(x),            expect_Ax,   tol), AllTrue());
         REQUIRE_THAT(is_close((A * x),             expect_Ax,   tol), AllTrue());
         REQUIRE_THAT(is_close((A * x + y),         expect_Axpy, tol), AllTrue());
@@ -827,7 +827,7 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
         std::vector<double> expect_Axpy = {10, 10, 10};
 
         multiply_test(A, x, y, expect_Ax, expect_Axpy);
-        REQUIRE_THAT(is_close(sym_gaxpy(A, x, y),  expect_Axpy, tol), AllTrue());
+        REQUIRE_THAT(is_close(A.sym_gaxpy(x, y),  expect_Axpy, tol), AllTrue());
     }
 
     SECTION("Test an arbitrary non-symmetric matrix.") {
@@ -861,7 +861,7 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
         // A @ x + y
         std::vector<double> expect_Axpy = {25.7, 15.0, 13.4,  8.5};
 
-        REQUIRE_THAT(is_close(sym_gaxpy(A, x, y), expect_Axpy, tol), AllTrue());
+        REQUIRE_THAT(is_close(A.sym_gaxpy(x, y), expect_Axpy, tol), AllTrue());
     }
 }
 
@@ -883,8 +883,8 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
 
         CSCMatrix expect = A;
 
-        compare_noncanonical(CSCMatrix(gaxpy_col(A, I, Z), 4, 4), expect);
-        compare_noncanonical(CSCMatrix(gatxpy_col(A.T(), I, Z), 4, 4), expect);
+        compare_noncanonical(CSCMatrix(A.gaxpy_col(I, Z), 4, 4), expect);
+        compare_noncanonical(CSCMatrix(A.T().gatxpy_col(I, Z), 4, 4), expect);
     }
 
     SECTION("Test arbitrary square matrix in column-major format") {
@@ -898,10 +898,10 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
              6.29,  3.91,  0.0 ,  2.81
         };
 
-        std::vector<double> C_col = gaxpy_col(A.T(), A_dense, A_dense);
-        std::vector<double> C_block = gaxpy_block(A.T(), A_dense, A_dense);
-        std::vector<double> CT_col = gatxpy_col(A, A_dense, A_dense);
-        std::vector<double> CT_block = gatxpy_block(A, A_dense, A_dense);
+        std::vector<double> C_col = A.T().gaxpy_col(A_dense, A_dense);
+        std::vector<double> C_block = A.T().gaxpy_block(A_dense, A_dense);
+        std::vector<double> CT_col = A.gatxpy_col(A_dense, A_dense);
+        std::vector<double> CT_block = A.gatxpy_block(A_dense, A_dense);
 
         REQUIRE_THAT(is_close(C_col, expect, tol), AllTrue());
         REQUIRE_THAT(is_close(C_block, expect, tol), AllTrue());
@@ -920,8 +920,8 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
              9.79,  3.41,  0.0 ,  2.81
         };
 
-        std::vector<double> C = gaxpy_row(A.T(), A_dense, A_dense);
-        std::vector<double> CT = gatxpy_row(A, A_dense, A_dense);
+        std::vector<double> C = A.T().gaxpy_row(A_dense, A_dense);
+        std::vector<double> CT = A.gatxpy_row(A_dense, A_dense);
 
         REQUIRE_THAT(is_close(C, expect, tol), AllTrue());
         REQUIRE_THAT(is_close(CT, expect, tol), AllTrue());
@@ -940,13 +940,13 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
              0.0 ,  3.51,  1.53,  1.36
         };
 
-        REQUIRE_THAT(is_close(gaxpy_col(Ab, Ac_dense, A_dense), expect, tol),
+        REQUIRE_THAT(is_close(Ab.gaxpy_col(Ac_dense, A_dense), expect, tol),
                      AllTrue());
-        REQUIRE_THAT(is_close(gaxpy_block(Ab, Ac_dense, A_dense), expect, tol),
+        REQUIRE_THAT(is_close(Ab.gaxpy_block(Ac_dense, A_dense), expect, tol),
                      AllTrue());
-        REQUIRE_THAT(is_close(gatxpy_col(Ab.T(), Ac_dense, A_dense), expect, tol),
+        REQUIRE_THAT(is_close(Ab.T().gatxpy_col(Ac_dense, A_dense), expect, tol),
                      AllTrue());
-        REQUIRE_THAT(is_close(gatxpy_block(Ab.T(), Ac_dense, A_dense), expect, tol),
+        REQUIRE_THAT(is_close(Ab.T().gatxpy_block(Ac_dense, A_dense), expect, tol),
                      AllTrue());
     }
 
@@ -963,9 +963,9 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
             20.49,  1.56, 11.2 ,  1.36
         };
 
-        REQUIRE_THAT(is_close(gaxpy_row(Ab, Ac_dense, A_dense), expect, tol),
+        REQUIRE_THAT(is_close(Ab.gaxpy_row(Ac_dense, A_dense), expect, tol),
                      AllTrue());
-        REQUIRE_THAT(is_close(gatxpy_row(Ab.T(), Ac_dense, A_dense), expect, tol),
+        REQUIRE_THAT(is_close(Ab.T().gatxpy_row(Ac_dense, A_dense), expect, tol),
                      AllTrue());
     }
 }
@@ -1819,7 +1819,7 @@ TEST_CASE("Test triangular solve with dense RHS")
 
     SECTION("Forward solve L x = b") {
         const std::vector<double> b = {1, 5, 15};  // row sums of L
-        const std::vector<double> x = lsolve(L, b);
+        const std::vector<double> x = L.lsolve(b);
 
         REQUIRE(x.size() == expect.size());
         REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
@@ -1827,7 +1827,7 @@ TEST_CASE("Test triangular solve with dense RHS")
 
     SECTION("Backsolve L.T x = b") {
         const std::vector<double> b = {7, 8, 6};  // row sums of L.T == col sums of L
-        const std::vector<double> x = ltsolve(L, b);
+        const std::vector<double> x = L.ltsolve(b);
 
         REQUIRE(x.size() == expect.size());
         REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
@@ -1835,7 +1835,7 @@ TEST_CASE("Test triangular solve with dense RHS")
 
     SECTION("Backsolve U x = b") {
         const std::vector<double> b = {7, 8, 6};  // row sums of L.T == col sums of L
-        const std::vector<double> x = usolve(U, b);
+        const std::vector<double> x = U.usolve(b);
 
         REQUIRE(x.size() == expect.size());
         REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
@@ -1843,7 +1843,7 @@ TEST_CASE("Test triangular solve with dense RHS")
 
     SECTION("Forward solve U.T x = b") {
         const std::vector<double> b = {1, 5, 15};  // row sums of L
-        const std::vector<double> x = utsolve(U, b);
+        const std::vector<double> x = U.utsolve(b);
 
         REQUIRE(x.size() == expect.size());
         REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
@@ -1884,7 +1884,7 @@ TEST_CASE("Reachability and DFS")
         std::vector<csint> xi;  // do not initialize!
         xi.reserve(N);
 
-        xi = dfs(L, j, is_marked, xi);
+        xi = L.dfs(j, is_marked, xi);
 
         REQUIRE(xi == expect);
     }
@@ -1894,7 +1894,7 @@ TEST_CASE("Reachability and DFS")
         B.assign(3, 0, 1.0);
         std::vector<csint> expect = {3, 8, 11, 12, 13};
 
-        std::vector<csint> xi = reach(L, B, 0);
+        std::vector<csint> xi = L.reach(B, 0);
 
         REQUIRE(xi == expect);
     }
@@ -1904,7 +1904,7 @@ TEST_CASE("Reachability and DFS")
         B.assign(3, 0, 1.0).assign(5, 0, 1.0).to_canonical();
         std::vector<csint> expect = {5, 9, 10, 3, 8, 11, 12, 13};
 
-        std::vector<csint> xi = reach(L, B, 0);
+        std::vector<csint> xi = L.reach(B, 0);
 
         REQUIRE(xi == expect);
     }
@@ -1918,7 +1918,7 @@ TEST_CASE("Reachability and DFS")
         std::vector<double> expect(N, 1.0);
 
         // Use structured bindings to unpack the result
-        auto [xi, x] = spsolve(L, B, 0, true);
+        auto [xi, x] = L.spsolve(B, 0, true);
 
         REQUIRE(x == expect);
     }
@@ -1930,7 +1930,7 @@ TEST_CASE("Reachability and DFS")
         std::vector<double> expect = { 0.,  0.,  0.,  1.,  0.,  0.,  0.,  0., -1.,  0.,  0.,  1.,  0.,  0.};
 
         // Use structured bindings to unpack the result
-        auto [xi, x] = spsolve(L, B, 0, true);
+        auto [xi, x] = L.spsolve(B, 0, true);
 
         REQUIRE(x == expect);
     }
@@ -1941,7 +1941,7 @@ TEST_CASE("Reachability and DFS")
 
         std::vector<double> expect = {0., -1.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.};
 
-        auto [xi, x] = spsolve(U, B, 0, false);
+        auto [xi, x] = U.spsolve(B, 0, false);
 
         REQUIRE(x == expect);
     }

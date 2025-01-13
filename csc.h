@@ -113,70 +113,64 @@ class CSCMatrix
         static bool nonzero(csint i, csint j, double Aij, void *tol);
         static bool abs_gt_tol(csint i, csint j, double Aij, void *tol);
 
+        // TODO refactor *all* gaxpy family to member functions?
+        //  Then, we can refactor `timeit` to use member functions for both
+        //  gaxpy and lsolve performance scripts.
         // Matrix-vector multiply and add via C-style function
-        friend std::vector<double> gaxpy(
-            const CSCMatrix& A,
+        std::vector<double> gaxpy(
             const std::vector<double>& x,
             const std::vector<double>& y
-        );
+        ) const;
 
         // Exercise 2.1
-        friend std::vector<double> gatxpy(
-            const CSCMatrix& A,
+        std::vector<double> gatxpy(
             const std::vector<double>& x,
             const std::vector<double>& y
-        );
+        ) const;
 
         // Exercise 2.3
-        friend std::vector<double> sym_gaxpy(
-            const CSCMatrix& A,
+        std::vector<double> sym_gaxpy(
             const std::vector<double>& x,
             const std::vector<double>& y
-        );
+        ) const;
 
         // Exercise 2.27(a) cs_gaxpy with matrix x, y in column-major order
-        friend std::vector<double> gaxpy_col(
-            const CSCMatrix& A,
+        std::vector<double> gaxpy_col(
             const std::vector<double>& X,
             const std::vector<double>& Y
-        );
+        ) const;
 
         // Exercise 2.27(b) cs_gaxpy with matrix x, y in row-major order
-        friend std::vector<double> gaxpy_row(
-            const CSCMatrix& A,
+        std::vector<double> gaxpy_row(
             const std::vector<double>& X,
             const std::vector<double>& Y
-        );
+        ) const;
 
         // Exercise 2.27(c) cs_gaxpy with matrix x, y in column-major order, but
         // operating on blocks of columns
-        friend std::vector<double> gaxpy_block(
-            const CSCMatrix& A,
+        std::vector<double> gaxpy_block(
             const std::vector<double>& X,
             const std::vector<double>& Y
-        );
+        ) const;
 
         // Exercise 2.28(a) cs_gatxpy with matrix x, y in column-major order
-        friend std::vector<double> gatxpy_col(
-            const CSCMatrix& A,
+        std::vector<double> gatxpy_col(
             const std::vector<double>& X,
             const std::vector<double>& Y
-        );
+        ) const;
 
         // Exercise 2.28(b) cs_gatxpy with matrix x, y in row-major order
-        friend std::vector<double> gatxpy_row(
-            const CSCMatrix& A,
+        std::vector<double> gatxpy_row(
             const std::vector<double>& X,
             const std::vector<double>& Y
-        );
+        ) const;
 
         // Exercise 2.28(c) cs_gatxpy with matrix x, y in column-major order, but
         // operating on blocks of columns
-        friend std::vector<double> gatxpy_block(
-            const CSCMatrix& A,
+        std::vector<double> gatxpy_block(
             const std::vector<double>& X,
             const std::vector<double>& Y
-        );
+        ) const;
 
         // Exercise 2.4
         CSCMatrix scale(const std::vector<double>& r, const std::vector<double> c) const;
@@ -209,8 +203,7 @@ class CSCMatrix
         );
 
         // Helper for add and multiply
-        friend csint scatter(
-            const CSCMatrix& A,
+        csint scatter(
             csint j,
             double beta,
             std::vector<csint>& w,
@@ -219,7 +212,7 @@ class CSCMatrix
             CSCMatrix& C,
             csint nz,
             bool fs
-        );
+        ) const;
 
         // Permutations
         CSCMatrix permute(
@@ -272,36 +265,32 @@ class CSCMatrix
         //----------------------------------------------------------------------
         //        Matrix Solutions
         //----------------------------------------------------------------------
-        friend std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b);
-        friend std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b);
-        friend std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b);
-        friend std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b);
+        std::vector<double>  lsolve(const std::vector<double>& b) const;
+        std::vector<double> ltsolve(const std::vector<double>& b) const;
+        std::vector<double>  usolve(const std::vector<double>& b) const;
+        std::vector<double> utsolve(const std::vector<double>& b) const;
 
         // Exercise 3.8 optimized versions of [lu]solve
-        friend std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b);
-        friend std::vector<double> usolve_opt(const CSCMatrix& L, const std::vector<double>& b);
+        std::vector<double> lsolve_opt(const std::vector<double>& b) const;
+        std::vector<double> usolve_opt(const std::vector<double>& b) const;
+
+        // Exercise 3.3 solve permuted triangular system without permutation
+        std::vector<double> lsolve_perm(const std::vector<double>& b) const;
 
         // Sparse matrix solve
-        friend std::pair<std::vector<csint>, std::vector<double>> 
-        spsolve(
-            const CSCMatrix& G,
-	        const CSCMatrix& B,
-	        csint k,
-	        bool lo
-        );
-
-        friend std::vector<csint> reach(
-            const CSCMatrix& G,
+        std::pair<std::vector<csint>, std::vector<double>> spsolve(
             const CSCMatrix& B,
-            csint k
-        );
+            csint k,
+            bool lo
+        ) const;
 
-        friend std::vector<csint>& dfs(
-            const CSCMatrix& G,
+        std::vector<csint> reach(const CSCMatrix& B, csint k) const;
+
+        std::vector<csint>& dfs(
             csint j,
             std::vector<bool>& is_marked,
             std::vector<csint>& xi
-        );
+        ) const;
 
         // ---------- Other
         void print(

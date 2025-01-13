@@ -89,17 +89,18 @@ int main()
     std::map<std::string, TimeStats> times;
 
     const int N = 2000;
-    const float density = 0.4;  // density of the sparse matrix
+    const float density = 0.1;  // density of the sparse matrix
 
     const std::vector<float> b_densities = {
-        0.001, 0.002, 0.003, 0.005,
+        // 0.001, 0.002, 0.003, 0.005,
+        0.001,
         0.01, 0.02, 0.03, 0.05, 0.1,
         0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
     };
 
-    // Time sampling
+    // Time sampling (ipython %timeit uses r = 7, n = 100_000)
     const int N_repeats = 3;
-    const int N_samples = 10;  // adjust for total time ~0.2 s (for 1e6 samples)
+    const int N_samples = 100;
 
     // Initialize the results struct
     for (const auto& name : std::views::keys(lusolve_funcs)) {

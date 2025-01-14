@@ -1950,34 +1950,22 @@ TEST_CASE("Reachability and DFS")
 
 TEST_CASE("Permuted triangular solvers")
 {
-    // CSCMatrix A = davis_21_coo().tocsc();
-    // const std::vector<csint> p = {3, 0, 2, 1};
-    // const std::vector<csint> q = {0, 1, 2, 3};
-    // A = A.permute(inv_permute(p), q);
-    // 
-    // in MATLAB:
-    // p = [3, 0, 2, 1] + 1;
-    // P = sparse(1:N, p, 1);
-    // [L, U] = lu(P' * A);  % returns (P L)(U Q') = A
-    // P * L * U - A   % should be zero
+    // >>> L.toarray()
+    // === array([[1, 0, 0, 0, 0, 0],
+    //            [2, 2, 0, 0, 0, 0],
+    //            [3, 3, 3, 0, 0, 0],
+    //            [4, 4, 4, 4, 0, 0],
+    //            [5, 5, 5, 5, 5, 0],
+    //            [6, 6, 6, 6, 6, 6]])
+    // >>> (P @ L).toarray().astype(int)
+    // === array([[ 6,  6,  6,  6,  6, *6],
+    //            [ 4,  4,  4, *4,  0,  0],
+    //            [*1,  0,  0,  0,  0,  0],
+    //            [ 2, *2,  0,  0,  0,  0],
+    //            [ 5,  5,  5,  5, *5,  0],
+    //            [ 3,  3, *3,  0,  0,  0]])
     //
-    // >> L
-    // L =
-    //
-    // 0.6889   1.0000        0        0
-    // 0.7778   0.1379  -0.5090   1.0000
-    //      0   0.5862   1.0000        0
-    // 1.0000        0        0        0
-    //
-    // >> P * L
-    // ans =
-    //
-    // 1.0000        0        0        0
-    // 0.6889   1.0000        0        0
-    //      0   0.5862   1.0000        0
-    // 0.7778   0.1379  -0.5090   1.0000
-    //
-    // b = sum((P * L)')'
+    // Starred elements are the diagonals of the un-permuted matrix
 
     // Un-permuted L
     CSCMatrix L = COOMatrix(

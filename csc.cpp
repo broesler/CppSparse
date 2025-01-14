@@ -2155,14 +2155,14 @@ std::vector<double> CSCMatrix::usolve_opt(const std::vector<double>& b) const
  *
  * See: Davis, Exercise 3.3
  *
- * @return diags  a vector of indices of the diagonal entries.
+ * @return p_diags  a vector of pointers to the indices of the diagonal entries.
  */
 std::vector<csint> CSCMatrix::find_lower_diagonals() const
 {
     assert(M_ == N_);
 
     std::vector<bool> is_marked(N_, false);  // workspace
-    std::vector<csint> diags(N_, -1);  // diagonal indicies (inverse permutation)  // diagonal indicies
+    std::vector<csint> p_diags(N_);  // diagonal indicies (inverse permutation)
 
     for (csint j = N_ - 1; j >= 0; j--) {
         csint N_unmarked = 0;
@@ -2172,7 +2172,7 @@ std::vector<csint> CSCMatrix::find_lower_diagonals() const
             // Mark the rows viewed so far
             if (!is_marked[i]) {
                 is_marked[i] = true;
-                diags[j] = i;
+                p_diags[j] = p;
                 N_unmarked++;
             }
         }
@@ -2183,8 +2183,9 @@ std::vector<csint> CSCMatrix::find_lower_diagonals() const
         }
     }
 
-    return diags;
+    return p_diags;
 }
+
 /** Solve a triangular system \f$ Lx = b_k \f$ for column `k` of `B`.
  *
  * @note If `lo` is non-zero, this function assumes that the diagonal entry of

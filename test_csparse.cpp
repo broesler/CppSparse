@@ -1989,17 +1989,23 @@ TEST_CASE("Permuted triangular solvers")
     std::vector<csint> p = {5, 3, 0, 1, 4, 2};
     std::vector<csint> q = {0, 1, 2, 3, 4, 5};
 
-    // Permute the rows of L
+    // Permute the rows of L (non-canonical form works too)
     CSCMatrix PL = L.permute(inv_permute(p), q).to_canonical();
 
-
     SECTION("Find diagonals of permuted L") {
-        std::vector<csint> expect = inv_permute(p);  // {2, 3, 5, 1, 4, 0};
+        std::vector<csint> expect = {2, 8, 14, 16, 19, 20};
+        std::vector<csint> p_diags = PL.find_lower_diagonals();
+        CHECK(p_diags == expect);
 
-        std::vector<csint> diags = PL.find_lower_diagonals();
-
-        REQUIRE(diags == expect);
+        // Check that we can get the inverse permutation
+        std::vector<csint> p_inv = inv_permute(p);  // {2, 3, 5, 1, 4, 0};
+        std::vector<csint> diags;
+        for (const auto& p : p_diags) {
+            diags.push_back(PL.indices()[p]);
+        }
+        REQUIRE(diags == p_inv);
     }
+
 }
 
 /*==============================================================================

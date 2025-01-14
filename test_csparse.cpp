@@ -2006,7 +2006,10 @@ TEST_CASE("Permuted triangular solvers")
         REQUIRE(diags == p_inv);
     }
 
-    // TODO check find_lower_diagonals throws error on non-triangular matrix
+    SECTION("Find diagonals of non-triangular matrix") {
+        CSCMatrix A = davis_21_coo().tocsc();
+        REQUIRE_THROWS(A.find_lower_diagonals());
+    }
 
     SECTION("Permuted P L x = b, with unknown P") {
         // Create RHS for Lx = b

@@ -126,7 +126,7 @@ std::vector<csint> argsort(const std::vector<T>& vec)
 
 /** Time a function call.
  *
- * @param func  the function to time
+ * @param func  a function to time
  * @param N_repeats  the number of times to repeat the function call
  * @param N_samples  the number of samples to take
  * @param args...  any arguments to pass to the function
@@ -174,8 +174,36 @@ Stats timeit(
     return {μ, σ};
 }
 
-} // namespace cs
 
+/** Time a function call.
+ *
+ * @param func  a member function of CSCMatrix to time
+ * @param N_repeats  the number of times to repeat the function call
+ * @param N_samples  the number of samples to take
+ * @param args...  any arguments to pass to the function
+ *
+ * @return ts  a TimeStats object with the mean and standard deviation of the
+ *         times taken.
+ */
+template <typename Func, typename... Args>
+Stats timeit_member(
+    Func (CSCMatrix::*func)(Args...) const,
+    const CSCMatrix& A,
+    const int N_repeats = 1,
+    const int N_samples = 7,
+    Args&&... args
+)
+{
+    // Bind the member function to the object with a lambda
+    auto bound_func = [&A, func](Args&&... args) {
+        return (A.*func)(std::forward<Args>(args)...);
+    };
+
+    return timeit(bound_func, N_repeats, N_samples, std::forward<Args>(args)...);
+}
+
+
+} // namespace cs
 
 #endif  // _UTILS_H_
 

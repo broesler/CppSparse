@@ -24,44 +24,6 @@
 using namespace cs;
 
 
-// Define function prototypes here to make them visible to main()
-// See: 
-// <https://stackoverflow.com/questions/69558521/friend-function-name-undefined>
-namespace cs {
-
-#ifdef GATXPY
-std::vector<double> gatxpy_col(
-#else
-std::vector<double> gaxpy_col(
-#endif
-    const CSCMatrix& A,
-    const std::vector<double>& X,
-    const std::vector<double>& Y
-);
-
-#ifdef GATXPY
-std::vector<double> gatxpy_row(
-#else
-std::vector<double> gaxpy_row(
-#endif
-    const CSCMatrix& A,
-    const std::vector<double>& X,
-    const std::vector<double>& Y
-);
-
-#ifdef GATXPY
-std::vector<double> gatxpy_block(
-#else
-std::vector<double> gaxpy_block(
-#endif
-    const CSCMatrix& A,
-    const std::vector<double>& X,
-    const std::vector<double>& Y
-);
-
-}  // namespace cs
-
-
 /*------------------------------------------------------------------------------
  *         Main Loop 
  *----------------------------------------------------------------------------*/
@@ -77,23 +39,21 @@ int main()
 #endif
 
     // Run the tests
-    using gaxpy_prototype = std::function<
-        std::vector<double>(
-            const CSCMatrix&,
+    using gaxpy_prototype = std::vector<double>
+        (CSCMatrix::*)(
             const std::vector<double>&,
             const std::vector<double>&
-        )
-    >;
+        ) const;
 
     const std::map<std::string, gaxpy_prototype> gaxpy_funcs = {
 #ifdef GATXPY
-        {"gatxpy_col", gatxpy_col},
-        {"gatxpy_row", gatxpy_row},
-        {"gatxpy_block", gatxpy_block}
+        {"gatxpy_col", &CSCMatrix::gatxpy_col},
+        {"gatxpy_row", &CSCMatrix::gatxpy_row},
+        {"gatxpy_block", &CSCMatrix::gatxpy_block}
 #else
-        {"gaxpy_col", gaxpy_col},
-        {"gaxpy_row", gaxpy_row},
-        {"gaxpy_block", gaxpy_block}
+        {"gaxpy_col", &CSCMatrix::gaxpy_col},
+        {"gaxpy_row", &CSCMatrix::gaxpy_row},
+        {"gaxpy_block", &CSCMatrix::gaxpy_block}
 #endif
     };
 
@@ -145,11 +105,11 @@ int main()
 
         for (const auto& [name, gaxpy_func] : gaxpy_funcs) {
             // Time the function runs
-            Stats ts = timeit(
+            Stats ts = timeit_member(
                 gaxpy_func,
+                A,
                 N_repeats,
                 N_samples,
-                A,
                 name == "gaxpy_row" ? X_row : X_col,
                 name == "gaxpy_row" ? Y_row : Y_col
             );

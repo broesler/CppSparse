@@ -25,19 +25,6 @@
 using namespace cs;
 
 
-// Define function prototypes here to make them visible to main()
-// See:
-// <https://stackoverflow.com/questions/69558521/friend-function-name-undefined>
-namespace cs {
-
-std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b);
-std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b);
-std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b);
-std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b);
-
-}  // namespace cs
-
-
 /** Set a random number of elements in a vector to zero.
  * 
  * @param vec the vector to modify
@@ -80,15 +67,14 @@ int main()
     const std::string filename = "./plots/lusolve_perf.json";
 
     // Run the tests
-    using lusolve_prototype = std::function<
-        std::vector<double>(const CSCMatrix&, const std::vector<double>&)
-    >;
+    using CSCMatrixFunc = std::vector<double>
+        (CSCMatrix::*)(const std::vector<double>&) const;
 
-    const std::map<std::string, lusolve_prototype> lusolve_funcs = {
-        {"lsolve", lsolve},
-        {"usolve", usolve},
-        {"lsolve_opt", lsolve_opt},
-        {"usolve_opt", usolve_opt}
+    const std::map<std::string, CSCMatrixFunc> lusolve_funcs = {
+        {"lsolve", &CSCMatrix::lsolve},
+        {"usolve", &CSCMatrix::usolve},
+        {"lsolve_opt", &CSCMatrix::lsolve_opt},
+        {"usolve_opt", &CSCMatrix::usolve_opt}
     };
 
     // Store the results
@@ -122,8 +108,8 @@ int main()
     }
 
     // Take the lower triangular
-    CSCMatrix L = A.band(-N, 0);
-    CSCMatrix U = L.T();
+    const CSCMatrix L = A.band(-N, 0);
+    const CSCMatrix U = L.T();
 
     // Create a dense column vector that is the sum of the rows of L
     std::vector<double> bL = L.sum_rows();
@@ -143,12 +129,15 @@ int main()
         zero_random_indices(bU, (size_t)((1 - b_dens) * N), SEED);
 
         for (const auto& [name, lusolve_func] : lusolve_funcs) {
-            Stats ts = timeit(
+            const CSCMatrix& A = name.starts_with("l") ? L : U;
+            const std::vector<double>& b = name.starts_with("l") ? bL : bU;
+
+            Stats ts = timeit_member(
                 lusolve_func,
+                A,
                 N_repeats,
                 N_samples,
-                name.starts_with("l") ? L : U,
-                name.starts_with("l") ? bL : bU
+                b
             );
 
             // Store results

@@ -2191,9 +2191,9 @@ std::vector<csint> CSCMatrix::find_lower_diagonals() const
  *
  * See: Davis, Exercise 3.3
  *
- * @param b  a dense RHS vector
+ * @param b  a dense RHS vector, *not* permuted.
  *
- * @return x  the dense solution vector
+ * @return x  the dense solution vector, also *not* permuted.
  */
 std::vector<double> CSCMatrix::lsolve_perm(const std::vector<double>& b) const
 {
@@ -2202,21 +2202,18 @@ std::vector<double> CSCMatrix::lsolve_perm(const std::vector<double>& b) const
 
     // First (backward) pass to find diagonal entries
     // p_diags is a vector of pointers to the diagonal entries
-    // The inverse permutation vector p_inv = i_[p_diags]
     std::vector<csint> p_diags = find_lower_diagonals();
 
-    std::vector<csint> p_inv;  // inverse permutation == diagonal indices
-    for (auto& p : p_diags) {
-        p_inv.push_back(i_[p]);
+    // Compute the row permutation vector
+    std::vector<csint> permuted_rows(N_);
+    for (csint i = 0; i < N_; i++) {
+        permuted_rows[i_[p_diags[i]]] = i;
     }
-
-    std::vector<csint> permuted_rows = inv_permute(p_inv);
 
     // Second (forward) pass to solve the system
     std::vector<double> x = b;
 
     // Perform the permuted forward solve
-    // x/b is *not* permuted only rows of L
     for (csint j = 0; j < N_; j++) {
         csint d = p_diags[j];  // pointer to the diagonal entry
         double& x_val = x[j];  // cache diagonal value

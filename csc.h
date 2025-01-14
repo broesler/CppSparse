@@ -214,11 +214,13 @@ class CSCMatrix
             bool fs
         ) const;
 
+        // TODO extra functions for permute_rows, permute_cols
         // Permutations
         CSCMatrix permute(
             const std::vector<csint> p_inv,
             const std::vector<csint> q
         ) const;
+
         CSCMatrix symperm(const std::vector<csint> p_inv) const;
 
         // Exercise 2.26 permuted transpose

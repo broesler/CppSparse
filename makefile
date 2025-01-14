@@ -33,7 +33,7 @@ all: test_csparse gaxpy_perf gatxpy_perf
 
 test: OPT = -I$(BREW)/include 
 test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
-test: CFLAGS += -glldb #-Og #-fsanitize=address
+test: CFLAGS += -glldb #-fsanitize=address #-Og 
 test: test_csparse
 
 gaxpy_perf: CFLAGS += -O3

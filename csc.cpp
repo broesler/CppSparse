@@ -2186,6 +2186,56 @@ std::vector<csint> CSCMatrix::find_lower_diagonals() const
     return p_diags;
 }
 
+
+/** Solve Lx = b with a row-permuted L. The permutation is unknown
+ *
+ * See: Davis, Exercise 3.3
+ *
+ * @param b  a dense RHS vector
+ *
+ * @return x  the dense solution vector
+ */
+std::vector<double> CSCMatrix::lsolve_perm(const std::vector<double>& b) const
+{
+    assert(M_ == N_);
+    assert(M_ == b.size());
+
+    // First (backward) pass to find diagonal entries
+    // p_diags is a vector of pointers to the diagonal entries
+    // The inverse permutation vector p_inv = i_[p_diags]
+    std::vector<csint> p_diags = find_lower_diagonals();
+
+    std::vector<csint> p_inv;  // inverse permutation == diagonal indices
+    for (auto& p : p_diags) {
+        p_inv.push_back(i_[p]);
+    }
+
+    std::vector<csint> permuted_rows = inv_permute(p_inv);
+
+    // Second (forward) pass to solve the system
+    std::vector<double> x = b;
+
+    // Perform the permuted forward solve
+    // x/b is *not* permuted only rows of L
+    for (csint j = 0; j < N_; j++) {
+        csint d = p_diags[j];  // pointer to the diagonal entry
+        double& x_val = x[j];  // cache diagonal value
+
+        if (x_val != 0) {
+            x_val /= v_[d];    // solve for x[d]
+            for (csint p = p_[j]; p < p_[j+1]; p++) {
+                csint i = permuted_rows[i_[p]];
+                if (p != d) {
+                    x[i] -= v_[p] * x_val;  // update the off-diagonals
+                }
+            }
+        }
+    }
+
+    return x;
+}
+
+
 /** Solve a triangular system \f$ Lx = b_k \f$ for column `k` of `B`.
  *
  * @note If `lo` is non-zero, this function assumes that the diagonal entry of

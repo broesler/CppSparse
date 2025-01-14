@@ -2227,7 +2227,7 @@ std::vector<csint> CSCMatrix::find_lower_diagonals() const
  *
  * @return x  the dense solution vector, also *not* permuted.
  */
-std::vector<double> CSCMatrix::lsolve_perm(const std::vector<double>& b) const
+std::vector<double> CSCMatrix::lsolve_rows(const std::vector<double>& b) const
 {
     assert(M_ == N_);
     assert(M_ == b.size());
@@ -2257,6 +2257,57 @@ std::vector<double> CSCMatrix::lsolve_perm(const std::vector<double>& b) const
                 if (p != d) {
                     x[i] -= v_[p] * x_val;  // update the off-diagonals
                 }
+            }
+        }
+    }
+
+    return x;
+}
+
+
+/** Solve Lx = b with a column-permuted L. The permutation is unknown.
+ *
+ * See: Davis, Exercise 3.5
+ *
+ * @param b  a dense RHS vector, *not* permuted.
+ *
+ * @return x  the dense solution vector, also *not* permuted.
+ */
+std::vector<double> CSCMatrix::lsolve_cols(const std::vector<double>& b) const
+{
+    assert(M_ == N_);
+    assert(M_ == b.size());
+
+    // First O(N) pass to find the diagonal entries
+    // Assume that the first entry in each column has the smallest row index
+    std::vector<csint> p_diags(N_, -1);
+    for (csint j = 0; j < N_; j++) {
+        if (p_diags[j] == -1) {
+            p_diags[j] = p_[j];  // pointer to the diagonal entry
+        } else {
+            // We have seen this column index before
+            throw std::runtime_error("Matrix is not a permuted lower triangular matrix!");
+        }
+    }
+
+    // Compute the column permutation vector
+    std::vector<csint> permuted_cols(N_);
+    for (csint i = 0; i < N_; i++) {
+        permuted_cols[i_[p_diags[i]]] = i;
+    }
+
+    // Second (forward) pass to solve the system
+    std::vector<double> x = b;
+
+    // Perform the permuted forward solve
+    for (const auto& j : permuted_cols) {
+        csint d = p_diags[j];      // pointer to the diagonal entry
+        double& x_val = x[i_[d]];  // cache diagonal value
+
+        if (x_val != 0) {
+            x_val /= v_[d];  // solve for x[i_[d]]
+            for (csint p = p_[j]+1; p < p_[j+1]; p++) {
+                x[i_[p]] -= v_[p] * x_val;  // update the off-diagonals
             }
         }
     }
@@ -2309,7 +2360,7 @@ std::vector<csint> CSCMatrix::find_upper_diagonals() const
  *
  * @return x  the dense solution vector, also *not* permuted.
  */
-std::vector<double> CSCMatrix::usolve_perm(const std::vector<double>& b) const
+std::vector<double> CSCMatrix::usolve_rows(const std::vector<double>& b) const
 {
     assert(M_ == N_);
     assert(M_ == b.size());

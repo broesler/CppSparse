@@ -278,12 +278,17 @@ class CSCMatrix
         std::vector<double> lsolve_opt(const std::vector<double>& b) const;
         std::vector<double> usolve_opt(const std::vector<double>& b) const;
 
-        // Exercise 3.3 solve permuted triangular system without permutation
-        std::vector<double> lsolve_perm(const std::vector<double>& b) const;
-        std::vector<csint> find_lower_diagonals() const;
+        // Exercise 3.3, 3.4 solve row-permuted triangular system
+        std::vector<double> lsolve_rows(const std::vector<double>& b) const;
+        std::vector<double> usolve_rows(const std::vector<double>& b) const;
 
-        std::vector<double> usolve_perm(const std::vector<double>& b) const;
+        // Exercise 3.5 solve column-permuted triangular system
+        std::vector<double> lsolve_cols(const std::vector<double>& b) const;
+        // std::vector<double> usolve_rows(const std::vector<double>& b) const;
+
+        std::vector<csint> find_lower_diagonals() const;
         std::vector<csint> find_upper_diagonals() const;
+
 
         // Sparse matrix solve
         std::pair<std::vector<csint>, std::vector<double>> spsolve(

@@ -1988,6 +1988,10 @@ TEST_CASE("Permuted triangular solvers")
     const CSCMatrix PL = L.permute_rows(inv_permute(p)).to_canonical();
     const CSCMatrix PU = U.permute_rows(inv_permute(p)).to_canonical();
 
+    // Permute the columns (non-canonical form works too)
+    const CSCMatrix LQT = L.permute_cols(p).to_canonical();
+    // const CSCMatrix UQT = U.permute_cols(p).to_canonical();
+
     SECTION("Find diagonals of permuted L") {
         std::vector<csint> expect = {2, 8, 14, 16, 19, 20};
         std::vector<csint> p_diags = PL.find_lower_diagonals();
@@ -2033,7 +2037,19 @@ TEST_CASE("Permuted triangular solvers")
         CHECK_THAT(is_close(x, expect, tol), AllTrue());
 
         // Solve PLx = b
-        const std::vector<double> xp = PL.lsolve_perm(b);
+        const std::vector<double> xp = PL.lsolve_rows(b);
+
+        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
+    }
+
+    SECTION("Permuted LQ.T x = b, with unknown Q") {
+        // Create RHS for Lx = b
+        // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
+        const std::vector<double> b = { 1,  6, 18, 40, 75, 126};
+        const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
+
+        // Solve L Q.T x = b
+        const std::vector<double> xp = LQT.lsolve_cols(b);
 
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
@@ -2049,7 +2065,7 @@ TEST_CASE("Permuted triangular solvers")
         CHECK_THAT(is_close(x, expect, tol), AllTrue());
 
         // Solve PUx = b
-        const std::vector<double> xp = PU.usolve_perm(b);
+        const std::vector<double> xp = PU.usolve_rows(b);
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
 }

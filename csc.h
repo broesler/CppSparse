@@ -276,6 +276,7 @@ class CSCMatrix
 
         // Exercise 3.3 solve permuted triangular system without permutation
         std::vector<double> lsolve_perm(const std::vector<double>& b) const;
+        std::vector<csint> find_lower_diagonals() const;
 
         // Sparse matrix solve
         std::pair<std::vector<csint>, std::vector<double>> spsolve(

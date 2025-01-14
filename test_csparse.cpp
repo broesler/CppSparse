@@ -1947,5 +1947,60 @@ TEST_CASE("Reachability and DFS")
     }
 }
 
+
+TEST_CASE("Permuted triangular solvers")
+{
+    // CSCMatrix A = davis_21_coo().tocsc();
+    // const std::vector<csint> p = {3, 0, 2, 1};
+    // const std::vector<csint> q = {0, 1, 2, 3};
+    // A = A.permute(inv_permute(p), q);
+    // 
+    // in MATLAB:
+    // p = [3, 0, 2, 1] + 1;
+    // P = sparse(1:N, p, 1);
+    // [L, U] = lu(P' * A);  % returns (P L)(U Q') = A
+    // P * L * U - A   % should be zero
+    //
+    // >> L
+    // L =
+    //
+    // 0.6889   1.0000        0        0
+    // 0.7778   0.1379  -0.5090   1.0000
+    //      0   0.5862   1.0000        0
+    // 1.0000        0        0        0
+    //
+    // >> P * L
+    // ans =
+    //
+    // 1.0000        0        0        0
+    // 0.6889   1.0000        0        0
+    //      0   0.5862   1.0000        0
+    // 0.7778   0.1379  -0.5090   1.0000
+    //
+    // b = sum((P * L)')'
+
+    // Un-permuted L
+    CSCMatrix L = COOMatrix(
+        std::vector<double> {1, 2, 3, 4, 5, 6, 2, 3, 4, 5, 6, 3, 4, 5, 6, 4, 5, 6, 5, 6, 6},
+        std::vector<csint>  {0, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 2, 3, 4, 5, 3, 4, 5, 4, 5, 5},
+        std::vector<csint>  {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5}
+    ).tocsc();
+
+    std::vector<csint> p = {5, 3, 0, 1, 4, 2};
+    std::vector<csint> q = {0, 1, 2, 3, 4, 5};
+
+    // Permute the rows of L
+    CSCMatrix PL = L.permute(inv_permute(p), q).to_canonical();
+
+
+    SECTION("Find diagonals of permuted L") {
+        std::vector<csint> expect = inv_permute(p);  // {2, 3, 5, 1, 4, 0};
+
+        std::vector<csint> diags = PL.find_lower_diagonals();
+
+        REQUIRE(diags == expect);
+    }
+}
+
 /*==============================================================================
  *============================================================================*/

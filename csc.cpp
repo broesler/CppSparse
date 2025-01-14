@@ -2151,6 +2151,40 @@ std::vector<double> CSCMatrix::usolve_opt(const std::vector<double>& b) const
 }
 
 
+/** Find the diagonal indices of a row-permuted lower triangular matrix.
+ *
+ * See: Davis, Exercise 3.3
+ *
+ * @return diags  a vector of indices of the diagonal entries.
+ */
+std::vector<csint> CSCMatrix::find_lower_diagonals() const
+{
+    assert(M_ == N_);
+
+    std::vector<bool> is_marked(N_, false);  // workspace
+    std::vector<csint> diags(N_, -1);  // diagonal indicies (inverse permutation)  // diagonal indicies
+
+    for (csint j = N_ - 1; j >= 0; j--) {
+        csint N_unmarked = 0;
+
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            csint i = i_[p];
+            // Mark the rows viewed so far
+            if (!is_marked[i]) {
+                is_marked[i] = true;
+                diags[j] = i;
+                N_unmarked++;
+            }
+        }
+
+        // If 0 or > 1 "diagonal" entries found, the matrix is not permuted.
+        if (N_unmarked != 1) {
+            throw std::runtime_error("Matrix is not a permuted lower triangular matrix!");
+        }
+    }
+
+    return diags;
+}
 /** Solve a triangular system \f$ Lx = b_k \f$ for column `k` of `B`.
  *
  * @note If `lo` is non-zero, this function assumes that the diagonal entry of

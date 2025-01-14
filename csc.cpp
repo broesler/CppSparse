@@ -1528,6 +1528,38 @@ CSCMatrix CSCMatrix::permute(
 }
 
 
+/** Permute the rows of a matrix.
+ *
+ * @note In Matlab, this call is `C = A(p, :)`.
+ *
+ * @param p_inv  *inverse* row permutation vector. `p_inv` is length `M`.
+ *
+ * @return C  permuted matrix
+ */
+CSCMatrix CSCMatrix::permute_rows(const std::vector<csint> p_inv) const
+{
+    std::vector<csint> q(N_);
+    std::iota(q.begin(), q.end(), 0);  // identity permutation
+    return permute(p_inv, q);
+}
+
+
+/** Permute the columns of a matrix.
+ *
+ * @note In Matlab, this call is `C = A(:, q)`.
+ *
+ * @param q  column permutation vector. `q` is length `N`.
+ *
+ * @return C  permuted matrix
+ */
+CSCMatrix CSCMatrix::permute_cols(const std::vector<csint> q) const
+{
+    std::vector<csint> p_inv(M_);
+    std::iota(p_inv.begin(), p_inv.end(), 0);  // identity permutation
+    return permute(p_inv, q);
+}
+
+
 /** Permute a symmetric matrix with only the upper triangular part stored.
  *
  * @param p_inv  *inverse* permutation vector. Both rows and columns are

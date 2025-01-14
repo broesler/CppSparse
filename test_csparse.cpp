@@ -1267,6 +1267,8 @@ TEST_CASE("Test matrix permutation", "[permute]")
         CSCMatrix C = A.permute(inv_permute(p), q);
 
         compare_noncanonical(C, A);
+        compare_noncanonical(A.permute_rows(p), A);
+        compare_noncanonical(A.permute_cols(q), A);
     }
 
     SECTION("Test row permutation") {
@@ -1283,6 +1285,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
         CSCMatrix C = A.permute(inv_permute(p), q);
 
         compare_noncanonical(C, expect);
+        compare_noncanonical(A.permute_rows(inv_permute(p)), expect);
     }
 
     SECTION("Test column permutation") {
@@ -1299,6 +1302,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
         CSCMatrix C = A.permute(inv_permute(p), q);
 
         compare_noncanonical(C, expect);
+        compare_noncanonical(A.permute_cols(q), expect);
     }
 
     SECTION("Test both row and column permutation") {
@@ -1312,9 +1316,11 @@ TEST_CASE("Test matrix permutation", "[permute]")
             std::vector<csint>  {0,    3,    2,    0,    1,    3,    1,    2,    3,    1}
         ).tocsc();
 
-        CSCMatrix C = A.permute(inv_permute(p), q);
+        std::vector<csint> p_inv = inv_permute(p);
+        CSCMatrix C = A.permute(p_inv, q);
 
         compare_noncanonical(C, expect);
+        compare_noncanonical(A.permute_rows(p_inv).permute_cols(q), expect);
     }
 
     SECTION("Test symperm") {
@@ -1975,10 +1981,9 @@ TEST_CASE("Permuted triangular solvers")
     ).tocsc();
 
     std::vector<csint> p = {5, 3, 0, 1, 4, 2};
-    std::vector<csint> q = {0, 1, 2, 3, 4, 5};
 
     // Permute the rows of L (non-canonical form works too)
-    CSCMatrix PL = L.permute(inv_permute(p), q).to_canonical();
+    CSCMatrix PL = L.permute_rows(inv_permute(p)).to_canonical();
 
     SECTION("Find diagonals of permuted L") {
         std::vector<csint> expect = {2, 8, 14, 16, 19, 20};

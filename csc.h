@@ -214,7 +214,6 @@ class CSCMatrix
             bool fs
         ) const;
 
-        // TODO extra functions for permute_rows, permute_cols
         // Permutations
         CSCMatrix permute(
             const std::vector<csint> p_inv,
@@ -228,6 +227,9 @@ class CSCMatrix
             const std::vector<csint>& p_inv,
             const std::vector<csint>& q_inv
         ) const;
+
+        CSCMatrix permute_rows(const std::vector<csint> p_inv) const;
+        CSCMatrix permute_cols(const std::vector<csint> q) const;
 
         double norm() const;
 

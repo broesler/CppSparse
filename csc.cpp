@@ -2219,7 +2219,7 @@ std::vector<csint> CSCMatrix::find_lower_diagonals() const
 }
 
 
-/** Solve Lx = b with a row-permuted L. The permutation is unknown
+/** Solve Lx = b with a row-permuted L. The permutation is unknown.
  *
  * See: Davis, Exercise 3.3
  *
@@ -2247,6 +2247,88 @@ std::vector<double> CSCMatrix::lsolve_perm(const std::vector<double>& b) const
 
     // Perform the permuted forward solve
     for (csint j = 0; j < N_; j++) {
+        csint d = p_diags[j];  // pointer to the diagonal entry
+        double& x_val = x[j];  // cache diagonal value
+
+        if (x_val != 0) {
+            x_val /= v_[d];    // solve for x[d]
+            for (csint p = p_[j]; p < p_[j+1]; p++) {
+                csint i = permuted_rows[i_[p]];
+                if (p != d) {
+                    x[i] -= v_[p] * x_val;  // update the off-diagonals
+                }
+            }
+        }
+    }
+
+    return x;
+}
+
+
+/** Find the diagonal indices of a row-permuted upper triangular matrix.
+ *
+ * See: Davis, Exercise 3.4
+ *
+ * @return p_diags  a vector of pointers to the indices of the diagonal entries.
+ */
+std::vector<csint> CSCMatrix::find_upper_diagonals() const
+{
+    assert(M_ == N_);
+
+    std::vector<bool> is_marked(N_, false);  // workspace
+    std::vector<csint> p_diags(N_);  // diagonal indicies (inverse permutation)
+
+    for (csint j = 0; j < N_; j++) {
+        csint N_unmarked = 0;
+
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            csint i = i_[p];
+            // Mark the rows viewed so far
+            if (!is_marked[i]) {
+                is_marked[i] = true;
+                p_diags[j] = p;
+                N_unmarked++;
+            }
+        }
+
+        // If 0 or > 1 "diagonal" entries found, the matrix is not permuted.
+        if (N_unmarked != 1) {
+            throw std::runtime_error("Matrix is not a permuted upper triangular matrix!");
+        }
+    }
+
+    return p_diags;
+}
+
+
+/** Solve Ux = b with a row-permuted U. The permutation is unknown.
+ *
+ * See: Davis, Exercise 3.4
+ *
+ * @param b  a dense RHS vector, *not* permuted.
+ *
+ * @return x  the dense solution vector, also *not* permuted.
+ */
+std::vector<double> CSCMatrix::usolve_perm(const std::vector<double>& b) const
+{
+    assert(M_ == N_);
+    assert(M_ == b.size());
+
+    // First (backward) pass to find diagonal entries
+    // p_diags is a vector of pointers to the diagonal entries
+    std::vector<csint> p_diags = find_upper_diagonals();
+
+    // Compute the row permutation vector
+    std::vector<csint> permuted_rows(N_);
+    for (csint i = 0; i < N_; i++) {
+        permuted_rows[i_[p_diags[i]]] = i;
+    }
+
+    // Second (forward) pass to solve the system
+    std::vector<double> x = b;
+
+    // Perform the permuted forward solve
+    for (csint j = N_ - 1; j >= 0; j--) {
         csint d = p_diags[j];  // pointer to the diagonal entry
         double& x_val = x[j];  // cache diagonal value
 

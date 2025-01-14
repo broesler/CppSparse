@@ -282,6 +282,9 @@ class CSCMatrix
         std::vector<double> lsolve_perm(const std::vector<double>& b) const;
         std::vector<csint> find_lower_diagonals() const;
 
+        std::vector<double> usolve_perm(const std::vector<double>& b) const;
+        std::vector<csint> find_upper_diagonals() const;
+
         // Sparse matrix solve
         std::pair<std::vector<csint>, std::vector<double>> spsolve(
             const CSCMatrix& B,

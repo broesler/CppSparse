@@ -1974,16 +1974,19 @@ TEST_CASE("Permuted triangular solvers")
     // Starred elements are the diagonals of the un-permuted matrix
 
     // Un-permuted L
-    CSCMatrix L = COOMatrix(
+    const CSCMatrix L = COOMatrix(
         std::vector<double> {1, 2, 3, 4, 5, 6, 2, 3, 4, 5, 6, 3, 4, 5, 6, 4, 5, 6, 5, 6, 6},
         std::vector<csint>  {0, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 2, 3, 4, 5, 3, 4, 5, 4, 5, 5},
         std::vector<csint>  {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5}
     ).tocsc();
 
-    std::vector<csint> p = {5, 3, 0, 1, 4, 2};
+    const CSCMatrix U = L.T();
 
-    // Permute the rows of L (non-canonical form works too)
-    CSCMatrix PL = L.permute_rows(inv_permute(p)).to_canonical();
+    const std::vector<csint> p = {5, 3, 0, 1, 4, 2};
+
+    // Permute the rows (non-canonical form works too)
+    const CSCMatrix PL = L.permute_rows(inv_permute(p)).to_canonical();
+    const CSCMatrix PU = U.permute_rows(inv_permute(p)).to_canonical();
 
     SECTION("Find diagonals of permuted L") {
         std::vector<csint> expect = {2, 8, 14, 16, 19, 20};
@@ -1999,9 +2002,24 @@ TEST_CASE("Permuted triangular solvers")
         REQUIRE(diags == p_inv);
     }
 
+    SECTION("Find diagonals of permuted U") {
+        std::vector<csint> expect = {0, 2, 5, 6, 13, 15};
+        std::vector<csint> p_diags = PU.find_upper_diagonals();
+        CHECK(p_diags == expect);
+
+        // Check that we can get the inverse permutation
+        std::vector<csint> p_inv = inv_permute(p);  // {2, 3, 5, 1, 4, 0};
+        std::vector<csint> diags;
+        for (const auto& p : p_diags) {
+            diags.push_back(PU.indices()[p]);
+        }
+        REQUIRE(diags == p_inv);
+    }
+
     SECTION("Find diagonals of non-triangular matrix") {
-        CSCMatrix A = davis_21_coo().tocsc();
+        const CSCMatrix A = davis_21_coo().tocsc();
         REQUIRE_THROWS(A.find_lower_diagonals());
+        REQUIRE_THROWS(A.find_upper_diagonals());
     }
 
     SECTION("Permuted P L x = b, with unknown P") {
@@ -2017,6 +2035,21 @@ TEST_CASE("Permuted triangular solvers")
         // Solve PLx = b
         const std::vector<double> xp = PL.lsolve_perm(b);
 
+        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
+    }
+
+    SECTION("Permuted P U x = b, with unknown P") {
+        // Create RHS for Ux = b
+        // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
+        const std::vector<double> b = {91, 90, 86, 77, 61, 36};
+        const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
+
+        // Solve Ux = b (un-permuted)
+        const std::vector<double> x = U.usolve(b);
+        CHECK_THAT(is_close(x, expect, tol), AllTrue());
+
+        // Solve PUx = b
+        const std::vector<double> xp = PU.usolve_perm(b);
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
 }

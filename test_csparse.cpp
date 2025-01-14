@@ -1990,7 +1990,7 @@ TEST_CASE("Permuted triangular solvers")
 
     // Permute the columns (non-canonical form works too)
     const CSCMatrix LQT = L.permute_cols(p).to_canonical();
-    // const CSCMatrix UQT = U.permute_cols(p).to_canonical();
+    const CSCMatrix UQT = U.permute_cols(p).to_canonical();
 
     SECTION("Find diagonals of permuted L") {
         std::vector<csint> expect = {2, 8, 14, 16, 19, 20};
@@ -2066,6 +2066,18 @@ TEST_CASE("Permuted triangular solvers")
 
         // Solve PUx = b
         const std::vector<double> xp = PU.usolve_rows(b);
+        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
+    }
+
+    SECTION("Permuted UQ.T x = b, with unknown Q") {
+        // Create RHS for Ux = b
+        // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
+        const std::vector<double> b = {91, 90, 86, 77, 61, 36};
+        const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
+
+        // Solve U Q.T x = b
+        const std::vector<double> xp = UQT.usolve_cols(b);
+
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
 }

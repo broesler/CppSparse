@@ -282,9 +282,9 @@ class CSCMatrix
         std::vector<double> lsolve_rows(const std::vector<double>& b) const;
         std::vector<double> usolve_rows(const std::vector<double>& b) const;
 
-        // Exercise 3.5 solve column-permuted triangular system
+        // Exercise 3.5, 3.6 solve column-permuted triangular system
         std::vector<double> lsolve_cols(const std::vector<double>& b) const;
-        // std::vector<double> usolve_rows(const std::vector<double>& b) const;
+        std::vector<double> usolve_cols(const std::vector<double>& b) const;
 
         std::vector<csint> find_lower_diagonals() const;
         std::vector<csint> find_upper_diagonals() const;

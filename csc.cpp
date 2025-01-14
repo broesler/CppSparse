@@ -9,6 +9,7 @@
 
 #include <algorithm>  // for std::lower_bound
 #include <cmath>      // for std::fabs
+#include <ranges>     // for std::views::reverse
 
 #include "csparse.h"
 
@@ -2390,6 +2391,57 @@ std::vector<double> CSCMatrix::usolve_rows(const std::vector<double>& b) const
                 if (p != d) {
                     x[i] -= v_[p] * x_val;  // update the off-diagonals
                 }
+            }
+        }
+    }
+
+    return x;
+}
+
+
+/** Solve Ux = b with a column-permuted U. The permutation is unknown.
+ *
+ * See: Davis, Exercise 3.6
+ *
+ * @param b  a dense RHS vector, *not* permuted.
+ *
+ * @return x  the dense solution vector, also *not* permuted.
+ */
+std::vector<double> CSCMatrix::usolve_cols(const std::vector<double>& b) const
+{
+    assert(M_ == N_);
+    assert(M_ == b.size());
+
+    // First O(N) pass to find the diagonal entries
+    // Assume that the last entry in each column has the largest row index
+    std::vector<csint> p_diags(N_, -1);
+    for (csint j = 0; j < N_; j++) {
+        if (p_diags[j] == -1) {
+            p_diags[j] = p_[j+1] - 1;  // pointer to the diagonal entry
+        } else {
+            // We have seen this column index before
+            throw std::runtime_error("Matrix is not a permuted lower triangular matrix!");
+        }
+    }
+
+    // Compute the column permutation vector
+    std::vector<csint> permuted_cols(N_);
+    for (csint i = 0; i < N_; i++) {
+        permuted_cols[i_[p_diags[i]]] = i;
+    }
+
+    // Second (forward) pass to solve the system
+    std::vector<double> x = b;
+
+    // Perform the permuted forward solve
+    for (const auto& j : std::views::reverse(permuted_cols)) {
+        csint d = p_diags[j];      // pointer to the diagonal entry
+        double& x_val = x[i_[d]];  // cache diagonal value
+
+        if (x_val != 0) {
+            x_val /= v_[d];  // solve for x[i_[d]]
+            for (csint p = p_[j]; p < p_[j+1] - 1; p++) {
+                x[i_[p]] -= v_[p] * x_val;  // update the off-diagonals
             }
         }
     }

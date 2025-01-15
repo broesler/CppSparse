@@ -299,7 +299,11 @@ class CSCMatrix
 
         std::pair<std::vector<csint>, std::vector<csint>> find_tri_permutation() const;
 
-        bool is_lower_triangular() const;
+        bool is_lower_tri() const;
+        bool is_lower_tri(
+            const std::vector<csint>& p_inv,
+            const std::vector<csint>& q
+        ) const;
 
         // Sparse matrix solve
         std::pair<std::vector<csint>, std::vector<double>> spsolve(

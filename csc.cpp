@@ -2583,11 +2583,38 @@ std::vector<double> CSCMatrix::lsolve_perm(
 
 
 /** Determine if a matrix is lower triangular or upper. */
-bool CSCMatrix::is_lower_triangular() const
+bool CSCMatrix::is_lower_tri() const
 {
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             if (i_[p] < j) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+
+/** Determine if a permuted matrix is lower triangular.
+ *
+ * See: Davis, Exercise 3.7
+ *
+ * @param p  the row permutation vector.
+ * @param q_inv  the *inverse* column permutation vector.
+ *
+ * @return true if the matrix is lower triangular, false otherwise.
+ */
+bool CSCMatrix::is_lower_tri(
+    const std::vector<csint>& p,
+    const std::vector<csint>& q_inv
+) const
+{
+    for (csint k = 0; k < N_; k++) {
+        csint j = q_inv[k];  // permuted column
+        for (csint t = p_[j]; t < p_[j+1]; t++) {
+            if (p[i_[t]] < k) {  // un-permuted row vs un-permuted column
                 return false;
             }
         }

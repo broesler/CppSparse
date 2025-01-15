@@ -1997,8 +1997,10 @@ TEST_CASE("Permuted triangular solvers")
     const CSCMatrix PUQ = U.permute(inv_permute(p), q).to_canonical();
 
     SECTION("Determine if matrix is lower triangular or not") {
-        REQUIRE(L.is_lower_triangular());
-        REQUIRE_FALSE(U.is_lower_triangular());
+        CHECK(L.is_lower_tri());
+        CHECK_FALSE(U.is_lower_tri());
+        CHECK(PLQ.is_lower_tri(p, inv_permute(q)));
+        REQUIRE_FALSE(PUQ.is_lower_tri(p, inv_permute(q)));
     }
 
     SECTION("Find diagonals of permuted L") {

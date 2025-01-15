@@ -1993,8 +1993,9 @@ TEST_CASE("Permuted triangular solvers")
     const CSCMatrix LQ = L.permute_cols(p).to_canonical();
     const CSCMatrix UQ = U.permute_cols(p).to_canonical();
 
-    // Permute both rows and columnd
+    // Permute both rows and columns
     const CSCMatrix PLQ = L.permute(inv_permute(p), q).to_canonical();
+    const CSCMatrix PUQ = U.permute(inv_permute(p), q).to_canonical();
 
     SECTION("Find diagonals of permuted L") {
         std::vector<csint> expect = {2, 8, 14, 16, 19, 20};
@@ -2028,16 +2029,34 @@ TEST_CASE("Permuted triangular solvers")
         const CSCMatrix A = davis_21_coo().tocsc();
         REQUIRE_THROWS(A.find_lower_diagonals());
         REQUIRE_THROWS(A.find_upper_diagonals());
+        REQUIRE_THROWS(A.find_tri_permutation());
     }
 
     SECTION("Find permutation vectors of permuted L") {
         std::vector<csint> expect_p = inv_permute(p);
         std::vector<csint> expect_q = inv_permute(q);
+
         auto [p_inv, q_inv] = PLQ.find_tri_permutation();
+
         CHECK(p_inv == expect_p);
-        REQUIRE(q_inv == expect_q);
+        CHECK(q_inv == expect_q);
         compare_noncanonical(L, PLQ.permute(inv_permute(p_inv), q_inv));
         compare_noncanonical(PLQ, L.permute(p_inv, inv_permute(q_inv)));
+    }
+
+    SECTION("Find permutation vectors of permuted U") {
+        std::vector<csint> expect_p = inv_permute(p);
+        std::vector<csint> expect_q = inv_permute(q);
+
+        // NOTE returns *reversed* vectors for an upper triangular matrix!!
+        auto [p_inv, q_inv] = PUQ.find_tri_permutation();
+        std::reverse(p_inv.begin(), p_inv.end());
+        std::reverse(q_inv.begin(), q_inv.end());
+
+        CHECK(p_inv == expect_p);
+        CHECK(q_inv == expect_q);
+        compare_noncanonical(U, PUQ.permute(inv_permute(p_inv), q_inv));
+        compare_noncanonical(PUQ, U.permute(p_inv, inv_permute(q_inv)));
     }
 
     SECTION("Permuted P L x = b, with unknown P") {

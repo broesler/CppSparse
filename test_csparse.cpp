@@ -2125,6 +2125,18 @@ TEST_CASE("Permuted triangular solvers")
 
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
+
+    SECTION("Permuted P U Q x = b, with unknown P and Q") {
+        // Create RHS for Lx = b
+        // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
+        const std::vector<double> b = {91, 90, 86, 77, 61, 36};
+        const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
+
+        // Solve P L Q x = b
+        const std::vector<double> xp = PUQ.tri_solve_perm(b);
+
+        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
+    }
 }
 
 /*==============================================================================

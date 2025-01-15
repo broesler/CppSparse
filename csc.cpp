@@ -2533,13 +2533,17 @@ std::vector<double> CSCMatrix::lsolve_perm(
     assert(N_ == p_inv.size());
     assert(N_ == q_inv.size());
 
-    // Get the non-inverse row-permutation vector O(N)
-    std::vector<csint> p = inv_permute(p_inv);
+    // FIXME? When A is upper triangular, [pq]_inv are *reversed*. The for-k
+    // loop will correctly iterate through the columns in reverse order.
+    // Q: Does the inverse permutation of a reversed vector give the reversed
+    //    version of the permutation?
+    // A: NO. This p vector is incorrect; however, it is *only* used to index
+    //    into the x vector, so maybe we can permute the input the p_inv and
+    //    then un-permute the output with q_inv, and not need p?
 
-    // Copy the RHS vector
-    std::vector<double> x = b;
+    // Copy the RHS vector in permuted form
+    std::vector<double> x = ipvec(p_inv, b);
 
-    // NOTE ASSUME LOWER TRIANGULAR FOR NOW
     // The diagonal entry is first in the *un-permuted* matrix
     for (csint k = 0; k < N_; k++) {
         // std::cout << "----- k = " << k << std::endl;
@@ -2549,7 +2553,7 @@ std::vector<double> CSCMatrix::lsolve_perm(
 
         // Find the diagonal entry
         csint diag_row = p_inv[k];  // un-permuted row of the diagonal entry
-        csint d = -1;
+        csint d = -1;  // pointer to the diagonal entry
         for (csint t = p_[j]; t < p_[j+1]; t++) {
             if (i_[t] == diag_row) {
                 d = t;
@@ -2559,18 +2563,19 @@ std::vector<double> CSCMatrix::lsolve_perm(
         assert(d >= 0);
 
         // Update the solution
-        double& x_val = x[k];  // un-permuted row of x
+        double& x_val = x[diag_row];
         if (x_val != 0) {
             x_val /= v_[d];  // diagonal entry
             for (csint t = p_[j]; t < p_[j+1]; t++) {
                 if (t != d) {
-                    x[p[i_[t]]] -= v_[t] * x_val;  // off-diagonals
+                    x[i_[t]] -= v_[t] * x_val;  // off-diagonals
                 }
             }
         }
     }
 
-    return x;
+    // Un-permute the solution vector
+    return pvec(p_inv, x);
 }
 
 

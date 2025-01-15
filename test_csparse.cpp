@@ -1996,6 +1996,11 @@ TEST_CASE("Permuted triangular solvers")
     const CSCMatrix PLQ = L.permute(inv_permute(p), q).to_canonical();
     const CSCMatrix PUQ = U.permute(inv_permute(p), q).to_canonical();
 
+    SECTION("Determine if matrix is lower triangular or not") {
+        REQUIRE(L.is_lower_triangular());
+        REQUIRE_FALSE(U.is_lower_triangular());
+    }
+
     SECTION("Find diagonals of permuted L") {
         std::vector<csint> expect = {2, 8, 14, 16, 19, 20};
         std::vector<csint> p_diags = PL.find_lower_diagonals();

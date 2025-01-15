@@ -2582,6 +2582,21 @@ std::vector<double> CSCMatrix::lsolve_perm(
 }
 
 
+/** Determine if a matrix is lower triangular or upper. */
+bool CSCMatrix::is_lower_triangular() const
+{
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            if (i_[p] < j) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+
 /** Solve a row- and column-permuted triangular system P A Q x = b, for unknown
  * P and Q.
  *

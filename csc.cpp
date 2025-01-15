@@ -2518,32 +2518,54 @@ std::pair<std::vector<csint>, std::vector<csint>> CSCMatrix::find_tri_permutatio
  * See: Davis, Exercise 3.7
  *
  * @param b  a dense RHS vector, *not* permuted.
- * @param p_inv  the inverse row permutation vector.
+ * @param p_inv  the *inverse* row permutation vector.
  * @param q  the column permutation vector.
  *
  * @return x  the dense solution vector, also *not* permuted.
  */
-std::vector<double> CSCMatrix::tri_solve_perm(
+std::vector<double> CSCMatrix::lsolve_perm(
     const std::vector<double>& b,
     const std::vector<csint>& p_inv,
-    const std::vector<csint>& q) const
+    const std::vector<csint>& q_inv) const
 {
     assert(M_ == N_);
     assert(M_ == b.size());
     assert(N_ == p_inv.size());
-    assert(N_ == q.size());
+    assert(N_ == q_inv.size());
+
+    // Get the non-inverse row-permutation vector O(N)
+    std::vector<csint> p = inv_permute(p_inv);
 
     // Copy the RHS vector
     std::vector<double> x = b;
 
     // NOTE ASSUME LOWER TRIANGULAR FOR NOW
+    // The diagonal entry is first in the *un-permuted* matrix
     for (csint k = 0; k < N_; k++) {
-        csint j = q[k];    // permuted column
+        // std::cout << "----- k = " << k << std::endl;
+        // std::cout << "x = " << x << std::endl;
+
+        csint j = q_inv[k];    // permuted column
+
+        // Find the diagonal entry
+        csint diag_row = p_inv[k];  // un-permuted row of the diagonal entry
+        csint d = -1;
+        for (csint t = p_[j]; t < p_[j+1]; t++) {
+            if (i_[t] == diag_row) {
+                d = t;
+                break;
+            }
+        }
+        assert(d >= 0);
+
+        // Update the solution
         double& x_val = x[k];  // un-permuted row of x
         if (x_val != 0) {
-            x_val /= v_[p_[j]];  // diagonal entry
-            for (csint p = p_[j] + 1; p < p_[j+1]; p++) {
-                x[p_inv[i_[p]]] -= v_[p] * x_val;  // off-diagonals
+            x_val /= v_[d];  // diagonal entry
+            for (csint t = p_[j]; t < p_[j+1]; t++) {
+                if (t != d) {
+                    x[p[i_[t]]] -= v_[t] * x_val;  // off-diagonals
+                }
             }
         }
     }
@@ -2569,12 +2591,7 @@ std::vector<double> CSCMatrix::tri_solve_perm(const std::vector<double>& b) cons
     // Get the permutation vectors
     auto [p_inv, q_inv] = find_tri_permutation();
 
-    // TODO shouldn't have to permute the matrix to solve
-    // Get un-permuted matrix back from input
-    const CSCMatrix L = permute(inv_permute(p_inv), q_inv).to_canonical();
-    return L.lsolve(b);
-
-    // return tri_solve_perm(b, p_inv, inv_permute(q_inv));
+    return lsolve_perm(b, p_inv, q_inv);
 }
 
 

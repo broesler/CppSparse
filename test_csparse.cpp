@@ -12,11 +12,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_all.hpp>
 
-// #include <compare>
+#include <algorithm>  // for std::reverse
 #include <iostream>
 #include <fstream>
 #include <numeric>   // for std::iota
-#include <iterator>  // for std::back_inserter
 #include <string>
 #include <sstream>
 #include <ranges>
@@ -1980,7 +1979,7 @@ TEST_CASE("Permuted triangular solvers")
         std::vector<csint>  {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5}
     ).tocsc();
 
-    const CSCMatrix U = L.T();
+    const CSCMatrix U = L.T().to_canonical();
 
     const std::vector<csint> p = {5, 3, 0, 1, 4, 2};
     const std::vector<csint> q = {1, 4, 0, 2, 5, 3};
@@ -2123,6 +2122,8 @@ TEST_CASE("Permuted triangular solvers")
         // Solve P L Q x = b
         const std::vector<double> xp = PLQ.tri_solve_perm(b);
 
+        std::cout << "xp = " << xp << std::endl;
+
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
 
@@ -2134,6 +2135,8 @@ TEST_CASE("Permuted triangular solvers")
 
         // Solve P L Q x = b
         const std::vector<double> xp = PUQ.tri_solve_perm(b);
+
+        std::cout << "xp = " << xp << std::endl;
 
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }

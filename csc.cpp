@@ -2540,14 +2540,17 @@ std::vector<double> CSCMatrix::lsolve_perm(
     // A: NO. This p vector is incorrect; however, it is *only* used to index
     //    into the x vector, so maybe we can permute the input the p_inv and
     //    then un-permute the output with q_inv, and not need p?
+    //
+    // FAIL the use of ipvec breaks when the matrix is upper triangular, because
+    // the permutation vector is reversed.
 
     // Copy the RHS vector in permuted form
     std::vector<double> x = ipvec(p_inv, b);
 
     // The diagonal entry is first in the *un-permuted* matrix
     for (csint k = 0; k < N_; k++) {
-        // std::cout << "----- k = " << k << std::endl;
-        // std::cout << "x = " << x << std::endl;
+        std::cout << "----- k = " << k << std::endl;
+        std::cout << "x = " << x << std::endl;
 
         csint j = q_inv[k];    // permuted column
 

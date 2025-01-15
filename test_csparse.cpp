@@ -2036,6 +2036,16 @@ TEST_CASE("Permuted triangular solvers")
         auto [p_inv, q_inv] = PLQ.find_tri_permutation();
         CHECK(p_inv == expect_p);
         REQUIRE(q_inv == expect_q);
+
+        // Print the dense matrices for comparison
+        std::cout << "L: " << std::endl;
+        L.print_dense();
+        std::cout << "PLQ: " << std::endl;
+        PLQ.print_dense();
+        std::cout << "L.permute(p_inv, inv_permute(q_inv)): " << std::endl;
+        L.permute(p_inv, inv_permute(q_inv)).print_dense();
+
+        compare_noncanonical(PLQ, L.permute(p_inv, inv_permute(q_inv)));
     }
 
     SECTION("Permuted P L x = b, with unknown P") {
@@ -2101,8 +2111,6 @@ TEST_CASE("Permuted triangular solvers")
 
         // Solve P L Q x = b
         const std::vector<double> xp = PLQ.tri_solve_perm(b);
-
-        std::cout << "xp: " << xp << std::endl;
 
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }

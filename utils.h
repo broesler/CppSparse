@@ -124,6 +124,40 @@ std::vector<csint> argsort(const std::vector<T>& vec)
 }
 
 
+/** Print a matrix in dense format.
+ *
+ * @param A  a dense matrix
+ * @param M, N  the number of rows and columns
+ * @param os  the output stream
+ * @param order  the order to print the matrix ('C' for row-major or 'F' for
+ *        column-major)
+ * 
+ * @return os  the output stream
+ */
+template <typename T>
+void print_dense_vec(
+    const std::vector<T>& A,
+    const csint M,
+    const csint N,
+    std::ostream& os=std::cout,
+    const char order='C'
+)
+{
+    const std::string indent(3, ' ');
+    for (csint i = 0; i < M; i++) {
+        os << indent;  // indent
+        for (csint j = 0; j < N; j++) {
+            if (order == 'C') {
+                os << A[i + j*M] << indent;
+            } else {
+                os << A[i*N + j] << indent;
+            }
+        }
+        os << std::endl;
+    }
+}
+
+
 /** Time a function call.
  *
  * @param func  a function to time

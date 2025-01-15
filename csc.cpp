@@ -2569,7 +2569,8 @@ std::vector<double> CSCMatrix::tri_solve_perm(const std::vector<double>& b) cons
     // Get the permutation vectors
     auto [p_inv, q_inv] = find_tri_permutation();
 
-    return tri_solve_perm(b, p_inv, inv_permute(q_inv));
+    // return tri_solve_perm(b, p_inv, inv_permute(q_inv));
+    return permute(p_inv, inv_permute(q_inv)).lsolve(b);
 }
 
 
@@ -2725,6 +2726,18 @@ std::vector<csint>& CSCMatrix::dfs(
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/
+/** Print the matrix in dense format.
+ *
+ * @param os  a reference to the output stream.
+ *
+ * @return os  a reference to the output stream.
+ */
+void CSCMatrix::print_dense(std::ostream& os) const
+{
+    print_dense_vec((*this).toarray(), M_, N_, os, 'C');
+}
+
+
 /** Print elements of the matrix between `start` and `end`.
  *
  * @param os          the output stream, defaults to std::cout

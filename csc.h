@@ -315,6 +315,8 @@ class CSCMatrix
         ) const;
 
         // ---------- Other
+        void print_dense(std::ostream& os=std::cout) const;
+
         void print(
             std::ostream& os=std::cout,
             const bool verbose=false,

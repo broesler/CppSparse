@@ -2450,6 +2450,69 @@ std::vector<double> CSCMatrix::usolve_cols(const std::vector<double>& b) const
 }
 
 
+/** Find the permutation vectors of a permuted triangular matrix.
+ *
+ * See: Davis, Exercise 3.7
+ *
+ * @return p_inv, q_inv  the row and column permutation vectors.
+ */
+std::pair<std::vector<csint>, std::vector<csint>> CSCMatrix::find_tri_permutation() const
+{
+    assert(M_ == N_);
+
+    // Create a vector of row counts and corresponding set vector
+    std::vector<csint> r(N_, 0);
+    std::vector<csint> z(N_, 0);  // z[i] is XORed with each column j in row i
+
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            r[i_[p]]++;
+            z[i_[p]] ^= j;
+        }
+    }
+
+    // Create a list of singleton row indices
+    std::vector<csint> singles;
+    singles.reserve(N_);
+
+    for (csint i = 0; i < N_; i++) {
+        if (r[i] == 1) {
+            singles.push_back(i);
+        }
+    }
+
+    // Iterate through the columns to get the permutation vectors
+    std::vector<csint> p_inv(N_, -1);
+    std::vector<csint> q_inv(N_, -1);
+
+    for (csint k = 0; k < N_; k++) {
+        // Take a singleton row
+        if (singles.empty()) {
+            throw std::runtime_error("Matrix is not a permuted triangular matrix!");
+        }
+
+        csint i = singles.back();
+        singles.pop_back();
+        csint j = z[i];  // column index
+
+        // Update the permutations
+        p_inv[k] = i;
+        q_inv[k] = j;
+
+        // Decrement each row count, and update the set vector
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            csint t = i_[p];
+            if (--r[t] == 1) {
+                singles.push_back(t);
+            }
+            z[t] ^= j;  // removes j from the set
+        }
+    }
+
+    return std::make_pair(p_inv, q_inv);
+}
+
+
 /** Solve a triangular system \f$ Lx = b_k \f$ for column `k` of `B`.
  *
  * @note If `lo` is non-zero, this function assumes that the diagonal entry of

@@ -290,7 +290,13 @@ class CSCMatrix
         std::vector<csint> find_upper_diagonals() const;
 
         // Exercise 3.7 Generalized permuted triangular solve
-        std::vector<double> permuted_tri_solve(const std::vector<double>& b) const;
+        std::vector<double> tri_solve_perm(const std::vector<double>& b) const;
+        std::vector<double> tri_solve_perm(
+            const std::vector<double>& b,
+            const std::vector<csint>& p_inv,
+            const std::vector<csint>& q
+        ) const;
+
         std::pair<std::vector<csint>, std::vector<csint>> find_tri_permutation() const;
 
         // Sparse matrix solve

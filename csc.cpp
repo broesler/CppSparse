@@ -2454,7 +2454,7 @@ std::vector<double> CSCMatrix::usolve_cols(const std::vector<double>& b) const
  *
  * See: Davis, Exercise 3.7
  *
- * @return p_inv, q_inv  the row and column permutation vectors.
+ * @return p_inv, q_inv  the inverse row and column permutation vectors.
  */
 std::pair<std::vector<csint>, std::vector<csint>> CSCMatrix::find_tri_permutation() const
 {
@@ -2510,6 +2510,66 @@ std::pair<std::vector<csint>, std::vector<csint>> CSCMatrix::find_tri_permutatio
     }
 
     return std::make_pair(p_inv, q_inv);
+}
+
+
+/** Solve a permuted triangular system \f$ PAQx = b \f$.
+ *
+ * See: Davis, Exercise 3.7
+ *
+ * @param b  a dense RHS vector, *not* permuted.
+ * @param p_inv  the inverse row permutation vector.
+ * @param q  the column permutation vector.
+ *
+ * @return x  the dense solution vector, also *not* permuted.
+ */
+std::vector<double> CSCMatrix::tri_solve_perm(
+    const std::vector<double>& b,
+    const std::vector<csint>& p_inv,
+    const std::vector<csint>& q) const
+{
+    assert(M_ == N_);
+    assert(M_ == b.size());
+    assert(N_ == p_inv.size());
+    assert(N_ == q.size());
+
+    // Copy the RHS vector
+    std::vector<double> x = b;
+
+    // NOTE ASSUME LOWER TRIANGULAR FOR NOW
+    for (csint k = 0; k < N_; k++) {
+        csint j = q[k];    // permuted column
+        double& x_val = x[k];  // un-permuted row of x
+        if (x_val != 0) {
+            x_val /= v_[p_[j]];  // diagonal entry
+            for (csint p = p_[j] + 1; p < p_[j+1]; p++) {
+                x[p_inv[i_[p]]] -= v_[p] * x_val;  // off-diagonals
+            }
+        }
+    }
+
+    return x;
+}
+
+
+/** Solve a row- and column-permuted triangular system P A Q x = b, for unknown
+ * P and Q.
+ *
+ * See: Davis, Exercise 3.7
+ *
+ * @param b  a dense RHS vector, *not* permuted.
+ *
+ * @return x  the dense solution vector, also *not* permuted.
+ */
+std::vector<double> CSCMatrix::tri_solve_perm(const std::vector<double>& b) const
+{
+    assert(M_ == N_);
+    assert(M_ == b.size());
+
+    // Get the permutation vectors
+    auto [p_inv, q_inv] = find_tri_permutation();
+
+    return tri_solve_perm(b, p_inv, inv_permute(q_inv));
 }
 
 

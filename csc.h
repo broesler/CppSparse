@@ -291,7 +291,14 @@ class CSCMatrix
 
         // Exercise 3.7 Generalized permuted triangular solve
         std::vector<double> tri_solve_perm(const std::vector<double>& b) const;
+
         std::vector<double> lsolve_perm(
+            const std::vector<double>& b,
+            const std::vector<csint>& p_inv,
+            const std::vector<csint>& q
+        ) const;
+
+        std::vector<double> usolve_perm(
             const std::vector<double>& b,
             const std::vector<csint>& p_inv,
             const std::vector<csint>& q

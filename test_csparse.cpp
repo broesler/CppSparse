@@ -2038,12 +2038,14 @@ TEST_CASE("Permuted triangular solvers")
         REQUIRE(q_inv == expect_q);
 
         // Print the dense matrices for comparison
-        std::cout << "L: " << std::endl;
-        L.print_dense();
-        std::cout << "PLQ: " << std::endl;
-        PLQ.print_dense();
-        std::cout << "L.permute(p_inv, inv_permute(q_inv)): " << std::endl;
-        L.permute(p_inv, inv_permute(q_inv)).print_dense();
+        // std::cout << "L: " << std::endl;
+        // L.print_dense();
+        // std::cout << "PLQ: " << std::endl;
+        // PLQ.print_dense();
+        // std::cout << "P L Q == L.permute(p_inv, inv_permute(q_inv)): " << std::endl;
+        // L.permute(p_inv, inv_permute(q_inv)).print_dense();
+        // std::cout << "P.T PLQ Q.T == PLQ.permute(inv_permute(p_inv), q_inv): " << std::endl;
+        // PLQ.permute(inv_permute(p_inv), q_inv).print_dense();
 
         compare_noncanonical(PLQ, L.permute(p_inv, inv_permute(q_inv)));
     }

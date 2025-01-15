@@ -2569,8 +2569,12 @@ std::vector<double> CSCMatrix::tri_solve_perm(const std::vector<double>& b) cons
     // Get the permutation vectors
     auto [p_inv, q_inv] = find_tri_permutation();
 
+    // TODO shouldn't have to permute the matrix to solve
+    // Get un-permuted matrix back from input
+    const CSCMatrix L = permute(inv_permute(p_inv), q_inv).to_canonical();
+    return L.lsolve(b);
+
     // return tri_solve_perm(b, p_inv, inv_permute(q_inv));
-    return permute(p_inv, inv_permute(q_inv)).lsolve(b);
 }
 
 

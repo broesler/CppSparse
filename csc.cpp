@@ -2513,7 +2513,7 @@ std::pair<std::vector<csint>, std::vector<csint>> CSCMatrix::find_tri_permutatio
 }
 
 
-/** Solve a permuted triangular system \f$ PAQx = b \f$.
+/** Solve a permuted triangular system \f$ PLQx = b \f$.
  *
  * See: Davis, Exercise 3.7
  *
@@ -2526,14 +2526,16 @@ std::pair<std::vector<csint>, std::vector<csint>> CSCMatrix::find_tri_permutatio
 std::vector<double> CSCMatrix::lsolve_perm(
     const std::vector<double>& b,
     const std::vector<csint>& p_inv,
-    const std::vector<csint>& q_inv) const
+    const std::vector<csint>& q_inv,
+    bool reverse
+) const
 {
     assert(M_ == N_);
     assert(M_ == b.size());
     assert(N_ == p_inv.size());
     assert(N_ == q_inv.size());
 
-    // FIXME? When A is upper triangular, [pq]_inv are *reversed*. The for-k
+    // NOTE When A is upper triangular, [pq]_inv are *reversed*. The for-k
     // loop will correctly iterate through the columns in reverse order.
     // Q: Does the inverse permutation of a reversed vector give the reversed
     //    version of the permutation?
@@ -2542,21 +2544,35 @@ std::vector<double> CSCMatrix::lsolve_perm(
     //    then un-permute the output with q_inv, and not need p?
 
     // Get the non-inverse row-permutation vector O(N)
-    std::vector<csint> p = inv_permute(p_inv);
+    std::vector<csint> p_invc = p_inv;  // copy the vector
+
+    // Reverse for the sake of permutation
+    if (reverse) {
+        std::reverse(p_invc.begin(), p_invc.end());
+    }
+
+    std::vector<csint> p = inv_permute(p_invc);
+
+    // Un-reverse after permutation, so the loop is correct
+    if (reverse) {
+        std::reverse(p_invc.begin(), p_invc.end());
+        std::reverse(p.begin(), p.end());
+    }
+
+    std::cout << "----- lsolve_perm -----" << std::endl;
+    std::cout << "p_inv = " << p_invc << std::endl;
+    std::cout << "p = " << p << std::endl;
+    std::cout << "q_inv = " << q_inv << std::endl;
 
     // Copy the RHS vector
     std::vector<double> x = b;
 
-    // NOTE ASSUME LOWER TRIANGULAR FOR NOW
     // The diagonal entry is first in the *un-permuted* matrix
     for (csint k = 0; k < N_; k++) {
-        std::cout << "----- k = " << k << std::endl;
-        std::cout << "x = " << x << std::endl;
-
         csint j = q_inv[k];    // permuted column
 
         // Find the diagonal entry
-        csint diag_row = p_inv[k];  // un-permuted row of the diagonal entry
+        csint diag_row = p_invc[k];  // un-permuted row of the diagonal entry
         csint d = -1;  // pointer to the diagonal entry
         for (csint t = p_[j]; t < p_[j+1]; t++) {
             if (i_[t] == diag_row) {
@@ -2595,7 +2611,8 @@ std::vector<double> CSCMatrix::lsolve_perm(
 std::vector<double> CSCMatrix::usolve_perm(
     const std::vector<double>& b,
     const std::vector<csint>& p_inv,
-    const std::vector<csint>& q_inv) const
+    const std::vector<csint>& q_inv
+) const
 {
     assert(M_ == N_);
     assert(M_ == b.size());
@@ -2605,11 +2622,16 @@ std::vector<double> CSCMatrix::usolve_perm(
     // Get the non-inverse row-permutation vector O(N)
     std::vector<csint> p = inv_permute(p_inv);
 
+    std::cout << "----- usolve_perm -----" << std::endl;
+    std::cout << "p_inv = " << p_inv << std::endl;
+    std::cout << "p = " << p << std::endl;
+    std::cout << "q_inv = " << q_inv << std::endl;
+
     // Copy the RHS vector
     std::vector<double> x = b;
 
     // The diagonal entry is first in the *un-permuted* matrix
-    for (csint k = N_; k >= 0; k--) {
+    for (csint k = N_ - 1; k >= 0; k--) {
         csint j = q_inv[k];    // permuted column
 
         // Find the diagonal entry
@@ -2698,15 +2720,30 @@ std::vector<double> CSCMatrix::tri_solve_perm(const std::vector<double>& b) cons
     // Get the permutation vectors
     auto [p_inv, q_inv] = find_tri_permutation();
 
-    // Solve the permuted system
-    if (is_lower_tri(inv_permute(p_inv), q_inv)) {
-        return lsolve_perm(b, p_inv, q_inv);
-    } else {
-        std::reverse(p_inv.begin(), p_inv.end());
-        std::reverse(q_inv.begin(), q_inv.end());
-        return usolve_perm(b, p_inv, q_inv);
-    }
+    // TODO lsolve_perm and usolve_perm only differ in the loop direction, and
+    // the order of the input vectors. Can we combine them into a single
+    // function that does *not* have to test to see if the matrix is lower or 
+    // upper triangular?
+    //
+    // Only the inv_permute(p_inv) line fails with p_inv reversed.
+    //
+    // Can we somehow invert p_inv *without* reversing it? Just using the
+    // available information in q_inv?
 
+    // FIXME this logic is circular, because we don't know if p_inv and q_inv
+    // are reversed!
+    // std::vector<csint> p_inv_r(p_inv.rbegin(), p_inv.rend());
+    // std::vector<csint> q_inv_r(q_inv.rbegin(), q_inv.rend());
+
+    // Solve the permuted system
+    // if (is_lower_tri(inv_permute(p_inv), q_inv) &&
+    //     !is_lower_tri(inv_permute(p_inv_r), q_inv_r)) {
+    //     return lsolve_perm(b, p_inv, q_inv);
+    // } else {
+        // return usolve_perm(b, p_inv_r, q_inv_r);
+    // }
+
+    return lsolve_perm(b, p_inv, q_inv);
 }
 
 

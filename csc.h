@@ -295,13 +295,14 @@ class CSCMatrix
         std::vector<double> lsolve_perm(
             const std::vector<double>& b,
             const std::vector<csint>& p_inv,
-            const std::vector<csint>& q
+            const std::vector<csint>& q_inv,
+            bool reverse=false
         ) const;
 
         std::vector<double> usolve_perm(
             const std::vector<double>& b,
             const std::vector<csint>& p_inv,
-            const std::vector<csint>& q
+            const std::vector<csint>& q_inv
         ) const;
 
         std::pair<std::vector<csint>, std::vector<csint>> find_tri_permutation() const;

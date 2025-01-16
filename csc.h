@@ -102,12 +102,19 @@ class CSCMatrix
             void *other
         );
 
+        // Overload for copies
+        CSCMatrix fkeep(
+            bool (*fk) (csint i, csint j, double Aij, void *tol),
+            void *other
+        ) const;
+
         CSCMatrix& dropzeros();
         CSCMatrix& droptol(double tol);
 
         // Exercise 2.15
         static bool in_band(csint i, csint j, double Aij, void *limits);
-        CSCMatrix band(csint kl, csint ku);
+        CSCMatrix& band(csint kl, csint ku);
+        CSCMatrix band(csint kl, csint ku) const;  // overload for copies
 
         // TODO possibly make these private? Or define in SparseMatrix base.
         static bool nonzero(csint i, csint j, double Aij, void *tol);

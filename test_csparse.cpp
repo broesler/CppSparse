@@ -1972,17 +1972,22 @@ TEST_CASE("Permuted triangular solvers")
     //
     // Starred elements are the diagonals of the un-permuted matrix
 
-    // Un-permuted L
-    const CSCMatrix L = COOMatrix(
-        std::vector<double> {1, 2, 3, 4, 5, 6, 2, 3, 4, 5, 6, 3, 4, 5, 6, 4, 5, 6, 5, 6, 6},
-        std::vector<csint>  {0, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 2, 3, 4, 5, 3, 4, 5, 4, 5, 5},
-        std::vector<csint>  {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5}
-    ).tocsc();
+    // Create full matrix with row numbers as values
+    const std::vector<double> row_vals = {1, 2, 3, 4, 5, 6};
+    const csint N = row_vals.size();
 
-    // TODO use U where rows are constant values like L, not L.T(). Only
-    // requires changing b in a few places, and makes it easier to debug the
-    // solver.
-    const CSCMatrix U = L.T().to_canonical();
+    std::vector<double> A_vals;
+    A_vals.reserve(N * N);
+
+    for (csint i = 0; i < N; i++) {
+        A_vals.insert(A_vals.end(), row_vals.begin(), row_vals.end());
+    }
+
+    const CSCMatrix A = CSCMatrix(A_vals, N, N);
+
+    // Un-permuted matrices
+    const CSCMatrix L = A.band(-N, 0);
+    const CSCMatrix U = A.band(0, N);
 
     const std::vector<csint> p = {5, 3, 0, 1, 4, 2};
     const std::vector<csint> q = {1, 4, 0, 2, 5, 3};
@@ -2099,7 +2104,7 @@ TEST_CASE("Permuted triangular solvers")
     SECTION("Permuted P U x = b, with unknown P") {
         // Create RHS for Ux = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> b = {91, 90, 86, 77, 61, 36};
+        const std::vector<double> b = {21, 40, 54, 60, 55, 36};
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
 
         // Solve Ux = b (un-permuted)
@@ -2114,7 +2119,7 @@ TEST_CASE("Permuted triangular solvers")
     SECTION("Permuted U Q x = b, with unknown Q") {
         // Create RHS for Ux = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> b = {91, 90, 86, 77, 61, 36};
+        const std::vector<double> b = {21, 40, 54, 60, 55, 36};
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
 
         // Solve U Q.T x = b
@@ -2140,7 +2145,7 @@ TEST_CASE("Permuted triangular solvers")
     SECTION("Permuted P U Q x = b, with unknown P and Q") {
         // Create RHS for Lx = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> b = {91, 90, 86, 77, 61, 36};
+        const std::vector<double> b = {21, 40, 54, 60, 55, 36};
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
 
         // Solve P L Q x = b

@@ -671,6 +671,8 @@ CSCMatrix& CSCMatrix::sum_duplicates()
  *        @return keep a boolean that is true if the element `A(i, j)` should be
  *                kept in the matrix.
  * @param other a pointer to the additional argument in `fk`.
+ *
+ * @return a reference to the object for method chaining
  */
 CSCMatrix& CSCMatrix::fkeep(
     bool (*fk) (csint, csint, double, void *),
@@ -695,6 +697,31 @@ CSCMatrix& CSCMatrix::fkeep(
 
     return *this;
 };
+
+
+/** Keep matrix entries for which `fkeep` returns true.
+ *
+ * @param fk a boolean function that acts on each element. If `fk` returns
+ *        `true`, that element will be kept in the matrix. The function `fk` has
+ *        four parameters:
+ *        @param i, j integer indices of the element
+ *        @param v the value of the element
+ *        @param other a void pointer for any additional argument (*i.e.*
+ *               a non-zero tolerance against which to compare)
+ *        @return keep a boolean that is true if the element `A(i, j)` should be
+ *                kept in the matrix.
+ * @param other a pointer to the additional argument in `fk`.
+ *
+ * @return a copy of the matrix with entries removed.
+ */
+CSCMatrix CSCMatrix::fkeep(
+    bool (*fk) (csint i, csint j, double Aij, void *tol),
+    void *other
+) const
+{
+    CSCMatrix C(*this);
+    return C.fkeep(fk, other);
+}
 
 
 /** Return true if A(i, j) is non-zero */
@@ -753,7 +780,23 @@ bool CSCMatrix::in_band(csint i, csint j, double Aij, void *limits)
  *
  * @return a copy of the matrix with entries removed.
  */
-CSCMatrix CSCMatrix::band(const csint kl, const csint ku)
+CSCMatrix& CSCMatrix::band(const csint kl, const csint ku)
+{
+    assert(kl <= ku);
+    Shape limits {kl, ku};
+
+    return fkeep(&in_band, &limits);
+}
+
+
+/** Keep any entries within the specified band.
+ *
+ * @param kl, ku  the lower and upper diagonals within which to keep entries.
+ * The main diagonal is 0, with sub-diagonals < 0, and super-diagonals > 0.
+ *
+ * @return a copy of the matrix with entries removed.
+ */
+CSCMatrix CSCMatrix::band(const csint kl, const csint ku) const
 {
     assert(kl <= ku);
     Shape limits {kl, ku};

@@ -139,18 +139,18 @@ void print_dense_vec(
     const std::vector<T>& A,
     const csint M,
     const csint N,
-    std::ostream& os=std::cout,
-    const char order='C'
+    const char order='F',
+    std::ostream& os=std::cout
 )
 {
     const std::string indent(3, ' ');
     for (csint i = 0; i < M; i++) {
         os << indent;  // indent
         for (csint j = 0; j < N; j++) {
-            if (order == 'C') {
-                os << A[i + j*M] << indent;
+            if (order == 'F') {
+                os << A[i + j*M] << indent;  // print in column-major order
             } else {
-                os << A[i*N + j] << indent;
+                os << A[i*N + j] << indent;  // print in row-major order
             }
         }
         os << std::endl;

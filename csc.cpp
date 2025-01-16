@@ -2907,7 +2907,7 @@ std::vector<csint>& CSCMatrix::dfs(
  */
 void CSCMatrix::print_dense(std::ostream& os) const
 {
-    print_dense_vec(toarray(), M_, N_, os, 'C');
+    print_dense_vec(toarray('F'), M_, N_, 'F', os);
 }
 
 

@@ -240,9 +240,12 @@ TEST_CASE("Test vector permutations", "[vector]")
     std::vector<double> b = {0, 1, 2, 3, 4};
     std::vector<csint> p = {2, 0, 1, 4, 3};
 
+    // TODO write operator[] for std::vector so that b[p] == pvec(p, b)
     REQUIRE(pvec(p, b) == std::vector<double>{2, 0, 1, 4, 3});
     REQUIRE(ipvec(p, b) == std::vector<double>{1, 2, 0, 4, 3});
     REQUIRE(inv_permute(p) == std::vector<csint>{1, 2, 0, 4, 3});
+    REQUIRE(pvec(inv_permute(p), b) == ipvec(p, b));
+    REQUIRE(ipvec(inv_permute(p), b) == pvec(p, b));
 }
 
 

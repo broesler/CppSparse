@@ -2165,8 +2165,6 @@ TEST_CASE("Permuted triangular solvers")
 
         // const std::vector<double> xp = PUQ.lsolve_perm(b, p_inv, q_inv, true);
 
-        std::cout << "xp = " << xp << std::endl;
-
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
 }

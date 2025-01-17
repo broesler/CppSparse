@@ -2600,11 +2600,6 @@ std::vector<double> CSCMatrix::lsolve_perm(
         std::reverse(p.begin(), p.end());
     }
 
-    std::cout << "----- lsolve_perm -----" << std::endl;
-    std::cout << "p_inv = " << p_invc << std::endl;
-    std::cout << "p = " << p << std::endl;
-    std::cout << "q_inv = " << q_inv << std::endl;
-
     // Copy the RHS vector
     std::vector<double> x = b;
 
@@ -2662,11 +2657,6 @@ std::vector<double> CSCMatrix::usolve_perm(
 
     // Get the non-inverse row-permutation vector O(N)
     std::vector<csint> p = inv_permute(p_inv);
-
-    std::cout << "----- usolve_perm -----" << std::endl;
-    std::cout << "p_inv = " << p_inv << std::endl;
-    std::cout << "p = " << p << std::endl;
-    std::cout << "q_inv = " << q_inv << std::endl;
 
     // Copy the RHS vector
     std::vector<double> x = b;

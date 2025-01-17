@@ -2179,11 +2179,10 @@ std::vector<double> CSCMatrix::lsolve_opt(const std::vector<double>& b) const
     std::vector<double> x = b;
 
     for (csint j = 0; j < N_; j++) {
-        x[j] /= v_[p_[j]];
-
+        double& x_val = x[j];  // cache reference to value
         // Exercise 3.8: improve performance by checking for zeros
-        double x_val = x[j];  // cache value
         if (x_val != 0) {
+            x[j] /= v_[p_[j]];
             for (csint p = p_[j] + 1; p < p_[j+1]; p++) {
                 x[i_[p]] -= v_[p] * x_val;
             }
@@ -2213,10 +2212,9 @@ std::vector<double> CSCMatrix::usolve_opt(const std::vector<double>& b) const
     std::vector<double> x = b;
 
     for (csint j = N_ - 1; j >= 0; j--) {
-        x[j] /= v_[p_[j+1] - 1];  // diagonal entry
-
-        double x_val = x[j];  // cache value
+        double& x_val = x[j];  // cache reference to value
         if (x_val != 0) {
+            x[j] /= v_[p_[j+1] - 1];  // diagonal entry
             for (csint p = p_[j]; p < p_[j+1] - 1; p++) {
                 x[i_[p]] -= v_[p] * x_val;
             }

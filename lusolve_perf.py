@@ -20,29 +20,53 @@ filestem = 'lusolve_perf'
 with open(f"./plots/{filestem}.json", 'r') as f:
     data = json.load(f)
 
-density = data['density']
+# Hack key names from other script
+N = int(data['density'])
 del data['density']
 
-b_densities = np.r_[data['Ns']] / 1000
+densities = np.r_[data['Ns']] / 1000
 del data['Ns']
 
 times = data     # all other values are the times
 del data
 
 # Plot the data
-fig, ax = plt.subplots(num=1, clear=True)
+fig, axs = plt.subplots(num=1, nrows=2, sharex=True, clear=True)
+fig.suptitle(f"{filestem.split('_')[0]}, N = {N}")
+
+ax = axs[0]
 for i, (key, val) in enumerate(times.items()):
-    ax.errorbar(b_densities, val['mean'],
+    ax.errorbar(densities, val['mean'],
                 yerr=val['std_dev'], ecolor=f"C{i}", fmt='.-', label=key)
 
-ax.set_xscale('log')
+# ax.set_xscale('log')
 # ax.set_yscale('log')
 ax.grid(which='both')
 ax.legend()
 
-ax.set_xlabel('Density of RHS vector')
 ax.set_ylabel('Time (s)')
-ax.set_title(f"{filestem.split('_')[0]}, N = 2000, density {density}")
+
+# Plot the difference between the two methods
+ax = axs[1]
+for i, k in enumerate(['l', 'u']):
+    key = f"{k}solve"
+    opt_key = key + '_opt'
+
+    mean = np.r_[times[key]['mean']] 
+    opt_mean = np.r_[times[opt_key]['mean']]
+    rel_diff = (mean - opt_mean) / mean
+
+    var = np.r_[times[key]['std_dev']]**2 
+    opt_var = np.r_[times[opt_key]['std_dev']]**2
+
+    ax.errorbar(densities, rel_diff, yerr=np.sqrt(var + opt_var),
+                ecolor=f"C{i}", fmt='.-', label=key)
+
+ax.grid(which='both')
+ax.legend()
+
+ax.set_xlabel('Density of Matrix and RHS vector')
+ax.set_ylabel('Time Ratio of Original to Optimized')
 
 plt.show()
 

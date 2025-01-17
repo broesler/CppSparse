@@ -316,8 +316,14 @@ class CSCMatrix
 
         bool is_lower_tri() const;
         bool is_lower_tri(
-            const std::vector<csint>& p_inv,
-            const std::vector<csint>& q
+            const std::vector<csint>& p,
+            const std::vector<csint>& q_inv
+        ) const;
+
+        bool is_upper_tri() const;
+        bool is_upper_tri(
+            const std::vector<csint>& p,
+            const std::vector<csint>& q_inv
         ) const;
 
         // Sparse matrix solve

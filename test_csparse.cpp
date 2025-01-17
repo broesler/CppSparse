@@ -2006,9 +2006,13 @@ TEST_CASE("Permuted triangular solvers")
 
     SECTION("Determine if matrix is lower triangular or not") {
         CHECK(L.is_lower_tri());
+        CHECK(U.is_upper_tri());
         CHECK_FALSE(U.is_lower_tri());
+        CHECK_FALSE(L.is_upper_tri());
         CHECK(PLQ.is_lower_tri(p, inv_permute(q)));
+        CHECK(PUQ.is_upper_tri(p, inv_permute(q)));
         REQUIRE_FALSE(PUQ.is_lower_tri(p, inv_permute(q)));
+        REQUIRE_FALSE(PLQ.is_upper_tri(p, inv_permute(q)));
     }
 
     SECTION("Find diagonals of permuted L") {

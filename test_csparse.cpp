@@ -18,7 +18,6 @@
 #include <numeric>   // for std::iota
 #include <string>
 #include <sstream>
-#include <ranges>
 
 #include "csparse.h"
 
@@ -2007,17 +2006,6 @@ TEST_CASE("Permuted triangular solvers")
     const CSCMatrix PLQ = L.permute(inv_permute(p), q).to_canonical();
     const CSCMatrix PUQ = U.permute(inv_permute(p), q).to_canonical();
 
-    SECTION("Determine if matrix is lower triangular or not") {
-        CHECK(L.is_lower_tri());
-        CHECK(U.is_upper_tri());
-        CHECK_FALSE(U.is_lower_tri());
-        CHECK_FALSE(L.is_upper_tri());
-        CHECK(PLQ.is_lower_tri(p, inv_permute(q)));
-        CHECK(PUQ.is_upper_tri(p, inv_permute(q)));
-        REQUIRE_FALSE(PUQ.is_lower_tri(p, inv_permute(q)));
-        REQUIRE_FALSE(PLQ.is_upper_tri(p, inv_permute(q)));
-    }
-
     SECTION("Find diagonals of permuted L") {
         std::vector<csint> expect = {2, 8, 14, 16, 19, 20};
         std::vector<csint> p_diags = PL.find_lower_diagonals();
@@ -2057,7 +2045,7 @@ TEST_CASE("Permuted triangular solvers")
         std::vector<csint> expect_p = inv_permute(p);
         std::vector<csint> expect_q = inv_permute(q);
 
-        auto [p_inv, q_inv] = PLQ.find_tri_permutation();
+        auto [p_inv, q_inv, p_diags] = PLQ.find_tri_permutation();
 
         CHECK(p_inv == expect_p);
         CHECK(q_inv == expect_q);
@@ -2070,7 +2058,7 @@ TEST_CASE("Permuted triangular solvers")
         std::vector<csint> expect_q = inv_permute(q);
 
         // NOTE returns *reversed* vectors for an upper triangular matrix!!
-        auto [p_inv, q_inv] = PUQ.find_tri_permutation();
+        auto [p_inv, q_inv, p_diags] = PUQ.find_tri_permutation();
         std::reverse(p_inv.begin(), p_inv.end());
         std::reverse(q_inv.begin(), q_inv.end());
 
@@ -2142,11 +2130,8 @@ TEST_CASE("Permuted triangular solvers")
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
 
         // Solve P L Q x = b
-        // const std::vector<double> xp = PLQ.tri_solve_perm(b);
-        auto [p_inv, q_inv] = PLQ.find_tri_permutation();
-        const std::vector<double> xp = PLQ.lsolve_perm(b, p_inv, q_inv);
-
-        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
+        const std::vector<double> xt = PLQ.tri_solve_perm(b);
+        REQUIRE_THAT(is_close(xt, expect, tol), AllTrue());
     }
 
     SECTION("Permuted P U Q x = b, with unknown P and Q") {
@@ -2156,18 +2141,7 @@ TEST_CASE("Permuted triangular solvers")
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
 
         // Solve P L Q x = b
-        // const std::vector<double> xp = PUQ.tri_solve_perm(b);
-        auto [p_inv, q_inv] = PUQ.find_tri_permutation();
-
-        // FIXME: This test is failing, but the permutation vectors are correct
-        // CHECK_FALSE(PUQ.is_lower_tri(inv_permute(p_inv), q_inv));
-
-        std::reverse(p_inv.begin(), p_inv.end());
-        std::reverse(q_inv.begin(), q_inv.end());
-        const std::vector<double> xp = PUQ.usolve_perm(b, p_inv, q_inv);
-
-        // const std::vector<double> xp = PUQ.lsolve_perm(b, p_inv, q_inv, true);
-
+        std::vector<double> xp = PUQ.tri_solve_perm(b, true);
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
 }

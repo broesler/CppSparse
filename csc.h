@@ -317,6 +317,11 @@ class CSCMatrix
             std::vector<csint>& xi
         ) const;
 
+        //----------------------------------------------------------------------
+        //        Cholesky Decomposition
+        //----------------------------------------------------------------------
+        std::vector<csint> etree(bool ata=false) const;
+
         // ---------- Other
         void print_dense(std::ostream& os=std::cout) const;
 

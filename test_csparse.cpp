@@ -1991,6 +1991,11 @@ TEST_CASE("Permuted triangular solvers")
     const CSCMatrix L = A.band(-N, 0);
     const CSCMatrix U = A.band(0, N);
 
+    // TODO I am curious what happens when there is more than one singleton row
+    // at a time in find_tri_permutation(). Try removing a few entries from each
+    // matrix to make them more sparse and see if the permutation order is still
+    // correct.
+
     const std::vector<csint> p = {5, 3, 0, 1, 4, 2};
     const std::vector<csint> q = {1, 4, 0, 2, 5, 3};
 
@@ -2145,6 +2150,35 @@ TEST_CASE("Permuted triangular solvers")
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
 }
+
+
+TEST_CASE("Cholesky decomposition")
+{
+    // Define the test matrix A (See Davis, Figure 4.2, p 39)
+    csint N = 11;
+    std::vector<csint> rows = {5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10};
+    std::vector<csint> cols = {0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9};
+
+    // Include diagonals
+    std::vector<csint> diags(N);
+    std::iota(diags.begin(), diags.end(), 0);
+    rows.insert(rows.end(), diags.begin(), diags.end());
+    cols.insert(cols.end(), diags.begin(), diags.end());
+
+    std::vector<double> vals(rows.size(), 1);
+
+    CSCMatrix L = COOMatrix(vals, rows, cols).tocsc();
+    CSCMatrix A = (L + L.T().band(1, N)).to_canonical();
+
+    CHECK(A.is_symmetric());
+
+    SECTION("Elimination Tree") {
+        REQUIRE(A.etree() == std::vector<csint>{5, 2, 7, 5, 7, 6, 8, 9, 9, 10, -1});
+        REQUIRE(A.etree(true) == std::vector<csint>{3, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1});
+        REQUIRE((A.T() * A).to_canonical().etree() == A.etree(true));
+    }
+}
+
 
 /*==============================================================================
  *============================================================================*/

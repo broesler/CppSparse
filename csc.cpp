@@ -1231,6 +1231,10 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
     bool fs = true;  // Exercise 2.19 -- first call to scatter
 
     for (csint j = 0; j < N; j++) {
+        if (nz + M > C.nzmax()) {
+            C.realloc(2 * C.nzmax() + M);  // double the size of C
+        }
+
         C.p_[j] = nz;  // column j of C starts here
 
         // Compute x = A @ B[:, j]
@@ -2761,6 +2765,46 @@ std::vector<csint>& CSCMatrix::dfs(
     }
 
     return xi;
+}
+
+/*------------------------------------------------------------------------------
+ *         Cholesky Decomposition
+ *----------------------------------------------------------------------------*/
+/** Compute the elimination tree of A.
+  *
+  * @param ata  if True, compute the elimination tree of A^T A
+  *
+  * @return parent  the parent vector of the elimination tree
+  */
+std::vector<csint> CSCMatrix::etree(bool ata) const
+{
+    assert(has_canonical_format_);
+
+    std::vector<csint> parent(N_, -1);  // parent of i is parent[i]
+    std::vector<csint> ancestor(N_, -1);    // workspaces
+    std::vector<csint> prev;
+    if (ata) {
+        prev = std::vector<csint>(M_, -1);
+    }
+    csint inext = 0;
+
+    for (csint k = 0; k < N_; k++) {
+        for (csint p = p_[k]; p < p_[k+1]; p++) {
+            csint i = ata ? prev[i_[p]] : i_[p];  // A(i, k) is nonzero
+            for (; i != -1 && i < k; i = inext) {
+                inext = ancestor[i];  // traverse up to the root
+                ancestor[i] = k;      // path compression
+                if (inext == -1) {
+                    parent[i] = k;  // no ancestor
+                }
+            }
+            if (ata) {
+                prev[i_[p]] = k;  // use prev for A^T
+            }
+        }
+    }
+
+    return parent;
 }
 
 

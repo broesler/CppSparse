@@ -2541,14 +2541,6 @@ CSCMatrix::find_tri_permutation() const
         singles.pop_back();
         csint j = z[i];  // column index
 
-        // NOTE for upper triangular matrices, the permutations are reversed!
-        // Is there any way to tell if the matrix is upper or lower triangular
-        // in this loop without actually permuting the matrix?
-        // Reversing permutation vectors corrects order for U, but not L (duh)
-        //
-        // Using a queue for singles does not matter for my test matrices that
-        // are full, since there is only one singleton row at each step.
-
         // Update the permutations
         p_inv[k] = i;
         q_inv[k] = j;
@@ -2560,166 +2552,13 @@ CSCMatrix::find_tri_permutation() const
                 singles.push_back(t);
             }
             z[t] ^= j;  // removes j from the set
-            // Store the pointers to the diagonal entries
             if (t == i) {
-                p_diags[k] = p;
+                p_diags[k] = p;  // store the pointers to the diagonal entries
             }
         }
     }
 
     return std::make_tuple(p_inv, q_inv, p_diags);
-}
-
-
-/** Solve a permuted triangular system \f$ PLQx = b \f$.
- *
- * See: Davis, Exercise 3.7
- *
- * @param b  a dense RHS vector, *not* permuted.
- * @param p_inv  the *inverse* row permutation vector.
- * @param q  the column permutation vector.
- *
- * @return x  the dense solution vector, also *not* permuted.
- */
-std::vector<double> CSCMatrix::lsolve_perm(
-    const std::vector<double>& b,
-    const std::vector<csint>& p_inv,
-    const std::vector<csint>& q_inv
-) const
-{
-    assert(M_ == N_);
-    assert(M_ == b.size());
-    assert(N_ == p_inv.size());
-    assert(N_ == q_inv.size());
-
-    // NOTE When A is upper triangular, [pq]_inv are *reversed*. The for-k
-    // loop will correctly iterate through the columns in reverse order.
-    // Q: Does the inverse permutation of a reversed vector give the reversed
-    //    version of the permutation?
-    // A: NO. This p vector is incorrect; however, it is *only* used to index
-    //    into the x vector, so maybe we can permute the input the p_inv and
-    //    then un-permute the output with q_inv, and not need p?
-
-    // Get the non-inverse row-permutation vector O(N)
-    std::vector<csint> p = inv_permute(p_inv);
-
-    std::cout << "----- lsolve_perm -----" << std::endl;
-    std::cout << "p_inv = " << p_inv << std::endl;
-    std::cout << "p     = " << p << std::endl;
-    std::cout << "q_inv = " << q_inv << std::endl;
-
-    // Copy the RHS vector
-    // std::vector<double> x = b;
-    std::cout << "b = " << b << std::endl;
-
-    // NOTE This method suffers from the same issue for upper triangular matrices
-    // as directly computing `p` does. The reversed p_inv vector does not give
-    // a reversed p vector.
-    // Copy the RHS vector in permuted form x := Pb
-    std::vector<double> x = ipvec(p_inv, b);
-
-    std::cout << "x = P'b = " << x << std::endl;
-
-    // The diagonal entry is first in the *un-permuted* matrix
-    for (csint k = 0; k < N_; k++) {
-        csint j = q_inv[k];    // permuted column
-
-        // Find the diagonal entry
-        csint diag_row = p_inv[k];  // un-permuted row of the diagonal entry
-        csint d = -1;  // pointer to the diagonal entry
-        for (csint t = p_[j]; t < p_[j+1]; t++) {
-            if (i_[t] == diag_row) {
-                d = t;
-                break;
-            }
-        }
-        assert(d >= 0);
-
-        // Update the solution
-        // double& x_val = x[k];  // un-permuted row of x
-        double& x_val = x[diag_row];  // permuted row of x
-        if (x_val != 0) {
-            x_val /= v_[d];  // diagonal entry
-            for (csint t = p_[j]; t < p_[j+1]; t++) {
-                if (t != d) {
-                    // x[p[i_[t]]] -= v_[t] * x_val;  // off-diagonals
-                    x[i_[t]] -= v_[t] * x_val;  // off-diagonals
-                }
-            }
-        }
-    }
-
-    // Q: Why is this not x := Q x? From x = Q ((PAQ)^-1 P b)
-    // Un-permute the solution vector x := P.T x
-    std::cout << "x = " << x << std::endl;
-    x = pvec(p_inv, x);
-    std::cout << "Px = " << x << std::endl;
-
-    return x;
-}
-
-
-/** Solve a permuted upper triangular system \f$ PUQx = b \f$.
- *
- * See: Davis, Exercise 3.7
- *
- * @param b  a dense RHS vector, *not* permuted.
- * @param p_inv  the *inverse* row permutation vector.
- * @param q  the column permutation vector.
- *
- * @return x  the dense solution vector, also *not* permuted.
- */
-std::vector<double> CSCMatrix::usolve_perm(
-    const std::vector<double>& b,
-    const std::vector<csint>& p_inv,
-    const std::vector<csint>& q_inv
-) const
-{
-    assert(M_ == N_);
-    assert(M_ == b.size());
-    assert(N_ == p_inv.size());
-    assert(N_ == q_inv.size());
-
-    // Get the non-inverse row-permutation vector O(N)
-    std::vector<csint> p = inv_permute(p_inv);
-
-    std::cout << "----- usolve_perm -----" << std::endl;
-    std::cout << "p_inv = " << p_inv << std::endl;
-    std::cout << "p     = " << p << std::endl;
-    std::cout << "q_inv = " << q_inv << std::endl;
-
-    // Copy the RHS vector
-    std::vector<double> x = b;
-
-    // Backsolve the upper triangular system
-    for (csint k = N_ - 1; k >= 0; k--) {
-        csint j = q_inv[k];    // permuted column
-
-        // TODO could move the search for diags to find_tri_permutation 
-        // Find the diagonal entry
-        csint diag_row = p_inv[k];  // un-permuted row of the diagonal entry
-        csint d = -1;  // pointer to the diagonal entry
-        for (csint t = p_[j]; t < p_[j+1]; t++) {
-            if (i_[t] == diag_row) {
-                d = t;
-                break;
-            }
-        }
-        assert(d >= 0);
-
-        // Update the solution
-        double& x_val = x[k];  // un-permuted row of x
-        if (x_val != 0) {
-            x_val /= v_[d];  // diagonal entry
-            for (csint t = p_[j]; t < p_[j+1]; t++) {
-                if (t != d) {
-                    x[p[i_[t]]] -= v_[t] * x_val;  // off-diagonals
-                }
-            }
-        }
-    }
-
-    return x;
 }
 
 

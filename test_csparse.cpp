@@ -2142,90 +2142,18 @@ TEST_CASE("Permuted triangular solvers")
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
 
         // Solve P L Q x = b
-        // const std::vector<double> xp = PLQ.tri_solve_perm(b);
-        auto [p_inv, q_inv, p_diags] = PLQ.find_tri_permutation();
-        const std::vector<double> xp = PLQ.lsolve_perm(b, p_inv, q_inv);
-
-        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
-
         const std::vector<double> xt = PLQ.tri_solve_perm(b);
         REQUIRE_THAT(is_close(xt, expect, tol), AllTrue());
     }
 
     SECTION("Permuted P U Q x = b, with unknown P and Q") {
-        std::cout << "---------- Testing PUQx = b ----------" << std::endl;
         // Create RHS for Lx = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
         const std::vector<double> b = {21, 40, 54, 60, 55, 36};
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
 
-        const std::vector<double> x = {0, 1, 2, 3, 4, 5};
-        // const std::vector<double> x = {6, 4, 1, 2, 5, 3};  // column of PUQ
-
         // Solve P L Q x = b
-        // const std::vector<double> xp = PUQ.tri_solve_perm(b);
-        auto [p_inv_r, q_inv_r, p_diags] = PUQ.find_tri_permutation();
-
-        // std::cout << "U = " << std::endl;
-        // U.print_dense();
-        // std::cout << "PUQ = " << std::endl;
-        // PUQ.print_dense();
-
-        // NOTE prints Pr @ U @ Pr, where Pr is np.flipud(np.eye(6))
-        // aka a lower triangular matrix np.fliplr(np.flipud(U))
-        // Why does this permutation work with reversed vectors? What is the
-        // correct permutation to get the reverse of a single vector?
-        std::cout << "PUQ.permute(inv_permute(p_inv_r), q_inv_r) = " << std::endl;
-        PUQ.permute(inv_permute(p_inv_r), q_inv_r).print_dense();
-
-        CHECK(PUQ.is_lower_tri(inv_permute(p_inv_r), q_inv_r));
-
-        // Which permutation vectors take U to PUQ?
-        // PUQ == U.permute(p_inv, inv_permute(q_inv))
-        // PUQ =? U.permute(p_inv_r, inv_permute(q_inv_r))
-        std::cout << "PUQ = " << std::endl;
-        PUQ.print_dense();
-        std::cout << "U.permute(p_inv_r, inv_permute(q_inv_r)) = " << std::endl;
-        U.permute(p_inv_r, inv_permute(q_inv_r)).print_dense();
-
-        std::cout << "x =  " << x << std::endl;
-        // no-ops since x is just the indices
-        // std::cout << "pvec(p_inv_r, x) =  " << pvec(p_inv_r, x) << std::endl;
-        // std::cout << "pvec(q_inv_r, x) =  " << pvec(q_inv_r, x) << std::endl;
-        std::cout << "ipvec(p_inv_r, x) = " << ipvec(p_inv_r, x) << std::endl;
-        std::cout << "ipvec(q_inv_r, x) = " << ipvec(q_inv_r, x) << std::endl;
-
-        // FIXME?
-        std::vector<double> b_r(b.rbegin(), b.rend());
-        std::vector<double> expect_r(expect.rbegin(), expect.rend());
-
-        std::vector<double> xp_r = PUQ.lsolve_perm(b_r, p_inv_r, q_inv_r);
-
-        std::cout << "xp_r = " << xp_r << std::endl;
-        CHECK_THAT(is_close(xp_r, expect_r, tol), AllTrue());
-
-        // Pass in *reversed* vectors for an upper triangular matrix!!
-        const std::vector<csint> p_inv(p_inv_r.rbegin(), p_inv_r.rend());
-        const std::vector<csint> q_inv(q_inv_r.rbegin(), q_inv_r.rend());
-
-        std::cout << "p_inv = " << p_inv << std::endl;
-        std::cout << "q_inv = " << q_inv << std::endl;
-        std::cout << "PUQ.permute(inv_permute(p_inv), q_inv) = " << std::endl;
-        PUQ.permute(inv_permute(p_inv), q_inv).print_dense();
-
-        CHECK(PUQ.is_upper_tri(inv_permute(p_inv), q_inv));
-
-        std::vector<double> xp = PUQ.usolve_perm(b, p_inv, q_inv);
-
-        std::cout << "xp = " << xp << std::endl;
-        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
-
-        xp_r = PUQ.tri_solve_perm(b_r);
-        std::cout << "xp_r = " << xp_r << std::endl;
-        REQUIRE_THAT(is_close(xp_r, expect_r, tol), AllTrue());
-
-        xp = PUQ.tri_solve_perm(b, true);
-        std::cout << "xp = " << xp << std::endl;
+        std::vector<double> xp = PUQ.tri_solve_perm(b, true);
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
 }

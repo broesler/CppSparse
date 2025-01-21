@@ -120,9 +120,6 @@ class CSCMatrix
         static bool nonzero(csint i, csint j, double Aij, void *tol);
         static bool abs_gt_tol(csint i, csint j, double Aij, void *tol);
 
-        // TODO refactor *all* gaxpy family to member functions?
-        //  Then, we can refactor `timeit` to use member functions for both
-        //  gaxpy and lsolve performance scripts.
         // Matrix-vector multiply and add via C-style function
         std::vector<double> gaxpy(
             const std::vector<double>& x,
@@ -274,7 +271,7 @@ class CSCMatrix
         // std::vector<double> sum(const int axis) const;
 
         //----------------------------------------------------------------------
-        //        Matrix Solutions
+        //        Triangular Matrix Solutions
         //----------------------------------------------------------------------
         std::vector<double>  lsolve(const std::vector<double>& b) const;
         std::vector<double> ltsolve(const std::vector<double>& b) const;
@@ -300,18 +297,6 @@ class CSCMatrix
         std::vector<double> tri_solve_perm(
             const std::vector<double>& b,
             bool is_upper=false
-        ) const;
-
-        std::vector<double> lsolve_perm(
-            const std::vector<double>& b,
-            const std::vector<csint>& p_inv,
-            const std::vector<csint>& q_inv
-        ) const;
-
-        std::vector<double> usolve_perm(
-            const std::vector<double>& b,
-            const std::vector<csint>& p_inv,
-            const std::vector<csint>& q_inv
         ) const;
 
         std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>>

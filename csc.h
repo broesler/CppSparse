@@ -297,7 +297,10 @@ class CSCMatrix
         std::vector<csint> find_upper_diagonals() const;
 
         // Exercise 3.7 Generalized permuted triangular solve
-        std::vector<double> tri_solve_perm(const std::vector<double>& b) const;
+        std::vector<double> tri_solve_perm(
+            const std::vector<double>& b,
+            bool is_upper=false
+        ) const;
 
         std::vector<double> lsolve_perm(
             const std::vector<double>& b,
@@ -311,7 +314,8 @@ class CSCMatrix
             const std::vector<csint>& q_inv
         ) const;
 
-        std::pair<std::vector<csint>, std::vector<csint>> find_tri_permutation() const;
+        std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>>
+            find_tri_permutation() const;
 
         bool is_lower_tri() const;
         bool is_lower_tri(

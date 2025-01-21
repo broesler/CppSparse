@@ -18,6 +18,7 @@
 #include <numeric>   // for std::iota
 #include <string>
 #include <sstream>
+#include <tuple>  // for std::ignore
 
 #include "csparse.h"
 
@@ -2056,7 +2057,7 @@ TEST_CASE("Permuted triangular solvers")
         std::vector<csint> expect_p = inv_permute(p);
         std::vector<csint> expect_q = inv_permute(q);
 
-        auto [p_inv, q_inv] = PLQ.find_tri_permutation();
+        auto [p_inv, q_inv, p_diags] = PLQ.find_tri_permutation();
 
         CHECK(p_inv == expect_p);
         CHECK(q_inv == expect_q);
@@ -2069,7 +2070,7 @@ TEST_CASE("Permuted triangular solvers")
         std::vector<csint> expect_q = inv_permute(q);
 
         // NOTE returns *reversed* vectors for an upper triangular matrix!!
-        auto [p_inv, q_inv] = PUQ.find_tri_permutation();
+        auto [p_inv, q_inv, p_diags] = PUQ.find_tri_permutation();
         std::reverse(p_inv.begin(), p_inv.end());
         std::reverse(q_inv.begin(), q_inv.end());
 
@@ -2142,10 +2143,13 @@ TEST_CASE("Permuted triangular solvers")
 
         // Solve P L Q x = b
         // const std::vector<double> xp = PLQ.tri_solve_perm(b);
-        auto [p_inv, q_inv] = PLQ.find_tri_permutation();
+        auto [p_inv, q_inv, p_diags] = PLQ.find_tri_permutation();
         const std::vector<double> xp = PLQ.lsolve_perm(b, p_inv, q_inv);
 
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
+
+        const std::vector<double> xt = PLQ.tri_solve_perm(b);
+        REQUIRE_THAT(is_close(xt, expect, tol), AllTrue());
     }
 
     SECTION("Permuted P U Q x = b, with unknown P and Q") {
@@ -2160,7 +2164,7 @@ TEST_CASE("Permuted triangular solvers")
 
         // Solve P L Q x = b
         // const std::vector<double> xp = PUQ.tri_solve_perm(b);
-        auto [p_inv_r, q_inv_r] = PUQ.find_tri_permutation();
+        auto [p_inv_r, q_inv_r, p_diags] = PUQ.find_tri_permutation();
 
         // std::cout << "U = " << std::endl;
         // U.print_dense();
@@ -2213,6 +2217,14 @@ TEST_CASE("Permuted triangular solvers")
 
         std::vector<double> xp = PUQ.usolve_perm(b, p_inv, q_inv);
 
+        std::cout << "xp = " << xp << std::endl;
+        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
+
+        xp_r = PUQ.tri_solve_perm(b_r);
+        std::cout << "xp_r = " << xp_r << std::endl;
+        REQUIRE_THAT(is_close(xp_r, expect_r, tol), AllTrue());
+
+        xp = PUQ.tri_solve_perm(b, true);
         std::cout << "xp = " << xp << std::endl;
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }

@@ -16,6 +16,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <tuple>
 
 using csint = std::int64_t;
 using Shape = std::array<csint, 2>;

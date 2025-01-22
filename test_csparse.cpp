@@ -2202,6 +2202,13 @@ TEST_CASE("Cholesky decomposition")
             REQUIRE_THAT(xi, UnorderedEquals(expect));
         }
     }
+
+    SECTION("Post-order of Elimination Tree") {
+        std::vector<csint> parent = A.etree();
+        std::vector<csint> expect = {1, 2, 4, 7, 0, 3, 5, 6, 8, 9, 10};
+        std::vector<csint> postorder = post(parent);
+        REQUIRE(postorder == expect);
+    }
 }
 
 

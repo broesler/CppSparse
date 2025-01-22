@@ -2851,6 +2851,81 @@ std::vector<csint> CSCMatrix::ereach(
 }
 
 
+/** Post-order a tree non-recursively.
+ *
+ * @param parent  the parent vector of the elimination tree
+ *
+ * @return post  the post-order of the elimination tree
+ */
+std::vector<csint> post(const std::vector<csint>& parent)
+{
+    assert(!parent.empty());
+    const csint N = parent.size();
+    std::vector<csint> postorder(N, -1);  // postorder of elimination tree
+    std::vector<csint> head(N, -1);       // empty linked lists
+    std::vector<csint> next(N);
+    std::vector<csint> stack(N);
+
+    // Traverse nodes in reverse order
+    for (csint j = N - 1; j >= 0; j--) {
+        if (parent[j] != -1) {           // only operate on non-roots
+            next[j] = head[parent[j]];   // add j to list of its parent
+            head[parent[j]] = j;
+        }
+    }
+
+    // Search from each root
+    csint k = 0;  // index of postorder
+    for (csint j = 0; j < N; j++) {
+        if (parent[j] == -1) {  // only search from roots
+            k = tdfs(j, k, head, next, postorder, stack);
+        }
+    }
+
+    return postorder;
+}
+
+
+/** Depth-first search in a tree.
+ *
+ * @param j  the starting node
+ * @param k  the node number in the postorder
+ * @param head  the head of the linked list
+ * @param next  the next vector of the linked list
+ * @param postorder  the post-order of the elimination tree
+ * @param stack  the workspace stack
+ *
+ * @return k  the node number
+ */
+csint tdfs(
+    csint j,
+    csint k,
+    std::vector<csint>& head,
+    const std::vector<csint>& next,
+    std::vector<csint>& postorder,
+    std::vector<csint>& stack
+)
+{
+    stack[0] = j;  // place j on stack
+
+    csint top = 0;  // stack is empty
+
+    while (top >= 0) {
+        csint p = stack[top];  // p = top of stack
+        csint i = head[p];     // i = youngest child of p
+        if (i == -1) {
+            top--;              // p has no unordered children left
+            postorder[k++] = p;  // node p is the kth node in postorder
+        } else {
+            head[p] = next[i];  // remove i from children of p
+            stack[++top] = i;   // start dfs on child node i
+        }
+    }
+
+    return k;
+}
+
+
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/

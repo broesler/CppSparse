@@ -355,6 +355,19 @@ CSCMatrix operator*(const double c, const CSCMatrix& A);
 
 std::ostream& operator<<(std::ostream& os, const CSCMatrix& A);
 
+/*------------------------------------------------------------------------------
+ *          Cholesky Decomposition Helpers
+ *----------------------------------------------------------------------------*/
+std::vector<csint> post(const std::vector<csint>& parent);
+csint tdfs(
+    csint j,
+    csint k,
+    std::vector<csint>& head,
+    const std::vector<csint>& next,
+    std::vector<csint>& postorder,
+    std::vector<csint>& stack
+);
+
 
 }  // namespace cs
 

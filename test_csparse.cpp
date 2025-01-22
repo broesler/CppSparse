@@ -2174,8 +2174,10 @@ TEST_CASE("Cholesky decomposition")
     CHECK(A.is_symmetric());
 
     SECTION("Elimination Tree") {
-        REQUIRE(A.etree() == std::vector<csint>{5, 2, 7, 5, 7, 6, 8, 9, 9, 10, -1});
-        REQUIRE(A.etree(true) == std::vector<csint>{3, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1});
+        std::vector<csint> expect_A = {5, 2, 7, 5, 7, 6, 8, 9, 9, 10, -1};
+        std::vector<csint> expect_ATA = {3, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1};
+        REQUIRE(A.etree() == expect_A);
+        REQUIRE(A.etree(true) == expect_ATA);
         REQUIRE((A.T() * A).to_canonical().etree() == A.etree(true));
     }
 

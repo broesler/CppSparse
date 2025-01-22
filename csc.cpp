@@ -2779,22 +2779,19 @@ std::vector<csint> CSCMatrix::etree(bool ata) const
     assert(has_canonical_format_);
 
     std::vector<csint> parent(N_, -1);  // parent of i is parent[i]
-    std::vector<csint> ancestor(N_, -1);    // workspaces
-    std::vector<csint> prev;
-    if (ata) {
-        prev = std::vector<csint>(M_, -1);
-    }
-    csint inext = 0;
+    std::vector<csint> ancestor(N_, -1);  // workspaces
+    std::vector<csint> prev = ata ? std::vector<csint>(M_, -1) : std::vector<csint>();
 
     for (csint k = 0; k < N_; k++) {
         for (csint p = p_[k]; p < p_[k+1]; p++) {
             csint i = ata ? prev[i_[p]] : i_[p];  // A(i, k) is nonzero
-            for (; i != -1 && i < k; i = inext) {
-                inext = ancestor[i];  // traverse up to the root
+            while (i != -1 && i < k) {
+                csint inext = ancestor[i];  // traverse up to the root
                 ancestor[i] = k;      // path compression
                 if (inext == -1) {
                     parent[i] = k;  // no ancestor
                 }
+                i = inext;
             }
             if (ata) {
                 prev[i_[p]] = k;  // use prev for A^T

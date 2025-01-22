@@ -2861,10 +2861,10 @@ std::vector<csint> post(const std::vector<csint>& parent)
 {
     assert(!parent.empty());
     const csint N = parent.size();
-    std::vector<csint> postorder(N, -1);  // postorder of elimination tree
+    std::vector<csint> postorder;  // postorder of elimination tree
+    postorder.reserve(N);
     std::vector<csint> head(N, -1);       // empty linked lists
     std::vector<csint> next(N);
-    std::vector<csint> stack(N);
 
     // Traverse nodes in reverse order
     for (csint j = N - 1; j >= 0; j--) {
@@ -2875,13 +2875,16 @@ std::vector<csint> post(const std::vector<csint>& parent)
     }
 
     // Search from each root
-    csint k = 0;  // index of postorder
+    std::vector<csint> stack;  // allocate here for tdfs call in a loop
+    stack.reserve(N);
+
     for (csint j = 0; j < N; j++) {
         if (parent[j] == -1) {  // only search from roots
-            k = tdfs(j, k, head, next, postorder, stack);
+            tdfs(j, head, next, postorder, stack);
         }
     }
 
+    postorder.shrink_to_fit();
     return postorder;
 }
 
@@ -2889,17 +2892,14 @@ std::vector<csint> post(const std::vector<csint>& parent)
 /** Depth-first search in a tree.
  *
  * @param j  the starting node
- * @param k  the node number in the postorder
- * @param head  the head of the linked list
+ * @param[in,out] head  the head of the linked list
  * @param next  the next vector of the linked list
- * @param postorder  the post-order of the elimination tree
- * @param stack  the workspace stack
- *
- * @return k  the node number
+ * @param[in,out] postorder  the post-order of the elimination tree
+ * @param[in,out] stack  the workspace stack. This function is typically called
+ *          in a loop, so we allocate the stack outside the loop for efficiency.
  */
-csint tdfs(
+void tdfs(
     csint j,
-    csint k,
     std::vector<csint>& head,
     const std::vector<csint>& next,
     std::vector<csint>& postorder,
@@ -2914,14 +2914,12 @@ csint tdfs(
         csint i = head[p];       // i = youngest child of p
         if (i == -1) {
             stack.pop_back();    // p has no unordered children left
-            postorder[k++] = p;  // node p is the kth node in postorder
+            postorder.push_back(p);  // node p is the kth node in postorder
         } else {
             head[p] = next[i];   // remove i from children of p
             stack.push_back(i);  // start dfs on child node i
         }
     }
-
-    return k;
 }
 
 

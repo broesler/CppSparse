@@ -15,6 +15,7 @@
 #include <algorithm>  // for std::reverse
 #include <iostream>
 #include <fstream>
+#include <map>
 #include <numeric>   // for std::iota
 #include <string>
 #include <sstream>
@@ -2176,6 +2177,30 @@ TEST_CASE("Cholesky decomposition")
         REQUIRE(A.etree() == std::vector<csint>{5, 2, 7, 5, 7, 6, 8, 9, 9, 10, -1});
         REQUIRE(A.etree(true) == std::vector<csint>{3, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1});
         REQUIRE((A.T() * A).to_canonical().etree() == A.etree(true));
+    }
+
+    SECTION("Reachability of Elimination Tree") {
+        // See Davis Figure 4.4, p 40.
+        std::map<csint, std::vector<csint>> expect_map = {
+            {0, {}},
+            {1, {}},
+            {2, {1}},
+            {3, {}},
+            {4, {}},
+            {5, {0, 3}},
+            {6, {5, 0}},
+            {7, {2, 1, 4}},
+            {8, {6, 5}},
+            {9, {7, 2, 8, 6, 5, 3}},
+            {10, {9, 7, 2, 4, 8, 6}},
+        };
+
+        std::vector<csint> parent = A.etree();
+
+        for (const auto& [key, expect] : expect_map) {
+            std::vector<csint> xi = A.ereach(key, parent);
+            REQUIRE_THAT(xi, UnorderedEquals(expect));
+        }
     }
 }
 

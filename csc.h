@@ -321,6 +321,10 @@ class CSCMatrix
         //        Cholesky Decomposition
         //----------------------------------------------------------------------
         std::vector<csint> etree(bool ata=false) const;
+        std::vector<csint> ereach(
+            csint k,
+            const std::vector<csint>& parent
+        ) const;
 
         // ---------- Other
         void print_dense(std::ostream& os=std::cout) const;

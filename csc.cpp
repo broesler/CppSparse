@@ -2808,6 +2808,51 @@ std::vector<csint> CSCMatrix::etree(bool ata) const
 }
 
 
+/** Compute the reachability set for the *k*th row of *L*, the Cholesky faxtcor
+ * of this matrix.
+ *
+ * @param k  the row index
+ * @param parent  the parent vector of the elimination tree
+ * @param[in,out] w  the workspace vector of length `N_`
+ *
+ * @return xi  the reachability set of the *k*th row of *L*
+ */
+std::vector<csint> CSCMatrix::ereach(
+    csint k,
+    const std::vector<csint>& parent
+) const
+{
+    std::vector<bool> is_marked(N_, false);  // workspace
+    std::vector<csint> s, xi;  // internal dfs stack, output stack
+    s.reserve(N_);
+    xi.reserve(N_);
+
+    is_marked[k] = true;  // mark node k as visited
+
+    for (csint p = p_[k]; p < p_[k+1]; p++) {
+        csint i = i_[p];  // A(i, k) is nonzero
+        if (i <= k) {     // only consider upper triangular part of A
+            // Traverse up the etree
+            for (; !is_marked[i]; i = parent[i]) {
+                s.push_back(i);  // L(k, i) is nonzero
+                is_marked[i] = true;  // mark i as visited
+            }
+
+            // Push path onto output stack
+            // NOTE could build xi "backwards" so we don't have to reverse it
+            // Would need a counter to keep track of the "top" of the stack
+            while (!s.empty()) {
+                xi.push_back(s.back());
+                s.pop_back();
+            }
+        }
+    }
+
+    // Reverse the stack to get the topological order
+    return std::vector<csint>(xi.rbegin(), xi.rend());
+}
+
+
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/

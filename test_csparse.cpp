@@ -2209,6 +2209,11 @@ TEST_CASE("Cholesky decomposition")
         std::vector<csint> postorder = post(parent);
         REQUIRE(postorder == expect);
     }
+
+    SECTION("Rowcounts of L") {
+        std::vector<csint> expect = {1, 1, 2, 1, 1, 3, 3, 4, 3, 7, 7};
+        REQUIRE(A.chol_rowcounts() == expect);
+    }
 }
 
 

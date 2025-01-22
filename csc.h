@@ -326,6 +326,14 @@ class CSCMatrix
             const std::vector<csint>& parent
         ) const;
 
+        // See cs_rowcnt
+        std::vector<csint> rowcnt(
+            const std::vector<csint>& parent,
+            const std::vector<csint>& postorder
+        ) const;
+
+        std::vector<csint> chol_rowcounts() const;
+
         // ---------- Other
         void print_dense(std::ostream& os=std::cout) const;
 
@@ -366,6 +374,21 @@ void tdfs(
     const std::vector<csint>& next,
     std::vector<csint>& postorder,
     std::vector<csint>& stack
+);
+
+// NOTE firstdesc and rowcnt are *not* officially part of CSparse, but are in
+// the book for demonstrative purposes. Include compiler flag to ignore them?
+std::pair<std::vector<csint>, std::vector<csint>>
+firstdesc(const std::vector<csint>& parent, const std::vector<csint>& post);
+
+csint leaf(
+    csint i,
+    csint j,
+    const std::vector<csint>& first,
+    std::vector<csint>& maxfirst,
+    std::vector<csint>& prevleaf,
+    std::vector<csint>& ancestor,
+    csint& jleaf
 );
 
 

@@ -2923,6 +2923,146 @@ void tdfs(
 }
 
 
+/** Find the first descendent of a node in a postordered tree.
+ *
+ * @param parent  the parent vector of the elimination tree
+ * @param post  the post-order of the elimination tree
+ * @param[in,out] first  the first descendent of each node in the tree
+ * @param[in,out] level  the level of each node in the tree
+ */
+std::pair<std::vector<csint>, std::vector<csint>>
+firstdesc(
+    const std::vector<csint>& parent,
+    const std::vector<csint>& post
+)
+{
+    // TODO rewrite to remove [in,out] parameters
+    assert(parent.size() == post.size());
+    const csint N = parent.size();
+    std::vector<csint> first(N, -1);
+    std::vector<csint> level(N);
+
+    for (csint k = 0; k < N; k++) {
+        csint i = post[k];  // node i of etree is kth postordered node
+        csint len = 0;      // traverse from i to root 
+        csint r;
+        for (r = i; r != -1 && first[r] == -1; r = parent[r], len++) {
+            first[r] = k;
+        }
+        len += (r == -1) ? -1 : level[r];  // r is root of tree or end of path
+        for (csint s = i; s != r; s = parent[s]) {
+            level[s] = len--;
+        }
+    }
+
+    return std::make_pair(first, level);
+}
+
+
+/** Count the number of non-zeros in each row of the Cholesky factor L of A.
+ *
+ * @param parent  the parent vector of the elimination tree
+ * @param postorder  the post-order of the elimination tree
+ *
+ * @return rowcount  the number of non-zeros in each row of L
+ */
+std::vector<csint> CSCMatrix::rowcnt(
+    const std::vector<csint>& parent,
+    const std::vector<csint>& postorder
+) const
+{
+    // Count the diagonal to start
+    std::vector<csint> rowcount(N_, 1);   // count of nonzeros in each row of L
+
+    std::vector<csint> ancestor(N_);  // every node is its own ancestor
+    std::iota(ancestor.begin(), ancestor.end(), 0);
+
+    std::vector<csint> maxfirst(N_, -1);  // max first[i] for nodes in subtree of i
+    std::vector<csint> prevleaf(N_, -1);  // previous leaf of ith row subtree
+
+    auto [first, level] = firstdesc(parent, postorder);
+
+    csint jleaf = 0;
+    for (csint k = 0; k < N_; k++) {
+        csint j = postorder[k];  // j is the kth node in postorder
+
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            csint i = i_[p];  // A(i, j) is nonzero
+            csint q = leaf(i, j, first, maxfirst, prevleaf, ancestor, jleaf);
+            if (jleaf) {
+                rowcount[i] += (level[j] - level[q]);
+            }
+        }
+
+        if (parent[j] != -1) {
+            ancestor[j] = parent[j];
+        }
+    }
+
+    return rowcount;
+}
+
+
+/** Count the number of non-zeros in each row of the Cholesky factor L of A.
+  *
+  * @return rowcount  the number of non-zeros in each row of L
+  */
+std::vector<csint> CSCMatrix::chol_rowcounts() const
+{
+    // Compute the elimination tree of A
+    std::vector<csint> parent = etree();
+
+    // Compute the post-order of the elimination tree
+    std::vector<csint> postorder = post(parent);
+
+    // Count the number of non-zeros in each row of L
+    return rowcnt(parent, postorder);
+}
+
+
+/** Compute the least common ancestor of j_prev and j.
+  */
+csint leaf(
+    csint i,
+    csint j,
+    const std::vector<csint>& first,
+    std::vector<csint>& maxfirst,
+    std::vector<csint>& prevleaf,
+    std::vector<csint>& ancestor,
+    csint& jleaf
+)
+{
+    jleaf = 0;
+
+    if (i <= j || first[j] <= maxfirst[i]) {  // j is not a leaf
+        return -1;
+    }
+
+    maxfirst[i] = first[j];  // update max first[j] seen so far
+    csint jprev = prevleaf[i];     // jprev is the previous leaf of i
+    prevleaf[i] = j;         // j is now the previous leaf of i
+    jleaf = (jprev == -1) ? 1 : 2;  // j is the first or subsequent leaf
+
+    if (jleaf == 1) {
+        return i;  // if j is the first leaf, q = root of ith subtree
+    }
+
+    csint q = jprev;
+    while (q != ancestor[q]) {
+        q = ancestor[q];
+    }
+
+    csint s = jprev;
+    while (s != q) {
+        csint sparent = ancestor[s];  // path compression
+        ancestor[s] = q;
+        s = sparent;
+    }
+
+    return q;  // least common ancestor of j_prev and j
+}
+
+
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/

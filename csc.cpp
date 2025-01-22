@@ -2906,19 +2906,18 @@ csint tdfs(
     std::vector<csint>& stack
 )
 {
-    stack[0] = j;  // place j on stack
+    stack.clear();       // clear the stack
+    stack.push_back(j);  // place j on stack
 
-    csint top = 0;  // stack is empty
-
-    while (top >= 0) {
-        csint p = stack[top];  // p = top of stack
-        csint i = head[p];     // i = youngest child of p
+    while (!stack.empty()) {
+        csint p = stack.back();  // p = top of stack
+        csint i = head[p];       // i = youngest child of p
         if (i == -1) {
-            top--;              // p has no unordered children left
+            stack.pop_back();    // p has no unordered children left
             postorder[k++] = p;  // node p is the kth node in postorder
         } else {
-            head[p] = next[i];  // remove i from children of p
-            stack[++top] = i;   // start dfs on child node i
+            head[p] = next[i];   // remove i from children of p
+            stack.push_back(i);  // start dfs on child node i
         }
     }
 

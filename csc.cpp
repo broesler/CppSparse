@@ -2704,9 +2704,7 @@ std::vector<csint> CSCMatrix::reach(const CSCMatrix& B, csint k) const
     }
 
     // xi is returned from dfs in reverse order, since it is a stack
-    xi.shrink_to_fit();                  // free unused memory
-    std::reverse(xi.begin(), xi.end());  // O(N)
-    return xi;
+    return std::vector<csint>(xi.rbegin(), xi.rend());
 }
 
 

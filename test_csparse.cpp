@@ -2212,6 +2212,15 @@ TEST_CASE("Cholesky decomposition")
         REQUIRE(postorder == expect);
     }
 
+    SECTION("First descendants and levels") {
+        std::vector<csint> expect_firsts = {4, 0, 0, 5, 2, 4, 4, 0, 4, 0, 0};
+        std::vector<csint> expect_levels = {5, 4, 3, 5, 3, 4, 3, 2, 2, 1, 0};
+        std::vector<csint> parent = A.etree();
+        auto [firsts, levels] = firstdesc(parent, post(parent));
+        REQUIRE(firsts == expect_firsts);
+        REQUIRE(levels == expect_levels);
+    }
+
     SECTION("Rowcounts of L") {
         std::vector<csint> expect = {1, 1, 2, 1, 1, 3, 3, 4, 3, 7, 7};
         REQUIRE(A.chol_rowcounts() == expect);

@@ -2860,7 +2860,11 @@ std::vector<csint> post(const std::vector<csint>& parent)
     std::vector<csint> postorder;  // postorder of elimination tree
     postorder.reserve(N);
 
-    std::vector<csint> head(N, -1);       // empty linked lists
+    // Linked list representation of the children of each node in ascending
+    // order of node number. 
+    //   head[i] is the first child of node i. 
+    //   next[j] is the next child of node j.
+    std::vector<csint> head(N, -1);
     std::vector<csint> next(N);
 
     // Traverse nodes in reverse order
@@ -2878,7 +2882,9 @@ std::vector<csint> post(const std::vector<csint>& parent)
         }
     }
 
+    assert(postorder.size() == N);
     postorder.shrink_to_fit();
+
     return postorder;
 }
 
@@ -2898,47 +2904,52 @@ void tdfs(
 )
 {
     std::vector<csint> stack;
-    stack.push_back(j);  // place j on stack
+    stack.push_back(j);              // place j on stack
 
     while (!stack.empty()) {
-        csint p = stack.back();  // p = top of stack
-        csint i = head[p];       // i = youngest child of p
+        csint p = stack.back();      // p = top of stack
+        csint i = head[p];           // i = youngest child of p
         if (i == -1) {
-            stack.pop_back();    // p has no unordered children left
+            stack.pop_back();        // p has no unordered children left
             postorder.push_back(p);  // node p is the kth node in postorder
         } else {
-            head[p] = next[i];   // remove i from children of p
-            stack.push_back(i);  // start dfs on child node i
+            head[p] = next[i];       // remove i from children of p
+            stack.push_back(i);      // start dfs on child node i
         }
     }
 }
 
 
-/** Find the first descendent of a node in a postordered tree.
+/** Find the first descendent of a node in a tree.
+ *
+ * @note The *first descendent* of a node `j` is the smallest postordering of
+ * any descendant of `j`.
  *
  * @param parent  the parent vector of the elimination tree
  * @param post  the post-order of the elimination tree
- * @param[in,out] first  the first descendent of each node in the tree
- * @param[in,out] level  the level of each node in the tree
+ *
+ * @return first  the first descendent of each node in the tree
+ * @return level  the level of each node in the tree
  */
-std::pair<std::vector<csint>, std::vector<csint>>
-firstdesc(
+std::pair<std::vector<csint>, std::vector<csint>> firstdesc(
     const std::vector<csint>& parent,
     const std::vector<csint>& post
 )
 {
-    // TODO rewrite to remove [in,out] parameters
     assert(parent.size() == post.size());
     const csint N = parent.size();
+
     std::vector<csint> first(N, -1);
     std::vector<csint> level(N);
 
     for (csint k = 0; k < N; k++) {
         csint i = post[k];  // node i of etree is kth postordered node
         csint len = 0;      // traverse from i to root 
-        csint r;
-        for (r = i; r != -1 && first[r] == -1; r = parent[r], len++) {
+        csint r = i;
+        while (r != -1 && first[r] == -1) {
             first[r] = k;
+            r = parent[r];
+            len++;
         }
         len += (r == -1) ? -1 : level[r];  // r is root of tree or end of path
         for (csint s = i; s != r; s = parent[s]) {
@@ -3029,9 +3040,9 @@ csint leaf(
         return -1;
     }
 
-    maxfirst[i] = first[j];  // update max first[j] seen so far
-    csint jprev = prevleaf[i];     // jprev is the previous leaf of i
-    prevleaf[i] = j;         // j is now the previous leaf of i
+    maxfirst[i] = first[j];         // update max first[j] seen so far
+    csint jprev = prevleaf[i];      // jprev is the previous leaf of i
+    prevleaf[i] = j;                // j is now the previous leaf of i
     jleaf = (jprev == -1) ? 1 : 2;  // j is the first or subsequent leaf
 
     if (jleaf == 1) {

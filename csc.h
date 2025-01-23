@@ -377,8 +377,10 @@ void tdfs(
 
 // NOTE firstdesc and rowcnt are *not* officially part of CSparse, but are in
 // the book for demonstrative purposes. Include compiler flag to ignore them?
-std::pair<std::vector<csint>, std::vector<csint>>
-firstdesc(const std::vector<csint>& parent, const std::vector<csint>& post);
+std::pair<std::vector<csint>, std::vector<csint>> firstdesc(
+    const std::vector<csint>& parent,
+    const std::vector<csint>& post
+);
 
 csint leaf(
     csint i,

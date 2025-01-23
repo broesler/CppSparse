@@ -372,8 +372,7 @@ void tdfs(
     csint j,
     std::vector<csint>& head,
     const std::vector<csint>& next,
-    std::vector<csint>& postorder,
-    std::vector<csint>& stack
+    std::vector<csint>& postorder
 );
 
 // NOTE firstdesc and rowcnt are *not* officially part of CSparse, but are in

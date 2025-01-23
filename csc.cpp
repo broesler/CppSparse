@@ -2808,9 +2808,8 @@ std::vector<csint> CSCMatrix::etree(bool ata) const
  *
  * @param k  the row index
  * @param parent  the parent vector of the elimination tree
- * @param[in,out] w  the workspace vector of length `N_`
  *
- * @return xi  the reachability set of the *k*th row of *L*
+ * @return xi  the reachability set of the *k*th row of *L* in topological order
  */
 std::vector<csint> CSCMatrix::ereach(
     csint k,
@@ -2835,8 +2834,6 @@ std::vector<csint> CSCMatrix::ereach(
             }
 
             // Push path onto output stack
-            // NOTE could build xi "backwards" so we don't have to reverse it
-            // Would need a counter to keep track of the "top" of the stack
             while (!s.empty()) {
                 xi.push_back(s.back());
                 s.pop_back();
@@ -2859,8 +2856,10 @@ std::vector<csint> post(const std::vector<csint>& parent)
 {
     assert(!parent.empty());
     const csint N = parent.size();
+
     std::vector<csint> postorder;  // postorder of elimination tree
     postorder.reserve(N);
+
     std::vector<csint> head(N, -1);       // empty linked lists
     std::vector<csint> next(N);
 
@@ -2873,12 +2872,9 @@ std::vector<csint> post(const std::vector<csint>& parent)
     }
 
     // Search from each root
-    std::vector<csint> stack;  // allocate here for tdfs call in a loop
-    stack.reserve(N);
-
     for (csint j = 0; j < N; j++) {
         if (parent[j] == -1) {  // only search from roots
-            tdfs(j, head, next, postorder, stack);
+            tdfs(j, head, next, postorder);
         }
     }
 
@@ -2893,18 +2889,15 @@ std::vector<csint> post(const std::vector<csint>& parent)
  * @param[in,out] head  the head of the linked list
  * @param next  the next vector of the linked list
  * @param[in,out] postorder  the post-order of the elimination tree
- * @param[in,out] stack  the workspace stack. This function is typically called
- *          in a loop, so we allocate the stack outside the loop for efficiency.
  */
 void tdfs(
     csint j,
     std::vector<csint>& head,
     const std::vector<csint>& next,
-    std::vector<csint>& postorder,
-    std::vector<csint>& stack
+    std::vector<csint>& postorder
 )
 {
-    stack.clear();       // clear the stack
+    std::vector<csint> stack;
     stack.push_back(j);  // place j on stack
 
     while (!stack.empty()) {

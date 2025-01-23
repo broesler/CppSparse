@@ -2239,7 +2239,7 @@ std::vector<csint> CSCMatrix::find_lower_diagonals() const
 {
     assert(M_ == N_);
 
-    std::vector<bool> is_marked(N_, false);  // workspace
+    std::vector<bool> marked(N_, false);  // workspace
     std::vector<csint> p_diags(N_);  // diagonal indicies (inverse permutation)
 
     for (csint j = N_ - 1; j >= 0; j--) {
@@ -2248,8 +2248,8 @@ std::vector<csint> CSCMatrix::find_lower_diagonals() const
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             csint i = i_[p];
             // Mark the rows viewed so far
-            if (!is_marked[i]) {
-                is_marked[i] = true;
+            if (!marked[i]) {
+                marked[i] = true;
                 p_diags[j] = p;
                 N_unmarked++;
             }
@@ -2372,7 +2372,7 @@ std::vector<csint> CSCMatrix::find_upper_diagonals() const
 {
     assert(M_ == N_);
 
-    std::vector<bool> is_marked(N_, false);  // workspace
+    std::vector<bool> marked(N_, false);  // workspace
     std::vector<csint> p_diags(N_);  // diagonal indicies (inverse permutation)
 
     for (csint j = 0; j < N_; j++) {
@@ -2381,8 +2381,8 @@ std::vector<csint> CSCMatrix::find_upper_diagonals() const
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             csint i = i_[p];
             // Mark the rows viewed so far
-            if (!is_marked[i]) {
-                is_marked[i] = true;
+            if (!marked[i]) {
+                marked[i] = true;
                 p_diags[j] = p;
                 N_unmarked++;
             }
@@ -2692,14 +2692,14 @@ std::pair<std::vector<csint>, std::vector<double>> CSCMatrix::spsolve(
  */
 std::vector<csint> CSCMatrix::reach(const CSCMatrix& B, csint k) const
 {
-    std::vector<bool> is_marked(N_, false);
+    std::vector<bool> marked(N_, false);
     std::vector<csint> xi;  // do not initialize for dfs call!
     xi.reserve(N_);
 
     for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
         csint j = B.i_[p];  // consider nonzero B(j, k)
-        if (!is_marked[j]) {
-            xi = dfs(j, is_marked, xi);
+        if (!marked[j]) {
+            xi = dfs(j, marked, xi);
         }
     }
 
@@ -2711,7 +2711,7 @@ std::vector<csint> CSCMatrix::reach(const CSCMatrix& B, csint k) const
 /** Perform depth-first search on a graph.
  *
  * @param j  the starting node
- * @param is_marked  a boolean vector of length `N_` that marks visited nodes
+ * @param marked  a boolean vector of length `N_` that marks visited nodes
  * @param[in,out] xi  the row indices of the non-zero entries in `x`. This
  *      vector is used as a stack to store the output. It should not be
  *      initialized, other than by a previous call to `dfs`.
@@ -2720,7 +2720,7 @@ std::vector<csint> CSCMatrix::reach(const CSCMatrix& B, csint k) const
  */
 std::vector<csint>& CSCMatrix::dfs(
     csint j,
-    std::vector<bool>& is_marked,
+    std::vector<bool>& marked,
     std::vector<csint>& xi
     ) const
 {
@@ -2736,8 +2736,8 @@ std::vector<csint>& CSCMatrix::dfs(
         j = rstack.back();  // get j from the top of the recursion stack
         csint jnew = j;  // j maps to col jnew of G (NOTE ignore p_inv for now)
 
-        if (!is_marked[j]) {
-            is_marked[j] = true;  // mark node j as visited
+        if (!marked[j]) {
+            marked[j] = true;  // mark node j as visited
             pstack.push_back((jnew < 0) ? 0 : p_[jnew]);
         }
 
@@ -2747,7 +2747,7 @@ std::vector<csint>& CSCMatrix::dfs(
         // examine all neighbors of j
         for (csint p = pstack.back(); p < q; p++) {
             csint i = i_[p];        // consider neighbor node i
-            if (!is_marked[i]) {
+            if (!marked[i]) {
                 pstack.back() = p;    // pause dfs of node j
                 rstack.push_back(i);  // start dfs at node i
                 done = false;         // node j has unvisited neighbors
@@ -2785,11 +2785,11 @@ std::vector<csint> CSCMatrix::etree(bool ata) const
     for (csint k = 0; k < N_; k++) {
         for (csint p = p_[k]; p < p_[k+1]; p++) {
             csint i = ata ? prev[i_[p]] : i_[p];  // A(i, k) is nonzero
-            while (i != -1 && i < k) {
+            while (i != -1 && i < k) {      // only use upper triangular of A
                 csint inext = ancestor[i];  // traverse up to the root
-                ancestor[i] = k;      // path compression
+                ancestor[i] = k;            // path compression
                 if (inext == -1) {
-                    parent[i] = k;  // no ancestor
+                    parent[i] = k;          // no ancestor
                 }
                 i = inext;
             }
@@ -2817,20 +2817,21 @@ std::vector<csint> CSCMatrix::ereach(
     const std::vector<csint>& parent
 ) const
 {
-    std::vector<bool> is_marked(N_, false);  // workspace
+    std::vector<bool> marked(N_, false);  // workspace
     std::vector<csint> s, xi;  // internal dfs stack, output stack
     s.reserve(N_);
     xi.reserve(N_);
 
-    is_marked[k] = true;  // mark node k as visited
+    marked[k] = true;  // mark node k as visited
 
     for (csint p = p_[k]; p < p_[k+1]; p++) {
         csint i = i_[p];  // A(i, k) is nonzero
         if (i <= k) {     // only consider upper triangular part of A
             // Traverse up the etree
-            for (; !is_marked[i]; i = parent[i]) {
+            while (!marked[i]) {
                 s.push_back(i);  // L(k, i) is nonzero
-                is_marked[i] = true;  // mark i as visited
+                marked[i] = true;  // mark i as visited
+                i = parent[i]; 
             }
 
             // Push path onto output stack

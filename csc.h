@@ -313,7 +313,7 @@ class CSCMatrix
 
         std::vector<csint>& dfs(
             csint j,
-            std::vector<bool>& is_marked,
+            std::vector<bool>& marked,
             std::vector<csint>& xi
         ) const;
 

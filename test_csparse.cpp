@@ -1888,11 +1888,11 @@ TEST_CASE("Reachability and DFS")
         B.assign(j, 0, 1.0);
         std::vector<csint> expect = {13, 12, 11, 8, 3};  // reversed in stack
 
-        std::vector<bool> is_marked(N, false);
+        std::vector<bool> marked(N, false);
         std::vector<csint> xi;  // do not initialize!
         xi.reserve(N);
 
-        xi = L.dfs(j, is_marked, xi);
+        xi = L.dfs(j, marked, xi);
 
         REQUIRE(xi == expect);
     }

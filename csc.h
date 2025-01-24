@@ -382,14 +382,13 @@ std::pair<std::vector<csint>, std::vector<csint>> firstdesc(
     const std::vector<csint>& post
 );
 
-csint leaf(
+std::pair<csint, csint> least_common_ancestor(
     csint i,
     csint j,
     const std::vector<csint>& first,
     std::vector<csint>& maxfirst,
     std::vector<csint>& prevleaf,
-    std::vector<csint>& ancestor,
-    csint& jleaf
+    std::vector<csint>& ancestor
 );
 
 

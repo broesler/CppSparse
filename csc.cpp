@@ -2984,13 +2984,12 @@ std::vector<csint> CSCMatrix::rowcnt(
 
     auto [first, level] = firstdesc(parent, postorder);
 
-    csint jleaf = 0;
     for (csint k = 0; k < N_; k++) {
         csint j = postorder[k];  // j is the kth node in postorder
 
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             csint i = i_[p];  // A(i, j) is nonzero
-            csint q = leaf(i, j, first, maxfirst, prevleaf, ancestor, jleaf);
+            auto [q, jleaf] = least_common_ancestor(i, j, first, maxfirst, prevleaf, ancestor);
             if (jleaf) {
                 rowcount[i] += (level[j] - level[q]);
             }
@@ -3022,22 +3021,33 @@ std::vector<csint> CSCMatrix::chol_rowcounts() const
 }
 
 
-/** Compute the least common ancestor of j_prev and j.
+/** Compute the least common ancestor of j_prev and j, if j is a leaf of the ith
+ * row subtree.
+ *
+ * @param i  the row index
+ * @param j  the column index
+ * @param first  the first descendant of each node in the tree
+ * @param maxfirst  the maximum first descendant of each node in the tree
+ * @param prevleaf  the previous leaf of each node in the tree
+ * @param ancestor  the ancestor of each node in the tree
+ *
+ * @return q lca(jprev, j)
+ * @return jleaf  the leaf status of j:
+ *                  0 (not a leaf), 1 (first leaf), 2 (subsequent leaf)
   */
-csint leaf(
+std::pair<csint, csint> least_common_ancestor(
     csint i,
     csint j,
     const std::vector<csint>& first,
     std::vector<csint>& maxfirst,
     std::vector<csint>& prevleaf,
-    std::vector<csint>& ancestor,
-    csint& jleaf
+    std::vector<csint>& ancestor
 )
 {
-    jleaf = 0;
+    csint jleaf = 0;  // TODO Create an enum type for leaf status
 
     if (i <= j || first[j] <= maxfirst[i]) {  // j is not a leaf
-        return -1;
+        return std::make_pair(-1, jleaf);
     }
 
     maxfirst[i] = first[j];         // update max first[j] seen so far
@@ -3046,7 +3056,7 @@ csint leaf(
     jleaf = (jprev == -1) ? 1 : 2;  // j is the first or subsequent leaf
 
     if (jleaf == 1) {
-        return i;  // if j is the first leaf, q = root of ith subtree
+        return std::make_pair(i, jleaf);  // if j is the first leaf, q = root of ith subtree
     }
 
     csint q = jprev;
@@ -3061,7 +3071,7 @@ csint leaf(
         s = sparent;
     }
 
-    return q;  // least common ancestor of j_prev and j
+    return std::make_pair(q, jleaf);  // least common ancestor of j_prev and j
 }
 
 

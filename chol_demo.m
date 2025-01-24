@@ -24,6 +24,12 @@ A = full(L + triu(L', 1) + 8*eye(N));
 R = chol(A, 'lower');
 Rp = chol(A(post, post), 'lower');
 
+assert (nnz(R) == nnz(Rp));  % post-ordering does not change nnz
+
+% Compute the row counts of the post-ordered Cholesky factor
+col_counts = sum(Rp != 0);
+row_counts = sum(Rp != 0, 2)';
+
 
 % TODO fails in octave
 % G = graph(A);

@@ -2984,9 +2984,7 @@ std::vector<csint> CSCMatrix::rowcnt(
 
     auto [first, level] = firstdesc(parent, postorder);
 
-    for (csint k = 0; k < N_; k++) {
-        csint j = postorder[k];  // j is the kth node in postorder
-
+    for (const auto& j : postorder) {  // j is the kth node in postorder
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             csint i = i_[p];  // A(i, j) is nonzero
             auto [q, jleaf] = least_common_ancestor(i, j, first, maxfirst, prevleaf, ancestor);

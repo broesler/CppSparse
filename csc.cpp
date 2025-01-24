@@ -3005,23 +3005,6 @@ std::vector<csint> CSCMatrix::rowcnt(
 }
 
 
-/** Count the number of non-zeros in each row of the Cholesky factor L of A.
-  *
-  * @return rowcount  the number of non-zeros in each row of L
-  */
-std::vector<csint> CSCMatrix::chol_rowcounts() const
-{
-    // Compute the elimination tree of A
-    std::vector<csint> parent = etree();
-
-    // Compute the post-order of the elimination tree
-    std::vector<csint> postorder = post(parent);
-
-    // Count the number of non-zeros in each row of L
-    return rowcnt(parent, postorder);
-}
-
-
 /** Compute the least common ancestor of j_prev and j, if j is a leaf of the ith
  * row subtree.
  *
@@ -3075,6 +3058,23 @@ std::pair<csint, csint> least_common_ancestor(
     }
 
     return std::make_pair(q, jleaf);  // least common ancestor of j_prev and j
+}
+
+
+/** Count the number of non-zeros in each row of the Cholesky factor L of A.
+  *
+  * @return rowcount  the number of non-zeros in each row of L
+  */
+std::vector<csint> CSCMatrix::chol_rowcounts() const
+{
+    // Compute the elimination tree of A
+    std::vector<csint> parent = etree();
+
+    // Compute the post-order of the elimination tree
+    std::vector<csint> postorder = post(parent);
+
+    // Count the number of non-zeros in each row of L
+    return rowcnt(parent, postorder);
 }
 
 

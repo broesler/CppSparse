@@ -2854,7 +2854,6 @@ std::vector<csint> CSCMatrix::ereach(
  */
 std::vector<csint> post(const std::vector<csint>& parent)
 {
-    assert(!parent.empty());
     const csint N = parent.size();
 
     std::vector<csint> postorder;  // postorder of elimination tree
@@ -2973,8 +2972,12 @@ std::vector<csint> CSCMatrix::rowcnt(
     const std::vector<csint>& postorder
 ) const
 {
-    // Count the diagonal to start
-    std::vector<csint> rowcount(N_, 1);   // count of nonzeros in each row of L
+    assert(M_ == N_);
+    assert(parent.size() == N_);
+    assert(parent.size() == postorder.size());
+
+    // Count of nonzeros in each row of L
+    std::vector<csint> rowcount(N_, 1);   // count the diagonal to start
 
     std::vector<csint> ancestor(N_);  // every node is its own ancestor
     std::iota(ancestor.begin(), ancestor.end(), 0);
@@ -3032,7 +3035,7 @@ std::vector<csint> CSCMatrix::chol_rowcounts() const
  * @return q lca(jprev, j)
  * @return jleaf  the leaf status of j:
  *                  0 (not a leaf), 1 (first leaf), 2 (subsequent leaf)
-  */
+ */
 std::pair<csint, csint> least_common_ancestor(
     csint i,
     csint j,
@@ -3057,11 +3060,13 @@ std::pair<csint, csint> least_common_ancestor(
         return std::make_pair(i, jleaf);  // if j is the first leaf, q = root of ith subtree
     }
 
+    // Traverse up to the root of the subtree to find q
     csint q = jprev;
     while (q != ancestor[q]) {
         q = ancestor[q];
     }
 
+    // Compress the path to the root
     csint s = jprev;
     while (s != q) {
         csint sparent = ancestor[s];  // path compression

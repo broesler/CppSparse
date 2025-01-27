@@ -41,14 +41,13 @@ Symbolic symbolic_cholesky(const CSCMatrix& A, AMDOrder order)
         throw std::runtime_error("Ordering method not implemented!");
     }
 
-    // TODO implement symbolic symperm to ignore values
     // Find pattern of Cholesky factor
-    CSCMatrix C = A.symperm(S.p_inv);        // C = spones(triu(A(p, p)))
-    S.parent = C.etree();                    // compute the elimination tree
-    auto postorder = post(S.parent);         // postorder the elimination tree
-    auto c = C.counts(S.parent, postorder);  // find column counts of L
-    S.cp = cumsum(c);                        // find column pointers for L
-    S.lnz = S.unz = S.cp.back();             // number of non-zeros in L and U
+    CSCMatrix C = A.symperm(S.p_inv, false);  // C = spones(triu(A(p, p)))
+    S.parent = C.etree();                     // compute the elimination tree
+    auto postorder = post(S.parent);          // postorder the elimination tree
+    auto c = C.counts(S.parent, postorder);   // find column counts of L
+    S.cp = cumsum(c);                         // find column pointers for L
+    S.lnz = S.unz = S.cp.back();              // number of non-zeros in L and U
 
     return S;
 }

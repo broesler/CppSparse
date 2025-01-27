@@ -224,7 +224,7 @@ class CSCMatrix
             const std::vector<csint> q
         ) const;
 
-        CSCMatrix symperm(const std::vector<csint> p_inv) const;
+        CSCMatrix symperm(const std::vector<csint> p_inv, bool values=true) const;
 
         // Exercise 2.26 permuted transpose
         CSCMatrix permute_transpose(

@@ -1620,10 +1620,12 @@ CSCMatrix CSCMatrix::permute_cols(const std::vector<csint> q) const
  *
  * @param p_inv  *inverse* permutation vector. Both rows and columns are
  *        permuted with this vector to retain symmetry.
+ * @param values  if true, copy values from the original matrix, otherwise, only
+ *        the structure is copied.
  *
  * @return C  permuted matrix
  */
-CSCMatrix CSCMatrix::symperm(const std::vector<csint> p_inv) const
+CSCMatrix CSCMatrix::symperm(const std::vector<csint> p_inv, bool values) const
 {
     assert(M_ == N_);  // matrix must be square. Symmetry not checked.
 
@@ -1661,7 +1663,9 @@ CSCMatrix CSCMatrix::symperm(const std::vector<csint> p_inv) const
             csint i2 = p_inv[i];  // row i of A is row i2 of C
             csint q = w[std::max(i2, j2)]++;
             C.i_[q] = std::min(i2, j2);
-            C.v_[q] = v_[p];
+            if (values) {
+                C.v_[q] = v_[p];
+            }
         }
     }
 

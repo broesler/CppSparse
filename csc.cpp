@@ -52,13 +52,19 @@ CSCMatrix::CSCMatrix(
  * @param M, N  integer dimensions of the rows and columns
  * @param nzmax integer capacity of space to reserve for non-zeros
  */
-CSCMatrix::CSCMatrix(csint M, csint N, csint nzmax)
-    : v_(nzmax),
-      i_(nzmax),
+CSCMatrix::CSCMatrix(csint M, csint N, csint nzmax, bool values)
+    : i_(nzmax),
       p_(N + 1),
       M_(M),
       N_(N)
-{}
+{
+    if (values) {
+        v_.resize(nzmax);
+    } else {
+        v_.resize(0);
+        v_.shrink_to_fit();
+    }
+}
 
 
 /** Convert a coordinate format matrix to a compressed sparse column matrix in
@@ -484,10 +490,10 @@ std::vector<double> CSCMatrix::toarray(const char order) const
  *
  * @return new CSCMatrix object with transposed rows and columns.
  */
-CSCMatrix CSCMatrix::transpose() const
+CSCMatrix CSCMatrix::transpose(bool values) const
 {
     std::vector<csint> w(M_);   // workspace
-    CSCMatrix C(N_, M_, nnz());  // output
+    CSCMatrix C(N_, M_, nnz(), values);  // output
 
     // Compute number of elements in each row
     for (csint p = 0; p < nnz(); p++)
@@ -502,7 +508,9 @@ CSCMatrix CSCMatrix::transpose() const
             // place A(i, j) as C(j, i)
             csint q = w[i_[p]]++;
             C.i_[q] = j;
-            C.v_[q] = v_[p];
+            if (values) {
+                C.v_[q] = v_[p];
+            }
         }
     }
 
@@ -511,7 +519,7 @@ CSCMatrix CSCMatrix::transpose() const
 
 
 // Alias for transpose
-CSCMatrix CSCMatrix::T() const { return this->transpose(); }
+CSCMatrix CSCMatrix::T(bool values) const { return this->transpose(values); }
 
 
 /** Sort rows and columns in a copy via two transposes.
@@ -3098,7 +3106,7 @@ std::vector<csint> CSCMatrix::counts(
     }
 
     // Operate on the transpose
-    CSCMatrix AT = transpose();  // TODO symbolic transpose (don't touch values)
+    CSCMatrix AT = transpose(false);
 
     for (csint k = 0; k < N_; k++) {
         csint j = postorder[k];  // node j of etree is kth postordered node

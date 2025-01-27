@@ -40,7 +40,7 @@ class CSCMatrix
             const Shape& shape
         );
 
-        CSCMatrix(csint M, csint N, csint nzmax=0);  // allocate dims + nzmax
+        CSCMatrix(csint M, csint N, csint nzmax=0, bool values=true);  // allocate dims + nzmax
         CSCMatrix(const COOMatrix& A);               // Exercise 2.2
         CSCMatrix(const std::vector<double>& A, csint M, csint N);  // Exercise 2.16
 
@@ -87,8 +87,8 @@ class CSCMatrix
         std::vector<double> toarray(const char order='F') const;
 
         // ---------- Math Operations
-        CSCMatrix transpose() const;  // transpose a copy
-        CSCMatrix T() const;          // transpose a copy (alias)
+        CSCMatrix transpose(bool values=true) const;  // transpose a copy
+        CSCMatrix T(bool values=true) const;          // transpose a copy (alias)
 
         CSCMatrix tsort() const;      //  Exercise 2.7
         CSCMatrix& qsort();           //  Exercise 2.8 sort in-place

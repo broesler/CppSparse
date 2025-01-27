@@ -2989,13 +2989,14 @@ std::vector<csint> CSCMatrix::rowcnt(
 
     for (const auto& j : postorder) {  // j is the kth node in postorder
         for (csint p = p_[j]; p < p_[j+1]; p++) {
-            csint i = i_[p];  // A(i, j) is nonzero
+            csint i = i_[p];  // A(i, j) is nonzero, consider ith row subtree
             auto [q, jleaf] = least_common_ancestor(i, j, first, maxfirst, prevleaf, ancestor);
-            if (jleaf) {
+            if (jleaf != LeafStatus::NotLeaf) {
                 rowcount[i] += (level[j] - level[q]);
             }
         }
 
+        // Merge j into the ancestor set containing j's parent
         if (parent[j] != -1) {
             ancestor[j] = parent[j];
         }
@@ -3005,6 +3006,7 @@ std::vector<csint> CSCMatrix::rowcnt(
 }
 
 
+// TODO further decompose this function into two functions: is_leaf and lca.
 /** Compute the least common ancestor of j_prev and j, if j is a leaf of the ith
  * row subtree.
  *
@@ -3019,7 +3021,7 @@ std::vector<csint> CSCMatrix::rowcnt(
  * @return jleaf  the leaf status of j:
  *                  0 (not a leaf), 1 (first leaf), 2 (subsequent leaf)
  */
-std::pair<csint, csint> least_common_ancestor(
+std::pair<csint, LeafStatus> least_common_ancestor(
     csint i,
     csint j,
     const std::vector<csint>& first,
@@ -3028,18 +3030,19 @@ std::pair<csint, csint> least_common_ancestor(
     std::vector<csint>& ancestor
 )
 {
-    csint jleaf = 0;  // TODO Create an enum type for leaf status
+    LeafStatus jleaf;
 
+    // See "skeleton" function in Davis, p 48.
     if (i <= j || first[j] <= maxfirst[i]) {  // j is not a leaf
-        return std::make_pair(-1, jleaf);
+        return std::make_pair(-1, LeafStatus::NotLeaf);
     }
 
     maxfirst[i] = first[j];         // update max first[j] seen so far
     csint jprev = prevleaf[i];      // jprev is the previous leaf of i
     prevleaf[i] = j;                // j is now the previous leaf of i
-    jleaf = (jprev == -1) ? 1 : 2;  // j is the first or subsequent leaf
+    jleaf = (jprev == -1) ? LeafStatus::FirstLeaf : LeafStatus::SubsequentLeaf;
 
-    if (jleaf == 1) {
+    if (jleaf == LeafStatus::FirstLeaf) {
         return std::make_pair(i, jleaf);  // if j is the first leaf, q = root of ith subtree
     }
 

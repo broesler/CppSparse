@@ -366,6 +366,12 @@ std::ostream& operator<<(std::ostream& os, const CSCMatrix& A);
 /*------------------------------------------------------------------------------
  *          Cholesky Decomposition Helpers
  *----------------------------------------------------------------------------*/
+enum class LeafStatus {
+    NotLeaf,
+    FirstLeaf,
+    SubsequentLeaf
+};
+
 std::vector<csint> post(const std::vector<csint>& parent);
 
 void tdfs(
@@ -376,13 +382,14 @@ void tdfs(
 );
 
 // NOTE firstdesc and rowcnt are *not* officially part of CSparse, but are in
-// the book for demonstrative purposes. Include compiler flag to ignore them?
+// the book for demonstrative purposes.
 std::pair<std::vector<csint>, std::vector<csint>> firstdesc(
     const std::vector<csint>& parent,
     const std::vector<csint>& post
 );
 
-std::pair<csint, csint> least_common_ancestor(
+// See: cs_leaf
+std::pair<csint, LeafStatus> least_common_ancestor(
     csint i,
     csint j,
     const std::vector<csint>& first,

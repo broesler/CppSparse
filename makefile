@@ -14,7 +14,7 @@ CFLAGS = -Wall -pedantic -std=c++20
 BREW = /opt/homebrew
 
 INCL := $(wildcard *.h)
-SRC := test_csparse.cpp utils.cpp coo.cpp csc.cpp symbolic.cpp
+SRC := test_csparse.cpp utils.cpp coo.cpp csc.cpp decomposition.cpp
 OBJ := $(SRC:%.cpp=%.o)
 
 info :

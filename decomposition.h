@@ -1,5 +1,5 @@
 //==============================================================================
-//     File: symbolic.h
+//     File: decomposition.h
 //  Created: 2025-01-27 13:01
 //   Author: Bernie Roesler
 //

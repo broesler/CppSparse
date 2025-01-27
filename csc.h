@@ -334,6 +334,14 @@ class CSCMatrix
 
         std::vector<csint> chol_rowcounts() const;
 
+        // See cs_counts
+        std::vector<csint> counts(
+            const std::vector<csint>& parent,
+            const std::vector<csint>& postorder
+        ) const;
+
+        std::vector<csint> chol_colcounts() const;
+
         // ---------- Other
         void print_dense(std::ostream& os=std::cout) const;
 

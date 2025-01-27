@@ -3006,7 +3006,6 @@ std::vector<csint> CSCMatrix::rowcnt(
 }
 
 
-// TODO further decompose this function into two functions: is_leaf and lca.
 /** Compute the least common ancestor of j_prev and j, if j is a leaf of the ith
  * row subtree.
  *
@@ -3064,6 +3063,77 @@ std::pair<csint, LeafStatus> least_common_ancestor(
 }
 
 
+// TODO include option to count columns in ATA.
+/** Count the number of non-zeros in each column of the Cholesky factor L of A.
+ *
+ * @param parent  the parent vector of the elimination tree
+ * @param postorder  the post-order of the elimination tree
+ *
+ * @return colcount  the number of non-zeros in each column of L
+ */
+std::vector<csint> CSCMatrix::counts(
+    const std::vector<csint>& parent,
+    const std::vector<csint>& postorder
+) const
+{
+     std::vector<csint> delta(N_);  // allocate the result
+
+    // Workspaces
+    std::vector<csint> ancestor(N_),
+                       maxfirst(N_, -1),  // max first[i] for nodes in subtree of i
+                       prevleaf(N_, -1),  // previous leaf of ith row subtree
+                       first(N_, -1);     // first descendant of each node in the tree
+
+    // every node is its own ancestor
+    std::iota(ancestor.begin(), ancestor.end(), 0);
+
+    // Compute first descendent of each node in the tree
+    for (csint k = 0; k < N_; k++) {
+        csint j = postorder[k];  // node j of etree is kth postordered node
+        delta[j] = (first[j] == -1) ? 1 : 0;  // delta[j] = 1 if j is a leaf
+        while (j != -1 && first[j] == -1) {
+            first[j] = k;   // first descendant of j
+            j = parent[j];  // move up the etree
+        }
+    }
+
+    // Operate on the transpose
+    CSCMatrix AT = transpose();  // TODO symbolic transpose (don't touch values)
+
+    for (csint k = 0; k < N_; k++) {
+        csint j = postorder[k];  // node j of etree is kth postordered node
+        if (parent[j] != -1) {
+            delta[parent[j]]--;  // j is not a root
+        }
+
+        for (csint p = AT.p_[j]; p < AT.p_[j+1]; p++) {
+            csint i = AT.i_[p];  // AT(i, j) is nonzero
+            auto [q, jleaf] = least_common_ancestor(i, j, first, maxfirst, prevleaf, ancestor);
+            if (jleaf != LeafStatus::NotLeaf) {
+                delta[j]++;  // A(i, j) is in skeleton
+            }
+            if (jleaf == LeafStatus::SubsequentLeaf) {
+                delta[q]--;  // account for overlap in q
+            }
+        }
+
+        // Merge j into the ancestor set containing j's parent
+        if (parent[j] != -1) {
+            ancestor[j] = parent[j];
+        }
+    }
+
+    // sum up the counts for each child
+    for (csint j = 0; j < N_; j++) {
+        if (parent[j] != -1) {
+            delta[parent[j]] += delta[j];
+        }
+    }
+
+    return delta;
+}
+
+
 /** Count the number of non-zeros in each row of the Cholesky factor L of A.
   *
   * @return rowcount  the number of non-zeros in each row of L
@@ -3078,6 +3148,23 @@ std::vector<csint> CSCMatrix::chol_rowcounts() const
 
     // Count the number of non-zeros in each row of L
     return rowcnt(parent, postorder);
+}
+
+
+/** Count the number of non-zeros in each column of the Cholesky factor L of A.
+  *
+  * @return colcount  the number of non-zeros in each column of L
+  */
+std::vector<csint> CSCMatrix::chol_colcounts() const
+{
+    // Compute the elimination tree of A
+    std::vector<csint> parent = etree();
+
+    // Compute the post-order of the elimination tree
+    std::vector<csint> postorder = post(parent);
+
+    // Count the number of non-zeros in each column of L
+    return counts(parent, postorder);
 }
 
 

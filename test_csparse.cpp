@@ -2225,6 +2225,11 @@ TEST_CASE("Cholesky decomposition")
         std::vector<csint> expect = {1, 1, 2, 1, 1, 3, 3, 4, 3, 7, 7};
         REQUIRE(A.chol_rowcounts() == expect);
     }
+
+    SECTION("Column counts of L") {
+        std::vector<csint> expect = {3, 3, 4, 3, 3, 4, 4, 3, 3, 2, 1};
+        REQUIRE(A.chol_colcounts() == expect);
+    }
 }
 
 

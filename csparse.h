@@ -30,6 +30,7 @@ namespace cs {
 #include "utils.h"
 #include "csc.h"
 #include "coo.h"
+#include "symbolic.h"
 
 
 #endif // _CSPARSE_H_

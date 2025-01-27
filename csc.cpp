@@ -2784,8 +2784,6 @@ std::vector<csint>& CSCMatrix::dfs(
   */
 std::vector<csint> CSCMatrix::etree(bool ata) const
 {
-    assert(has_canonical_format_);
-
     std::vector<csint> parent(N_, -1);  // parent of i is parent[i]
     std::vector<csint> ancestor(N_, -1);  // workspaces
     std::vector<csint> prev = ata ? std::vector<csint>(M_, -1) : std::vector<csint>();

@@ -2230,6 +2230,22 @@ TEST_CASE("Cholesky decomposition")
         std::vector<csint> expect = {3, 3, 4, 3, 3, 4, 4, 3, 3, 2, 1};
         REQUIRE(A.chol_colcounts() == expect);
     }
+
+    SECTION("Symbolic factorization") {
+        Symbolic S = symbolic_cholesky(A, AMDOrder::Natural);
+
+        std::vector<csint> expect_p_inv(A.shape()[1]);
+        std::iota(expect_p_inv.begin(), expect_p_inv.end(), 0);
+
+        auto c = A.chol_colcounts();
+        csint expect_nnz = std::accumulate(c.begin(), c.end(), 0);
+
+        REQUIRE(S.p_inv == expect_p_inv);
+        REQUIRE(S.parent == A.etree());
+        REQUIRE(S.cp == cumsum(A.chol_colcounts()));
+        REQUIRE(S.lnz == expect_nnz);
+        REQUIRE(S.unz == expect_nnz);
+    }
 }
 
 

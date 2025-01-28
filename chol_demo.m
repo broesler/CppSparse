@@ -34,6 +34,12 @@ row_counts = sum(Rp != 0, 2)';
 % Compute the Cholesky factor
 L = chol(A, 'lower');
 
+[count, h, parent_, post_, R] = symbfact(sparse(A));
+
+assert(parent == parent_');
+assert(post == post_');
+
+
 % TODO fails in octave
 % G = graph(A);
 % Gp = graph(R + R');

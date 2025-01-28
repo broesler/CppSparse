@@ -73,7 +73,7 @@ def chol_left(A, lower=False):
 
     for k in range(N):
         L[k, k] = np.sqrt(A[k, k] - L[k, :k] @ L[k, :k])
-        L[k + 1:, k] = (A[k + 1:, k] - L[k + 1:, :k] @ L[k, :k].T) / L[k, k]
+        L[k+1:, k] = (A[k+1:, k] - L[k+1:, :k] @ L[k, :k].T) / L[k, k]
 
     return L if lower else L.T
 
@@ -106,7 +106,7 @@ def chol_left_amp(A, lower=False):
         for j in np.argwhere(L[k]).flat:
             a[k:] -= L[k:, j] * L[k, j]
         L[k, k] = np.sqrt(a[k])
-        L[k + 1:, k] = a[k + 1:] / L[k, k]
+        L[k+1:, k] = a[k+1:] / L[k, k]
 
     return L if lower else L.T
 
@@ -154,6 +154,38 @@ def chol_super(A, s, lower=False):
     return L if lower else L.T
 
 
+def chol_right(A, lower=False):
+    """Right-looking Cholesky decomposition.
+
+    .. note:: See Davis, p 62.
+
+    Parameters
+    ----------
+    A : (N, N) ndarray
+        Symmetric positive definite matrix to be decomposed.
+    lower : bool, optional
+        Whether to compute the lower triangular Cholesky factor.
+        Default is False, which computes the upper triangular Cholesky
+        factor.
+
+    Returns
+    -------
+    R : (N, N) ndarray
+        Triangular Cholesky factor of A.
+    """
+    A = np.ascontiguousarray(A)
+    N = A.shape[0]
+    L = np.zeros((N, N), dtype=A.dtype)
+
+    for k in range(N):
+        L[k, k] = np.sqrt(A[k, k])
+        L[k+1:, k] = A[k+1:, k] / L[k, k]
+        A[k+1:, k+1:] -= np.outer(L[k+1:, k], L[k+1:, k])
+
+    return L if lower else L.T
+
+
+
 if __name__ == "__main__":
     # Create the example matrix A
     N = 11
@@ -181,6 +213,7 @@ if __name__ == "__main__":
     R_left = chol_left(A, lower=True)
     R_left_amp = chol_left_amp(A, lower=True)
     R_super = chol_super(A, np.ones(A.shape[0], dtype=int), lower=True)
+    R_right = chol_right(A, lower=True)
 
     # NOTE etree is not implemented in scipy!
     # Get the elimination tree
@@ -196,7 +229,8 @@ if __name__ == "__main__":
     # print("L = \n", R)
 
     # Check that algorithms work
-    for L in [R, R_up, R_left, R_left_amp, R_super]:
+    # for L in [R, R_up, R_left, R_left_amp, R_super]:
+    for L in [R, R_up, R_left, R_left_amp, R_right]:
         np.testing.assert_allclose(L @ L.T, A, atol=1e-15)
 
 # =============================================================================

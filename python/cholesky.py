@@ -72,7 +72,7 @@ def chol_left(A, lower=False):
     L = np.zeros((N, N), dtype=A.dtype)
 
     for k in range(N):
-        L[k, k] = np.sqrt(A[k, k] - L[k, :k] @ L[k, :k])
+        L[k, k] = np.sqrt(A[k, k] - L[k, :k] @ L[k, :k].T)
         L[k+1:, k] = (A[k+1:, k] - L[k+1:, :k] @ L[k, :k].T) / L[k, k]
 
     return L if lower else L.T
@@ -180,7 +180,7 @@ def chol_right(A, lower=False):
     for k in range(N):
         L[k, k] = np.sqrt(A[k, k])
         L[k+1:, k] = A[k+1:, k] / L[k, k]
-        A[k+1:, k+1:] -= np.outer(L[k+1:, k], L[k+1:, k])
+        A[k+1:, k+1:] -= L[k+1:, [k]] @ L[k+1:, [k]].T
 
     return L if lower else L.T
 
@@ -193,8 +193,7 @@ if __name__ == "__main__":
                  [5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10]]
     cols = np.r_[np.arange(N),
                  [0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9]]
-    lnz = rows.size
-    vals = np.ones((lnz,))
+    vals = np.ones((rows.size,))
 
     # Values for the lower triangle
     L = sp.csc_matrix((vals, (rows, cols)), shape=(N, N))
@@ -212,8 +211,11 @@ if __name__ == "__main__":
     R_up = chol_up(A, lower=True)
     R_left = chol_left(A, lower=True)
     R_left_amp = chol_left_amp(A, lower=True)
-    R_super = chol_super(A, np.ones(A.shape[0], dtype=int), lower=True)
     R_right = chol_right(A, lower=True)
+
+    # Define "supernodes" as ones, so we get the same result as left-looking
+    s = np.ones(A.shape[0], dtype=int)
+    R_super = chol_super(A, s, lower=True)
 
     # NOTE etree is not implemented in scipy!
     # Get the elimination tree
@@ -224,9 +226,6 @@ if __name__ == "__main__":
     # Compute the row counts of the post-ordered Cholesky factor
     row_counts = np.sum(R != 0, 1)
     col_counts = np.sum(R != 0, 0)
-
-    # print("A = \n", A)
-    # print("L = \n", R)
 
     # Check that algorithms work
     for L in [R, R_up, R_left, R_left_amp, R_super, R_right]:

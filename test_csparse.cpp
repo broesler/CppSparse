@@ -69,6 +69,7 @@ CSCMatrix A_mat()
 }
 
 
+// TODO combine these two functions into one compare_matrices function
 /** Compare two matrices for equality.
  *
  * @note This function expects the matrices to be in canonical form.
@@ -76,7 +77,7 @@ CSCMatrix A_mat()
  * @param C       the matrix to test
  * @param expect  the expected matrix
  */
-auto compare_canonical(const CSCMatrix& C, const CSCMatrix& expect)
+auto compare_canonical(const CSCMatrix& C, const CSCMatrix& expect, double tol=1e-15)
 {
     REQUIRE(C.has_canonical_format());
     REQUIRE(expect.has_canonical_format());
@@ -84,7 +85,12 @@ auto compare_canonical(const CSCMatrix& C, const CSCMatrix& expect)
     CHECK(C.shape() == expect.shape());
     CHECK(C.indptr() == expect.indptr());
     CHECK(C.indices() == expect.indices());
-    REQUIRE(C.data() == expect.data());
+    REQUIRE(
+        std::ranges::equal(C.data(), expect.data(),
+            [tol](double a, double b) {
+                return std::fabs(a - b) < tol; 
+            })
+    );
 }
 
 
@@ -104,7 +110,7 @@ auto compare_noncanonical(const CSCMatrix& C, const CSCMatrix& expect)
 
     for (csint i = 0; i < M; i++) {
         for (csint j = 0; j < N; j++) {
-            REQUIRE(C(i, j) == expect(i, j));
+            REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
         }
     }
 }

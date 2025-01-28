@@ -13,7 +13,7 @@ presented in Davis, Chapter 4.
 import numpy as np
 
 from scipy import (linalg as la,
-                   sparse as sp)
+                   sparse as sparse)
 # import scipy.sparse.linalg as spla
 
 
@@ -173,7 +173,7 @@ def chol_right(A, lower=False):
     R : (N, N) ndarray
         Triangular Cholesky factor of A.
     """
-    A = np.ascontiguousarray(A)
+    A = np.ascontiguousarray(A).copy()
     N = A.shape[0]
     L = np.zeros((N, N), dtype=A.dtype)
 
@@ -183,6 +183,85 @@ def chol_right(A, lower=False):
         A[k+1:, k+1:] -= L[k+1:, [k]] @ L[k+1:, [k]].T
 
     return L if lower else L.T
+
+
+def chol_update(L, w):
+    """Update the Cholesky factor L of a matrix `A = L @ L.T + w @ w.T`.
+
+    Parameters
+    ----------
+    L : (N, N) ndarray
+        The Cholesky factor of a matrix A, assumed to be lower triangular.
+    w : (N,) ndarray
+        The update vector.
+
+    Returns
+    -------
+    L : (N, N) ndarray
+        The updated Cholesky factor of A + w @ w.T.
+    w : (N,) ndarray
+        The updated vector, which is the solution to `Lx = w`.
+    """
+    L = np.ascontiguousarray(L).copy()
+    w = np.ascontiguousarray(w).copy()
+    β = 1  # scaling factor
+    N = L.shape[0]
+
+    for j in range(N):
+        α = w[j] / L[j, j]
+        β2 = np.sqrt(β**2 + α**2)
+        γ = α / (β2 * β)
+        δ = β / β2
+        L[j, j] = δ * L[j, j] + γ * w[j]
+        w[j] = α
+        β = β2
+        if (j == N-1):
+            break
+        w1 = w[j+1:]  # store vector before updating w
+        w[j+1:] -= α * L[j+1:, j]
+        L[j+1:, j] = δ * L[j+1:, j] + γ * w1
+
+    return L, w
+
+
+def chol_downdate(L, w):
+    """Downdate the Cholesky factor L of a matrix `A = L @ L.T - w @ w.T`.
+
+    Parameters
+    ----------
+    L : (N, N) ndarray
+        The Cholesky factor of a matrix A, assumed to be lower triangular.
+    w : (N,) ndarray
+        The update vector.
+
+    Returns
+    -------
+    L : (N, N) ndarray
+        The updated Cholesky factor of A + w @ w.T.
+    w : (N,) ndarray
+        The updated vector, which is the solution to `Lx = w`.
+    """
+    L = np.ascontiguousarray(L).copy()
+    w = np.ascontiguousarray(w).copy()
+    β = 1  # scaling factor
+    N = L.shape[0]
+
+    for j in range(N):
+        α = w[j] / L[j, j]
+        if α**2 >= β**2:
+            raise ValueError("L is not positive definite.")
+        β2 = np.sqrt(β**2 - α**2)
+        γ = α / (β2 * β)
+        δ = β / β2
+        L[j, j] = δ * L[j, j]
+        w[j] = α
+        β = β2
+        if (j == N-1):
+            break
+        w[j+1:] -= α * L[j+1:, j]
+        L[j+1:, j] = δ * L[j+1:, j] - γ * w[j+1:]
+
+    return L, w
 
 
 
@@ -196,13 +275,13 @@ if __name__ == "__main__":
     vals = np.ones((rows.size,))
 
     # Values for the lower triangle
-    L = sp.csc_matrix((vals, (rows, cols)), shape=(N, N))
+    L = sparse.csc_matrix((vals, (rows, cols)), shape=(N, N))
 
     # Get the sum of the off-diagonal elements to ensure positive definiteness
-    diag_A = np.max(np.sum(L + L.T - 2 * sp.diags(L.diagonal()), 0))
+    diag_A = np.max(np.sum(L + L.T - 2 * sparse.diags(L.diagonal()), 0))
 
     # Create the symmetric matrix A
-    A = L + sp.triu(L.T, 1) + diag_A * sp.eye(N)
+    A = L + sparse.triu(L.T, 1) + diag_A * sparse.eye(N)
 
     A = A.toarray()
 
@@ -230,6 +309,23 @@ if __name__ == "__main__":
     # Check that algorithms work
     for L in [R, R_up, R_left, R_left_amp, R_super, R_right]:
         np.testing.assert_allclose(L @ L.T, A, atol=1e-15)
+
+    # Test (up|down)date
+    # Generate random update with same sparsity pattern as a column of L
+    k = 3
+    idx = np.nonzero(R[:, k])[0]
+    w = np.zeros((N,))
+    w[idx] = np.random.rand(idx.size)
+
+    A_up = A + w[:, np.newaxis] @ w[np.newaxis, :]
+    L_up, w_up = chol_update(R, w)
+    np.testing.assert_allclose(L_up @ L_up.T, A_up, atol=1e-15)
+    np.testing.assert_allclose(la.solve(R, w), w_up, atol=1e-15)
+
+    A_down = A - w[:, np.newaxis] @ w[np.newaxis, :]
+    L_down, w_down = chol_downdate(R, w)
+    # np.testing.assert_allclose(L_down @ L_down.T, A_down, atol=1e-15)
+    np.testing.assert_allclose(la.solve(R, w), w_down, atol=1e-15)
 
 # =============================================================================
 # =============================================================================

@@ -10,12 +10,11 @@ presented in Davis, Chapter 4.
 """
 # =============================================================================
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from scipy import (linalg as la,
                    sparse as sp)
-import scipy.sparse.linalg as spla
+# import scipy.sparse.linalg as spla
 
 
 # -----------------------------------------------------------------------------
@@ -37,7 +36,7 @@ def chol_up(A, lower=False):
 
     Returns
     -------
-    R : ndarray
+    R : (N, N) ndarray
         Triangular Cholesky factor of A.
     """
     N = A.shape[0]
@@ -57,7 +56,7 @@ def chol_left(A, lower=False):
 
     Parameters
     ----------
-    A : ndarray
+    A : (N, N) ndarray
         Symmetric positive definite matrix to be decomposed.
     lower : bool, optional
         Whether to compute the lower triangular Cholesky factor.
@@ -66,7 +65,7 @@ def chol_left(A, lower=False):
 
     Returns
     -------
-    R : ndarray
+    R : (N, N) ndarray
         Triangular Cholesky factor of A.
     """
     N = A.shape[0]
@@ -86,7 +85,7 @@ def chol_left_amp(A, lower=False):
 
     Parameters
     ----------
-    A : ndarray
+    A : (N, N) ndarray
         Symmetric positive definite matrix to be decomposed.
     lower : bool, optional
         Whether to compute the lower triangular Cholesky factor.
@@ -95,7 +94,7 @@ def chol_left_amp(A, lower=False):
 
     Returns
     -------
-    R : ndarray
+    R : (N, N) ndarray
         Triangular Cholesky factor of A.
     """
     N = A.shape[0]
@@ -112,11 +111,49 @@ def chol_left_amp(A, lower=False):
     return L if lower else L.T
 
 
+def chol_super(A, s, lower=False):
+    r"""Supernodal Cholesky decomposition.
+
+    .. note:: See Davis, p 61.
+
+    Parameters
+    ----------
+    A : (N, N) ndarray
+        Symmetric positive definite matrix to be decomposed.
+    s : (N,) ndarray of int
+        Supernode structure. The `j`th supernode consists of `s[j]` columns of
+        `L` which can be stored as a dense matrix of dimension
+        :math:`|\mathcal{L}_f| \\times s_j`, where :math:`f` is the column of
+        `L` represented as the leftmost column in the `j`th supernode.
+    lower : bool, optional
+        Whether to compute the lower triangular Cholesky factor.
+        Default is False, which computes the upper triangular Cholesky
+        factor.
+
+    Returns
+    -------
+    R : (N, N) ndarray
+        Triangular Cholesky factor of A.
+    """
+    N = A.shape[0]
+    L = np.zeros((N, N), dtype=A.dtype)
+    ss = np.cumsum(np.r_[1, s], dtype=int)
+    for j in range(len(s)):
+        k1 = ss[j]
+        k2 = ss[j + 1]
+        k = slice(k1, k2)
+        L[k, k] = la.cholesky(A[k, k] - L[k, :k1] @ L[k, :k1].T).T
+        L[k2:, k] = (A[k2:, k] - L[k2:, :k1] @ L[k, :k1].T) / L[k, k].T
+    return L if lower else L.T
+
+
 if __name__ == "__main__":
     # Create the example matrix A
     N = 11
-    rows = np.r_[np.arange(N), [5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10]]
-    cols = np.r_[np.arange(N), [0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9]]
+    rows = np.r_[np.arange(N),
+                 [5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10]]
+    cols = np.r_[np.arange(N),
+                 [0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9]]
     lnz = rows.size
     vals = np.ones((lnz,))
 
@@ -136,6 +173,7 @@ if __name__ == "__main__":
     R_up = chol_up(A, lower=True)
     R_left = chol_left(A, lower=True)
     R_left_amp = chol_left_amp(A, lower=True)
+    R_super = chol_super(A, np.ones(A.shape[0]), lower=True)  # FIXME fails
 
     # NOTE etree is not implemented in scipy!
     # Get the elimination tree
@@ -151,7 +189,7 @@ if __name__ == "__main__":
     # print("L = \n", R)
 
     # Check that algorithms work
-    for L in [R, R_up, R_left, R_left_amp]:
+    for L in [R, R_up, R_left, R_left_amp, R_super]:
         np.testing.assert_allclose(L @ L.T, A, atol=1e-15)
 
 # =============================================================================

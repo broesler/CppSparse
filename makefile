@@ -13,25 +13,32 @@ CFLAGS = -Wall -pedantic -std=c++20
 # BREW := $(shell brew --prefix)  # FIXME adds space? run command only once
 BREW = /opt/homebrew
 
-INCL := $(wildcard *.h)
-SRC := test_csparse.cpp utils.cpp coo.cpp csc.cpp decomposition.cpp
+SRC_DIR := src
+INCL_DIR := include
+
+OPT := -I$(INCL_DIR)
+
+INCL := $(wildcard $(INCL_DIR)/*.h)
+SRC_BASE := test_csparse utils coo csc decomposition
+SRC := $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(SRC_BASE)))
 OBJ := $(SRC:%.cpp=%.o)
 
 info :
+	@echo "INCL: $(INCL)"
 	@echo "SRC: $(SRC)"
 
-GAXPY_SRC := gaxpy_perf.cpp $(filter-out test_csparse.cpp, $(SRC))
+GAXPY_SRC := $(SRC_DIR)/gaxpy_perf.cpp $(filter-out $(SRC_DIR)/test_csparse.cpp, $(SRC))
 GAXPY_OBJ := $(GAXPY_SRC:%.cpp=%.o)
 
-LUSOLVE_SRC := lusolve_perf.cpp $(filter-out test_csparse.cpp, $(SRC))
+LUSOLVE_SRC := $(SRC_DIR)/lusolve_perf.cpp $(filter-out $(SRC_DIR)/test_csparse.cpp, $(SRC))
 LUSOLVE_OBJ := $(LUSOLVE_SRC:%.cpp=%.o)
 
 # -----------------------------------------------------------------------------
 #        Make options 
 # -----------------------------------------------------------------------------
-all: test_csparse gaxpy_perf gatxpy_perf
+all: test_csparse gaxpy_perf gatxpy_perf lusolve_perf
 
-test: OPT = -I$(BREW)/include 
+test: OPT += -I$(BREW)/include 
 test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
 test: CFLAGS += -glldb #-fsanitize=address #-Og 
 test: test_csparse
@@ -49,7 +56,7 @@ debug: all
 # -----------------------------------------------------------------------------
 #         Compile and Link
 # -----------------------------------------------------------------------------
-test_csparse: % : %.o $(OBJ)
+test_csparse: % : $(SRC_DIR)/%.o $(OBJ)
 	$(CC) $(CFLAGS) $(OPT) -o $@ $^ $(LDLIBS)
 
 gaxpy_perf: $(GAXPY_OBJ)
@@ -62,14 +69,14 @@ lusolve_perf: $(LUSOLVE_OBJ)
 	$(CC) $(CFLAGS) $(OPT) -o $@ $^
 
 # Objects depend on source and headers
-%.o : %.cpp $(INCL)
+$(SRC_DIR)/%.o : $(SRC_DIR)/%.cpp $(INCL)
 	$(CC) $(CFLAGS) $(OPT) -c $< -o $@
 
 # clean up
 .PHONY: depend clean
 clean:
 	rm -f *~
-	rm -f *.o
+	rm -f $(SRC_DIR)/*.o
 	rm -rf *.dSYM/
 	rm -f test_csparse
 	rm -f test_stdvector

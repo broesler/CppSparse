@@ -142,7 +142,7 @@ def chol_super(A, s, lower=False):
     assert np.all(s > 0)
 
     L = np.zeros((N, N), dtype=A.dtype)
-    ss = np.cumsum(np.r_[1, s], dtype=int)
+    ss = np.cumsum(np.r_[0, s], dtype=int)
 
     for j in range(len(s)):
         k1 = ss[j]
@@ -229,8 +229,7 @@ if __name__ == "__main__":
     # print("L = \n", R)
 
     # Check that algorithms work
-    # for L in [R, R_up, R_left, R_left_amp, R_super]:
-    for L in [R, R_up, R_left, R_left_amp, R_right]:
+    for L in [R, R_up, R_left, R_left_amp, R_super, R_right]:
         np.testing.assert_allclose(L @ L.T, A, atol=1e-15)
 
 # =============================================================================

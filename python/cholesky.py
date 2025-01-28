@@ -312,19 +312,22 @@ if __name__ == "__main__":
 
     # Test (up|down)date
     # Generate random update with same sparsity pattern as a column of L
+    rng = np.random.default_rng(565656)
     k = 3
     idx = np.nonzero(R[:, k])[0]
     w = np.zeros((N,))
-    w[idx] = np.random.rand(idx.size)
+    w[idx] = rng.random(idx.size)
 
-    A_up = A + w[:, np.newaxis] @ w[np.newaxis, :]
+    wwT = np.outer(w, w)  # == w[:, np.newaxis] @ w[np.newaxis, :]
+
+    A_up = A + wwT
     L_up, w_up = chol_update(R, w)
     np.testing.assert_allclose(L_up @ L_up.T, A_up, atol=1e-15)
     np.testing.assert_allclose(la.solve(R, w), w_up, atol=1e-15)
 
-    A_down = A - w[:, np.newaxis] @ w[np.newaxis, :]
+    A_down = A - wwT
     L_down, w_down = chol_downdate(R, w)
-    # np.testing.assert_allclose(L_down @ L_down.T, A_down, atol=1e-15)
+    np.testing.assert_allclose(L_down @ L_down.T, A_down, atol=1e-15)
     np.testing.assert_allclose(la.solve(R, w), w_down, atol=1e-15)
 
 # =============================================================================

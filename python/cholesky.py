@@ -124,7 +124,8 @@ def chol_super(A, s, lower=False):
         Supernode structure. The `j`th supernode consists of `s[j]` columns of
         `L` which can be stored as a dense matrix of dimension
         :math:`|\mathcal{L}_f| \\times s_j`, where :math:`f` is the column of
-        `L` represented as the leftmost column in the `j`th supernode.
+        `L` represented as the leftmost column in the `j`th supernode. The
+        values of `s` should satisfy `all(s > 0)` and `sum(s) == N`.
     lower : bool, optional
         Whether to compute the lower triangular Cholesky factor.
         Default is False, which computes the upper triangular Cholesky
@@ -136,14 +137,20 @@ def chol_super(A, s, lower=False):
         Triangular Cholesky factor of A.
     """
     N = A.shape[0]
+
+    assert np.sum(s) == N
+    assert np.all(s > 0)
+
     L = np.zeros((N, N), dtype=A.dtype)
     ss = np.cumsum(np.r_[1, s], dtype=int)
+
     for j in range(len(s)):
         k1 = ss[j]
         k2 = ss[j + 1]
         k = slice(k1, k2)
         L[k, k] = la.cholesky(A[k, k] - L[k, :k1] @ L[k, :k1].T).T
         L[k2:, k] = (A[k2:, k] - L[k2:, :k1] @ L[k, :k1].T) / L[k, k].T
+
     return L if lower else L.T
 
 
@@ -173,7 +180,7 @@ if __name__ == "__main__":
     R_up = chol_up(A, lower=True)
     R_left = chol_left(A, lower=True)
     R_left_amp = chol_left_amp(A, lower=True)
-    R_super = chol_super(A, np.ones(A.shape[0]), lower=True)  # FIXME fails
+    R_super = chol_super(A, np.ones(A.shape[0], dtype=int), lower=True)
 
     # NOTE etree is not implemented in scipy!
     # Get the elimination tree

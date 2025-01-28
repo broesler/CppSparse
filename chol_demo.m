@@ -16,7 +16,8 @@ vals = ones(size(rows));
 L = sparse(rows, cols, vals, N, N);
 
 % Create the symmetric matrix A, and add to diagonal to ensure positive definite
-A = full(L + triu(L', 1) + 8*eye(N));
+diag_A = max(sum(L + L' - 2*diag(diag(L))));
+A = full(L + triu(L', 1) + diag_A*eye(N));
 
 % Get the elimination tree
 [parent, post] = etree(A);
@@ -30,6 +31,8 @@ assert (nnz(R) == nnz(Rp));  % post-ordering does not change nnz
 col_counts = sum(Rp != 0);
 row_counts = sum(Rp != 0, 2)';
 
+% Compute the Cholesky factor
+L = chol(A, 'lower');
 
 % TODO fails in octave
 % G = graph(A);

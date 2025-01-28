@@ -31,6 +31,11 @@ Symbolic symbolic_cholesky(const CSCMatrix& A, AMDOrder order)
     Symbolic S;
 
     if (order == AMDOrder::Natural) {
+        // TODO set to empty vector?
+        // NOTE if we allow an empty p_inv here, we should support an empty
+        // p or p_inv argument to all permute functions: pvec, ipvec,
+        // inv_permute, permute, and symperm... and all of the upper/lower
+        // triangular permuted solvers!!
         // identity permutation
         S.p_inv = std::vector<csint>(A.shape()[1]);
         std::iota(S.p_inv.begin(), S.p_inv.end(), 0);
@@ -51,6 +56,78 @@ Symbolic symbolic_cholesky(const CSCMatrix& A, AMDOrder order)
 
     return S;
 }
+
+
+/** Compute the up-looking Cholesky factorization of a sparse matrix.
+ *
+ * @note This function assumes that `A` is symmetric and positive definite.
+ *
+ * @param A the matrix to factorize
+ * @param S the Symbolic factorization of `A`
+ *
+ * @return the Cholesky factorization of `A`
+ */
+CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
+{
+    auto [M, N] = A.shape();
+    CSCMatrix L(M, N, S.lnz);  // allocate result
+
+    // Workspaces
+    std::vector<csint> c(S.cp);  // column pointers for L
+    std::vector<double> x(N);    // sparse accumulator
+
+    // CSCMatrix C = S.p_inv.empty() ? A : A.symperm(S.p_inv);
+    CSCMatrix C = A.symperm(S.p_inv);  // just a copy if identity permutation
+
+    L.p_ = S.cp;  // column pointers for L
+
+    // Compute L(:, k) for L*L' = C
+    for (csint k = 0; k < N; k++) {
+        //--- Nonzero pattern of L(:, k) ---------------------------------------
+        std::vector<csint> s = C.ereach(k, S.parent);  // find pattern of L(k, :)
+        x[k] = 0;                   // x(0:k) is now zero
+
+        // x = full(triu(C(:,k))) scatter into x
+        for (csint p = C.p_[k]; p < C.p_[k+1]; p++) {
+            if (C.i_[p] <= k) {
+                x[C.i_[p]] = C.v_[p];
+            }
+        }
+
+        double d = x[k];  // d = C(k, k)
+        x[k] = 0;  // clear x for k + 1st iteration
+
+        //--- Triangular Solve -------------------------------------------------
+        // Solve L[:k, :k] * x = C[:, k]
+        for (const auto& i : s) {
+            double lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
+            x[i] = 0;                           // clear x for k + 1st iteration
+
+            for (csint p = L.p_[i] + 1; p < c[i]; p++) {
+                x[L.i_[p]] -= L.v_[p] * lki;    // x -= L(i, :) * L(k, i)
+            }
+
+            d -= lki * lki;                     // d -= L(k, i) * L(k, i)
+            csint p = c[i]++;
+            L.i_[p] = k;                        // store L(k, i) in column i
+            L.v_[p] = lki;
+        }
+
+        //--- Compute L(k, k) --------------------------------------------------
+        if (d <= 0) {
+            throw std::runtime_error("Matrix not positive definite!");
+        }
+
+        csint p = c[k]++;
+        L.i_[p] = k;  // store L(k, k) = sqrt(d) in column k
+        L.v_[p] = sqrt(d);
+    }
+
+    L.p_[N] = S.cp[N];  // finalize column pointers
+
+    return L;
+}
+
 
 } // namespace cs
 

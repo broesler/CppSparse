@@ -25,6 +25,7 @@ namespace cs {
     // Pre-declare classes for type conversions
     class COOMatrix;
     class CSCMatrix;
+    struct Symbolic;
 }  // namespace cs
 
 #include "utils.h"

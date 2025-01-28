@@ -2249,8 +2249,28 @@ TEST_CASE("Cholesky decomposition")
         REQUIRE(S.p_inv == expect_p_inv);
         REQUIRE(S.parent == A.etree());
         REQUIRE(S.cp == cumsum(A.chol_colcounts()));
+        REQUIRE(S.cp.back() == expect_nnz);
         REQUIRE(S.lnz == expect_nnz);
         REQUIRE(S.unz == expect_nnz);
+    }
+
+    SECTION("Numeric factorization") {
+        Symbolic S = symbolic_cholesky(A, AMDOrder::Natural);
+
+        CHECK_THROWS(chol(A, S));  // A is not positive definite
+
+        // Make A positive definite by increasing the diagonal
+        for (csint i = 0; i < N; i++) {
+            A.assign(i, i, 10.0);
+        }
+
+        // Now compute the factorization
+        CSCMatrix L = chol(A, S);
+
+        // Check that the factorization is correct
+        CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
+
+        compare_canonical(LLT, A, tol);
     }
 }
 

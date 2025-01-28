@@ -109,7 +109,7 @@ class CSCMatrix
         ) const;
 
         CSCMatrix& dropzeros();
-        CSCMatrix& droptol(double tol);
+        CSCMatrix& droptol(double tol=1e-15);
 
         // Exercise 2.15
         static bool in_band(csint i, csint j, double Aij, void *limits);
@@ -326,21 +326,21 @@ class CSCMatrix
             const std::vector<csint>& parent
         ) const;
 
-        // See cs_rowcnt
         std::vector<csint> rowcnt(
             const std::vector<csint>& parent,
             const std::vector<csint>& postorder
         ) const;
 
-        std::vector<csint> chol_rowcounts() const;
-
-        // See cs_counts
         std::vector<csint> counts(
             const std::vector<csint>& parent,
             const std::vector<csint>& postorder
         ) const;
 
+        // TODO make non-member functions?
+        std::vector<csint> chol_rowcounts() const;
         std::vector<csint> chol_colcounts() const;
+
+        friend CSCMatrix chol(const CSCMatrix& A, const Symbolic& S);
 
         // ---------- Other
         void print_dense(std::ostream& os=std::cout) const;

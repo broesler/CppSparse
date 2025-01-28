@@ -38,6 +38,8 @@ struct Symbolic
 // See cs_schol
 Symbolic symbolic_cholesky(const CSCMatrix& A, AMDOrder order);
 
+CSCMatrix chol(const CSCMatrix& A, const Symbolic& S);  // up-looking Cholesky
+
 
 }  // namespace cs
 

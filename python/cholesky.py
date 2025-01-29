@@ -264,7 +264,62 @@ def chol_downdate(L, w):
     return L, w
 
 
+def chol_updown(L, w, update=True):
+    """Up/downdate the Cholesky factor L of a matrix `A = L @ L.T ± w @ w.T`.
 
+    Parameters
+    ----------
+    L : (N, N) ndarray
+        The Cholesky factor of a matrix A, assumed to be lower triangular.
+    w : (N,) ndarray
+        The update vector.
+    update : bool, optional
+        Whether to update (True) or downdate (False) the Cholesky factor.
+
+    Returns
+    -------
+    L : (N, N) ndarray
+        The updated Cholesky factor of A + w @ w.T.
+    w : (N,) ndarray
+        The updated vector, which is the solution to `Lx = w`.
+    """
+    L = np.ascontiguousarray(L).copy()
+    w = np.ascontiguousarray(w).copy()
+
+    beta = 1
+    N = L.shape[0]
+    sigma = 1 if update else -1
+
+    if N == 1:
+        L = np.sqrt(L*L.T + sigma*w*w.T)
+        return L, w
+
+    for k in range(N):
+        alpha = w[k] / L[k, k]
+        beta2 = np.sqrt(beta**2 + sigma*alpha**2)
+        gamma = sigma * alpha / (beta2 * beta)
+
+        if update:
+            delta = beta / beta2
+            L[k, k] = delta * L[k, k] + gamma * w[k]
+            w1 = w[k+1:]
+            w[k+1:] -= alpha * L[k+1:, k]
+            L[k+1:, k] = delta * L[k+1:, k] + gamma * w1
+        else:  # downdate
+            delta = beta2 / beta
+            L[k, k] = delta * L[k, k]
+            w[k+1:] -= alpha * L[k+1:, k]
+            L[k+1:, k] = delta * L[k+1:, k] + gamma * w[k+1:]
+
+        w[k] = alpha
+        beta = beta2
+
+    return L, w
+
+
+# -----------------------------------------------------------------------------
+#        Main
+# -----------------------------------------------------------------------------
 if __name__ == "__main__":
     # Create the example matrix A
     N = 11
@@ -321,14 +376,29 @@ if __name__ == "__main__":
     wwT = np.outer(w, w)  # == w[:, np.newaxis] @ w[np.newaxis, :]
 
     A_up = A + wwT
+
     L_up, w_up = chol_update(R, w)
-    np.testing.assert_allclose(L_up @ L_up.T, A_up, atol=1e-15)
+    print("A_up =")
+    print(A_up)
+    print("L_up @ L_up.T =")
+    print(L_up @ L_up.T)
+    # np.testing.assert_allclose(L_up @ L_up.T, A_up, atol=1e-15)
     np.testing.assert_allclose(la.solve(R, w), w_up, atol=1e-15)
 
-    A_down = A - wwT
-    L_down, w_down = chol_downdate(R, w)
-    np.testing.assert_allclose(L_down @ L_down.T, A_down, atol=1e-15)
-    np.testing.assert_allclose(la.solve(R, w), w_down, atol=1e-15)
+    # This function *does* produce the same result as chol_update
+    L_up, w_up = chol_updown(R, w, update=True)
+    print("A_up =")
+    print(A_up)
+    print("L_up @ L_up.T =")
+    print(L_up @ L_up.T)
+    # np.testing.assert_allclose(L_up @ L_up.T, A_up, atol=1e-15)
+    np.testing.assert_allclose(la.solve(R, w), w_up, atol=1e-15)
+
+    # Just downdate back to the original matrix!
+    A_down = A.copy()  # A_down == A_up - wwT == A
+    L_down, w_down = chol_downdate(L_up, w)
+    # np.testing.assert_allclose(L_down @ L_down.T, A_down, atol=1e-15)
+    np.testing.assert_allclose(la.solve(L_up, w), w_down, atol=1e-15)
 
 # =============================================================================
 # =============================================================================

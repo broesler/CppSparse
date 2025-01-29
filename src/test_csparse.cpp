@@ -70,7 +70,6 @@ CSCMatrix A_mat()
 }
 
 
-// TODO combine these two functions into one compare_matrices function
 /** Compare two matrices for equality.
  *
  * @note This function expects the matrices to be in canonical form.
@@ -86,12 +85,9 @@ auto compare_canonical(const CSCMatrix& C, const CSCMatrix& expect, double tol=1
     CHECK(C.shape() == expect.shape());
     CHECK(C.indptr() == expect.indptr());
     CHECK(C.indices() == expect.indices());
-    REQUIRE(
-        std::ranges::equal(C.data(), expect.data(),
-            [tol](double a, double b) {
-                return std::fabs(a - b) < tol; 
-            })
-    );
+    for (csint p = 0; p < C.nnz(); p++) {
+        REQUIRE_THAT(C.data()[p], WithinAbs(expect.data()[p], tol));
+    }
 }
 
 
@@ -109,6 +105,9 @@ auto compare_noncanonical(const CSCMatrix& C, const CSCMatrix& expect, double to
 
     auto [M, N] = C.shape();
 
+    // Need to check all elements of the matrix because operator() combines
+    // duplicate entries, whereas just going through the non-zeros of one matrix
+    // does not combine those duplicates.
     for (csint i = 0; i < M; i++) {
         for (csint j = 0; j < N; j++) {
             REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));

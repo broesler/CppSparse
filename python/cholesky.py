@@ -386,13 +386,13 @@ if __name__ == "__main__":
     np.testing.assert_allclose(la.solve(R, w), w_up, atol=1e-15)
 
     # This function *does* produce the same result as chol_update
-    L_up, w_up = chol_updown(R, w, update=True)
+    L_upd, w_upd = chol_updown(R, w, update=True)
     print("A_up =")
     print(A_up)
-    print("L_up @ L_up.T =")
-    print(L_up @ L_up.T)
-    # np.testing.assert_allclose(L_up @ L_up.T, A_up, atol=1e-15)
-    np.testing.assert_allclose(la.solve(R, w), w_up, atol=1e-15)
+    print("L_upd @ L_upd.T =")
+    print(L_upd @ L_upd.T)
+    # np.testing.assert_allclose(L_upd @ L_upd.T, A_up, atol=1e-15)
+    np.testing.assert_allclose(la.solve(R, w), w_upd, atol=1e-15)
 
     # Just downdate back to the original matrix!
     A_down = A.copy()  # A_down == A_up - wwT == A

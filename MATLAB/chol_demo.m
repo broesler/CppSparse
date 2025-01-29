@@ -17,11 +17,12 @@ L = sparse(rows, cols, vals, N, N);
 
 % Create the symmetric matrix A, and add to diagonal to ensure positive definite
 diag_A = max(sum(L + L' - 2*diag(diag(L))));
-A = full(L + triu(L', 1) + diag_A*eye(N));
+A = full(L + triu(L', 1) + diag_A*eye(N));  % use full for easier display
 
 % Get the elimination tree
 [parent, post] = etree(A);
 
+% Compute the Cholesky factor
 R = chol(A, 'lower');
 Rp = chol(A(post, post), 'lower');
 
@@ -31,14 +32,30 @@ assert (nnz(R) == nnz(Rp));  % post-ordering does not change nnz
 col_counts = sum(Rp != 0);
 row_counts = sum(Rp != 0, 2)';
 
-% Compute the Cholesky factor
-L = chol(A, 'lower');
-
-[count, h, parent_, post_, R] = symbfact(sparse(A));
+[count, h, parent_, post_, Rs] = symbfact(sparse(A));
 
 assert(parent == parent_');
 assert(post == post_');
 
+% Create update vector
+k = 3;  % arbitrary column index
+idx = find(R(:, k));
+w = zeros(N, 1);
+% w(idx) = rand(length(idx), 1);
+w(idx) = [0.1, 0.2, 0.3, 0.4];
+
+% Update the Cholesky factor
+A_up = A + w*w';
+
+% Use built-in update function. 
+% NOTE that cholupdate expects the *upper* triangular Cholesky factor.
+R_up = cholupdate(R', w, '+')';
+
+% Use the CSparse update function (See Davis, p 63)
+R_ups = chol_update(R, w);
+
+assert(norm(R_up * R_up' - A_up) < 1e-14)
+assert(norm(R_ups * R_ups' - A_up) < 1e-14)
 
 % TODO fails in octave
 % G = graph(A);

@@ -217,7 +217,7 @@ def chol_update(L, w):
         β = β2
         if (j == N-1):
             break
-        w1 = w[j+1:]  # store vector before updating w
+        w1 = w[j+1:].copy()  # store vector before updating w
         w[j+1:] -= α * L[j+1:, j]
         L[j+1:, j] = δ * L[j+1:, j] + γ * w1
 
@@ -302,7 +302,7 @@ def chol_updown(L, w, update=True):
         if update:
             delta = beta / beta2
             L[k, k] = delta * L[k, k] + gamma * w[k]
-            w1 = w[k+1:]
+            w1 = w[k+1:].copy()
             w[k+1:] -= alpha * L[k+1:, k]
             L[k+1:, k] = delta * L[k+1:, k] + gamma * w1
         else:  # downdate
@@ -378,20 +378,12 @@ if __name__ == "__main__":
     A_up = A + wwT
 
     L_up, w_up = chol_update(R, w)
-    print("A_up =")
-    print(A_up)
-    print("L_up @ L_up.T =")
-    print(L_up @ L_up.T)
-    # np.testing.assert_allclose(L_up @ L_up.T, A_up, atol=1e-15)
+    np.testing.assert_allclose(L_up @ L_up.T, A_up, atol=1e-15)
     np.testing.assert_allclose(la.solve(R, w), w_up, atol=1e-15)
 
     # This function *does* produce the same result as chol_update
     L_upd, w_upd = chol_updown(R, w, update=True)
-    print("A_up =")
-    print(A_up)
-    print("L_upd @ L_upd.T =")
-    print(L_upd @ L_upd.T)
-    # np.testing.assert_allclose(L_upd @ L_upd.T, A_up, atol=1e-15)
+    np.testing.assert_allclose(L_upd @ L_upd.T, A_up, atol=1e-15)
     np.testing.assert_allclose(la.solve(R, w), w_upd, atol=1e-15)
 
     # Just downdate back to the original matrix!

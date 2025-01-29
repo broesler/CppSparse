@@ -39,6 +39,12 @@ struct Symbolic
 Symbolic symbolic_cholesky(const CSCMatrix& A, AMDOrder order);
 
 CSCMatrix chol(const CSCMatrix& A, const Symbolic& S);  // up-looking Cholesky
+CSCMatrix& chol_update(
+    CSCMatrix& L,
+    int sigma,
+    const CSCMatrix& C,
+    const std::vector<csint>& parent
+);
 
 
 }  // namespace cs

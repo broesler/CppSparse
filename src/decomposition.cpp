@@ -130,6 +130,66 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
 }
 
 
+/** Update the Cholesky factor for \f$ A = A + σ w w^T \f$.
+ *
+ * @param L  the Cholesky factor of A
+ * @param σ  +1 for an update, or -1 for a downdate
+ * @param C  the update vector, as the first column in a CSCMatrix
+ * @param parent  the elimination tree of A
+ *
+ * @return L  the updated Cholesky factor of A
+ */
+CSCMatrix& chol_update(
+    CSCMatrix& L,
+    int σ,  // TODO use a bool and set the ±1 in the function
+    const CSCMatrix& C,
+    const std::vector<csint>& parent
+)
+{
+    assert(L.shape()[0] == C.shape()[0]);
+    assert(C.shape()[1] == 1);  // C must be a column vector
+
+    double α,
+           β = 1.0,
+           β2 = 1.0,
+           δ,
+           γ;
+
+    std::vector<double> w(L.shape()[0]);  // sparse accumulator workspace
+
+    // Find the minimum row index in the update vector
+    csint p = C.p_[0];
+    csint f = C.i_[p];
+    for (; p < C.p_[1]; p++) {
+        f = std::min(f, C.i_[p]);
+        w[C.i_[p]] = C.v_[p];   // also scatter C into w
+    }
+
+    // Walk path f up to root
+    for (csint j = f; j != -1; j = parent[j]) {
+        p = L.p_[j];
+        α = w[j] / L.v_[p];  // α = w(j) / L(j, j)
+        β2 = β*β + σ * α*α;
+        if (β2 <= 0) {
+            throw std::runtime_error("Matrix not positive definite!");
+        }
+        β2 = std::sqrt(β2);
+        δ = (σ > 0) ? (β / β2) : (β2 / β);
+        γ = σ * α / (β2 * β);
+        L.v_[p] = δ * L.v_[p] + ((σ > 0) ? (γ * w[j]) : 0.0);
+        β = β2;
+        for (p++; p < L.p_[j+1]; p++) {
+            double w1 = w[L.i_[p]];
+            double w2 = w1 - α * L.v_[p];
+            w[L.i_[p]] = w2;
+            L.v_[p] = δ * L.v_[p] + γ * ((σ > 0) ? w1 : w2);
+        }
+    }
+
+    return L;
+}
+
+
 } // namespace cs
 
 /*==============================================================================

@@ -341,6 +341,12 @@ class CSCMatrix
         std::vector<csint> chol_colcounts() const;
 
         friend CSCMatrix chol(const CSCMatrix& A, const Symbolic& S);
+        friend CSCMatrix& chol_update(
+            CSCMatrix& L,
+	        int sigma,
+	        const CSCMatrix& w,
+	        const std::vector<csint>& parent
+        );
 
         // ---------- Other
         void print_dense(std::ostream& os=std::cout) const;

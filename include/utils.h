@@ -148,9 +148,9 @@ void print_dense_vec(
         os << indent;  // indent
         for (csint j = 0; j < N; j++) {
             if (order == 'F') {
-                os << A[i + j*M] << indent;  // print in column-major order
+                os << std::setw(6) << std::setprecision(4) << A[i + j*M] << indent;  // print in column-major order
             } else {
-                os << A[i*N + j] << indent;  // print in row-major order
+                os << std::setw(6) << std::setprecision(4) << A[i*N + j] << indent;  // print in row-major order
             }
         }
         os << std::endl;

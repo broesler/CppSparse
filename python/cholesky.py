@@ -286,33 +286,33 @@ def chol_updown(L, w, update=True):
     L = np.ascontiguousarray(L).copy()
     w = np.ascontiguousarray(w).copy()
 
-    beta = 1
+    β = 1
     N = L.shape[0]
-    sigma = 1 if update else -1
+    σ = 1 if update else -1
 
     if N == 1:
-        L = np.sqrt(L*L.T + sigma*w*w.T)
+        L = np.sqrt(L*L.T + σ * w*w.T)
         return L, w
 
     for k in range(N):
-        alpha = w[k] / L[k, k]
-        beta2 = np.sqrt(beta**2 + sigma*alpha**2)
-        gamma = sigma * alpha / (beta2 * beta)
+        α = w[k] / L[k, k]
+        β2 = np.sqrt(β**2 + σ * α**2)
+        γ = σ * α / (β2 * β)
 
         if update:
-            delta = beta / beta2
-            L[k, k] = delta * L[k, k] + gamma * w[k]
+            δ = β / β2
+            L[k, k] = δ * L[k, k] + γ * w[k]
             w1 = w[k+1:].copy()
-            w[k+1:] -= alpha * L[k+1:, k]
-            L[k+1:, k] = delta * L[k+1:, k] + gamma * w1
+            w[k+1:] -= α * L[k+1:, k]
+            L[k+1:, k] = δ * L[k+1:, k] + γ * w1
         else:  # downdate
-            delta = beta2 / beta
-            L[k, k] = delta * L[k, k]
-            w[k+1:] -= alpha * L[k+1:, k]
-            L[k+1:, k] = delta * L[k+1:, k] + gamma * w[k+1:]
+            δ = β2 / β
+            L[k, k] = δ * L[k, k]
+            w[k+1:] -= α * L[k+1:, k]
+            L[k+1:, k] = δ * L[k+1:, k] + γ * w[k+1:]
 
-        w[k] = alpha
-        beta = beta2
+        w[k] = α
+        β = β2
 
     return L, w
 

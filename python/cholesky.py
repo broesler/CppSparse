@@ -252,7 +252,7 @@ def chol_downdate(L, w):
             raise ValueError("L is not positive definite.")
         β2 = np.sqrt(β**2 - α**2)
         γ = α / (β2 * β)
-        δ = β / β2
+        δ = β2 / β
         L[j, j] = δ * L[j, j]
         w[j] = α
         β = β2
@@ -361,36 +361,47 @@ if __name__ == "__main__":
     row_counts = np.sum(R != 0, 1)
     col_counts = np.sum(R != 0, 0)
 
+    # -------------------------------------------------------------------------
+    #         Test Algorithms
+    # -------------------------------------------------------------------------
+    tol = 1e-15  # testing tolerance
+
     # Check that algorithms work
     for L in [R, R_up, R_left, R_left_amp, R_super, R_right]:
-        np.testing.assert_allclose(L @ L.T, A, atol=1e-15)
+        np.testing.assert_allclose(L @ L.T, A, atol=tol)
 
     # Test (up|down)date
     # Generate random update with same sparsity pattern as a column of L
     rng = np.random.default_rng(565656)
-    k = 3
+    k = 2
     idx = np.nonzero(R[:, k])[0]
     w = np.zeros((N,))
-    w[idx] = rng.random(idx.size)
+    # w[idx] = rng.random(idx.size)
+    w[idx] = np.r_[0.1, 0.2, 0.3, 0.4]
 
     wwT = np.outer(w, w)  # == w[:, np.newaxis] @ w[np.newaxis, :]
 
     A_up = A + wwT
 
     L_up, w_up = chol_update(R, w)
-    np.testing.assert_allclose(L_up @ L_up.T, A_up, atol=1e-15)
-    np.testing.assert_allclose(la.solve(R, w), w_up, atol=1e-15)
+    np.testing.assert_allclose(L_up @ L_up.T, A_up, atol=tol)
+    np.testing.assert_allclose(la.solve(R, w), w_up, atol=tol)
 
-    # This function *does* produce the same result as chol_update
     L_upd, w_upd = chol_updown(R, w, update=True)
-    np.testing.assert_allclose(L_upd @ L_upd.T, A_up, atol=1e-15)
-    np.testing.assert_allclose(la.solve(R, w), w_upd, atol=1e-15)
+    np.testing.assert_allclose(L_up, L_upd, atol=tol)
+    np.testing.assert_allclose(L_upd @ L_upd.T, A_up, atol=tol)
+    np.testing.assert_allclose(la.solve(R, w), w_upd, atol=tol)
 
     # Just downdate back to the original matrix!
     A_down = A.copy()  # A_down == A_up - wwT == A
     L_down, w_down = chol_downdate(L_up, w)
-    # np.testing.assert_allclose(L_down @ L_down.T, A_down, atol=1e-15)
-    np.testing.assert_allclose(la.solve(L_up, w), w_down, atol=1e-15)
+    np.testing.assert_allclose(L_down @ L_down.T, A_down, atol=tol)
+    np.testing.assert_allclose(la.solve(L_up, w), w_down, atol=tol)
+
+    L_downd, w_downd = chol_updown(L_up, w, update=False)
+    np.testing.assert_allclose(L_down, L_downd, atol=tol)
+    np.testing.assert_allclose(L_downd @ L_downd.T, A_down, atol=tol)
+    np.testing.assert_allclose(la.solve(L_up, w), w_downd, atol=tol)
 
 # =============================================================================
 # =============================================================================

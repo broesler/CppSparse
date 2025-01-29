@@ -154,8 +154,8 @@ COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
 /*------------------------------------------------------------------------------
  *         Accessors
  *----------------------------------------------------------------------------*/
-csint COOMatrix::nnz() const { return v_.size(); }
-csint COOMatrix::nzmax() const { return v_.capacity(); }
+csint COOMatrix::nnz() const { return i_.size(); }
+csint COOMatrix::nzmax() const { return i_.capacity(); }
 
 Shape COOMatrix::shape() const
 {

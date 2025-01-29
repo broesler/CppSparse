@@ -577,6 +577,17 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         SECTION("Test non-square matrix M > N") {
             transpose_test(A.assign(4, 0, 1.6).compress()); // shape = {5, 4}
         }
+
+        SECTION("Symbolic Transpose") {
+            CSCMatrix C_T = C.T(false);
+
+            auto [M, N] = C.shape();
+
+            REQUIRE(C_T.data().empty());
+            REQUIRE(C.nnz() == C_T.nnz());
+            REQUIRE(M == C_T.shape()[1]);
+            REQUIRE(N == C_T.shape()[0]);
+        }
     }
 
     SECTION("Sort rows/columns") {

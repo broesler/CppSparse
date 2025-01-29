@@ -160,8 +160,8 @@ CSCMatrix& CSCMatrix::realloc(csint nzmax)
 /*------------------------------------------------------------------------------
  *         Accessors
  *----------------------------------------------------------------------------*/
-csint CSCMatrix::nnz() const { return v_.size(); }
-csint CSCMatrix::nzmax() const { return v_.capacity(); }
+csint CSCMatrix::nnz() const { return i_.size(); }
+csint CSCMatrix::nzmax() const { return i_.capacity(); }
 
 Shape CSCMatrix::shape() const
 {

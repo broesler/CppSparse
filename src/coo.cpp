@@ -34,13 +34,15 @@ COOMatrix::COOMatrix() {};
 COOMatrix::COOMatrix(
     const std::vector<double>& v,
     const std::vector<csint>& i,
-    const std::vector<csint>& j
+    const std::vector<csint>& j,
+    csint M,
+    csint N
     )
     : v_(v),
       i_(i),
       j_(j),
-      M_(*std::max_element(i_.begin(), i_.end()) + 1),
-      N_(*std::max_element(j_.begin(), j_.end()) + 1)
+      M_(M ? M : *std::max_element(i_.begin(), i_.end()) + 1),
+      N_(N ? N : *std::max_element(j_.begin(), j_.end()) + 1)
 {
     // Check that all vectors are the same size
     assert(v_.size() == i_.size());
@@ -316,7 +318,7 @@ std::vector<double> COOMatrix::toarray(const char order) const
  */
 COOMatrix COOMatrix::transpose() const
 {
-    return COOMatrix(this->v_, this->j_, this->i_);
+    return COOMatrix(this->v_, this->j_, this->i_, this->N_, this->M_);
 }
 
 

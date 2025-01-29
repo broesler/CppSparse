@@ -373,11 +373,10 @@ if __name__ == "__main__":
     # Test (up|down)date
     # Generate random update with same sparsity pattern as a column of L
     rng = np.random.default_rng(565656)
-    k = 2
+    k = rng.integers(0, N)
     idx = np.nonzero(R[:, k])[0]
     w = np.zeros((N,))
-    # w[idx] = rng.random(idx.size)
-    w[idx] = np.r_[0.1, 0.2, 0.3, 0.4]
+    w[idx] = rng.random(idx.size)
 
     wwT = np.outer(w, w)  # == w[:, np.newaxis] @ w[np.newaxis, :]
 

@@ -38,11 +38,10 @@ assert(parent == parent_');
 assert(post == post_');
 
 % Create update vector
-k = 3;  % arbitrary column index
+k = randi(N);
 idx = find(R(:, k));
 w = zeros(N, 1);
-% w(idx) = rand(length(idx), 1);
-w(idx) = [0.1, 0.2, 0.3, 0.4];
+w(idx) = rand(length(idx), 1);
 
 % Update the Cholesky factor
 A_up = A + w*w';

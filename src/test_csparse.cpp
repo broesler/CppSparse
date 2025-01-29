@@ -2204,9 +2204,9 @@ TEST_CASE("Cholesky decomposition")
     SECTION("Elimination Tree") {
         std::vector<csint> expect_A = {5, 2, 7, 5, 7, 6, 8, 9, 9, 10, -1};
         std::vector<csint> expect_ATA = {3, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1};
-        REQUIRE(A.etree() == expect_A);
-        REQUIRE(A.etree(true) == expect_ATA);
-        REQUIRE((A.T() * A).to_canonical().etree() == A.etree(true));
+        REQUIRE(etree(A) == expect_A);
+        REQUIRE(etree(A, true) == expect_ATA);
+        REQUIRE(etree((A.T() * A).to_canonical()) == etree(A, true));
     }
 
     SECTION("Reachability of Elimination Tree") {
@@ -2225,16 +2225,16 @@ TEST_CASE("Cholesky decomposition")
             {10, {9, 7, 2, 4, 8, 6}},
         };
 
-        std::vector<csint> parent = A.etree();
+        std::vector<csint> parent = etree(A);
 
         for (const auto& [key, expect] : expect_map) {
-            std::vector<csint> xi = A.ereach(key, parent);
+            std::vector<csint> xi = ereach(A, key, parent);
             REQUIRE_THAT(xi, UnorderedEquals(expect));
         }
     }
 
     SECTION("Post-order of Elimination Tree") {
-        std::vector<csint> parent = A.etree();
+        std::vector<csint> parent = etree(A);
         std::vector<csint> expect = {1, 2, 4, 7, 0, 3, 5, 6, 8, 9, 10};
         std::vector<csint> postorder = post(parent);
         REQUIRE(postorder == expect);
@@ -2243,7 +2243,7 @@ TEST_CASE("Cholesky decomposition")
     SECTION("First descendants and levels") {
         std::vector<csint> expect_firsts = {4, 0, 0, 5, 2, 4, 4, 0, 4, 0, 0};
         std::vector<csint> expect_levels = {5, 4, 3, 5, 3, 4, 3, 2, 2, 1, 0};
-        std::vector<csint> parent = A.etree();
+        std::vector<csint> parent = etree(A);
         auto [firsts, levels] = firstdesc(parent, post(parent));
         REQUIRE(firsts == expect_firsts);
         REQUIRE(levels == expect_levels);
@@ -2251,12 +2251,12 @@ TEST_CASE("Cholesky decomposition")
 
     SECTION("Rowcounts of L") {
         std::vector<csint> expect = {1, 1, 2, 1, 1, 3, 3, 4, 3, 7, 7};
-        REQUIRE(A.chol_rowcounts() == expect);
+        REQUIRE(chol_rowcounts(A) == expect);
     }
 
     SECTION("Column counts of L") {
         std::vector<csint> expect = {3, 3, 4, 3, 3, 4, 4, 3, 3, 2, 1};
-        REQUIRE(A.chol_colcounts() == expect);
+        REQUIRE(chol_colcounts(A) == expect);
     }
 
     SECTION("Symbolic factorization") {
@@ -2265,12 +2265,12 @@ TEST_CASE("Cholesky decomposition")
         std::vector<csint> expect_p_inv(A.shape()[1]);
         std::iota(expect_p_inv.begin(), expect_p_inv.end(), 0);
 
-        auto c = A.chol_colcounts();
+        auto c = chol_colcounts(A);
         csint expect_nnz = std::accumulate(c.begin(), c.end(), 0);
 
         REQUIRE(S.p_inv == expect_p_inv);
-        REQUIRE(S.parent == A.etree());
-        REQUIRE(S.cp == cumsum(A.chol_colcounts()));
+        REQUIRE(S.parent == etree(A));
+        REQUIRE(S.cp == cumsum(chol_colcounts(A)));
         REQUIRE(S.cp.back() == expect_nnz);
         REQUIRE(S.lnz == expect_nnz);
         REQUIRE(S.unz == expect_nnz);

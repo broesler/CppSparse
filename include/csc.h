@@ -273,6 +273,8 @@ class CSCMatrix
         //----------------------------------------------------------------------
         //        Triangular Matrix Solutions
         //----------------------------------------------------------------------
+        // TODO make all of these solve and decomposition functions into
+        // non-member friend functions? We could do the same with the gaxpys.
         std::vector<double>  lsolve(const std::vector<double>& b) const;
         std::vector<double> ltsolve(const std::vector<double>& b) const;
         std::vector<double>  usolve(const std::vector<double>& b) const;
@@ -320,27 +322,30 @@ class CSCMatrix
         //----------------------------------------------------------------------
         //        Cholesky Decomposition
         //----------------------------------------------------------------------
-        std::vector<csint> etree(bool ata=false) const;
-        std::vector<csint> ereach(
+        friend std::vector<csint> etree(const CSCMatrix& A, bool ata);
+        friend std::vector<csint> ereach(
+            const CSCMatrix& A,
             csint k,
             const std::vector<csint>& parent
-        ) const;
+        );
 
-        std::vector<csint> rowcnt(
+        friend std::vector<csint> rowcnt(
+            const CSCMatrix& A,
             const std::vector<csint>& parent,
             const std::vector<csint>& postorder
-        ) const;
+        );
 
-        std::vector<csint> counts(
+        friend std::vector<csint> counts(
+            const CSCMatrix& A,
             const std::vector<csint>& parent,
             const std::vector<csint>& postorder
-        ) const;
+        );
 
-        // TODO make non-member functions?
-        std::vector<csint> chol_rowcounts() const;
-        std::vector<csint> chol_colcounts() const;
+        friend std::vector<csint> chol_rowcounts(const CSCMatrix& A);
+        friend std::vector<csint> chol_colcounts(const CSCMatrix& A);
 
         friend CSCMatrix chol(const CSCMatrix& A, const Symbolic& S);
+
         friend CSCMatrix& chol_update(
             CSCMatrix& L,
 	        int sigma,
@@ -376,41 +381,6 @@ CSCMatrix operator*(const CSCMatrix& A, const double c);
 CSCMatrix operator*(const double c, const CSCMatrix& A);
 
 std::ostream& operator<<(std::ostream& os, const CSCMatrix& A);
-
-/*------------------------------------------------------------------------------
- *          Cholesky Decomposition Helpers
- *----------------------------------------------------------------------------*/
-enum class LeafStatus {
-    NotLeaf,
-    FirstLeaf,
-    SubsequentLeaf
-};
-
-std::vector<csint> post(const std::vector<csint>& parent);
-
-void tdfs(
-    csint j,
-    std::vector<csint>& head,
-    const std::vector<csint>& next,
-    std::vector<csint>& postorder
-);
-
-// NOTE firstdesc and rowcnt are *not* officially part of CSparse, but are in
-// the book for demonstrative purposes.
-std::pair<std::vector<csint>, std::vector<csint>> firstdesc(
-    const std::vector<csint>& parent,
-    const std::vector<csint>& post
-);
-
-// See: cs_leaf
-std::pair<csint, LeafStatus> least_common_ancestor(
-    csint i,
-    csint j,
-    const std::vector<csint>& first,
-    std::vector<csint>& maxfirst,
-    std::vector<csint>& prevleaf,
-    std::vector<csint>& ancestor
-);
 
 
 }  // namespace cs

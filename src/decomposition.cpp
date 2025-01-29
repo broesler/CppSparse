@@ -14,6 +14,412 @@
 
 namespace cs {
 
+/*------------------------------------------------------------------------------
+ *         Cholesky Decomposition
+ *----------------------------------------------------------------------------*/
+/** Compute the elimination tree of A.
+  *
+  * @param ata  if True, compute the elimination tree of A^T A
+  *
+  * @return parent  the parent vector of the elimination tree
+  */
+std::vector<csint> etree(const CSCMatrix& A, bool ata)
+{
+    std::vector<csint> parent(A.N_, -1);  // parent of i is parent[i]
+    std::vector<csint> ancestor(A.N_, -1);  // workspaces
+    std::vector<csint> prev = ata ? std::vector<csint>(A.M_, -1) : std::vector<csint>();
+
+    for (csint k = 0; k < A.N_; k++) {
+        for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
+            csint i = ata ? prev[A.i_[p]] : A.i_[p];  // A(i, k) is nonzero
+            while (i != -1 && i < k) {      // only use upper triangular of A
+                csint inext = ancestor[i];  // traverse up to the root
+                ancestor[i] = k;            // path compression
+                if (inext == -1) {
+                    parent[i] = k;          // no ancestor
+                }
+                i = inext;
+            }
+            if (ata) {
+                prev[A.i_[p]] = k;  // use prev for A^T
+            }
+        }
+    }
+
+    return parent;
+}
+
+
+/** Compute the reachability set for the *k*th row of *L*, the Cholesky faxtcor
+ * of this matrix.
+ *
+ * @param k  the row index
+ * @param parent  the parent vector of the elimination tree
+ *
+ * @return xi  the reachability set of the *k*th row of *L* in topological order
+ */
+std::vector<csint> ereach(
+    const CSCMatrix& A,
+    csint k,
+    const std::vector<csint>& parent
+)
+{
+    std::vector<bool> marked(A.N_, false);  // workspace
+    std::vector<csint> s, xi;  // internal dfs stack, output stack
+    s.reserve(A.N_);
+    xi.reserve(A.N_);
+
+    marked[k] = true;  // mark node k as visited
+
+    for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
+        csint i = A.i_[p];  // A(i, k) is nonzero
+        if (i <= k) {     // only consider upper triangular part of A
+            // Traverse up the etree
+            while (!marked[i]) {
+                s.push_back(i);  // L(k, i) is nonzero
+                marked[i] = true;  // mark i as visited
+                i = parent[i]; 
+            }
+
+            // Push path onto output stack
+            while (!s.empty()) {
+                xi.push_back(s.back());
+                s.pop_back();
+            }
+        }
+    }
+
+    // Reverse the stack to get the topological order
+    return std::vector<csint>(xi.rbegin(), xi.rend());
+}
+
+
+/** Post-order a tree non-recursively.
+ *
+ * @param parent  the parent vector of the elimination tree
+ *
+ * @return post  the post-order of the elimination tree
+ */
+std::vector<csint> post(const std::vector<csint>& parent)
+{
+    const csint N = parent.size();
+
+    std::vector<csint> postorder;  // postorder of elimination tree
+    postorder.reserve(N);
+
+    // Linked list representation of the children of each node in ascending
+    // order of node number. 
+    //   head[i] is the first child of node i. 
+    //   next[j] is the next child of node j.
+    std::vector<csint> head(N, -1);
+    std::vector<csint> next(N);
+
+    // Traverse nodes in reverse order
+    for (csint j = N - 1; j >= 0; j--) {
+        if (parent[j] != -1) {           // only operate on non-roots
+            next[j] = head[parent[j]];   // add j to list of its parent
+            head[parent[j]] = j;
+        }
+    }
+
+    // Search from each root
+    for (csint j = 0; j < N; j++) {
+        if (parent[j] == -1) {  // only search from roots
+            tdfs(j, head, next, postorder);
+        }
+    }
+
+    assert(postorder.size() == N);
+    postorder.shrink_to_fit();
+
+    return postorder;
+}
+
+
+/** Depth-first search in a tree.
+ *
+ * @param j  the starting node
+ * @param[in,out] head  the head of the linked list
+ * @param next  the next vector of the linked list
+ * @param[in,out] postorder  the post-order of the elimination tree
+ */
+void tdfs(
+    csint j,
+    std::vector<csint>& head,
+    const std::vector<csint>& next,
+    std::vector<csint>& postorder
+)
+{
+    std::vector<csint> stack;
+    stack.push_back(j);              // place j on stack
+
+    while (!stack.empty()) {
+        csint p = stack.back();      // p = top of stack
+        csint i = head[p];           // i = youngest child of p
+        if (i == -1) {
+            stack.pop_back();        // p has no unordered children left
+            postorder.push_back(p);  // node p is the kth node in postorder
+        } else {
+            head[p] = next[i];       // remove i from children of p
+            stack.push_back(i);      // start dfs on child node i
+        }
+    }
+}
+
+
+/** Find the first descendent of a node in a tree.
+ *
+ * @note The *first descendent* of a node `j` is the smallest postordering of
+ * any descendant of `j`.
+ *
+ * @param parent  the parent vector of the elimination tree
+ * @param post  the post-order of the elimination tree
+ *
+ * @return first  the first descendent of each node in the tree
+ * @return level  the level of each node in the tree
+ */
+std::pair<std::vector<csint>, std::vector<csint>> firstdesc(
+    const std::vector<csint>& parent,
+    const std::vector<csint>& post
+)
+{
+    assert(parent.size() == post.size());
+    const csint N = parent.size();
+
+    std::vector<csint> first(N, -1);
+    std::vector<csint> level(N);
+
+    for (csint k = 0; k < N; k++) {
+        csint i = post[k];  // node i of etree is kth postordered node
+        csint len = 0;      // traverse from i to root 
+        csint r = i;
+        while (r != -1 && first[r] == -1) {
+            first[r] = k;
+            r = parent[r];
+            len++;
+        }
+        len += (r == -1) ? -1 : level[r];  // r is root of tree or end of path
+        for (csint s = i; s != r; s = parent[s]) {
+            level[s] = len--;
+        }
+    }
+
+    return std::make_pair(first, level);
+}
+
+
+/** Count the number of non-zeros in each row of the Cholesky factor L of A.
+ *
+ * @param parent  the parent vector of the elimination tree
+ * @param postorder  the post-order of the elimination tree
+ *
+ * @return rowcount  the number of non-zeros in each row of L
+ */
+std::vector<csint> rowcnt(
+    const CSCMatrix& A,
+    const std::vector<csint>& parent,
+    const std::vector<csint>& postorder
+)
+{
+    assert(A.M_ == A.N_);
+    assert(parent.size() == A.N_);
+    assert(parent.size() == postorder.size());
+
+    // Count of nonzeros in each row of L
+    std::vector<csint> rowcount(A.N_, 1);   // count the diagonal to start
+
+    std::vector<csint> ancestor(A.N_);  // every node is its own ancestor
+    std::iota(ancestor.begin(), ancestor.end(), 0);
+
+    std::vector<csint> maxfirst(A.N_, -1);  // max first[i] for nodes in subtree of i
+    std::vector<csint> prevleaf(A.N_, -1);  // previous leaf of ith row subtree
+
+    auto [first, level] = firstdesc(parent, postorder);
+
+    for (const auto& j : postorder) {  // j is the kth node in postorder
+        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            csint i = A.i_[p];  // A(i, j) is nonzero, consider ith row subtree
+            auto [q, jleaf] = least_common_ancestor(i, j, first, maxfirst, prevleaf, ancestor);
+            if (jleaf != LeafStatus::NotLeaf) {
+                rowcount[i] += (level[j] - level[q]);
+            }
+        }
+
+        // Merge j into the ancestor set containing j's parent
+        if (parent[j] != -1) {
+            ancestor[j] = parent[j];
+        }
+    }
+
+    return rowcount;
+}
+
+
+/** Compute the least common ancestor of j_prev and j, if j is a leaf of the ith
+ * row subtree.
+ *
+ * @param i  the row index
+ * @param j  the column index
+ * @param first  the first descendant of each node in the tree
+ * @param maxfirst  the maximum first descendant of each node in the tree
+ * @param prevleaf  the previous leaf of each node in the tree
+ * @param ancestor  the ancestor of each node in the tree
+ *
+ * @return q lca(jprev, j)
+ * @return jleaf  the leaf status of j:
+ *                  0 (not a leaf), 1 (first leaf), 2 (subsequent leaf)
+ */
+std::pair<csint, LeafStatus> least_common_ancestor(
+    csint i,
+    csint j,
+    const std::vector<csint>& first,
+    std::vector<csint>& maxfirst,
+    std::vector<csint>& prevleaf,
+    std::vector<csint>& ancestor
+)
+{
+    LeafStatus jleaf;
+
+    // See "skeleton" function in Davis, p 48.
+    if (i <= j || first[j] <= maxfirst[i]) {  // j is not a leaf
+        return std::make_pair(-1, LeafStatus::NotLeaf);
+    }
+
+    maxfirst[i] = first[j];         // update max first[j] seen so far
+    csint jprev = prevleaf[i];      // jprev is the previous leaf of i
+    prevleaf[i] = j;                // j is now the previous leaf of i
+    jleaf = (jprev == -1) ? LeafStatus::FirstLeaf : LeafStatus::SubsequentLeaf;
+
+    if (jleaf == LeafStatus::FirstLeaf) {
+        return std::make_pair(i, jleaf);  // if j is the first leaf, q = root of ith subtree
+    }
+
+    // Traverse up to the root of the subtree to find q
+    csint q = jprev;
+    while (q != ancestor[q]) {
+        q = ancestor[q];
+    }
+
+    // Compress the path to the root
+    csint s = jprev;
+    while (s != q) {
+        csint sparent = ancestor[s];  // path compression
+        ancestor[s] = q;
+        s = sparent;
+    }
+
+    return std::make_pair(q, jleaf);  // least common ancestor of j_prev and j
+}
+
+
+// TODO include option to count columns in ATA -> not needed until we implement
+// symbolic QR decomposition.
+/** Count the number of non-zeros in each column of the Cholesky factor L of A.
+ *
+ * @param parent  the parent vector of the elimination tree
+ * @param postorder  the post-order of the elimination tree
+ *
+ * @return colcount  the number of non-zeros in each column of L
+ */
+std::vector<csint> counts(
+    const CSCMatrix& A,
+    const std::vector<csint>& parent,
+    const std::vector<csint>& postorder
+)
+{
+    std::vector<csint> delta(A.N_);  // allocate the result
+
+    // Workspaces
+    std::vector<csint> ancestor(A.N_),
+                       maxfirst(A.N_, -1),  // max first[i] for nodes in subtree of i
+                       prevleaf(A.N_, -1),  // previous leaf of ith row subtree
+                       first(A.N_, -1);     // first descendant of each node in the tree
+
+    // every node is its own ancestor
+    std::iota(ancestor.begin(), ancestor.end(), 0);
+
+    // Compute first descendent of each node in the tree
+    for (csint k = 0; k < A.N_; k++) {
+        csint j = postorder[k];  // node j of etree is kth postordered node
+        delta[j] = (first[j] == -1) ? 1 : 0;  // delta[j] = 1 if j is a leaf
+        while (j != -1 && first[j] == -1) {
+            first[j] = k;   // first descendant of j
+            j = parent[j];  // move up the etree
+        }
+    }
+
+    // Operate on the transpose
+    bool values = false;  // do not copy values in the transpose
+    CSCMatrix AT = A.transpose(values);
+
+    for (csint k = 0; k < A.N_; k++) {
+        csint j = postorder[k];  // node j of etree is kth postordered node
+        if (parent[j] != -1) {
+            delta[parent[j]]--;  // j is not a root
+        }
+
+        for (csint p = AT.p_[j]; p < AT.p_[j+1]; p++) {
+            csint i = AT.i_[p];  // AT(i, j) is nonzero
+            auto [q, jleaf] = least_common_ancestor(i, j, first, maxfirst, prevleaf, ancestor);
+            if (jleaf != LeafStatus::NotLeaf) {
+                delta[j]++;  // A(i, j) is in skeleton
+            }
+            if (jleaf == LeafStatus::SubsequentLeaf) {
+                delta[q]--;  // account for overlap in q
+            }
+        }
+
+        // Merge j into the ancestor set containing j's parent
+        if (parent[j] != -1) {
+            ancestor[j] = parent[j];
+        }
+    }
+
+    // sum up the counts for each child
+    for (csint j = 0; j < A.N_; j++) {
+        if (parent[j] != -1) {
+            delta[parent[j]] += delta[j];
+        }
+    }
+
+    return delta;
+}
+
+
+/** Count the number of non-zeros in each row of the Cholesky factor L of A.
+  *
+  * @return rowcount  the number of non-zeros in each row of L
+  */
+std::vector<csint> chol_rowcounts(const CSCMatrix& A)
+{
+    // Compute the elimination tree of A
+    std::vector<csint> parent = etree(A);
+
+    // Compute the post-order of the elimination tree
+    std::vector<csint> postorder = post(parent);
+
+    // Count the number of non-zeros in each row of L
+    return rowcnt(A, parent, postorder);
+}
+
+
+/** Count the number of non-zeros in each column of the Cholesky factor L of A.
+  *
+  * @return colcount  the number of non-zeros in each column of L
+  */
+std::vector<csint> chol_colcounts(const CSCMatrix& A)
+{
+    // Compute the elimination tree of A
+    std::vector<csint> parent = etree(A);
+
+    // Compute the post-order of the elimination tree
+    std::vector<csint> postorder = post(parent);
+
+    // Count the number of non-zeros in each column of L
+    return counts(A, parent, postorder);
+}
+
+
 /** Compute the symbolic Cholesky factorization of a sparse matrix.
  *
  * @note This function assumes that `A` is symmetric and positive definite.
@@ -49,9 +455,9 @@ Symbolic symbolic_cholesky(const CSCMatrix& A, AMDOrder order)
 
     // Find pattern of Cholesky factor
     CSCMatrix C = A.symperm(S.p_inv, false);  // C = spones(triu(A(p, p)))
-    S.parent = C.etree();                     // compute the elimination tree
+    S.parent = etree(C);                     // compute the elimination tree
     auto postorder = post(S.parent);          // postorder the elimination tree
-    auto c = C.counts(S.parent, postorder);   // find column counts of L
+    auto c = counts(C, S.parent, postorder);   // find column counts of L
     S.cp = cumsum(c);                         // find column pointers for L
     S.lnz = S.unz = S.cp.back();              // number of non-zeros in L and U
 
@@ -85,7 +491,7 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
     // Compute L(:, k) for L*L' = C
     for (csint k = 0; k < N; k++) {
         //--- Nonzero pattern of L(:, k) ---------------------------------------
-        const std::vector<csint> s = C.ereach(k, S.parent);  // pattern of L(k, :)
+        const std::vector<csint> s = ereach(C, k, S.parent);  // pattern of L(k, :)
         x[k] = 0.0;  // x(0:k) is now zero
 
         // scatter into x = full(triu(C(:,k)))

@@ -20,24 +20,14 @@ namespace cs {
  *----------------------------------------------------------------------------*/
 COOMatrix::COOMatrix() {};
 
-/** Construct a COOMatrix from arrays of values and coordinates.
- *
- * The entries are *not* sorted in any order, and duplicates are allowed. Any
- * duplicates will be summed.
- *
- * The matrix shape `(M, N)` will be inferred from the maximum indices given.
- *
- * @param v the values of the entries in the matrix
- * @param i, j the non-negative integer row and column indices of the values
- * @return a new COOMatrix object
- */
+
 COOMatrix::COOMatrix(
     const std::vector<double>& v,
     const std::vector<csint>& i,
     const std::vector<csint>& j,
     csint M,
     csint N
-    )
+)
     : v_(v),
       i_(i),
       j_(j),
@@ -51,11 +41,6 @@ COOMatrix::COOMatrix(
 }
 
 
-/** Allocate a COOMatrix for a given shape and number of non-zeros.
- *
- * @param M, N  integer dimensions of the rows and columns
- * @param nzmax integer capacity of space to reserve for non-zeros
- */
 COOMatrix::COOMatrix(csint M, csint N, csint nzmax)
     : M_(M),
       N_(N) 
@@ -66,13 +51,6 @@ COOMatrix::COOMatrix(csint M, csint N, csint nzmax)
 }
 
 
-/** Convert a CSCMatrix to a COOMatrix, like Matlab's `find`.
- *
- * @see CSCMatrix::tocoo(), cs_find (Davis, Exercise 2.2)
- *
- * @param A a CSCMatrix.
- * @return C the equivalent matrix in triplet form.
- */
 COOMatrix::COOMatrix(const CSCMatrix& A)
     : v_(A.nnz()),
       i_(A.nnz()),
@@ -92,14 +70,6 @@ COOMatrix::COOMatrix(const CSCMatrix& A)
 }
 
 
-/** Read a COOMatrix matrix from a file.
- *
- * The file is expected to be in "triplet format" `(i, j, v)`, where `(i, j)`
- * are the index coordinates, and `v` is the value to be assigned.
- *
- * @param fp    a reference to the file stream.
- * @throws std::runtime_error if file format is not in triplet format
- */
 COOMatrix::COOMatrix(std::istream& fp)
 {
     csint i, j;
@@ -119,14 +89,6 @@ COOMatrix::COOMatrix(std::istream& fp)
 }
 
 
-/** Create a random sparse matrix.
- *
- * @param M, N  the dimensions of the matrix
- * @param density  the fraction of non-zero elements
- * @param seed  the random seed
- *
- * @return a random sparse matrix
- */
 COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
 {
     csint nzmax = M * N * density;
@@ -152,7 +114,7 @@ COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
 
 
 /*------------------------------------------------------------------------------
- *         Accessors
+ *         Setters and Getters
  *----------------------------------------------------------------------------*/
 csint COOMatrix::nnz() const { return i_.size(); }
 csint COOMatrix::nzmax() const { return i_.capacity(); }
@@ -167,23 +129,7 @@ const std::vector<csint>& COOMatrix::column() const { return j_; }
 const std::vector<double>& COOMatrix::data() const { return v_; }
 
 
-/** Assign a value to a pair of indices.
- *
- * Note that there is no argument checking other than for positive indices.
- * Assigning to an index that is outside of the dimensions of the matrix will
- * just increase the size of the matrix accordingly.
- *
- * Duplicate entries are also allowed to ease incremental construction of
- * matrices from files, or, e.g., finite element applications. Duplicates will be
- * summed upon compression to sparse column/row form.
- *
- * @param i, j  integer indices of the matrix
- * @param v     the value to be assigned
- *
- * @return A    a reference to itself for method chaining.
- *
- * @see cs_entry Davis p 12.
- */
+// cs_entry
 COOMatrix& COOMatrix::assign(csint i, csint j, double v)
 {
     assert((i >= 0) && (j >= 0));
@@ -202,17 +148,7 @@ COOMatrix& COOMatrix::assign(csint i, csint j, double v)
 }
 
 
-/** Assign a dense submatrix to vectors of indices.
- *
- * See: Davis, Exercise 2.5.
- *
- * @param i, j  vectors of integer indices of length `N`.
- * @param v     dense submatrix of size `N`-by-`N`, in column-major order.
- *
- * @return A    a reference to itself for method chaining.
- *
- * @see cs_entry Davis p 12.
- */
+// Exercise 2.5
 COOMatrix& COOMatrix::assign(
     std::vector<csint> rows,
     std::vector<csint> cols,
@@ -238,12 +174,9 @@ COOMatrix& COOMatrix::assign(
 }
 
 
-/** Convert a coordinate format matrix to a compressed sparse column matrix.
- *
- * The columns are not guaranteed to be sorted, and duplicates are allowed.
- *
- * @return a copy of the `COOMatrix` in CSC format.
- */
+/*------------------------------------------------------------------------------
+ *          Format Conversions 
+ *----------------------------------------------------------------------------*/
 CSCMatrix COOMatrix::compress() const 
 {
     csint nnz_ = nnz();
@@ -269,22 +202,10 @@ CSCMatrix COOMatrix::compress() const
 }
 
 
-/** Create a canonical format CSCMatrix from a COOMatrix.
- *
- * See: Davis, Exercise 2.9
- */
+// Exercise 2.9
 CSCMatrix COOMatrix::tocsc() const { return CSCMatrix(*this); }
 
 
-/** Convert the matrix to a dense array.
- *
- * The array is in column-major order, like Fortran.
- *
- * @param order  the order of the array, either 'C' or 'F' for row-major or
- *        column-major order.
- *
- * @return a copy of the matrix as a dense array.
- */
 std::vector<double> COOMatrix::toarray(const char order) const
 {
     std::vector<double> arr(M_ * N_, 0.0);
@@ -308,14 +229,9 @@ std::vector<double> COOMatrix::toarray(const char order) const
 
 
 /*------------------------------------------------------------------------------
-       Math Operations
-----------------------------------------------------------------------------*/
-/** Transpose the matrix as a copy.
- *
- * See: Davis, Exercise 2.6.
- *
- * @return new COOMatrix object with transposed rows and columns.
- */
+ *          Math Operations
+ *----------------------------------------------------------------------------*/
+// Exercise 2.6
 COOMatrix COOMatrix::transpose() const
 {
     return COOMatrix(this->v_, this->j_, this->i_, this->N_, this->M_);
@@ -337,19 +253,15 @@ std::vector<double> COOMatrix::dot(const std::vector<double>& x) const
     return out;
 }
 
+
 // Exercise 2.10
 std::vector<double> operator*(const COOMatrix& A, const std::vector<double>& x)
 { return A.dot(x); }
 
+
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/
-/** Print elements of the matrix between `start` and `end`.
- *
- * @param os          the output stream, defaults to std::cout
- * @param start, end  print the all elements where `p ∈ [start, end]`, counting
- *        column-wise.
- */
 void COOMatrix::print_elems_(std::ostream& os, const csint start, const csint end) const
 {
     for (csint k = start; k < end; k++) {
@@ -358,13 +270,6 @@ void COOMatrix::print_elems_(std::ostream& os, const csint start, const csint en
 }
 
 
-/** Print the matrix
- *
- * @param os          the output stream, defaults to std::cout
- * @param verbose     if True, print all non-zeros and their coordinates
- * @param threshold   if `nnz > threshold`, print only the first and last
- *        3 entries in the matrix. Otherwise, print all entries.
- */
 void COOMatrix::print(std::ostream& os, const bool verbose, const csint threshold) const
 {
     csint nnz_ = nnz();
@@ -385,11 +290,13 @@ void COOMatrix::print(std::ostream& os, const bool verbose, const csint threshol
     }
 }
 
+
 std::ostream& operator<<(std::ostream& os, const COOMatrix& A)
 {
     A.print(os, true);  // verbose printing assumed
     return os;
 }
+
 
 }  // namespace cs
 

@@ -12,7 +12,7 @@
 clear;
 
 Ms = [10, 20, 50, 100, 200, 500, 1000];
-% Ms = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
+% Ms = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
 density = 0.2;
 N_samples = 7;
 
@@ -25,7 +25,7 @@ figure(1); clf; hold on;
 for M = Ms
     disp(['M = ', num2str(M)]);
 
-    A = create_sparse_matrix(M, M, density);
+    A = sprand(M, M, density);
 
     row_times = zeros(N_samples, M);
 
@@ -73,8 +73,8 @@ orient landscape;
 xlabel('Matrix size M');
 ylabel('Time to index row (s)');
 
-saveas(1, './data/row_indexing_distribution.png');
-saveas(2, './data/row_indexing_scaling.png');
+% saveas(1, '../data/row_indexing_distribution.png');
+% saveas(2, '../data/row_indexing_scaling.png');
 
 
 %===============================================================================

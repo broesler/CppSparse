@@ -142,17 +142,17 @@ void tdfs(
 
 std::pair<std::vector<csint>, std::vector<csint>> firstdesc(
     const std::vector<csint>& parent,
-    const std::vector<csint>& post
+    const std::vector<csint>& postorder
 )
 {
-    assert(parent.size() == post.size());
+    assert(parent.size() == postorder.size());
     const csint N = parent.size();
 
     std::vector<csint> first(N, -1);
     std::vector<csint> level(N);
 
     for (csint k = 0; k < N; k++) {
-        csint i = post[k];  // node i of etree is kth postordered node
+        csint i = postorder[k];  // node i of etree is kth postordered node
         csint len = 0;      // traverse from i to root 
         csint r = i;
         while (r != -1 && first[r] == -1) {

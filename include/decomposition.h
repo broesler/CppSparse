@@ -89,7 +89,7 @@ void tdfs(
  */
 std::pair<std::vector<csint>, std::vector<csint>> firstdesc(
     const std::vector<csint>& parent,
-    const std::vector<csint>& post
+    const std::vector<csint>& postorder
 );
 
 /** Compute the least common ancestor of j_prev and j, if j is a leaf of the ith

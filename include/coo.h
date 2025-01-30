@@ -8,8 +8,15 @@
 //
 //==============================================================================
 
-#ifndef _COO_H_
-#define _COO_H_
+#ifndef _CSPARSE_COO_H_
+#define _CSPARSE_COO_H_
+
+#include <iostream>
+#include <string_view>
+#include <vector>
+
+#include "types.h"
+
 
 namespace cs {
 

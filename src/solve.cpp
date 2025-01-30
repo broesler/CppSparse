@@ -7,9 +7,12 @@
  *
  *============================================================================*/
 
+#include <cassert>
 #include <ranges>  // for std::views::reverse
 
-#include "csparse.h"
+#include "solve.h"
+#include "csc.h"
+#include "utils.h"
 
 namespace cs {
 

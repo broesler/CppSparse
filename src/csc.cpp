@@ -8,10 +8,13 @@
  *============================================================================*/
 
 #include <algorithm>  // for std::lower_bound
+#include <cassert>
 #include <cmath>      // for std::fabs
 #include <ranges>     // for std::views::reverse
 
-#include "csparse.h"
+#include "utils.h"
+#include "csc.h"
+#include "coo.h"
 
 namespace cs {
 

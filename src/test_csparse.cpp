@@ -2163,7 +2163,7 @@ TEST_CASE("Permuted triangular solvers")
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
 
         // Solve P L Q x = b
-        const std::vector<double> xt = tri_solve_perm(PLQ, b, false);
+        const std::vector<double> xt = tri_solve_perm(PLQ, b);
         REQUIRE_THAT(is_close(xt, expect, tol), AllTrue());
     }
 

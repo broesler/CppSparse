@@ -7,10 +7,12 @@
  *
  *============================================================================*/
 
+#include <cassert>
 #include <cmath>    // std::sqrt
 #include <numeric>  // std::iota
 
-#include "csparse.h"
+#include "decomposition.h"
+#include "utils.h"
 
 namespace cs {
 

@@ -7,8 +7,15 @@
 //
 //==============================================================================
 
-#ifndef _CSC_H_
-#define _CSC_H_
+#ifndef _CSPARSE_CSC_H_
+#define _CSPARSE_CSC_H_
+
+#include <iostream>
+#include <string_view>
+#include <tuple>
+#include <vector>
+
+#include "types.h"
 
 namespace cs {
 

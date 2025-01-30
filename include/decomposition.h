@@ -7,8 +7,14 @@
 //
 //==============================================================================
 
-#ifndef _DECOMPOSITION_H_
-#define _DECOMPOSITION_H_
+#ifndef _CSPARSE_DECOMPOSITION_H_
+#define _CSPARSE_DECOMPOSITION_H_
+
+#include <tuple>
+#include <vector>
+
+#include "types.h"
+#include "csc.h"
 
 namespace cs {
 

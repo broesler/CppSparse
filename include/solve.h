@@ -7,8 +7,15 @@
 //
 //==============================================================================
 
-#ifdef _SOLVE_H_
-#define _SOLVE_H_
+#ifndef _CSPARSE_SOLVE_H_
+#define _CSPARSE_SOLVE_H_
+
+#include <tuple>
+#include <utility>
+#include <vector>
+
+#include "types.h"
+
 
 namespace cs {
 

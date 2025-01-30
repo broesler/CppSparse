@@ -7,7 +7,12 @@
  *
  *============================================================================*/
 
-#include "csparse.h"
+#include <cassert>
+#include <cmath>
+#include <fstream>
+#include <numeric>
+
+#include "utils.h"
 
 namespace cs {
 

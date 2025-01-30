@@ -7,12 +7,17 @@
 //
 //==============================================================================
 
-#ifndef _UTILS_H_
-#define _UTILS_H_
+#ifndef _CSPARSE_UTILS_H_
+#define _CSPARSE_UTILS_H_
 
-#include <fstream>
+#include <iomanip>
+#include <iostream>
 #include <map>
-#include <numeric>  // std::iota
+#include <numeric>  // std::iota, inner_product, accumulate, partial_sum
+#include <string>
+#include <vector>
+
+#include "types.h"
 
 namespace cs {
 

@@ -8,10 +8,13 @@
  *============================================================================*/
 
 #include <algorithm>  // for std::max_element
+#include <cassert>
 #include <random>
 #include <sstream>  // for std::stringstream
 
-#include "csparse.h"
+#include "utils.h"
+#include "coo.h"
+#include "csc.h"
 
 namespace cs {
 

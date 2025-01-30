@@ -323,20 +323,20 @@ def chol_updown(L, w, update=True):
 if __name__ == "__main__":
     # Create the example matrix A
     N = 11
-    rows = np.r_[np.arange(N),
-                 [5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10]]
-    cols = np.r_[np.arange(N),
-                 [0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9]]
+    # Only off-diagonal elements
+    rows = np.r_[5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10]
+    cols = np.r_[0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9]
     vals = np.ones((rows.size,))
 
     # Values for the lower triangle
     L = sparse.csc_matrix((vals, (rows, cols)), shape=(N, N))
 
-    # Get the sum of the off-diagonal elements to ensure positive definiteness
-    diag_A = np.max(np.sum(L + L.T - 2 * sparse.diags(L.diagonal()), 0))
-
     # Create the symmetric matrix A
-    A = L + sparse.triu(L.T, 1) + diag_A * sparse.eye(N)
+    A = L + L.T
+
+    # Get the sum of the off-diagonal elements to ensure positive definiteness
+    diag_A = np.max(np.sum(L + L.T, axis=0))
+    A.setdiag(1 + diag_A)
 
     A = A.toarray()
 

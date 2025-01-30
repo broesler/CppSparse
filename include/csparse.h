@@ -32,6 +32,7 @@ namespace cs {
 #include "csc.h"
 #include "coo.h"
 #include "decomposition.h"
+#include "solve.h"
 
 
 #endif // _CSPARSE_H_

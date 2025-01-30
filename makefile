@@ -19,7 +19,7 @@ INCL_DIR := include
 OPT := -I$(INCL_DIR)
 
 INCL := $(wildcard $(INCL_DIR)/*.h)
-SRC_BASE := test_csparse utils coo csc decomposition
+SRC_BASE := test_csparse utils coo csc decomposition solve
 SRC := $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(SRC_BASE)))
 OBJ := $(SRC:%.cpp=%.o)
 

@@ -1854,7 +1854,7 @@ TEST_CASE("Test triangular solve with dense RHS")
 
     SECTION("Forward solve L x = b") {
         const std::vector<double> b = {1, 5, 15};  // row sums of L
-        const std::vector<double> x = L.lsolve(b);
+        const std::vector<double> x = lsolve(L, b);
 
         REQUIRE(x.size() == expect.size());
         REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
@@ -1862,7 +1862,7 @@ TEST_CASE("Test triangular solve with dense RHS")
 
     SECTION("Backsolve L.T x = b") {
         const std::vector<double> b = {7, 8, 6};  // row sums of L.T == col sums of L
-        const std::vector<double> x = L.ltsolve(b);
+        const std::vector<double> x = ltsolve(L, b);
 
         REQUIRE(x.size() == expect.size());
         REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
@@ -1870,7 +1870,7 @@ TEST_CASE("Test triangular solve with dense RHS")
 
     SECTION("Backsolve U x = b") {
         const std::vector<double> b = {7, 8, 6};  // row sums of L.T == col sums of L
-        const std::vector<double> x = U.usolve(b);
+        const std::vector<double> x = usolve(U, b);
 
         REQUIRE(x.size() == expect.size());
         REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
@@ -1878,7 +1878,7 @@ TEST_CASE("Test triangular solve with dense RHS")
 
     SECTION("Forward solve U.T x = b") {
         const std::vector<double> b = {1, 5, 15};  // row sums of L
-        const std::vector<double> x = U.utsolve(b);
+        const std::vector<double> x = utsolve(U, b);
 
         REQUIRE(x.size() == expect.size());
         REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
@@ -1919,7 +1919,7 @@ TEST_CASE("Reachability and DFS")
         std::vector<csint> xi;  // do not initialize!
         xi.reserve(N);
 
-        xi = L.dfs(j, marked, xi);
+        xi = dfs(L, j, marked, xi);
 
         REQUIRE(xi == expect);
     }
@@ -1929,7 +1929,7 @@ TEST_CASE("Reachability and DFS")
         B.assign(3, 0, 1.0);
         std::vector<csint> expect = {3, 8, 11, 12, 13};
 
-        std::vector<csint> xi = L.reach(B, 0);
+        std::vector<csint> xi = reach(L, B, 0);
 
         REQUIRE(xi == expect);
     }
@@ -1939,7 +1939,7 @@ TEST_CASE("Reachability and DFS")
         B.assign(3, 0, 1.0).assign(5, 0, 1.0).to_canonical();
         std::vector<csint> expect = {5, 9, 10, 3, 8, 11, 12, 13};
 
-        std::vector<csint> xi = L.reach(B, 0);
+        std::vector<csint> xi = reach(L, B, 0);
 
         REQUIRE(xi == expect);
     }
@@ -1953,7 +1953,7 @@ TEST_CASE("Reachability and DFS")
         std::vector<double> expect(N, 1.0);
 
         // Use structured bindings to unpack the result
-        auto [xi, x] = L.spsolve(B, 0, true);
+        auto [xi, x] = spsolve(L, B, 0, true);
 
         REQUIRE(x == expect);
     }
@@ -1965,7 +1965,7 @@ TEST_CASE("Reachability and DFS")
         std::vector<double> expect = { 0.,  0.,  0.,  1.,  0.,  0.,  0.,  0., -1.,  0.,  0.,  1.,  0.,  0.};
 
         // Use structured bindings to unpack the result
-        auto [xi, x] = L.spsolve(B, 0, true);
+        auto [xi, x] = spsolve(L, B, 0, true);
 
         REQUIRE(x == expect);
     }
@@ -1976,7 +1976,7 @@ TEST_CASE("Reachability and DFS")
 
         std::vector<double> expect = {0., -1.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.};
 
-        auto [xi, x] = U.spsolve(B, 0, false);
+        auto [xi, x] = spsolve(U, B, 0, false);
 
         REQUIRE(x == expect);
     }
@@ -2041,7 +2041,7 @@ TEST_CASE("Permuted triangular solvers")
 
     SECTION("Find diagonals of permuted L") {
         std::vector<csint> expect = {2, 8, 14, 16, 19, 20};
-        std::vector<csint> p_diags = PL.find_lower_diagonals();
+        std::vector<csint> p_diags = find_lower_diagonals(PL);
         CHECK(p_diags == expect);
 
         // Check that we can get the inverse permutation
@@ -2055,7 +2055,7 @@ TEST_CASE("Permuted triangular solvers")
 
     SECTION("Find diagonals of permuted U") {
         std::vector<csint> expect = {0, 2, 5, 6, 13, 15};
-        std::vector<csint> p_diags = PU.find_upper_diagonals();
+        std::vector<csint> p_diags = find_upper_diagonals(PU);
         CHECK(p_diags == expect);
 
         // Check that we can get the inverse permutation
@@ -2069,16 +2069,16 @@ TEST_CASE("Permuted triangular solvers")
 
     SECTION("Find diagonals of non-triangular matrix") {
         const CSCMatrix A = davis_21_coo().tocsc();
-        REQUIRE_THROWS(A.find_lower_diagonals());
-        REQUIRE_THROWS(A.find_upper_diagonals());
-        REQUIRE_THROWS(A.find_tri_permutation());
+        REQUIRE_THROWS(find_lower_diagonals(A));
+        REQUIRE_THROWS(find_upper_diagonals(A));
+        REQUIRE_THROWS(find_tri_permutation(A));
     }
 
     SECTION("Find permutation vectors of permuted L") {
         std::vector<csint> expect_p = inv_permute(p);
         std::vector<csint> expect_q = inv_permute(q);
 
-        auto [p_inv, q_inv, p_diags] = PLQ.find_tri_permutation();
+        auto [p_inv, q_inv, p_diags] = find_tri_permutation(PLQ);
 
         CHECK(p_inv == expect_p);
         CHECK(q_inv == expect_q);
@@ -2091,7 +2091,7 @@ TEST_CASE("Permuted triangular solvers")
         std::vector<csint> expect_q = inv_permute(q);
 
         // NOTE returns *reversed* vectors for an upper triangular matrix!!
-        auto [p_inv, q_inv, p_diags] = PUQ.find_tri_permutation();
+        auto [p_inv, q_inv, p_diags] = find_tri_permutation(PUQ);
         std::reverse(p_inv.begin(), p_inv.end());
         std::reverse(q_inv.begin(), q_inv.end());
 
@@ -2108,11 +2108,11 @@ TEST_CASE("Permuted triangular solvers")
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
 
         // Solve Lx = b
-        const std::vector<double> x = L.lsolve(b);
+        const std::vector<double> x = lsolve(L, b);
         CHECK_THAT(is_close(x, expect, tol), AllTrue());
 
         // Solve PLx = b
-        const std::vector<double> xp = PL.lsolve_rows(b);
+        const std::vector<double> xp = lsolve_rows(PL, b);
 
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
@@ -2124,7 +2124,7 @@ TEST_CASE("Permuted triangular solvers")
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
 
         // Solve L Q.T x = b
-        const std::vector<double> xp = LQ.lsolve_cols(b);
+        const std::vector<double> xp = lsolve_cols(LQ, b);
 
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
@@ -2136,11 +2136,11 @@ TEST_CASE("Permuted triangular solvers")
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
 
         // Solve Ux = b (un-permuted)
-        const std::vector<double> x = U.usolve(b);
+        const std::vector<double> x = usolve(U, b);
         CHECK_THAT(is_close(x, expect, tol), AllTrue());
 
         // Solve PUx = b
-        const std::vector<double> xp = PU.usolve_rows(b);
+        const std::vector<double> xp = usolve_rows(PU, b);
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
 
@@ -2151,7 +2151,7 @@ TEST_CASE("Permuted triangular solvers")
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
 
         // Solve U Q.T x = b
-        const std::vector<double> xp = UQ.usolve_cols(b);
+        const std::vector<double> xp = usolve_cols(UQ, b);
 
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
@@ -2163,7 +2163,7 @@ TEST_CASE("Permuted triangular solvers")
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
 
         // Solve P L Q x = b
-        const std::vector<double> xt = PLQ.tri_solve_perm(b);
+        const std::vector<double> xt = tri_solve_perm(PLQ, b, false);
         REQUIRE_THAT(is_close(xt, expect, tol), AllTrue());
     }
 
@@ -2174,7 +2174,7 @@ TEST_CASE("Permuted triangular solvers")
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
 
         // Solve P U Q x = b
-        std::vector<double> xp = PUQ.tri_solve_perm(b, true);
+        std::vector<double> xp = tri_solve_perm(PUQ, b, true);
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
 }

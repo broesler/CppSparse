@@ -50,11 +50,7 @@ A_up = A + w*w';
 % NOTE that cholupdate expects the *upper* triangular Cholesky factor.
 R_up = cholupdate(R', w, '+')';
 
-% Use the CSparse update function (See Davis, p 63)
-R_ups = chol_update(R, w);
-
 assert(norm(R_up * R_up' - A_up) < 1e-14)
-assert(norm(R_ups * R_ups' - A_up) < 1e-14)
 
 % TODO fails in octave
 % G = graph(A);

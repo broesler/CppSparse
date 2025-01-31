@@ -513,8 +513,9 @@ std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>>
         flag[k] = k;  // mark node k as visited
         // Compute T_k from T_{k-1} by finding the children of node k
         for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
-            // Follow path from node i to the root of the etree, or flagged node
-            for (csint i = A.i_[p]; flag[i] != k && i < k; i = parent[i]) {
+            // For each nonzero in the strict upper triangular part of A,
+            // follow path from node i to the root of the etree, or flagged node
+            for (csint i = A.i_[p]; i < k && flag[i] != k; i = parent[i]) {
                 if (parent[i] == -1) {
                     parent[i] = k;   // the parent of i must be k
                 }

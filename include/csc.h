@@ -948,23 +948,13 @@ class CSCMatrix
         friend std::pair<std::vector<csint>, std::vector<double>> chol_lsolve(
             const CSCMatrix& L,
             const CSCMatrix& b,
-            const std::vector<csint>& parent
-        );
-
-        friend std::pair<std::vector<csint>, std::vector<double>> chol_lsolve(
-            const CSCMatrix& L,
-            const CSCMatrix& b
+            std::vector<csint> parent
         );
 
         friend std::pair<std::vector<csint>, std::vector<double>> chol_ltsolve(
             const CSCMatrix& L,
             const CSCMatrix& b,
-            const std::vector<csint>& parent
-        );
-
-        friend std::pair<std::vector<csint>, std::vector<double>> chol_ltsolve(
-            const CSCMatrix& L,
-            const CSCMatrix& b
+            std::vector<csint> parent
         );
 
         friend std::vector<csint> topological_order(

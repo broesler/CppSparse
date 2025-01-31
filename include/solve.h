@@ -256,25 +256,7 @@ std::vector<csint>& dfs(
 std::pair<std::vector<csint>, std::vector<double>> chol_lsolve(
     const CSCMatrix& L,
     const CSCMatrix& b,
-    const std::vector<csint>& parent
-);
-
-
-/** Solve \f$ Lx = b \f$ with sparse RHS `b`, where `L` is a lower-triangular
- * Cholesky factor, without a given elimination tree.
- *
- * See: Davis, Exercise 4.3.
- *
- * @param L  a lower-triangular matrix from a Cholesky factorization. `L` must
- *        be in canonical format.
- * @param b  a sparse RHS vector, stored as an Nx1 CSCMatrix.
- *
- * @return xi  the row indices of the non-zero entries in `x`.
- * @return x  the solution vector, stored as a dense vector.
- */
-std::pair<std::vector<csint>, std::vector<double>> chol_lsolve(
-    const CSCMatrix& L,
-    const CSCMatrix& b
+    std::vector<csint> parent = {}
 );
 
 
@@ -294,27 +276,8 @@ std::pair<std::vector<csint>, std::vector<double>> chol_lsolve(
 std::pair<std::vector<csint>, std::vector<double>> chol_ltsolve(
     const CSCMatrix& L,
     const CSCMatrix& b,
-    const std::vector<csint>& parent
+    std::vector<csint> parent = {}
 );
-
-
-/** Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is a lower-triangular
- * Cholesky factor, without a given elimination tree.
- *
- * See: Davis, Exercise 4.4.
- *
- * @param L  a lower-triangular matrix from a Cholesky factorization. `L` must
- *        be in canonical format.
- * @param b  a sparse RHS vector, stored as an Nx1 CSCMatrix.
- *
- * @return xi  the row indices of the non-zero entries in `x`.
- * @return x  the solution vector, stored as a dense vector.
- */
-std::pair<std::vector<csint>, std::vector<double>> chol_ltsolve(
-    const CSCMatrix& L,
-    const CSCMatrix& b
-);
-
 
 
 /** Find the topological order of the nodes in the elimination tree.

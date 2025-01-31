@@ -396,8 +396,9 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
 
     // Compute L(:, k) for L*L' = C
     for (csint k = 0; k < N; k++) {
-        //--- Nonzero pattern of L(:, k) ---------------------------------------
-        const std::vector<csint> s = ereach(C, k, S.parent);  // pattern of L(k, :)
+        //--- Nonzero pattern of L(k, :) ---------------------------------------
+        // pattern of L(k, :) in topological order
+        const std::vector<csint> s = ereach(C, k, S.parent);
         x[k] = 0.0;  // x(0:k) is now zero
 
         // scatter into x = full(triu(C(:,k)))
@@ -423,6 +424,8 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
 
             d -= lki * lki;                     // d -= L(k, i) * L(k, i)
 
+            // These pointers are incremented one at a time, guaranteeing that
+            // the columns of L are sorted.
             csint p = c[i]++;
             L.i_[p] = k;                        // store L(k, i) in column i
             L.v_[p] = lki;
@@ -437,6 +440,10 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
         L.i_[p] = k;  // store L(k, k) = sqrt(d) in column k
         L.v_[p] = std::sqrt(d);
     }
+
+    // Guaranteed by construction
+    L.has_sorted_indices_ = true;
+    L.has_canonical_format_ = true;  // L retains numerically 0 entries
 
     return L;
 }

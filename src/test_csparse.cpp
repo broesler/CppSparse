@@ -2316,7 +2316,7 @@ TEST_CASE("Cholesky decomposition")
             CSCMatrix LLT_up = (L_up * L_up.T()).droptol().to_canonical();
             CHECK(LLT_up.nnz() == A_up.nnz());
 
-            compare_noncanonical(LLT_up, A_up, tol);
+            compare_matrices(LLT_up, A_up, tol);
         }
     }
 

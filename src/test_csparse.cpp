@@ -2267,7 +2267,7 @@ TEST_CASE("Cholesky decomposition")
     }
 
     SECTION("Symbolic factorization") {
-        Symbolic S = symbolic_cholesky(A, AMDOrder::Natural);
+        Symbolic S = schol(A, AMDOrder::Natural);
 
         std::vector<csint> expect_p_inv(A.shape()[1]);
         std::iota(expect_p_inv.begin(), expect_p_inv.end(), 0);
@@ -2288,12 +2288,12 @@ TEST_CASE("Cholesky decomposition")
         for (csint i = 0; i < N; i++) {
             A.assign(i, i, 1.0);
         }
-        Symbolic S = symbolic_cholesky(A, AMDOrder::Natural);
+        Symbolic S = schol(A, AMDOrder::Natural);
         CHECK_THROWS(chol(A, S));  // A is not positive definite
     }
 
     SECTION("Numeric factorization") {
-        Symbolic S = symbolic_cholesky(A, AMDOrder::Natural);
+        Symbolic S = schol(A, AMDOrder::Natural);
 
         // Now compute the numeric factorization
         CSCMatrix L = chol(A, S);
@@ -2344,7 +2344,7 @@ TEST_CASE("Cholesky decomposition")
 
     SECTION("Exercise 4.3: Solve Lx = b") {
         // Compute the numeric factorization
-        Symbolic S = symbolic_cholesky(A);
+        Symbolic S = schol(A);
         CSCMatrix L = chol(A, S);
 
         // TODO zero-out a few rows of expect to make it "sparse"
@@ -2370,7 +2370,7 @@ TEST_CASE("Cholesky decomposition")
 
     SECTION("Exercise 4.4: Solve L^T x = b") {
         // Compute the numeric factorization
-        Symbolic S = symbolic_cholesky(A);
+        Symbolic S = schol(A);
         CSCMatrix L = chol(A, S);
 
         // Create RHS for Lx = b

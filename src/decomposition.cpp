@@ -366,7 +366,7 @@ std::vector<csint> chol_colcounts(const CSCMatrix& A)
 }
 
 
-Symbolic symbolic_cholesky(const CSCMatrix& A, AMDOrder order)
+Symbolic schol(const CSCMatrix& A, AMDOrder order)
 {
     Symbolic S;
 

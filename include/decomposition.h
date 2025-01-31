@@ -212,7 +212,7 @@ std::vector<csint> chol_colcounts(const CSCMatrix& A);
  *
  * @see cs_schol
  */
-Symbolic symbolic_cholesky(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
+Symbolic schol(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
 
 /** Compute the up-looking Cholesky factorization of a sparse matrix.
  *

@@ -97,50 +97,6 @@ std::vector<double>& operator*=(std::vector<double>& vec, const double c)
  *          Vector Permutations
  *----------------------------------------------------------------------------*/
 
-/** Compute \f$ x = Pb \f$ where P is a permutation matrix, represented as
- * a vector.
- *
- * @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
- * @param b  vector of data to permute
- *
- * @return x  `x = Pb` the permuted vector, like `x = p(b)` in Matlab.
- */
-std::vector<double> pvec(
-    const std::vector<csint>& p,
-    const std::vector<double>& b
-    )
-{
-    std::vector<double> x(b.size());
-
-    for (csint k = 0; k < b.size(); k++)
-        x[k] = b[p[k]];
-
-    return x;
-}
-
-
-/** Compute \f$ x = P^T b = P^{-1} b \f$ where P is a permutation matrix,
- * represented as a vector.
- *
- * @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
- * @param b  vector of data to permute
- *
- * @return x  `x = Pb` the permuted vector, like `x = p(b)` in Matlab.
- */
-std::vector<double> ipvec(
-    const std::vector<csint>& p,
-    const std::vector<double>& b
-    )
-{
-    std::vector<double> x(b.size());
-
-    for (csint k = 0; k < b.size(); k++)
-        x[p[k]] = b[k];
-
-    return x;
-}
-
-
 /** Compute the inverse (or transpose) of a permutation vector.
  *
  * @note This function is named `cs_pinv` in CSparse, but we have changed the

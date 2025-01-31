@@ -37,12 +37,58 @@ std::vector<double> operator*(const double c, const std::vector<double>& x);
 std::vector<double> operator*(const std::vector<double>& x, const double c);
 std::vector<double>& operator*=(std::vector<double>& x, const double c);
 
-std::vector<double> pvec(const std::vector<csint>& p, const std::vector<double>& b);
-std::vector<double> ipvec(const std::vector<csint>& p, const std::vector<double>& b);
-
 std::vector<csint> inv_permute(const std::vector<csint>& p);
 
 std::vector<csint> cumsum(const std::vector<csint>& w);
+
+
+/*------------------------------------------------------------------------------
+ *          Vector Permutations
+ *----------------------------------------------------------------------------*/
+/** Compute \f$ x = Pb \f$ where P is a permutation matrix, represented as
+ * a vector.
+ *
+ * @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
+ * @param b  vector of data to permute
+ *
+ * @return x  `x = Pb` the permuted vector, like `x = p(b)` in Matlab.
+ */
+template <typename T>
+std::vector<T> pvec(
+    const std::vector<csint>& p,
+    const std::vector<T>& b
+    )
+{
+    std::vector<T> x(b.size());
+
+    for (csint k = 0; k < b.size(); k++)
+        x[k] = b[p[k]];
+
+    return x;
+}
+
+
+/** Compute \f$ x = P^T b = P^{-1} b \f$ where P is a permutation matrix,
+ * represented as a vector.
+ *
+ * @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
+ * @param b  vector of data to permute
+ *
+ * @return x  `x = Pb` the permuted vector, like `x = p(b)` in Matlab.
+ */
+template <typename T>
+std::vector<T> ipvec(
+    const std::vector<csint>& p,
+    const std::vector<T>& b
+    )
+{
+    std::vector<T> x(b.size());
+
+    for (csint k = 0; k < b.size(); k++)
+        x[p[k]] = b[k];
+
+    return x;
+}
 
 
 /*------------------------------------------------------------------------------

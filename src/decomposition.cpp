@@ -494,6 +494,7 @@ CSCMatrix& chol_update(
 
 
 // Exercise 4.1 O(|L|)-time elimination tree and row/column counts
+// Use ereach to compute the elimination tree one node at a time (pp 43--44)
 // TODO make type for the output?
 std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>> 
     chol_etree_counts(const CSCMatrix& A)
@@ -501,31 +502,28 @@ std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>>
     assert(A.M_ == A.N_);
     csint N = A.N_;
     std::vector<csint> parent(N, -1);
-    std::vector<csint> row_counts(N, 1);  // include diagonals
-    std::vector<csint> col_counts(N, 1);
+    std::vector<csint> row_counts(N);
+    std::vector<csint> col_counts(N, 1);  // include diagonals
 
-    // Use ereach to compute the elimination tree one node at a time (pp 43--44)
-    std::vector<bool> marked(N, false);  // workspaces
-
-    // Compute T_k from T_{k-1} by finding the children of node k
     for (csint k = 0; k < N; k++) {
+        // Compute T_k from T_{k-1} by finding the children of node k
         for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
-            marked.assign(N, false);  // reset the marked array
             csint i = A.i_[p];
-            // Traverse up the etree
-            while (i < k && !marked[i]) {
-                marked[i] = true;  // mark i as visited
-
-                row_counts[k]++;   // A[i, k] != 0 => L[k, i] != 0
-                col_counts[i]++;
-
+            // Traverse up the etree from the leaves of the row subtree
+            while (i < k) {
                 // When we find the parent of i, we are done
                 if (parent[i] == -1) {
                     parent[i] = k;   // the parent of i must be k
                 }
-
                 i = parent[i];
             }
+        }
+
+        // Traverse back through the kth row subtree to count the nodes
+        std::vector<csint> xi = ereach(A, k, parent);
+        row_counts[k] = 1 + xi.size();
+        for (const auto& i : xi) {
+            col_counts[i]++;
         }
     }
 

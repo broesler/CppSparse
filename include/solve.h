@@ -240,6 +240,39 @@ std::vector<csint>& dfs(
     std::vector<csint>& xi
 );
 
+/** Solve \f$ Lx = b \f$ with sparse RHS `b`, where `L` is a lower-triangular
+ * Cholesky factor.
+ *
+ * See: Davis, Exercise 4.3.
+ *
+ * @param L  a lower-triangular matrix from a Cholesky factorization. `L` must
+ *        be in canonical format.
+ * @param b  a sparse RHS vector, stored as an Nx1 CSCMatrix.
+ * @param parent  the parent vector of the elimination tree of `L`.
+ *
+ * @return xi  the row indices of the non-zero entries in `x`.
+ * @return x  the solution vector, stored as a dense vector.
+ */
+std::pair<std::vector<csint>, std::vector<double>> chol_spsolve(
+    const CSCMatrix& L,
+    const CSCMatrix& b,
+    const std::vector<csint>& parent
+);
+
+
+/** Find the topological order of the nodes in the elimination tree.
+ *
+ * @param b  a sparse matrix
+ * @param parent  the parent vector of the elimination tree
+ *
+ * @return xi  the row indices of the non-zero entries in `x`, in topological
+ *      order of the graph of `b`.
+ */
+std::vector<csint> topological_order(
+    const CSCMatrix& b,
+    const std::vector<csint>& parent
+);
+
 
 }  // namespace cs
 

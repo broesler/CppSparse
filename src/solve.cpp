@@ -565,6 +565,75 @@ std::vector<csint>& dfs(
 }
 
 
+// Exercise 4.3
+std::pair<std::vector<csint>, std::vector<double>> chol_spsolve(
+    const CSCMatrix& L,
+    const CSCMatrix& b,
+    const std::vector<csint>& parent
+)
+{
+    csint N = L.N_;
+    std::vector<double> x(N);
+
+    // Scatter b into x
+    assert(b.N_ == 1);
+    for (csint p = b.p_[0]; p < b.p_[1]; p++) {
+        x[b.i_[p]] = b.v_[p];
+    }
+
+    // Get the order of the nodes from the elimination tree
+    std::vector<csint> xi = topological_order(b, parent);
+
+    // Solve Lx = b
+    for (const auto& j : xi) {
+        x[j] /= L.v_[L.p_[j]];
+        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
+            x[L.i_[p]] -= L.v_[p] * x[j];
+        }
+    }
+
+    return std::make_pair(xi, x);
+}
+
+
+std::vector<csint> topological_order(
+    const CSCMatrix& b,
+    const std::vector<csint>& parent
+)
+{
+    assert(b.N_ == 1);
+    csint N = b.M_;
+
+    std::vector<bool> marked(N, false);
+    std::vector<csint> s, xi;
+    s.reserve(N);
+    xi.reserve(N);
+
+    // Search up the tree for each non-zero in b
+    for (csint p = b.p_[0]; p < b.p_[1]; p++) {
+        csint i = b.i_[p];
+
+        // Traverse up the elimination tree
+        while (i != -1 && !marked[i]) {
+            s.push_back(i);
+            marked[i] = true;
+            i = parent[i];
+        }
+
+        // Push pash onto output stack
+        while (!s.empty()) {
+            xi.push_back(s.back());
+            s.pop_back();
+        }
+    }
+
+    // Reverse the order of the stack
+    assert(xi.size() == N);
+
+    return std::vector<csint>(xi.rbegin(), xi.rend());
+}
+
+
 }  // namespace cs
 
 /*==============================================================================

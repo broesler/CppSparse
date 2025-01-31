@@ -2290,7 +2290,7 @@ TEST_CASE("Cholesky decomposition")
         }
         Symbolic S = symbolic_cholesky(A, AMDOrder::Natural);
         CHECK_THROWS(chol(A, S));  // A is not positive definite
-        }
+    }
 
     SECTION("Numeric factorization") {
         Symbolic S = symbolic_cholesky(A, AMDOrder::Natural);
@@ -2340,6 +2340,25 @@ TEST_CASE("Cholesky decomposition")
         CHECK(parent == expect_parent);
         CHECK(rowcounts == expect_rowcounts);
         REQUIRE(colcounts == expect_colcounts);
+    }
+
+    SECTION("Exercise 4.3: Solve Lx = b") {
+        // Compute the numeric factorization
+        Symbolic S = symbolic_cholesky(A);
+        CSCMatrix L = chol(A, S);
+
+        // Create RHS for Lx = b
+        std::vector<double> expect(N);
+        std::iota(expect.begin(), expect.end(), 1);
+        const std::vector<double> b_vals = L * expect;
+
+        // Create the sparse RHS matrix
+        CSCMatrix b(b_vals, N, 1);
+
+        // Solve Lx = b
+        auto [xi, x] = chol_spsolve(L, b, S.parent);
+
+        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
     }
 
 }

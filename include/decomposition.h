@@ -19,7 +19,7 @@
 namespace cs {
 
 /*------------------------------------------------------------------------------
- *         Enums 
+ *         Enums
  *----------------------------------------------------------------------------*/
 enum class AMDOrder
 {
@@ -37,7 +37,7 @@ enum class LeafStatus {
 
 
 /*------------------------------------------------------------------------------
- *         Structs 
+ *         Structs
  *----------------------------------------------------------------------------*/
 // See cs_symbolic aka css
 struct Symbolic
@@ -234,14 +234,21 @@ CSCMatrix& chol_update(
  *
  * See: Davis, Exercise 4.1, and pp 43--44.
  *
+ * See: Davis (2005)
+ *  *Algorithm 849: A Concise Sparse Cholesky Factorization Package*
+ *  Figure 1, p 590.
+ *
+ * See: SuiteSparse-7.7.0/LDL/Source/ldl.c
+ *
  * @param A  the matrix to factorize
  *
  * @return parent  the parent vector of the elimination tree
  * @return rowcount  the number of non-zeros in each row of L
  * @return colcount  the number of non-zeros in each column of L
  */
-std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>> 
+std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>>
     chol_etree_counts(const CSCMatrix& A);
+
 
 
 }  // namespace cs

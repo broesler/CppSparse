@@ -502,34 +502,31 @@ std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>>
     assert(A.M_ == A.N_);
     csint N = A.N_;
     std::vector<csint> parent(N, -1);
-    std::vector<csint> row_counts(N);
-    std::vector<csint> col_counts(N, 1);  // include diagonals
+    std::vector<csint> row_counts(N, 1);  // count diagonals
+    std::vector<csint> col_counts(N, 1);
+
+    // Note that we "mark" nodes by setting the flag to the column index k, so
+    // we don't have to reset a bool array each time.
+    std::vector<csint> flag(N, -1);  // workspace
 
     for (csint k = 0; k < N; k++) {
+        flag[k] = k;  // mark node k as visited
         // Compute T_k from T_{k-1} by finding the children of node k
         for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
-            csint i = A.i_[p];
-            // Traverse up the etree from the leaves of the row subtree
-            while (i < k) {
-                // When we find the parent of i, we are done
+            // Follow path from node i to the root of the etree, or flagged node
+            for (csint i = A.i_[p]; flag[i] != k && i < k; i = parent[i]) {
                 if (parent[i] == -1) {
                     parent[i] = k;   // the parent of i must be k
                 }
-                i = parent[i];
+                row_counts[k]++;  // A[i, k] != 0 => L[k, i] != 0
+                col_counts[i]++;
+                flag[i] = k;  // mark node k as visited
             }
-        }
-
-        // Traverse back through the kth row subtree to count the nodes
-        std::vector<csint> xi = ereach(A, k, parent);
-        row_counts[k] = 1 + xi.size();
-        for (const auto& i : xi) {
-            col_counts[i]++;
         }
     }
 
     return std::make_tuple(parent, row_counts, col_counts);
 }
-
 
 } // namespace cs
 

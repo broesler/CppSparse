@@ -2358,7 +2358,13 @@ TEST_CASE("Cholesky decomposition")
         // Solve Lx = b
         auto [xi, x] = chol_spsolve(L, b, S.parent);
 
-        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+        CHECK_THAT(is_close(x, expect, tol), AllTrue());
+
+        // Solve Lx = b, inferring parent from L
+        auto [xi_s, x_s] = chol_spsolve(L, b);
+
+        CHECK(xi == xi_s);
+        REQUIRE_THAT(is_close(x_s, expect, tol), AllTrue());
     }
 
 }

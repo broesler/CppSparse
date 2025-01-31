@@ -596,6 +596,43 @@ std::pair<std::vector<csint>, std::vector<double>> chol_spsolve(
 }
 
 
+// Exercise 4.3
+std::pair<std::vector<csint>, std::vector<double>> chol_spsolve(
+    const CSCMatrix& L,
+    const CSCMatrix& b
+)
+{
+    csint N = L.N_;
+    std::vector<double> x(N);
+
+    // Scatter b into x
+    assert(b.N_ == 1);
+    for (csint p = b.p_[0]; p < b.p_[1]; p++) {
+        x[b.i_[p]] = b.v_[p];
+    }
+
+    // Inspect L to get the parent vector, since it is in canonical format.
+    assert(L.has_canonical_format());
+    std::vector<csint> parent(N, -1);
+    for (csint j = 0; j < N-1; j++) {  // skip the last row (only diagonal)
+        parent[j] = L.i_[L.p_[j]+1];   // first off-diagonal element
+    }
+
+    // Get the order of the nodes from the elimination tree
+    std::vector<csint> xi = topological_order(b, parent);
+
+    // Solve Lx = b
+    for (const auto& j : xi) {
+        x[j] /= L.v_[L.p_[j]];
+        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
+            x[L.i_[p]] -= L.v_[p] * x[j];
+        }
+    }
+
+    return std::make_pair(xi, x);
+}
+
+
 std::vector<csint> topological_order(
     const CSCMatrix& b,
     const std::vector<csint>& parent

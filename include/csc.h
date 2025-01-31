@@ -951,6 +951,11 @@ class CSCMatrix
             const std::vector<csint>& parent
         );
 
+        friend std::pair<std::vector<csint>, std::vector<double>> chol_spsolve(
+            const CSCMatrix& L,
+            const CSCMatrix& b
+        );
+
         friend std::vector<csint> topological_order(
             const CSCMatrix& b,
             const std::vector<csint>& parent

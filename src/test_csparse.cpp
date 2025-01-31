@@ -2347,6 +2347,7 @@ TEST_CASE("Cholesky decomposition")
         Symbolic S = symbolic_cholesky(A);
         CSCMatrix L = chol(A, S);
 
+        // TODO zero-out a few rows of expect to make it "sparse"
         // Create RHS for Lx = b
         std::vector<double> expect(N);
         std::iota(expect.begin(), expect.end(), 1);
@@ -2356,17 +2357,41 @@ TEST_CASE("Cholesky decomposition")
         CSCMatrix b(b_vals, N, 1);
 
         // Solve Lx = b
-        auto [xi, x] = chol_spsolve(L, b, S.parent);
+        auto [xi, x] = chol_lsolve(L, b, S.parent);
 
         CHECK_THAT(is_close(x, expect, tol), AllTrue());
 
         // Solve Lx = b, inferring parent from L
-        auto [xi_s, x_s] = chol_spsolve(L, b);
+        auto [xi_s, x_s] = chol_lsolve(L, b);
 
         CHECK(xi == xi_s);
         REQUIRE_THAT(is_close(x_s, expect, tol), AllTrue());
     }
 
+    SECTION("Exercise 4.4: Solve L^T x = b") {
+        // Compute the numeric factorization
+        Symbolic S = symbolic_cholesky(A);
+        CSCMatrix L = chol(A, S);
+
+        // Create RHS for Lx = b
+        std::vector<double> expect(N);
+        std::iota(expect.begin(), expect.end(), 1);
+        const std::vector<double> b_vals = L.T() * expect;
+
+        // Create the sparse RHS matrix
+        CSCMatrix b(b_vals, N, 1);
+
+        // Solve Lx = b
+        auto [xi, x] = chol_ltsolve(L, b, S.parent);
+
+        CHECK_THAT(is_close(x, expect, tol), AllTrue());
+
+        // Solve Lx = b, inferring parent from L
+        auto [xi_s, x_s] = chol_ltsolve(L, b);
+
+        CHECK(xi == xi_s);
+        REQUIRE_THAT(is_close(x_s, expect, tol), AllTrue());
+    }
 }
 
 

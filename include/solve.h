@@ -253,7 +253,7 @@ std::vector<csint>& dfs(
  * @return xi  the row indices of the non-zero entries in `x`.
  * @return x  the solution vector, stored as a dense vector.
  */
-std::pair<std::vector<csint>, std::vector<double>> chol_spsolve(
+std::pair<std::vector<csint>, std::vector<double>> chol_lsolve(
     const CSCMatrix& L,
     const CSCMatrix& b,
     const std::vector<csint>& parent
@@ -272,7 +272,45 @@ std::pair<std::vector<csint>, std::vector<double>> chol_spsolve(
  * @return xi  the row indices of the non-zero entries in `x`.
  * @return x  the solution vector, stored as a dense vector.
  */
-std::pair<std::vector<csint>, std::vector<double>> chol_spsolve(
+std::pair<std::vector<csint>, std::vector<double>> chol_lsolve(
+    const CSCMatrix& L,
+    const CSCMatrix& b
+);
+
+
+/** Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is a lower-triangular
+ * Cholesky factor.
+ *
+ * See: Davis, Exercise 4.4.
+ *
+ * @param L  a lower-triangular matrix from a Cholesky factorization. `L` must
+ *        be in canonical format.
+ * @param b  a sparse RHS vector, stored as an Nx1 CSCMatrix.
+ * @param parent  the parent vector of the elimination tree of `L`.
+ *
+ * @return xi  the row indices of the non-zero entries in `x`.
+ * @return x  the solution vector, stored as a dense vector.
+ */
+std::pair<std::vector<csint>, std::vector<double>> chol_ltsolve(
+    const CSCMatrix& L,
+    const CSCMatrix& b,
+    const std::vector<csint>& parent
+);
+
+
+/** Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is a lower-triangular
+ * Cholesky factor, without a given elimination tree.
+ *
+ * See: Davis, Exercise 4.4.
+ *
+ * @param L  a lower-triangular matrix from a Cholesky factorization. `L` must
+ *        be in canonical format.
+ * @param b  a sparse RHS vector, stored as an Nx1 CSCMatrix.
+ *
+ * @return xi  the row indices of the non-zero entries in `x`.
+ * @return x  the solution vector, stored as a dense vector.
+ */
+std::pair<std::vector<csint>, std::vector<double>> chol_ltsolve(
     const CSCMatrix& L,
     const CSCMatrix& b
 );
@@ -283,13 +321,18 @@ std::pair<std::vector<csint>, std::vector<double>> chol_spsolve(
  *
  * @param b  a sparse matrix
  * @param parent  the parent vector of the elimination tree
+ * @param forward  if true, return the topological order of the forward tree,
+ *        (from lower nodes to higher nodes). If false, return the reverse
+ *        topological order (from higher nodes to lower nodes). `forward=false`
+ *        is useful for computing the solution to \f$ L^T x = b \f$.
  *
  * @return xi  the row indices of the non-zero entries in `x`, in topological
  *      order of the graph of `b`.
  */
 std::vector<csint> topological_order(
     const CSCMatrix& b,
-    const std::vector<csint>& parent
+    const std::vector<csint>& parent,
+    bool forward=true
 );
 
 

@@ -2320,6 +2320,18 @@ TEST_CASE("Cholesky decomposition")
         }
     }
 
+    SECTION("Exercise 4.1: etree and counts from ereach") {
+        std::vector<csint> expect_parent = etree(A);
+        std::vector<csint> expect_rowcounts = chol_rowcounts(A);
+        std::vector<csint> expect_colcounts = chol_colcounts(A);
+
+        auto [parent, rowcounts, colcounts] = chol_etree_counts(A);
+
+        CHECK(parent == expect_parent);
+        CHECK(rowcounts == expect_rowcounts);
+        REQUIRE(colcounts == expect_colcounts);
+    }
+
 }
 
 

@@ -493,6 +493,46 @@ CSCMatrix& chol_update(
 }
 
 
+// Exercise 4.1 O(|L|)-time elimination tree and row/column counts
+// TODO make type for the output?
+std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>> 
+    chol_etree_counts(const CSCMatrix& A)
+{
+    assert(A.M_ == A.N_);
+    csint N = A.N_;
+    std::vector<csint> parent(N, -1);
+    std::vector<csint> row_counts(N, 1);  // include diagonals
+    std::vector<csint> col_counts(N, 1);
+
+    // Use ereach to compute the elimination tree one node at a time (pp 43--44)
+    std::vector<bool> marked(N, false);  // workspaces
+
+    // Compute T_k from T_{k-1} by finding the children of node k
+    for (csint k = 0; k < N; k++) {
+        for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
+            marked.assign(N, false);  // reset the marked array
+            csint i = A.i_[p];
+            // Traverse up the etree
+            while (i < k && !marked[i]) {
+                marked[i] = true;  // mark i as visited
+
+                row_counts[k]++;   // A[i, k] != 0 => L[k, i] != 0
+                col_counts[i]++;
+
+                // When we find the parent of i, we are done
+                if (parent[i] == -1) {
+                    parent[i] = k;   // the parent of i must be k
+                }
+
+                i = parent[i];
+            }
+        }
+    }
+
+    return std::make_tuple(parent, row_counts, col_counts);
+}
+
+
 } // namespace cs
 
 /*==============================================================================

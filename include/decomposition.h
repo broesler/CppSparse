@@ -132,6 +132,19 @@ std::pair<csint, LeafStatus> least_common_ancestor(
   */
 std::vector<csint> etree(const CSCMatrix& A, bool ata=false);
 
+/** Compute the height of the elimination tree.
+ *
+ * The height is defined as the length of the longest path from the root to any
+ * leaf of the tree.
+ *
+ * See: Davis, Exercise 4.6.
+ *
+ * @param parent  the parent vector of the elimination tree
+ *
+ * @return height  the height of the elimination tree
+ */
+csint etree_height(const std::vector<csint>& parent);
+
 /** Compute the reachability set for the *k*th row of *L*, the Cholesky faxtcor
  * of this matrix.
  *

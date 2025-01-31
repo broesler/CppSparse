@@ -46,6 +46,24 @@ std::vector<csint> etree(const CSCMatrix& A, bool ata)
 }
 
 
+// Exercise 4.6
+csint etree_height(const std::vector<csint>& parent)
+{
+    assert(!parent.empty());
+
+    csint height = 0;
+    for (csint i = 0; i < parent.size(); i++) {
+        csint h = 0;
+        for (csint p = i; p != -1; p = parent[p]) {
+            h++;
+        }
+        height = std::max(height, h);
+    }
+
+    return height;
+}
+
+
 std::vector<csint> ereach(
     const CSCMatrix& A,
     csint k,

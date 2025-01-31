@@ -2392,6 +2392,11 @@ TEST_CASE("Cholesky decomposition")
         CHECK(xi == xi_s);
         REQUIRE_THAT(is_close(x_s, expect, tol), AllTrue());
     }
+
+    SECTION("Exercise 4.6: etree height") {
+        std::vector<csint> parent = etree(A);
+        REQUIRE(etree_height(parent) == 6);
+    }
 }
 
 

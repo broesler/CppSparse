@@ -1953,7 +1953,7 @@ TEST_CASE("Reachability and DFS")
         std::vector<double> expect(N, 1.0);
 
         // Use structured bindings to unpack the result
-        auto [xi, x] = spsolve(L, B, 0, true);
+        auto [xi, x] = spsolve(L, B, 0);
 
         REQUIRE(x == expect);
     }
@@ -1965,7 +1965,7 @@ TEST_CASE("Reachability and DFS")
         std::vector<double> expect = { 0.,  0.,  0.,  1.,  0.,  0.,  0.,  0., -1.,  0.,  0.,  1.,  0.,  0.};
 
         // Use structured bindings to unpack the result
-        auto [xi, x] = spsolve(L, B, 0, true);
+        auto [xi, x] = spsolve(L, B, 0);
 
         REQUIRE(x == expect);
     }

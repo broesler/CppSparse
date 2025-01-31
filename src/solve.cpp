@@ -475,11 +475,6 @@ std::pair<std::vector<csint>, std::vector<double>> spsolve(
     std::vector<csint> xi = reach(A, B, k);
     std::vector<double> x(A.N_);  // dense output vector
 
-    // Clear non-zeros of x
-    for (auto& i : xi) {
-        x[i] = 0.0;
-    }
-
     // scatter B(:, k) into x
     for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
         x[B.i_[p]] = B.v_[p];

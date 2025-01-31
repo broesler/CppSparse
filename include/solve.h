@@ -198,25 +198,18 @@ std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>>
  *
  * @param B  a dense matrix
  * @param k  the column index of `B` to solve
- * @param xi[out]  the row indices of the non-zero entries in `x`. This is
- *        a vector of length `2*G.N_` that is also used as a workspace. The
- *        first `G.N_` entries hold the output stack and the recursion stack for
- *        `j`. The second `G.N_` entries hold the stack for `p` in `dfs`.
- *        The row indices of the non-zero entries in `x` are stored in
- *        `xi[top:G.N_-1]` on output.
- * @param x[out]  the numerical values of the solution vector
  * @param lo  the lower bound of the diagonal entries of `G`. If `lo` is
- *        non-zero, the function solves \f$ Lx = b_k`, otherwise it solves
+ *        true, the function solves \f$ Lx = b_k`, otherwise it solves
  *        \f$ Ux = b_k \f$.
  *
- * @return top  the index of `xi` where the non-zero entries of `x` begin. They
- *         are located from `top` through `G.N_ - 1`.
+ * @return xi the row indices of the non-zero entries in `x`.
+ * @return x  the numerical values of the solution vector, as a dense vector.
  */
 std::pair<std::vector<csint>, std::vector<double>> spsolve(
     const CSCMatrix& A, 
     const CSCMatrix& B,
     csint k,
-    bool lo
+    bool lo=true
 );
 
 /** Compute the reachability indices of a column `k` in a sparse matrix `B`,

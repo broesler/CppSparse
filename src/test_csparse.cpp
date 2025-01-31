@@ -2187,13 +2187,21 @@ TEST_CASE("Cholesky decomposition")
     std::vector<csint> rows = {5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10};
     std::vector<csint> cols = {0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9};
 
+    csint N_offdiag = rows.size();
+
     // Include diagonals
     std::vector<csint> diags(N);
     std::iota(diags.begin(), diags.end(), 0);
+
     rows.insert(rows.end(), diags.begin(), diags.end());
     cols.insert(cols.end(), diags.begin(), diags.end());
 
     std::vector<double> vals(rows.size(), 1);
+
+    // Make A positive definite by increasing the diagonal
+    for (csint i = 0; i < N; i++) {
+        vals[i + N_offdiag] = 10.0;
+    }
 
     CSCMatrix L = COOMatrix(vals, rows, cols).tocsc();
     CSCMatrix A = (L + L.T().band(1, N)).to_canonical();
@@ -2275,17 +2283,19 @@ TEST_CASE("Cholesky decomposition")
         REQUIRE(S.unz == expect_nnz);
     }
 
+    SECTION("Numeric factorization of non-positive definite matrix") {
+        // Decrease the diagonal to make A non-positive definite
+        for (csint i = 0; i < N; i++) {
+            A.assign(i, i, 1.0);
+        }
+        Symbolic S = symbolic_cholesky(A, AMDOrder::Natural);
+        CHECK_THROWS(chol(A, S));  // A is not positive definite
+        }
+
     SECTION("Numeric factorization") {
         Symbolic S = symbolic_cholesky(A, AMDOrder::Natural);
 
-        CHECK_THROWS(chol(A, S));  // A is not positive definite
-
-        // Make A positive definite by increasing the diagonal
-        for (csint i = 0; i < N; i++) {
-            A.assign(i, i, 10.0);
-        }
-
-        // Now compute the factorization
+        // Now compute the numeric factorization
         CSCMatrix L = chol(A, S);
 
         // Check that the factorization is correct
@@ -2293,7 +2303,7 @@ TEST_CASE("Cholesky decomposition")
 
         compare_matrices(LLT, A, tol);
 
-        SECTION("Update") {
+        SECTION("Update Cholesky") {
             // Create a random vector with the sparsity of a column of L
             csint k = 3;  // arbitrary column index
             std::default_random_engine rng(56);

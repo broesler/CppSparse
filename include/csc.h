@@ -12,7 +12,6 @@
 
 #include <iostream>
 #include <string_view>
-#include <tuple>
 #include <vector>
 
 #include "types.h"
@@ -890,10 +889,9 @@ class CSCMatrix
             bool is_upper
         );
 
-        friend std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>>
-            find_tri_permutation(const CSCMatrix& A);
+        friend TriPerm find_tri_permutation(const CSCMatrix& A);
 
-        friend std::pair<std::vector<csint>, std::vector<double>> spsolve(
+        friend SparseSolution spsolve(
             const CSCMatrix& A,
             const CSCMatrix& B,
             csint k,
@@ -912,6 +910,7 @@ class CSCMatrix
         //        Cholesky Decomposition
         //----------------------------------------------------------------------
         friend std::vector<csint> etree(const CSCMatrix& A, bool ata);
+
         friend std::vector<csint> ereach(
             const CSCMatrix& A,
             csint k,
@@ -944,13 +943,13 @@ class CSCMatrix
 
         friend CholCounts chol_etree_counts(const CSCMatrix& A);
 
-        friend std::pair<std::vector<csint>, std::vector<double>> chol_lsolve(
+        friend SparseSolution chol_lsolve(
             const CSCMatrix& L,
             const CSCMatrix& b,
             std::vector<csint> parent
         );
 
-        friend std::pair<std::vector<csint>, std::vector<double>> chol_ltsolve(
+        friend SparseSolution chol_ltsolve(
             const CSCMatrix& L,
             const CSCMatrix& b,
             std::vector<csint> parent

@@ -15,15 +15,14 @@ namespace cs {
 using csint = std::int64_t;
 using Shape = std::array<csint, 2>;
 
-// Pre-declare classes for type conversions
-class COOMatrix;
-class CSCMatrix;
+// Forward declarations
+struct CholCounts;
+struct TriPerm;
+struct SparseSolution;
 struct Symbolic;
 
-struct CholCounts {
-    std::vector<csint> parent, row_counts, col_counts;
-};
-
+class COOMatrix;
+class CSCMatrix;
 
 }  // namespace cs
 

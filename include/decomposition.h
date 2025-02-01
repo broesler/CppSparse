@@ -10,17 +10,13 @@
 #ifndef _CSPARSE_DECOMPOSITION_H_
 #define _CSPARSE_DECOMPOSITION_H_
 
-#include <tuple>
 #include <vector>
 
 #include "types.h"
-#include "csc.h"
 
 namespace cs {
 
-/*------------------------------------------------------------------------------
- *         Enums
- *----------------------------------------------------------------------------*/
+// ---------- Enums
 enum class AMDOrder
 {
     Natural,
@@ -36,9 +32,23 @@ enum class LeafStatus {
 };
 
 
-/*------------------------------------------------------------------------------
- *         Structs
- *----------------------------------------------------------------------------*/
+// ---------- Structs
+struct FirstDesc {
+    std::vector<csint> first, level;
+};
+
+
+struct LCAStatus {
+    csint q;
+    LeafStatus jleaf;
+};
+
+
+struct CholCounts {
+    std::vector<csint> parent, row_counts, col_counts;
+};
+
+
 // See cs_symbolic aka css
 struct Symbolic
 {
@@ -66,6 +76,7 @@ struct Symbolic
  */
 std::vector<csint> post(const std::vector<csint>& parent);
 
+
 /** Depth-first search in a tree.
  *
  * @param j  the starting node
@@ -80,6 +91,7 @@ void tdfs(
     std::vector<csint>& postorder
 );
 
+
 // NOTE firstdesc and rowcnt are *not* officially part of CSparse, but are in
 // the book for demonstrative purposes.
 /** Find the first descendent of a node in a tree.
@@ -93,10 +105,11 @@ void tdfs(
  * @return first  the first descendent of each node in the tree
  * @return level  the level of each node in the tree
  */
-std::pair<std::vector<csint>, std::vector<csint>> firstdesc(
+FirstDesc firstdesc(
     const std::vector<csint>& parent,
     const std::vector<csint>& postorder
 );
+
 
 /** Compute the least common ancestor of j_prev and j, if j is a leaf of the ith
  * row subtree.
@@ -114,7 +127,7 @@ std::pair<std::vector<csint>, std::vector<csint>> firstdesc(
  *
  * @see cs_leaf Davis p 48.
  */
-std::pair<csint, LeafStatus> least_common_ancestor(
+LCAStatus least_common_ancestor(
     csint i,
     csint j,
     const std::vector<csint>& first,
@@ -122,6 +135,7 @@ std::pair<csint, LeafStatus> least_common_ancestor(
     std::vector<csint>& prevleaf,
     std::vector<csint>& ancestor
 );
+
 
 // ---------- Matrix operations
 /** Compute the elimination tree of A.
@@ -132,6 +146,7 @@ std::pair<csint, LeafStatus> least_common_ancestor(
   * @return parent  the parent vector of the elimination tree
   */
 std::vector<csint> etree(const CSCMatrix& A, bool ata=false);
+
 
 /** Compute the height of the elimination tree.
  *
@@ -145,6 +160,7 @@ std::vector<csint> etree(const CSCMatrix& A, bool ata=false);
  * @return height  the height of the elimination tree
  */
 csint etree_height(const std::vector<csint>& parent);
+
 
 /** Compute the reachability set for the *k*th row of *L*, the Cholesky faxtcor
  * of this matrix.
@@ -175,6 +191,7 @@ std::vector<csint> rowcnt(
     const std::vector<csint>& postorder
 );
 
+
 /** Count the number of non-zeros in each column of the Cholesky factor L of A.
  *
  * @param A  the matrix to factorize
@@ -189,6 +206,7 @@ std::vector<csint> counts(
     const std::vector<csint>& postorder
 );
 
+
 /** Count the number of non-zeros in each row of the Cholesky factor L of A.
   *
  * @param A  the matrix to factorize
@@ -197,6 +215,7 @@ std::vector<csint> counts(
   */
 std::vector<csint> chol_rowcounts(const CSCMatrix& A);
 
+
 /** Count the number of non-zeros in each column of the Cholesky factor L of A.
   *
  * @param A  the matrix to factorize
@@ -204,6 +223,7 @@ std::vector<csint> chol_rowcounts(const CSCMatrix& A);
   * @return colcount  the number of non-zeros in each column of L
   */
 std::vector<csint> chol_colcounts(const CSCMatrix& A);
+
 
 /** Compute the symbolic Cholesky factorization of a sparse matrix.
  *
@@ -222,6 +242,7 @@ std::vector<csint> chol_colcounts(const CSCMatrix& A);
  */
 Symbolic schol(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
 
+
 /** Compute the up-looking Cholesky factorization of a sparse matrix.
  *
  * @note This function assumes that `A` is symmetric and positive definite.
@@ -232,6 +253,7 @@ Symbolic schol(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
  * @return the Cholesky factorization of `A`
  */
 CSCMatrix chol(const CSCMatrix& A, const Symbolic& S);
+
 
 /** Update the Cholesky factor for \f$ A = A + σ w w^T \f$.
  *
@@ -248,6 +270,7 @@ CSCMatrix& chol_update(
     const CSCMatrix& C,
     const std::vector<csint>& parent
 );
+
 
 /** Compute the elimination tree of L and row and column counts using ereach.
  *
@@ -268,6 +291,7 @@ CSCMatrix& chol_update(
  * @return colcount  the number of non-zeros in each column of L
  */
 CholCounts chol_etree_counts(const CSCMatrix& A);
+
 
 
 }  // namespace cs

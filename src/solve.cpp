@@ -356,8 +356,7 @@ std::vector<double> usolve_cols(const CSCMatrix& U, const std::vector<double>& b
 }
 
 
-std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>>
-    find_tri_permutation(const CSCMatrix& A)
+TriPerm find_tri_permutation(const CSCMatrix& A)
 {
     assert(A.M_ == A.N_);
 
@@ -414,7 +413,7 @@ std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>>
         }
     }
 
-    return std::make_tuple(p_inv, q_inv, p_diags);
+    return {p_inv, q_inv, p_diags};
 }
 
 
@@ -464,7 +463,7 @@ std::vector<double> tri_solve_perm(
 }
 
 
-std::pair<std::vector<csint>, std::vector<double>> spsolve(
+SparseSolution spsolve(
     const CSCMatrix& A, 
     const CSCMatrix& B,
     csint k,
@@ -494,7 +493,7 @@ std::pair<std::vector<csint>, std::vector<double>> spsolve(
         }
     }
 
-    return std::make_pair(xi, x);
+    return {xi, x};
 }
 
 
@@ -566,7 +565,7 @@ std::vector<csint>& dfs(
 
 
 // Exercise 4.3
-std::pair<std::vector<csint>, std::vector<double>> chol_lsolve(
+SparseSolution chol_lsolve(
     const CSCMatrix& L,
     const CSCMatrix& b,
     std::vector<csint> parent
@@ -601,13 +600,13 @@ std::pair<std::vector<csint>, std::vector<double>> chol_lsolve(
         }
     }
 
-    return std::make_pair(xi, x);
+    return {xi, x};
 }
 
 
 
 // Exercise 4.4
-std::pair<std::vector<csint>, std::vector<double>> chol_ltsolve(
+SparseSolution chol_ltsolve(
     const CSCMatrix& L,
     const CSCMatrix& b,
     std::vector<csint> parent
@@ -642,7 +641,7 @@ std::pair<std::vector<csint>, std::vector<double>> chol_ltsolve(
         x[j] /= L.v_[L.p_[j]];
     }
 
-    return std::make_pair(xi, x);
+    return {xi, x};
 }
 
 

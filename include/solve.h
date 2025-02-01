@@ -10,14 +10,23 @@
 #ifndef _CSPARSE_SOLVE_H_
 #define _CSPARSE_SOLVE_H_
 
-#include <tuple>
-#include <utility>
 #include <vector>
 
 #include "types.h"
 
 
 namespace cs {
+
+struct SparseSolution {
+    std::vector<csint> xi;
+    std::vector<double> x;
+};
+
+
+struct TriPerm {
+    std::vector<csint> p_inv, q_inv, p_diags;
+};
+
 
 //------------------------------------------------------------------------------
 //        Triangular Matrix Solutions
@@ -207,8 +216,7 @@ std::vector<double> tri_solve_perm(
  * @return p_inv, q_inv  the inverse row and column permutation vectors.
  * @return p_diags  the pointers to the diagonal entries.
  */
-std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>>
-    find_tri_permutation(const CSCMatrix& A);
+TriPerm find_tri_permutation(const CSCMatrix& A);
 
 
 // TODO return `x` as a 1-column CSCMatrix?
@@ -231,7 +239,7 @@ std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>>
  * @return xi the row indices of the non-zero entries in `x`.
  * @return x  the numerical values of the solution vector, as a dense vector.
  */
-std::pair<std::vector<csint>, std::vector<double>> spsolve(
+SparseSolution spsolve(
     const CSCMatrix& A,
     const CSCMatrix& B,
     csint k,
@@ -285,7 +293,7 @@ std::vector<csint>& dfs(
  * @return xi  the row indices of the non-zero entries in `x`.
  * @return x  the solution vector, stored as a dense vector.
  */
-std::pair<std::vector<csint>, std::vector<double>> chol_lsolve(
+SparseSolution chol_lsolve(
     const CSCMatrix& L,
     const CSCMatrix& b,
     std::vector<csint> parent = {}
@@ -306,7 +314,7 @@ std::pair<std::vector<csint>, std::vector<double>> chol_lsolve(
  * @return xi  the row indices of the non-zero entries in `x`.
  * @return x  the solution vector, stored as a dense vector.
  */
-std::pair<std::vector<csint>, std::vector<double>> chol_ltsolve(
+SparseSolution chol_ltsolve(
     const CSCMatrix& L,
     const CSCMatrix& b,
     std::vector<csint> parent = {}

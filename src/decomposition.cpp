@@ -12,6 +12,7 @@
 #include <numeric>  // std::iota
 
 #include "decomposition.h"
+#include "csc.h"
 #include "utils.h"
 
 namespace cs {
@@ -160,7 +161,7 @@ void tdfs(
 }
 
 
-std::pair<std::vector<csint>, std::vector<csint>> firstdesc(
+FirstDesc firstdesc(
     const std::vector<csint>& parent,
     const std::vector<csint>& postorder
 )
@@ -186,7 +187,7 @@ std::pair<std::vector<csint>, std::vector<csint>> firstdesc(
         }
     }
 
-    return std::make_pair(first, level);
+    return {first, level};
 }
 
 
@@ -230,7 +231,7 @@ std::vector<csint> rowcnt(
 }
 
 
-std::pair<csint, LeafStatus> least_common_ancestor(
+LCAStatus least_common_ancestor(
     csint i,
     csint j,
     const std::vector<csint>& first,
@@ -243,7 +244,7 @@ std::pair<csint, LeafStatus> least_common_ancestor(
 
     // See "skeleton" function in Davis, p 48.
     if (i <= j || first[j] <= maxfirst[i]) {  // j is not a leaf
-        return std::make_pair(-1, LeafStatus::NotLeaf);
+        return {-1, LeafStatus::NotLeaf};
     }
 
     maxfirst[i] = first[j];         // update max first[j] seen so far
@@ -252,7 +253,7 @@ std::pair<csint, LeafStatus> least_common_ancestor(
     jleaf = (jprev == -1) ? LeafStatus::FirstLeaf : LeafStatus::SubsequentLeaf;
 
     if (jleaf == LeafStatus::FirstLeaf) {
-        return std::make_pair(i, jleaf);  // if j is the first leaf, q = root of ith subtree
+        return {i, jleaf};  // if j is the first leaf, q = root of ith subtree
     }
 
     // Traverse up to the root of the subtree to find q
@@ -269,7 +270,7 @@ std::pair<csint, LeafStatus> least_common_ancestor(
         s = sparent;
     }
 
-    return std::make_pair(q, jleaf);  // least common ancestor of j_prev and j
+    return {q, jleaf};  // least common ancestor of j_prev and j
 }
 
 

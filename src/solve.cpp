@@ -19,17 +19,17 @@ namespace cs {
 /*------------------------------------------------------------------------------
  *      Triangular Matrix Solutions 
  *----------------------------------------------------------------------------*/
-std::vector<double> lsolve(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
 {
-    assert(A.M_ == A.N_);
-    assert(A.M_ == b.size());
+    assert(L.M_ == L.N_);
+    assert(L.M_ == b.size());
 
     std::vector<double> x = b;
 
-    for (csint j = 0; j < A.N_; j++) {
-        x[j] /= A.v_[A.p_[j]];
-        for (csint p = A.p_[j] + 1; p < A.p_[j+1]; p++) {
-            x[A.i_[p]] -= A.v_[p] * x[j];
+    for (csint j = 0; j < L.N_; j++) {
+        x[j] /= L.v_[L.p_[j]];
+        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
+            x[L.i_[p]] -= L.v_[p] * x[j];
         }
     }
 
@@ -37,35 +37,35 @@ std::vector<double> lsolve(const CSCMatrix& A, const std::vector<double>& b)
 }
 
 
-std::vector<double> ltsolve(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
 {
-    assert(A.M_ == A.N_);
-    assert(A.M_ == b.size());
+    assert(L.M_ == L.N_);
+    assert(L.M_ == b.size());
 
     std::vector<double> x = b;
 
-    for (csint j = A.N_ - 1; j >= 0; j--) {
-        for (csint p = A.p_[j] + 1; p < A.p_[j+1]; p++) {
-            x[j] -= A.v_[p] * x[A.i_[p]];
+    for (csint j = L.N_ - 1; j >= 0; j--) {
+        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
+            x[j] -= L.v_[p] * x[L.i_[p]];
         }
-        x[j] /= A.v_[A.p_[j]];
+        x[j] /= L.v_[L.p_[j]];
     }
 
     return x;
 }
 
 
-std::vector<double> usolve(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> usolve(const CSCMatrix& L, const std::vector<double>& b)
 {
-    assert(A.M_ == A.N_);
-    assert(A.M_ == b.size());
+    assert(L.M_ == L.N_);
+    assert(L.M_ == b.size());
 
     std::vector<double> x = b;
 
-    for (csint j = A.N_ - 1; j >= 0; j--) {
-        x[j] /= A.v_[A.p_[j+1] - 1];  // diagonal entry
-        for (csint p = A.p_[j]; p < A.p_[j+1] - 1; p++) {
-            x[A.i_[p]] -= A.v_[p] * x[j];
+    for (csint j = L.N_ - 1; j >= 0; j--) {
+        x[j] /= L.v_[L.p_[j+1] - 1];  // diagonal entry
+        for (csint p = L.p_[j]; p < L.p_[j+1] - 1; p++) {
+            x[L.i_[p]] -= L.v_[p] * x[j];
         }
     }
 
@@ -73,38 +73,38 @@ std::vector<double> usolve(const CSCMatrix& A, const std::vector<double>& b)
 }
 
 
-std::vector<double> utsolve(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> utsolve(const CSCMatrix& L, const std::vector<double>& b)
 {
-    assert(A.M_ == A.N_);
-    assert(A.M_ == b.size());
+    assert(L.M_ == L.N_);
+    assert(L.M_ == b.size());
 
     std::vector<double> x = b;
 
-    for (csint j = 0; j < A.N_; j++) {
-        for (csint p = A.p_[j]; p < A.p_[j+1] - 1; p++) {
-            x[j] -= A.v_[p] * x[A.i_[p]];
+    for (csint j = 0; j < L.N_; j++) {
+        for (csint p = L.p_[j]; p < L.p_[j+1] - 1; p++) {
+            x[j] -= L.v_[p] * x[L.i_[p]];
         }
-        x[j] /= A.v_[A.p_[j+1] - 1];  // diagonal entry
+        x[j] /= L.v_[L.p_[j+1] - 1];  // diagonal entry
     }
 
     return x;
 }
 
 
-std::vector<double> lsolve_opt(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
 {
-    assert(A.M_ == A.N_);
-    assert(A.M_ == b.size());
+    assert(L.M_ == L.N_);
+    assert(L.M_ == b.size());
 
     std::vector<double> x = b;
 
-    for (csint j = 0; j < A.N_; j++) {
+    for (csint j = 0; j < L.N_; j++) {
         double& x_val = x[j];  // cache reference to value
         // Exercise 3.8: improve performance by checking for zeros
         if (x_val != 0) {
-            x_val /= A.v_[A.p_[j]];
-            for (csint p = A.p_[j] + 1; p < A.p_[j+1]; p++) {
-                x[A.i_[p]] -= A.v_[p] * x_val;
+            x_val /= L.v_[L.p_[j]];
+            for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
+                x[L.i_[p]] -= L.v_[p] * x_val;
             }
         }
     }
@@ -113,19 +113,19 @@ std::vector<double> lsolve_opt(const CSCMatrix& A, const std::vector<double>& b)
 }
 
 
-std::vector<double> usolve_opt(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> usolve_opt(const CSCMatrix& L, const std::vector<double>& b)
 {
-    assert(A.M_ == A.N_);
-    assert(A.M_ == b.size());
+    assert(L.M_ == L.N_);
+    assert(L.M_ == b.size());
 
     std::vector<double> x = b;
 
-    for (csint j = A.N_ - 1; j >= 0; j--) {
+    for (csint j = L.N_ - 1; j >= 0; j--) {
         double& x_val = x[j];  // cache reference to value
         if (x_val != 0) {
-            x_val /= A.v_[A.p_[j+1] - 1];  // diagonal entry
-            for (csint p = A.p_[j]; p < A.p_[j+1] - 1; p++) {
-                x[A.i_[p]] -= A.v_[p] * x_val;
+            x_val /= L.v_[L.p_[j+1] - 1];  // diagonal entry
+            for (csint p = L.p_[j]; p < L.p_[j+1] - 1; p++) {
+                x[L.i_[p]] -= L.v_[p] * x_val;
             }
         }
     }
@@ -134,18 +134,18 @@ std::vector<double> usolve_opt(const CSCMatrix& A, const std::vector<double>& b)
 }
 
 
-std::vector<csint> find_lower_diagonals(const CSCMatrix& A)
+std::vector<csint> find_lower_diagonals(const CSCMatrix& L)
 {
-    assert(A.M_ == A.N_);
+    assert(L.M_ == L.N_);
 
-    std::vector<bool> marked(A.N_, false);  // workspace
-    std::vector<csint> p_diags(A.N_);  // diagonal indicies (inverse permutation)
+    std::vector<bool> marked(L.N_, false);  // workspace
+    std::vector<csint> p_diags(L.N_);  // diagonal indicies (inverse permutation)
 
-    for (csint j = A.N_ - 1; j >= 0; j--) {
+    for (csint j = L.N_ - 1; j >= 0; j--) {
         csint N_unmarked = 0;
 
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
-            csint i = A.i_[p];
+        for (csint p = L.p_[j]; p < L.p_[j+1]; p++) {
+            csint i = L.i_[p];
             // Mark the rows viewed so far
             if (!marked[i]) {
                 marked[i] = true;
@@ -164,35 +164,35 @@ std::vector<csint> find_lower_diagonals(const CSCMatrix& A)
 }
 
 
-std::vector<double> lsolve_rows(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> lsolve_rows(const CSCMatrix& L, const std::vector<double>& b)
 {
-    assert(A.M_ == A.N_);
-    assert(A.M_ == b.size());
+    assert(L.M_ == L.N_);
+    assert(L.M_ == b.size());
 
     // First (backward) pass to find diagonal entries
     // p_diags is a vector of pointers to the diagonal entries
-    std::vector<csint> p_diags = find_lower_diagonals(A);
+    std::vector<csint> p_diags = find_lower_diagonals(L);
 
     // Compute the row permutation vector
-    std::vector<csint> permuted_rows(A.N_);
-    for (csint i = 0; i < A.N_; i++) {
-        permuted_rows[A.i_[p_diags[i]]] = i;
+    std::vector<csint> permuted_rows(L.N_);
+    for (csint i = 0; i < L.N_; i++) {
+        permuted_rows[L.i_[p_diags[i]]] = i;
     }
 
     // Second (forward) pass to solve the system
     std::vector<double> x = b;
 
     // Perform the permuted forward solve
-    for (csint j = 0; j < A.N_; j++) {
+    for (csint j = 0; j < L.N_; j++) {
         csint d = p_diags[j];  // pointer to the diagonal entry
         double& x_val = x[j];  // cache diagonal value
 
         if (x_val != 0) {
-            x_val /= A.v_[d];    // solve for x[d]
-            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
-                csint i = permuted_rows[A.i_[p]];
+            x_val /= L.v_[d];    // solve for x[d]
+            for (csint p = L.p_[j]; p < L.p_[j+1]; p++) {
+                csint i = permuted_rows[L.i_[p]];
                 if (p != d) {
-                    x[i] -= A.v_[p] * x_val;  // update the off-diagonals
+                    x[i] -= L.v_[p] * x_val;  // update the off-diagonals
                 }
             }
         }
@@ -202,17 +202,17 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, const std::vector<double>& b
 }
 
 
-std::vector<double> lsolve_cols(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> lsolve_cols(const CSCMatrix& L, const std::vector<double>& b)
 {
-    assert(A.M_ == A.N_);
-    assert(A.M_ == b.size());
+    assert(L.M_ == L.N_);
+    assert(L.M_ == b.size());
 
     // First O(N) pass to find the diagonal entries
     // Assume that the first entry in each column has the smallest row index
-    std::vector<csint> p_diags(A.N_, -1);
-    for (csint j = 0; j < A.N_; j++) {
+    std::vector<csint> p_diags(L.N_, -1);
+    for (csint j = 0; j < L.N_; j++) {
         if (p_diags[j] == -1) {
-            p_diags[j] = A.p_[j];  // pointer to the diagonal entry
+            p_diags[j] = L.p_[j];  // pointer to the diagonal entry
         } else {
             // We have seen this column index before
             throw std::runtime_error("Matrix is not a permuted lower triangular matrix!");
@@ -220,9 +220,9 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, const std::vector<double>& b
     }
 
     // Compute the column permutation vector
-    std::vector<csint> permuted_cols(A.N_);
-    for (csint i = 0; i < A.N_; i++) {
-        permuted_cols[A.i_[p_diags[i]]] = i;
+    std::vector<csint> permuted_cols(L.N_);
+    for (csint i = 0; i < L.N_; i++) {
+        permuted_cols[L.i_[p_diags[i]]] = i;
     }
 
     // Second (forward) pass to solve the system
@@ -231,12 +231,12 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, const std::vector<double>& b
     // Perform the permuted forward solve
     for (const auto& j : permuted_cols) {
         csint d = p_diags[j];      // pointer to the diagonal entry
-        double& x_val = x[A.i_[d]];  // cache diagonal value
+        double& x_val = x[L.i_[d]];  // cache diagonal value
 
         if (x_val != 0) {
-            x_val /= A.v_[d];  // solve for x[A.i_[d]]
-            for (csint p = A.p_[j]+1; p < A.p_[j+1]; p++) {
-                x[A.i_[p]] -= A.v_[p] * x_val;  // update the off-diagonals
+            x_val /= L.v_[d];  // solve for x[L.i_[d]]
+            for (csint p = L.p_[j]+1; p < L.p_[j+1]; p++) {
+                x[L.i_[p]] -= L.v_[p] * x_val;  // update the off-diagonals
             }
         }
     }
@@ -245,18 +245,18 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, const std::vector<double>& b
 }
 
 
-std::vector<csint> find_upper_diagonals(const CSCMatrix& A)
+std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
 {
-    assert(A.M_ == A.N_);
+    assert(U.M_ == U.N_);
 
-    std::vector<bool> marked(A.N_, false);  // workspace
-    std::vector<csint> p_diags(A.N_);  // diagonal indicies (inverse permutation)
+    std::vector<bool> marked(U.N_, false);  // workspace
+    std::vector<csint> p_diags(U.N_);  // diagonal indicies (inverse permutation)
 
-    for (csint j = 0; j < A.N_; j++) {
+    for (csint j = 0; j < U.N_; j++) {
         csint N_unmarked = 0;
 
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
-            csint i = A.i_[p];
+        for (csint p = U.p_[j]; p < U.p_[j+1]; p++) {
+            csint i = U.i_[p];
             // Mark the rows viewed so far
             if (!marked[i]) {
                 marked[i] = true;
@@ -275,35 +275,35 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& A)
 }
 
 
-std::vector<double> usolve_rows(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> usolve_rows(const CSCMatrix& U, const std::vector<double>& b)
 {
-    assert(A.M_ == A.N_);
-    assert(A.M_ == b.size());
+    assert(U.M_ == U.N_);
+    assert(U.M_ == b.size());
 
     // First (backward) pass to find diagonal entries
     // p_diags is a vector of pointers to the diagonal entries
-    std::vector<csint> p_diags = find_upper_diagonals(A);
+    std::vector<csint> p_diags = find_upper_diagonals(U);
 
     // Compute the row permutation vector
-    std::vector<csint> permuted_rows(A.N_);
-    for (csint i = 0; i < A.N_; i++) {
-        permuted_rows[A.i_[p_diags[i]]] = i;
+    std::vector<csint> permuted_rows(U.N_);
+    for (csint i = 0; i < U.N_; i++) {
+        permuted_rows[U.i_[p_diags[i]]] = i;
     }
 
     // Second (forward) pass to solve the system
     std::vector<double> x = b;
 
     // Perform the permuted forward solve
-    for (csint j = A.N_ - 1; j >= 0; j--) {
+    for (csint j = U.N_ - 1; j >= 0; j--) {
         csint d = p_diags[j];  // pointer to the diagonal entry
         double& x_val = x[j];  // cache diagonal value
 
         if (x_val != 0) {
-            x_val /= A.v_[d];    // solve for x[d]
-            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
-                csint i = permuted_rows[A.i_[p]];
+            x_val /= U.v_[d];    // solve for x[d]
+            for (csint p = U.p_[j]; p < U.p_[j+1]; p++) {
+                csint i = permuted_rows[U.i_[p]];
                 if (p != d) {
-                    x[i] -= A.v_[p] * x_val;  // update the off-diagonals
+                    x[i] -= U.v_[p] * x_val;  // update the off-diagonals
                 }
             }
         }
@@ -313,17 +313,17 @@ std::vector<double> usolve_rows(const CSCMatrix& A, const std::vector<double>& b
 }
 
 
-std::vector<double> usolve_cols(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> usolve_cols(const CSCMatrix& U, const std::vector<double>& b)
 {
-    assert(A.M_ == A.N_);
-    assert(A.M_ == b.size());
+    assert(U.M_ == U.N_);
+    assert(U.M_ == b.size());
 
     // First O(N) pass to find the diagonal entries
     // Assume that the last entry in each column has the largest row index
-    std::vector<csint> p_diags(A.N_, -1);
-    for (csint j = 0; j < A.N_; j++) {
+    std::vector<csint> p_diags(U.N_, -1);
+    for (csint j = 0; j < U.N_; j++) {
         if (p_diags[j] == -1) {
-            p_diags[j] = A.p_[j+1] - 1;  // pointer to the diagonal entry
+            p_diags[j] = U.p_[j+1] - 1;  // pointer to the diagonal entry
         } else {
             // We have seen this column index before
             throw std::runtime_error("Matrix is not a permuted lower triangular matrix!");
@@ -331,9 +331,9 @@ std::vector<double> usolve_cols(const CSCMatrix& A, const std::vector<double>& b
     }
 
     // Compute the column permutation vector
-    std::vector<csint> permuted_cols(A.N_);
-    for (csint i = 0; i < A.N_; i++) {
-        permuted_cols[A.i_[p_diags[i]]] = i;
+    std::vector<csint> permuted_cols(U.N_);
+    for (csint i = 0; i < U.N_; i++) {
+        permuted_cols[U.i_[p_diags[i]]] = i;
     }
 
     // Second (forward) pass to solve the system
@@ -342,12 +342,12 @@ std::vector<double> usolve_cols(const CSCMatrix& A, const std::vector<double>& b
     // Perform the permuted forward solve
     for (const auto& j : std::views::reverse(permuted_cols)) {
         csint d = p_diags[j];      // pointer to the diagonal entry
-        double& x_val = x[A.i_[d]];  // cache diagonal value
+        double& x_val = x[U.i_[d]];  // cache diagonal value
 
         if (x_val != 0) {
-            x_val /= A.v_[d];  // solve for x[A.i_[d]]
-            for (csint p = A.p_[j]; p < A.p_[j+1] - 1; p++) {
-                x[A.i_[p]] -= A.v_[p] * x_val;  // update the off-diagonals
+            x_val /= U.v_[d];  // solve for x[U.i_[d]]
+            for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
+                x[U.i_[p]] -= U.v_[p] * x_val;  // update the off-diagonals
             }
         }
     }
@@ -357,7 +357,7 @@ std::vector<double> usolve_cols(const CSCMatrix& A, const std::vector<double>& b
 
 
 std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>>
-find_tri_permutation(const CSCMatrix& A)
+    find_tri_permutation(const CSCMatrix& A)
 {
     assert(A.M_ == A.N_);
 

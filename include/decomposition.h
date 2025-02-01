@@ -58,7 +58,7 @@ struct Symbolic
  *          Cholesky Decomposition
  *----------------------------------------------------------------------------*/
 // ---------- Helpers
-/** Post-order a tree non-recursively.
+/** Post-order a tree non-recursively, in O(N) time.
  *
  * @param parent  the parent vector of the elimination tree
  *
@@ -126,6 +126,7 @@ std::pair<csint, LeafStatus> least_common_ancestor(
 // ---------- Matrix operations
 /** Compute the elimination tree of A.
   *
+ * @param A  the matrix to factorize
   * @param ata  if True, compute the elimination tree of A^T A
   *
   * @return parent  the parent vector of the elimination tree
@@ -148,6 +149,7 @@ csint etree_height(const std::vector<csint>& parent);
 /** Compute the reachability set for the *k*th row of *L*, the Cholesky faxtcor
  * of this matrix.
  *
+ * @param A  the matrix to factorize
  * @param k  the row index
  * @param parent  the parent vector of the elimination tree
  *
@@ -161,6 +163,7 @@ std::vector<csint> ereach(
 
 /** Count the number of non-zeros in each row of the Cholesky factor L of A.
  *
+ * @param A  the matrix to factorize
  * @param parent  the parent vector of the elimination tree
  * @param postorder  the post-order of the elimination tree
  *
@@ -174,6 +177,7 @@ std::vector<csint> rowcnt(
 
 /** Count the number of non-zeros in each column of the Cholesky factor L of A.
  *
+ * @param A  the matrix to factorize
  * @param parent  the parent vector of the elimination tree
  * @param postorder  the post-order of the elimination tree
  *
@@ -187,12 +191,16 @@ std::vector<csint> counts(
 
 /** Count the number of non-zeros in each row of the Cholesky factor L of A.
   *
+ * @param A  the matrix to factorize
+ *
   * @return rowcount  the number of non-zeros in each row of L
   */
 std::vector<csint> chol_rowcounts(const CSCMatrix& A);
 
 /** Count the number of non-zeros in each column of the Cholesky factor L of A.
   *
+ * @param A  the matrix to factorize
+ *
   * @return colcount  the number of non-zeros in each column of L
   */
 std::vector<csint> chol_colcounts(const CSCMatrix& A);

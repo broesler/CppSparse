@@ -942,8 +942,7 @@ class CSCMatrix
 	        const std::vector<csint>& parent
         );
 
-        friend std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>>
-            chol_etree_counts(const CSCMatrix& A);
+        friend CholCounts chol_etree_counts(const CSCMatrix& A);
 
         friend std::pair<std::vector<csint>, std::vector<double>> chol_lsolve(
             const CSCMatrix& L,

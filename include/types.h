@@ -10,17 +10,24 @@
 #ifndef _CSPARSE_TYPES_H_
 #define _CSPARSE_TYPES_H_
 
+namespace cs {
+
 using csint = std::int64_t;
 using Shape = std::array<csint, 2>;
 
-namespace cs {
-    // Pre-declare classes for type conversions
-    class COOMatrix;
-    class CSCMatrix;
-    struct Symbolic;
+// Pre-declare classes for type conversions
+class COOMatrix;
+class CSCMatrix;
+struct Symbolic;
+
+struct CholCounts {
+    std::vector<csint> parent, row_counts, col_counts;
+};
+
+
 }  // namespace cs
 
-#endif  // _CS_TYPES_H_
+#endif  // _CSPARSE_TYPES_H_
 
 //==============================================================================
 //==============================================================================

@@ -521,8 +521,7 @@ CSCMatrix& chol_update(
 // Exercise 4.1 O(|L|)-time elimination tree and row/column counts
 // Use ereach to compute the elimination tree one node at a time (pp 43--44)
 // TODO make type for the output?
-std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>> 
-    chol_etree_counts(const CSCMatrix& A)
+CholCounts chol_etree_counts(const CSCMatrix& A)
 {
     assert(A.M_ == A.N_);
     csint N = A.N_;
@@ -551,7 +550,7 @@ std::tuple<std::vector<csint>, std::vector<csint>, std::vector<csint>>
         }
     }
 
-    return std::make_tuple(parent, row_counts, col_counts);
+    return {parent, row_counts, col_counts};
 }
 
 } // namespace cs

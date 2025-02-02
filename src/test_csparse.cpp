@@ -2224,19 +2224,20 @@ TEST_CASE("Cholesky decomposition")
             {2, {1}},
             {3, {}},
             {4, {}},
-            {5, {0, 3}},
-            {6, {5, 0}},
-            {7, {2, 1, 4}},
-            {8, {6, 5}},
-            {9, {7, 2, 8, 6, 5, 3}},
-            {10, {9, 7, 2, 4, 8, 6}},
+            {5, {3, 0}},
+            {6, {0, 5}},
+            {7, {4, 1, 2}},
+            {8, {5, 6}},
+            {9, {3, 5, 6, 8, 2, 7}},
+            {10, {6, 8, 4, 2, 7, 9}},
         };
 
         std::vector<csint> parent = etree(A);
 
         for (const auto& [key, expect] : expect_map) {
             std::vector<csint> xi = ereach(A, key, parent);
-            REQUIRE_THAT(xi, UnorderedEquals(expect));
+            // REQUIRE_THAT(xi, UnorderedEquals(expect));
+            REQUIRE(xi == expect);
         }
     }
 

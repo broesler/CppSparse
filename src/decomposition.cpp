@@ -7,8 +7,10 @@
  *
  *============================================================================*/
 
+#include <algorithm>  // std::copy
 #include <cassert>
 #include <cmath>    // std::sqrt
+#include <iterator>   // std::back_inserter
 #include <numeric>  // std::iota
 
 #include "decomposition.h"
@@ -89,10 +91,8 @@ std::vector<csint> ereach(
             }
 
             // Push path onto output stack
-            while (!s.empty()) {
-                xi.push_back(s.back());
-                s.pop_back();
-            }
+            std::copy(s.rbegin(), s.rend(), std::back_inserter(xi));
+            s.clear();
         }
     }
 

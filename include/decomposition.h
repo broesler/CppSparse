@@ -235,12 +235,18 @@ std::vector<csint> chol_colcounts(const CSCMatrix& A);
  *       - 1: amd(A + A.T())
  *       - 2: amd(??)  FIXME
  *       - 3: amd(A^T A)
+ * @param postorder  if True, postorder the matrix in addition to the AMD
+ *        (or natural) ordering. See: Davis, Exercise 4.9.
  *
  * @return the Symbolic factorization
  *
  * @see cs_schol
  */
-Symbolic schol(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
+Symbolic schol(
+    const CSCMatrix& A,
+    AMDOrder order=AMDOrder::Natural,
+    bool use_postorder=false
+);
 
 
 /** Compute the up-looking Cholesky factorization of a sparse matrix.

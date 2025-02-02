@@ -367,9 +367,10 @@ std::vector<csint> chol_colcounts(const CSCMatrix& A)
 }
 
 
-Symbolic schol(const CSCMatrix& A, AMDOrder order)
+Symbolic schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 {
     Symbolic S;
+    std::vector<csint> p(A.shape()[1]);  // the matrix permutation
 
     if (order == AMDOrder::Natural) {
         // TODO set to empty vector?
@@ -377,21 +378,31 @@ Symbolic schol(const CSCMatrix& A, AMDOrder order)
         // p or p_inv argument to all permute functions: pvec, ipvec,
         // inv_permute, permute, and symperm... and all of the upper/lower
         // triangular permuted solvers!!
-        // identity permutation
-        S.p_inv = std::vector<csint>(A.shape()[1]);
-        std::iota(S.p_inv.begin(), S.p_inv.end(), 0);
+        std::iota(p.begin(), p.end(), 0);  // identity permutation
+        S.p_inv = p;  // identity is its own inverse
     } else {
-        // TODO implement amd order
-        // std::vector<csint> p = amd(order, A);  // P = amd(A + A.T()) or natural
+        // TODO implement amd order (see Chapter 7)
+        // p = amd(order, A);  // P = amd(A + A.T()) or natural
         // S.p_inv = inv_permute(p);
         throw std::runtime_error("Ordering method not implemented!");
     }
 
     // Find pattern of Cholesky factor
     CSCMatrix C = A.symperm(S.p_inv, false);  // C = spones(triu(A(p, p)))
-    S.parent = etree(C);                     // compute the elimination tree
-    auto postorder = post(S.parent);          // postorder the elimination tree
-    auto c = counts(C, S.parent, postorder);   // find column counts of L
+    S.parent = etree(C);
+    std::vector<csint> postorder = post(S.parent);
+
+    // Exercise 4.9
+    if (use_postorder) {
+        p = pvec(postorder, p);    // combine the permutations
+        S.p_inv = inv_permute(p);
+        C = A.symperm(S.p_inv, false);  // apply combined permutation
+        S.parent = etree(C);
+        postorder = post(S.parent);  // should be identity for AMDOrder::Natural
+    }
+
+    std::vector<csint> c = counts(C, S.parent, postorder);
+
     S.cp = cumsum(c);                         // find column pointers for L
     S.lnz = S.unz = S.cp.back();              // number of non-zeros in L and U
 

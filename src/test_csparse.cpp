@@ -2335,15 +2335,11 @@ TEST_CASE("Cholesky decomposition")
         }
     }
 
-    SECTION("Exercise 4.9: Use post-ordering with AMD ordering") {
+    SECTION("Exercise 4.9: Use post-ordering with natural ordering") {
         // Compute the symbolic factorization with postordering
         bool use_postorder = true;
         Symbolic S = schol(A, AMDOrder::Natural, use_postorder);
-
-        // Now compute the numeric factorization
         CSCMatrix L = chol(A, S);
-
-        // Check that the factorization is correct
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
 
         // The factorization will be postordered!

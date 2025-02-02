@@ -398,7 +398,7 @@ Symbolic schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
         S.p_inv = inv_permute(p);
         C = A.symperm(S.p_inv, false);  // apply combined permutation
         S.parent = etree(C);
-        postorder = post(S.parent);  // should be identity for AMDOrder::Natural
+        postorder = post(S.parent);     // should be identity for natural order
     }
 
     std::vector<csint> c = counts(C, S.parent, postorder);

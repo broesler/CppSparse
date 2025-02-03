@@ -441,6 +441,46 @@ Symbolic schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 }
 
 
+CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S)
+{
+    auto [M, N] = A.shape();
+    CSCMatrix L(M, N, S.lnz);  // allocate result
+
+    // Workspaces
+    std::vector<csint> c(S.cp);  // column pointers for L
+
+    const CSCMatrix C = A.symperm(S.p_inv);
+
+    L.p_ = S.cp;  // column pointers for L
+
+    // Compute L(:, k) for L*L' = C
+    for (csint k = 0; k < N; k++) {
+        //--- Nonzero pattern of L(k, :) ---------------------------------------
+        // pattern of L(k, :) in topological order
+        const std::vector<csint> s = ereach(C, k, S.parent);
+
+        //--- Triangular Solve -------------------------------------------------
+        // Solve L(0:k-1, 0:k-1) * x = C(:, k)
+        for (const auto& i : s) {
+            // These pointers are incremented one at a time, guaranteeing that
+            // the columns of L are sorted.
+            csint p = c[i]++;
+            L.i_[p] = k;                        // store L(k, i) in column i
+        }
+
+        //--- Compute L(k, k) --------------------------------------------------
+        csint p = c[k]++;
+        L.i_[p] = k;  // store L(k, k) = sqrt(d) in column k
+    }
+
+    // Guaranteed by construction
+    L.has_sorted_indices_ = true;
+    L.has_canonical_format_ = true;  // L retains numerically 0 entries
+
+    return L;
+}
+
+
 CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
 {
     auto [M, N] = A.shape();

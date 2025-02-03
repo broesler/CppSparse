@@ -269,6 +269,27 @@ Symbolic schol(
 );
 
 
+/** Compute the complete symbolic Cholesky factorization of a sparse matrix.
+ * 
+ * This functions computes the entire sparsity pattern of `L` in *O(|L|)* time.
+ * It returns the matrix with sorted columns.
+ *
+ * @note This function assumes that `A` is symmetric and positive definite.
+ *
+ * @param A the matrix to factorize
+ * @param S the Symbolic factorization of `A`, from `cs::schol()`
+ *
+ * @return L  a CSCMatrix with the sparsity pattern of the Cholesky
+ *         factor of A, and the values vector zeroed out.
+ *
+ * @see cs_schol
+ * @see cs_chol
+ * @see cs::schol()
+ * @see cs::chol()
+ */
+CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S);
+
+
 /** Compute the up-looking Cholesky factorization of a sparse matrix.
  *
  * @note This function assumes that `A` is symmetric and positive definite.

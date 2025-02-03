@@ -2450,6 +2450,18 @@ TEST_CASE("Cholesky decomposition")
         std::vector<csint> parent = etree(A);
         REQUIRE(etree_height(parent) == 6);
     }
+
+    SECTION("Exercise 4.10: Symbolic Cholesky") {
+        Symbolic S = schol(A);
+        CSCMatrix L = chol(A, S);  // numeric factorization
+        CSCMatrix Ls = symbolic_cholesky(A, S);
+
+        CHECK(Ls.nnz() == L.nnz());
+        CHECK(Ls.shape() == L.shape());
+        CHECK(Ls.indptr() == L.indptr());
+        CHECK(Ls.indices() == L.indices());
+        CHECK(Ls.data().size() == L.data().size());  // allocation only
+    }
 }
 
 

@@ -938,6 +938,8 @@ class CSCMatrix
         friend std::vector<csint> chol_rowcounts(const CSCMatrix& A);
         friend std::vector<csint> chol_colcounts(const CSCMatrix& A);
 
+        friend CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S);
+
         friend CSCMatrix chol(const CSCMatrix& A, const Symbolic& S);
 
         friend CSCMatrix& chol_update(

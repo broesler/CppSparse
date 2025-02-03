@@ -177,6 +177,26 @@ std::vector<csint> ereach(
     const std::vector<csint>& parent
 );
 
+
+/** Compute the reachability set for the *k*th row of *L*, the Cholesky faxtcor
+ * of this matrix.
+ *
+ * `A` and `parent` are assumed to be postordered, and `A` is assumed to have
+ * sorted columns.
+ *
+ * @param A  the matrix to factorize
+ * @param k  the row index
+ * @param parent  the parent vector of the elimination tree
+ *
+ * @return xi  the reachability set of the *k*th row of *L* in topological order
+ */
+std::vector<csint> ereach_post(
+    const CSCMatrix& A,
+    csint k,
+    const std::vector<csint>& parent
+);
+
+
 /** Count the number of non-zeros in each row of the Cholesky factor L of A.
  *
  * @param A  the matrix to factorize

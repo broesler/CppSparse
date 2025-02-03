@@ -2249,6 +2249,39 @@ TEST_CASE("Cholesky decomposition")
         REQUIRE(postorder == expect);
     }
 
+    SECTION("Reachability of Post-ordered Elimination Tree") {
+        // Map defines the post-ordered row subtrees.
+        // See Davis Figure 4.8, p 49.
+        std::map<csint, std::vector<csint>> expect_map = {
+            {0, {}},
+            {1, {0}},
+            {2, {}},
+            {3, {0, 1, 2}},
+            {4, {}},
+            {5, {}},
+            {6, {4, 5}},
+            {7, {4, 6}},
+            {8, {6, 7}},
+            {9, {1, 3, 5, 6, 7, 8}},
+            {10, {1, 2, 3, 7, 8, 9}},
+        };
+
+        // Post-order A and recompute the elimination tree
+        std::vector<csint> parent = etree(A);
+        std::vector<csint> p = post(parent);
+
+        // NOTE that we cannot just permute parent, as the post-ordering
+        // is not a permutation of the elimination tree.
+        A = A.permute(inv_permute(p), p).to_canonical();
+        parent = etree(A);
+
+        std::cout << "ereach_post: " << std::endl;
+        for (const auto& [key, expect] : expect_map) {
+            std::vector<csint> xi = ereach_post(A, key, parent);
+            CHECK(xi == expect);
+        }
+    }
+
     SECTION("First descendants and levels") {
         std::vector<csint> expect_firsts = {4, 0, 0, 5, 2, 4, 4, 0, 4, 0, 0};
         std::vector<csint> expect_levels = {5, 4, 3, 5, 3, 4, 3, 2, 2, 1, 0};

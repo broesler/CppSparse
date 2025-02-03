@@ -101,6 +101,37 @@ std::vector<csint> ereach(
 }
 
 
+std::vector<csint> ereach_post(
+    const CSCMatrix& A,
+    csint k,
+    const std::vector<csint>& parent
+)
+{
+    assert(A.has_sorted_indices_);
+
+    std::vector<bool> marked(A.N_, false);  // workspace
+    std::vector<csint> xi;  // internal dfs stack, output stack
+    xi.reserve(A.N_);
+
+    marked[k] = true;  // mark node k as visited
+
+    for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
+        csint i = A.i_[p];  // A(i, k) is nonzero
+        csint i2 = A.i_[p+1];  // next row index
+        if (i <= k) {     // only consider upper triangular part of A
+            // Traverse up the etree i -> a = lca(i1, i2)
+            while (i < i2 && i != -1 && !marked[i]) {
+                xi.push_back(i);   // L(k, i) is nonzero
+                marked[i] = true;  // mark i as visited
+                i = parent[i]; 
+            }
+        }
+    }
+
+    return xi;
+}
+
+
 std::vector<csint> post(const std::vector<csint>& parent)
 {
     const csint N = parent.size();

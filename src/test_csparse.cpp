@@ -256,7 +256,6 @@ TEST_CASE("Test vector permutations", "[vector]")
     std::vector<double> b = {0, 1, 2, 3, 4};
     std::vector<csint> p = {2, 0, 1, 4, 3};
 
-    // TODO write operator[] for std::vector so that b[p] == pvec(p, b)
     REQUIRE(pvec(p, b) == std::vector<double>{2, 0, 1, 4, 3});
     REQUIRE(ipvec(p, b) == std::vector<double>{1, 2, 0, 4, 3});
     REQUIRE(inv_permute(p) == std::vector<csint>{1, 2, 0, 4, 3});
@@ -912,8 +911,8 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
 
         CSCMatrix expect = A;
 
-        compare_noncanonical(CSCMatrix(A.gaxpy_col(I, Z), 4, 4), expect);
-        compare_noncanonical(CSCMatrix(A.T().gatxpy_col(I, Z), 4, 4), expect);
+        compare_matrices(CSCMatrix(A.gaxpy_col(I, Z), 4, 4), expect);
+        compare_matrices(CSCMatrix(A.T().gatxpy_col(I, Z), 4, 4), expect);
     }
 
     SECTION("Test arbitrary square matrix in column-major format") {
@@ -1229,8 +1228,8 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
         CSCMatrix C = 0.1 * A + 9.0 * B;
         // std::cout << "C = \n" << C << std::endl;
 
-        compare_noncanonical(C, expect);
-        compare_noncanonical(Cf, expect);
+        compare_matrices(C, expect);
+        compare_matrices(Cf, expect);
     }
 
     SECTION("Test sparse column vectors") {
@@ -1295,9 +1294,9 @@ TEST_CASE("Test matrix permutation", "[permute]")
 
         CSCMatrix C = A.permute(inv_permute(p), q);
 
-        compare_noncanonical(C, A);
-        compare_noncanonical(A.permute_rows(p), A);
-        compare_noncanonical(A.permute_cols(q), A);
+        compare_matrices(C, A);
+        compare_matrices(A.permute_rows(p), A);
+        compare_matrices(A.permute_cols(q), A);
     }
 
     SECTION("Test row permutation") {
@@ -1313,8 +1312,8 @@ TEST_CASE("Test matrix permutation", "[permute]")
 
         CSCMatrix C = A.permute(inv_permute(p), q);
 
-        compare_noncanonical(C, expect);
-        compare_noncanonical(A.permute_rows(inv_permute(p)), expect);
+        compare_matrices(C, expect);
+        compare_matrices(A.permute_rows(inv_permute(p)), expect);
     }
 
     SECTION("Test column permutation") {
@@ -1330,8 +1329,8 @@ TEST_CASE("Test matrix permutation", "[permute]")
 
         CSCMatrix C = A.permute(inv_permute(p), q);
 
-        compare_noncanonical(C, expect);
-        compare_noncanonical(A.permute_cols(q), expect);
+        compare_matrices(C, expect);
+        compare_matrices(A.permute_cols(q), expect);
     }
 
     SECTION("Test both row and column permutation") {
@@ -1348,8 +1347,8 @@ TEST_CASE("Test matrix permutation", "[permute]")
         std::vector<csint> p_inv = inv_permute(p);
         CSCMatrix C = A.permute(p_inv, q);
 
-        compare_noncanonical(C, expect);
-        compare_noncanonical(A.permute_rows(p_inv).permute_cols(q), expect);
+        compare_matrices(C, expect);
+        compare_matrices(A.permute_rows(p_inv).permute_cols(q), expect);
     }
 
     SECTION("Test symperm") {
@@ -1371,7 +1370,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
 
         CSCMatrix C = A.symperm(inv_permute(p));
 
-        compare_noncanonical(C, expect);
+        compare_matrices(C, expect);
     }
 
     // Exercise 2.26
@@ -1382,7 +1381,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
         CSCMatrix expect = A.T();
         CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
-        compare_noncanonical(C, expect);
+        compare_matrices(C, expect);
     }
 
     SECTION("Test row-permuted transpose") {
@@ -1398,7 +1397,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
 
         CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
-        compare_noncanonical(C, expect);
+        compare_matrices(C, expect);
     }
 
     SECTION("Test column-permuted transpose") {
@@ -1414,7 +1413,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
 
         CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
-        compare_noncanonical(C, expect);
+        compare_matrices(C, expect);
     }
 
     SECTION("Test permuted transpose") {
@@ -1430,7 +1429,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
 
         CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
-        compare_noncanonical(C, expect);
+        compare_matrices(C, expect);
     }
 }
 
@@ -1562,7 +1561,7 @@ TEST_CASE("Test concatentation")
         ).tocsc();
 
         CSCMatrix C = hstack(E, A);
-        compare_canonical(C, expect);
+        compare_matrices(C, expect);
     }
 
     SECTION("Test vertical concatenation") {
@@ -1573,7 +1572,7 @@ TEST_CASE("Test concatentation")
         ).tocsc();
 
         CSCMatrix C = vstack(E, A);
-        compare_canonical(C, expect);
+        compare_matrices(C, expect);
     }
 }
 
@@ -1591,7 +1590,7 @@ TEST_CASE("Test slicing")
         ).tocsc();
 
         CSCMatrix C = A.slice(1, 3, 0, A.shape()[1]);
-        compare_canonical(C, expect);
+        compare_matrices(C, expect);
     }
 
     SECTION("Test column slicing") {
@@ -1602,7 +1601,7 @@ TEST_CASE("Test slicing")
         ).tocsc();
 
         CSCMatrix C = A.slice(0, A.shape()[0], 1, 3);
-        compare_canonical(C, expect);
+        compare_matrices(C, expect);
     }
 
     SECTION("Test row and column slicing") {
@@ -1613,7 +1612,7 @@ TEST_CASE("Test slicing")
         ).tocsc();
 
         CSCMatrix C = A.slice(1, 3, 1, 4);
-        compare_canonical(C, expect);
+        compare_matrices(C, expect);
     }
 }
 
@@ -1632,7 +1631,7 @@ TEST_CASE("Test non-contiguous indexing")
             std::vector<csint>  {  0,   2,   2}
         ).tocsc();
 
-        compare_canonical(C, expect);
+        compare_matrices(C, expect);
     }
 
     SECTION("Test indexing with duplicate rows") {
@@ -1644,7 +1643,7 @@ TEST_CASE("Test non-contiguous indexing")
             std::vector<csint>  {  0,   0,   0,   1,   1,   2,   2}
         ).tocsc();
 
-        compare_canonical(C, expect);
+        compare_matrices(C, expect);
     }
 
     SECTION("Test indexing with duplicate columns") {
@@ -1656,7 +1655,7 @@ TEST_CASE("Test non-contiguous indexing")
             std::vector<csint>  {  0,   2,   2,   3}
         ).tocsc();
 
-        compare_canonical(C, expect);
+        compare_matrices(C, expect);
     }
 }
 
@@ -2082,8 +2081,8 @@ TEST_CASE("Permuted triangular solvers")
 
         CHECK(p_inv == expect_p);
         CHECK(q_inv == expect_q);
-        compare_noncanonical(L, PLQ.permute(inv_permute(p_inv), q_inv));
-        compare_noncanonical(PLQ, L.permute(p_inv, inv_permute(q_inv)));
+        compare_matrices(L, PLQ.permute(inv_permute(p_inv), q_inv));
+        compare_matrices(PLQ, L.permute(p_inv, inv_permute(q_inv)));
     }
 
     SECTION("Find permutation vectors of permuted U") {
@@ -2097,8 +2096,8 @@ TEST_CASE("Permuted triangular solvers")
 
         CHECK(p_inv == expect_p);
         CHECK(q_inv == expect_q);
-        compare_noncanonical(U, PUQ.permute(inv_permute(p_inv), q_inv));
-        compare_noncanonical(PUQ, U.permute(p_inv, inv_permute(q_inv)));
+        compare_matrices(U, PUQ.permute(inv_permute(p_inv), q_inv));
+        compare_matrices(PUQ, U.permute(p_inv, inv_permute(q_inv)));
     }
 
     SECTION("Permuted P L x = b, with unknown P") {
@@ -2204,9 +2203,10 @@ TEST_CASE("Cholesky decomposition")
     }
 
     CSCMatrix L = COOMatrix(vals, rows, cols).tocsc();
-    CSCMatrix A = (L + L.T().band(1, N)).to_canonical();
+    CSCMatrix A = L + L.T().band(1, N);
 
     CHECK(A.is_symmetric());
+    // CHECK(A.has_canonical_format());
 
     SECTION("Elimination Tree") {
         std::vector<csint> expect_A = {5, 2, 7, 5, 7, 6, 8, 9, 9, 10, -1};
@@ -2217,6 +2217,7 @@ TEST_CASE("Cholesky decomposition")
     }
 
     SECTION("Reachability of Elimination Tree") {
+        // Map defines the row subtrees.
         // See Davis Figure 4.4, p 40.
         std::map<csint, std::vector<csint>> expect_map = {
             {0, {}},
@@ -2237,7 +2238,7 @@ TEST_CASE("Cholesky decomposition")
         for (const auto& [key, expect] : expect_map) {
             std::vector<csint> xi = ereach(A, key, parent);
             // REQUIRE_THAT(xi, UnorderedEquals(expect));
-            REQUIRE(xi == expect);
+            REQUIRE(xi == expect);  // in exact order
         }
     }
 

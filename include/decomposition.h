@@ -21,7 +21,8 @@ enum class AMDOrder
 {
     Natural,
     APlusAT,
-    ATimesA
+    ATANoDenseRows,
+    ATA
 };
 
 
@@ -139,12 +140,12 @@ LCAStatus least_common_ancestor(
 
 // ---------- Matrix operations
 /** Compute the elimination tree of A.
-  *
+ *
  * @param A  the matrix to factorize
-  * @param ata  if True, compute the elimination tree of A^T A
-  *
-  * @return parent  the parent vector of the elimination tree
-  */
+ * @param ata  if True, compute the elimination tree of A^T A
+ *
+ * @return parent  the parent vector of the elimination tree
+ */
 std::vector<csint> etree(const CSCMatrix& A, bool ata=false);
 
 
@@ -228,20 +229,20 @@ std::vector<csint> counts(
 
 
 /** Count the number of non-zeros in each row of the Cholesky factor L of A.
-  *
+ *
  * @param A  the matrix to factorize
  *
-  * @return rowcount  the number of non-zeros in each row of L
-  */
+ * @return rowcount  the number of non-zeros in each row of L
+ */
 std::vector<csint> chol_rowcounts(const CSCMatrix& A);
 
 
 /** Count the number of non-zeros in each column of the Cholesky factor L of A.
-  *
+ *
  * @param A  the matrix to factorize
  *
-  * @return colcount  the number of non-zeros in each column of L
-  */
+ * @return colcount  the number of non-zeros in each column of L
+ */
 std::vector<csint> chol_colcounts(const CSCMatrix& A);
 
 
@@ -252,9 +253,9 @@ std::vector<csint> chol_colcounts(const CSCMatrix& A);
  * @param A the matrix to factorize
  * @param order the ordering method to use:
  *       - 0: natural ordering
- *       - 1: amd(A + A.T())
- *       - 2: amd(??)  FIXME
- *       - 3: amd(A^T A)
+ *       - 1: amd(A + A.T)
+ *       - 2: amd(A.T * A) with no dense rows
+ *       - 3: amd(A.T * A)
  * @param postorder  if True, postorder the matrix in addition to the AMD
  *        (or natural) ordering. See: Davis, Exercise 4.9.
  *

@@ -9,9 +9,9 @@
 
 #include <algorithm>  // std::copy
 #include <cassert>
-#include <cmath>    // std::sqrt
+#include <cmath>      // std::sqrt
 #include <iterator>   // std::back_inserter
-#include <numeric>  // std::iota
+#include <numeric>    // std::iota
 
 #include "decomposition.h"
 #include "csc.h"
@@ -425,7 +425,7 @@ Symbolic schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 
     // Exercise 4.9
     if (use_postorder) {
-        p = pvec(postorder, p);    // combine the permutations
+        p = pvec(postorder, p);         // combine the permutations
         S.p_inv = inv_permute(p);
         C = A.symperm(S.p_inv, false);  // apply combined permutation
         S.parent = etree(C);

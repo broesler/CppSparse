@@ -1166,6 +1166,10 @@ CSCMatrix CSCMatrix::permute(
 
     C.p_[N_] = nz;
 
+    // TODO test if this is true and necessary. Breaks some tests.
+    // C.has_sorted_indices_ = has_sorted_indices_;
+    // C.has_canonical_format_ = has_canonical_format_;
+
     return C;
 }
 
@@ -1290,6 +1294,10 @@ bool CSCMatrix::is_valid(const bool sorted, const bool values) const
 
     // TODO not sure how we're supposed to use O(M) space? Column counts can't
     // be independently checked.
+    // A: for printing the matrix?
+    // A: to check for duplicates! We need to store the row indices of each
+    // column, which requires O(M) space. Then we need to sort them and go
+    // through the list to check for duplicates. This is O(M log M) time.
 
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {

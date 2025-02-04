@@ -303,6 +303,25 @@ CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S);
 CSCMatrix chol(const CSCMatrix& A, const Symbolic& S);
 
 
+/** Compute the up-looking Cholesky factorization of a sparse matrix, given the
+ * non-zero pattern.
+ *
+ * See: Davis, Exercise 4.12.
+ *
+ * @note This function assumes that `A` is symmetric and positive definite.
+ *
+ * @param A the matrix to factorize
+ * @param S the Symbolic factorization of `A` from `cs::schol()`
+ * @param[in, out] L  the symbolic Cholesky factor of `A` from
+ *        `cs::symbolic_cholesky()`. This matrix is modified in place.
+ *
+ * @return the numeric Cholesky factorization of `A`
+ *
+ * @see 'python/cholesky.py::chol_left_amp()'
+ */
+CSCMatrix& rechol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L);
+
+
 /** Update the Cholesky factor for \f$ A = A + σ w w^T \f$.
  *
  * @param L  the Cholesky factor of A

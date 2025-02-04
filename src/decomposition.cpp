@@ -551,6 +551,78 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
 }
 
 
+
+
+CSCMatrix& rechol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L)
+{
+    // Ensure L has been allocated via symbolic_cholesky
+    assert(!L.indptr().empty());
+    assert(!L.indices().empty());
+    assert(!L.data().empty());
+
+    csint N = A.shape()[1];
+
+    // Workspaces
+    // TODO do we need c array if we have L.p_ and L.i_ already?
+    std::vector<csint> c(S.cp);  // column pointers for L
+    std::vector<double> x(N);    // sparse accumulator
+
+    const CSCMatrix C = A.symperm(S.p_inv);
+
+    L.p_ = S.cp;  // column pointers for L
+
+    // Compute L(:, k) for L*L' = C
+    for (csint k = 0; k < N; k++) {
+        //--- Nonzero pattern of L(k, :) ---------------------------------------
+        x[k] = 0.0;  // x(0:k) is now zero
+
+        // scatter C into x = full(triu(C(:,k)))
+        for (csint p = C.p_[k]; p < C.p_[k+1]; p++) {
+            csint i = C.i_[p];
+            if (i <= k) {
+                x[i] = C.v_[p];
+            }
+        }
+
+        double d = x[k];  // d = C(k, k)
+        x[k] = 0.0;       // clear x for k + 1st iteration
+
+        //--- Triangular Solve -------------------------------------------------
+        // Solve L(0:k-1, 0:k-1) * x = C(0:k-1, k) =- L[:k, :k] * x = C[:k, k]
+        //   => L[k, :k] := x.T == l_{12}.T
+        // ereach gives the pattern of L(k, :) in topological order
+        for (const auto& i : ereach(C, k, S.parent)) {
+            double lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
+            x[i] = 0.0;                         // clear x for k + 1st iteration
+
+            for (csint p = L.p_[i] + 1; p < c[i]; p++) {
+                x[L.i_[p]] -= L.v_[p] * lki;    // x -= L(i, :) * L(k, i)
+            }
+
+            // subtract the sparse dot product from the diagonal
+            d -= lki * lki;                     // d -= L(k, i) * L(k, i)
+
+            // These pointers are incremented one at a time, guaranteeing that
+            // the columns of L are sorted.
+            L.v_[c[i]++] = lki;                 // store L(k, i) in column i
+        }
+
+        //--- Compute L(k, k) --------------------------------------------------
+        if (d <= 0) {
+            throw std::runtime_error("Matrix not positive definite!");
+        }
+
+        L.v_[c[k]++] = std::sqrt(d);  // store L(k, k) = sqrt(d) in column k
+    }
+
+    // Guaranteed by construction
+    L.has_sorted_indices_ = true;
+    L.has_canonical_format_ = true;  // L retains numerically 0 entries
+
+    return L;
+}
+
+
 CSCMatrix& chol_update(
     CSCMatrix& L,
     int σ,  // TODO use a bool and set the ±1 in the function

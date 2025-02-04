@@ -2462,6 +2462,32 @@ TEST_CASE("Cholesky decomposition")
         CHECK(Ls.indices() == L.indices());
         CHECK(Ls.data().size() == L.data().size());  // allocation only
     }
+
+    SECTION("Exercise 4.12: Up-looking Cholesky with Pattern") {
+        Symbolic S = schol(A, AMDOrder::Natural);
+        CSCMatrix L = symbolic_cholesky(A, S);
+
+        std::cout << "symbolic L: " << std::endl;
+        std::cout << "L.indptr: " << L.indptr() << std::endl;
+        std::cout << "L.indices: [" << std::endl;
+        for (csint k = 0; k < L.shape()[1]; k++) {
+            std::cout << std::setw(2) << k << ": ";
+            for (csint p = L.indptr()[k]; p < L.indptr()[k + 1]; p++) {
+                std::cout << L.indices()[p] << ", ";
+            }
+            std::cout << std::endl;
+        }
+        
+        // Compute the numeric factorization using the non-zero pattern
+        L = rechol(A, S, L);
+
+        std::cout << "up-looking L: " << std::endl;
+        L.print_dense();
+
+        CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
+
+        compare_matrices(LLT, A, tol);
+    }
 }
 
 

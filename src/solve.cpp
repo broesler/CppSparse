@@ -481,7 +481,7 @@ SparseSolution spsolve(
 
     // Solve Lx = b_k or Ux = b_k
     for (auto& j : xi) {  // x(j) is nonzero
-        csint J = j;  // j maps to col J of G (NOTE ignore for now)
+        csint J = j;  // j maps to col J of G (TODO p_inv arg for LU)
         if (J < 0) {
             continue;                                // x(j) is not in the pattern of G
         }
@@ -499,6 +499,7 @@ SparseSolution spsolve(
 
 std::vector<csint> reach(const CSCMatrix& A, const CSCMatrix& B, csint k)
 {
+    // TODO p_inv argument (ignore for now, used in LU decomoposition)
     std::vector<bool> marked(A.N_, false);
     std::vector<csint> xi;  // do not initialize for dfs call!
     xi.reserve(A.N_);

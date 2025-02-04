@@ -491,7 +491,6 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
     std::vector<csint> c(S.cp);  // column pointers for L
     std::vector<double> x(N);    // sparse accumulator
 
-    // const CSCMatrix C = S.p_inv.empty() ? A : A.symperm(S.p_inv);
     const CSCMatrix C = A.symperm(S.p_inv);
 
     L.p_ = S.cp;  // column pointers for L
@@ -499,11 +498,10 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
     // Compute L(:, k) for L*L' = C
     for (csint k = 0; k < N; k++) {
         //--- Nonzero pattern of L(k, :) ---------------------------------------
-        // pattern of L(k, :) in topological order
-        const std::vector<csint> s = ereach(C, k, S.parent);
         x[k] = 0.0;  // x(0:k) is now zero
 
-        // scatter into x = full(triu(C(:,k)))
+        // scatter C into x = full(triu(C(:,k)))
+        // C does not have to be in sorted order (d = x[k] gets the diagonal)
         for (csint p = C.p_[k]; p < C.p_[k+1]; p++) {
             csint i = C.i_[p];
             if (i <= k) {
@@ -515,8 +513,10 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
         x[k] = 0.0;       // clear x for k + 1st iteration
 
         //--- Triangular Solve -------------------------------------------------
-        // Solve L(0:k-1, 0:k-1) * x = C(:, k)
-        for (const auto& i : s) {
+        // Solve L(0:k-1, 0:k-1) * x = C(0:k-1, k) == L[:k, :k] * x = C[:k, k]
+        //   => L[k, :k] := x.T
+        // ereach gives the pattern of L(k, :) in topological order
+        for (const auto& i : ereach(C, k, S.parent)) {
             double lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 
@@ -524,10 +524,12 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
                 x[L.i_[p]] -= L.v_[p] * lki;    // x -= L(i, :) * L(k, i)
             }
 
+            // subtract the sparse dot product from the diagonal
             d -= lki * lki;                     // d -= L(k, i) * L(k, i)
 
-            // These pointers are incremented one at a time, guaranteeing that
-            // the columns of L are sorted.
+            // We build L one *row* at a time, in topological order. All
+            // i < k since they are reachable, so the diagonal is always the
+            // first element in its column, and all other elements are in order.
             csint p = c[i]++;
             L.i_[p] = k;                        // store L(k, i) in column i
             L.v_[p] = lki;

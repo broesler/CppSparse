@@ -2199,7 +2199,7 @@ TEST_CASE("Cholesky decomposition")
 
     // Make A positive definite by increasing the diagonal
     for (csint i = 0; i < N; i++) {
-        vals[i + N_offdiag] = 10.0;
+        vals[i + N_offdiag] = 10.0 + i;
     }
 
     CSCMatrix L = COOMatrix(vals, rows, cols).tocsc();

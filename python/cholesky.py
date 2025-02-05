@@ -335,8 +335,8 @@ if __name__ == "__main__":
     A = L + L.T
 
     # Get the sum of the off-diagonal elements to ensure positive definiteness
-    diag_A = np.max(np.sum(L + L.T, axis=0))
-    A.setdiag(1 + diag_A)
+    # diag_A = np.max(np.sum(A, axis=0))
+    A.setdiag(np.arange(10, 21))
 
     A = A.toarray()
 

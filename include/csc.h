@@ -923,6 +923,12 @@ class CSCMatrix
             const std::vector<csint>& parent
         );
 
+        friend std::vector<csint> ereach_queue(
+            const CSCMatrix& A,
+            csint k,
+            const std::vector<csint>& parent
+        );
+
         friend std::vector<csint> rowcnt(
             const CSCMatrix& A,
             const std::vector<csint>& parent,

@@ -164,7 +164,7 @@ csint etree_height(const std::vector<csint>& parent);
 
 
 /** Compute the reachability set for the *k*th row of *L*, the Cholesky faxtcor
- * of this matrix.
+ * of `A`, in topological order.
  *
  * @param A  the matrix to factorize
  * @param k  the row index
@@ -192,6 +192,22 @@ std::vector<csint> ereach(
  * @return xi  the reachability set of the *k*th row of *L* in topological order
  */
 std::vector<csint> ereach_post(
+    const CSCMatrix& A,
+    csint k,
+    const std::vector<csint>& parent
+);
+
+
+/** Compute the reachability set for the *k*th row of *L*, the Cholesky faxtcor
+ * of `A`, in no particular order.
+ *
+ * @param A  the matrix to factorize
+ * @param k  the row index
+ * @param parent  the parent vector of the elimination tree
+ *
+ * @return xi  the reachability set of the *k*th row of *L*
+ */
+std::vector<csint> ereach_queue(
     const CSCMatrix& A,
     csint k,
     const std::vector<csint>& parent

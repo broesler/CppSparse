@@ -132,6 +132,34 @@ std::vector<csint> ereach_post(
 }
 
 
+std::vector<csint> ereach_queue(
+    const CSCMatrix& A,
+    csint k,
+    const std::vector<csint>& parent
+)
+{
+    std::vector<bool> marked(A.N_, false);  // workspace
+    std::vector<csint> s;  // internal dfs stack, output stack
+    s.reserve(A.N_);
+
+    marked[k] = true;  // mark node k as visited
+
+    for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
+        csint i = A.i_[p];  // A(i, k) is nonzero
+        if (i <= k) {     // only consider upper triangular part of A
+            // Traverse up the etree
+            while (!marked[i]) {
+                s.push_back(i);  // L(k, i) is nonzero
+                marked[i] = true;  // mark i as visited
+                i = parent[i]; 
+            }
+        }
+    }
+
+    return s;
+}
+
+
 std::vector<csint> post(const std::vector<csint>& parent)
 {
     const csint N = parent.size();
@@ -446,7 +474,6 @@ CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S)
     auto [M, N] = A.shape();
     CSCMatrix L(M, N, S.lnz);        // allocate result
 
-    std::vector<csint> flag(N, -1);  // "mark" with column index
     std::vector<csint> c(S.cp);      // column pointers for L
 
     const CSCMatrix C = A.symperm(S.p_inv);
@@ -455,22 +482,9 @@ CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S)
 
     // Compute L(:, k) for L*L' = C
     for (csint k = 0; k < N; k++) {
-        // TODO could call ereach(C, k, S.parent, &L, &c)? More of a subroutine
-        // than a function call per se, but would be cleaner to read.
-
-        // pattern of L(k, :) from ereach loop
-        flag[k] = k;                   // mark node k as visited
-
-        for (csint p = C.p_[k]; p < C.p_[k+1]; p++) {
-            csint i = C.i_[p];         // C(i, k) is nonzero
-            if (i <= k) {              // only consider upper triangular
-                // Traverse up the etree
-                while (flag[i] != k) {
-                    L.i_[c[i]++] = k;  // store L(k, i) directly in column i
-                    flag[i] = k;       // mark node i as visited
-                    i = S.parent[i];
-                }
-            }
+        // pattern of L(k, :) (order doesn't matter)
+        for (const auto& j : ereach_queue(C, k, S.parent)) {
+            L.i_[c[j]++] = k;  // store L(k, j) in column j
         }
 
         // Store the diagonal element
@@ -600,11 +614,8 @@ CSCMatrix& leftchol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L)
         // Result is: [a_22 - l_12.T @ l_12 | a_32 - L_31 @ l_12].T
         //                  x[k]            | ---- x[k+1:] ----
 
-        // TODO try in topological order first, then incorporate ereach directly
-        // since order doesn't matter for multiplication only (no solve).
-
-        // ereach gives pattern of L(k, :) in topological order
-        for (const auto& j : ereach(C, k, S.parent)) {
+        // ereach_queue gives pattern of L(k, :) in no particular order
+        for (const auto& j : ereach_queue(C, k, S.parent)) {
             // Compute x[k:] -= L[k:, j] * L[k, j]
             //
             // Row indices and values in L[k:, j] are stored in:

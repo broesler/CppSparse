@@ -658,6 +658,11 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         REQUIRE_THAT(C.norm(), WithinAbs(11.1, tol));
     }
 
+    SECTION("Test Frobenius norm") {
+        double expect = 8.638286867197685;  // computed in MATLAB and numpy
+        REQUIRE_THAT(C.fronorm(), WithinAbs(expect, tol));
+    }
+
     // Exercise 2.2
     SECTION("Test Conversion to COOMatrix") {
         auto convert_test = [](const COOMatrix& B) {

@@ -1284,6 +1284,19 @@ double CSCMatrix::norm() const
 }
 
 
+double CSCMatrix::fronorm() const
+{
+    double sumsq = 0;
+
+    // Sum the squares of the entries in v_
+    for (const auto& v : v_) {
+        sumsq += v * v;
+    }
+
+    return std::sqrt(sumsq);
+}
+
+
 bool CSCMatrix::is_valid(const bool sorted, const bool values) const
 {
     // Check number of columns

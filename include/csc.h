@@ -733,11 +733,21 @@ class CSCMatrix
          */
         CSCMatrix permute_cols(const std::vector<csint> q) const;
 
-        /** Compute the 1-norm of the matrix.
+        /** Compute the 1-norm of the matrix (maximum column sum).
          *
          * The 1-norm is defined as \f$ \|A\|_1 = \max_j \sum_{i=1}^{m} |a_{ij}| \f$.
          */
         double norm() const;
+
+        /** Compute the Frobenius norm of the matrix.
+         *
+         * The Frobenius norm is defined as
+         * $$
+         *      \|A\|_F = 
+         *      \( \sum_{i=1}^{m} \sum_{j=1}^{n} |a_{ij}|^2 \)^{\frac{1}{2}}
+         * $$.
+         */
+        double fronorm() const;
 
         /** Check a matrix for valid compressed sparse column format.
          *

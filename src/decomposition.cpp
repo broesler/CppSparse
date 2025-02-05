@@ -87,7 +87,7 @@ std::vector<csint> ereach(
             while (!marked[i]) {
                 s.push_back(i);  // L(k, i) is nonzero
                 marked[i] = true;  // mark i as visited
-                i = parent[i]; 
+                i = parent[i];
             }
 
             // Push path onto output stack
@@ -117,13 +117,13 @@ std::vector<csint> ereach_post(
 
     for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
         csint i = A.i_[p];  // A(i, k) is nonzero
-        csint i2 = A.i_[p+1];  // next row index
+        csint i2 = p < (A.i_.size() - 1) ? A.i_[p+1] : A.i_.size();  // next row index
         if (i <= k) {     // only consider upper triangular part of A
             // Traverse up the etree i -> a = lca(i1, i2)
             while (i < i2 && i != -1 && !marked[i]) {
                 xi.push_back(i);   // L(k, i) is nonzero
                 marked[i] = true;  // mark i as visited
-                i = parent[i]; 
+                i = parent[i];
             }
         }
     }
@@ -151,7 +151,7 @@ std::vector<csint> ereach_queue(
             while (!marked[i]) {
                 s.push_back(i);  // L(k, i) is nonzero
                 marked[i] = true;  // mark i as visited
-                i = parent[i]; 
+                i = parent[i];
             }
         }
     }
@@ -168,8 +168,8 @@ std::vector<csint> post(const std::vector<csint>& parent)
     postorder.reserve(N);
 
     // Linked list representation of the children of each node in ascending
-    // order of node number. 
-    //   head[i] is the first child of node i. 
+    // order of node number.
+    //   head[i] is the first child of node i.
     //   next[j] is the next child of node j.
     std::vector<csint> head(N, -1);
     std::vector<csint> next(N);
@@ -233,7 +233,7 @@ FirstDesc firstdesc(
 
     for (csint k = 0; k < N; k++) {
         csint i = postorder[k];  // node i of etree is kth postordered node
-        csint len = 0;      // traverse from i to root 
+        csint len = 0;      // traverse from i to root
         csint r = i;
         while (r != -1 && first[r] == -1) {
             first[r] = k;
@@ -548,10 +548,10 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S, double drop_tol)
             // i < k since they are reachable, so the diagonal is always the
             // first element in its column, and all other elements are in order.
             if (std::abs(lki) > drop_tol) {
-            csint p = c[i]++;
-            L.i_[p] = k;                        // store L(k, i) in column i
-            L.v_[p] = lki;
-        }
+                csint p = c[i]++;
+                L.i_[p] = k;                        // store L(k, i) in column i
+                L.v_[p] = lki;
+            }
         }
 
         //--- Compute L(k, k) --------------------------------------------------
@@ -561,8 +561,8 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S, double drop_tol)
 
         double sqrt_d = std::sqrt(d);
         if (std::abs(sqrt_d) > drop_tol) {
-        csint p = c[k]++;
-        L.i_[p] = k;  // store L(k, k) = sqrt(d) in column k
+            csint p = c[k]++;
+            L.i_[p] = k;  // store L(k, k) = sqrt(d) in column k
             L.v_[p] = sqrt_d;
         }
     }

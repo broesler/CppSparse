@@ -553,9 +553,7 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
 }
 
 
-
-
-CSCMatrix& rechol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L)
+CSCMatrix& leftchol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L)
 {
     // Ensure L has been allocated via symbolic_cholesky
     assert(!L.indptr().empty());
@@ -565,7 +563,113 @@ CSCMatrix& rechol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L)
     csint N = A.shape()[1];
 
     // Workspaces
-    // TODO do we need c array if we have L.p_ and L.i_ already?
+    std::vector<csint> c(S.cp);  // column pointers for L
+    std::vector<double> x(N);    // sparse accumulator
+
+    // TODO check if we can avoid this "full" permutation.
+    // const CSCMatrix C = A.symperm(S.p_inv);
+    const CSCMatrix C = A.permute(S.p_inv, inv_permute(S.p_inv));
+
+    L.p_ = S.cp;  // column pointers for L
+
+    // See 'python/cholesky.py' -> chol_left_amp() for top-level algorithm
+
+    // Compute L(:, k) for L*L' = C in left-looking order
+    for (csint k = 0; k < N; k++) {
+        // FIXME x used to contain C[:, k] in the upper triangular part aka:
+        //  x = [ --- a_{12} --- | a_{22} | 0   ... 0 ].T
+        //      [ 1    ...   k-1     k      k+1 ... N ]
+        //
+        // We actually want a_{32}, which is the kth *row* of the upper tri, or
+        // the kth *column* of the lower tri, but symperm only touches the upper
+        // tri part.
+        //  x = [ 0  ...  0 | a_{22} | --- a_{32} --- ].T
+        //      [ 1  ... k-1    k     k+1   ...     N ]
+        //
+        // It is expensive to get a row without a row-oriented matrix... are we
+        // doing this correctly?
+
+        // scatter [a22 a32.T] into x
+        // x := full(tril(C(:, k))) == full(triu(C(k, :)))
+
+        // // Method for C = A.symperm(S.p_inv):
+        // for (csint j = k; j < N; j++) {
+        //     for (csint p = C.p_[j]; p < C.p_[j+1]; p++) {
+        //         csint i = C.i_[p];
+        //         if (i == k) {  // only consider upper triangular
+        //             x[j] = C.v_[p];
+        //         }
+        //     }
+        // }
+
+        // Method for C = A.permute(S.p_inv, inv_permute(S.p_inv)):
+        for (csint p = C.p_[k]; p < C.p_[k+1]; p++) {
+            csint i = C.i_[p];
+            if (i >= k) {  // only take diagonal + lower triangular
+                x[i] = C.v_[p];
+            }
+        }
+
+        //--- Sparse Multiply --------------------------------------------------
+        // Multiply L[k:, :k] @ L[k, :k].T, and subtract it from x
+        //
+        //        1    ...  k-1     k
+        //   k   [--- l12.T ---] [  |  ]  == (N - k) x (k - 1) * (k - 1) x 1
+        //   k+1 [             ] [  |  ]  => (N - k) x 1
+        //   ... [     L31     ] [ l12 ]
+        //   N   [             ] [  |  ]
+        //
+        // Result is: [a_22 - l_12.T @ l_12 | a_32 - L_31 @ l_12].T
+        //                  x[k]            | ---- x[k+1:] ----
+
+        // TODO try in topological order first, then incorporate ereach directly
+        // since order doesn't matter for multiplication only (no solve).
+
+        // ereach gives pattern of L(k, :) in topological order
+        for (const auto& j : ereach(C, k, S.parent)) {
+            // Compute x[k:] -= L[k:, j] * L[k, j]
+            //
+            // Row indices and values in L(k:N, j) are stored in:
+            //  L.i_[c[j]... L.p_[j+1]-1] and L.v_[c[j]... L.p_[j+1]-1]
+
+            for (csint p = L.p_[j]; p < L.p_[j+1]; p++) {
+                x[L.i_[p]] -= L.v_[p] * L.v_[c[j]];
+            }
+            c[j]++;
+        }
+
+        //--- Compute L(k:, k) -------------------------------------------------
+        double Lkk = std::sqrt(x[k]);
+        L.v_[c[k]++] = Lkk;
+        x[k] = 0.0;  // clear x for k + 1st iteration
+
+
+        // Compute the rest of the column L[k+1:, k] = x[k+1:] / L[k, k]
+        for (csint p = c[k]; p < L.p_[k+1]; p++) {
+            L.v_[p] = x[L.i_[p]] / Lkk;
+            x[L.i_[p]] = 0.0;  // clear x for k + 1st iteration
+        }
+    }
+
+    // Guaranteed by construction
+    L.has_sorted_indices_ = true;
+    L.has_canonical_format_ = true;  // L retains numerically 0 entries
+
+    return L;
+}
+
+
+CSCMatrix& rechol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L)
+{
+    // Ensure L has been allocated via symbolic_cholesky
+    assert(!L.p_.empty());
+    assert(!L.i_.empty());
+    assert(!L.v_.empty());
+    assert(L.has_sorted_indices_);
+
+    csint N = A.shape()[1];
+
+    // Workspaces
     std::vector<csint> c(S.cp);  // column pointers for L
     std::vector<double> x(N);    // sparse accumulator
 

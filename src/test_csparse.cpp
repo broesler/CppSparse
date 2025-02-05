@@ -2463,6 +2463,18 @@ TEST_CASE("Cholesky decomposition")
         CHECK(Ls.data().size() == L.data().size());  // allocation only
     }
 
+    SECTION("Exercise 4.11: Left-looking Cholesky") {
+        Symbolic S = schol(A, AMDOrder::Natural);
+        CSCMatrix L = symbolic_cholesky(A, S);
+
+        // Compute the numeric factorization using the non-zero pattern
+        L = leftchol(A, S, L);
+
+        CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
+
+        compare_matrices(LLT, A, tol);
+    }
+
     SECTION("Exercise 4.12: Up-looking Cholesky with Pattern") {
         Symbolic S = schol(A, AMDOrder::Natural);
         CSCMatrix L = symbolic_cholesky(A, S);

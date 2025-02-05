@@ -941,6 +941,7 @@ class CSCMatrix
         friend CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S);
 
         friend CSCMatrix chol(const CSCMatrix& A, const Symbolic& S);
+        friend CSCMatrix& leftchol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L);
         friend CSCMatrix& rechol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L);
 
         friend CSCMatrix& chol_update(

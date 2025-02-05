@@ -576,6 +576,7 @@ CSCMatrix& leftchol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L)
     assert(!L.indptr().empty());
     assert(!L.indices().empty());
     assert(!L.data().empty());
+    assert(L.has_sorted_indices_);
 
     csint N = A.shape()[1];
 
@@ -583,9 +584,7 @@ CSCMatrix& leftchol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L)
     std::vector<csint> c(S.cp);  // column pointers for L
     std::vector<double> x(N);    // sparse accumulator
 
-    // TODO check if we can avoid this "full" permutation. Currently need the
-    // *lower* triangular part for a_{32} so we don't need to do a row search.
-    // const CSCMatrix C = A.symperm(S.p_inv);
+    // Need the *lower* triangular part for a_{32}, so do a full permutation
     const CSCMatrix C = A.permute(S.p_inv, inv_permute(S.p_inv));
 
     L.p_ = S.cp;  // column pointers for L
@@ -621,10 +620,10 @@ CSCMatrix& leftchol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L)
             // Row indices and values in L[k:, j] are stored in:
             //  L.i_ and L.v_[c[j] ... L.p_[j+1]-1]
             //
-            for (csint p = c[j]; p < L.p_[j+1]; p++) {
-                x[L.i_[p]] -= L.v_[p] * L.v_[c[j]];
+            double lkj = L.v_[c[j]];  // cache L(k, j)
+            for (csint p = c[j]++; p < L.p_[j+1]; p++) {
+                x[L.i_[p]] -= L.v_[p] * lkj;
             }
-            c[j]++;
         }
 
         //--- Compute L[k:, k] -------------------------------------------------

@@ -499,7 +499,7 @@ CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S)
 }
 
 
-CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
+CSCMatrix chol(const CSCMatrix& A, const Symbolic& S, double drop_tol)
 {
     auto [M, N] = A.shape();
     CSCMatrix L(M, N, S.lnz);  // allocate result
@@ -547,9 +547,11 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
             // We build L one *row* at a time, in topological order. All
             // i < k since they are reachable, so the diagonal is always the
             // first element in its column, and all other elements are in order.
+            if (std::abs(lki) > drop_tol) {
             csint p = c[i]++;
             L.i_[p] = k;                        // store L(k, i) in column i
             L.v_[p] = lki;
+        }
         }
 
         //--- Compute L(k, k) --------------------------------------------------
@@ -557,9 +559,12 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
             throw std::runtime_error("Matrix not positive definite!");
         }
 
+        double sqrt_d = std::sqrt(d);
+        if (std::abs(sqrt_d) > drop_tol) {
         csint p = c[k]++;
         L.i_[p] = k;  // store L(k, k) = sqrt(d) in column k
-        L.v_[p] = std::sqrt(d);
+            L.v_[p] = sqrt_d;
+        }
     }
 
     // Guaranteed by construction
@@ -802,6 +807,30 @@ CholCounts chol_etree_counts(const CSCMatrix& A)
 
     return {parent, row_counts, col_counts};
 }
+
+
+CSCMatrix ichol(
+    const CSCMatrix& A,
+    ICholMethod method,
+    double drop_tol
+)
+{
+    switch (method) {
+        case ICholMethod::NoFill:
+            // L = A;  // just copy the matrix and update the values
+            throw std::runtime_error("Not implemented!");
+            break;
+
+        case ICholMethod::ICT:
+            return chol(A, schol(A), drop_tol);
+            break;
+
+        default:
+            throw std::runtime_error("Invalid incomplete Cholesky method!");
+    }
+}
+
+
 
 } // namespace cs
 

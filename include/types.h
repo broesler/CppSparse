@@ -16,6 +16,8 @@ using csint = std::int64_t;
 using Shape = std::array<csint, 2>;
 
 // Forward declarations
+enum class ICholMethod;
+
 struct CholCounts;
 struct TriPerm;
 struct SparseSolution;

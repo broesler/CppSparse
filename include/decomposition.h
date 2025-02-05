@@ -33,6 +33,12 @@ enum class LeafStatus {
 };
 
 
+enum class ICholMethod {
+    NoFill,
+    ICT
+};
+
+
 // ---------- Structs
 struct FirstDesc {
     std::vector<csint> first, level;
@@ -315,10 +321,11 @@ CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S);
  *
  * @param A the matrix to factorize
  * @param S the Symbolic factorization of `A`
+ * @param drop_tol  the drop tolerance for the factorization
  *
  * @return the numeric Cholesky factorization of `A`
  */
-CSCMatrix chol(const CSCMatrix& A, const Symbolic& S);
+CSCMatrix chol(const CSCMatrix& A, const Symbolic& S, double drop_tol=0.0);
 
 
 /** Compute the left-looking Cholesky factorization of a sparse matrix, given
@@ -396,6 +403,34 @@ CSCMatrix& chol_update(
  */
 CholCounts chol_etree_counts(const CSCMatrix& A);
 
+
+/** Compute the incomplete Cholesky factor \f$ L L^T = A \f$.
+ *
+ * This function uses the up-looking algorithm, like `chol`.
+ *
+ * See: Davis, Exercise 4.13 and MATLAB ichol.
+ *
+ * @note This function assumes that `A` is symmetric and positive definite.
+ *
+ * @param A  the matrix to factorize. Only the upper triangle is used.
+ * @param method the method to use: NoFill or ICT
+ *        * NoFill: no fill-in. The factor will have the same non-zero pattern
+ *           as the input `A`.
+ *        * ICT: incomplete Cholesky with threshold drop tolerance. Any
+ *          element that is smaller than `drop_tol` will not be included in `L`.
+ * @param drop_tol  the drop tolerance, default is 1e-4
+ *
+ * @return L  the incomplete (lower triangular) Cholesky factor of A.
+ *
+ * @see cs::chol()
+ * @see cs::leftchol()
+ * @see cs::ilu()
+ */
+CSCMatrix ichol(
+    const CSCMatrix& A,
+    ICholMethod method=ICholMethod::NoFill,
+    double drop_tol=1e-4
+);
 
 
 }  // namespace cs

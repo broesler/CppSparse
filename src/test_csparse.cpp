@@ -2490,6 +2490,33 @@ TEST_CASE("Cholesky decomposition")
 
         compare_matrices(LLT, A, tol);
     }
+
+    SECTION("Exercise 4.13: Incomplete Cholesky") {
+        // Compute the incomplete Cholesky factorization with no fill-in
+        double drop_tol = 1e-2;
+        CSCMatrix Li = ichol(A, ICholMethod::ICT, drop_tol);
+
+        // Compute the complete Cholesky factorization for comparison
+        CSCMatrix L = chol(A, schol(A));
+
+        CSCMatrix LLT = (Li * Li.T()).droptol().to_canonical();
+
+        // std::cout << "Li:" << std::endl;
+        // Li.print_dense();
+        // std::cout << "LLT:" << std::endl;
+        // LLT.print_dense();
+        // std::cout << "A:" << std::endl;
+        // A.print_dense();
+
+        CHECK(Li.nnz() <= L.nnz());
+        CHECK(LLT.nnz() >= A.nnz());
+        // NOTE the ICT method uses the column counts from `schol`, so any
+        // entries that are dropped will be exactly 0 in L.
+        // REQUIRE_THAT(Li.data() >= drop_tol, AllTrue());
+
+        // TODO implement CSCMatrix::subtract() and use it here
+        REQUIRE((LLT + A.dot(-1)).fronorm() / A.fronorm() < drop_tol);
+    }
 }
 
 

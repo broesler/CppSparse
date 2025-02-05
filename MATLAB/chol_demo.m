@@ -18,6 +18,7 @@ L = sparse(rows, cols, vals, N, N);
 % Create the symmetric matrix A, and add to diagonal to ensure positive definite
 diag_A = max(sum(L + L' - 2*diag(diag(L))));
 A = full(L + triu(L', 1) + diag_A*eye(N));  % use full for easier display
+A = sparse(A);
 
 % Get the elimination tree
 [parent, post] = etree(A);
@@ -51,6 +52,15 @@ A_up = A + w*w';
 R_up = cholupdate(R', w, '+')';
 
 assert(norm(R_up * R_up' - A_up) < 1e-14)
+
+% Compute the incomplete Cholesky factorization
+droptol = 1e-2
+options = struct('type', 'ict', 'droptol', droptol);
+Li = ichol(A, options);
+
+% check that Li is a good approximation to A
+test_norm = norm(Li * Li' - A, 'fro') / norm(A, 'fro')
+assert(test_norm < droptol)
 
 % TODO fails in octave
 % G = graph(A);

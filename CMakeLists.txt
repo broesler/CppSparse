@@ -30,14 +30,14 @@ pybind11_add_module(csparse_module src/pybind11_wrapper.cpp)
 
 target_link_libraries(csparse_module PRIVATE csc_lib)
 
-# Ensure C++20 standard
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)  # Use strict standard compliance
+# Ensure C++20 standard -- doesn't work?
+# set(CMAKE_CXX_STANDARD 20)
+# set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# set(CMAKE_CXX_EXTENSIONS OFF)  # Use strict standard compliance
 
-# Compiler options for both the library and the Python module
-target_compile_options(csc_lib PRIVATE -Wall -Wextra -pedantic)
-target_compile_options(csparse_module PRIVATE -Wall -Wextra -pedantic)
+# Explicit compiler options for both the library and the Python module
+target_compile_options(csc_lib PRIVATE --std=c++20 -Wall -pedantic)
+target_compile_options(csparse_module PRIVATE --std=c++20 -Wall -pedantic)
 
 # Set Python output directory
 set_target_properties(

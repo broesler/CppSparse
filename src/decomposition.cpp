@@ -569,7 +569,7 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S, double drop_tol)
 
     // Guaranteed by construction
     L.has_sorted_indices_ = true;
-    L.has_canonical_format_ = true;  // L retains numerically 0 entries
+    L.has_canonical_format_ = (drop_tol == 0);  // retains numerically 0 entries
 
     return L;
 }

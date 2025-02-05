@@ -582,8 +582,8 @@ SparseSolution chol_lsolve(
     }
 
     if (parent.empty()) {
-        // Inspect L to get the parent vector, since it is in canonical format.
-        assert(L.has_canonical_format());
+        // Inspect L to get the parent vector, since it has sorted indices
+        assert(L.has_sorted_indices());
         parent.assign(N, -1);
         for (csint j = 0; j < N-1; j++) {  // skip the last row (only diagonal)
             parent[j] = L.i_[L.p_[j]+1];   // first off-diagonal element
@@ -623,8 +623,8 @@ SparseSolution chol_ltsolve(
     }
 
     if (parent.empty()) {
-        // Inspect L to get the parent vector, since it is in canonical format.
-        assert(L.has_canonical_format());
+        // Inspect L to get the parent vector, since it has sorted indices
+        assert(L.has_sorted_indices());
         parent.assign(N, -1);
         for (csint j = 0; j < N-1; j++) {  // skip the last row (only diagonal)
             parent[j] = L.i_[L.p_[j]+1];   // first off-diagonal element

@@ -455,6 +455,9 @@ CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S)
 
     // Compute L(:, k) for L*L' = C
     for (csint k = 0; k < N; k++) {
+        // TODO could call ereach(C, k, S.parent, &L, &c)? More of a subroutine
+        // than a function call per se, but would be cleaner to read.
+
         // pattern of L(k, :) from ereach loop
         flag[k] = k;                   // mark node k as visited
 
@@ -495,7 +498,7 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S)
 
     L.p_ = S.cp;  // column pointers for L
 
-    // Compute L(:, k) for L*L' = C
+    // Compute L(k, :) for L*L' = C in up-looking order
     for (csint k = 0; k < N; k++) {
         //--- Nonzero pattern of L(k, :) ---------------------------------------
         x[k] = 0.0;  // x(0:k) is now zero

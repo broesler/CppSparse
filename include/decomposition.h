@@ -275,6 +275,8 @@ Symbolic schol(
  * This functions computes the entire sparsity pattern of `L` in *O(|L|)* time.
  * It returns the matrix with sorted columns.
  *
+ * See: Davis, Exercise 4.10.
+ *
  * @note This function assumes that `A` is symmetric and positive definite.
  *
  * @param A the matrix to factorize
@@ -298,7 +300,7 @@ CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S);
  * @param A the matrix to factorize
  * @param S the Symbolic factorization of `A`
  *
- * @return the Cholesky factorization of `A`
+ * @return the numeric Cholesky factorization of `A`
  */
 CSCMatrix chol(const CSCMatrix& A, const Symbolic& S);
 

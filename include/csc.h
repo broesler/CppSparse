@@ -432,7 +432,7 @@ class CSCMatrix
             const std::vector<double>& y
         ) const;
 
-        /** Matrix transpose-vector multiply `y = T x + y`.
+        /** Matrix transpose-vector multiply `y = A.T x + y`.
          *
          * See: Davis, Exercise 2.1. Compute \f$ A^T x + y \f$ without explicitly
          * computing the transpose.
@@ -504,7 +504,7 @@ class CSCMatrix
             const std::vector<double>& Y
         ) const;
 
-        /** Matrix multiply `Y = T X + Y` column-major dense matrices `X` and `Y`.
+        /** Matrix multiply `Y = A.T X + Y` column-major dense matrices `X` and `Y`.
          *
          * See: Davis, Exercise 2.28(a).
          *
@@ -518,7 +518,7 @@ class CSCMatrix
             const std::vector<double>& Y
         ) const;
 
-        /** Matrix multiply `Y = T X + Y` for row-major dense matrices `X` and `Y`.
+        /** Matrix multiply `Y = A.T X + Y` for row-major dense matrices `X` and `Y`.
          *
          * See: Davis, Exercise 2.27(b).
          *
@@ -532,7 +532,7 @@ class CSCMatrix
             const std::vector<double>& Y
         ) const;
 
-        /** Matrix multiply `Y = T X + Y` column-major dense matrices `X` and
+        /** Matrix multiply `Y = A.T X + Y` column-major dense matrices `X` and
          * `Y`, but operate on blocks of columns.
          *
          * See: Davis, Exercise 2.28(c).

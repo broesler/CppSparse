@@ -2275,7 +2275,6 @@ TEST_CASE("Cholesky decomposition")
         A = A.permute(inv_permute(p), p).to_canonical();
         parent = etree(A);
 
-        std::cout << "ereach_post: " << std::endl;
         for (const auto& [key, expect] : expect_map) {
             std::vector<csint> xi = ereach_post(A, key, parent);
             CHECK(xi == expect);

@@ -111,6 +111,8 @@ PYBIND11_MODULE(csparse, m) {
                         const std::vector<cs::csint>&,
                         const std::vector<cs::csint>&,
                         const cs::CSCMatrix&>(&cs::CSCMatrix::assign))
+        .def("__call__", py::overload_cast<cs::csint, cs::csint>(&cs::CSCMatrix::operator()))
+        .def("__call__", py::overload_cast<cs::csint, cs::csint>(&cs::CSCMatrix::operator(), py::const_))
         //
         .def("tocoo", &cs::CSCMatrix::tocoo)
         .def("toarray", &cs::CSCMatrix::toarray, py::arg("order")='F')

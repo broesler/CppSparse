@@ -39,7 +39,12 @@ N_repeats = 3  # number of "runs" in %timeit (7 is default)
 N_samples = 1  # number of samples in each run (100,000 is default)
 
 # TODO include the transpose versions and plot as subfigs
-gaxpy_methods = ['gaxpy_col', 'gaxpy_row', 'gaxpy_block']
+if filestem.startswith('gaxpy'):
+    gaxpy_methods = ['gaxpy_col', 'gaxpy_row', 'gaxpy_block']
+elif filestem.startswith('gatxpy'):
+    gaxpy_methods = ['gatxpy_col', 'gatxpy_row', 'gatxpy_block']
+else:
+    raise ValueError(f"Unknown filestem: {filestem}")
 
 # Store the results
 times = defaultdict(list)
@@ -51,6 +56,9 @@ for N in Ns:
     M = int(0.9 * N)
     K = int(0.8 * N)
     A = cs.COOMatrix.random(M, N, density, SEED).tocsc()
+
+    if filestem.startswith('gatxpy'):
+        A = A.T()
 
     # Create compatible random, dense matrix for multiplying and adding
     X = cs.COOMatrix.random(N, K, density, SEED)

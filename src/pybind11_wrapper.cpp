@@ -43,7 +43,10 @@ PYBIND11_MODULE(csparse, m) {
         .def(py::init<const cs::CSCMatrix&>())
         .def("nnz", &cs::COOMatrix::nnz)
         .def("nzmax", &cs::COOMatrix::nzmax)
-        .def("shape", &cs::COOMatrix::shape)
+        .def("shape", [](const cs::COOMatrix& A) {
+            auto s = A.shape();
+            return std::make_tuple(s[0], s[1]);
+        })
         //
         .def("row", &cs::COOMatrix::row)
         .def("column", &cs::COOMatrix::column)
@@ -89,7 +92,10 @@ PYBIND11_MODULE(csparse, m) {
         //
         .def("nnz", &cs::CSCMatrix::nnz)
         .def("nzmax", &cs::CSCMatrix::nzmax)
-        .def("shape", &cs::CSCMatrix::shape)
+        .def("shape", [](const cs::CSCMatrix& A) {
+            auto s = A.shape();
+            return std::make_tuple(s[0], s[1]);
+        })
         //
         .def("indptr", &cs::CSCMatrix::indptr)
         .def("indices", &cs::CSCMatrix::indices)

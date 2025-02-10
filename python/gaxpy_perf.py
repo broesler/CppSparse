@@ -5,7 +5,7 @@
 #   Author: Bernie Roesler
 #
 """
-Plot the gaxpy performance data.
+Create and plot the gaxpy performance data.
 """
 # =============================================================================
 
@@ -15,8 +15,10 @@ import timeit
 
 from collections import defaultdict
 from functools import partial
+from pathlib import Path
 
 import csparse as cs
+
 
 SAVE_FIG = True
 
@@ -33,10 +35,10 @@ Ns = np.r_[10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
 
 density = 0.25  # density of the matrix
 
-N_repeats = 7   # number of "runs" in %timeit (7 is default)
+N_repeats = 1   # number of "runs" in %timeit (7 is default)
 N_samples = 1  # number of samples in each run (100,000 is default)
 
-# TODO include the transpose versions
+# TODO include the transpose versions and plot as subfigs
 gaxpy_methods = ['gaxpy_col', 'gaxpy_row', 'gaxpy_block']
 
 # Store the results
@@ -64,12 +66,16 @@ for N in Ns:
     for method_name in gaxpy_methods:
         args = (X_row, Y_row) if method_name.endswith('row') else (X_col, Y_col)
         method = getattr(A, method_name)
+
         # Create a partial function with the arguments for timing
         partial_method = partial(method, *args)
+
         # Run the function (len(ts) == N_repeats)
         ts = timeit.repeat(partial_method, repeat=N_repeats, number=N_samples)
+
         ts_mean = np.mean(ts)
         ts_std = np.std(ts)
+
         times[method_name]['mean'].append(ts_mean)
         times[method_name]['std_dev'].append(ts_std)
 
@@ -81,6 +87,7 @@ for N in Ns:
 #         Plot the data
 # -----------------------------------------------------------------------------
 fig, ax = plt.subplots(num=1, clear=True)
+fig.set_size_inches(6.4, 4.8, forward=True)
 for i, (key, val) in enumerate(times.items()):
     ax.errorbar(Ns, val['mean'],
                 yerr=val['std_dev'], ecolor=f"C{i}", fmt='.-', label=key)
@@ -96,8 +103,15 @@ ax.set_title(f"{filestem.split('_')[0]}, density {density}")
 
 plt.show()
 
+
 if SAVE_FIG:
-    fig.savefig(f"./plots/{filestem}.png")
+    fig_fullpath = Path(f"../plots/{filestem}.png")
+    try:
+        fig.savefig(fig_fullpath)
+        print(f"Saved figure to {fig_fullpath}.")
+    except Exception as e:
+        print(f"Could not save figure to {fig_fullpath}: {e}")
+        raise e
 
 # =============================================================================
 # =============================================================================

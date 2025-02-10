@@ -10,6 +10,7 @@
 #ifndef _CSPARSE_CSC_H_
 #define _CSPARSE_CSC_H_
 
+#include <cassert>
 #include <iostream>
 #include <string_view>
 #include <vector>

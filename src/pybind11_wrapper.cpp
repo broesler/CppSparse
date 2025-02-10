@@ -59,6 +59,7 @@ PYBIND11_MODULE(csparse, m) {
             cs::csint j = t[1].cast<cs::csint>();
             A.assign(i, j, v);
         })
+        // TODO handle assigning to vectors
         //
         .def("compress", &cs::COOMatrix::compress)
         .def("tocsc", &cs::COOMatrix::tocsc)
@@ -125,6 +126,7 @@ PYBIND11_MODULE(csparse, m) {
                         const std::vector<cs::csint>&,
                         const cs::CSCMatrix&>(&cs::CSCMatrix::assign))
         .def("__setitem__", [](cs::CSCMatrix& A, py::tuple t, double v) {
+            // TODO handle slices
             cs::csint i = t[0].cast<cs::csint>();
             cs::csint j = t[1].cast<cs::csint>();
             A.assign(i, j, v);

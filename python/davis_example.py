@@ -26,7 +26,7 @@ Ac = sparse.coo_matrix((v, (i, j)), shape=(4, 4)).tocsc()
 
 # print(Ac)
 
-A = cs.COOMatrix(v, i, j, 4, 4)
+A = cs.COOMatrix(v, i, j, 4, 4).tocsc()
 
 # R = cs.COOMatrix.random(10, 10, density=0.1)
 # print(np.r_[R.data()])

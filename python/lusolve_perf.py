@@ -37,14 +37,8 @@ densities = np.r_[
     0.001, 0.01, 0.1, 0.2, 0.5, 1.0
 ]
 
-# densities = np.r_[
-#     0.001,
-#     0.01, 0.02, 0.03, 0.05,
-#     0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
-# ]
-
-N_repeats = 3   # number of "runs" in %timeit (7 is default)
-N_samples = 5  # number of samples in each run (100,000 is default)
+N_repeats = 7    # number of "runs" in %timeit (7 is default)
+N_samples = 100  # number of samples in each run (100,000 is default)
 
 times = defaultdict(list)
 
@@ -55,8 +49,6 @@ for density in densities:
 
     # Create a random matrix
     A = cs.COOMatrix.random(N, N, density, SEED).tocsc()
-
-    print(f"Matrix density: {A.nnz() / (N**2):.2g}")
 
     # Ensure all diagonals are non-zero so that L is non-singular
     for i in range(N):

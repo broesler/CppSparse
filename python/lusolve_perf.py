@@ -86,7 +86,7 @@ for density in densities:
         ts = np.array(ts) / N_samples  # time per loop
         ts_min = np.min(ts)
 
-        times[func_name]['mean'].append(ts_min)
+        times[func_name].append(ts_min)
 
         print(f"{func_name}: {ts_min:.4g} s per loop, "
               f"({N_repeats} runs, {N_samples} loops each)")
@@ -99,12 +99,24 @@ fig, axs = plt.subplots(num=1, nrows=2, sharex=True, clear=True)
 fig.set_size_inches(6.4, 8, forward=True)
 fig.suptitle(f"{filestem.split('_')[0]}, N = {N}")
 
-# TODO make color the same for original and optimized versions, but change
-# linestyle for the optimized versions (blue for lsolve, orange for usolve)
+colors = {
+    'lsolve': 'C0',
+    'usolve': 'C1',
+    'lsolve_opt': 'C0',
+    'usolve_opt': 'C1',
+}
+
+linestyles = {
+    'lsolve': '-',
+    'usolve': '-',
+    'lsolve_opt': '--',
+    'usolve_opt': '--',
+}
 
 ax = axs[0]
 for i, (key, val) in enumerate(times.items()):
-    ax.errorbar(densities, val['mean'], '.-', label=key)
+    ax.plot(densities, val,
+            marker='.', color=colors[key], ls=linestyles[key], label=key)
 
 # ax.set_xscale('log')
 # ax.set_yscale('log')
@@ -119,17 +131,18 @@ for i, k in enumerate(['l', 'u']):
     key = f"{k}solve"
     opt_key = key + '_opt'
 
-    mean = np.r_[times[key]['mean']]
-    opt_mean = np.r_[times[opt_key]['mean']]
+    mean = np.r_[times[key]]
+    opt_mean = np.r_[times[opt_key]]
     rel_diff = (mean - opt_mean) / mean
 
-    ax.plot(densities, rel_diff, '.-', color=f"C{i}", label=key)
+    ax.plot(densities, rel_diff,
+            marker='.', color=colors[key], ls=linestyles[key], label=key)
 
 ax.grid(which='both')
 ax.legend()
 
 ax.set_xlabel('Density of Matrix and RHS vector')
-ax.set_ylabel('Time Ratio of Original to Optimized')
+ax.set_ylabel('Relative Difference between Original and Optimized')
 
 plt.show()
 

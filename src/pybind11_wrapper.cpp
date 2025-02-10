@@ -54,6 +54,11 @@ PYBIND11_MODULE(csparse, m) {
         //
         .def("assign", py::overload_cast
                         <cs::csint, cs::csint, double>(&cs::COOMatrix::assign))
+        .def("__setitem__", [](cs::COOMatrix& A, py::tuple t, double v) {
+            cs::csint i = t[0].cast<cs::csint>();
+            cs::csint j = t[1].cast<cs::csint>();
+            A.assign(i, j, v);
+        })
         //
         .def("compress", &cs::COOMatrix::compress)
         .def("tocsc", &cs::COOMatrix::tocsc)
@@ -67,10 +72,6 @@ PYBIND11_MODULE(csparse, m) {
         //
         // TODO how to handle printing
         // .def("__str__", &cs::COOMatrix::str);
-
-        // TODO Need separate C++ function using py::tuple for set/getitem
-        // .def("__setitem__", &cs::COOMatrix::assign)
-        // .def("__getitem__", &cs::COOMatrix::assign)
 
     // CSCMatrix class
     py::class_<cs::CSCMatrix>(m, "CSCMatrix")
@@ -106,7 +107,13 @@ PYBIND11_MODULE(csparse, m) {
         .def("has_canonical_format", &cs::CSCMatrix::has_canonical_format)
         .def("is_symmetric", &cs::CSCMatrix::is_symmetric)
         //
-        // .def("__call__", &cs::CSCMatrix::operator())
+        .def("__call__", py::overload_cast<cs::csint, cs::csint>(&cs::CSCMatrix::operator(), py::const_))
+        .def("__getitem__", [](cs::CSCMatrix& A, py::tuple t) {
+            cs::csint i = t[0].cast<cs::csint>();
+            cs::csint j = t[1].cast<cs::csint>();
+            return A(i, j);
+        })
+        //
         .def("assign", py::overload_cast
                         <cs::csint, cs::csint, double>(&cs::CSCMatrix::assign))
         .def("assign", py::overload_cast<
@@ -117,8 +124,11 @@ PYBIND11_MODULE(csparse, m) {
                         const std::vector<cs::csint>&,
                         const std::vector<cs::csint>&,
                         const cs::CSCMatrix&>(&cs::CSCMatrix::assign))
-        .def("__call__", py::overload_cast<cs::csint, cs::csint>(&cs::CSCMatrix::operator()))
-        .def("__call__", py::overload_cast<cs::csint, cs::csint>(&cs::CSCMatrix::operator(), py::const_))
+        .def("__setitem__", [](cs::CSCMatrix& A, py::tuple t, double v) {
+            cs::csint i = t[0].cast<cs::csint>();
+            cs::csint j = t[1].cast<cs::csint>();
+            A.assign(i, j, v);
+        })
         //
         .def("tocoo", &cs::CSCMatrix::tocoo)
         .def("toarray", &cs::CSCMatrix::toarray, py::arg("order")='F')

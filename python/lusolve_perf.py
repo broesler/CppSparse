@@ -9,30 +9,99 @@ Plot the lusolve performance data.
 """
 # =============================================================================
 
-import json
 import matplotlib.pyplot as plt
 import numpy as np
+import timeit
+
+from collections import defaultdict
+from functools import partial
+from pathlib import Path
+
+import csparse as cs
+
 
 SAVE_FIG = True
 
-filestem = 'lusolve_perf'
+SEED = 565656
 
-with open(f"./plots/{filestem}.json", 'r') as f:
-    data = json.load(f)
+filestem = 'lusolve_perf_py'
 
-# Hack key names from other script
-N = int(data['density'])
-del data['density']
+# -----------------------------------------------------------------------------
+#         Create the data
+# -----------------------------------------------------------------------------
+lusolve_funcs = [cs.lsolve, cs.usolve, cs.lsolve_opt, cs.usolve_opt]
 
-densities = np.r_[data['Ns']] / 1000
-del data['Ns']
+N = 1000  # size of the square matrix
 
-times = data     # all other values are the times
-del data
+densities = np.r_[
+    0.001, 0.01, 0.1, 0.2, 0.5, 1.0
+]
 
-# Plot the data
+# densities = np.r_[
+#     0.001,
+#     0.01, 0.02, 0.03, 0.05,
+#     0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
+# ]
+
+N_repeats = 7   # number of "runs" in %timeit (7 is default)
+N_samples = 10  # number of samples in each run (100,000 is default)
+
+times = defaultdict(lambda: {'mean': [], 'std_dev': []})
+
+rng = np.random.default_rng(SEED)
+
+for density in densities:
+    print(f"---------- Density = {density:6.2g} ----------")
+
+    # Create a random matrix
+    A = cs.COOMatrix.random(N, N, density, SEED).tocsc()
+
+    print(f"Matrix density: {A.nnz() / (N**2):.2g}")
+
+    # Ensure all diagonals are non-zero so that L is non-singular
+    for i in range(N):
+        A[i, i] = 1.0
+
+    # Take the lower and upper triangular
+    L = A.band(-N, 0)
+    U = L.T()
+
+    # Create a dense column vector that is the sum of the rows of L
+    bL = np.r_[L.sum_rows()]
+    bU = np.r_[U.sum_rows()]
+
+    # Create sparse RHS vectors by removing random elements
+    idx_zero = rng.choice(N, int((1 - density) * N), replace=False)
+    bL[idx_zero] = 0.0
+    bU[idx_zero] = 0.0
+
+    for func in lusolve_funcs:
+        func_name = func.__name__
+        args = (L, bL) if func_name.startswith('l') else (U, bU)
+        partial_func = partial(func, *args)
+
+        # Time the function
+        ts = timeit.repeat(partial_func, repeat=N_repeats, number=N_samples)
+
+        ts_mean = np.mean(ts)
+        ts_std = np.std(ts)
+
+        times[func_name]['mean'].append(ts_mean)
+        times[func_name]['std_dev'].append(ts_std)
+
+        print(f"{func_name}: {ts_mean:.4g} ± {ts_std:.4g} s per loop, "
+              f"({N_repeats} runs, {N_samples} loops each)")
+
+
+# -----------------------------------------------------------------------------
+#         Plot the data
+# -----------------------------------------------------------------------------
 fig, axs = plt.subplots(num=1, nrows=2, sharex=True, clear=True)
+fig.set_size_inches(6.4, 8, forward=True)
 fig.suptitle(f"{filestem.split('_')[0]}, N = {N}")
+
+# TODO make color the same for original and optimized versions, but change
+# linestyle for the optimized versions (blue for lsolve, orange for usolve)
 
 ax = axs[0]
 for i, (key, val) in enumerate(times.items()):
@@ -52,11 +121,11 @@ for i, k in enumerate(['l', 'u']):
     key = f"{k}solve"
     opt_key = key + '_opt'
 
-    mean = np.r_[times[key]['mean']] 
+    mean = np.r_[times[key]['mean']]
     opt_mean = np.r_[times[opt_key]['mean']]
     rel_diff = (mean - opt_mean) / mean
 
-    var = np.r_[times[key]['std_dev']]**2 
+    var = np.r_[times[key]['std_dev']]**2
     opt_var = np.r_[times[opt_key]['std_dev']]**2
 
     ax.errorbar(densities, rel_diff, yerr=np.sqrt(var + opt_var),
@@ -71,7 +140,13 @@ ax.set_ylabel('Time Ratio of Original to Optimized')
 plt.show()
 
 if SAVE_FIG:
-    fig.savefig(f"./plots/{filestem}.png")
+    fig_fullpath = Path(f"../plots/{filestem}.png")
+    try:
+        fig.savefig(fig_fullpath)
+        print(f"Saved figure to {fig_fullpath}.")
+    except Exception as e:
+        print(f"Could not save figure to {fig_fullpath}: {e}")
+        raise e
 
 # =============================================================================
 # =============================================================================

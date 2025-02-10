@@ -21,7 +21,9 @@ namespace py = pybind11;
 PYBIND11_MODULE(csparse, m) {
     m.doc() = "CSparse module for sparse matrix operations.";
 
-    // COOMatrix class
+    //--------------------------------------------------------------------------
+    //        COOMatrix class
+    //--------------------------------------------------------------------------
     py::class_<cs::COOMatrix>(m, "COOMatrix")
         .def(py::init<>())
         .def(py::init<
@@ -74,7 +76,9 @@ PYBIND11_MODULE(csparse, m) {
         // TODO how to handle printing
         // .def("__str__", &cs::COOMatrix::str);
 
-    // CSCMatrix class
+    //--------------------------------------------------------------------------
+    //        CSCMatrix class
+    //--------------------------------------------------------------------------
     py::class_<cs::CSCMatrix>(m, "CSCMatrix")
         .def(py::init<>())
         .def(py::init<
@@ -182,6 +186,13 @@ PYBIND11_MODULE(csparse, m) {
         .def("sum_rows", &cs::CSCMatrix::sum_rows)
         .def("sum_cols", &cs::CSCMatrix::sum_cols);
 
+    //--------------------------------------------------------------------------
+    //      Solve functions
+    //--------------------------------------------------------------------------
+    m.def("lsolve", &cs::lsolve);
+    m.def("usolve", &cs::usolve);
+    m.def("lsolve_opt", &cs::lsolve_opt);
+    m.def("usolve_opt", &cs::usolve_opt);
 }
 
 /*==============================================================================

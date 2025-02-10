@@ -44,6 +44,6 @@ set_target_properties(
     csparse_module
     PROPERTIES
     OUTPUT_NAME csparse
-    MODULE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python
+    MODULE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/python
 )
 

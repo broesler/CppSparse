@@ -9,26 +9,77 @@ Plot the gaxpy performance data.
 """
 # =============================================================================
 
-import json
 import matplotlib.pyplot as plt
 import numpy as np
+import timeit
+
+from collections import defaultdict
+from functools import partial
+
+import csparse as cs
 
 SAVE_FIG = True
 
-filestem = 'gaxpy_perf'
-# filestem = 'gatxpy_perf'
+SEED = 565656
 
-with open(f"./plots/{filestem}.json", 'r') as f:
-    data = json.load(f)
+filestem = 'gaxpy_perf_py'
+# filestem = 'gatxpy_perf_py'
 
-density = data['density']
-del data['density']
-Ns = data['Ns']  # N values
-del data['Ns']
-times = data     # all other values are the times
-del data
+# -----------------------------------------------------------------------------
+#         Create the data
+# -----------------------------------------------------------------------------
+# Ns = np.r_[10, 100, 1000]
+Ns = np.r_[10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
 
-# Plot the data
+density = 0.25  # density of the matrix
+
+N_repeats = 7   # number of "runs" in %timeit (7 is default)
+N_samples = 1  # number of samples in each run (100,000 is default)
+
+# TODO include the transpose versions
+gaxpy_methods = ['gaxpy_col', 'gaxpy_row', 'gaxpy_block']
+
+# Store the results
+times = defaultdict(lambda: {'mean': [], 'std_dev': []})
+
+for N in Ns:
+    print(f"---------- N = {N:6,d} ----------")
+
+    # Create a large, random, sparse matrix
+    M = int(0.9 * N)
+    K = int(0.8 * N)
+    A = cs.COOMatrix.random(M, N, density, SEED).tocsc()
+
+    # Create compatible random, dense matrix for multiplying and adding
+    X = cs.COOMatrix.random(N, K, density, SEED)
+    Y = cs.COOMatrix.random(M, K, density, SEED)
+
+    # Convert to row and column-major format
+    X_col = X.toarray('F')
+    Y_col = Y.toarray('F')
+
+    X_row = X.toarray('C')
+    Y_row = Y.toarray('C')
+
+    for method_name in gaxpy_methods:
+        args = (X_row, Y_row) if method_name.endswith('row') else (X_col, Y_col)
+        method = getattr(A, method_name)
+        # Create a partial function with the arguments for timing
+        partial_method = partial(method, *args)
+        # Run the function (len(ts) == N_repeats)
+        ts = timeit.repeat(partial_method, repeat=N_repeats, number=N_samples)
+        ts_mean = np.mean(ts)
+        ts_std = np.std(ts)
+        times[method_name]['mean'].append(ts_mean)
+        times[method_name]['std_dev'].append(ts_std)
+
+        print(f"{method_name}: {ts_mean:.4g} ± {ts_std:.4g} s per loop, "
+              f"({N_repeats} runs, {N_samples} loops each)")
+
+
+# -----------------------------------------------------------------------------
+#         Plot the data
+# -----------------------------------------------------------------------------
 fig, ax = plt.subplots(num=1, clear=True)
 for i, (key, val) in enumerate(times.items()):
     ax.errorbar(Ns, val['mean'],

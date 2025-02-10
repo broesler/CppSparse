@@ -133,8 +133,8 @@ PYBIND11_MODULE(csparse, m) {
         .def("tocoo", &cs::CSCMatrix::tocoo)
         .def("toarray", &cs::CSCMatrix::toarray, py::arg("order")='F')
         //
-        .def("transpose", &cs::CSCMatrix::transpose)
-        .def("T", &cs::CSCMatrix::T)
+        .def("transpose", &cs::CSCMatrix::transpose, py::arg("values")=true)
+        .def("T", &cs::CSCMatrix::T, py::arg("values")=true)
         //
         .def("band", py::overload_cast<cs::csint, cs::csint>
                         (&cs::CSCMatrix::band, py::const_))

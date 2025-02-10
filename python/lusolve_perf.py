@@ -43,10 +43,10 @@ densities = np.r_[
 #     0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
 # ]
 
-N_repeats = 7   # number of "runs" in %timeit (7 is default)
-N_samples = 10  # number of samples in each run (100,000 is default)
+N_repeats = 3   # number of "runs" in %timeit (7 is default)
+N_samples = 5  # number of samples in each run (100,000 is default)
 
-times = defaultdict(lambda: {'mean': [], 'std_dev': []})
+times = defaultdict(list)
 
 rng = np.random.default_rng(SEED)
 
@@ -83,13 +83,12 @@ for density in densities:
         # Time the function
         ts = timeit.repeat(partial_func, repeat=N_repeats, number=N_samples)
 
-        ts_mean = np.mean(ts)
-        ts_std = np.std(ts)
+        ts = np.array(ts) / N_samples  # time per loop
+        ts_min = np.min(ts)
 
-        times[func_name]['mean'].append(ts_mean)
-        times[func_name]['std_dev'].append(ts_std)
+        times[func_name]['mean'].append(ts_min)
 
-        print(f"{func_name}: {ts_mean:.4g} ± {ts_std:.4g} s per loop, "
+        print(f"{func_name}: {ts_min:.4g} s per loop, "
               f"({N_repeats} runs, {N_samples} loops each)")
 
 
@@ -105,8 +104,7 @@ fig.suptitle(f"{filestem.split('_')[0]}, N = {N}")
 
 ax = axs[0]
 for i, (key, val) in enumerate(times.items()):
-    ax.errorbar(densities, val['mean'],
-                yerr=val['std_dev'], ecolor=f"C{i}", fmt='.-', label=key)
+    ax.errorbar(densities, val['mean'], '.-', label=key)
 
 # ax.set_xscale('log')
 # ax.set_yscale('log')
@@ -125,11 +123,7 @@ for i, k in enumerate(['l', 'u']):
     opt_mean = np.r_[times[opt_key]['mean']]
     rel_diff = (mean - opt_mean) / mean
 
-    var = np.r_[times[key]['std_dev']]**2
-    opt_var = np.r_[times[opt_key]['std_dev']]**2
-
-    ax.errorbar(densities, rel_diff, yerr=np.sqrt(var + opt_var),
-                ecolor=f"C{i}", fmt='.-', label=key)
+    ax.plot(densities, rel_diff, '.-', color=f"C{i}", label=key)
 
 ax.grid(which='both')
 ax.legend()
@@ -140,7 +134,7 @@ ax.set_ylabel('Time Ratio of Original to Optimized')
 plt.show()
 
 if SAVE_FIG:
-    fig_fullpath = Path(f"../plots/{filestem}.png")
+    fig_fullpath = Path(f"../plots/{filestem}_N{N}.png")
     try:
         fig.savefig(fig_fullpath)
         print(f"Saved figure to {fig_fullpath}.")

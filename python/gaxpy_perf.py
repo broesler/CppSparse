@@ -30,19 +30,19 @@ filestem = 'gaxpy_perf_py'
 # -----------------------------------------------------------------------------
 #         Create the data
 # -----------------------------------------------------------------------------
-# Ns = np.r_[10, 100, 1000]
+# Ns = np.r_[10, 100, 500]
 Ns = np.r_[10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
 
-density = 0.25  # density of the matrix
+density = 0.25  # density of the matrices
 
-N_repeats = 1   # number of "runs" in %timeit (7 is default)
+N_repeats = 3  # number of "runs" in %timeit (7 is default)
 N_samples = 1  # number of samples in each run (100,000 is default)
 
 # TODO include the transpose versions and plot as subfigs
 gaxpy_methods = ['gaxpy_col', 'gaxpy_row', 'gaxpy_block']
 
 # Store the results
-times = defaultdict(lambda: {'mean': [], 'std_dev': []})
+times = defaultdict(list)
 
 for N in Ns:
     print(f"---------- N = {N:6,d} ----------")
@@ -70,16 +70,20 @@ for N in Ns:
         # Create a partial function with the arguments for timing
         partial_method = partial(method, *args)
 
-        # Run the function (len(ts) == N_repeats)
+        # Run the function
         ts = timeit.repeat(partial_method, repeat=N_repeats, number=N_samples)
 
-        ts_mean = np.mean(ts)
-        ts_std = np.std(ts)
+        # NOTE timeit returns the total time for all "number" loops for each
+        # repeat, so we divide by N_samples to get the time per loop.
+        #   len(ts) == N_repeats
+        # We only care about the minimum time per loop, since additional time
+        # is likely due to other processes running on the system.
+        ts = np.array(ts) / N_samples  # time per loop
+        ts_min = np.min(ts)
 
-        times[method_name]['mean'].append(ts_mean)
-        times[method_name]['std_dev'].append(ts_std)
+        times[method_name].append(ts_min)
 
-        print(f"{method_name}: {ts_mean:.4g} ± {ts_std:.4g} s per loop, "
+        print(f"{method_name}: {ts_min:.4g} s per loop, "
               f"({N_repeats} runs, {N_samples} loops each)")
 
 
@@ -89,8 +93,7 @@ for N in Ns:
 fig, ax = plt.subplots(num=1, clear=True)
 fig.set_size_inches(6.4, 4.8, forward=True)
 for i, (key, val) in enumerate(times.items()):
-    ax.errorbar(Ns, val['mean'],
-                yerr=val['std_dev'], ecolor=f"C{i}", fmt='.-', label=key)
+    ax.plot(Ns, val, '.-', label=key)
 
 ax.set_xscale('log')
 ax.set_yscale('log')
@@ -105,7 +108,7 @@ plt.show()
 
 
 if SAVE_FIG:
-    fig_fullpath = Path(f"../plots/{filestem}.png")
+    fig_fullpath = Path(f"../plots/{filestem}_d{int(100*density):02d}.png")
     try:
         fig.savefig(fig_fullpath)
         print(f"Saved figure to {fig_fullpath}.")

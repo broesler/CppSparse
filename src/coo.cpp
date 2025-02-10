@@ -11,6 +11,7 @@
 #include <cassert>
 #include <random>
 #include <sstream>  // for std::stringstream
+#include <unordered_set>
 
 #include "utils.h"
 #include "coo.h"
@@ -95,24 +96,34 @@ COOMatrix::COOMatrix(std::istream& fp)
 COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
 {
     csint nzmax = M * N * density;
-    COOMatrix A(M, N, nzmax);
 
-    if (seed == 0)
+    if (seed == 0) {
         seed = std::random_device{}();
-
-    std::default_random_engine rng(seed);
-    std::uniform_int_distribution<csint> row_dist(0, M - 1);
-    std::uniform_int_distribution<csint> col_dist(0, N - 1);
-    std::uniform_real_distribution<double> value_dist(0.0, 1.0);
-
-    for (csint k = 0; k < nzmax; k++) {
-        csint i = row_dist(rng);
-        csint j = col_dist(rng);
-        double v = value_dist(rng);
-        A.assign(i, j, v);
     }
 
-    return A;
+    std::default_random_engine rng(seed);
+    std::uniform_int_distribution<csint> idx_dist(0, M * N - 1);
+    std::uniform_real_distribution<double> value_dist(0.0, 1.0);
+
+    // Create a set of unique random (linear) indices
+    std::unordered_set<csint> idx;
+
+    while (idx.size() < nzmax) {
+        idx.insert(idx_dist(rng));
+    }
+
+    // Create the (i, j, v) vectors
+    std::vector<csint> row_idx(nzmax);
+    std::vector<csint> col_idx(nzmax);
+    std::vector<double> values(nzmax);
+
+    // Use ranges::transform to fill the vectors
+    std::ranges::transform(idx, row_idx.begin(), [N](csint i) { return i / N; });
+    std::ranges::transform(idx, col_idx.begin(), [N](csint i) { return i % N; });
+    std::ranges::generate(values.begin(), values.end(), [&rng, &value_dist]() { return value_dist(rng); });
+
+    // Build the matrix
+    return COOMatrix(values, row_idx, col_idx, M, N);
 }
 
 

@@ -15,7 +15,7 @@
 #include "utils.h"
 #include "csc.h"
 #include "coo.h"
-#include "decomposition.h"
+#include "cholesky.h"
 #include "solve.h"
 
 #endif  // _CSPARSE_H_

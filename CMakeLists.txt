@@ -13,7 +13,7 @@ project(CSparsePythonBindings)
 find_package(pybind11 REQUIRED) # Find pybind11
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
-set(BASENAMES utils coo csc decomposition solve)
+set(BASENAMES utils coo csc cholesky solve)
 
 set(SOURCES "")
 set(HEADERS include/csparse.h include/types.h)

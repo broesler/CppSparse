@@ -1,5 +1,5 @@
 /*==============================================================================
- *     File: decomposition.cpp
+ *     File: cholesky.cpp
  *  Created: 2025-01-27 13:14
  *   Author: Bernie Roesler
  *
@@ -13,7 +13,7 @@
 #include <iterator>   // std::back_inserter
 #include <numeric>    // std::iota
 
-#include "decomposition.h"
+#include "cholesky.h"
 #include "csc.h"
 #include "utils.h"
 

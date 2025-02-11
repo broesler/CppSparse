@@ -17,6 +17,8 @@ from collections import defaultdict
 from functools import partial
 from pathlib import Path
 
+from scipy.sparse.linalg import LaplacianNd
+
 import csparse as cs
 
 
@@ -32,7 +34,7 @@ filestem = 'chol_perf_py'
 chol_funcs = [cs.chol, cs.leftchol, cs.rechol]
 
 # Ns = [10, 100, 1000]
-Ns = [10, 20, 50, 100, 200, 500, 1000]
+Ns = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
 
 density = 0.2
 
@@ -48,13 +50,18 @@ for N in Ns:
     # for density in densities:
     # print(f"---------- Density = {density:6.2g} ----------")
 
-    # TODO try a non-random matrix like a 2D Laplacian
+    # TODO make this an option and change the filename output
+    # Use a non-random matrix like a 2D Laplacian
+    sqrtN = int(np.sqrt(N))
+    lap = LaplacianNd((sqrtN, sqrtN)).tosparse().tocsc()
+
+    A = cs.CSCMatrix(lap.data, lap.indices, lap.indptr, lap.shape)
 
     # Create a random matrix
-    A = cs.COOMatrix.random(N, N, density, SEED).tocsc()
+    # A = cs.COOMatrix.random(N, N, density, SEED).tocsc()
 
     # Ensure all diagonals are non-zero so that L is non-singular
-    for i in range(N):
+    for i in range(A.shape()[0]):
         A[i, i] = N
 
     # Make sure the matrix is symmetric, positive definite
@@ -103,8 +110,6 @@ ax.set_xlabel('Number of Columns')
 ax.set_ylabel('Time (s)')
 ax.set_title(f"{filestem.split('_')[0]}, density {density}")
 
-plt.show()
-
 if SAVE_FIG:
     fig_fullpath = Path(f"../plots/{filestem}_d{int(100*density):02d}.png")
     try:
@@ -114,8 +119,16 @@ if SAVE_FIG:
         print(f"Could not save figure to {fig_fullpath}: {e}")
         raise e
 
-# =============================================================================
-# =============================================================================
+
+# Plot the spy of each matrix to see fill-in
+fig, axs = plt.subplots(num=2, ncols=2, clear=True)
+Aa = np.array(A.toarray('C')).reshape(lap.shape)
+La = np.array(L.toarray('C')).reshape(lap.shape)
+
+axs[0].spy(Aa)
+axs[1].spy(La)
+
+plt.show()
 
 # =============================================================================
 # =============================================================================

@@ -1221,20 +1221,37 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
             i, j
         ).compress();
 
-        CSCMatrix expect = COOMatrix(
-            std::vector<double> {9.1, 9.2, 9.3, 9.4, 9.5, 9.6},
-            i, j
-        ).compress();
+        SECTION("Addition") {
+            CSCMatrix expect = COOMatrix(
+                std::vector<double> {9.1, 9.2, 9.3, 9.4, 9.5, 9.6},
+                i, j
+            ).compress();
 
-        // Test function definition
-        CSCMatrix Cf = add_scaled(A, B, 0.1, 9.0);
+            // Test function definition
+            CSCMatrix Cf = add_scaled(A, B, 0.1, 9.0);
 
-        // Test operator overloading
-        CSCMatrix C = 0.1 * A + 9.0 * B;
-        // std::cout << "C = \n" << C << std::endl;
+            // Test operator overloading
+            CSCMatrix C = 0.1 * A + 9.0 * B;
 
-        compare_matrices(C, expect);
-        compare_matrices(Cf, expect);
+            compare_matrices(C, expect);
+            compare_matrices(Cf, expect);
+        }
+
+        SECTION("Subtraction") {
+            CSCMatrix expect = COOMatrix(
+                std::vector<double> {0, 1, 2, 3, 4, 5},
+                i, j
+            ).compress();
+
+            // Test function definition
+            CSCMatrix Cf = add_scaled(A, B, 1.0, -1.0);
+
+            // Test operator overloading
+            CSCMatrix C = A - B;
+
+            compare_matrices(C, expect);
+            compare_matrices(Cf, expect);
+        }
     }
 
     SECTION("Test sparse column vectors") {
@@ -2514,8 +2531,7 @@ TEST_CASE("Cholesky decomposition")
         // entries that are dropped will be exactly 0 in L.
         // REQUIRE_THAT(Li.data() >= drop_tol, AllTrue());
 
-        // TODO implement CSCMatrix::subtract() and use it here
-        REQUIRE((LLT + A.dot(-1)).fronorm() / A.fronorm() < drop_tol);
+        REQUIRE((LLT - A).fronorm() / A.fronorm() < drop_tol);
     }
 }
 

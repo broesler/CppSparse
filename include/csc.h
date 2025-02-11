@@ -580,8 +580,9 @@ class CSCMatrix
          */
         double vecdot(const CSCMatrix& y) const;
 
-        /** Matrix-matrix add. */
+        /** Matrix-matrix add and subtract */
         CSCMatrix add(const CSCMatrix& B) const;
+        CSCMatrix subtract(const CSCMatrix& B) const;
 
         /** Add two matrices (and optionally scale them) `C = alpha * A + beta * B`.
          *
@@ -1001,6 +1002,7 @@ class CSCMatrix
  *          Free Functions
  *----------------------------------------------------------------------------*/
 CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B);
+CSCMatrix operator-(const CSCMatrix& A, const CSCMatrix& B);
 
 std::vector<double> operator*(const CSCMatrix& A, const std::vector<double>& B);
 CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B);

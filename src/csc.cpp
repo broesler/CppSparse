@@ -1083,7 +1083,14 @@ CSCMatrix CSCMatrix::add(const CSCMatrix& B) const
 }
 
 
+CSCMatrix CSCMatrix::subtract(const CSCMatrix& B) const
+{
+    return add_scaled(*this, B, 1.0, -1.0);
+}
+
+
 CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B) { return A.add(B); }
+CSCMatrix operator-(const CSCMatrix& A, const CSCMatrix& B) { return A.subtract(B); }
 
 
 csint CSCMatrix::scatter(
@@ -1145,10 +1152,6 @@ CSCMatrix CSCMatrix::permute(
     }
 
     C.p_[N_] = nz;
-
-    // TODO test if this is true and necessary. Breaks some tests.
-    // C.has_sorted_indices_ = has_sorted_indices_;
-    // C.has_canonical_format_ = has_canonical_format_;
 
     return C;
 }

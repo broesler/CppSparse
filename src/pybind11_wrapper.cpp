@@ -21,6 +21,27 @@ namespace py = pybind11;
 PYBIND11_MODULE(csparse, m) {
     m.doc() = "CSparse module for sparse matrix operations.";
 
+    // Register the enum class 'AMDOrder'
+    py::enum_<cs::AMDOrder>(m, "AMDOrder")
+        .value("Natural", cs::AMDOrder::Natural)
+        .value("APlusAT", cs::AMDOrder::APlusAT)
+        .value("ATANoDenseRows", cs::AMDOrder::ATANoDenseRows)
+        .value("ATA", cs::AMDOrder::ATA)
+        .export_values();
+
+    // Bind the Symbolic struct
+    py::class_<cs::Symbolic>(m, "Symbolic")
+        // Expose the members of the struct as attributes in Python
+        .def(py::init<>())  // Default constructor
+        .def_readwrite("p_inv", &cs::Symbolic::p_inv)
+        .def_readwrite("q", &cs::Symbolic::q)
+        .def_readwrite("parent", &cs::Symbolic::parent)
+        .def_readwrite("cp", &cs::Symbolic::cp)
+        .def_readwrite("leftmost", &cs::Symbolic::leftmost)
+        .def_readwrite("m2", &cs::Symbolic::m2)
+        .def_readwrite("lnz", &cs::Symbolic::lnz)
+        .def_readwrite("unz", &cs::Symbolic::unz);
+
     //--------------------------------------------------------------------------
     //        COOMatrix class
     //--------------------------------------------------------------------------
@@ -160,9 +181,9 @@ PYBIND11_MODULE(csparse, m) {
         .def("dot", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
         .def("dot", py::overload_cast<const std::vector<double>&>(&cs::CSCMatrix::dot, py::const_))
         .def("dot", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
-        .def("__mul__", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
-        .def("__mul__", py::overload_cast<const std::vector<double>&>(&cs::CSCMatrix::dot, py::const_))
-        .def("__mul__", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
+        .def("__matmul__", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
+        .def("__matmul__", py::overload_cast<const std::vector<double>&>(&cs::CSCMatrix::dot, py::const_))
+        .def("__matmul__", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
         //
         .def("add", &cs::CSCMatrix::add)
         .def("__add__", &cs::CSCMatrix::add)
@@ -185,6 +206,21 @@ PYBIND11_MODULE(csparse, m) {
         //
         .def("sum_rows", &cs::CSCMatrix::sum_rows)
         .def("sum_cols", &cs::CSCMatrix::sum_cols);
+
+    //--------------------------------------------------------------------------
+    //        Decomposition Functions
+    //--------------------------------------------------------------------------
+    m.def("schol", &cs::schol,
+            py::arg("A"),
+            py::arg("ordering")=cs::AMDOrder::Natural,
+            py::arg("use_postorder")=false);
+    m.def("symbolic_cholesky", &cs::symbolic_cholesky);
+    m.def("chol", &cs::chol,
+            py::arg("A"),
+            py::arg("S"),
+            py::arg("drop_tol")=0.0);
+    m.def("leftchol", &cs::leftchol);
+    m.def("rechol", &cs::rechol);
 
     //--------------------------------------------------------------------------
     //      Solve functions

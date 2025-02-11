@@ -22,7 +22,7 @@ from scipy.sparse.linalg import LaplacianNd
 import csparse as cs
 
 
-LAPLACE = True
+LAPLACE = False
 SAVE_FIG = True
 
 SEED = 565656
@@ -42,7 +42,7 @@ if LAPLACE:
     Ns = [3, 4, 7, 10, 14, 22, 31, 44, 70]
     N_cols = [N**2 for N in Ns]
 else:
-    Ns = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
+    Ns = [10, 20, 50, 100, 200, 500, 1000, 2000]
     N_cols = Ns
     density = 0.2
 
@@ -77,14 +77,16 @@ for N in Ns:
 
     for func in chol_funcs:
         func_name = func.__name__
+        args = (A, S)
 
-        args = [A, S]
-
-        if func_name == 'leftchol' or func_name == 'rechol':
-            L = cs.symbolic_cholesky(A, S)
-            args.append(L)
-
-        partial_func = partial(func, *args)
+        if func_name == 'chol':
+            partial_func = partial(func, *args)
+        else:  # 'leftchol' or 'rechol'
+            # The function should capture the symbolic_cholesky step
+            partial_func = partial(
+                lambda A, S: func(A, S, cs.symbolic_cholesky(A, S)),
+                *args
+            )
 
         # Time the function
         ts = timeit.repeat(partial_func, repeat=N_repeats, number=N_samples)
@@ -98,6 +100,7 @@ for N in Ns:
               f"({N_repeats} runs, {N_samples} loops each)")
 
     # Compute fill-in
+    L = cs.chol(A, S)
     fill_in.append((L.nnz() - A.nnz()) / A.nnz())
 
 

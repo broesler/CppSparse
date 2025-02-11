@@ -10,7 +10,7 @@
 #include <cassert>
 #include <cmath>
 #include <fstream>
-#include <numeric>
+#include <numeric>  // partial_sum
 
 #include "utils.h"
 

@@ -13,7 +13,7 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
-#include <numeric>  // std::iota, inner_product, accumulate, partial_sum
+#include <numeric>  // iota
 #include <string>
 #include <vector>
 

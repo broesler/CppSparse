@@ -535,8 +535,8 @@ CSCMatrix& CSCMatrix::band(const csint kl, const csint ku)
 {
     assert(kl <= ku);
     return fkeep(
-        [kl, ku](csint i, csint j, double Aij) {
-            return ((i <= (j - kl)) && (i >= (j - ku)));
+        [=](csint i, csint j, double Aij) {
+            return (i <= (j - kl)) && (i >= (j - ku));
         }
     );
 }
@@ -545,11 +545,8 @@ CSCMatrix& CSCMatrix::band(const csint kl, const csint ku)
 CSCMatrix CSCMatrix::band(const csint kl, const csint ku) const
 {
     assert(kl <= ku);
-    return fkeep(
-        [kl, ku](csint i, csint j, double Aij) {
-            return ((i <= (j - kl)) && (i >= (j - ku)));
-        }
-    );
+    CSCMatrix C(*this);
+    return C.band(kl, ku);
 }
 
 

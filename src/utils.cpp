@@ -94,19 +94,9 @@ std::vector<double>& operator*=(std::vector<double>& vec, const double c)
 
 
 /*------------------------------------------------------------------------------
- *          Vector Permutations
+ *          Vector Functions
  *----------------------------------------------------------------------------*/
 
-/** Compute the inverse (or transpose) of a permutation vector.
- *
- * @note This function is named `cs_pinv` in CSparse, but we have changed the
- * name to avoid conflict with similarly named variables, and the well-known
- * Matlab funvtion to compute the pseudo-inverse of a matrix.
- *
- * @param p  permutation vector
- *
- * @return pinv  inverse permutation vector
- */
 std::vector<csint> inv_permute(const std::vector<csint>& p)
 {
     std::vector<csint> out(p.size());
@@ -118,12 +108,6 @@ std::vector<csint> inv_permute(const std::vector<csint>& p)
 }
 
 
-/** Compute the cumulative sum of a vector, starting with 0.
- *
- * @param w  a reference to a vector of length N.
- *
- * @return p  the cumulative sum of `w`, of length N + 1.
- */
 std::vector<csint> cumsum(const std::vector<csint>& w)
 {
     std::vector<csint> out(w.size() + 1);

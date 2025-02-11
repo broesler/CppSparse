@@ -42,7 +42,27 @@ class CSCMatrix
     public:
         friend class COOMatrix;
 
-        // ---------- Constructors
+        /** 
+         * @typedef KeepFunc
+         * @brief A boolean function pointer type that acts on an element of
+         * a matrix.
+         *
+         * This type is used by the function `CSCMatrix::fkeep`. If `fk` returns
+         * `true` for `A(i, j)`, that element will be kept in the matrix.
+         *
+         * @param i, j  the row and column indices of the element
+         * @param Aij  the value of the element `A(i, j)`
+         * @param other  a void pointer for any additional argument (*e.g.*
+         *        a non-zero tolerance against which to compare)
+         *
+         * @return keep  a boolean that is true if the element `A(i, j)` should be
+         *         kept in the matrix.
+         */
+        using KeepFunc = bool (*) (csint i, csint j, double Aij, void *other);
+
+        //----------------------------------------------------------------------
+        //        Constructors
+        //----------------------------------------------------------------------
         CSCMatrix();
 
         /** Construct a CSCMatrix from arrays of values and coordinates.
@@ -315,47 +335,26 @@ class CSCMatrix
          */
         CSCMatrix& sum_duplicates();
 
-        // TODO make a type for the fkeep function pointer
         /** Keep matrix entries for which `fkeep` returns true, remove others.
         *
-        * @param fk a boolean function that acts on each element. If `fk` returns
-        *        `true`, that element will be kept in the matrix. The function `fk` has
-        *        four parameters:
-        *        @param i, j integer indices of the element
-        *        @param v the value of the element
-        *        @param other a void pointer for any additional argument (*i.e.*
-        *               a non-zero tolerance against which to compare)
-        *        @return keep a boolean that is true if the element `A(i, j)` should be
-        *                kept in the matrix.
+        * @param fk  a boolean function that acts on each element. If `fk`
+        *        returns `true`, that element will be kept in the matrix. 
         * @param other a pointer to the additional argument in `fk`.
         *
         * @return a reference to the object for method chaining.
         */
-        CSCMatrix& fkeep(
-            bool (*fk) (csint i, csint j, double Aij, void *tol),
-            void *other
-        );
+        CSCMatrix& fkeep(KeepFunc fk, void *other);
 
         // Overload for copies
         /** Keep matrix entries for which `fkeep` returns true, remove others.
         *
-        * @param fk a boolean function that acts on each element. If `fk` returns
-        *        `true`, that element will be kept in the matrix. The function `fk` has
-        *        four parameters:
-        *        @param i, j integer indices of the element
-        *        @param v the value of the element
-        *        @param other a void pointer for any additional argument (*i.e.*
-        *               a non-zero tolerance against which to compare)
-        *        @return keep a boolean that is true if the element `A(i, j)` should be
-        *                kept in the matrix.
+        * @param fk  a boolean function that acts on each element. If `fk`
+        *        returns `true`, that element will be kept in the matrix. 
         * @param other a pointer to the additional argument in `fk`.
         *
         * @return a copy of the matrix with entries removed.
         */
-        CSCMatrix fkeep(
-            bool (*fk) (csint i, csint j, double Aij, void *tol),
-            void *other
-        ) const;
+        CSCMatrix fkeep(KeepFunc fk, void *other) const;
 
         /** Drop any exactly zero entries from the matrix.
          *

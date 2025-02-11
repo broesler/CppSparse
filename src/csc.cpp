@@ -486,10 +486,7 @@ CSCMatrix& CSCMatrix::sum_duplicates()
 }
 
 
-CSCMatrix& CSCMatrix::fkeep(
-    bool (*fk) (csint, csint, double, void *),
-    void *other
-)
+CSCMatrix& CSCMatrix::fkeep(KeepFunc fk, void *other)
 {
     csint nz = 0;  // count actual number of non-zeros
 
@@ -511,10 +508,7 @@ CSCMatrix& CSCMatrix::fkeep(
 };
 
 
-CSCMatrix CSCMatrix::fkeep(
-    bool (*fk) (csint i, csint j, double Aij, void *tol),
-    void *other
-) const
+CSCMatrix CSCMatrix::fkeep(KeepFunc fk, void *other) const
 {
     CSCMatrix C(*this);
     return C.fkeep(fk, other);

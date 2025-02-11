@@ -11,6 +11,7 @@ Compare the performance of the Cholesky decomposition using different methods.
 
 import matplotlib.pyplot as plt
 import numpy as np
+import re
 import timeit
 
 from collections import defaultdict
@@ -133,7 +134,7 @@ if SAVE_FIG:
     fig_fullpath = f"../plots/{filestem}.png"
 
     if not LAPLACE:
-        re.sub('\.png', f"_d{int(100*density):02d}.png", fig_fullpath)
+        fig_fullpath = re.sub('\.png', f"_d{int(100*density):02d}.png", fig_fullpath)
 
     try:
         fig.savefig(Path(fig_fullpath))

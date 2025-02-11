@@ -27,7 +27,7 @@ Householder house(const std::vector<double>& x)
         beta = (v[0] <= 0) ? 2 : 0;
         v[0] = 1;
     } else {
-        s = std::sqrt(v[0] * v[0] + sigma);  // s = norm(v)
+        s = std::sqrt(v[0] * v[0] + sigma);  // s = norm(x)
         v[0] = (v[0] <= 0) ? (v[0] - s) : (-sigma / (v[0] + s));
         beta = -1 / (s * v[0]);
     }

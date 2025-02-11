@@ -36,11 +36,16 @@ struct Householder {
  * \f]
  * where \f$ v = x - \beta e_1 \f$ and \f$ \beta = 2 / (v^T v) \f$.
  *
+ * The result is defined such that applying the Householder reflection gives
+ * \f$ Hx = s e_1 \f$, where \f$ s = \pm \|x\|_2 \f$.
+ *
+ * See: Algorithm 5.1.1, Golub & Van Loan, 3rd ed.
+ *
  * @param x  the input vector
  *
  * @return beta  the scaling factor
  * @return v  the Householder vector
- * @return s  the first element of v, which is guaranteed to be 
+ * @return s  the first element of v, which is guaranteed to be
  *         \f$ \pm \|x\|_2 \f$
  */
 Householder house(const std::vector<double>& x);
@@ -50,9 +55,10 @@ Householder house(const std::vector<double>& x);
  *
  * The Householder reflection is applied as
  * \f[
- *     Hx = x - v \beta v^T x
+ *     Hx = x - v \beta v^T x = s e_1
  * \f]
- * where `v` is the Householder vector and `beta` is the scaling factor.
+ * where \f$ s = \pm \|x\|_2 \f$, `v` is the Householder vector and `beta` is
+ * the scaling factor.
  *
  * @param V  a CSCMatrix with a single column containing the Householder vector
  * @param j  the column index of the Householder vector in `V`

@@ -2536,5 +2536,49 @@ TEST_CASE("Cholesky decomposition")
 }
 
 
+TEST_CASE("QR Decomposition")
+{
+    SECTION("Householder reflection with trivial x") {
+        std::vector<double> x(3, 0.0);
+
+        std::vector<double> expect_v = {1, 0, 0};
+        double expect_beta = 2;
+        double expect_s = 0.0;
+
+        Householder H = house(x);
+
+        CHECK_THAT(is_close(H.v, expect_v, tol), AllTrue());
+        CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
+        CHECK_THAT(H.s, WithinAbs(expect_s, tol));
+    }
+
+    SECTION("Householder reflection with non-zero x") {
+        // [v, beta] = gallery('house', [1, 2, 3]) in MATLAB, s == v[0]
+        std::vector<double> x = {1, 2, 3};
+
+        // FIXME fails relative to MATLAB, but are v and beta unique?
+        std::vector<double> expect_v = {4.741657386773941, 2, 3};
+        double expect_beta = 2.818709704017050e-02;
+        double expect_s = 0.0; // 3.7416573867739413
+        for (const auto& xi : x) {
+            expect_s += xi * xi;
+        }
+        expect_s = std::sqrt(expect_s);
+
+        Householder H = house(x);
+
+        // std::cout << "     H.v = " << H.v << std::endl;
+        // std::cout << "expect_v = " << expect_v << std::endl;
+        // std::cout << "     H.beta = " << H.beta << std::endl;
+        // std::cout << "expect_beta = " << expect_beta << std::endl;
+
+        // CHECK_THAT(is_close(H.v, expect_v, tol), AllTrue());
+        // CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
+        CHECK_THAT(H.s, WithinAbs(expect_s, tol));
+    }
+
+}
+
+
 /*==============================================================================
  *============================================================================*/

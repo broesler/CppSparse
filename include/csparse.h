@@ -16,6 +16,7 @@
 #include "csc.h"
 #include "coo.h"
 #include "cholesky.h"
+#include "qr.h"
 #include "solve.h"
 
 #endif  // _CSPARSE_H_

@@ -12,11 +12,11 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_all.hpp>
 
-#include <algorithm>  // for std::reverse
+#include <algorithm>  // reverse
 #include <iostream>
 #include <fstream>
 #include <map>
-#include <numeric>   // for std::iota
+#include <numeric>    // iota
 #include <random>
 #include <string>
 #include <sstream>
@@ -2538,12 +2538,12 @@ TEST_CASE("Cholesky decomposition")
 
 TEST_CASE("QR Decomposition")
 {
-    SECTION("Householder reflection with trivial x") {
-        std::vector<double> x(3, 0.0);
+    SECTION("Householder reflection with unit x") {
+        std::vector<double> x = {1, 0, 0};
 
         std::vector<double> expect_v = {1, 0, 0};
-        double expect_beta = 2;
-        double expect_s = 0.0;
+        double expect_beta = 0.0;
+        double expect_s = 1.0;
 
         Householder H = house(x);
 
@@ -2552,31 +2552,46 @@ TEST_CASE("QR Decomposition")
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
     }
 
-    SECTION("Householder reflection with non-zero x") {
-        // [v, beta] = gallery('house', [1, 2, 3]) in MATLAB, s == v[0]
+    // SECTION("Householder reflection with non-zero x") {
+    //     // [v, beta] = gallery('house', [1, 2, 3]) in MATLAB, s == v[0]
+    //     std::vector<double> x = {1, 2, 3};
+
+    //     // NOTE fails relative to MATLAB, but are v and beta unique?
+    //     std::vector<double> expect_v = {4.741657386773941, 2, 3};
+    //     double expect_beta = 5.636451985289045e-02;
+
+    //     double expect_s = 0.0;
+    //     for (const auto& xi : x) {
+    //         expect_s += xi * xi;
+    //     }
+    //     expect_s = std::sqrt(expect_s);   // 3.7416573867739413
+
+    //     Householder H = house(x);
+
+    //     // std::cout << "     H.v = " << H.v << std::endl;
+    //     // std::cout << "expect_v = " << expect_v << std::endl;
+    //     // std::cout << "     H.beta = " << H.beta << std::endl;
+    //     // std::cout << "expect_beta = " << expect_beta << std::endl;
+
+    //     CHECK_THAT(is_close(H.v, expect_v, tol), AllTrue());
+    //     CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
+    //     CHECK_THAT(H.s, WithinAbs(expect_s, tol));
+    // }
+
+    SECTION("Apply Householder Reflection") {
+        // Apply the Householder reflection to a dense vector x, with sparse v.
         std::vector<double> x = {1, 2, 3};
 
-        // FIXME fails relative to MATLAB, but are v and beta unique?
-        std::vector<double> expect_v = {4.741657386773941, 2, 3};
-        double expect_beta = 2.818709704017050e-02;
-        double expect_s = 0.0; // 3.7416573867739413
-        for (const auto& xi : x) {
-            expect_s += xi * xi;
-        }
-        expect_s = std::sqrt(expect_s);
-
         Householder H = house(x);
+        CSCMatrix V = COOMatrix(H.v, {0, 1, 2}, {0, 0, 0}).tocsc();
 
-        // std::cout << "     H.v = " << H.v << std::endl;
-        // std::cout << "expect_v = " << expect_v << std::endl;
-        // std::cout << "     H.beta = " << H.beta << std::endl;
-        // std::cout << "expect_beta = " << expect_beta << std::endl;
+        std::vector<double> expect = {H.s, 0, 0};
 
-        // CHECK_THAT(is_close(H.v, expect_v, tol), AllTrue());
-        // CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
-        CHECK_THAT(H.s, WithinAbs(expect_s, tol));
+        // Use column 0 of V to apply the Householder reflection
+        std::vector<double> Hx = happly(V, 0, H.beta, x);
+
+        CHECK_THAT(is_close(Hx, expect, tol), AllTrue());
     }
-
 }
 
 

@@ -13,6 +13,9 @@
 
 #include <vector>
 
+#include "csc.h"
+#include "types.h"
+
 
 namespace cs {
 
@@ -20,8 +23,8 @@ namespace cs {
 /** Householder reflection return struct. */
 struct Householder {
     std::vector<double> v;  ///< the Householder vector
-    double beta,            ///< the scaling factor
-           s;               ///< the first element of v
+    double beta;            ///< the scaling factor
+    double s;               ///< the first element of v
 };
 
 
@@ -41,6 +44,29 @@ struct Householder {
  *         \f$ \pm \|x\|_2 \f$
  */
 Householder house(const std::vector<double>& x);
+
+
+/** Apply a Householder reflection to a dense vector `x` with a sparse `v`.
+ *
+ * The Householder reflection is applied as
+ * \f[
+ *     Hx = x - v \beta v^T x
+ * \f]
+ * where `v` is the Householder vector and `beta` is the scaling factor.
+ *
+ * @param V  a CSCMatrix with a single column containing the Householder vector
+ * @param j  the column index of the Householder vector in `V`
+ * @param beta  the scaling factor
+ * @param x  the dense vector to which to apply the reflection
+ *
+ * @return Hx  the result of applying the Householder reflection to `x`
+ */
+std::vector<double> happly(
+    const CSCMatrix& V,
+	csint j,
+	double beta,
+	const std::vector<double>& x
+);
 
 
 }  // namespace cs

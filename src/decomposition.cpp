@@ -775,7 +775,6 @@ CSCMatrix& chol_update(
 
 // Exercise 4.1 O(|L|)-time elimination tree and row/column counts
 // Use ereach to compute the elimination tree one node at a time (pp 43--44)
-// TODO make type for the output?
 CholCounts chol_etree_counts(const CSCMatrix& A)
 {
     assert(A.M_ == A.N_);

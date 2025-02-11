@@ -486,7 +486,7 @@ CSCMatrix& CSCMatrix::sum_duplicates()
 }
 
 
-CSCMatrix& CSCMatrix::fkeep(KeepFunc fk, void *other)
+CSCMatrix& CSCMatrix::fkeep(KeepFunc fk)
 {
     csint nz = 0;  // count actual number of non-zeros
 
@@ -494,7 +494,7 @@ CSCMatrix& CSCMatrix::fkeep(KeepFunc fk, void *other)
         csint p = p_[j];  // get current location of column j
         p_[j] = nz;       // record new location of column j
         for (; p < p_[j+1]; p++) {
-            if (fk(i_[p], j, v_[p], other)) {
+            if (fk(i_[p], j, v_[p])) {
                 v_[nz] = v_[p];  // keep A(i, j)
                 i_[nz++] = i_[p];
             }
@@ -508,59 +508,48 @@ CSCMatrix& CSCMatrix::fkeep(KeepFunc fk, void *other)
 };
 
 
-CSCMatrix CSCMatrix::fkeep(KeepFunc fk, void *other) const
+CSCMatrix CSCMatrix::fkeep(KeepFunc fk) const
 {
     CSCMatrix C(*this);
-    return C.fkeep(fk, other);
-}
-
-
-bool CSCMatrix::nonzero(csint i, csint j, double Aij, void *other)
-{
-    return (Aij != 0);
+    return C.fkeep(fk);
 }
 
 
 CSCMatrix& CSCMatrix::dropzeros()
 {
-    return fkeep(&nonzero, nullptr);
-}
-
-
-bool CSCMatrix::abs_gt_tol(csint i, csint j, double Aij, void *tol)
-{
-    return (std::fabs(Aij) > *((double *) tol));
+    return fkeep([] (csint i, csint j, double Aij) { return (Aij != 0); });
 }
 
 
 CSCMatrix& CSCMatrix::droptol(double tol)
 {
-    return fkeep(&abs_gt_tol, &tol);
+    return fkeep(
+        [tol](csint i, csint j, double Aij) {
+            return std::fabs(Aij) > tol; 
+        }
+    );
 }
-
-
-bool CSCMatrix::in_band(csint i, csint j, double Aij, void *limits)
-{
-    auto [kl, ku] = *((Shape *) limits);
-    return ((i <= (j - kl)) && (i >= (j - ku)));
-};
 
 
 CSCMatrix& CSCMatrix::band(const csint kl, const csint ku)
 {
     assert(kl <= ku);
-    Shape limits {kl, ku};
-
-    return fkeep(&in_band, &limits);
+    return fkeep(
+        [kl, ku](csint i, csint j, double Aij) {
+            return ((i <= (j - kl)) && (i >= (j - ku)));
+        }
+    );
 }
 
 
 CSCMatrix CSCMatrix::band(const csint kl, const csint ku) const
 {
     assert(kl <= ku);
-    Shape limits {kl, ku};
-
-    return fkeep(&in_band, &limits);
+    return fkeep(
+        [kl, ku](csint i, csint j, double Aij) {
+            return ((i <= (j - kl)) && (i >= (j - ku)));
+        }
+    );
 }
 
 

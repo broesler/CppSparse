@@ -11,6 +11,7 @@
 #define _CSPARSE_CSC_H_
 
 #include <cassert>
+#include <functional>
 #include <iostream>
 #include <string_view>
 #include <vector>
@@ -52,13 +53,11 @@ class CSCMatrix
          *
          * @param i, j  the row and column indices of the element
          * @param Aij  the value of the element `A(i, j)`
-         * @param other  a void pointer for any additional argument (*e.g.*
-         *        a non-zero tolerance against which to compare)
          *
-         * @return keep  a boolean that is true if the element `A(i, j)` should be
-         *         kept in the matrix.
+         * @return keep  a boolean that is true if the element `A(i, j)` should
+         *         be kept in the matrix.
          */
-        using KeepFunc = bool (*) (csint i, csint j, double Aij, void *other);
+        using KeepFunc = std::function<bool(csint i, csint j, double Aij)>;
 
         //----------------------------------------------------------------------
         //        Constructors
@@ -339,22 +338,20 @@ class CSCMatrix
         *
         * @param fk  a boolean function that acts on each element. If `fk`
         *        returns `true`, that element will be kept in the matrix. 
-        * @param other a pointer to the additional argument in `fk`.
         *
         * @return a reference to the object for method chaining.
         */
-        CSCMatrix& fkeep(KeepFunc fk, void *other);
+        CSCMatrix& fkeep(KeepFunc fk);
 
         // Overload for copies
         /** Keep matrix entries for which `fkeep` returns true, remove others.
         *
         * @param fk  a boolean function that acts on each element. If `fk`
         *        returns `true`, that element will be kept in the matrix. 
-        * @param other a pointer to the additional argument in `fk`.
         *
         * @return a copy of the matrix with entries removed.
         */
-        CSCMatrix fkeep(KeepFunc fk, void *other) const;
+        CSCMatrix fkeep(KeepFunc fk) const;
 
         /** Drop any exactly zero entries from the matrix.
          *
@@ -375,22 +372,9 @@ class CSCMatrix
          */
         CSCMatrix& droptol(double tol=1e-15);
 
-        /** Return true if `A(i, j)` is within the diagonals
-         * `limits = {lower, upper}`.
+        /** Keep any entries within the specified band, in-place.
          *
          * See: Davis, Exercise 2.15.
-         *
-         * @param i, j the row and column indices of the element to access.
-         * @param Aij the value of the element at `(i, j)`.
-         * @param limits a pointer to an array of two integers, the lower and
-         *        upper diagonals within which to keep entries. The main
-         *        diagonal is 0, sub-diagonals < 0, and super-diagonals > 0.
-         *
-         * @return true if the element is within the band.
-         */
-        static bool in_band(csint i, csint j, double Aij, void *limits);
-
-        /** Keep any entries within the specified band, in-place.
          *
          * @param kl, ku  the lower and upper diagonals within which to keep entries.
          *        The main diagonal is 0, with sub-diagonals < 0, and
@@ -409,13 +393,6 @@ class CSCMatrix
         * @return a copy of the matrix with entries removed.
         */
         CSCMatrix band(csint kl, csint ku) const;
-
-        // TODO possibly make these private? Or define in SparseMatrix base.
-        /** Return true if A(i, j) is non-zero */
-        static bool nonzero(csint i, csint j, double Aij, void *tol);
-
-        /** Return true if abs(A(i j)) > tol */
-        static bool abs_gt_tol(csint i, csint j, double Aij, void *tol);
 
         //----------------------------------------------------------------------
         //        Math Operations

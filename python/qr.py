@@ -17,6 +17,7 @@ from scipy import linalg as la
 
 tol = 1e-14
 
+
 # -----------------------------------------------------------------------------
 #         Define QR Algorithms
 # -----------------------------------------------------------------------------
@@ -145,10 +146,10 @@ def extract_householder_reflectors(Q):
 
         reflectors.append(v)
 
-    return reflectors
+    return np.array(reflectors).T
 
 
-def construct_householder_matrix(v, tau=None):
+def build_H(v, tau=None):
     """Constructs the Householder matrix from its defining vector.
 
     Parameters
@@ -190,7 +191,7 @@ def build_Q(V, beta):
     M, N = V.shape
     Q = np.eye(M)
     for i in range(N):
-        Q @= construct_householder_matrix(V[:, i], beta[i])
+        Q @= build_H(V[:, i], beta[i])
     return Q
 
 
@@ -205,13 +206,13 @@ if __name__ == '__main__':
                  dtype=float)
 
     # Get the raw LAPACK output for the entire matrix
-    # Qc stores the Householder reflectors *below* the diagonal*
-    (Qc, tau), Rraw = la.qr(A, mode='raw')
-    reflectors = extract_householder_reflectors(Qc)
-    Hs = [construct_householder_matrix(v, t) for v, t in zip(reflectors, tau)]
-    Qr = build_Q(np.array(reflectors).T, tau)
+    # Qraw stores the Householder reflectors *below* the diagonal
+    (Qraw, tau), Rraw = la.qr(A, mode='raw')
+    V = extract_householder_reflectors(Qraw)
+    Hs = [build_H(v, t) for v, t in zip(V.T, tau)]
+    Qr = build_Q(V, tau)
     np.testing.assert_allclose(Qr @ Rraw, A, atol=tol)
-    
+
     # Test our own QR decomposition
     V_r, beta_r, R_r = qr_right(A)
     V_l, beta_l, R_l = qr_left(A)

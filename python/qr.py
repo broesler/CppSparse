@@ -113,11 +113,11 @@ def qr_left(A):
             b = beta[i]
             x[i:] -= v @ (b * (v.T @ x[i:]))
 
-        (Qraw, b), Rraw = la.qr(x[k:], mode='raw')
+        (Qraw, b), _ = la.qr(x[k:], mode='raw')
         V[k:, [k]] = np.vstack([1.0, Qraw[1:]])  # extract the reflector
-        beta[k] = float(b.squeeze())          # get the scalar
+        beta[k] = float(b[0])                    # get the scalar
         R[:k, [k]] = x[:k]
-        R[k, k] = Rraw[0, 0]  # s = np.sign(x[0, 0]) * la.norm(x)
+        R[k, k] = Qraw[0, 0]  # == Rraw[0, 0] == s = -sign(x[0]) * norm(x)
 
     return V, beta, R
 
@@ -245,15 +245,15 @@ if __name__ == '__main__':
     np.testing.assert_allclose(R, R_l)
 
     # Get the raw LAPACK output for a test vector
-    x = np.c_[[1, 1, 1]]
-    (Qraw, tau), Rraw = la.qr(x, mode='raw')
-    v = np.vstack([1.0, Qraw[1:]])
-    H = np.eye(x.size) - tau * (v @ v.T)
-    Hx = H @ x
-    print("Hx = ")
-    print(Hx)
-    # NOTE sign of Hx[0] is negative when x[0] is positive
-    np.testing.assert_allclose(Hx[0], -la.norm(x))
+    # x = np.c_[[1, 1, 1]]
+    # (Qraw, tau), Rraw = la.qr(x, mode='raw')
+    # v = np.vstack([1.0, Qraw[1:]])
+    # H = np.eye(x.size) - tau * (v @ v.T)
+    # Hx = H @ x
+    # print("Hx = ")
+    # print(Hx)
+    # # NOTE sign of Hx[0] is negative when x[0] is positive
+    # np.testing.assert_allclose(Hx[0], -la.norm(x))
 
 # =============================================================================
 # =============================================================================

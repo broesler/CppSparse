@@ -244,5 +244,16 @@ if __name__ == '__main__':
     np.testing.assert_allclose(Q, Q_l)
     np.testing.assert_allclose(R, R_l)
 
+    # Get the raw LAPACK output for a test vector
+    x = np.c_[[1, 1, 1]]
+    (Qraw, tau), Rraw = la.qr(x, mode='raw')
+    v = np.vstack([1.0, Qraw[1:]])
+    H = np.eye(x.size) - tau * (v @ v.T)
+    Hx = H @ x
+    print("Hx = ")
+    print(Hx)
+    # NOTE sign of Hx[0] is negative when x[0] is positive
+    np.testing.assert_allclose(np.abs(Hx[0]), np.abs(la.norm(x)))
+
 # =============================================================================
 # =============================================================================

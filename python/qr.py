@@ -253,7 +253,7 @@ if __name__ == '__main__':
     print("Hx = ")
     print(Hx)
     # NOTE sign of Hx[0] is negative when x[0] is positive
-    np.testing.assert_allclose(np.abs(Hx[0]), np.abs(la.norm(x)))
+    np.testing.assert_allclose(Hx[0], -la.norm(x))
 
 # =============================================================================
 # =============================================================================

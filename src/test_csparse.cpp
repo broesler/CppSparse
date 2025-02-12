@@ -2552,49 +2552,72 @@ TEST_CASE("QR Decomposition")
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
     }
 
-    SECTION("Householder reflection with non-zero x") {
-        // [v, beta] = gallery('house', [1, 2, 3]) in MATLAB, s == v[0]
-        std::vector<double> x = {1, 2, 3};
+    SECTION("Householder reflection with negative unit x") {
+        std::vector<double> x = {-1, 0, 0};
 
-        // NOTE fails relative to MATLAB, but are v and beta unique?
-        //
-        // In comparison to MATLAB, our v[0] is exactly 6 less than v(1), and
-        // beta is off by a seemingly arbitrary amount.
-        //
-        // When we compute Hx with our values, we get:
-        //     Hx = [3.7417, 0, 0]
-        // vs. MATLAB's
-        //     (H*x)' = [-3.7417  0  0]
-
-        // std::vector<double> expect_v = {4.741657386773941, 2, 3};
-        // double expect_beta = 5.636451985289045e-02;
-
-        double expect_s = 0.0;
-        for (const auto& xi : x) {
-            expect_s += xi * xi;
-        }
-        expect_s = std::sqrt(expect_s);   // 3.7416573867739413
+        std::vector<double> expect_v = {1, 0, 0};
+        double expect_beta = 2.0;
+        double expect_s = 1.0;
 
         Householder H = house(x);
 
-        // std::cout << "     H.v = " << H.v << std::endl;
-        // std::cout << "expect_v = " << expect_v << std::endl;
-        // std::cout << "     H.beta = " << H.beta << std::endl;
-        // std::cout << "expect_beta = " << expect_beta << std::endl;
-
-        // CHECK_THAT(is_close(H.v, expect_v, tol), AllTrue());
-        // CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
+        CHECK_THAT(is_close(H.v, expect_v, tol), AllTrue());
+        CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
+    }
+
+    SECTION("Householder reflection with non-zero x") {
+        std::cout << "---------- Testing Householder [1, 1, 1] ----------" << std::endl;
+        std::vector<double> x = {1, 1, 1};
+
+        // These are the *unscaled* values from Octave
+        // std::vector<double> expect_v = {2.732050807568877, 1, 1};
+        // double expect_beta = 0.211324865405187;
+        // To get the scaled values, we need to divide v by v[0], and then
+        // multiply beta by v[0]**2.
+
+        // These are the values from python's scipy.linalg.qr (via LAPACK):
+        // >>> x = np.c_[[1, 1, 1]]
+        // >>> (Qraw, beta), Rraw = scipy.linalg.qr(x, mode='raw')
+        // >>> v = np.vstack([1, Qraw[1:]])
+        //
+        // In Octave/MATLAB:
+        // >> x = [1, 1, 1]';
+        // >> [v, beta] = gallery('house', x);
+        // >> v / v(1)
+        // >> beta * v(1)^2
+        //
+        // The relevant LAPACK routines are DGEQRF, DLARFG
+
+        std::vector<double> expect_v = {
+            1.0,
+            0.366025403784439,
+            0.366025403784439
+        };
+
+        double expect_beta = 1.577350269189626;
+
+        // s is just the 2-norm of x == x.T @ x
+        // sqrt(3) == 1.732050807568878
+        double expect_s = std::sqrt(
+            std::inner_product(x.begin(), x.end(), x.begin(), 0.0)
+        );
+
+        Householder H = house(x);
+
+        CHECK_THAT(is_close(H.v, expect_v, tol), AllTrue());
+        CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
+        REQUIRE_THAT(H.s, WithinAbs(expect_s, tol));
     }
 
     SECTION("Apply Householder Reflection") {
         // Apply the Householder reflection to a dense vector x, with sparse v.
-        std::vector<double> x = {1, 2, 3};
+        std::vector<double> x = {1, 1, 1};
 
         Householder H = house(x);
         CSCMatrix V = COOMatrix(H.v, {0, 1, 2}, {0, 0, 0}).tocsc();
 
-        std::vector<double> expect = {H.s, 0, 0};
+        std::vector<double> expect = {-H.s, 0, 0};  // [-norm(x), 0, 0]
 
         // Use column 0 of V to apply the Householder reflection
         std::vector<double> Hx = happly(V, 0, H.beta, x);

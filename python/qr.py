@@ -68,6 +68,59 @@ def qr_right(A):
     return V, beta, R
 
 
+def qr_left(A):
+    """Compute the QR decomposition of A using the left-looking algorithm.
+
+    From the LAPACK documentation for `dgeqrf.f`:
+
+    The matrix Q is represented as a product of elementary reflectors
+
+       Q = H(1) H(2) . . . H(k), where k = min(m,n).
+
+    Each H(i) has the form
+
+       H(i) = I - tau * v * v**T
+
+    where tau is a real scalar, and v is a real vector with
+    v(1:i-1) = 0 and v(i) = 1; v(i+1:m) is stored on exit in A(i+1:m,i),
+    and tau in TAU(i).
+
+    Parameters
+    ----------
+    A : (M, N) ndarray
+        Matrix of M vectors in N dimensions
+
+    Returns
+    -------
+    V : (M, N) ndarray
+        A matrix with the Householder reflectors as columns.
+    beta : (N,) ndarray
+        A vector with the scaling factors for each reflector.
+    R : (M, N) ndarray
+        The upper triangular matrix.
+    """
+    M, N = A.shape
+    V = np.zeros((M, N))
+    R = np.zeros((M, N))
+    beta = np.zeros(N)
+
+    for k in range(N):
+        x = A[:, [k]]
+
+        for i in range(k):
+            v = V[i:, [i]]
+            b = beta[i]
+            x[i:] -= v @ (b * (v.T @ x[i:]))
+
+        (Qraw, b), Rraw = la.qr(x[k:], mode='raw')
+        V[k:, [k]] = np.vstack([1.0, Qraw[1:]])  # extract the reflector
+        beta[k] = float(b.squeeze())          # get the scalar
+        R[:k, [k]] = x[:k]
+        R[k, k] = Rraw[0, 0]  # s = np.sign(x[0, 0]) * la.norm(x)
+
+    return V, beta, R
+
+
 def extract_householder_reflectors(Q):
     """Extract the Householder reflectors from the compact representation given
     by `scipy.linalg.qr(..., mode='raw')`.
@@ -160,27 +213,35 @@ if __name__ == '__main__':
     np.testing.assert_allclose(Qr @ Rraw, A, atol=tol)
     
     # Test our own QR decomposition
-    V, beta, R = qr_right(A)
+    V_r, beta_r, R_r = qr_right(A)
+    V_l, beta_l, R_l = qr_left(A)
 
     # NOTE that V is scaled to have 1 on the diagonal, whereas the MATLAB
     # output from `qr_right.m` is not.
-    print("V = ")
-    print(V)
-    print("beta = ")
-    print(beta)
-    print("R = ")
-    print(R)
+    # The MATLAB output is just scaled by v(1):
+    #   v := v / v(1)
+    #   beta_M := 2 / (v' * v) == tau / (v(1)**2)
 
-    Q = build_Q(V, beta)
+    print("V = ")
+    print(V_r)
+    print("beta = ")
+    print(beta_r)
+    print("R = ")
+    print(R_r)
+
+    Q_r = build_Q(V_r, beta_r)
+    Q_l = build_Q(V_l, beta_l)
 
     # Reproduce A = QR
-    np.testing.assert_allclose(Q @ R, A, atol=tol)
+    np.testing.assert_allclose(Q_r @ R_r, A, atol=tol)
+    np.testing.assert_allclose(Q_l @ R_l, A, atol=tol)
 
     # Compare to scipy's QR
-    Q_, R_ = la.qr(A)
-    np.testing.assert_allclose(Q_, Q)
-    np.testing.assert_allclose(R_, R)
-
+    Q, R = la.qr(A)
+    np.testing.assert_allclose(Q, Q_r)
+    np.testing.assert_allclose(R, R_r)
+    np.testing.assert_allclose(Q, Q_l)
+    np.testing.assert_allclose(R, R_l)
 
 # =============================================================================
 # =============================================================================

@@ -11,7 +11,9 @@ A = [[1 1 2]
      [0 0 1]
      [1 0 0]];
 
-[V, Beta, R] = qr_right(A)
+[V_r, Beta_r, R_r] = qr_right(A)
+
+[V_l, Beta_l, R_l] = qr_left(A)
 
 % [Q, R] = qr(A);
 

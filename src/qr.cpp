@@ -176,7 +176,7 @@ Symbolic sqr(const CSCMatrix& A, AMDOrder order)
     S.q = q;  // store the column permutation
 
     // Find pattern of Cholesky factor of A.T @ A
-    CSCMatrix C = A.permute_cols(S.q);  // TODO bool values = false
+    CSCMatrix C = A.permute_cols(S.q, false);  // don't copy values
     bool CTC = true;
     S.parent = etree(C, CTC);  // etree of C.T @ C, C = A[:, q]
     S.cp = counts(C, S.parent, post(S.parent));  // TODO col counts chol(C.T @ C)

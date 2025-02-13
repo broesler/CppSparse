@@ -654,22 +654,26 @@ class CSCMatrix
          *
          * @note In Matlab, this call is `C = A(p, q)`.
          *
-         * @param p_inv, q  *inverse* row and (non-inverse) column permutation vectors.
-         *        `p_inv` is length `M` and `q` is length `N`, where `A` is `M`-by-`N`.
+         * @param p_inv, q  *inverse* row and (non-inverse) column permutation
+         *        vectors. `p_inv` is length `M` and `q` is length `N`,
+         *        where `A` is `M`-by-`N`.
+         * @param values  if true, copy values from the original matrix,
+         *        otherwise, only the structure is copied.
          *
          * @return C  permuted matrix
          */
         CSCMatrix permute(
             const std::vector<csint> p_inv,
-            const std::vector<csint> q
+            const std::vector<csint> q,
+            bool values=true
         ) const;
 
         /** Permute a symmetric matrix with only the upper triangular part stored.
          *
          * @param p_inv  *inverse* permutation vector. Both rows and columns are
          *        permuted with this vector to retain symmetry.
-         * @param values  if true, copy values from the original matrix, otherwise, only
-         *        the structure is copied.
+         * @param values  if true, copy values from the original matrix,
+         *        otherwise, only the structure is copied.
          *
          * @return C  permuted matrix
          */
@@ -682,13 +686,17 @@ class CSCMatrix
          * @note In Matlab, this call is `C = A(p, q)'`.
          *
          * @param p_inv, q_inv  *inverse* row and column permutation vectors.
-         *        `p_inv` is length `M` and `q` is length `N`, where `A` is `M`-by-`N`.
+         *        `p_inv` is length `M` and `q` is length `N`,
+         *        where `A` is `M`-by-`N`.
+         * @param values  if true, copy values from the original matrix,
+         *        otherwise, only the structure is copied.
          *
          * @return C  permuted and transposed matrix
          */
         CSCMatrix permute_transpose(
             const std::vector<csint>& p_inv,
-            const std::vector<csint>& q_inv
+            const std::vector<csint>& q_inv,
+            bool values=true
         ) const;
 
         /** Permute the rows of a matrix.
@@ -696,20 +704,24 @@ class CSCMatrix
          * @note In Matlab, this call is `C = A(p, :)`.
          *
          * @param p_inv  *inverse* row permutation vector. `p_inv` is length `M`.
+         * @param values if true, copy values from the original matrix,
+         *        otherwise, only the structure is copied.
          *
          * @return C  permuted matrix
          */
-        CSCMatrix permute_rows(const std::vector<csint> p_inv) const;
+        CSCMatrix permute_rows(const std::vector<csint> p_inv, bool values=true) const;
 
         /** Permute the columns of a matrix.
          *
          * @note In Matlab, this call is `C = A(:, q)`.
          *
          * @param q  column permutation vector. `q` is length `N`.
+         * @param values if true, copy values from the original matrix,
+         *        otherwise, only the structure is copied.
          *
          * @return C  permuted matrix
          */
-        CSCMatrix permute_cols(const std::vector<csint> q) const;
+        CSCMatrix permute_cols(const std::vector<csint> q, bool values=true) const;
 
         /** Compute the 1-norm of the matrix (maximum column sum).
          *

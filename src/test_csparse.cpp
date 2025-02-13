@@ -77,7 +77,12 @@ CSCMatrix A_mat()
  * @param C       the matrix to test
  * @param expect  the expected matrix
  */
-auto compare_canonical(const CSCMatrix& C, const CSCMatrix& expect, double tol=1e-15)
+auto compare_canonical(
+    const CSCMatrix& C,
+	const CSCMatrix& expect,
+	bool values=true,
+	double tol=1e-15
+)
 {
     REQUIRE(C.has_canonical_format());
     REQUIRE(expect.has_canonical_format());
@@ -85,8 +90,10 @@ auto compare_canonical(const CSCMatrix& C, const CSCMatrix& expect, double tol=1
     CHECK(C.shape() == expect.shape());
     CHECK(C.indptr() == expect.indptr());
     CHECK(C.indices() == expect.indices());
-    for (csint p = 0; p < C.nnz(); p++) {
-        REQUIRE_THAT(C.data()[p], WithinAbs(expect.data()[p], tol));
+    if (values) {
+        for (csint p = 0; p < C.nnz(); p++) {
+            REQUIRE_THAT(C.data()[p], WithinAbs(expect.data()[p], tol));
+        }
     }
 }
 
@@ -98,30 +105,42 @@ auto compare_canonical(const CSCMatrix& C, const CSCMatrix& expect, double tol=1
  * @param C       the matrix to test
  * @param expect  the expected matrix
  */
-auto compare_noncanonical(const CSCMatrix& C, const CSCMatrix& expect, double tol=1e-15)
+auto compare_noncanonical(
+    const CSCMatrix& C,
+	const CSCMatrix& expect,
+    bool values=true,
+	double tol=1e-15
+)
 {
     REQUIRE(C.nnz() == expect.nnz());
     REQUIRE(C.shape() == expect.shape());
 
     auto [M, N] = C.shape();
 
-    // Need to check all elements of the matrix because operator() combines
-    // duplicate entries, whereas just going through the non-zeros of one matrix
-    // does not combine those duplicates.
-    for (csint i = 0; i < M; i++) {
-        for (csint j = 0; j < N; j++) {
-            REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
+    if (values) {
+        // Need to check all elements of the matrix because operator() combines
+        // duplicate entries, whereas just going through the non-zeros of one
+        // matrix does not combine those duplicates.
+        for (csint i = 0; i < M; i++) {
+            for (csint j = 0; j < N; j++) {
+                REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
+            }
         }
     }
 }
 
 
-auto compare_matrices(const CSCMatrix& C, const CSCMatrix& expect, double tol=1e-15)
+auto compare_matrices(
+    const CSCMatrix& C,
+	const CSCMatrix& expect,
+	bool values=true,
+	double tol=1e-15
+)
 {
     if (C.has_canonical_format() && expect.has_canonical_format()) {
-        compare_canonical(C, expect, tol);
+        compare_canonical(C, expect, values, tol);
     } else {
-        compare_noncanonical(C, expect, tol);
+        compare_noncanonical(C, expect, values, tol);
     }
 }
 
@@ -1371,6 +1390,15 @@ TEST_CASE("Test matrix permutation", "[permute]")
 
         compare_matrices(C, expect);
         compare_matrices(A.permute_rows(p_inv).permute_cols(q), expect);
+
+        SECTION("Symbolic permutation") {
+            CSCMatrix Cs = A.permute(inv_permute(p), q, false);  // no values
+            CSCMatrix Cs2 = A.permute_rows(p_inv, false).permute_cols(q, false);
+            CHECK(Cs.data().empty());
+            CHECK(Cs2.data().empty());
+            compare_matrices(Cs, expect, false);
+            compare_matrices(Cs2, expect, false);
+        }
     }
 
     SECTION("Test symperm") {
@@ -1393,6 +1421,12 @@ TEST_CASE("Test matrix permutation", "[permute]")
         CSCMatrix C = A.symperm(inv_permute(p));
 
         compare_matrices(C, expect);
+
+        SECTION("Symbolic permutation") {
+            CSCMatrix Cs = A.symperm(inv_permute(p), false);  // no values
+            CHECK(Cs.data().empty());
+            compare_matrices(Cs, expect, false);
+        }
     }
 
     // Exercise 2.26
@@ -1452,6 +1486,12 @@ TEST_CASE("Test matrix permutation", "[permute]")
         CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
         compare_matrices(C, expect);
+
+        SECTION("Symbolic permutation") {
+            CSCMatrix Cs = A.permute_transpose(inv_permute(p), inv_permute(q), false);
+            CHECK(Cs.data().empty());
+            compare_matrices(Cs, expect, false);
+        }
     }
 }
 
@@ -2362,7 +2402,7 @@ TEST_CASE("Cholesky decomposition")
         // Check that the factorization is correct
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
 
-        compare_matrices(LLT, A, tol);
+        compare_matrices(LLT, A, true, tol);
 
         SECTION("Update Cholesky") {
             // Create a random vector with the sparsity of a column of L
@@ -2387,7 +2427,7 @@ TEST_CASE("Cholesky decomposition")
             CSCMatrix LLT_up = (L_up * L_up.T()).droptol().to_canonical();
             CHECK(LLT_up.nnz() == A_up.nnz());
 
-            compare_matrices(LLT_up, A_up, tol);
+            compare_matrices(LLT_up, A_up, true, tol);
         }
     }
 
@@ -2401,7 +2441,7 @@ TEST_CASE("Cholesky decomposition")
         // The factorization will be postordered!
         CSCMatrix expect_A = A.permute(S.p_inv, inv_permute(S.p_inv));
 
-        compare_matrices(LLT, expect_A, tol);
+        compare_matrices(LLT, expect_A, true, tol);
     }
 
     SECTION("Exercise 4.1: etree and counts from ereach") {
@@ -2493,7 +2533,7 @@ TEST_CASE("Cholesky decomposition")
 
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
 
-        compare_matrices(LLT, A, tol);
+        compare_matrices(LLT, A, true, tol);
     }
 
     SECTION("Exercise 4.12: Up-looking Cholesky with Pattern") {
@@ -2505,7 +2545,7 @@ TEST_CASE("Cholesky decomposition")
 
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
 
-        compare_matrices(LLT, A, tol);
+        compare_matrices(LLT, A, true, tol);
     }
 
     SECTION("Exercise 4.13: Incomplete Cholesky") {

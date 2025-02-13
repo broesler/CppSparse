@@ -56,6 +56,7 @@ struct CholCounts {
 };
 
 
+// TODO separate this structure into SymbolicChol, SymbolicQR, and SymbolicLU.
 // See cs_symbolic aka css
 struct Symbolic
 {
@@ -63,11 +64,11 @@ struct Symbolic
                        q,         // fill-reducting column permutation for LU and QR
                        parent,    // elimination tree
                        cp,        // column pointers for Cholesky
-                       leftmost,  // leftmost[i] = min(find(A(i,:))) for QR
-                       m2;        // # of rows for QR, after adding fictitious rows
+                       leftmost;  // leftmost[i] = min(find(A(i,:))) for QR
 
-    double lnz,   // # entries in L for LU or Cholesky, in V for QR
-           unz;   // # entries in U for LU, in R for QR
+    csint m2;    // # of rows for QR, after adding fictitious rows
+    double lnz,  // # entries in L for LU or Cholesky, in V for QR
+           unz;  // # entries in U for LU, in R for QR
 };
 
 

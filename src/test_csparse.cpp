@@ -2536,7 +2536,7 @@ TEST_CASE("Cholesky decomposition")
 }
 
 
-TEST_CASE("QR Decomposition")
+TEST_CASE("Householder Reflection")
 {
     SECTION("Householder reflection with unit x") {
         std::vector<double> x = {1, 0, 0};
@@ -2567,7 +2567,6 @@ TEST_CASE("QR Decomposition")
     }
 
     SECTION("Householder reflection with non-zero x") {
-        std::cout << "---------- Testing Householder [1, 1, 1] ----------" << std::endl;
         std::vector<double> x = {1, 1, 1};
 
         // These are the *unscaled* values from Octave
@@ -2626,6 +2625,40 @@ TEST_CASE("QR Decomposition")
     }
 }
 
+
+TEST_CASE("QR Decomposition")
+{
+    // csint N = 8;  // number of rows and columns
+    // Define the test matrix A (See Davis, Figure 5.1, p 74)
+    std::vector<csint> rows = {0, 3, 1, 6, 1, 2, 6, 0, 2, 3, 4, 5, 7,
+                               4, 5, 7, 0, 1, 3, 6, 7, 5, 6};
+    std::vector<csint> cols = {0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
+                               5, 5, 5, 6, 6, 6, 6, 6, 7, 7};
+    std::vector<double> vals(rows.size(), 1.0);
+
+    CSCMatrix A = COOMatrix(vals, rows, cols).tocsc();
+
+    // NOTE we need to inclue A[7, 7] even though it is zero!
+    A.assign(7, 7, 0.0);
+
+    SECTION("vcount") {
+        Symbolic S;
+        // See etree in Figure 5.1, p 74
+        S.parent.assign({3, 2, 3, 6, 5, 6, 7, -1});
+        vcount(A, S);
+
+        std::vector<csint> expect_leftmost = {0, 1, 2, 0, 4, 4, 1, 4};
+
+        // std::cout << "S.p_inv: " << S.p_inv << std::endl;
+        // std::cout << "S.leftmost: " << S.leftmost << std::endl;
+        // std::cout << "S.lnz: " << S.lnz << std::endl;
+        // std::cout << "S.m2: " << S.m2 << std::endl;
+
+        CHECK(S.leftmost == expect_leftmost);
+        CHECK(S.lnz == 16);
+    }
+
+}
 
 /*==============================================================================
  *============================================================================*/

@@ -8,6 +8,7 @@
  *
  *============================================================================*/
 
+#include "cholesky.h"  // Symbolic
 #include "qr.h"
 
 namespace cs {
@@ -92,6 +93,68 @@ std::vector<double> happly(
     return Hx;
 }
 
+
+void vcount(const CSCMatrix& A, Symbolic& S)
+{
+    auto [M, N] = A.shape();
+    std::vector<csint> next(M),      // the next row index
+                       head(N, -1),  // the first row index in each column
+                       tail(N, -1),  // the last row index in each column
+                       nque(N);      // the number of rows in each column
+
+    S.p_inv.assign(std::max(M, N), 0);  // permutation vector
+    S.leftmost.assign(N, -1);           // leftmost non-zero in each column
+
+    for (csint k = N-1; k >= 0; k--) {
+        for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
+            S.leftmost[A.i_[p]] = k;  // leftmost[i] = min(find(A(i, :)))
+        }
+    }
+
+    for (csint i = M-1; i >= 0; i--) {  // scan rows in reverse order
+        S.p_inv[i] = -1;                // i is not yet in the permutation
+        csint k = S.leftmost[i];
+        if (k != -1) {                  // row i is not empty
+            if (nque[k]++ == 0) {
+                tail[k] = i;            // first row in queue k
+            }
+            next[i] = head[k];          // put i at head of queue k
+            head[k] = i;
+        }
+    }
+
+    S.lnz = 0;
+    S.m2 = M;
+
+    csint k; // declare outside loop for final row permutation
+    for (k = 0; k < N; k++) {          // find row permutation and nnz(V)
+        csint i = head[k];             // remove row i from queue k
+        S.lnz++;                       // count V(k, k) as nonzero
+        if (i < 0) {
+            i = S.m2++;                // add a fictitious row
+        }
+        S.p_inv[i] = k;                // associate row i with V(:, k)
+        if (--nque[k] <= 0) {          // skip if V(k+1:m, k) is empty
+            continue;
+        }
+        S.lnz += nque[k];              // nque[k] is nnz(V(k+1:m, k))
+        csint pa = S.parent[k];
+        if (pa != -1) {                // move all rows to parent of k
+            if (nque[pa] == 0) {
+                tail[pa] = tail[k];
+            }
+            next[tail[k]] = head[pa];
+            head[pa] = next[i];
+            nque[pa] += nque[k];
+        }
+    }
+
+    for (csint i = 0; i < M; i++) {    // finalize row permutation
+        if (S.p_inv[i] < 0) {
+            S.p_inv[i] = k++;
+        }
+    }
+}
 
 }  // namespace cs
 

@@ -75,6 +75,14 @@ std::vector<double> happly(
 );
 
 
+/** Compute the column counts of the matrix V containing Householder vectors.
+ *
+ * @param A  the CSCMatrix that will be decomposed
+ * @param[in,out] S  the symbolic QR decomposition of A. S.parent is expected to
+ *        have been computed by cs::etree. Only p_inv, leftmost, lnz, and m2
+ *        values are updated.
+ */
+void vcount(const CSCMatrix& A, Symbolic& S);
 }  // namespace cs
 
 #endif  // _CSPARSE_QR_H_

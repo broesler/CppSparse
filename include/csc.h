@@ -981,6 +981,8 @@ class CSCMatrix
             const std::vector<double>& x
         );
 
+        friend void vcount(const CSCMatrix& A, Symbolic& S);
+
         //----------------------------------------------------------------------
         //        Printing
         //----------------------------------------------------------------------

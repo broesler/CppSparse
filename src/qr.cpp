@@ -8,6 +8,8 @@
  *
  *============================================================================*/
 
+#include <numeric>  // accumulate
+
 #include "cholesky.h"  // Symbolic
 #include "qr.h"
 
@@ -155,6 +157,36 @@ void vcount(const CSCMatrix& A, Symbolic& S)
         }
     }
 }
+
+
+Symbolic sqr(const CSCMatrix& A, AMDOrder order)
+{
+    auto [M, N] = A.shape();
+    Symbolic S;  // allocate result
+    std::vector<csint> q(M);  // column permutation vector
+
+    if (order == AMDOrder::Natural) {
+        std::iota(q.begin(), q.end(), 0);  // identity permutation
+    } else {
+        // TODO implement amd order (see Chapter 7)
+        // q = amd(order, A);  // P = amd(A + A.T()) or natural
+        throw std::runtime_error("Ordering method not implemented!");
+    }
+
+    S.q = q;  // store the column permutation
+
+    // Find pattern of Cholesky factor of A.T @ A
+    CSCMatrix C = A.permute_cols(S.q);  // TODO bool values = false
+    bool CTC = true;
+    S.parent = etree(C, CTC);  // etree of C.T @ C, C = A[:, q]
+    S.cp = counts(C, S.parent, post(S.parent));  // TODO col counts chol(C.T @ C)
+    vcount(C, S);  // compute p_inv, leftmost, lnz, m2
+    S.unz = std::accumulate(S.cp.begin(), S.cp.end(), 0);
+    assert(S.lnz >= 0 && S.unz >= 0);  // overflow guard
+
+    return S;
+}
+
 
 }  // namespace cs
 

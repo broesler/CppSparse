@@ -2658,6 +2658,31 @@ TEST_CASE("QR Decomposition")
         CHECK(S.lnz == 16);
     }
 
+    SECTION("Symbolic QR factorization") {
+        std::vector<csint> expect_q = {0, 1, 2, 3, 4, 5, 6, 7};
+        std::vector<csint> expect_parent = {3, 2, 3, 6, 5, 6, 7, -1};
+        std::vector<csint> expect_leftmost = {0, 1, 2, 0, 4, 4, 1, 4};
+
+        Symbolic S = sqr(A);
+
+        // TODO print function for Symbolic
+        std::cout << "S.p_inv: " << S.p_inv << std::endl;
+        std::cout << "S.q: " << S.q << std::endl;
+        std::cout << "S.parent: " << S.parent << std::endl;
+        std::cout << "S.cp: " << S.cp << std::endl;
+        std::cout << "S.leftmost: " << S.leftmost << std::endl;
+        std::cout << "S.unz: " << S.unz << std::endl;
+        std::cout << "S.lnz: " << S.lnz << std::endl;
+        std::cout << "S.m2: " << S.m2 << std::endl;
+
+        CHECK(S.q == expect_q);
+        CHECK(S.parent == expect_parent);
+        CHECK(S.leftmost == expect_leftmost);
+        CHECK(S.lnz == 16);
+        // CHECK(S.unz == 16);  // strict upper tri?
+        // CHECK(S.unz == 24);
+        CHECK(S.m2 == 8);
+    }
 }
 
 /*==============================================================================

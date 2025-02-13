@@ -83,6 +83,22 @@ std::vector<double> happly(
  *        values are updated.
  */
 void vcount(const CSCMatrix& A, Symbolic& S);
+
+
+/** Perform symbolic analysis for the QR decomposition of a matrix.
+ *
+ * @param A  the matrix to factorize
+ * @param order  the ordering method to use:
+ *       - 0: natural ordering
+ *       - 1: amd(A + A.T)
+ *       - 2: amd(A.T * A) with no dense rows
+ *       - 3: amd(A.T * A)
+ *
+ * @return the Symbolic factorization
+ */
+Symbolic sqr(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
+
+
 }  // namespace cs
 
 #endif  // _CSPARSE_QR_H_

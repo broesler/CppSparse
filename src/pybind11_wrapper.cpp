@@ -222,6 +222,11 @@ PYBIND11_MODULE(csparse, m) {
     m.def("leftchol", &cs::leftchol);
     m.def("rechol", &cs::rechol);
 
+    m.def("sqr", &cs::sqr,
+            py::arg("A"),
+            py::arg("order")=cs::AMDOrder::Natural);
+    m.def("qr", &cs::qr);
+
     //--------------------------------------------------------------------------
     //      Solve functions
     //--------------------------------------------------------------------------

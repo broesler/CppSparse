@@ -41,7 +41,7 @@ def qright(Y, V, beta, p=None):
     result : (M, N) ndarray
         The result of applying the Householder transformations to `Y`.
     """
-    M, N = V.shape()
+    M, N = V.shape
     X = Y.copy()
     if p is not None:
         X = X[:, p]
@@ -73,7 +73,7 @@ def qleft(Y, V, beta, p=None):
     result : (M, N) ndarray
         The result of applying the Householder transformations to `Y`.
     """
-    M2, N = V.shape()
+    M2, N = V.shape
     M, NY = Y.shape
     X = Y.copy()
 

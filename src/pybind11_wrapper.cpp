@@ -80,16 +80,16 @@ PYBIND11_MODULE(csparse, m) {
                 py::arg("seed")=0
             )
         .def(py::init<const cs::CSCMatrix&>())
-        .def("nnz", &cs::COOMatrix::nnz)
-        .def("nzmax", &cs::COOMatrix::nzmax)
-        .def("shape", [](const cs::COOMatrix& A) {
+        .def_property_readonly("nnz", &cs::COOMatrix::nnz)
+        .def_property_readonly("nzmax", &cs::COOMatrix::nzmax)
+        .def_property_readonly("shape", [](const cs::COOMatrix& A) {
             auto s = A.shape();
             return std::make_tuple(s[0], s[1]);
         })
         //
-        .def("row", &cs::COOMatrix::row)
-        .def("column", &cs::COOMatrix::column)
-        .def("data", &cs::COOMatrix::data)
+        .def_property_readonly("row", &cs::COOMatrix::row)
+        .def_property_readonly("column", &cs::COOMatrix::column)
+        .def_property_readonly("data", &cs::COOMatrix::data)
         //
         .def("assign", py::overload_cast
                         <cs::csint, cs::csint, double>(&cs::COOMatrix::assign))
@@ -133,21 +133,21 @@ PYBIND11_MODULE(csparse, m) {
         .def(py::init<const cs::COOMatrix&>())
         .def(py::init<const std::vector<double>&, cs::csint, cs::csint>())
         //
-        .def("nnz", &cs::CSCMatrix::nnz)
-        .def("nzmax", &cs::CSCMatrix::nzmax)
-        .def("shape", [](const cs::CSCMatrix& A) {
+        .def_property_readonly("nnz", &cs::CSCMatrix::nnz)
+        .def_property_readonly("nzmax", &cs::CSCMatrix::nzmax)
+        .def_property_readonly("shape", [](const cs::CSCMatrix& A) {
             auto s = A.shape();
             return std::make_tuple(s[0], s[1]);
         })
         //
-        .def("indptr", &cs::CSCMatrix::indptr)
-        .def("indices", &cs::CSCMatrix::indices)
-        .def("data", &cs::CSCMatrix::data)
+        .def_property_readonly("indptr", &cs::CSCMatrix::indptr)
+        .def_property_readonly("indices", &cs::CSCMatrix::indices)
+        .def_property_readonly("data", &cs::CSCMatrix::data)
         //
         .def("to_canonical", &cs::CSCMatrix::to_canonical)
-        .def("has_sorted_indices", &cs::CSCMatrix::has_sorted_indices)
-        .def("has_canonical_format", &cs::CSCMatrix::has_canonical_format)
-        .def("is_symmetric", &cs::CSCMatrix::is_symmetric)
+        .def_property_readonly("has_sorted_indices", &cs::CSCMatrix::has_sorted_indices)
+        .def_property_readonly("has_canonical_format", &cs::CSCMatrix::has_canonical_format)
+        .def_property_readonly("is_symmetric", &cs::CSCMatrix::is_symmetric)
         //
         .def("__call__", py::overload_cast<cs::csint, cs::csint>(&cs::CSCMatrix::operator(), py::const_))
         // TODO handle slices

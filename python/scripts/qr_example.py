@@ -70,10 +70,12 @@ S = csparse.sqr(Ac)
 # V, beta, Rraw = VbR.V, VbR.beta, VbR.R
 V, beta, Rraw = csparse.qr(Ac, S)
 
+print(V.shape)
+
 # FIXME V needs to have slicing or conversion to csc_array, beta needs to be
 # an ndarray. Rraw is not actually used here.
 # Get the actual Q matrix
-Q = csparse.qright(sparse.eye(N), V, beta)
+# Q = csparse.qright(sparse.eye(N), V, beta)
 
 
 # =============================================================================

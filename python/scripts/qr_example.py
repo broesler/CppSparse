@@ -16,13 +16,16 @@ from scipy import sparse
 from scipy import linalg as la
 from scipy.sparse import linalg as sla
 
+import csparse
+
+# Matrix from Davis Figure 5.1, p 74.
 N = 8
 rows = np.r_[0, 3, 1, 6, 1, 2, 6, 0, 2, 3, 4, 5, 7, 4, 5, 7, 0, 1, 3, 6, 7, 5, 6];
 cols = np.r_[0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 6, 6, 7, 7];
 vals = np.ones(rows.size);
 
 A = sparse.csc_array((vals, (rows, cols)), shape=(N, N))
-# A.setdiag(np.r_[np.arange(1, N), 0])
+A.setdiag(np.r_[np.arange(1, N), 0])
 
 # Compute A^T A
 ATA = A.T @ A
@@ -58,6 +61,20 @@ Q, R = la.qr(A.toarray())
 # Q, R = la.qr(A)
 # # Q.shape = (M, M)
 # # R.shape = (M, N)
+
+# Compute QR decomposition with csparse
+Ac = csparse.COOMatrix(vals, rows, cols, N, N).tocsc()
+
+S = csparse.sqr(Ac)
+# VbR = csparse.qr(Ac, S)
+# V, beta, Rraw = VbR.V, VbR.beta, VbR.R
+V, beta, Rraw = csparse.qr(Ac, S)
+
+# FIXME V needs to have slicing or conversion to csc_array, beta needs to be
+# an ndarray. Rraw is not actually used here.
+# Get the actual Q matrix
+Q = csparse.qright(sparse.eye(N), V, beta)
+
 
 # =============================================================================
 # =============================================================================

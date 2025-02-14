@@ -42,6 +42,22 @@ PYBIND11_MODULE(csparse, m) {
         .def_readwrite("lnz", &cs::Symbolic::lnz)
         .def_readwrite("unz", &cs::Symbolic::unz);
 
+    // Bind the QRResult struct
+    py::class_<cs::QRResult>(m, "QRResult")
+        .def_readwrite("V", &cs::QRResult::V)
+        .def_readwrite("beta", &cs::QRResult::beta)
+        .def_readwrite("R", &cs::QRResult::R)
+        // Add __iter__ for unpacking in Python: V, beta, R = qr(A, S)
+        .def("__iter__", [](const cs::QRResult& res) {
+            auto* v = new std::vector<py::object>{
+                py::cast(res.V),
+                py::cast(res.beta),
+                py::cast(res.R)
+            };
+            return py::make_iterator(v->begin(), v->end(), 
+                    py::return_value_policy::take_ownership);
+        }, py::keep_alive<0, 1>());
+
     //--------------------------------------------------------------------------
     //        COOMatrix class
     //--------------------------------------------------------------------------
@@ -134,6 +150,7 @@ PYBIND11_MODULE(csparse, m) {
         .def("is_symmetric", &cs::CSCMatrix::is_symmetric)
         //
         .def("__call__", py::overload_cast<cs::csint, cs::csint>(&cs::CSCMatrix::operator(), py::const_))
+        // TODO handle slices
         .def("__getitem__", [](cs::CSCMatrix& A, py::tuple t) {
             cs::csint i = t[0].cast<cs::csint>();
             cs::csint j = t[1].cast<cs::csint>();

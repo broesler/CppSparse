@@ -25,10 +25,9 @@ Version: 0.1
 
 # Import all bindings from the csparse module
 from .csparse import *
+from .qr_utils import *
 
-# from .utils import *  # TODO add other python-level functions
-
-__all__ = dir(csparse) #+
+__all__ = dir(csparse) + dir(qr_utils)
 
 # =============================================================================
 # =============================================================================

@@ -596,7 +596,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         }
 
         SECTION("Symbolic Transpose") {
-            CSCMatrix C_T = C.T(false);
+            CSCMatrix C_T = C.transpose(false);
 
             auto [M, N] = C.shape();
 

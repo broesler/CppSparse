@@ -371,7 +371,7 @@ CSCMatrix CSCMatrix::transpose(bool values) const
 
 
 // Alias for transpose
-CSCMatrix CSCMatrix::T(bool values) const { return this->transpose(values); }
+CSCMatrix CSCMatrix::T() const { return this->transpose(); }
 
 
 CSCMatrix CSCMatrix::tsort() const

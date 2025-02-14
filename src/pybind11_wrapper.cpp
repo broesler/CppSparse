@@ -105,7 +105,7 @@ PYBIND11_MODULE(csparse, m) {
         .def("toarray", &cs::COOMatrix::toarray, py::arg("order")='F')
         //
         .def("transpose", &cs::COOMatrix::transpose)
-        .def("T", &cs::COOMatrix::T)
+        .def_property_readonly("T", &cs::COOMatrix::T)
         //
         .def("dot", &cs::COOMatrix::dot)
         .def("__mul__", &cs::COOMatrix::dot);
@@ -178,7 +178,7 @@ PYBIND11_MODULE(csparse, m) {
         .def("toarray", &cs::CSCMatrix::toarray, py::arg("order")='F')
         //
         .def("transpose", &cs::CSCMatrix::transpose, py::arg("values")=true)
-        .def("T", &cs::CSCMatrix::T, py::arg("values")=true)
+        .def_property_readonly("T", &cs::CSCMatrix::T)
         //
         .def("band", py::overload_cast<cs::csint, cs::csint>
                         (&cs::CSCMatrix::band, py::const_))

@@ -289,7 +289,7 @@ class CSCMatrix
         * @return new CSCMatrix object with transposed rows and columns.
         */
         CSCMatrix transpose(bool values=true) const;
-        CSCMatrix T(bool values=true) const;  // transpose a copy (alias)
+        CSCMatrix T() const;  // transpose a copy (alias)
 
         /** Sort rows and columns in a copy via two transposes.
          *
@@ -764,6 +764,7 @@ class CSCMatrix
          * @return C  the concatenated matrix.
          */
         friend CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B);
+
         /** Concatenate two matrices vertically.
          *
          * See: Davis, Exercise 2.22 `cs_hcat`.

@@ -2675,11 +2675,16 @@ TEST_CASE("Householder Reflection")
 TEST_CASE("QR Decomposition")
 {
     csint N = 8;  // number of rows and columns
+
+    // TODO move the diagonal elements either first or last so that we can set
+    // their values more easily
     // Define the test matrix A (See Davis, Figure 5.1, p 74)
     std::vector<csint> rows = {0, 3, 1, 6, 1, 2, 6, 0, 2, 3, 4, 5, 7,
                                4, 5, 7, 0, 1, 3, 6, 7, 5, 6};
     std::vector<csint> cols = {0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
                                5, 5, 5, 6, 6, 6, 6, 6, 7, 7};
+
+    // TODO try random values for A?
     std::vector<double> vals(rows.size(), 1.0);
 
     CSCMatrix A = COOMatrix(vals, rows, cols).tocsc();
@@ -2724,6 +2729,24 @@ TEST_CASE("QR Decomposition")
         CHECK(S.unz == 24);
     }
 
+    SECTION("Numeric QR factorization") {
+        Symbolic S = sqr(A);
+        QRResult QR = qr(A, S);
+
+        // Check that the factorization is correct
+        QR.V.print_dense();
+        std::cout << "beta: " << QR.beta << std::endl;
+        QR.R.print_dense();
+
+        // CSCMatrix expect_V = {}; // TODO
+        // std::vector<double> expect_beta = {}; // TODO
+        // CSCMatrix expect_R = {}; // TODO
+
+        // compare_matrices(QR.V, expect_V);
+        // CHECK_THAT(is_close(QR.beta, expect_beta, tol), AllTrue());
+        // compare_matrices(QR.R, expect_R);
+
+        // Test that the factorization is correct
     }
 }
 

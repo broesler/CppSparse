@@ -624,7 +624,6 @@ class CSCMatrix
          * accumulated in `x`, and then gathered in the calling function, so
          * that we can account for any duplicate entries.
          *
-         * @param A     CSC matrix by which to multiply
          * @param j     column index of `A`
          * @param beta  scalar value by which to multiply `A`
          * @param[in,out] w, x  workspace vectors of row indices and values, respectively
@@ -632,7 +631,9 @@ class CSCMatrix
          *              are not yet in `Cj`.
          * @param[in,out] C    CSC matrix where output non-zero pattern is stored
          * @param[in,out] nz   current number of non-zeros in `C`.
-         * @param fs    first call to scatter
+         * @param fs    first call to scatter. Default is false to skip the
+         *        optimization.
+         * @param values if true, copy values from the original matrix,
          *
          * @return nz  updated number of non-zeros in `C`.
          */
@@ -644,7 +645,8 @@ class CSCMatrix
             csint mark,
             CSCMatrix& C,
             csint nz,
-            bool fs
+            bool fs=false,    // Exercise 2.19
+            bool values=true  // needed in qr
         ) const;
 
         //----------------------------------------------------------------------
@@ -1002,6 +1004,8 @@ class CSCMatrix
         );
 
         friend void vcount(const CSCMatrix& A, Symbolic& S);
+
+        friend QRResult qr(const CSCMatrix& A, const Symbolic& S);
 
         //----------------------------------------------------------------------
         //        Printing

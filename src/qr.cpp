@@ -189,6 +189,75 @@ Symbolic sqr(const CSCMatrix& A, AMDOrder order)
 }
 
 
+QRResult qr(const CSCMatrix& A, const Symbolic& S)
+{
+    csint M = S.m2;
+    csint N = A.N_;
+
+    // Allocate result matrices
+    CSCMatrix V(M, N, S.lnz);  // Householder vectors
+    CSCMatrix R(M, N, S.unz);  // R factor
+    std::vector<double> beta(N);  // scaling factors
+
+    // Allocate workspaces
+    std::vector<csint>  w(M, -1),  // workspace
+                        s(N);  // stack
+    std::vector<double> x(M);  // dense vector
+
+    // Compute V and R
+    csint vnz = 0,
+          rnz = 0;
+    csint p1;
+
+    for (csint k = 0; k < N; k++) {
+        R.p_[k] = rnz;  // R[:, k] starts here
+        V.p_[k] = p1 = vnz;  // V[:, k] starts here
+        w[k] = k;  // add V(k, k) to pattern of V
+        V.i_[vnz++] = k;  // V(k, k) is non-zero
+        csint top = N;
+        csint col = S.q[k];
+        for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {  // find R[:, k] pattern
+            csint i = S.leftmost[A.i_[p]];  // i = min(find(A(i, q)))
+            csint len;
+            for (len = 0; w[i] != k; i = S.parent[i]) {  // traverse up to k
+                s[len++] = i;
+                w[i] = k;
+            }
+            while (len > 0) {
+                s[--top] = s[--len];  // push path on stack
+            }
+            i = S.p_inv[A.i_[p]];  // i = permuted row of A(:, col)
+            x[i] = A.v_[p];  // x(i) = A(:, col)
+            if (i > k && w[i] < k) {  // pattern of V(:, k) = x(k+1:m)
+                V.i_[vnz++] = i;  // add i to pattern of V(:, k)
+                w[i] = k;
+            }
+        }
+        for (csint p = top; p < N; p++) {  // for each i in pattern of R[:, k]
+            csint i = s[p];  // R(i, k) is non-zero
+            happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
+            R.i_[rnz] = i;  // R(i, k) = x(i)
+            R.v_[rnz++] = x[i];
+            x[i] = 0;
+            if (S.parent[i] == k) {
+                vnz = V.scatter(i, 0, w, x, k, V, vnz, false, false);
+            }
+        }
+        for (csint p = p1; p < vnz; p++) {  // gather V(:, k) = x
+            V.v_[p] = x[V.i_[p]];
+            x[V.i_[p]] = 0;
+        }
+        R.i_[rnz] = k;  // R(k, k) = norm(x)
+        Householder h = house({V.v_.begin() + p1, V.v_.end()});
+        R.v_[rnz++] = h.s;  // [v, beta, s] = house(x)
+        beta[k] = h.beta;
+    }
+    R.p_[N] = rnz;  // finalize R
+    V.p_[N] = vnz;  // finalize V
+    return {V, beta, R};
+}
+
+
 }  // namespace cs
 
 /*==============================================================================

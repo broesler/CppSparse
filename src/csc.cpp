@@ -1101,8 +1101,9 @@ csint CSCMatrix::scatter(
     csint mark,
     CSCMatrix& C,
     csint nz,
-    bool fs
-    ) const
+    bool fs,  // Exercise 2.19
+    bool values
+) const
 {
     if (fs) {
         // If it's the first call, we can just copy the (scaled) column
@@ -1110,7 +1111,9 @@ csint CSCMatrix::scatter(
             csint i = i_[p];       // A(i, j) is non-zero
             w[i] = mark;             // i is new entry in column j
             C.i_[nz++] = i;          // add i to sparsity pattern of C(:, j)
-            x[i] = beta * v_[p];   // x = beta * A(i, j)
+            if (values) {
+                x[i] = beta * v_[p];   // x = beta * A(i, j)
+            }
         }
     } else {
         // Otherwise, we need to accumulate the values
@@ -1119,9 +1122,13 @@ csint CSCMatrix::scatter(
             if (w[i] < mark) {
                 w[i] = mark;             // i is new entry in column j
                 C.i_[nz++] = i;          // add i to pattern of C(:, j)
-                x[i] = beta * v_[p];   // x = beta * A(i, j)
+                if (values) {
+                    x[i] = beta * v_[p];   // x = beta * A(i, j)
+                }
             } else {
-                x[i] += beta * v_[p];  // i exists in C(:, j) already
+                if (values) {
+                    x[i] += beta * v_[p];  // i exists in C(:, j) already
+                }
             }
         }
     }

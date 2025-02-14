@@ -28,6 +28,14 @@ struct Householder {
 };
 
 
+/** Numeric QR decomposition return struct. */
+struct QRResult {
+    CSCMatrix V;               ///< the Householder vectors
+    std::vector<double> beta;  ///< the scaling factors
+    CSCMatrix R;               ///< the upper triangular matrix
+};
+
+
 /** Compute the Householder reflection matrix for a given vector.
  *
  * The Householder reflection matrix is defined as
@@ -97,6 +105,16 @@ void vcount(const CSCMatrix& A, Symbolic& S);
  * @return the Symbolic factorization
  */
 Symbolic sqr(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
+
+
+/** Perform the numeric QR decomposition of a matrix.
+ *
+ * @param A  the matrix to factorize
+ * @param S  the symbolic factorization of A
+ *
+ * @return the numeric factorization
+ */
+QRResult qr(const CSCMatrix& A, const Symbolic& S);
 
 
 }  // namespace cs

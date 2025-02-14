@@ -22,6 +22,7 @@ struct CholCounts;
 struct TriPerm;
 struct SparseSolution;
 struct Symbolic;
+struct QRResult;
 
 class COOMatrix;
 class CSCMatrix;

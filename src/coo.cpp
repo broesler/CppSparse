@@ -9,6 +9,7 @@
 
 #include <algorithm>  // std::max_element
 #include <cassert>
+#include <format>
 #include <random>
 #include <string>
 #include <sstream>
@@ -282,9 +283,10 @@ std::string COOMatrix::to_string(bool verbose, csint threshold) const
     csint nnz_ = nnz();
     std::stringstream ss;
 
-    ss << "<" << format_desc_ << " matrix" << std::endl;
-    ss << "        with " << nnz_ << " stored elements "
-        << "and shape (" << M_ << ", " << N_ << ")>";
+    ss << std::format(
+        "<{} matrix\n"
+        "        with {} stored elements and shape ({}, {})>",
+        format_desc_, nnz_, M_, N_);
 
     if (verbose) {
         ss << std::endl;
@@ -307,7 +309,7 @@ std::string COOMatrix::to_string(bool verbose, csint threshold) const
 void COOMatrix::write_elems_(std::stringstream& ss, csint start, csint end) const
 {
     for (csint k = start; k < end; k++) {
-        ss << "(" << i_[k] << ", " << j_[k] << "): " << v_[k];
+        ss << std::format("({}, {}): {}", i_[k], j_[k], v_[k]);
         if (k < end - 1) {
             ss << std::endl;
         }

@@ -10,6 +10,7 @@
 #include <algorithm>  // for std::lower_bound
 #include <cassert>
 #include <cmath>      // for std::fabs
+#include <format>
 #include <ranges>     // for std::views::reverse
 #include <string>
 #include <sstream>
@@ -1551,9 +1552,10 @@ std::string CSCMatrix::to_string(bool verbose, csint threshold) const
     csint nnz_ = nnz();
     std::stringstream ss;
 
-    ss << "<" << format_desc_ << " matrix" << std::endl;
-    ss << "        with " << nnz_ << " stored elements "
-        << "and shape (" << M_ << ", " << N_ << ")>";
+    ss << std::format(
+        "<{} matrix\n"
+        "        with {} stored elements and shape ({}, {})>",
+        format_desc_, nnz_, M_, N_);
 
     if (verbose) {
         ss << std::endl;
@@ -1579,7 +1581,7 @@ void CSCMatrix::write_elems_(std::stringstream& ss, csint start, csint end) cons
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j + 1]; p++) {
             if ((n >= start) && (n < end)) {
-                ss << "(" << i_[p] << ", " << j << "): " << v_[p];
+                ss << std::format("({}, {}): {}", i_[p], j, v_[p]);
                 if (n < end - 1) {
                     ss << std::endl;
                 }

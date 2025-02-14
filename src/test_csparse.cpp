@@ -2275,7 +2275,7 @@ TEST_CASE("Cholesky decomposition")
         std::vector<csint> expect_ATA = {3, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1};
         REQUIRE(etree(A) == expect_A);
         REQUIRE(etree(A, true) == expect_ATA);
-        REQUIRE(etree((A.T() * A).to_canonical()) == etree(A, true));
+        REQUIRE(etree(A.T() * A) == etree(A, true));
     }
 
     SECTION("Reachability of Elimination Tree") {
@@ -2360,6 +2360,12 @@ TEST_CASE("Cholesky decomposition")
     SECTION("Column counts of L") {
         std::vector<csint> expect = {3, 3, 4, 3, 3, 4, 4, 3, 3, 2, 1};
         REQUIRE(chol_colcounts(A) == expect);
+    }
+
+    SECTION("Column counts of L from A^T A") {
+        std::vector<csint> expect = {7, 6, 8, 8, 7, 6, 5, 4, 3, 2, 1};
+        REQUIRE(chol_colcounts(A.T() * A) == expect);
+        REQUIRE(chol_colcounts(A, true) == expect);
     }
 
     SECTION("Symbolic factorization") {

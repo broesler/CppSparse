@@ -935,14 +935,22 @@ class CSCMatrix
             const std::vector<csint>& postorder
         );
 
+        friend void init_ata(
+            const CSCMatrix& AT,
+            const std::vector<csint>& post,
+            std::vector<csint>& head,
+            std::vector<csint>& next
+        );
+
         friend std::vector<csint> counts(
             const CSCMatrix& A,
             const std::vector<csint>& parent,
-            const std::vector<csint>& postorder
+            const std::vector<csint>& postorder,
+            bool ata
         );
 
         friend std::vector<csint> chol_rowcounts(const CSCMatrix& A);
-        friend std::vector<csint> chol_colcounts(const CSCMatrix& A);
+        friend std::vector<csint> chol_colcounts(const CSCMatrix& A, bool ata);
 
         friend CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S);
 

@@ -236,18 +236,35 @@ std::vector<csint> rowcnt(
 );
 
 
+/** Initialize the linked list structure for the column counts of A^T A.
+ *
+ * @param AT  the transpose of the matrix to factorize
+ * @param post  the post-order of the elimination tree
+ * @param[out] head  the head of the linked list
+ * @param[out] next  the next vector of the linked list
+ */
+void init_ata(
+    const CSCMatrix& AT,
+    const std::vector<csint>& post,
+    std::vector<csint>& head,
+    std::vector<csint>& next
+);
+
+
 /** Count the number of non-zeros in each column of the Cholesky factor L of A.
  *
  * @param A  the matrix to factorize
  * @param parent  the parent vector of the elimination tree
  * @param postorder  the post-order of the elimination tree
+ * @param ata  if True, compute the counts for A^T A, otherwise A
  *
  * @return colcount  the number of non-zeros in each column of L
  */
 std::vector<csint> counts(
     const CSCMatrix& A,
     const std::vector<csint>& parent,
-    const std::vector<csint>& postorder
+    const std::vector<csint>& postorder,
+    bool ata=false
 );
 
 
@@ -263,10 +280,11 @@ std::vector<csint> chol_rowcounts(const CSCMatrix& A);
 /** Count the number of non-zeros in each column of the Cholesky factor L of A.
  *
  * @param A  the matrix to factorize
+ * @param ata  if True, compute the counts for A^T A, otherwise A
  *
  * @return colcount  the number of non-zeros in each column of L
  */
-std::vector<csint> chol_colcounts(const CSCMatrix& A);
+std::vector<csint> chol_colcounts(const CSCMatrix& A, bool ata=false);
 
 
 /** Compute the symbolic Cholesky factorization of a sparse matrix.

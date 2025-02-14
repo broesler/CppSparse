@@ -24,9 +24,12 @@ namespace cs {
  *----------------------------------------------------------------------------*/
 std::vector<csint> etree(const CSCMatrix& A, bool ata)
 {
-    std::vector<csint> parent(A.N_, -1);  // parent of i is parent[i]
+    std::vector<csint> parent(A.N_, -1);    // parent of i is parent[i]
     std::vector<csint> ancestor(A.N_, -1);  // workspaces
-    std::vector<csint> prev = ata ? std::vector<csint>(A.M_, -1) : std::vector<csint>();
+    std::vector<csint> prev;
+    if (ata) {
+        prev = std::vector<csint>(A.M_, -1);
+    }
 
     for (csint k = 0; k < A.N_; k++) {
         for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
@@ -333,12 +336,40 @@ LCAStatus least_common_ancestor(
 }
 
 
-// TODO include option to count columns in ATA -> not needed until we implement
-// symbolic QR decomposition.
+void init_ata(
+    const CSCMatrix& AT,
+    const std::vector<csint>& post,
+    std::vector<csint>& head,
+    std::vector<csint>& next
+)
+{
+    auto [N, M] = AT.shape();
+    head.assign(N+1, -1);
+    next.assign(M, -1);
+    std::vector<csint> w(N);
+
+    // Invert postorder
+    for (csint k = 0; k < N; k++) {
+        w[post[k]] = k;
+    }
+
+    // Find the first non-zero row index in each column
+    for (csint i = 0; i < M; i++) {
+        csint k = N;
+        for (csint p = AT.p_[i]; p < AT.p_[i+1]; p++) {
+            k = std::min(k, w[AT.i_[p]]);
+        }
+        next[i] = head[k];  // place row i in linked list k
+        head[k] = i;
+    }
+}
+
+
 std::vector<csint> counts(
     const CSCMatrix& A,
     const std::vector<csint>& parent,
-    const std::vector<csint>& postorder
+    const std::vector<csint>& postorder,
+    bool ata
 )
 {
     std::vector<csint> delta(A.N_);  // allocate the result
@@ -347,7 +378,9 @@ std::vector<csint> counts(
     std::vector<csint> ancestor(A.N_),
                        maxfirst(A.N_, -1),  // max first[i] for nodes in subtree of i
                        prevleaf(A.N_, -1),  // previous leaf of ith row subtree
-                       first(A.N_, -1);     // first descendant of each node in the tree
+                       first(A.N_, -1),     // first descendant of each node in the tree
+                       head,                // head of the linked list
+                       next;                // next node of the linked list
 
     // every node is its own ancestor
     std::iota(ancestor.begin(), ancestor.end(), 0);
@@ -363,8 +396,11 @@ std::vector<csint> counts(
     }
 
     // Operate on the transpose
-    bool values = false;  // do not copy values in the transpose
-    CSCMatrix AT = A.transpose(values);
+    CSCMatrix AT = A.transpose(false);  // do not copy values in the transpose
+
+    if (ata) {
+        init_ata(AT, postorder, head, next);
+    }
 
     for (csint k = 0; k < A.N_; k++) {
         csint j = postorder[k];  // node j of etree is kth postordered node
@@ -372,14 +408,17 @@ std::vector<csint> counts(
             delta[parent[j]]--;  // j is not a root
         }
 
-        for (csint p = AT.p_[j]; p < AT.p_[j+1]; p++) {
-            csint i = AT.i_[p];  // AT(i, j) is nonzero
-            auto [q, jleaf] = least_common_ancestor(i, j, first, maxfirst, prevleaf, ancestor);
-            if (jleaf != LeafStatus::NotLeaf) {
-                delta[j]++;  // A(i, j) is in skeleton
-            }
-            if (jleaf == LeafStatus::SubsequentLeaf) {
-                delta[q]--;  // account for overlap in q
+        // J = j for LL' = A case, otherwise traverse the linked list
+        for (csint J = ata ? head[k] : j; J != -1; J = ata ? next[J] : -1) {
+            for (csint p = AT.p_[J]; p < AT.p_[J+1]; p++) {
+                csint i = AT.i_[p];  // AT(i, j) is nonzero
+                auto [q, jleaf] = least_common_ancestor(i, j, first, maxfirst, prevleaf, ancestor);
+                if (jleaf != LeafStatus::NotLeaf) {
+                    delta[j]++;  // A(i, j) is in skeleton
+                }
+                if (jleaf == LeafStatus::SubsequentLeaf) {
+                    delta[q]--;  // account for overlap in q
+                }
             }
         }
 
@@ -413,16 +452,16 @@ std::vector<csint> chol_rowcounts(const CSCMatrix& A)
 }
 
 
-std::vector<csint> chol_colcounts(const CSCMatrix& A)
+std::vector<csint> chol_colcounts(const CSCMatrix& A, bool ata)
 {
     // Compute the elimination tree of A
-    std::vector<csint> parent = etree(A);
+    std::vector<csint> parent = etree(A, ata);
 
     // Compute the post-order of the elimination tree
     std::vector<csint> postorder = post(parent);
 
     // Count the number of non-zeros in each column of L
-    return counts(A, parent, postorder);
+    return counts(A, parent, postorder, ata);
 }
 
 

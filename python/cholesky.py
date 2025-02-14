@@ -402,5 +402,10 @@ if __name__ == "__main__":
     np.testing.assert_allclose(L_downd @ L_downd.T, A_down, atol=tol)
     np.testing.assert_allclose(la.solve(L_up, w), w_downd, atol=tol)
 
+    # Count the nonzeros of the Cholesky factor of A^T A
+    ATA = A.T @ A
+    L_ATA = la.cholesky(ATA, lower=True)
+    nnz_cols = np.diff(sparse.csc_matrix(L_ATA).indptr)
+
 # =============================================================================
 # =============================================================================

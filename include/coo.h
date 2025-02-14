@@ -12,7 +12,9 @@
 #define _CSPARSE_COO_H_
 
 #include <iostream>
+#include <string>
 #include <string_view>
+#include <sstream>
 #include <vector>
 
 #include "types.h"
@@ -32,11 +34,11 @@ class COOMatrix
 
     /** Print elements of the matrix between `start` and `end`.
      *
-     * @param os          the output stream, defaults to std::cout
-     * @param start, end  print the all elements where `p ∈ [start, end]`, counting
-     *        column-wise.
+     * @param ss          the output string stream
+     * @param start, end  print the all elements where `p ∈ [start, end]`,
+     *        counting column-wise.
      */
-    void print_elems_(std::ostream& os, const csint start, const csint end) const;
+    void write_elems_(std::stringstream& ss, csint start, csint end) const;
 
     public:
         friend class CSCMatrix;
@@ -211,7 +213,18 @@ class COOMatrix
         //----------------------------------------------------------------------
         //        Other
         //----------------------------------------------------------------------
-        /** Print the matrix
+        /** Convert the matrix to a string.
+         *
+         * @param verbose     if True, print all non-zeros and their coordinates
+         * @param threshold   if `nnz > threshold`, print only the first and last
+         *        3 entries in the matrix. Otherwise, print all entries.
+         */
+        std::string to_string(
+            bool verbose=false,
+            csint threshold=1000
+        ) const;
+
+        /** Print the matrix.
          *
          * @param os          the output stream, defaults to std::cout
          * @param verbose     if True, print all non-zeros and their coordinates
@@ -220,10 +233,11 @@ class COOMatrix
          */
         void print(
             std::ostream& os=std::cout,
-            const bool verbose=false,
-            const csint threshold=1000
+            bool verbose=false,
+            csint threshold=1000
         ) const;
-};
+
+};  // class COOMatrix
 
 
 //------------------------------------------------------------------------------

@@ -11,6 +11,9 @@
 #include <cassert>
 #include <cmath>      // for std::fabs
 #include <ranges>     // for std::views::reverse
+#include <string>
+#include <sstream>
+#include <vector>
 
 #include "utils.h"
 #include "csc.h"
@@ -1543,13 +1546,43 @@ void CSCMatrix::print_dense(std::ostream& os) const
 }
 
 
-void CSCMatrix::print_elems_(std::ostream& os, const csint start, const csint end) const
+std::string CSCMatrix::to_string(bool verbose, csint threshold) const
+{
+    csint nnz_ = nnz();
+    std::stringstream ss;
+
+    ss << "<" << format_desc_ << " matrix" << std::endl;
+    ss << "        with " << nnz_ << " stored elements "
+        << "and shape (" << M_ << ", " << N_ << ")>";
+
+    if (verbose) {
+        ss << std::endl;
+        if (nnz_ < threshold) {
+            // Print all elements
+            write_elems_(ss, 0, nnz_);  // FIXME memory leak?
+        } else {
+            // Print just the first and last Nelems non-zero elements
+            int Nelems = 3;
+            write_elems_(ss, 0, Nelems);
+            ss << "..." << std::endl;
+            write_elems_(ss, nnz_ - Nelems, nnz_);
+        }
+    }
+
+    return ss.str();
+}
+
+
+void CSCMatrix::write_elems_(std::stringstream& ss, csint start, csint end) const
 {
     csint n = 0;  // number of elements printed
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j + 1]; p++) {
             if ((n >= start) && (n < end)) {
-                os << "(" << i_[p] << ", " << j << "): " << v_[p] << std::endl;
+                ss << "(" << i_[p] << ", " << j << "): " << v_[p];
+                if (n < end - 1) {
+                    ss << std::endl;
+                }
             }
             n++;
         }
@@ -1557,24 +1590,9 @@ void CSCMatrix::print_elems_(std::ostream& os, const csint start, const csint en
 }
 
 
-void CSCMatrix::print(std::ostream& os, const bool verbose, const csint threshold) const
+void CSCMatrix::print(std::ostream& os, bool verbose, csint threshold) const
 {
-    csint nnz_ = nnz();
-    os << "<" << format_desc_ << " matrix" << std::endl;
-    os << "        with " << nnz_ << " stored elements "
-        << "and shape (" << M_ << ", " << N_ << ")>" << std::endl;
-
-    if (verbose) {
-        if (nnz_ < threshold) {
-            // Print all elements
-            print_elems_(os, 0, nnz_);  // FIXME memory leak?
-        } else {
-            // Print just the first and last 3 non-zero elements
-            print_elems_(os, 0, 3);
-            os << "..." << std::endl;
-            print_elems_(os, nnz_ - 3, nnz_);
-        }
-    }
+    os << to_string(verbose, threshold) << std::endl;
 }
 
 

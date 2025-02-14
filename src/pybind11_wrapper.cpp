@@ -54,7 +54,7 @@ PYBIND11_MODULE(csparse, m) {
                 py::cast(res.beta),
                 py::cast(res.R)
             };
-            return py::make_iterator(v->begin(), v->end(), 
+            return py::make_iterator(v->begin(), v->end(),
                     py::return_value_policy::take_ownership);
         }, py::keep_alive<0, 1>());
 
@@ -108,10 +108,15 @@ PYBIND11_MODULE(csparse, m) {
         .def_property_readonly("T", &cs::COOMatrix::T)
         //
         .def("dot", &cs::COOMatrix::dot)
-        .def("__mul__", &cs::COOMatrix::dot);
+        .def("__mul__", &cs::COOMatrix::dot)
         //
-        // TODO how to handle printing
-        // .def("__str__", &cs::COOMatrix::str);
+        .def("__repr__", [](const cs::COOMatrix& A) {
+                return A.to_string(false);  // don't print all elements
+            })
+        .def("__str__", &cs::COOMatrix::to_string,
+                py::arg("verbose")=true,
+                py::arg("threshold")=1000
+            );
 
     //--------------------------------------------------------------------------
     //        CSCMatrix class
@@ -126,7 +131,7 @@ PYBIND11_MODULE(csparse, m) {
             >())
         .def(py::init<cs::csint, cs::csint, cs::csint, bool >(),
                 py::arg("M"),
-                py::arg("N"), 
+                py::arg("N"),
                 py::arg("nzmax")=0,
                 py::arg("values")=true
             )
@@ -222,7 +227,15 @@ PYBIND11_MODULE(csparse, m) {
         .def("add_empty_right", &cs::CSCMatrix::add_empty_right)
         //
         .def("sum_rows", &cs::CSCMatrix::sum_rows)
-        .def("sum_cols", &cs::CSCMatrix::sum_cols);
+        .def("sum_cols", &cs::CSCMatrix::sum_cols)
+        //
+        .def("__repr__", [](const cs::CSCMatrix& A) {
+                return A.to_string(false);  // don't print all elements
+            })
+        .def("__str__", &cs::CSCMatrix::to_string,
+                py::arg("verbose")=true,
+                py::arg("threshold")=1000
+            );
 
     //--------------------------------------------------------------------------
     //        Decomposition Functions

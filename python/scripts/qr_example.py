@@ -71,6 +71,7 @@ S = csparse.sqr(Ac)
 V, beta, Rraw = csparse.qr(Ac, S)
 
 print(V.shape)
+print(V)
 
 # FIXME V needs to have slicing or conversion to csc_array, beta needs to be
 # an ndarray. Rraw is not actually used here.

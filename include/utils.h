@@ -10,6 +10,7 @@
 #ifndef _CSPARSE_UTILS_H_
 #define _CSPARSE_UTILS_H_
 
+#include <format>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -180,9 +181,9 @@ void print_dense_vec(
         os << indent;  // indent
         for (csint j = 0; j < N; j++) {
             if (order == 'F') {
-                os << std::setw(6) << std::setprecision(4) << A[i + j*M] << indent;  // print in column-major order
+                os << std::format("{:6.4g}{}", A[i + j*M], indent);  // print in column-major order
             } else {
-                os << std::setw(6) << std::setprecision(4) << A[i*N + j] << indent;  // print in row-major order
+                os << std::format("{:6.4g}{}", A[i*N + j], indent);  // print in row-major order
             }
         }
         os << std::endl;

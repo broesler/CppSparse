@@ -63,7 +63,7 @@ struct Symbolic
     std::vector<csint> p_inv,     // inverse row permutation for QR, fill-reducing permutation for Cholesky
                        q,         // fill-reducting column permutation for LU and QR
                        parent,    // elimination tree
-                       cp,        // column pointers for Cholesky
+                       cp,        // column pointers for Cholesky, row counts for QR
                        leftmost;  // leftmost[i] = min(find(A(i,:))) for QR
 
     csint m2;    // # of rows for QR, after adding fictitious rows

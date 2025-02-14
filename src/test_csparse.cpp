@@ -2674,7 +2674,7 @@ TEST_CASE("Householder Reflection")
 
 TEST_CASE("QR Decomposition")
 {
-    // csint N = 8;  // number of rows and columns
+    csint N = 8;  // number of rows and columns
     // Define the test matrix A (See Davis, Figure 5.1, p 74)
     std::vector<csint> rows = {0, 3, 1, 6, 1, 2, 6, 0, 2, 3, 4, 5, 7,
                                4, 5, 7, 0, 1, 3, 6, 7, 5, 6};
@@ -2687,47 +2687,43 @@ TEST_CASE("QR Decomposition")
     // NOTE we need to inclue A[7, 7] even though it is zero!
     A.assign(7, 7, 0.0);
 
+    // See etree in Figure 5.1, p 74
+    std::vector<csint> parent = {3, 2, 3, 6, 5, 6, 7, -1};
+
     SECTION("vcount") {
         Symbolic S;
-        // See etree in Figure 5.1, p 74
-        S.parent.assign({3, 2, 3, 6, 5, 6, 7, -1});
+        S.parent.assign(parent.begin(), parent.end());
         vcount(A, S);
 
+        std::vector<csint> expect_p_inv = {0, 1, 3, 7, 4, 5, 2, 6};
         std::vector<csint> expect_leftmost = {0, 1, 2, 0, 4, 4, 1, 4};
 
-        // std::cout << "S.p_inv: " << S.p_inv << std::endl;
-        // std::cout << "S.leftmost: " << S.leftmost << std::endl;
-        // std::cout << "S.lnz: " << S.lnz << std::endl;
-        // std::cout << "S.m2: " << S.m2 << std::endl;
-
+        CHECK(S.p_inv == expect_p_inv);
         CHECK(S.leftmost == expect_leftmost);
         CHECK(S.lnz == 16);
+        CHECK(S.m2 == N);
     }
 
     SECTION("Symbolic QR factorization") {
+        std::vector<csint> expect_p_inv = {0, 1, 3, 7, 4, 5, 2, 6};
         std::vector<csint> expect_q = {0, 1, 2, 3, 4, 5, 6, 7};
-        std::vector<csint> expect_parent = {3, 2, 3, 6, 5, 6, 7, -1};
+        std::vector<csint> expect_parent = parent;
         std::vector<csint> expect_leftmost = {0, 1, 2, 0, 4, 4, 1, 4};
+        std::vector<csint> expect_cp = {3, 4, 4, 3, 4, 3, 2, 1};
+        // cp is the column counts of the Cholesky factor of A^T A
 
         Symbolic S = sqr(A);
 
-        // TODO print function for Symbolic
-        std::cout << "S.p_inv: " << S.p_inv << std::endl;
-        std::cout << "S.q: " << S.q << std::endl;
-        std::cout << "S.parent: " << S.parent << std::endl;
-        std::cout << "S.cp: " << S.cp << std::endl;
-        std::cout << "S.leftmost: " << S.leftmost << std::endl;
-        std::cout << "S.unz: " << S.unz << std::endl;
-        std::cout << "S.lnz: " << S.lnz << std::endl;
-        std::cout << "S.m2: " << S.m2 << std::endl;
-
+        CHECK(S.p_inv == expect_p_inv);
         CHECK(S.q == expect_q);
         CHECK(S.parent == expect_parent);
+        CHECK(S.cp == expect_cp);
         CHECK(S.leftmost == expect_leftmost);
-        CHECK(S.lnz == 16);
-        // CHECK(S.unz == 16);  // strict upper tri?
-        // CHECK(S.unz == 24);
-        CHECK(S.m2 == 8);
+        CHECK(S.m2 == N);
+        CHECK(S.lnz == 16);  // manual counts Figure 5.1, p 74
+        CHECK(S.unz == 24);
+    }
+
     }
 }
 

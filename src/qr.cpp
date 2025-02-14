@@ -151,7 +151,7 @@ void vcount(const CSCMatrix& A, Symbolic& S)
         }
     }
 
-    for (csint i = 0; i < M; i++) {    // finalize row permutation
+    for (csint i = 0; i < M; i++) {    // assign any unordered rows to last k
         if (S.p_inv[i] < 0) {
             S.p_inv[i] = k++;
         }
@@ -176,10 +176,11 @@ Symbolic sqr(const CSCMatrix& A, AMDOrder order)
     S.q = q;  // store the column permutation
 
     // Find pattern of Cholesky factor of A.T @ A
-    CSCMatrix C = A.permute_cols(S.q, false);  // don't copy values
-    bool CTC = true;
+    bool values = false,
+         CTC = true;
+    CSCMatrix C = A.permute_cols(S.q, values);  // don't copy values
     S.parent = etree(C, CTC);  // etree of C.T @ C, C = A[:, q]
-    S.cp = counts(C, S.parent, post(S.parent));  // TODO col counts chol(C.T @ C)
+    S.cp = counts(C, S.parent, post(S.parent), CTC);  // col counts chol(C.T @ C)
     vcount(C, S);  // compute p_inv, leftmost, lnz, m2
     S.unz = std::accumulate(S.cp.begin(), S.cp.end(), 0);
     assert(S.lnz >= 0 && S.unz >= 0);  // overflow guard

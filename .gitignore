@@ -1,6 +1,8 @@
 .types.vim
 *.o
 *.dSYM/
+*.so
+# Directories
 build/
 data/
 # Executables

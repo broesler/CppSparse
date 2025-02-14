@@ -39,11 +39,22 @@ target_link_libraries(csparse_module PRIVATE csc_lib)
 target_compile_options(csc_lib PRIVATE --std=c++20 -Wall -pedantic)
 target_compile_options(csparse_module PRIVATE --std=c++20 -Wall -pedantic)
 
-# Set Python output directory
+# Build the Python module in the build directory
 set_target_properties(
     csparse_module
     PROPERTIES
     OUTPUT_NAME csparse
-    MODULE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/python
+    MODULE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build
 )
 
+# Install the python module in the package directory
+install(
+    TARGETS csparse_module
+    LIBRARY DESTINATION ${CMAKE_SOURCE_DIR}/python/csparse
+    COMPONENT python
+)
+
+# TODO: Add install target for the C++ library
+
+#==============================================================================
+#==============================================================================

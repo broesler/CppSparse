@@ -11,6 +11,7 @@
 #ifndef _CSPARSE_QR_H_
 #define _CSPARSE_QR_H_
 
+#include <span>
 #include <vector>
 
 #include "csc.h"
@@ -49,14 +50,14 @@ struct QRResult {
  *
  * See: Algorithm 5.1.1, Golub & Van Loan, 3rd ed.
  *
- * @param x  the input vector
+ * @param x  the input vector, may be a subspan of a larger vector
  *
  * @return beta  the scaling factor
  * @return v  the Householder vector
  * @return s  the first element of v, which is guaranteed to be
  *         \f$ \pm \|x\|_2 \f$
  */
-Householder house(const std::vector<double>& x);
+Householder house(std::span<const double> x);
 
 
 /** Apply a Householder reflection to a dense vector `x` with a sparse `v`.

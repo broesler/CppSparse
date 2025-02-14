@@ -19,10 +19,10 @@ namespace cs {
 inline auto sign(double x) { return std::copysign(1.0, x); }
 
 
-Householder house(const std::vector<double>& x)
+Householder house(std::span<const double> x)
 {
     double beta, s, sigma = 0.0;
-    std::vector<double> v(x);  // copy x into v
+    std::vector<double> v(x.begin(), x.end());  // copy x into v
 
     // sigma is the sum of squares of all elements *except* the first
     for (csint i = 1; i < v.size(); i++) {
@@ -210,10 +210,10 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
     csint p1;
 
     for (csint k = 0; k < N; k++) {
-        R.p_[k] = rnz;  // R[:, k] starts here
+        R.p_[k] = rnz;       // R[:, k] starts here
         V.p_[k] = p1 = vnz;  // V[:, k] starts here
-        w[k] = k;  // add V(k, k) to pattern of V
-        V.i_[vnz++] = k;  // V(k, k) is non-zero
+        w[k] = k;            // add V(k, k) to pattern of V
+        V.i_[vnz++] = k;     // V(k, k) is non-zero
         csint top = N;
         csint col = S.q[k];
         for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {  // find R[:, k] pattern
@@ -226,17 +226,17 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
             while (len > 0) {
                 s[--top] = s[--len];  // push path on stack
             }
-            i = S.p_inv[A.i_[p]];  // i = permuted row of A(:, col)
-            x[i] = A.v_[p];  // x(i) = A(:, col)
+            i = S.p_inv[A.i_[p]];     // i = permuted row of A(:, col)
+            x[i] = A.v_[p];           // x(i) = A(:, col)
             if (i > k && w[i] < k) {  // pattern of V(:, k) = x(k+1:m)
-                V.i_[vnz++] = i;  // add i to pattern of V(:, k)
+                V.i_[vnz++] = i;      // add i to pattern of V(:, k)
                 w[i] = k;
             }
         }
         for (csint p = top; p < N; p++) {  // for each i in pattern of R[:, k]
-            csint i = s[p];  // R(i, k) is non-zero
+            csint i = s[p];            // R(i, k) is non-zero
             happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
-            R.i_[rnz] = i;  // R(i, k) = x(i)
+            R.i_[rnz] = i;             // R(i, k) = x(i)
             R.v_[rnz++] = x[i];
             x[i] = 0;
             if (S.parent[i] == k) {
@@ -247,9 +247,10 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
             V.v_[p] = x[V.i_[p]];
             x[V.i_[p]] = 0;
         }
-        R.i_[rnz] = k;  // R(k, k) = norm(x)
-        Householder h = house({V.v_.begin() + p1, V.v_.end()});
-        R.v_[rnz++] = h.s;  // [v, beta, s] = house(x)
+        R.i_[rnz] = k;      // R(k, k) = norm(x)
+        // [v, beta, s] = house(x)
+        Householder h = house(std::span(V.v_).subspan(p1, vnz - p1));
+        R.v_[rnz++] = h.s;
         beta[k] = h.beta;
     }
     R.p_[N] = rnz;  // finalize R

@@ -13,30 +13,7 @@ import numpy as np
 from scipy import sparse
 
 from csparse import CSCMatrix
-
-
-def to_scipy_sparse(A, format='csc'):
-    r"""Convert a csparse matrix to a scipy.sparse matrix.
-
-    Parameters
-    ----------
-    A : (M, N) csparse.CSCMatrix
-        The matrix to convert.
-    format : str, optional in {'bsr', 'coo', 'csc', 'csr', 'dia', 'dok', 'lil'}
-        The format of the output matrix.
-
-    Returns
-    -------
-    result : (M, N) sparse array
-        The matrix in the specified format.
-    """
-    A_sparse = sparse.csc_array((A.data, A.indices, A.indptr), shape=A.shape)
-    format_method_name = f"to{format}"
-    try:
-        format_method = getattr(A_sparse, format_method_name)
-    except AttributeError:
-        raise ValueError(f"Invalid format '{format}'")
-    return format_method()
+from .utils import to_scipy_sparse
 
 
 def qright(V, beta, p=None, Y=None):

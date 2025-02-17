@@ -36,6 +36,9 @@ VbR = csparse.qr(Ac, S)
 
 V, beta, Rraw = VbR.V, VbR.beta, VbR.R
 
+print("Rraw = ")
+print(csparse.to_ndarray(Rraw))
+
 # Get the actual Q matrix
 Qr = csparse.qright(V, beta)
 print("Qr = ")

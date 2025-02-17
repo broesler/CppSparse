@@ -23,5 +23,8 @@ for k = 1:n
     Beta (k) = beta ;
     R (1:(k-1),k) = x (1:(k-1)) ;
     % R (k,k) = s ;
-    R (k,k) = sign(x(1)) * norm(x) ;  % FIXME wrong value.
+    if k == 1
+        warning('FIXME: R(k,k) = -sign(x(1)) * norm(x) ;  % FIXME wrong value.');
+    end
+    R (k,k) = -sign(x(1)) * norm(x);  % FIXME wrong value since v(1) != 1
 end

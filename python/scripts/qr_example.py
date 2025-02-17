@@ -31,16 +31,21 @@ atol = 1e-15
 np.testing.assert_allclose(Q_ @ R_, A.toarray(), atol=atol)
 
 # Compute QR decomposition with csparse
-# Ac = csparse.COOMatrix(vals, rows, cols, N, N).tocsc()
-
 S = csparse.sqr(Ac)
 VbR = csparse.qr(Ac, S)
+
 V, beta, Rraw = VbR.V, VbR.beta, VbR.R
 
 # Get the actual Q matrix
-Q = csparse.qright(sparse.eye(N), V, beta)
-print("Q = ")
-print(Q.toarray())
+Qr = csparse.qright(V, beta)
+print("Qr = ")
+print(Qr.toarray())
+
+Ql = csparse.qleft(V, beta)
+print("Ql = ")
+print(Ql.toarray())
+
+np.testing.assert_allclose(Qr.toarray(), Ql.T.toarray(), atol=atol)
 
 
 # =============================================================================

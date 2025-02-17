@@ -12,7 +12,7 @@ Additional functions to support QR decomposition.
 import numpy as np
 from scipy import sparse
 
-import csparse
+from csparse import CSCMatrix
 
 
 def to_scipy_sparse(A, format='csc'):
@@ -39,11 +39,7 @@ def to_scipy_sparse(A, format='csc'):
     return format_method()
 
 
-# TODO In order to make these functions work with my csparse matrices, we need
-# to either: have a way to convert to sparse.csc_array, or implement the
-# slicing operations in the csparse module.
-
-def qright(Y, V, beta, p=None):
+def qright(V, beta, p=None, Y=None):
     r"""Apply Householder vectors on the right.
 
     Computes :math:`X = Y P^T H_1 \dots H_N = Y Q`, where :math:`Q` is
@@ -60,14 +56,20 @@ def qright(Y, V, beta, p=None):
         The Householder coefficients.
     p : (N,) ndarray, optional
         The column permutation vector.
+    Y : (M, N) ndarray or sparse array, optional
+        The matrix to which the Householder transformations are applied. If not
+        given, the identity matrix is used, resulting in the full `Q` matrix.
 
     Returns
     -------
     result : (M, N) ndarray
         The result of applying the Householder transformations to `Y`.
     """
-    if isinstance(V, csparse.CSCMatrix):
-        V = csparse.to_scipy_sparse(V)
+    if isinstance(V, CSCMatrix):
+        V = to_scipy_sparse(V)
+
+    if Y is None:
+        Y = sparse.eye_array(V.shape[1])
 
     M, N = V.shape
     X = Y.copy()
@@ -78,7 +80,7 @@ def qright(Y, V, beta, p=None):
     return X
 
 
-def qleft(Y, V, beta, p=None):
+def qleft(V, beta, p=None, Y=None):
     r"""Apply Householder vectors on the left.
 
     Computes :math:`X = H_N \dots H_1 P Y = Q^T Y`, where :math:`Q` is
@@ -95,14 +97,20 @@ def qleft(Y, V, beta, p=None):
         The Householder coefficients.
     p : (N,) ndarray, optional
         The row permutation vector.
+    Y : (M, N) ndarray or sparse array, optional
+        The matrix to which the Householder transformations are applied. If not
+        given, the identity matrix is used, resulting in the full `Q` matrix.
 
     Returns
     -------
     result : (M, N) ndarray
         The result of applying the Householder transformations to `Y`.
     """
-    if isinstance(V, csparse.CSCMatrix):
-        V = csparse.to_scipy_sparse(V)
+    if isinstance(V, CSCMatrix):
+        V = to_scipy_sparse(V)
+
+    if Y is None:
+        Y = sparse.eye_array(V.shape[0])
 
     M2, N = V.shape
     M, NY = Y.shape
@@ -110,11 +118,8 @@ def qleft(Y, V, beta, p=None):
 
     if (M2 > M):
         # Add empty rows to the bottom of X
-        if (isinstance(X, csparse.CSCMatrix)
-                or isinstance(X, csparse.COOMatrix)):
-            X = X.add_empty_bottom(M2 - M)
-        elif sparse.issparse(X):
-            X = sparse.vstack([X, sparse.csc_matrix((M2 - M, NY))])
+        if sparse.issparse(X):
+            X = sparse.vstack([X, sparse.csc_array((M2 - M, NY))])
         else:
             X = np.vstack([X, np.zeros((M2 - M, NY))])
 

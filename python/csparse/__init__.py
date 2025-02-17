@@ -27,6 +27,32 @@ Version: 0.1
 from .csparse import *
 from .qr_utils import *
 
+
+# TODO move to own file
+def davis_example():
+    """Create the matrix from Davis, "Direct Methods for Sparse Linear Systems"
+    p. 7-8, Eqn (2.1).
+
+    .. math:: 
+        A = \begin{bmatrix}
+            4.5 & 0   & 3.2 & 0   \\
+            3.1 & 2.9 & 0   & 0.9 \\
+            0   & 1.7 & 3   & 0   \\
+            3.5 & 0.4 & 0   & 1 
+        \end{bmatrix}
+
+    Returns
+    -------
+    A : (4, 4) csparse.CSCMatrix
+        The example matrix from Davis.
+    """
+    N = 4
+    rows = np.r_[2,    1,    3,    0,    1,    3,    3,    1,    0,    2]
+    cols = np.r_[2,    0,    3,    2,    1,    0,    1,    3,    0,    1]
+    vals = np.r_[3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7]
+    return csparse.COOMatrix(vals, rows, cols, N, N).tocsc()
+
+
 __all__ = dir(csparse) + dir(qr_utils)
 
 # =============================================================================

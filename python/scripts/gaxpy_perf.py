@@ -20,7 +20,7 @@ from pathlib import Path
 import csparse as cs
 
 
-SAVE_FIG = True
+SAVE_FIG = False
 
 SEED = 565656
 
@@ -65,11 +65,11 @@ for N in Ns:
     Y = cs.COOMatrix.random(M, K, density, SEED)
 
     # Convert to row and column-major format
-    X_col = X.toarray('F')
-    Y_col = Y.toarray('F')
+    X_col = X.to_dense_vector('F')
+    Y_col = Y.to_dense_vector('F')
 
-    X_row = X.toarray('C')
-    Y_row = Y.toarray('C')
+    X_row = X.to_dense_vector('C')
+    Y_row = Y.to_dense_vector('C')
 
     for method_name in gaxpy_methods:
         args = (X_row, Y_row) if method_name.endswith('row') else (X_col, Y_col)

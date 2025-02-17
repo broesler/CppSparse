@@ -59,7 +59,7 @@ def to_ndarray(A, order='C'):
     #
     # We use the csparse default 'F' order for the .toarray method, because it
     # is column-major like the CSC format, and thus more efficient to convert.
-    return (np.array(A.toarray(order='F'), order=order)
+    return (np.array(A.to_dense_vector(order='F'), order=order)
               .reshape(A.shape, order='F'))
 
 

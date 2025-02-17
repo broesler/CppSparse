@@ -222,7 +222,7 @@ CSCMatrix COOMatrix::compress() const
 CSCMatrix COOMatrix::tocsc() const { return CSCMatrix(*this); }
 
 
-std::vector<double> COOMatrix::toarray(const char order) const
+std::vector<double> COOMatrix::to_dense_vector(const char order) const
 {
     std::vector<double> arr(M_ * N_, 0.0);
     csint idx;

@@ -265,7 +265,7 @@ class CSCMatrix
          *
          * @return a copy of the matrix as a dense column-major array.
          */
-        std::vector<double> toarray(const char order='F') const;
+        std::vector<double> to_dense_vector(const char order='F') const;
 
         /** Convert a CSCMatrix to a double if it is a 1x1 matrix.
          *

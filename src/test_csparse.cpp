@@ -450,8 +450,8 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
             0.0, 0.9, 0.0, 1.0
         };
 
-        REQUIRE(A.toarray() == expect);
-        REQUIRE(A.toarray('F') == expect);
+        REQUIRE(A.to_dense_vector() == expect);
+        REQUIRE(A.to_dense_vector('F') == expect);
     }
 
     SECTION("Conversion to dense array: Row-major") {
@@ -462,7 +462,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
             3.5, 0.4, 0.0, 1.0
         };
 
-        REQUIRE(A.toarray('C') == expect);
+        REQUIRE(A.to_dense_vector('C') == expect);
     }
 
     SECTION("Generate random matrix") {
@@ -719,8 +719,8 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
             0.0, 0.9, 0.0, 1.0
         };
 
-        REQUIRE(A.tocsc().toarray() == expect);  // canonical form
-        REQUIRE(C.toarray() == expect);          // non-canonical form
+        REQUIRE(A.tocsc().to_dense_vector() == expect);  // canonical form
+        REQUIRE(C.to_dense_vector() == expect);          // non-canonical form
     }
 
     SECTION("Test conversion to dense array in row-major format") {
@@ -732,8 +732,8 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
             3.5, 0.4, 0.0, 1.0
         };
 
-        REQUIRE(A.tocsc().toarray('C') == expect);  // canonical form
-        REQUIRE(C.toarray('C') == expect);          // non-canonical form
+        REQUIRE(A.tocsc().to_dense_vector('C') == expect);  // canonical form
+        REQUIRE(C.to_dense_vector('C') == expect);          // non-canonical form
     }
 }
 
@@ -940,7 +940,7 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
     }
 
     SECTION("Test arbitrary square matrix in column-major format") {
-        std::vector<double> A_dense = A.toarray();
+        std::vector<double> A_dense = A.to_dense_vector();
 
         // A.T @ A + A in column-major format
         std::vector<double> expect = {
@@ -962,7 +962,7 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
     }
 
     SECTION("Test arbitrary square matrix in row-major format") {
-        std::vector<double> A_dense = A.toarray('C');
+        std::vector<double> A_dense = A.to_dense_vector('C');
 
         // A.T @ A + A in row-major format
         std::vector<double> expect = {
@@ -981,8 +981,8 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
 
     SECTION("Test non-square matrix in column-major format.") {
         CSCMatrix Ab = A.slice(0, 4, 0, 3);  // {4, 3}
-        std::vector<double> Ac_dense = A.slice(0, 3, 0, 4).toarray();
-        std::vector<double> A_dense = A.toarray();
+        std::vector<double> Ac_dense = A.slice(0, 3, 0, 4).to_dense_vector();
+        std::vector<double> A_dense = A.to_dense_vector();
 
         // Ab @ Ac + A in column-major format
         std::vector<double> expect = {
@@ -1004,8 +1004,8 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
 
     SECTION("Test non-square matrix in row-major format.") {
         CSCMatrix Ab = A.slice(0, 4, 0, 3);  // {4, 3}
-        std::vector<double> Ac_dense = A.slice(0, 3, 0, 4).toarray('C');
-        std::vector<double> A_dense = A.toarray('C');
+        std::vector<double> Ac_dense = A.slice(0, 3, 0, 4).to_dense_vector('C');
+        std::vector<double> A_dense = A.to_dense_vector('C');
 
         // Ab @ Ac + A in row-major format
         std::vector<double> expect = {

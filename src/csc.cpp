@@ -318,7 +318,7 @@ double& CSCMatrix::insert(csint i, csint j, double v, csint p)
 COOMatrix CSCMatrix::tocoo() const { return COOMatrix(*this); }
 
 
-std::vector<double> CSCMatrix::toarray(const char order) const
+std::vector<double> CSCMatrix::to_dense_vector(const char order) const
 {
     std::vector<double> A(M_ * N_, 0.0);
     csint idx;
@@ -1543,7 +1543,7 @@ std::vector<double> CSCMatrix::sum_cols() const
  *----------------------------------------------------------------------------*/
 void CSCMatrix::print_dense(std::ostream& os) const
 {
-    print_dense_vec(toarray('F'), M_, N_, 'F', os);
+    print_dense_vec(to_dense_vector('F'), M_, N_, 'F', os);
 }
 
 

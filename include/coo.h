@@ -186,7 +186,7 @@ class COOMatrix
          *
          * @return a copy of the matrix as a dense array.
          */
-        std::vector<double> toarray(const char order='F') const;
+        std::vector<double> to_dense_vector(const char order='F') const;
 
         //----------------------------------------------------------------------
         //        Math Operations

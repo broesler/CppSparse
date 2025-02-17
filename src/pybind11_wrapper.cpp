@@ -9,7 +9,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-// #include <pybind11/numpy.h>
+#include <pybind11/numpy.h>
 
 #include "csparse.h"
 
@@ -98,7 +98,7 @@ PYBIND11_MODULE(csparse, m) {
         //
         .def("compress", &cs::COOMatrix::compress)
         .def("tocsc", &cs::COOMatrix::tocsc)
-        .def("toarray", &cs::COOMatrix::toarray, py::arg("order")='F')
+        .def("to_dense_vector", &cs::COOMatrix::to_dense_vector, py::arg("order")='F')
         //
         .def("transpose", &cs::COOMatrix::transpose)
         .def_property_readonly("T", &cs::COOMatrix::T)
@@ -182,7 +182,31 @@ PYBIND11_MODULE(csparse, m) {
         )
         //
         .def("tocoo", &cs::CSCMatrix::tocoo)
-        .def("toarray", &cs::CSCMatrix::toarray, py::arg("order")='F')
+        .def("to_dense_vector", &cs::CSCMatrix::to_dense_vector, py::arg("order")='F')
+        .def("toarray",
+            [](const cs::CSCMatrix& self) {
+                // Get the matrix in dense column-major order
+                std::vector<double> v = self.to_dense_vector('C');
+                auto [rows, cols] = self.shape();
+
+                // Create a NumPy array with specified dimensions
+                py::array_t<double> result({rows, cols});
+
+                // Get a pointer to the underlying data of the NumPy array.  This is important
+                // for zero-copy if possible.  We're assuming C-style contiguous here. If
+                // you need F-style, you'd have to handle strides appropriately.
+                auto buffer_info = result.request();
+                double* ptr = static_cast<double*>(buffer_info.ptr);
+
+                // Copy the data from the vector to the NumPy array.  This is the most
+                // straightforward way.  For very large matrices, you might explore
+                // zero-copy options (if the memory layout is compatible) for better
+                // performance.
+                std::copy(v.begin(), v.end(), ptr);
+
+                return result;
+            }
+        )
         //
         .def("transpose", &cs::CSCMatrix::transpose, py::arg("values")=true)
         .def_property_readonly("T", &cs::CSCMatrix::T)

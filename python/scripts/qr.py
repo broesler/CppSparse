@@ -13,7 +13,8 @@ Davis, Chapter 5.
 import numpy as np
 
 from scipy import linalg as la
-# from scipy import sparse
+
+from csparse import davis_example, to_ndarray, qright, qleft
 
 tol = 1e-14
 
@@ -122,32 +123,6 @@ def qr_left(A):
     return V, beta, R
 
 
-def extract_householder_reflectors(Q):
-    """Extract the Householder reflectors from the compact representation given
-    by `scipy.linalg.qr(..., mode='raw')`.
-
-    Parameters
-    ----------
-    Q : (M, N) ndarray
-        Matrix of M vectors in N dimensions
-
-    Returns
-    -------
-    V : (M, N) ndarray
-        A matrix with the Householder reflectors as columns.
-    """
-    M, N = Q.shape
-    reflectors = []
-
-    for j in range(min(M, N)):
-        v = np.zeros(M)       # initialize the vector for the reflector
-        v[j] = 1.0            # diagonal element is 1
-        v[j+1:] = Q[j+1:, j]  # elements below the diagonal are taken from Q
-
-        reflectors.append(v)
-
-    return np.array(reflectors).T
-
 
 def build_H(v, tau=None):
     """Constructs the Householder matrix from its defining vector.
@@ -173,47 +148,27 @@ def build_H(v, tau=None):
     return np.eye(M) - tau * (v @ v.T)
 
 
-def build_Q(V, beta):
-    """Construct the Q matrix from the Householder reflectors.
-
-    Parameters
-    ----------
-    V : (M, N) ndarray
-        A matrix with the Householder reflectors as columns.
-    beta : (N,) ndarray
-        A vector with the scaling factors for each reflector.
-
-    Returns
-    -------
-    Q : (M, N) ndarray
-        The orthogonal matrix Q.
-    """
-    M, N = V.shape
-    Q = np.eye(M)
-    for i in range(N):
-        Q @= build_H(V[:, i], beta[i])
-    return Q
-
-
 # -----------------------------------------------------------------------------
 #         Main Script
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
     # See: Strang Linear Algebra p 203.
-    A = np.array([[1, 1, 2],
-                  [0, 0, 1],
-                  [1, 0, 0]],
-                 dtype=float)
+    # A = np.array([[1, 1, 2],
+    #               [0, 0, 1],
+    #               [1, 0, 0]],
+    #              dtype=float)
+
+    A = to_ndarray(davis_example())
 
     # Get the raw LAPACK output for the entire matrix
     # Qraw stores the Householder reflectors *below* the diagonal
     (Qraw, tau), Rraw = la.qr(A, mode='raw')
-    V = extract_householder_reflectors(Qraw)
+    V = np.tril(Qraw, -1) + np.eye(Qraw.shape[0])
     Hs = [build_H(v, t) for v, t in zip(V.T, tau)]
-    Qr = build_Q(V, tau)
+    Qr = qright(V, tau)
     np.testing.assert_allclose(Qr @ Rraw, A, atol=tol)
 
-    # Test our own QR decomposition
+    # Test our own python QR decomposition
     V_r, beta_r, R_r = qr_right(A)
     V_l, beta_l, R_l = qr_left(A)
 
@@ -230,8 +185,8 @@ if __name__ == '__main__':
     print("R = ")
     print(R_r)
 
-    Q_r = build_Q(V_r, beta_r)
-    Q_l = build_Q(V_l, beta_l)
+    Q_r = qright(V_r, beta_r)
+    Q_l = qleft(V_l, beta_l).T
 
     # Reproduce A = QR
     np.testing.assert_allclose(Q_r @ R_r, A, atol=tol)
@@ -239,10 +194,10 @@ if __name__ == '__main__':
 
     # Compare to scipy's QR
     Q, R = la.qr(A)
-    np.testing.assert_allclose(Q, Q_r)
-    np.testing.assert_allclose(R, R_r)
-    np.testing.assert_allclose(Q, Q_l)
-    np.testing.assert_allclose(R, R_l)
+    np.testing.assert_allclose(Q, Q_r, atol=tol)
+    np.testing.assert_allclose(R, R_r, atol=tol)
+    np.testing.assert_allclose(Q, Q_l, atol=tol)
+    np.testing.assert_allclose(R, R_l, atol=tol)
 
     # Get the raw LAPACK output for a test vector
     # x = np.c_[[1, 1, 1]]

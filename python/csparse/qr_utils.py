@@ -10,8 +10,33 @@ Additional functions to support QR decomposition.
 # =============================================================================
 
 import numpy as np
+from scipy import sparse
 
 import csparse
+
+
+def to_scipy_sparse(A, format='csc'):
+    r"""Convert a csparse matrix to a scipy.sparse matrix.
+
+    Parameters
+    ----------
+    A : (M, N) csparse.CSCMatrix
+        The matrix to convert.
+    format : str, optional in {'bsr', 'coo', 'csc', 'csr', 'dia', 'dok', 'lil'}
+        The format of the output matrix.
+
+    Returns
+    -------
+    result : (M, N) sparse array
+        The matrix in the specified format.
+    """
+    A_sparse = sparse.csc_array((A.data, A.indices, A.indptr), shape=A.shape)
+    format_method_name = f"to{format}"
+    try:
+        format_method = getattr(A_sparse, format_method_name)
+    except AttributeError:
+        raise ValueError(f"Invalid format '{format}'")
+    return format_method()
 
 
 # TODO In order to make these functions work with my csparse matrices, we need
@@ -27,7 +52,7 @@ def qright(Y, V, beta, p=None):
 
     Parameters
     ----------
-    Y : (M, N) ndarray or sparse matrix
+    Y : (M, N) ndarray or sparse array
         The matrix to which the Householder transformations are applied.
     V : (M, N) CSCMatrix
         The matrix of Householder vectors.
@@ -41,12 +66,15 @@ def qright(Y, V, beta, p=None):
     result : (M, N) ndarray
         The result of applying the Householder transformations to `Y`.
     """
+    if isinstance(V, csparse.CSCMatrix):
+        V = csparse.to_scipy_sparse(V)
+
     M, N = V.shape
     X = Y.copy()
     if p is not None:
         X = X[:, p]
     for j in range(N):
-        X -= X @ (beta[j] * V[:, [j]]) @ V[:, [j]].T()
+        X -= X @ (beta[j] * V[:, [j]]) @ V[:, [j]].T
     return X
 
 
@@ -59,7 +87,7 @@ def qleft(Y, V, beta, p=None):
 
     Parameters
     ----------
-    Y : (M2, N) ndarray or sparse matrix
+    Y : (M2, N) ndarray or sparse array
         The matrix to which the Householder transformations are applied.
     V : (M, NY) CSCMatrix
         The matrix of Householder vectors.
@@ -73,6 +101,9 @@ def qleft(Y, V, beta, p=None):
     result : (M, N) ndarray
         The result of applying the Householder transformations to `Y`.
     """
+    if isinstance(V, csparse.CSCMatrix):
+        V = csparse.to_scipy_sparse(V)
+
     M2, N = V.shape
     M, NY = Y.shape
     X = Y.copy()
@@ -91,7 +122,7 @@ def qleft(Y, V, beta, p=None):
         X = X[p, :]
 
     for j in range(N):
-        X -= V[:, [j]] @ (beta[j] * V[:, [j]].T() @ X)
+        X -= V[:, [j]] @ (beta[j] * V[:, [j]].T @ X)
 
     return X
 

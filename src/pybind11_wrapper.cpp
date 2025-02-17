@@ -16,6 +16,55 @@
 namespace py = pybind11;
 
 
+/** Template function to convert a matrix to a NumPy array.
+ *
+ * @param self  the matrix to convert
+ * @param order the order of the NumPy array ('C' or 'F')
+ *
+ * @return a NumPy array with the same data as the matrix
+ */
+template <typename T>
+auto matrix_to_ndarray(const T& self, const char order)
+{
+    // Get the matrix in dense column-major order
+    std::vector<double> v = self.to_dense_vector('C');
+    auto [N_rows, N_cols] = self.shape();
+
+    // Create a NumPy array with specified dimensions
+    py::array_t<double> result({N_rows, N_cols});
+
+    // Get a pointer to the underlying data of the NumPy array.
+    auto buffer_info = result.request();
+    double* ptr = static_cast<double*>(buffer_info.ptr);
+
+    // Calculate strides based on order
+    std::vector<ssize_t> strides;
+    if (order == 'C') { // C-style (row-major)
+        strides = {
+            static_cast<ssize_t>(N_cols * sizeof(double)),
+            sizeof(double)
+        };
+    } else if (order == 'F') { // Fortran-style (column-major)
+        strides = {
+            sizeof(double),
+            static_cast<ssize_t>(N_rows * sizeof(double))
+        };
+    } else {
+        throw std::runtime_error("Invalid order specified. Use 'C' or 'F'.");
+    }
+
+    // Assign strides to the buffer info. This is crucial!
+    buffer_info.strides = strides;
+
+    // Copy the data from the vector to the NumPy array.  This is the most
+    // straightforward way.
+    std::copy(v.begin(), v.end(), ptr);
+
+    return result;
+};
+
+
+
 PYBIND11_MODULE(csparse, m) {
     m.doc() = "CSparse module for sparse matrix operations.";
 
@@ -99,6 +148,7 @@ PYBIND11_MODULE(csparse, m) {
         .def("compress", &cs::COOMatrix::compress)
         .def("tocsc", &cs::COOMatrix::tocsc)
         .def("to_dense_vector", &cs::COOMatrix::to_dense_vector, py::arg("order")='F')
+        .def("toarray", &matrix_to_ndarray<cs::COOMatrix>, py::arg("order")='C')
         //
         .def("transpose", &cs::COOMatrix::transpose)
         .def_property_readonly("T", &cs::COOMatrix::T)
@@ -183,30 +233,7 @@ PYBIND11_MODULE(csparse, m) {
         //
         .def("tocoo", &cs::CSCMatrix::tocoo)
         .def("to_dense_vector", &cs::CSCMatrix::to_dense_vector, py::arg("order")='F')
-        .def("toarray",
-            [](const cs::CSCMatrix& self) {
-                // Get the matrix in dense column-major order
-                std::vector<double> v = self.to_dense_vector('C');
-                auto [rows, cols] = self.shape();
-
-                // Create a NumPy array with specified dimensions
-                py::array_t<double> result({rows, cols});
-
-                // Get a pointer to the underlying data of the NumPy array.  This is important
-                // for zero-copy if possible.  We're assuming C-style contiguous here. If
-                // you need F-style, you'd have to handle strides appropriately.
-                auto buffer_info = result.request();
-                double* ptr = static_cast<double*>(buffer_info.ptr);
-
-                // Copy the data from the vector to the NumPy array.  This is the most
-                // straightforward way.  For very large matrices, you might explore
-                // zero-copy options (if the memory layout is compatible) for better
-                // performance.
-                std::copy(v.begin(), v.end(), ptr);
-
-                return result;
-            }
-        )
+        .def("toarray", &matrix_to_ndarray<cs::CSCMatrix>, py::arg("order")='C')
         //
         .def("transpose", &cs::CSCMatrix::transpose, py::arg("values")=true)
         .def_property_readonly("T", &cs::CSCMatrix::T)

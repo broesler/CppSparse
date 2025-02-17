@@ -52,6 +52,10 @@ V, beta, R = VbR.V, VbR.beta, VbR.R
 R = csparse.to_scipy_sparse(R)
 
 np.testing.assert_allclose(V.toarray(), csparse.to_ndarray(V), atol=atol)
+np.testing.assert_allclose(V.toarray(order='F'), csparse.to_ndarray(V), atol=atol)
+np.testing.assert_allclose(V.toarray(order='C'), csparse.to_ndarray(V), atol=atol)
+np.testing.assert_allclose(V.tocoo().toarray(), csparse.to_ndarray(V), atol=atol)
+
 print("V.toarray() = ")
 print(V.toarray())
 print("beta = ")

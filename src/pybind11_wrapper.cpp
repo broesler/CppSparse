@@ -9,8 +9,6 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-// TODO might need to write additional bindings for numpy arrays
 // #include <pybind11/numpy.h>
 
 #include "csparse.h"
@@ -21,6 +19,9 @@ namespace py = pybind11;
 PYBIND11_MODULE(csparse, m) {
     m.doc() = "CSparse module for sparse matrix operations.";
 
+    //--------------------------------------------------------------------------
+    //        Enums and Structs
+    //--------------------------------------------------------------------------
     // Register the enum class 'AMDOrder'
     py::enum_<cs::AMDOrder>(m, "AMDOrder")
         .value("Natural", cs::AMDOrder::Natural)
@@ -46,17 +47,7 @@ PYBIND11_MODULE(csparse, m) {
     py::class_<cs::QRResult>(m, "QRResult")
         .def_readwrite("V", &cs::QRResult::V)
         .def_readwrite("beta", &cs::QRResult::beta)
-        .def_readwrite("R", &cs::QRResult::R)
-        // Add __iter__ for unpacking in Python: V, beta, R = qr(A, S)
-        .def("__iter__", [](const cs::QRResult& res) {
-            auto* v = new std::vector<py::object>{
-                py::cast(res.V),
-                py::cast(res.beta),
-                py::cast(res.R)
-            };
-            return py::make_iterator(v->begin(), v->end(),
-                    py::return_value_policy::take_ownership);
-        }, py::keep_alive<0, 1>());
+        .def_readwrite("R", &cs::QRResult::R);
 
     //--------------------------------------------------------------------------
     //        COOMatrix class
@@ -64,28 +55,31 @@ PYBIND11_MODULE(csparse, m) {
     py::class_<cs::COOMatrix>(m, "COOMatrix")
         .def(py::init<>())
         .def(py::init<
-                const std::vector<double>&,
-                const std::vector<cs::csint>&,
-                const std::vector<cs::csint>&,
-                cs::csint,
-                cs::csint
-            >())
+            const std::vector<double>&,
+            const std::vector<cs::csint>&,
+            const std::vector<cs::csint>&,
+            cs::csint,
+            cs::csint>()
+        )
         .def(py::init<cs::csint, cs::csint, cs::csint>())
         // TODO how to handle a file pointer?
         // .def(py::init<std::istream&>())
-        .def_static("random", &cs::COOMatrix::random,
-                py::arg("M"),
-                py::arg("N"),
-                py::arg("density")=0.1,
-                py::arg("seed")=0
-            )
+        .def_static("random",
+            &cs::COOMatrix::random,
+            py::arg("M"),
+            py::arg("N"),
+            py::arg("density")=0.1,
+            py::arg("seed")=0
+        )
         .def(py::init<const cs::CSCMatrix&>())
         .def_property_readonly("nnz", &cs::COOMatrix::nnz)
         .def_property_readonly("nzmax", &cs::COOMatrix::nzmax)
-        .def_property_readonly("shape", [](const cs::COOMatrix& A) {
-            auto s = A.shape();
-            return std::make_tuple(s[0], s[1]);
-        })
+        .def_property_readonly("shape",
+            [](const cs::COOMatrix& A) {
+                cs::Shape s = A.shape();
+                return std::make_tuple(s[0], s[1]);
+            }
+        )
         //
         .def_property_readonly("row", &cs::COOMatrix::row)
         .def_property_readonly("column", &cs::COOMatrix::column)
@@ -93,11 +87,13 @@ PYBIND11_MODULE(csparse, m) {
         //
         .def("assign", py::overload_cast
                         <cs::csint, cs::csint, double>(&cs::COOMatrix::assign))
-        .def("__setitem__", [](cs::COOMatrix& A, py::tuple t, double v) {
-            cs::csint i = t[0].cast<cs::csint>();
-            cs::csint j = t[1].cast<cs::csint>();
-            A.assign(i, j, v);
-        })
+        .def("__setitem__",
+            [](cs::COOMatrix& A, py::tuple t, double v) {
+                cs::csint i = t[0].cast<cs::csint>();
+                cs::csint j = t[1].cast<cs::csint>();
+                A.assign(i, j, v);
+            }
+        )
         // TODO handle assigning to vectors
         //
         .def("compress", &cs::COOMatrix::compress)
@@ -111,12 +107,12 @@ PYBIND11_MODULE(csparse, m) {
         .def("__mul__", &cs::COOMatrix::dot)
         //
         .def("__repr__", [](const cs::COOMatrix& A) {
-                return A.to_string(false);  // don't print all elements
-            })
+            return A.to_string(false);  // don't print all elements
+        })
         .def("__str__", &cs::COOMatrix::to_string,
-                py::arg("verbose")=true,
-                py::arg("threshold")=1000
-            );
+            py::arg("verbose")=true,
+            py::arg("threshold")=1000
+        );
 
     //--------------------------------------------------------------------------
     //        CSCMatrix class
@@ -124,26 +120,28 @@ PYBIND11_MODULE(csparse, m) {
     py::class_<cs::CSCMatrix>(m, "CSCMatrix")
         .def(py::init<>())
         .def(py::init<
-                const std::vector<double>&,
-                const std::vector<cs::csint>&,
-                const std::vector<cs::csint>&,
-                const cs::Shape&
-            >())
-        .def(py::init<cs::csint, cs::csint, cs::csint, bool >(),
-                py::arg("M"),
-                py::arg("N"),
-                py::arg("nzmax")=0,
-                py::arg("values")=true
-            )
+            const std::vector<double>&,
+            const std::vector<cs::csint>&,
+            const std::vector<cs::csint>&,
+            const cs::Shape&>()
+        )
+        .def(py::init<cs::csint, cs::csint, cs::csint, bool>(),
+            py::arg("M"),
+            py::arg("N"),
+            py::arg("nzmax")=0,
+            py::arg("values")=true
+        )
         .def(py::init<const cs::COOMatrix&>())
         .def(py::init<const std::vector<double>&, cs::csint, cs::csint>())
         //
         .def_property_readonly("nnz", &cs::CSCMatrix::nnz)
         .def_property_readonly("nzmax", &cs::CSCMatrix::nzmax)
-        .def_property_readonly("shape", [](const cs::CSCMatrix& A) {
-            auto s = A.shape();
-            return std::make_tuple(s[0], s[1]);
-        })
+        .def_property_readonly("shape",
+            [](const cs::CSCMatrix& A) {
+                cs::Shape s = A.shape();
+                return std::make_tuple(s[0], s[1]);
+            }
+        )
         //
         .def_property_readonly("indptr", &cs::CSCMatrix::indptr)
         .def_property_readonly("indices", &cs::CSCMatrix::indices)
@@ -156,11 +154,13 @@ PYBIND11_MODULE(csparse, m) {
         //
         .def("__call__", py::overload_cast<cs::csint, cs::csint>(&cs::CSCMatrix::operator(), py::const_))
         // TODO handle slices
-        .def("__getitem__", [](cs::CSCMatrix& A, py::tuple t) {
-            cs::csint i = t[0].cast<cs::csint>();
-            cs::csint j = t[1].cast<cs::csint>();
-            return A(i, j);
-        })
+        .def("__getitem__",
+            [](cs::CSCMatrix& A, py::tuple t) {
+                cs::csint i = t[0].cast<cs::csint>();
+                cs::csint j = t[1].cast<cs::csint>();
+                return A(i, j);
+            }
+        )
         //
         .def("assign", py::overload_cast
                         <cs::csint, cs::csint, double>(&cs::CSCMatrix::assign))
@@ -172,12 +172,14 @@ PYBIND11_MODULE(csparse, m) {
                         const std::vector<cs::csint>&,
                         const std::vector<cs::csint>&,
                         const cs::CSCMatrix&>(&cs::CSCMatrix::assign))
-        .def("__setitem__", [](cs::CSCMatrix& A, py::tuple t, double v) {
-            // TODO handle slices
-            cs::csint i = t[0].cast<cs::csint>();
-            cs::csint j = t[1].cast<cs::csint>();
-            A.assign(i, j, v);
-        })
+        .def("__setitem__",
+            [](cs::CSCMatrix& A, py::tuple t, double v) {
+                // TODO handle slices
+                cs::csint i = t[0].cast<cs::csint>();
+                cs::csint j = t[1].cast<cs::csint>();
+                A.assign(i, j, v);
+            }
+        )
         //
         .def("tocoo", &cs::CSCMatrix::tocoo)
         .def("toarray", &cs::CSCMatrix::toarray, py::arg("order")='F')
@@ -230,31 +232,39 @@ PYBIND11_MODULE(csparse, m) {
         .def("sum_cols", &cs::CSCMatrix::sum_cols)
         //
         .def("__repr__", [](const cs::CSCMatrix& A) {
-                return A.to_string(false);  // don't print all elements
-            })
+            return A.to_string(false);  // don't print all elements
+        })
         .def("__str__", &cs::CSCMatrix::to_string,
-                py::arg("verbose")=true,
-                py::arg("threshold")=1000
-            );
+            py::arg("verbose")=true,
+            py::arg("threshold")=1000
+        );
 
     //--------------------------------------------------------------------------
     //        Decomposition Functions
     //--------------------------------------------------------------------------
-    m.def("schol", &cs::schol,
-            py::arg("A"),
-            py::arg("ordering")=cs::AMDOrder::Natural,
-            py::arg("use_postorder")=false);
+    // Cholesky decomposition
+    m.def("schol",
+        &cs::schol,
+        py::arg("A"),
+        py::arg("ordering")=cs::AMDOrder::Natural,
+        py::arg("use_postorder")=false
+    );
     m.def("symbolic_cholesky", &cs::symbolic_cholesky);
-    m.def("chol", &cs::chol,
-            py::arg("A"),
-            py::arg("S"),
-            py::arg("drop_tol")=0.0);
+    m.def("chol",
+        &cs::chol,
+        py::arg("A"),
+        py::arg("S"),
+        py::arg("drop_tol")=0.0
+    );
     m.def("leftchol", &cs::leftchol);
     m.def("rechol", &cs::rechol);
 
-    m.def("sqr", &cs::sqr,
-            py::arg("A"),
-            py::arg("order")=cs::AMDOrder::Natural);
+    // QR decomposition
+    m.def("sqr", 
+        &cs::sqr,
+        py::arg("A"),
+        py::arg("order")=cs::AMDOrder::Natural
+    );
     m.def("qr", &cs::qr);
 
     //--------------------------------------------------------------------------

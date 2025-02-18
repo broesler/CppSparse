@@ -158,7 +158,7 @@ if __name__ == '__main__':
     #               [1, 0, 0]],
     #              dtype=float)
 
-    A = to_ndarray(davis_example())
+    A = davis_example().toarray()
 
     # Get the raw LAPACK output for the entire matrix
     # Qraw stores the Householder reflectors *below* the diagonal

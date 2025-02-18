@@ -36,7 +36,7 @@ def davis_example():
     rows = [2,    1,    3,    0,    1,    3,    3,    1,    0,    2]
     cols = [2,    0,    3,    2,    1,    0,    1,    3,    0,    1]
     vals = [3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7]
-    return COOMatrix(vals, rows, cols, N, N).tocsc()
+    return COOMatrix(vals, rows, cols, (N, N)).tocsc()
 
 
 def to_ndarray(A, order='C'):

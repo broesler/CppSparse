@@ -96,6 +96,8 @@ std::vector<double> happly(
 }
 
 
+// TODO this function does a lot of things, and likely can be broken up into
+// smaller functions? e.g. leftmost at least could be separated.
 void vcount(const CSCMatrix& A, Symbolic& S)
 {
     auto [M, N] = A.shape();
@@ -195,8 +197,8 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
     csint N = A.N_;
 
     // Allocate result matrices
-    CSCMatrix V(M, N, S.lnz);  // Householder vectors
-    CSCMatrix R(M, N, S.unz);  // R factor
+    CSCMatrix V({M, N}, S.lnz);  // Householder vectors
+    CSCMatrix R({M, N}, S.unz);  // R factor
     std::vector<double> beta(N);  // scaling factors
 
     // Allocate workspaces

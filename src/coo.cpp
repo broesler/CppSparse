@@ -195,7 +195,7 @@ COOMatrix& COOMatrix::assign(
 CSCMatrix COOMatrix::compress() const 
 {
     csint nnz_ = nnz();
-    CSCMatrix C(M_, N_, nnz_);
+    CSCMatrix C({M_, N_}, nnz_);
     std::vector<csint> w(N_);  // workspace
 
     // Compute number of elements in each column

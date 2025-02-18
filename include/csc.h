@@ -90,11 +90,11 @@ class CSCMatrix
 
         /** Allocate a CSCMatrix for a given shape and number of non-zeros.
          *
-         * @param M, N  integer dimensions of the rows and columns
+         * @param shape  the dimensions of the matrix
          * @param nzmax integer capacity of space to reserve for non-zeros
          * @param values if `true`, allocate space for the values array
          */
-        CSCMatrix(csint M, csint N, csint nzmax=0, bool values=true);
+        CSCMatrix(const Shape& shape, csint nzmax=0, bool values=true);
 
         /** Convert a coordinate format matrix to a compressed sparse column matrix in
          * canonical format.

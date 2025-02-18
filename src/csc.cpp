@@ -42,11 +42,11 @@ CSCMatrix::CSCMatrix(
 {}
 
 
-CSCMatrix::CSCMatrix(csint M, csint N, csint nzmax, bool values)
+CSCMatrix::CSCMatrix(const Shape& shape, csint nzmax, bool values)
     : i_(nzmax),
-      p_(N + 1),
-      M_(M),
-      N_(N)
+      p_(shape[1] + 1),
+      M_(shape[0]),
+      N_(shape[1])
 {
     if (values) {
         v_.resize(nzmax);
@@ -361,7 +361,7 @@ std::vector<double> CSCMatrix::to_dense_vector(const char order) const
 CSCMatrix CSCMatrix::transpose(bool values) const
 {
     std::vector<csint> w(M_);   // workspace
-    CSCMatrix C(N_, M_, nnz(), values);  // output
+    CSCMatrix C({N_, M_}, nnz(), values);  // output
 
     // Compute number of elements in each row
     for (csint p = 0; p < nnz(); p++)
@@ -437,7 +437,7 @@ CSCMatrix& CSCMatrix::sort()
 {
     // ----- first transpose
     std::vector<csint> w(M_);   // workspace
-    CSCMatrix C(N_, M_, nnz());  // intermediate transpose
+    CSCMatrix C({N_, M_}, nnz());  // intermediate transpose
 
     // Compute number of elements in each row
     for (csint p = 0; p < nnz(); p++)
@@ -877,7 +877,7 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
     assert(Ka == Kb);
 
     // NOTE See Problem 2.20 for how to compute nnz(A*B)
-    CSCMatrix C(M, N, nnz() + B.nnz());  // output
+    CSCMatrix C({M, N}, nnz() + B.nnz());  // output
 
     // Allocate workspaces
     std::vector<csint> w(M);
@@ -943,7 +943,7 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
     }
 
     // Allocate the correct size output matrix
-    CSCMatrix C(M, N, nz_C);
+    CSCMatrix C({M, N}, nz_C);
 
     // Compute the actual multiplication
     std::fill(w.begin(), w.end(), 0);  // reset workspace
@@ -1033,7 +1033,7 @@ CSCMatrix add_scaled(
     assert(A.shape() == B.shape());
     auto [M, N] = A.shape();
 
-    CSCMatrix C(M, N, A.nnz() + B.nnz());  // output
+    CSCMatrix C({M, N}, A.nnz() + B.nnz());  // output
 
     // Allocate workspaces
     std::vector<csint> w(M);
@@ -1162,7 +1162,7 @@ CSCMatrix CSCMatrix::permute(
     bool values
 ) const
 {
-    CSCMatrix C(M_, N_, nnz(), values);
+    CSCMatrix C({M_, N_}, nnz(), values);
     csint nz = 0;
 
     for (csint k = 0; k < N_; k++) {
@@ -1203,7 +1203,7 @@ CSCMatrix CSCMatrix::symperm(const std::vector<csint> p_inv, bool values) const
 {
     assert(M_ == N_);  // matrix must be square. Symmetry not checked.
 
-    CSCMatrix C(N_, N_, nnz(), values);
+    CSCMatrix C({N_, N_}, nnz(), values);
     std::vector<csint> w(N_);  // workspace for column counts
 
     // Count entries in each column of C
@@ -1254,7 +1254,7 @@ CSCMatrix CSCMatrix::permute_transpose(
 ) const
 {
     std::vector<csint> w(M_);            // workspace
-    CSCMatrix C(N_, M_, nnz(), values);  // output
+    CSCMatrix C({N_, M_}, nnz(), values);  // output
 
     // Compute number of elements in each permuted row (aka column of C)
     for (csint p = 0; p < nnz(); p++)
@@ -1381,7 +1381,7 @@ CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
 {
     assert(A.N_ == B.N_);
 
-    CSCMatrix C(A.M_ + B.M_, A.N_, A.nnz() + B.nnz());
+    CSCMatrix C({A.M_ + B.M_, A.N_}, A.nnz() + B.nnz());
 
     csint nz = 0;
 
@@ -1419,7 +1419,7 @@ CSCMatrix CSCMatrix::slice(
     assert((i_start >= 0) && (i_end <= M_) && (i_start < i_end));
     assert((j_start >= 0) && (j_end <= N_) && (j_start < j_end));
 
-    CSCMatrix C(i_end - i_start, j_end - j_start, nnz());
+    CSCMatrix C({i_end - i_start, j_end - j_start}, nnz());
 
     csint nz = 0;
 
@@ -1454,15 +1454,17 @@ CSCMatrix CSCMatrix::index(
     const std::vector<csint>& cols
     ) const
 {
-    CSCMatrix C(rows.size(), cols.size(), nnz());
+    csint M = rows.size();
+    csint N = cols.size();
+    CSCMatrix C({M, N}, nnz());
 
     csint nz = 0;
 
-    for (csint j = 0; j < cols.size(); j++) {
+    for (csint j = 0; j < N; j++) {
         C.p_[j] = nz;  // column j of C starts here
 
         // Iterate over `rows` and find the corresponding indices in `i_`.
-        for (csint k = 0; k < rows.size(); k++) {
+        for (csint k = 0; k < M; k++) {
             double val = (*this)(rows[k], cols[j]);
             if (val != 0) {
                 C.i_[nz] = k;

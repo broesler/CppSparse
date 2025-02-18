@@ -511,7 +511,7 @@ Symbolic schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S)
 {
     auto [M, N] = A.shape();
-    CSCMatrix L(M, N, S.lnz);        // allocate result
+    CSCMatrix L({M, N}, S.lnz);        // allocate result
 
     std::vector<csint> c(S.cp);      // column pointers for L
 
@@ -541,7 +541,7 @@ CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S)
 CSCMatrix chol(const CSCMatrix& A, const Symbolic& S, double drop_tol)
 {
     auto [M, N] = A.shape();
-    CSCMatrix L(M, N, S.lnz);  // allocate result
+    CSCMatrix L({M, N}, S.lnz);  // allocate result
 
     // Workspaces
     std::vector<csint> c(S.cp);  // column pointers for L

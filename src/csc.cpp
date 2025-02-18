@@ -66,24 +66,24 @@ CSCMatrix::CSCMatrix(const COOMatrix& A) : CSCMatrix(A.compress())
 }
 
 
-CSCMatrix::CSCMatrix(const std::vector<double>& A, csint M, csint N)
-    : M_(M),
-      N_(N)
+CSCMatrix::CSCMatrix(const std::vector<double>& A, const Shape shape)
+    : M_(shape[0]),
+      N_(shape[1])
 {
-    assert(A.size() == (M * N));  // ensure input is valid
+    assert(A.size() == (M_ * N_));  // ensure input is valid
 
     // Allocate memory
     v_.reserve(A.size());
     i_.reserve(A.size());
-    p_.reserve(N);
+    p_.reserve(N_);
 
     csint nz = 0;  // count number of non-zeros
 
-    for (csint j = 0; j < N; j++) {
+    for (csint j = 0; j < N_; j++) {
         p_.push_back(nz);
 
-        for (csint i = 0; i < M; i++) {
-            double val = A[i + j * N];  // linear index for column-major order
+        for (csint i = 0; i < M_; i++) {
+            double val = A[i + j * N_];  // linear index for column-major order
 
             // Only store non-zeros
             if (val != 0.0) {

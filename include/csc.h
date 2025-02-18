@@ -115,11 +115,11 @@ class CSCMatrix
          * See: Davis, Exercise 2.16.
          *
          * @param A a dense matrix in column-major form
-         * @param M, N the size of the matrix
+         * @param shape  the dimensions of the matrix
          *
          * @return C a compressed sparse column version of the matrix
          */
-        CSCMatrix(const std::vector<double>& A, csint M, csint N);
+        CSCMatrix(const std::vector<double>& A, const Shape shape);
 
         /** Reallocate a CSCMatrix to a new number of non-zeros.
          *

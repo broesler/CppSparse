@@ -20,6 +20,7 @@
 #include <random>
 #include <string>
 #include <sstream>
+#include <vector>
 
 #include "csparse.h"
 
@@ -935,8 +936,8 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
 
         CSCMatrix expect = A;
 
-        compare_matrices(CSCMatrix(A.gaxpy_col(I, Z), 4, 4), expect);
-        compare_matrices(CSCMatrix(A.T().gatxpy_col(I, Z), 4, 4), expect);
+        compare_matrices(CSCMatrix(A.gaxpy_col(I, Z), {4, 4}), expect);
+        compare_matrices(CSCMatrix(A.T().gatxpy_col(I, Z), {4, 4}), expect);
     }
 
     SECTION("Test arbitrary square matrix in column-major format") {
@@ -1576,7 +1577,7 @@ TEST_CASE("Test CSC from dense column-major")
         0.0, 0.9, 0.0, 1.0
     };
 
-    CSCMatrix A {dense_mat, 4, 4};
+    CSCMatrix A {dense_mat, {4, 4}};
 
     CSCMatrix expect_A = davis_21_coo().tocsc();
 
@@ -2074,7 +2075,7 @@ TEST_CASE("Permuted triangular solvers")
         A_vals.insert(A_vals.end(), row_vals.begin(), row_vals.end());
     }
 
-    const CSCMatrix A = CSCMatrix(A_vals, N, N);
+    const CSCMatrix A = CSCMatrix(A_vals, {N, N});
 
     // Un-permuted matrices
     const CSCMatrix L = A.band(-N, 0);
@@ -2474,7 +2475,7 @@ TEST_CASE("Cholesky decomposition")
         const std::vector<double> b_vals = L * expect;
 
         // Create the sparse RHS matrix
-        CSCMatrix b(b_vals, N, 1);
+        CSCMatrix b(b_vals, {N, 1});
 
         // Solve Lx = b
         auto [xi, x] = chol_lsolve(L, b, S.parent);
@@ -2499,7 +2500,7 @@ TEST_CASE("Cholesky decomposition")
         const std::vector<double> b_vals = L.T() * expect;
 
         // Create the sparse RHS matrix
-        CSCMatrix b(b_vals, N, 1);
+        CSCMatrix b(b_vals, {N, 1});
 
         // Solve Lx = b
         auto [xi, x] = chol_ltsolve(L, b, S.parent);

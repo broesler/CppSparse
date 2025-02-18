@@ -62,7 +62,7 @@ np.testing.assert_allclose(Qr_, Q_, atol=atol)
 # -----------------------------------------------------------------------------
 #         Compute the QR decomposition with my python implementation
 # -----------------------------------------------------------------------------
-V_r, beta_r, R_r = qr_right(A.toarray())
+V_r, beta_r, R_r = qr_right(A_dense)
 Q_r = csparse.qright(V_r, beta_r)
 
 # NOTE that the V, beta, and R results from scipy and my implementation are
@@ -78,35 +78,47 @@ np.testing.assert_allclose(Q_r @ R_r, A.toarray(), atol=atol)
 S = csparse.sqr(Ac)
 QRres = csparse.qr(Ac, S)
 
-# FIXME these matrices all seem wrong
 V, beta, R = QRres.V, QRres.beta, QRres.R
 
-R = csparse.to_scipy_sparse(R)
+# Convert for easier debugging
+V = V.toarray()
+beta = np.r_[beta]
+R = R.toarray()
+
+# With house Davis book code
+np.testing.assert_allclose(R, -R_, atol=atol)
+
+# With house LAPACK code
+# NOTE csparse R differs from scipy R_ by a sign on the diagonal.
+# np.testing.assert_allclose(np.diag(R), -np.diag(R_), atol=atol)
+# np.testing.assert_allclose(np.triu(R, 1), np.triu(R_, 1), atol=atol)
+# np.testing.assert_allclose(np.tril(R, -1), np.tril(R_, -1), atol=atol)
 
 print("V_ = ")
 print(V_)
 print("V = ")
-print(V.toarray())
+print(V)
 
 print("tau = ")
-print(np.r_[tau])
+print(tau)
 print("beta = ")
-print(np.r_[beta])
+print(beta)
 
 print("R_ = ")
 print(R_)
 print("R = ")
-print(R.toarray())
+print(R)
 
-# Get the actual Q matrix
-Qr = csparse.qright(V, beta)
-Ql = csparse.qleft(V, beta)
+# Get the actual Q matrix, don't forget the row permutation!
+p = csparse.inv_permute(S.p_inv)
+Qr = csparse.qright(V, beta, p)
+Ql = csparse.qleft(V, beta, p)
 
-np.testing.assert_allclose(Qr.toarray(), Ql.T.toarray(), atol=atol)
+np.testing.assert_allclose(Qr, Ql.T, atol=atol)
 
-# FIXME Reproduce A = QR
-# np.testing.assert_allclose((Qr @ R).toarray(), A_dense, atol=atol)
-# np.testing.assert_allclose((Ql.T @ R).toarray(), A_dense, atol=atol)
+# Reproduce A = QR
+np.testing.assert_allclose(Qr @ R, A_dense, atol=atol)
+np.testing.assert_allclose(Ql.T @ R, A_dense, atol=atol)
 
 
 # =============================================================================

@@ -38,18 +38,18 @@ Householder house(std::span<const double> x)
 
         //---------- LAPACK DLARFG algorithm
         // matches scipy.linalg.qr(mode='raw') and MATLAB
-        double alpha = v[0];
-        double b_ = -sign(alpha) * std::sqrt(alpha * alpha + sigma);
-        beta = (b_ - alpha) / b_;
+        // double alpha = v[0];
+        // double b_ = -sign(alpha) * std::sqrt(alpha * alpha + sigma);
+        // beta = (b_ - alpha) / b_;
 
-        v[0] = 1;
-        for (csint i = 1; i < v.size(); i++) {
-            v[i] /= (alpha - b_);
-        }
+        // v[0] = 1;
+        // for (csint i = 1; i < v.size(); i++) {
+        //     v[i] /= (alpha - b_);
+        // }
 
         //---------- Davis book code (cs_house)
-        // v[0] = (v[0] <= 0) ? (v[0] - s) : (-sigma / (v[0] + s));
-        // beta = -1 / (s * v[0]);  // Davis book code
+        v[0] = (v[0] <= 0) ? (v[0] - s) : (-sigma / (v[0] + s));
+        beta = -1 / (s * v[0]);  // Davis book code
 
         // NOTE scale to be self-consistent with v[0] = 1, but does *not* match
         // the MATLAB or python v or beta.
@@ -209,32 +209,38 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
     // Compute V and R
     csint vnz = 0,
           rnz = 0;
-    csint p1;
 
     for (csint k = 0; k < N; k++) {
-        R.p_[k] = rnz;       // R[:, k] starts here
-        V.p_[k] = p1 = vnz;  // V[:, k] starts here
-        w[k] = k;            // add V(k, k) to pattern of V
-        V.i_[vnz++] = k;     // V(k, k) is non-zero
+        R.p_[k] = rnz;    // R[:, k] starts here
+        V.p_[k] = vnz;    // V[:, k] starts here
+        csint p1 = vnz;   // save start of V(:, k)
+        w[k] = k;         // add V(k, k) to pattern of V
+        V.i_[vnz++] = k;  // V(k, k) is non-zero
+
         csint top = N;
         csint col = S.q[k];
         for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {  // find R[:, k] pattern
             csint i = S.leftmost[A.i_[p]];  // i = min(find(A(i, q)))
+
             csint len;
             for (len = 0; w[i] != k; i = S.parent[i]) {  // traverse up to k
                 s[len++] = i;
                 w[i] = k;
             }
+
             while (len > 0) {
                 s[--top] = s[--len];  // push path on stack
             }
+
             i = S.p_inv[A.i_[p]];     // i = permuted row of A(:, col)
             x[i] = A.v_[p];           // x(i) = A(:, col)
+
             if (i > k && w[i] < k) {  // pattern of V(:, k) = x(k+1:m)
                 V.i_[vnz++] = i;      // add i to pattern of V(:, k)
                 w[i] = k;
             }
         }
+
         for (csint p = top; p < N; p++) {  // for each i in pattern of R[:, k]
             csint i = s[p];                // R(i, k) is non-zero
             x = happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
@@ -242,22 +248,27 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
             R.v_[rnz++] = x[i];
             x[i] = 0;
             if (S.parent[i] == k) {
+                // Scatter the non-zero pattern without changing the values
                 vnz = V.scatter(i, 0, w, x, k, V, vnz, false, false);
             }
         }
+
         for (csint p = p1; p < vnz; p++) {  // gather V(:, k) = x
             V.v_[p] = x[V.i_[p]];
             x[V.i_[p]] = 0;
         }
+
         // [v, beta, s] = house(x) == house(V[p1:vnz, k])
         Householder h = house(std::span(V.v_).subspan(p1, vnz - p1));
         std::copy(h.v.begin(), h.v.end(), V.v_.begin() + p1);
         beta[k] = h.beta;
-        R.i_[rnz] = k;      // R(k, k) = norm(x)
+        R.i_[rnz] = k;      // R(k, k) = -norm(x)
         R.v_[rnz++] = h.s;
     }
+
     R.p_[N] = rnz;  // finalize R
     V.p_[N] = vnz;  // finalize V
+
     return {V, beta, R};
 }
 

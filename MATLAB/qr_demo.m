@@ -64,6 +64,8 @@ assert(norm(abs(V_r - V_l)) < tol);
 assert(norm(abs(Beta_r - Beta_l)) < tol);
 % assert(norm(abs(R_r - R_l)) < tol);  % NOT true, since R_l is not correct
 
+% NOTE that V != V_r, because of the row permutation applied
+
 % Compute the Q matrix by applying the Householder vectors to the identity
 Q_r = cs_qright(V_r, Beta_r, [], speye(size(V_r, 1)));
 Q_l = cs_qleft(V_l, Beta_l, [], speye(size(V_l, 1)));

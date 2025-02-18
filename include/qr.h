@@ -86,6 +86,15 @@ std::vector<double> happly(
 
 /** Compute the column counts of the matrix V containing Householder vectors.
  *
+ * This function also computes a row permutation vector `S.p_inv`, so that the
+ * diagonal entries of PA are all structurally non-zero.
+ *
+ * It also computes leftmost row index of each row in `A`, `S.leftmost`. 
+ *
+ * If `A` is structurally rank-deficient, then this function adds fictitious
+ * rows to `A` to make it structurally full rank. The total row count including
+ * these fictitious rows is stored in `S.m2`.
+ *
  * @param A  the CSCMatrix that will be decomposed
  * @param[in,out] S  the symbolic QR decomposition of A. S.parent is expected to
  *        have been computed by cs::etree. Only p_inv, leftmost, lnz, and m2
@@ -95,6 +104,15 @@ void vcount(const CSCMatrix& A, Symbolic& S);
 
 
 /** Perform symbolic analysis for the QR decomposition of a matrix.
+ *
+ * This function calls `vcount` to compute the column counts of the matrix `V`;
+ * the total non-zeros in `V`, `S.lnz`; the row permutation vector `S.p_inv`;
+ * the leftmost row index of each row in `A`, `S.leftmost`; and the total row
+ * count (including fictitious rows), `S.m2`.
+ *
+ * It also computes the elimination tree of the matrix `A.T @ A`, `S.parent`;
+ * a column permutation vector `S.q` per the desired `order`; and the column
+ * counts of the Cholesky factor of `A.T @ A`, `S.cp`.
  *
  * @param A  the matrix to factorize
  * @param order  the ordering method to use:

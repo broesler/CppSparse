@@ -46,7 +46,7 @@ def qright(V, beta, p=None, Y=None):
         V = to_scipy_sparse(V)
 
     if Y is None:
-        Y = sparse.eye_array(V.shape[1])
+        Y = sparse.eye_array(V.shape[1]).tocsc()
 
     M, N = V.shape
     X = Y.copy()
@@ -87,7 +87,7 @@ def qleft(V, beta, p=None, Y=None):
         V = to_scipy_sparse(V)
 
     if Y is None:
-        Y = sparse.eye_array(V.shape[0])
+        Y = sparse.eye_array(V.shape[0]).tocsc()
 
     M2, N = V.shape
     M, NY = Y.shape

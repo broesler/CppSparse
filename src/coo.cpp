@@ -46,9 +46,9 @@ COOMatrix::COOMatrix(
 }
 
 
-COOMatrix::COOMatrix(csint M, csint N, csint nzmax)
-    : M_(M),
-      N_(N) 
+COOMatrix::COOMatrix(const Shape& shape, csint nzmax)
+    : M_(shape[0]),
+      N_(shape[1]) 
 {
     v_.reserve(nzmax);
     i_.reserve(nzmax);

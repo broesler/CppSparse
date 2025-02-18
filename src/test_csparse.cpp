@@ -312,7 +312,7 @@ TEST_CASE("Test COOMatrix Constructors", "[COOMatrix]")
     }
 
     SECTION("Make new from given shape") {
-        COOMatrix A(56, 37);
+        COOMatrix A({56, 37});
         REQUIRE(A.nnz() == 0);
         REQUIRE(A.nzmax() == 0);
         REQUIRE(A.shape() == Shape{56, 37});
@@ -320,7 +320,7 @@ TEST_CASE("Test COOMatrix Constructors", "[COOMatrix]")
 
     SECTION("Allocate new from shape and nzmax") {
         int nzmax = 1e4;
-        COOMatrix A(56, 37, nzmax);
+        COOMatrix A({56, 37}, nzmax);
         REQUIRE(A.nnz() == 0);
         REQUIRE(A.nzmax() >= nzmax);
         REQUIRE(A.shape() == Shape{56, 37});
@@ -2425,7 +2425,7 @@ TEST_CASE("Cholesky decomposition")
             std::default_random_engine rng(56);
             std::uniform_real_distribution<double> unif(0.0, 1.0);
 
-            COOMatrix w(L.shape()[0], 1);
+            COOMatrix w({L.shape()[0], 1});
 
             for (csint p = L.indptr()[k]; p < L.indptr()[k + 1]; p++) {
                 w.assign(L.indices()[p], 0, unif(rng));

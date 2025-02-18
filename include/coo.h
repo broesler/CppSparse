@@ -78,10 +78,10 @@ class COOMatrix
 
         /** Allocate a COOMatrix for a given shape and number of non-zeros.
          *
-         * @param M, N  integer dimensions of the rows and columns
-         * @param nzmax integer capacity of space to reserve for non-zeros
+         * @param shape  the dimensions of the matrix
+         * @param nzmax  integer capacity of space to reserve for non-zeros
          */
-        COOMatrix(csint M, csint N, csint nzmax=0);
+        COOMatrix(const Shape& shape, csint nzmax=0);
 
         /** Read a COOMatrix matrix from a file.
          *

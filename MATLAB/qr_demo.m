@@ -19,6 +19,8 @@
 
 A = davis_example();
 
+% TODO make these edits in my branch of CSparse and remove the files from this
+% CSparse++ repo.
 % Compute the QR decomposition two different ways
 [V_r, Beta_r, R_r] = qr_right(A);
 [V_l, Beta_l, R_l] = qr_left(A);  % FIXME R_l diagonal is not correct

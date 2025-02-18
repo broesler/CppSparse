@@ -109,7 +109,7 @@ PYBIND11_MODULE(csparse, m) {
             const std::vector<cs::csint>&,
             const cs::Shape>()
         )
-        .def(py::init<cs::csint, cs::csint, cs::csint>())
+        .def(py::init<const cs::Shape&, cs::csint>())
         // TODO how to handle a file pointer?
         // .def(py::init<std::istream&>())
         .def_static("random",
@@ -174,14 +174,17 @@ PYBIND11_MODULE(csparse, m) {
             const std::vector<cs::csint>&,
             const cs::Shape&>()
         )
-        .def(py::init<cs::csint, cs::csint, cs::csint, bool>(),
-            py::arg("M"),
-            py::arg("N"),
+        .def(py::init<const cs::Shape&, cs::csint, bool>(),
+            py::arg("shape"),
             py::arg("nzmax")=0,
             py::arg("values")=true
         )
         .def(py::init<const cs::COOMatrix&>())
-        .def(py::init<const std::vector<double>&, cs::csint, cs::csint>())
+        .def(py::init<const std::vector<double>&, const cs::Shape&, const char>(),
+            py::arg("A"),
+            py::arg("shape"),
+            py::arg("order")='F'
+        )
         //
         .def_property_readonly("nnz", &cs::CSCMatrix::nnz)
         .def_property_readonly("nzmax", &cs::CSCMatrix::nzmax)

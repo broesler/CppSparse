@@ -251,7 +251,7 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
         }
         // [v, beta, s] = house(x) == house(V[p1:vnz, k])
         Householder h = house(std::span(V.v_).subspan(p1, vnz - p1));
-        std::copy(V.v_.begin() + p1, V.v_.begin() + vnz, h.v.begin());
+        std::copy(h.v.begin(), h.v.end(), V.v_.begin() + p1);
         beta[k] = h.beta;
         R.i_[rnz] = k;      // R(k, k) = norm(x)
         R.v_[rnz++] = h.s;

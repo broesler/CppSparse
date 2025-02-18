@@ -2739,10 +2739,7 @@ TEST_CASE("QR Decomposition")
     }
 
     SECTION("Numeric QR factorization") {
-        Symbolic S = sqr(A);
-        QRResult QR = qr(A, S);
-
-        // NOTE these expected values are computed from cs_qr in MATLAB
+        // Expected values computed from cs_qr in MATLAB
         CSCMatrix expect_V {
             { 1.000000000000000,                   0,                   0,                   0,                   0,                   0,                   0,                   0,
                               0,   1.000000000000000,                   0,                   0,                   0,                   0,                   0,                   0,
@@ -2788,6 +2785,10 @@ TEST_CASE("QR Decomposition")
         std::cout << "expect_R:" << std::endl;
         expect_R.print_dense();
 
+        // ---------- Factor the matrix
+        Symbolic S = sqr(A);
+        QRResult QR = qr(A, S);
+
         // Check that the factorization is correct
         std::cout << "V:" << std::endl;
         QR.V.print_dense();
@@ -2800,7 +2801,7 @@ TEST_CASE("QR Decomposition")
         // CHECK_THAT(is_close(QR.beta, expect_beta, tol), AllTrue());
         // compare_matrices(QR.R, expect_R);
 
-        // Test that the factorization is correct QR = PA
+        // TODO Test that the factorization is correct QR = PA
     }
 }
 

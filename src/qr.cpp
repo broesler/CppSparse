@@ -197,14 +197,14 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
     csint N = A.N_;
 
     // Allocate result matrices
-    CSCMatrix V({M, N}, S.lnz);  // Householder vectors
-    CSCMatrix R({M, N}, S.unz);  // R factor
+    CSCMatrix V({M, N}, S.lnz);   // Householder vectors
+    CSCMatrix R({M, N}, S.unz);   // R factor
     std::vector<double> beta(N);  // scaling factors
 
     // Allocate workspaces
     std::vector<csint>  w(M, -1),  // workspace
-                        s(N);  // stack
-    std::vector<double> x(M);  // dense vector
+                        s(N);      // stack
+    std::vector<double> x(M);      // dense vector
 
     // Compute V and R
     csint vnz = 0,
@@ -249,12 +249,12 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
             V.v_[p] = x[V.i_[p]];
             x[V.i_[p]] = 0;
         }
-        R.i_[rnz] = k;      // R(k, k) = norm(x)
-        // [v, beta, s] = house(x)
+        // [v, beta, s] = house(x) == house(V[p1:vnz, k])
         Householder h = house(std::span(V.v_).subspan(p1, vnz - p1));
         std::copy(V.v_.begin() + p1, V.v_.begin() + vnz, h.v.begin());
-        R.v_[rnz++] = h.s;
         beta[k] = h.beta;
+        R.i_[rnz] = k;      // R(k, k) = norm(x)
+        R.v_[rnz++] = h.s;
     }
     R.p_[N] = rnz;  // finalize R
     V.p_[N] = vnz;  // finalize V

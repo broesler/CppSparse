@@ -236,9 +236,9 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
             }
         }
         for (csint p = top; p < N; p++) {  // for each i in pattern of R[:, k]
-            csint i = s[p];            // R(i, k) is non-zero
-            happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
-            R.i_[rnz] = i;             // R(i, k) = x(i)
+            csint i = s[p];                // R(i, k) is non-zero
+            x = happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
+            R.i_[rnz] = i;                 // R(i, k) = x(i)
             R.v_[rnz++] = x[i];
             x[i] = 0;
             if (S.parent[i] == k) {

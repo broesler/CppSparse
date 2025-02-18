@@ -114,12 +114,18 @@ class CSCMatrix
          *
          * See: Davis, Exercise 2.16.
          *
-         * @param A a dense matrix in column-major form
+         * @param A  a dense matrix in column-major form
          * @param shape  the dimensions of the matrix
+         * @param order  the order of the dense matrix, either 'F'
+         *        (column-major) or 'C' (row-major).
          *
          * @return C a compressed sparse column version of the matrix
          */
-        CSCMatrix(const std::vector<double>& A, const Shape shape);
+        CSCMatrix(
+            const std::vector<double>& A,
+            const Shape& shape,
+            const char order='F'
+        );
 
         /** Reallocate a CSCMatrix to a new number of non-zeros.
          *

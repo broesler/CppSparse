@@ -66,11 +66,18 @@ CSCMatrix::CSCMatrix(const COOMatrix& A) : CSCMatrix(A.compress())
 }
 
 
-CSCMatrix::CSCMatrix(const std::vector<double>& A, const Shape shape)
-    : M_(shape[0]),
-      N_(shape[1])
+CSCMatrix::CSCMatrix(
+    const std::vector<double>& A,
+    const Shape& shape,
+    const char order
+) : M_(shape[0]),
+    N_(shape[1])
 {
     assert(A.size() == (M_ * N_));  // ensure input is valid
+
+    if (order != 'C' && order != 'F') {
+        throw std::invalid_argument("Order must be 'C' or 'F'.");
+    }
 
     // Allocate memory
     v_.reserve(A.size());
@@ -82,8 +89,13 @@ CSCMatrix::CSCMatrix(const std::vector<double>& A, const Shape shape)
     for (csint j = 0; j < N_; j++) {
         p_.push_back(nz);
 
+        double val;
         for (csint i = 0; i < M_; i++) {
-            double val = A[i + j * N_];  // linear index for column-major order
+            if (order == 'F') {
+                val = A[i + j * N_];  // linear index for column-major order
+            } else {
+                val = A[j + i * M_];  // linear index for row-major order
+            }
 
             // Only store non-zeros
             if (val != 0.0) {

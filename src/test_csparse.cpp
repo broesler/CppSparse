@@ -1568,23 +1568,31 @@ TEST_CASE("Test band function")
 
 
 // Exercise 2.16
-TEST_CASE("Test CSC from dense column-major")
+TEST_CASE("Test CSC from dense")
 {
-    std::vector<double> dense_mat = {
-        4.5, 3.1, 0.0, 3.5,
-        0.0, 2.9, 1.7, 0.4,
-        3.2, 0.0, 3.0, 0.0,
-        0.0, 0.9, 0.0, 1.0
-    };
-
-    CSCMatrix A {dense_mat, {4, 4}};
-
     CSCMatrix expect_A = davis_21_coo().tocsc();
 
-    CHECK(A.nnz() == expect_A.nnz());
-    CHECK(A.indptr() == expect_A.indptr());
-    CHECK(A.indices() == expect_A.indices());
-    REQUIRE(A.data() == expect_A.data());
+    SECTION("Column-major") {
+        std::vector<double> dense_mat = {
+            4.5, 3.1, 0.0, 3.5,
+            0.0, 2.9, 1.7, 0.4,
+            3.2, 0.0, 3.0, 0.0,
+            0.0, 0.9, 0.0, 1.0
+        };
+        CSCMatrix A {dense_mat, {4, 4}, 'F'};
+        compare_matrices(A, expect_A);
+    }
+
+    SECTION("Row-major") {
+        std::vector<double> dense_mat = {
+            4.5, 0.0, 3.2, 0.0,
+            3.1, 2.9, 0.0, 0.9,
+            0.0, 1.7, 3.0, 0.0,
+            3.5, 0.4, 0.0, 1.0
+        };
+        CSCMatrix A {dense_mat, {4, 4}, 'C'};
+        compare_matrices(A, expect_A);
+    }
 }
 
 

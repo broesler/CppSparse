@@ -77,6 +77,7 @@ class CSCMatrix
          * @param indices row indices of each element.
          * @param indptr array indices of the start of each column in `indices`. The
          *        first `indptr` element is always 0.
+         * @param shape the dimensions of the matrix
          *
          * @return a new CSCMatrix object
          */

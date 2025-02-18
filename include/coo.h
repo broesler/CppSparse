@@ -62,16 +62,18 @@ class COOMatrix
          *
          * The matrix shape `(M, N)` will be inferred from the maximum indices given.
          *
-         * @param v the values of the entries in the matrix
-         * @param i, j the non-negative integer row and column indices of the values
+         * @param vals  the values of the entries in the matrix
+         * @param rows, cols  the non-negative integer row and column indices of
+         *        the values
+         * @param shape  the dimensions of the matrix
+         *
          * @return a new COOMatrix object
          */
         COOMatrix(
             const std::vector<double>& vals,
             const std::vector<csint>& rows,
             const std::vector<csint>& cols,
-            csint M=0,
-            csint N=0
+            const Shape shape=Shape{0, 0}
         );
 
         /** Allocate a COOMatrix for a given shape and number of non-zeros.

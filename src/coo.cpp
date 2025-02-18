@@ -31,14 +31,13 @@ COOMatrix::COOMatrix(
     const std::vector<double>& v,
     const std::vector<csint>& i,
     const std::vector<csint>& j,
-    csint M,
-    csint N
+    const Shape shape
 )
     : v_(v),
       i_(i),
       j_(j),
-      M_(M ? M : *std::max_element(i_.begin(), i_.end()) + 1),
-      N_(N ? N : *std::max_element(j_.begin(), j_.end()) + 1)
+      M_(shape[0] ? shape[0] : *std::max_element(i_.begin(), i_.end()) + 1),
+      N_(shape[1] ? shape[1] : *std::max_element(j_.begin(), j_.end()) + 1)
 {
     // Check that all vectors are the same size
     assert(v_.size() == i_.size());
@@ -125,7 +124,7 @@ COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
     std::ranges::generate(values.begin(), values.end(), [&rng, &value_dist]() { return value_dist(rng); });
 
     // Build the matrix
-    return COOMatrix(values, row_idx, col_idx, M, N);
+    return COOMatrix(values, row_idx, col_idx, {M, N});
 }
 
 
@@ -250,7 +249,7 @@ std::vector<double> COOMatrix::to_dense_vector(const char order) const
 // Exercise 2.6
 COOMatrix COOMatrix::transpose() const
 {
-    return COOMatrix(this->v_, this->j_, this->i_, this->N_, this->M_);
+    return COOMatrix(this->v_, this->j_, this->i_, {this->N_, this->M_});
 }
 
 

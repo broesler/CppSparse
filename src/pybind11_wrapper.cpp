@@ -107,8 +107,7 @@ PYBIND11_MODULE(csparse, m) {
             const std::vector<double>&,
             const std::vector<cs::csint>&,
             const std::vector<cs::csint>&,
-            cs::csint,
-            cs::csint>()
+            const cs::Shape>()
         )
         .def(py::init<cs::csint, cs::csint, cs::csint>())
         // TODO how to handle a file pointer?
@@ -293,6 +292,10 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     //        Decomposition Functions
     //--------------------------------------------------------------------------
+    // TODO update these interfaces so we don't need to expose the symbolic
+    // structures (or possibly even the output structures?) in python
+    // We should just be able to call "Q, R = qr(A)" like in scipy.
+
     // Cholesky decomposition
     m.def("schol",
         &cs::schol,

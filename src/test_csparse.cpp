@@ -2742,20 +2742,64 @@ TEST_CASE("QR Decomposition")
         Symbolic S = sqr(A);
         QRResult QR = qr(A, S);
 
+        // NOTE these expected values are computed from cs_qr in MATLAB
+        CSCMatrix expect_V {
+            { 1.000000000000000,                   0,                   0,                   0,                   0,                   0,                   0,                   0,
+                              0,   1.000000000000000,                   0,                   0,                   0,                   0,                   0,                   0,
+                              0,  -4.236067977499790,   1.000000000000000,                   0,                   0,                   0,                   0,                   0,
+                              0,                   0,  -0.861978860706887,   1.000000000000000,                   0,                   0,                   0,                   0,
+                              0,                   0,                   0,                   0,   1.000000000000000,                   0,                   0,                   0,
+                              0,                   0,                   0,                   0,  -5.098076211353316,   1.000000000000000,                   0,                   0,
+                              0,                   0,                   0,                   0,  -5.098076211353316,   0.888047727026319,   1.000000000000000,                   0,
+             -2.414213562373095,                   0,                   0,   1.071917353427175,                   0,                   0,  -1.184610347616938,   1.000000000000000
+            },
+            {8, 8},
+            'C'
+        };
+
+        std::cout << "expect_V:" << std::endl;
+        expect_V.print_dense();
+
+        std::vector<double> expect_beta = {
+            2.928932188134525e-01,
+            1.055728090000841e-01,
+            1.147441956154897e+00,
+            9.306624754718464e-01,
+            3.774955135062372e-02,
+            1.118175016863863e+00,
+            8.321884931208972e-01,
+            2.000000000000000e+00
+        };
+
+        CSCMatrix expect_R {
+            {1.414213562373095,                   0,                   0,   3.535533905932738,                   0,                   0,   1.414213562373095,                   0,
+                             0,   2.236067977499790,   1.341640786499874,                   0,                   0,                   0,   4.024922359499621,   0.447213595499958,
+                             0,                   0,   3.033150177620620,   0.989070710093681,                   0,                   0,   0.857194615414522,   0.131876094679157,
+                             0,                   0,                   0,   2.126438132284779,                   0,                   0,  -0.398707149803397,  -0.061339561508215,
+                             0,                   0,                   0,                   0,   5.196152422706632,   2.309401076758503,   0.192450089729875,   0.192450089729875,
+                             0,                   0,                   0,                   0,                   0,   5.715476066494083,   0.097201973919967,   0.972019739199674,
+                             0,                   0,                   0,                   0,                   0,                   0,   5.818914395248395,   0.847405613949248,
+                             0,                   0,                   0,                   0,                   0,                   0,                   0,   0.280874471717552
+            },
+            {8, 8},
+            'C'
+        };
+
+        std::cout << "expect_R:" << std::endl;
+        expect_R.print_dense();
+
         // Check that the factorization is correct
+        std::cout << "V:" << std::endl;
         QR.V.print_dense();
         std::cout << "beta: " << QR.beta << std::endl;
+        std::cout << "R:" << std::endl;
         QR.R.print_dense();
 
-        // CSCMatrix expect_V = {}; // TODO
-        // std::vector<double> expect_beta = {}; // TODO
-        // CSCMatrix expect_R = {}; // TODO
+        compare_matrices(QR.V, expect_V);
+        CHECK_THAT(is_close(QR.beta, expect_beta, tol), AllTrue());
+        compare_matrices(QR.R, expect_R);
 
-        // compare_matrices(QR.V, expect_V);
-        // CHECK_THAT(is_close(QR.beta, expect_beta, tol), AllTrue());
-        // compare_matrices(QR.R, expect_R);
-
-        // Test that the factorization is correct
+        // Test that the factorization is correct QR = PA
     }
 }
 

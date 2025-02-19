@@ -2621,7 +2621,7 @@ TEST_CASE("Householder Reflection")
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
     }
 
-    SECTION("Arbitrary x") {
+    SECTION("Arbitrary x, x[0] > 0") {
         std::vector<double> x = {3, 4};  // norm(x) == 5
 
         // These are the *unscaled* values from Octave
@@ -2664,26 +2664,43 @@ TEST_CASE("Householder Reflection")
 
         CHECK_THAT(is_close(H.v, expect_v, tol), AllTrue());
         CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
-        REQUIRE_THAT(H.s, WithinAbs(expect_s, tol));
-    }
+        CHECK_THAT(H.s, WithinAbs(expect_s, tol));
 
-    SECTION("Apply to arbitrary x") {
-        // Apply the Householder reflection to a dense vector x, with sparse v.
-        std::vector<double> x = {3, 4};
-
-        Householder H = house(x);
-        CSCMatrix V = COOMatrix(H.v, {0, 1}, {0, 0}).tocsc();
-
+        // Apply the vector
         // Hx = [±norm(x), 0, 0]
-        std::vector<double> expect = {-H.s, 0}; // LAPACK
-        // std::vector<double> expect = {H.s, 0};  // Davis
+        std::vector<double> expect = {-5, 0}; // LAPACK
+        // std::vector<double> expect = {5, 0};  // Davis
 
         // Use column 0 of V to apply the Householder reflection
+        CSCMatrix V = COOMatrix(H.v, {0, 1}, {0, 0}).tocsc();
         std::vector<double> Hx = happly(V, 0, H.beta, x);
 
         // std::cout << "Hx: " << Hx << std::endl;
 
-        CHECK_THAT(is_close(Hx, expect, tol), AllTrue());
+        REQUIRE_THAT(is_close(Hx, expect, tol), AllTrue());
+    }
+
+    SECTION("Arbitrary x, x[0] < 0") {
+        std::vector<double> x = {-3, 4};  // norm(x) == 5
+
+        // These are the values from python's scipy.linalg.qr (via LAPACK):
+        std::vector<double> expect_v {1, -0.5};
+        double expect_beta = 1.6;
+        double expect_s = 5;
+
+        Householder H = house(x);
+
+        CHECK_THAT(is_close(H.v, expect_v, tol), AllTrue());
+        CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
+        CHECK_THAT(H.s, WithinAbs(expect_s, tol));
+
+        // Apply the vector
+        std::vector<double> expect = {5, 0}; // LAPACK or Davis
+
+        CSCMatrix V = COOMatrix(H.v, {0, 1}, {0, 0}).tocsc();
+        std::vector<double> Hx = happly(V, 0, H.beta, x);
+
+        REQUIRE_THAT(is_close(Hx, expect, tol), AllTrue());
     }
 }
 

@@ -36,6 +36,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.linalg as la
 
+from pathlib import Path
+
+SAVE_FIGS = True
+fig_path = Path('../../plots/')
+
 
 def house(x, method='LAPACK'):
     r"""Compute the Householder reflection vector for a given vector x.
@@ -143,8 +148,14 @@ def plot_vector(v, text=None, ax=None, **kwargs):
     # Annotate vector
     if text is not None:
         kwargs.pop('label', None)  # not used in ax.text()
-        ax.text(1.01*v[0], 1.01*v[1],
-                f"{text}: ({v[0]:.2g}, {v[1]:.2g})",
+        ax.text(v[0] + 0.1, v[1] + 0.3,
+                f"{text}: [{v[0]:.2g}, {v[1]:.2g}]",
+                bbox=dict(
+                    facecolor='white',
+                    alpha=0.5,
+                    edgecolor='none',
+                    # pad=5
+                ),
                 **kwargs)
 
     return ax
@@ -227,6 +238,9 @@ if __name__ == "__main__":
     )
     ax.grid(which='both')
 
+    if SAVE_FIGS:
+        fig.savefig(fig_path / 'householder_stability.png')
+
     # -------------------------------------------------------------------------
     #         Plot a nice example of the vectors and reflectors
     # -------------------------------------------------------------------------
@@ -271,14 +285,14 @@ if __name__ == "__main__":
 
     # Plot the vectors
     plot_vector(x, 'x', color='k')
-    plot_vector(v_D, 'v', color=CD)
-    plot_vector(v_L, 'v', color=CL)
+    plot_vector(v_D, 'v', color=CD, label='Davis')
+    plot_vector(v_L, 'v', color=CL, label='LAPACK')
 
     # Plot the reflected vectors
     plot_vector(Hx_D, 'Hx', color=CD)
     plot_vector(Hx_L, 'Hx', color=CL)
 
-    # ax.legend()
+    ax.legend(loc='lower left')
     AX_LIM = 6
     ax.set(
         xlabel='$e_1$',
@@ -288,6 +302,9 @@ if __name__ == "__main__":
         aspect='equal',
     )
     ax.grid(which='both')
+
+    if SAVE_FIGS:
+        fig.savefig(fig_path / 'householder_demo.png')
 
     plt.show()
 

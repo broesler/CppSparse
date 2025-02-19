@@ -187,21 +187,18 @@ if __name__ == "__main__":
     # -------------------------------------------------------------------------
     N = 100
     epsilons = np.logspace(-15, 3, N)
-    vDs = np.zeros(N)
-    vLs = np.zeros(N)
-    βDs = np.zeros(N)
-    βLs = np.zeros(N)
-    ss = np.zeros(N)
+    xs = np.c_[1 + epsilons, epsilons]  # (N, 2)
 
-    for i, ϵ in enumerate(epsilons):
-        x = np.r_[1 + ϵ, ϵ]
-        v_D, β_D, s = house(x, method='Davis')
-        v_L, β_L, _ = house(x, method='LAPACK')
-        vDs[i] = v_D[1]
-        vLs[i] = v_L[1]
-        βDs[i] = β_D
-        βLs[i] = β_L
-        ss[i] = s
+    # Vectorize the computation
+    house_vecD = np.vectorize(lambda x: house(x, method='Davis'),
+                              signature='(n)->(n),(),()')
+    house_vecL = np.vectorize(lambda x: house(x, method='LAPACK'),
+                              signature='(n)->(n),(),()')
+
+    vDs_all, βDs, ss = house_vecD(xs)
+    vLs_all, βLs,  _ = house_vecL(xs)
+    vDs = vDs_all[:, 1]  # just get the 2nd component
+    vLs = vLs_all[:, 1]
 
     # Plot the results
     CD = 'C2'  # color for Davis

@@ -12,7 +12,7 @@ Utility functions for the csparse module.
 import numpy as np
 
 from scipy import sparse
-from csparse import COOMatrix
+from csparse import COOMatrix, CSCMatrix
 
 
 def davis_example():
@@ -85,6 +85,31 @@ def to_scipy_sparse(A, format='csc'):
     except AttributeError:
         raise ValueError(f"Invalid format '{format}'")
     return format_method()
+
+
+def from_scipy_sparse(A, format='csc'):
+    r"""Convert a scipy.sparse matrix to a csparse matrix.
+
+    Parameters
+    ----------
+    A : (M, N) sparse array
+        The matrix to convert.
+    format : str, optional in {'coo', 'csc'}
+        The format of the output matrix.
+
+    Returns
+    -------
+    result : (M, N) csparse.COOMatrix or csparse.CSCMatrix
+        The matrix in the csparse format.
+    """
+    if format == 'coo':
+        A = A.tocoo()
+        return COOMatrix(A.data, A.row, A.col, A.shape)
+    elif format == 'csc':
+        A = A.tocsc()
+        return CSCMatrix(A.data, A.indices, A.indptr, A.shape)
+    else:
+        raise ValueError(f"Invalid format '{format}'")
 
 
 # =============================================================================

@@ -2688,7 +2688,40 @@ TEST_CASE("Householder Reflection")
 }
 
 
-TEST_CASE("QR Decomposition")
+TEST_CASE("QR factorization of the Identity Matrix")
+{
+    csint N = 8;
+    std::vector<csint> rows(N);
+    std::iota(rows.begin(), rows.end(), 0);
+    std::vector<double> vals(N, 1.0);
+
+    CSCMatrix I = COOMatrix(vals, rows, rows).tocsc();
+
+    Symbolic S = sqr(I);
+
+    SECTION("Symbolic factorization") {
+        std::vector<csint> expect_identity = {0, 1, 2, 3, 4, 5, 6, 7};
+        CHECK(S.p_inv == expect_identity);
+        CHECK(S.q == expect_identity);
+        CHECK(S.parent == std::vector<csint>(N, -1));
+        CHECK(S.cp == std::vector<csint>(N, 1));
+        CHECK(S.leftmost == expect_identity);
+        CHECK(S.m2 == N);
+        CHECK(S.lnz == N);
+        CHECK(S.unz == N);
+    }
+
+    SECTION("Numeric factorization") {
+        QRResult QR = qr(I, S);
+
+        compare_matrices(QR.V, I);
+        CHECK_THAT(is_close(QR.beta, std::vector<double>(N, 0.0), tol), AllTrue());
+        compare_matrices(QR.R, I);
+    }
+}
+
+
+TEST_CASE("QR Decomposition of Square, Non-symmetric A")
 {
     csint N = 8;  // number of rows and columns
 
@@ -2725,7 +2758,7 @@ TEST_CASE("QR Decomposition")
         CHECK(S.m2 == N);
     }
 
-    SECTION("Symbolic QR factorization") {
+    SECTION("Symbolic factorization") {
         std::vector<csint> expect_p_inv = {0, 1, 3, 7, 4, 5, 2, 6};  // from cs_qr MATLAB
         std::vector<csint> expect_q = {0, 1, 2, 3, 4, 5, 6, 7};      // natural
         std::vector<csint> expect_parent = parent;
@@ -2745,8 +2778,8 @@ TEST_CASE("QR Decomposition")
         CHECK(S.unz == 24);
     }
 
-    SECTION("Numeric QR factorization") {
-        // // Expected values computed from cs_qr in MATLAB, with *scaled* V diagonal
+    SECTION("Numeric factorization") {
+        // Expected values computed from cs_qr in MATLAB, with *scaled* V diagonal
         CSCMatrix expect_V {
             { 1.000000000000000,                   0,                   0,                   0,                   0,                   0,                   0,                   0,
                               0,   1.000000000000000,                   0,                   0,                   0,                   0,                   0,                   0,

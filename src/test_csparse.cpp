@@ -2622,46 +2622,38 @@ TEST_CASE("Householder Reflection")
     }
 
     SECTION("Arbitrary x") {
-        std::vector<double> x = {1, 1, 1};
+        std::vector<double> x = {3, 4};  // norm(x) == 5
 
         // These are the *unscaled* values from Octave
-        // std::vector<double> expect_v = {2.732050807568877, 1, 1};
-        // double expect_beta = 0.211324865405187;
-        // To get the scaled values, we need to divide v by v[0], and then
-        // multiply beta by v[0]**2.
-
-        // These are the values from python's scipy.linalg.qr (via LAPACK):
-        // >>> x = np.c_[[1, 1, 1]]
-        // >>> (Qraw, beta), Rraw = scipy.linalg.qr(x, mode='raw')
-        // >>> v = np.vstack([1, Qraw[1:]])
+        // std::vector<double> expect_v = {8, 4};
+        // double expect_beta = 0.025;
+        //
+        // To get the scaled values, we need to multiply beta by v(1)**2, and
+        // then divide v by v(1).
         //
         // In Octave/MATLAB:
-        // >> x = [1, 1, 1]';
+        // >> x = [3, 4]';
         // >> [v, beta] = gallery('house', x);
         // >> v / v(1)
         // >> beta * v(1)^2
         //
+        // To get the values from scipy.linalg.qr, use:
+        // >>> x = np.c_[[3, 4]]  # qr expects 2D array
+        // >>> (Qraw, beta), Rraw = scipy.linalg.qr(x, mode='raw')
+        // >>> v = np.vstack([1, Qraw[1:]])
+        //
         // The relevant LAPACK routines are DGEQRF, DLARFG
-        // std::vector<double> expect_v = {
-        //     1.0,
-        //     0.366025403784439,
-        //     0.366025403784439
-        // };
-        // double expect_beta = 1.577350269189626;
 
-        // These are the values Davis uses
-        std::vector<double> expect_v = {
-            1.0,
-            -1.366025403784439,
-            -1.366025403784439
-        };
-        double expect_beta = 0.4226497308103743;
+        // These are the values from python's scipy.linalg.qr (via LAPACK):
+        // std::vector<double> expect_v {1, 0.5};
+        // double expect_beta = 1.6;
 
-        // s is just the 2-norm of x == x.T @ x
-        // sqrt(3) == 1.732050807568878
-        double expect_s = std::sqrt(
-            std::inner_product(x.begin(), x.end(), x.begin(), 0.0)
-        );
+        // These are the values from Davis/Golub & Van Loan:
+        std::vector<double> expect_v {1, -2};
+        double expect_beta = 0.4;
+
+        // s is the 2-norm of x == x.T @ x
+        double expect_s = 5;
 
         Householder H = house(x);
 
@@ -2677,14 +2669,14 @@ TEST_CASE("Householder Reflection")
 
     SECTION("Apply to arbitrary x") {
         // Apply the Householder reflection to a dense vector x, with sparse v.
-        std::vector<double> x = {1, 1, 1};
+        std::vector<double> x = {3, 4};
 
         Householder H = house(x);
-        CSCMatrix V = COOMatrix(H.v, {0, 1, 2}, {0, 0, 0}).tocsc();
+        CSCMatrix V = COOMatrix(H.v, {0, 1}, {0, 0}).tocsc();
 
         // Hx = [±norm(x), 0, 0]
-        // std::vector<double> expect = {-H.s, 0, 0};   // LAPACK
-        std::vector<double> expect = {H.s, 0, 0};       // Davis
+        // std::vector<double> expect = {-H.s, 0}; // LAPACK
+        std::vector<double> expect = {H.s, 0};  // Davis
 
         // Use column 0 of V to apply the Householder reflection
         std::vector<double> Hx = happly(V, 0, H.beta, x);

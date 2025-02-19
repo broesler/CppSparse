@@ -87,6 +87,14 @@ V = V.toarray()
 beta = np.r_[beta]
 R = R.toarray()
 
+# Not sure what to glean from this comparison. Mostly the same H matrices up to
+# a permutation and sign change.
+Hs_ = [build_H(v, t) for v, t in zip(V_.T, tau)]
+Hs = [build_H(v, t) for v, t in zip(V.T, beta)]
+
+# Sum the number of nonzeros in the columns of V
+# V_cols_nnz = np.sum(V != 0, axis=0)  # size of non-zero part of each H matrix
+
 # print("V_ = ")
 # print(V_)
 # print("V = ")

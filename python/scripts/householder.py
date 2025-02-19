@@ -7,10 +7,15 @@
 r"""
 Demonstration of the different Householder vector computations.
 
-We show an example of an unstable Householder vector computation, and compare
-the methods of Davis and LAPACK for computing the Householder vector. For
-:math:`\varepsilon \ll 1`, the Davis method creates a large second component of
-the reflector,
+We show an example of an unstable Householder vector computation when the input
+vector `x` is very close to the first unit vector.
+We then compare the methods of Davis and LAPACK for computing the Householder
+vector. For an input vector close to the first unit vector,
+
+.. math:: x = [1 + \varepsilon, \varepsilon]^T
+
+with :math:`0 < \varepsilon \ll 1`, the Davis method creates a large second
+component of the reflector:
 
 .. math::
     \begin{align}
@@ -19,16 +24,19 @@ the reflector,
     \end{align}
 
 and a correspondingly miniscule scaling factor. The LAPACK method contains
-these values in a more numerically stable way,
+these values in a more numerically stable way:
 
 .. math::
     \begin{align}
         v &= [1, \frac{\varepsilon}{2}]^T \\
-        \beta &= 2
+        \beta &= 2,
     \end{align}
 
 so that the scaling factor is essentially a constant, and the second component
 of :math:`v` is proportional to :math:`\varepsilon`.
+
+When the first component of `x` is negative, both methods compute the same
+result.
 """
 # =============================================================================
 
@@ -38,7 +46,7 @@ import scipy.linalg as la
 
 from pathlib import Path
 
-SAVE_FIGS = True
+SAVE_FIGS = False
 fig_path = Path('../../plots/')
 
 
@@ -246,6 +254,7 @@ if __name__ == "__main__":
     # -------------------------------------------------------------------------
     # Create a vector with an easy norm
     x = np.r_[3., 4.]  # |x| == 5
+    # x = np.r_[-3., 4.]  # both methods give the same result
 
     v_D, β_D, s_D = house(x, method='Davis')
     v_L, β_L, s_L = house(x, method='LAPACK')
@@ -266,11 +275,21 @@ if __name__ == "__main__":
         np.testing.assert_allclose(β_L, 1.6)
         np.testing.assert_allclose(s_D, 5)
         np.testing.assert_allclose(s_L, 5)
-
-    # Need atol when comparing to 0
-    np.testing.assert_allclose(H_L, -H_D)
-    np.testing.assert_allclose(Hx_D, np.r_[s_D, 0], atol=1e-15)
-    np.testing.assert_allclose(Hx_L, np.r_[-s_L, 0], atol=1e-15)
+        # Need atol when comparing to 0
+        np.testing.assert_allclose(H_L, -H_D)
+        np.testing.assert_allclose(Hx_D, np.r_[s_D, 0], atol=1e-15)
+        np.testing.assert_allclose(Hx_L, np.r_[-s_L, 0], atol=1e-15)
+    elif np.allclose(x, np.r_[-3, 4]):
+        np.testing.assert_allclose(v_D, np.r_[1, -0.5])
+        np.testing.assert_allclose(v_L, np.r_[1, -0.5])
+        np.testing.assert_allclose(β_D, 1.6)
+        np.testing.assert_allclose(β_L, 1.6)
+        np.testing.assert_allclose(s_D, 5)
+        np.testing.assert_allclose(s_L, 5)
+        # Need atol when comparing to 0
+        np.testing.assert_allclose(H_L, H_D)
+        np.testing.assert_allclose(Hx_D, np.r_[s_D, 0], atol=1e-15)
+        np.testing.assert_allclose(Hx_L, np.r_[s_L, 0], atol=1e-15)
 
     # ---------- Plot the results
     fig, ax = plt.subplots(num=2, clear=True)

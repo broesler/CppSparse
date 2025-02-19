@@ -62,7 +62,7 @@ def qleft(V, beta, p=None, Y=None):
 
     Computes :math:`X = H_N \dots H_1 P Y = Q^T Y`, where :math:`Q` is
     represented by the Householder vectors stored in `V`, coefficients `beta`,
-    and permutation `p`. To obtain :math:`Q` itself, pass `Y = sparse.eye(M)`.
+    and permutation `p`. To obtain :math:`Q^T` itself, pass `Y = sparse.eye(M)`.
 
     Parameters
     ----------

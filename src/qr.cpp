@@ -37,36 +37,35 @@ Householder house(std::span<const double> x)
         s = std::sqrt(v[0] * v[0] + sigma);  // s = norm(x)
 
         //---------- LAPACK DLARFG algorithm
-        //   * matches scipy.linalg.qr(mode='raw') and MATLAB
-        //   * V does *not* match V from cs_qr with permutation. 
-        //   * R matches with R[k, k] = -h.s in cs::qr.
-        // double alpha = v[0];
-        // // double b_ = -sign(alpha) * std::sqrt(alpha * alpha + sigma);
-        // double b_ = -sign(alpha) * s;
-        // beta = (b_ - alpha) / b_;
+        // * matches scipy.linalg.qr(mode='raw') and MATLAB
+        // * V does *not* match V from cs_qr with permutation. 
+        // * R matches scipy and MATLAB with R[k, k] = -h.s in cs::qr.
+        double alpha = v[0];
+        double b_ = -sign(alpha) * s;
+        beta = (b_ - alpha) / b_;
 
-        // v[0] = 1;
-        // for (csint i = 1; i < v.size(); i++) {
-        //     v[i] /= (alpha - b_);
-        // }
+        v[0] = 1;
+        for (csint i = 1; i < v.size(); i++) {
+            v[i] /= (alpha - b_);
+        }
 
         //---------- Davis book code (cs_house)
-        v[0] = (v[0] <= 0) ? (v[0] - s) : (-sigma / (v[0] + s));
-        beta = -1 / (s * v[0]);  // Davis book code
+        // v[0] = (v[0] <= 0) ? (v[0] - s) : (-sigma / (v[0] + s));
+        // beta = -1 / (s * v[0]);  // Davis book code
 
         // Scale to be self-consistent with v[0] = 1. 
         // Matches cs_qr when we normalize V and beta after the call.
-        double v0 = v[0];  // cache value before we change it to 1.0
-        beta *= v0 * v0;   // works with Davis book code + v[0] = 1 scaling
+        // double v0 = v[0];  // cache value before we change it to 1.0
+        // beta *= v0 * v0;   // works with Davis book code + v[0] = 1 scaling
 
         //---------- Golub & Van Loan (Algorithm 5.1.1) (3 or 4ed)
         // Gives same result as the beta from Davis book, scaled by v0**2.
         // beta = 2 * (v0 * v0) / (v0 * v0 + sigma);
 
         // normalize to v[0] == 1
-        for (auto& vi : v) {
-            vi /= v0;
-        }
+        // for (auto& vi : v) {
+        //     vi /= v0;
+        // }
     }
 
     return {v, beta, s};

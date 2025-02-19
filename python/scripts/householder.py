@@ -4,8 +4,31 @@
 #  Created: 2025-02-19 10:20
 #   Author: Bernie Roesler
 #
-"""
+r"""
 Demonstration of the different Householder vector computations.
+
+We show an example of an unstable Householder vector computation, and compare
+the methods of Davis and LAPACK for computing the Householder vector. For
+:math:`\varepsilon \ll 1`, the Davis method creates a large second component of
+the reflector,
+
+.. math::
+    \begin{align}
+        v &= [1, \frac{-2}{\varepsilon}]^T \\
+        \beta &= \frac{\varepsilon^2}{2}
+    \end{align}
+
+and a correspondingly miniscule scaling factor. The LAPACK method contains
+these values in a more numerically stable way,
+
+.. math::
+    \begin{align}
+        v &= [1, \frac{\varepsilon}{2}]^T \\
+        \beta &= 2
+    \end{align}
+
+so that the scaling factor is essentially a constant, and the second component
+of :math:`v` is proportional to :math:`\varepsilon`.
 """
 # =============================================================================
 
@@ -64,7 +87,9 @@ def house(x, method='LAPACK'):
     beta : float
         The scaling factor.
     s : float
-        The L2-norm of the vector x.     References
+        The L2-norm of the vector x.
+
+    References
     ----------
     .. [Tref] Trefethen, Lloyd and David Bau (1997).
         "Numerical Linear Algebra". Eq (10.5), and Algorithm 10.1.
@@ -78,7 +103,7 @@ def house(x, method='LAPACK'):
 
     if σ == 0:
         s = np.abs(v[0])
-        beta = 2 if v[0] <= 0 else 0  # make direction positive if x[0] < 0
+        β = 2 if v[0] <= 0 else 0  # make direction positive if x[0] < 0
         v[0] = 1                      # make the reflector a unit vector
     else:
         s = np.sqrt(v[0]**2 + σ)   # ||x||_2
@@ -196,11 +221,11 @@ if __name__ == "__main__":
 
     ax.legend(loc='lower right')
     ax.set(
-        title='Householder reflector of $x = [1 + \epsilon, \epsilon]^T$',
+        title=r'Householder reflector of $x = [1 + \epsilon, \epsilon]^T$',
         xscale='log',
         yscale='log',
-        xlabel='$\\varepsilon$',
-        ylabel='$|v_2|$, $|\\beta|$',
+        xlabel=r'$\epsilon$',
+        ylabel=r'$|v_2|$, $|\beta|$',
         aspect='equal'
     )
     ax.grid(which='both')
@@ -267,6 +292,7 @@ if __name__ == "__main__":
     )
     ax.grid(which='both')
 
+    plt.show()
 
 
 # =============================================================================

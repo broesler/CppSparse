@@ -37,9 +37,12 @@ Householder house(std::span<const double> x)
         s = std::sqrt(v[0] * v[0] + sigma);  // s = norm(x)
 
         //---------- LAPACK DLARFG algorithm
-        // matches scipy.linalg.qr(mode='raw') and MATLAB
+        //   * matches scipy.linalg.qr(mode='raw') and MATLAB
+        //   * V does *not* match V from cs_qr with permutation. 
+        //   * R matches with R[k, k] = -h.s in cs::qr.
         // double alpha = v[0];
-        // double b_ = -sign(alpha) * std::sqrt(alpha * alpha + sigma);
+        // // double b_ = -sign(alpha) * std::sqrt(alpha * alpha + sigma);
+        // double b_ = -sign(alpha) * s;
         // beta = (b_ - alpha) / b_;
 
         // v[0] = 1;
@@ -51,19 +54,19 @@ Householder house(std::span<const double> x)
         v[0] = (v[0] <= 0) ? (v[0] - s) : (-sigma / (v[0] + s));
         beta = -1 / (s * v[0]);  // Davis book code
 
-        // NOTE scale to be self-consistent with v[0] = 1, but does *not* match
-        // the MATLAB or python v or beta.
-        // double v0 = v[0];  // cache value before we change it to 1.0
-        // beta *= v0 * v0;   // works with Davis book code + v[0] = 1 scaling
+        // Scale to be self-consistent with v[0] = 1. 
+        // Matches cs_qr when we normalize V and beta after the call.
+        double v0 = v[0];  // cache value before we change it to 1.0
+        beta *= v0 * v0;   // works with Davis book code + v[0] = 1 scaling
 
         //---------- Golub & Van Loan (Algorithm 5.1.1) (3 or 4ed)
         // Gives same result as the beta from Davis book, scaled by v0**2.
         // beta = 2 * (v0 * v0) / (v0 * v0 + sigma);
 
         // normalize to v[0] == 1
-        // for (auto& vi : v) {
-        //     vi /= v0;
-        // }
+        for (auto& vi : v) {
+            vi /= v0;
+        }
     }
 
     return {v, beta, s};
@@ -218,14 +221,15 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
         V.i_[vnz++] = k;  // V(k, k) is non-zero
 
         csint top = N;
-        csint col = S.q[k];
+        csint col = S.q[k];  // permuted column of A
         for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {  // find R[:, k] pattern
             csint i = S.leftmost[A.i_[p]];  // i = min(find(A(i, q)))
 
-            csint len;
-            for (len = 0; w[i] != k; i = S.parent[i]) {  // traverse up to k
+            csint len = 0;
+            while (w[i] != k) {  // traverse up to k
                 s[len++] = i;
                 w[i] = k;
+                i = S.parent[i]; 
             }
 
             while (len > 0) {
@@ -255,7 +259,7 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
 
         for (csint p = p1; p < vnz; p++) {  // gather V(:, k) = x
             V.v_[p] = x[V.i_[p]];
-            x[V.i_[p]] = 0;
+            x[V.i_[p]] = 0;  // clear x
         }
 
         // [v, beta, s] = house(x) == house(V[p1:vnz, k])
@@ -263,7 +267,7 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
         std::copy(h.v.begin(), h.v.end(), V.v_.begin() + p1);
         beta[k] = h.beta;
         R.i_[rnz] = k;      // R(k, k) = -norm(x)
-        R.v_[rnz++] = h.s;
+        R.v_[rnz++] = h.s;  // NOTE with LAPACK house, need -h.s here to match R
     }
 
     R.p_[N] = rnz;  // finalize R

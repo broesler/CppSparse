@@ -19,7 +19,7 @@ tol = 1e-14;
 % [Q, R] = qr(A);
 
 % ---------- Matrix from Davis Figure 5.1, p 74.
-N = 8
+N = 8;
 rows = 1 + [0, 1, 2, 3, 4, 5, 6, 7, 3, 6, 1, 6, 0, 2, 5, 7, 4, 7, 0, 1, 3, 7, 5, 6];
 cols = 1 + [0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7];
 vals = [1:N-1, 0, ones(1, size(rows, 2) - N)];
@@ -65,6 +65,7 @@ assert(norm(abs(Beta_r - Beta_l)) < tol);
 % assert(norm(abs(R_r - R_l)) < tol);  % NOT true, since R_l is not correct
 
 % NOTE that V != V_r, because of the row permutation applied
+% R == -R_r *except* for the last element R(N, N) == R_r(N, N)
 
 % Compute the Q matrix by applying the Householder vectors to the identity
 Q_r = cs_qright(V_r, Beta_r, [], speye(size(V_r, 1)));
@@ -73,15 +74,17 @@ Q_l = cs_qleft(V_l, Beta_l, [], speye(size(V_l, 1)));
 % Make sure to include the row permutation p!
 Q = cs_qright(V, Beta, p, speye(size(V, 1)));
 
+% QR = cs_qleft(V, Beta, p, R);  % fails?
+
 % Compute the QR decomposition using the built-in MATLAB function
 [Q_, R_] = qr(A);
 
 % Compare to the built-in MATLAB QR decomposition
-norm(abs(Q_r - Q_l'))
-norm(abs(Q_r * R_r - A))
-norm(abs(Q_l' * R_l - A))  % FIXME fails since qr_left is wrong
-norm(abs(Q * R - A))
-norm(abs(Q_ * R_ - A))
+assert(norm(abs(Q_r - Q_l')) < tol);
+assert(norm(abs(Q_r * R_r - A)) < tol);
+% assert(norm(abs(Q_l' * R_l - A)) < tol);  % FIXME fails since qr_left is wrong
+assert(norm(abs(Q * R - A)) < tol);
+assert(norm(abs(Q_ * R_ - A)) < tol);
 
 
 %===============================================================================

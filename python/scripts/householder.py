@@ -21,7 +21,7 @@ def house(x, method='LAPACK'):
 
     .. math:: H = I - \beta v v^T
 
-    where :math:`\beta = \frac{2}{v^T v}` and 
+    where :math:`\beta = \frac{2}{v^T v}` and
     :math:`v = \[1, v_2, \ldots, v_n\]^T`.
 
     The reflection is defined such that the product
@@ -29,7 +29,7 @@ def house(x, method='LAPACK'):
     .. math:: Hx = \pm \|x\| e_1
 
     where :math:`e_1` is the first unit vector.
-    
+
     The `method` argument determines which reflector is used. The LAPACK
     method defines:
 
@@ -54,7 +54,7 @@ def house(x, method='LAPACK'):
         The method to use for computing the Householder vector.
         The 'LAPACK' method taken from LAPACK's DLARFG subroutine. It is the
         same algorithm described in Trefethen and Bau [Tref]_.
-        The 'Davis' method is taken from Davis [Davis]_, which is 
+        The 'Davis' method is taken from Davis [Davis]_, which is
         equivalent to Golub & Van Loan [GVL]_.
 
     Returns
@@ -86,7 +86,7 @@ def house(x, method='LAPACK'):
         if method == 'LAPACK':
             a = v[0]
             b = -np.sign(a) * s
-            β = (b - a) / b 
+            β = (b - a) / b
             # v = x + sign(x[0]) * ||x|| e_1
             # v /= v[0]
             v[0] = 1
@@ -111,7 +111,7 @@ def plot_vector(v, text=None, ax=None, **kwargs):
         ax = plt.gca()
 
     ax.quiver(0, 0, v[0], v[1],
-              angles='xy', scale_units='xy', scale=1, 
+              angles='xy', scale_units='xy', scale=1,
               width=0.005,
               **kwargs)
 
@@ -125,16 +125,10 @@ def plot_vector(v, text=None, ax=None, **kwargs):
     return ax
 
 
-def annotate_vector(v, name='', ax=None, **kwargs):
-    """Annotate a vector a name and its components."""
-    if ax is None:
-        ax = plt.gca()
-
-    return ax
-
-
 if __name__ == "__main__":
-    # Show numerical *instability* of the naïve method
+    # -------------------------------------------------------------------------
+    #         Show numerical *instability* of the naïve method
+    # -------------------------------------------------------------------------
     ϵ = 1e-15  # a very small number
 
     x = np.r_[1 + ϵ, ϵ]  # a vector very close to e_1 == [1, 0]
@@ -142,19 +136,77 @@ if __name__ == "__main__":
     v = x - la.norm(x)  # cancellation occurs!
     with np.errstate(divide='ignore', invalid='ignore'):
         v /= v[0]
-    
+
+    np.set_printoptions(suppress=False)
+    print("x:", x)
     print("v:")
     print("unstable:", v)  # [nan, -inf] divide by zero!
 
     # Show numerical *stability* of the Davis method
-    v_D, _, _ = house(x, method='Davis')
+    # NOTE that Davis method is "stable", but creates a *massive* second
+    # component of the reflector [1, -2e+15]!
+    v_D, β_D, _ = house(x, method='Davis')
     print("   Davis:", v_D)
+    print(f"     β_D: {β_D:.2g}")
 
-    v_L, _, _ = house(x, method='LAPACK')
+    # The LAPACK method is numerically stable and avoids cancellation, so it
+    # computes a nicer reflector [1.0, 5e-16]
+    v_L, β_L, _ = house(x, method='LAPACK')
     print("  LAPACK:", v_L)
+    print(f"     β_L: {β_L:.2g}")
+
+    np.set_printoptions(suppress=True)
 
     # -------------------------------------------------------------------------
-    #         Plot the vectors and reflectors
+    #         Numerical experiment of v_2 and β vs. ϵ
+    # -------------------------------------------------------------------------
+    N = 100
+    epsilons = np.logspace(-15, 3, N)
+    vDs = np.zeros(N)
+    vLs = np.zeros(N)
+    βDs = np.zeros(N)
+    βLs = np.zeros(N)
+    ss = np.zeros(N)
+
+    for i, ϵ in enumerate(epsilons):
+        x = np.r_[1 + ϵ, ϵ]
+        v_D, β_D, s = house(x, method='Davis')
+        v_L, β_L, _ = house(x, method='LAPACK')
+        vDs[i] = v_D[1]
+        vLs[i] = v_L[1]
+        βDs[i] = β_D
+        βLs[i] = β_L
+        ss[i] = s
+
+    # Plot the results
+    CD = 'C2'  # color for Davis
+    CL = 'C0'  # color for LAPACK
+
+    fig, ax = plt.subplots(num=1, clear=True)
+    fig.set_size_inches(5, 8, forward=True)
+
+    ax.axhline(1, color='k', zorder=0)
+    ax.plot(epsilons, epsilons, 'k-.', lw=1, label='$\\epsilon$')
+    ax.plot(epsilons, ss, 'C3-.', lw=1, label='$||x||_2$')
+
+    ax.plot(epsilons, np.abs(vDs), CD, label='$v_2$ (Davis)')
+    ax.plot(epsilons, np.abs(vLs), CL, label='$v_2$ (LAPACK)')
+    ax.plot(epsilons, np.abs(βDs), CD, ls='--', label='$\\beta$ (Davis)')
+    ax.plot(epsilons, np.abs(βLs), CL, ls='--', label='$\\beta$ (LAPACK)')
+
+    ax.legend(loc='lower right')
+    ax.set(
+        title='Householder reflector of $x = [1 + \epsilon, \epsilon]^T$',
+        xscale='log',
+        yscale='log',
+        xlabel='$\\varepsilon$',
+        ylabel='$|v_2|$, $|\\beta|$',
+        aspect='equal'
+    )
+    ax.grid(which='both')
+
+    # -------------------------------------------------------------------------
+    #         Plot a nice example of the vectors and reflectors
     # -------------------------------------------------------------------------
     # Create a vector with an easy norm
     x = np.r_[3., 4.]  # |x| == 5
@@ -171,12 +223,13 @@ if __name__ == "__main__":
     Hx_L = H_L @ x
 
     # Compare to hand calculations
-    np.testing.assert_allclose(v_D, np.r_[1, -2])
-    np.testing.assert_allclose(v_L, np.r_[1, 0.5])
-    np.testing.assert_allclose(β_D, 0.4)
-    np.testing.assert_allclose(β_L, 1.6)
-    np.testing.assert_allclose(s_D, 5)
-    np.testing.assert_allclose(s_L, 5)
+    if np.allclose(x, np.r_[3, 4]):
+        np.testing.assert_allclose(v_D, np.r_[1, -2])
+        np.testing.assert_allclose(v_L, np.r_[1, 0.5])
+        np.testing.assert_allclose(β_D, 0.4)
+        np.testing.assert_allclose(β_L, 1.6)
+        np.testing.assert_allclose(s_D, 5)
+        np.testing.assert_allclose(s_L, 5)
 
     # Need atol when comparing to 0
     np.testing.assert_allclose(H_L, -H_D)
@@ -184,24 +237,24 @@ if __name__ == "__main__":
     np.testing.assert_allclose(Hx_L, np.r_[-s_L, 0], atol=1e-15)
 
     # ---------- Plot the results
-    fig, ax = plt.subplots(num=1, clear=True)
+    fig, ax = plt.subplots(num=2, clear=True)
 
     # Plot the axes
     ax.axhline(0, color='k', zorder=0)
     ax.axvline(0, color='k', zorder=0)
 
     # Plot the Householder planes (normal to the reflector)
-    ax.axline((0, 0), (-v_D[1], v_D[0]), color='C2', linestyle='--', zorder=0)
-    ax.axline((0, 0), (-v_L[1], v_L[0]), color='C0', linestyle='--', zorder=0)
+    ax.axline((0, 0), (-v_D[1], v_D[0]), color=CD, linestyle='--', zorder=0)
+    ax.axline((0, 0), (-v_L[1], v_L[0]), color=CL, linestyle='--', zorder=0)
 
     # Plot the vectors
     plot_vector(x, 'x', color='k')
-    plot_vector(v_D, 'v', color='C2')
-    plot_vector(v_L, 'v', color='C0')
+    plot_vector(v_D, 'v', color=CD)
+    plot_vector(v_L, 'v', color=CL)
 
     # Plot the reflected vectors
-    plot_vector(Hx_D, 'Hx', color='C2')
-    plot_vector(Hx_L, 'Hx', color='C0')
+    plot_vector(Hx_D, 'Hx', color=CD)
+    plot_vector(Hx_L, 'Hx', color=CL)
 
     # ax.legend()
     AX_LIM = 6

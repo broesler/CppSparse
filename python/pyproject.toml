@@ -10,5 +10,16 @@ authors = [{ name = "Bernie Roesler", email = "bernard.roesler@gmail.com" }]
 license = { text = "MIT" }
 requires-python = ">=3.8"  # TODO setup CI to test on multiple versions
 
+dependencies = [
+    "matplotlib>=3.10",
+    "numpy>=2.2",
+    "scipy>=1.15",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest"
+]
+
 [tool.setuptools]
 packages = ["csparse"]

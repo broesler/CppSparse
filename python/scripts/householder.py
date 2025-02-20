@@ -332,6 +332,27 @@ if __name__ == "__main__":
         np.testing.assert_allclose(Hx_D, np.r_[s_D, 0], atol=atol)
         np.testing.assert_allclose(Hx_L, np.r_[s_L, 0], atol=atol)
 
+    # ---------- Get the raw LAPACK output for a test vector
+    (Qraw, tau), _ = la.qr(np.c_[x], mode='raw')
+    v = np.vstack([1.0, Qraw[1:]])
+    H = np.eye(x.size) - tau * (v @ v.T)
+    Hx = H @ x
+    print("LAPACK (via scipy.linalg.qr(mode='raw')):")
+    print("x = ")
+    print(x)
+    print("v = ")
+    print(v.flatten())
+    print("beta = ")
+    print(tau[0])
+    print("Hx = ")
+    print(Hx)
+    np.testing.assert_allclose(
+        Hx.flatten(),
+        # np.r_[-np.sign(x[0])*la.norm(x), np.zeros(x.size - 1)],
+        np.r_[Qraw[0, 0], np.zeros(x.size - 1)],
+        atol=atol
+    )
+
     # ---------- Plot the results
     fig, ax = plt.subplots(num=2, clear=True)
 

@@ -25,7 +25,8 @@ Version: 0.1
 
 # Import all bindings from the csparse module
 from .csparse import *
-from .qr_utils import *
+from ._cholesky import *
+from ._qr import *
 from .utils import *
 
 __all__ = [x for x in dir() if not x.startswith('_')]

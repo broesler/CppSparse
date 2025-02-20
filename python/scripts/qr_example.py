@@ -7,13 +7,9 @@
 """
 Compute the QR decomposition of a matrix using scipy and csparse.
 
-Use for testing our csparse implementation.
+Use for testing usage of the csparse module API interactively.
 """
 # =============================================================================
-
-# TODO convert this entire script to a pytest unit testing framework so that we
-# can run through multiple tests like the identity matrix, the Davis example,
-# the Strang example, etc.
 
 import numpy as np
 
@@ -21,9 +17,6 @@ from scipy import sparse
 from scipy import linalg as la
 
 import csparse
-
-# TODO move cholesky.py and qr.py functions into csparse.linalg module and
-# create unit tests for them instead of the __name__ == "__main__" blocks.
 
 atol = 1e-12
 
@@ -39,33 +32,13 @@ vals = np.r_[np.arange(1, N), 0, np.ones(rows.size - N)]
 A = sparse.csc_array((vals, (rows, cols)), shape=(N, N))
 Ac = csparse.COOMatrix(vals, rows, cols, (N, N)).tocsc()
 
+
 # ---------- Davis 4x4 example
-# Ac = csparse.davis_example()
-# A = csparse.to_scipy_sparse(Ac)
+# A = csparse.to_scipy_sparse(csparse.davis_example())
 # N = A.shape[0]
 
-# ---------- Create a random matrix
-# N = 7
-# rng = np.random.default_rng(565656)
-# A = sparse.random_array((N, N), density=0.5, rng=rng, format='csc')
-# A.setdiag(10*np.arange(1, N+1))  # ensure structural full rank
 
-# ---------- Identity matrix
-# Q and R should be the same as A
-# N = 7
-# A = sparse.eye_array(N).tocsc()
-
-# ---------- Diagonal/Banded matrix
-# N = 7
-
-# A = sparse.diags(np.arange(1, N+1)).tocsc()  # positive diagonal
-# A = -sparse.diags(np.arange(1, N+1)).tocsc()  # negative diagonal
-# A = sparse.diags([np.ones(N-1), np.arange(1, N+1)], [-1, 0]).tocsc()
-# A = sparse.diags([np.ones(N-1), np.arange(1, N+1), np.ones(N-1)], [-1, 0, 1]).tocsc()
-# A = sparse.diags([1, -2, 1], [-1, 0, 1], shape=(N, N)).tocsc()
-# A = -sparse.diags([1, -2, 1], [-1, 0, 1], shape=(N, N)).tocsc()
-
-# Ac = csparse.from_scipy_sparse(A, format='csc')
+Ac = csparse.from_scipy_sparse(A, format='csc')
 
 A_dense = A.toarray()
 print("A = ")
@@ -80,13 +53,7 @@ print(A_dense)
 # -----------------------------------------------------------------------------
 (Qraw, tau), Rraw = la.qr(A_dense, mode='raw')
 Q_, R_ = la.qr(A_dense)
-
 V_ = np.tril(Qraw, -1) + np.eye(N)
-Qr_ = csparse.qright(V_, tau)
-Ql_ = csparse.qleft(V_, tau)
-
-np.testing.assert_allclose(Qr_, Ql_.T, atol=atol)
-np.testing.assert_allclose(Qr_, Q_, atol=atol)
 
 # -----------------------------------------------------------------------------
 #         Compute QR decomposition with csparse
@@ -107,25 +74,8 @@ R = R.toarray()
 # TODO can we turn off the row permutation in sqr/vcount?
 # Get the actual Q matrix, don't forget the row permutation!
 p = csparse.inv_permute(S.p_inv)
-Q = csparse.qright(V, beta, p)
-Ql = csparse.qleft(V, beta, p)
+Q = csparse.apply_qright(V, beta, p)
 
-np.testing.assert_allclose(Q, Ql.T, atol=atol)
-
-# Compare the Householder reflectors
-# NOT true when we have a permutation of the rows of A
-if np.all(p == np.arange(N)):
-    np.testing.assert_allclose(V, V_, atol=atol)
-    np.testing.assert_allclose(beta, tau, atol=atol)
-
-# Q != Q_ in general. Columns are off by a sign change, probably due to the row
-# permutation computed in csparse.sqr.
-# We are getting the correct values in Q and R, up to a sign change.
-np.testing.assert_allclose(np.abs(Q), np.abs(Q_), atol=atol)
-np.testing.assert_allclose(np.abs(R), np.abs(R_), atol=atol)
-
-# NOTE this is the "unit test" for csparse.qr since we do not have a C++
-# implementation of qright or qleft to compare against.
 # Reproduce A = QR
 np.testing.assert_allclose(Q @ R, A_dense, atol=atol)
 print("Q @ R = ")

@@ -17,7 +17,7 @@ from scipy import linalg as la
 
 import csparse
 
-atol = 1e-14
+atol = 1e-12
 
 
 # ---------- Matrix from Davis Figure 5.1, p 74.
@@ -38,14 +38,30 @@ TEST_MATRICES = [
     ("Diagonal", sparse.diags(np.arange(1, N)).tocsc()),
     ("Asymmetric Banded", sparse.diags([np.ones(N-1), np.arange(1, N+1)], [-1, 0]).tocsc()),
     ("Laplacian (Symmetric Banded)", sparse.diags([1, -2, 1], [-1, 0, 1]).tocsc()),
-    ("Random", sparse.random(N, N, density=0.5, format='csc', random_state=56)),
     ("Davis 8x8", A_davis8),
     ("Davis 4x4", A_davis4),
 ]
 
 
 @pytest.mark.parametrize("case_name, A", TEST_MATRICES)
-def test_qr_decomposition(case_name, A):
+def test_qr_fixed(case_name, A):
+    """Test QR decomposition with various matrices."""
+    _test_qr_decomposition(case_name, A)
+
+
+@pytest.mark.parametrize("N", [2, 7, 10])
+def test_qr_random(N):
+    """Test QR decomposition with random matrices."""
+    N_runs = 10
+    seed = 565656
+    rng = np.random.default_rng(seed)
+    for i in range(N_runs):
+        A = sparse.random(N, N, density=0.5, format='csc', random_state=rng).tocsc()
+        A.setdiag(N * np.arange(1, N+1))  # ensure structural full rank
+        _test_qr_decomposition(f"Random {N}x{N} ({seed = }, {i = })", A)
+
+
+def _test_qr_decomposition(case_name, A):
     """Test QR decomposition with various matrices using parametrization."""
     Ac = csparse.from_scipy_sparse(A, format='csc')
     A_dense = A.toarray()

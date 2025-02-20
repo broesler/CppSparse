@@ -277,9 +277,12 @@ if __name__ == "__main__":
     #         Plot a nice example of the vectors and reflectors
     # -------------------------------------------------------------------------
     # Create a vector with an easy norm
-    x = np.r_[-3., 0.]  # |x| == 3 * e_1
-    # x = np.r_[3., 4.]  # |x| == 5
+    # x = np.r_[3., 0.]  # |x| == 3 * e_1
+    # x = np.r_[-3., 0.]  # |x| == -3 * e_1
+    x = np.r_[3., 4.]  # |x| == 5
     # x = np.r_[-3., 4.]  # both methods give the same result
+    # x = np.r_[3., -4.]  # |x| == 5
+    # x = np.r_[-3., -4.]  # |x| == 5
 
     v_D, β_D, s_D = house(x, method='Davis')
     v_L, β_L, s_L = house(x, method='LAPACK')

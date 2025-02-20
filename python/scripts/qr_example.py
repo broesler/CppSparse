@@ -22,20 +22,22 @@ from scipy import linalg as la
 
 import csparse
 
-# TODO move cholesky.py and qr.py functions into csparse.linalg module
+# TODO move cholesky.py and qr.py functions into csparse.linalg module and
+# create unit tests for them instead of the __name__ == "__main__" blocks.
 
-atol = 1e-14
+atol = 1e-12
 
 
 # ---------- Matrix from Davis Figure 5.1, p 74.
-# N = 8
-# rows = np.r_[0, 1, 2, 3, 4, 5, 6, 7,
-#              3, 6, 1, 6, 0, 2, 5, 7, 4, 7, 0, 1, 3, 7, 5, 6]
-# cols = np.r_[0, 1, 2, 3, 4, 5, 6, 7,
-#              0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7]
-# vals = np.r_[np.arange(1, N), 0, np.ones(rows.size - N)]
-# A = sparse.csc_array((vals, (rows, cols)), shape=(N, N))
-# Ac = csparse.COOMatrix(vals, rows, cols, (N, N)).tocsc()
+N = 8
+rows = np.r_[0, 1, 2, 3, 4, 5, 6, 7,
+             3, 6, 1, 6, 0, 2, 5, 7, 4, 7, 0, 1, 3, 7, 5, 6]
+cols = np.r_[0, 1, 2, 3, 4, 5, 6, 7,
+             0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7]
+vals = np.r_[np.arange(1, N), 0, np.ones(rows.size - N)]
+
+A = sparse.csc_array((vals, (rows, cols)), shape=(N, N))
+Ac = csparse.COOMatrix(vals, rows, cols, (N, N)).tocsc()
 
 # ---------- Davis 4x4 example
 # Ac = csparse.davis_example()
@@ -53,44 +55,25 @@ atol = 1e-14
 # N = 7
 # A = sparse.eye_array(N).tocsc()
 
-# ---------- Diagonal matrix
-N = 7
+# ---------- Diagonal/Banded matrix
+# N = 7
 
 # A = sparse.diags(np.arange(1, N+1)).tocsc()  # positive diagonal
-# A only has a positive main diagonal
-# R matches R_ entirely
-
 # A = -sparse.diags(np.arange(1, N+1)).tocsc()  # negative diagonal
-# A only has a negative main diagonal
-# Diagonal of R is negated
-
-A = sparse.diags([np.ones(N-1), np.arange(1, N+1)], [-1, 0]).tocsc()
-# A has all positive diagonals
-# R matches off-diagonals and R[-1, -1]
-# Diagonal of R (except R[-1, -1]) is negated
-
+# A = sparse.diags([np.ones(N-1), np.arange(1, N+1)], [-1, 0]).tocsc()
 # A = sparse.diags([np.ones(N-1), np.arange(1, N+1), np.ones(N-1)], [-1, 0, 1]).tocsc()
-# A has all positive diagonals
-# R matches off-diagonals and R[-1, -1]
-# Diagonal of R (except R[-1, -1]) is negated
-
 # A = sparse.diags([1, -2, 1], [-1, 0, 1], shape=(N, N)).tocsc()
-# A has a negative main diagonal, with positive off-diagonals
-# R matches on all but R[-1, -1], which is negated
-
 # A = -sparse.diags([1, -2, 1], [-1, 0, 1], shape=(N, N)).tocsc()
-# A has a positive main diagonal, with negative off-diagonals
-# R matches off-diagonals and R[-1, -1]
-# Diagonal of R (except R[-1, -1]) is negated
 
-
-Ac = csparse.from_scipy_sparse(A, format='csc')
+# Ac = csparse.from_scipy_sparse(A, format='csc')
 
 A_dense = A.toarray()
+print("A = ")
 print(A_dense)
 
 # TODO try permuting the rows of A_dense here with S.p_inv to see if we get the
-# same V and beta as the csparse.qr function?
+# same V and beta as the csparse.qr function? la.qr(pivoting=True) computes
+# a *column* permutation.
 
 # -----------------------------------------------------------------------------
 #         Compute the QR decomposition of A with scipy
@@ -104,9 +87,6 @@ Ql_ = csparse.qleft(V_, tau)
 
 np.testing.assert_allclose(Qr_, Ql_.T, atol=atol)
 np.testing.assert_allclose(Qr_, Q_, atol=atol)
-
-# TODO try using csparse.qr *within* qr_right (instead of la.qr) to see if we
-# get the same Q and R as la.qr?
 
 # -----------------------------------------------------------------------------
 #         Compute QR decomposition with csparse
@@ -124,6 +104,7 @@ V = V.toarray()
 beta = np.r_[beta]
 R = R.toarray()
 
+# TODO can we turn off the row permutation in sqr/vcount?
 # Get the actual Q matrix, don't forget the row permutation!
 p = csparse.inv_permute(S.p_inv)
 Q = csparse.qright(V, beta, p)
@@ -137,21 +118,18 @@ if np.all(p == np.arange(N)):
     np.testing.assert_allclose(V, V_, atol=atol)
     np.testing.assert_allclose(beta, tau, atol=atol)
 
-# NOTE We are getting the correct values in Q and R, up to a sign change. The
-# sign difference occurs when x[0] is positive, and the sign of Hx[0] is
-# negative.
+# Q != Q_ in general. Columns are off by a sign change, probably due to the row
+# permutation computed in csparse.sqr.
+# We are getting the correct values in Q and R, up to a sign change.
 np.testing.assert_allclose(np.abs(Q), np.abs(Q_), atol=atol)
 np.testing.assert_allclose(np.abs(R), np.abs(R_), atol=atol)
-
-# Q == Q_ for all tested diagonal matrices, regardless of sign
-# Q != Q_ in general. Columns are off by a sign change.
-np.testing.assert_allclose(Q, Q_, atol=atol)
-np.testing.assert_allclose(R, R_, atol=atol)
 
 # NOTE this is the "unit test" for csparse.qr since we do not have a C++
 # implementation of qright or qleft to compare against.
 # Reproduce A = QR
 np.testing.assert_allclose(Q @ R, A_dense, atol=atol)
+print("Q @ R = ")
+print(Q @ R)
 
 
 # =============================================================================

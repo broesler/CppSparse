@@ -29,16 +29,17 @@ Householder house(std::span<const double> x)
         sigma += v[i] * v[i];
     }
 
-    if (sigma == 0) {
+    if (sigma == 0) {  // x is already a multiple of e1
         s = std::fabs(v[0]);   // s = |x(0)|
-        beta = (v[0] <= 0) ? 2 : 0;  // make direction positive if x(0) < 0
+        // beta = (v[0] <= 0) ? 2 : 0;  // make direction positive if x(0) < 0
+        beta = 0;  // LAPACK DLARFG: H is just the identity
         v[0] = 1;
     } else {
         s = std::sqrt(v[0] * v[0] + sigma);  // s = norm(x)
 
         //---------- LAPACK DLARFG algorithm
         // * matches scipy.linalg.qr(mode='raw') and MATLAB
-        // * V does *not* match V from cs_qr with permutation. 
+        // * V does *not* match V from cs_qr with permutation.
         // * R matches scipy and MATLAB with R[k, k] = -h.s in cs::qr.
         double alpha = v[0];
         double b_ = -sign(alpha) * s;
@@ -53,7 +54,7 @@ Householder house(std::span<const double> x)
         // v[0] = (v[0] <= 0) ? (v[0] - s) : (-sigma / (v[0] + s));
         // beta = -1 / (s * v[0]);  // Davis book code
 
-        // Scale to be self-consistent with v[0] = 1. 
+        // Scale to be self-consistent with v[0] = 1.
         // Matches cs_qr when we normalize V and beta after the call.
         // double v0 = v[0];  // cache value before we change it to 1.0
         // beta *= v0 * v0;   // works with Davis book code + v[0] = 1 scaling
@@ -228,7 +229,7 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
             while (w[i] != k) {  // traverse up to k
                 s[len++] = i;
                 w[i] = k;
-                i = S.parent[i]; 
+                i = S.parent[i];
             }
 
             while (len > 0) {
@@ -265,8 +266,8 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
         Householder h = house(std::span(V.v_).subspan(p1, vnz - p1));
         std::copy(h.v.begin(), h.v.end(), V.v_.begin() + p1);
         beta[k] = h.beta;
-        R.i_[rnz] = k;      // R(k, k) = -norm(x)
-        R.v_[rnz++] = h.s;  // NOTE with LAPACK house, need -h.s here to match R
+        R.i_[rnz] = k;      // R(k, k) = ±norm(x)
+        R.v_[rnz++] = h.s;
     }
 
     R.p_[N] = rnz;  // finalize R

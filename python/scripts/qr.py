@@ -114,11 +114,20 @@ def qr_left(A):
             b = beta[i]
             x[i:] -= v @ (b * (v.T @ x[i:]))
 
-        (Qraw, b), _ = la.qr(x[k:], mode='raw')
+        # Compute the Householder reflector
+        x_k = x[k:]
+        (Qraw, b), _ = la.qr(x_k, mode='raw')
         V[k:, [k]] = np.vstack([1.0, Qraw[1:]])  # extract the reflector
         beta[k] = float(b[0])                    # get the scalar
         R[:k, [k]] = x[:k]
-        R[k, k] = Qraw[0, 0]  # == Rraw[0, 0] == s = -sign(x[0]) * norm(x)
+        # NOTE If beta == 0, H is the identity matrix, so Hx == x:
+        # if beta[k] == 0:
+        #     R[k, k] = x_k[0]
+        # else:
+        #     R[k, k] = -np.sign(x_k[0]) * la.norm(x_k)
+        #
+        # Qraw computes Hx internally to give the correct result.
+        R[k, k] = Qraw[0, 0]
 
     return V, beta, R
 
@@ -166,6 +175,8 @@ if __name__ == '__main__':
     V = np.tril(Qraw, -1) + np.eye(Qraw.shape[0])
     Hs = [build_H(v, t) for v, t in zip(V.T, tau)]
     Qr = qright(V, tau)
+
+    np.testing.assert_allclose(np.triu(Qraw), Rraw, atol=tol)
     np.testing.assert_allclose(Qr @ Rraw, A, atol=tol)
 
     # Test our own python QR decomposition
@@ -188,6 +199,16 @@ if __name__ == '__main__':
     Q_r = qright(V_r, beta_r)
     Q_l = qleft(V_l, beta_l).T
 
+    # Compare to each other
+    np.testing.assert_allclose(V_r, V_l, atol=tol)
+    np.testing.assert_allclose(beta_r, beta_l, atol=tol)
+    np.testing.assert_allclose(Q_r, Q_l, atol=tol)
+    np.testing.assert_allclose(R_r, R_l, atol=tol)
+
+    # Compare to scipy
+    np.testing.assert_allclose(V_r, V, atol=tol)
+    np.testing.assert_allclose(beta_r, tau, atol=tol)
+
     # Reproduce A = QR
     np.testing.assert_allclose(Q_r @ R_r, A, atol=tol)
     np.testing.assert_allclose(Q_l @ R_l, A, atol=tol)
@@ -201,18 +222,25 @@ if __name__ == '__main__':
 
     # Get the raw LAPACK output for a test vector
     # x = np.c_[[3, 4]]
+    # # x = np.c_[[-3., 0.]]
     # (Qraw, tau), _ = la.qr(x, mode='raw')
     # v = np.vstack([1.0, Qraw[1:]])
     # H = np.eye(x.size) - tau * (v @ v.T)
     # Hx = H @ x
+    # print("x = ")
+    # print(x)
     # print("v = ")
     # print(v)
     # print("beta = ")
     # print(tau)
     # print("Hx = ")
     # print(Hx)
-    # # NOTE sign of Hx[0] is negative when x[0] is positive
-    # np.testing.assert_allclose(Hx[0], -la.norm(x))
+    # np.testing.assert_allclose(
+    #     Hx.flatten(),
+    #     # np.r_[-np.sign(x[0])*la.norm(x), np.zeros(x.size - 1)],
+    #     np.r_[Qraw[0, 0], np.zeros(x.size - 1)],
+    #     atol=tol
+    # )
 
 # =============================================================================
 # =============================================================================

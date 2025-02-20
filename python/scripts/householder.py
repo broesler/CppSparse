@@ -276,13 +276,14 @@ if __name__ == "__main__":
     # -------------------------------------------------------------------------
     #         Plot a nice example of the vectors and reflectors
     # -------------------------------------------------------------------------
+    # TODO make plots for each of these cases?
     # Create a vector with an easy norm
-    # x = np.r_[3., 0.]  # |x| == 3 * e_1
-    # x = np.r_[-3., 0.]  # |x| == -3 * e_1
-    x = np.r_[3., 4.]  # |x| == 5
-    # x = np.r_[-3., 4.]  # both methods give the same result
-    # x = np.r_[3., -4.]  # |x| == 5
-    # x = np.r_[-3., -4.]  # |x| == 5
+    # x = np.r_[3., 0.]
+    # x = np.r_[-3., 0.]
+    x = np.r_[3., 4.]       # |x| == 5
+    # x = np.r_[-3., 4.]    # both methods give the same result
+    # x = np.r_[3., -4.]
+    # x = np.r_[-3., -4.]
 
     v_D, β_D, s_D = house(x, method='Davis')
     v_L, β_L, s_L = house(x, method='LAPACK')
@@ -302,6 +303,7 @@ if __name__ == "__main__":
     # print("β_L:", β_L)
 
     # Compare to hand calculations
+    atol = 1e-15
     if np.allclose(x, np.r_[3, 4]):
         np.testing.assert_allclose(v_D, np.r_[1, -2])
         np.testing.assert_allclose(v_L, np.r_[1, 0.5])
@@ -311,8 +313,8 @@ if __name__ == "__main__":
         np.testing.assert_allclose(s_L, -5)
         # Need atol when comparing to 0
         np.testing.assert_allclose(H_L, -H_D)
-        np.testing.assert_allclose(Hx_D, np.r_[s_D, 0], atol=1e-15)
-        np.testing.assert_allclose(Hx_L, np.r_[s_L, 0], atol=1e-15)
+        np.testing.assert_allclose(Hx_D, np.r_[s_D, 0], atol=atol)
+        np.testing.assert_allclose(Hx_L, np.r_[s_L, 0], atol=atol)
     elif np.allclose(x, np.r_[-3, 4]):
         np.testing.assert_allclose(v_D, np.r_[1, -0.5])
         np.testing.assert_allclose(v_L, np.r_[1, -0.5])
@@ -322,8 +324,8 @@ if __name__ == "__main__":
         np.testing.assert_allclose(s_L, 5)
         # Need atol when comparing to 0
         np.testing.assert_allclose(H_L, H_D)
-        np.testing.assert_allclose(Hx_D, np.r_[s_D, 0], atol=1e-15)
-        np.testing.assert_allclose(Hx_L, np.r_[s_L, 0], atol=1e-15)
+        np.testing.assert_allclose(Hx_D, np.r_[s_D, 0], atol=atol)
+        np.testing.assert_allclose(Hx_L, np.r_[s_L, 0], atol=atol)
 
     # ---------- Plot the results
     fig, ax = plt.subplots(num=2, clear=True)

@@ -35,22 +35,21 @@ Householder house(std::span<const double> x)
         beta = 0;  // LAPACK DLARFG: H is just the identity
         v[0] = 1;
     } else {
-        s = std::sqrt(v[0] * v[0] + sigma);  // s = norm(x)
-
         //---------- LAPACK DLARFG algorithm
-        // * matches scipy.linalg.qr(mode='raw') and MATLAB
-        // * V does *not* match V from cs_qr with permutation.
-        // * R matches scipy and MATLAB with R[k, k] = -h.s in cs::qr.
+        // consistent with scipy.linalg.qr(mode='raw') and MATLAB
+        // LAPACK uses the notation: tau := beta, beta := s
+        double norm_x = std::sqrt(v[0] * v[0] + sigma);
         double alpha = v[0];
-        double b_ = -sign(alpha) * s;
-        beta = (b_ - alpha) / b_;
+        s = -sign(alpha) * norm_x;
+        beta = (s - alpha) / s;
 
         v[0] = 1;
         for (csint i = 1; i < v.size(); i++) {
-            v[i] /= (alpha - b_);
+            v[i] /= (alpha - s);
         }
 
         //---------- Davis book code (cs_house)
+        // s = std::sqrt(v[0] * v[0] + sigma);  // s = norm(x)
         // v[0] = (v[0] <= 0) ? (v[0] - s) : (-sigma / (v[0] + s));
         // beta = -1 / (s * v[0]);  // Davis book code
 
@@ -266,7 +265,7 @@ QRResult qr(const CSCMatrix& A, const Symbolic& S)
         Householder h = house(std::span(V.v_).subspan(p1, vnz - p1));
         std::copy(h.v.begin(), h.v.end(), V.v_.begin() + p1);
         beta[k] = h.beta;
-        R.i_[rnz] = k;      // R(k, k) = ±norm(x)
+        R.i_[rnz] = k;      // R(k, k) = -sign(x[0]) * norm(x)
         R.v_[rnz++] = h.s;
     }
 

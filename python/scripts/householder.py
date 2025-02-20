@@ -131,14 +131,14 @@ def _house_lapack(x):
         β = 0
         v[0] = 1  # make the reflector a unit vector
     else:
-        s = np.sqrt(v[0]**2 + σ)   # ||x||_2
+        norm_x = np.sqrt(v[0]**2 + σ)   # ||x||_2
         a = v[0]
-        b = -np.sign(a) * s
-        β = (b - a) / b
+        s = -np.sign(a) * norm_x
+        β = (s - a) / s
         # v = x + sign(x[0]) * ||x|| e_1
         # v /= v[0]
         v[0] = 1
-        v[1:] /= (a - b)  # a - b == x[0] + sign(x[0]) * ||x||
+        v[1:] /= (a - s)  # a - b == x[0] + sign(x[0]) * ||x||
 
     return v, β, s
 
@@ -295,6 +295,12 @@ if __name__ == "__main__":
     Hx_D = H_D @ x
     Hx_L = H_L @ x
 
+    # print("   x:", x)
+    # print("Hx_D:", Hx_D)
+    # print("Hx_L:", Hx_L)
+    # print("β_D:", β_D)
+    # print("β_L:", β_L)
+
     # Compare to hand calculations
     if np.allclose(x, np.r_[3, 4]):
         np.testing.assert_allclose(v_D, np.r_[1, -2])
@@ -302,11 +308,11 @@ if __name__ == "__main__":
         np.testing.assert_allclose(β_D, 0.4)
         np.testing.assert_allclose(β_L, 1.6)
         np.testing.assert_allclose(s_D, 5)
-        np.testing.assert_allclose(s_L, 5)
+        np.testing.assert_allclose(s_L, -5)
         # Need atol when comparing to 0
         np.testing.assert_allclose(H_L, -H_D)
         np.testing.assert_allclose(Hx_D, np.r_[s_D, 0], atol=1e-15)
-        np.testing.assert_allclose(Hx_L, np.r_[-s_L, 0], atol=1e-15)
+        np.testing.assert_allclose(Hx_L, np.r_[s_L, 0], atol=1e-15)
     elif np.allclose(x, np.r_[-3, 4]):
         np.testing.assert_allclose(v_D, np.r_[1, -0.5])
         np.testing.assert_allclose(v_L, np.r_[1, -0.5])

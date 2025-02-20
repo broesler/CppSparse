@@ -2605,6 +2605,12 @@ TEST_CASE("Householder Reflection")
         CHECK_THAT(is_close(H.v, expect_v, tol), AllTrue());
         CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
+
+        // Apply the reflection
+        CSCMatrix V = COOMatrix(H.v, {0, 1, 2}, {0, 0, 0}).tocsc();
+        std::vector<double> Hx = happly(V, 0, H.beta, x);
+
+        REQUIRE_THAT(is_close(Hx, x, tol), AllTrue());
     }
 
     SECTION("Negative unit x") {
@@ -2619,6 +2625,12 @@ TEST_CASE("Householder Reflection")
         CHECK_THAT(is_close(H.v, expect_v, tol), AllTrue());
         CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
+
+        // Apply the reflection
+        CSCMatrix V = COOMatrix(H.v, {0, 1, 2}, {0, 0, 0}).tocsc();
+        std::vector<double> Hx = happly(V, 0, H.beta, x);
+
+        REQUIRE_THAT(is_close(Hx, x, tol), AllTrue());
     }
 
     SECTION("Arbitrary x, x[0] > 0") {
@@ -2653,7 +2665,7 @@ TEST_CASE("Householder Reflection")
         // double expect_beta = 0.4;
 
         // s is the 2-norm of x == x.T @ x
-        double expect_s = 5;
+        double expect_s = -5;
 
         Householder H = house(x);
 
@@ -2674,8 +2686,6 @@ TEST_CASE("Householder Reflection")
         // Use column 0 of V to apply the Householder reflection
         CSCMatrix V = COOMatrix(H.v, {0, 1}, {0, 0}).tocsc();
         std::vector<double> Hx = happly(V, 0, H.beta, x);
-
-        // std::cout << "Hx: " << Hx << std::endl;
 
         REQUIRE_THAT(is_close(Hx, expect, tol), AllTrue());
     }

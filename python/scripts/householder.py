@@ -81,6 +81,11 @@ def house(x, method='LAPACK'):
     cancellation, whereas the Davis method uses additional logic to compute the
     denominator in a numerically stable way in the case where :math:`x_1 < 0`.
 
+    In the case where :math:`x = \alpha e_1`, the LAPACK method sets
+    :math:`\beta = 0` such that :math:`H = I`,
+    whereas the Davis method sets :math:`\beta = 0`, if :math:`x_1 > 0`,
+    and :math:`\beta = 2` if :math:`x_1 \le 0` to make the direction positive.
+
     This function normalizes the reflector such that :math:`v_1 = 1` for both
     methods.
 

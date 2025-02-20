@@ -43,12 +43,19 @@ struct QRResult {
  * \f[
  *      H = I - \beta v v^T
  * \f]
- * where \f$ v = x - \beta e_1 \f$ and \f$ \beta = 2 / (v^T v) \f$.
+ * where \f$ \beta = 2 / (v^T v) \f$.
  *
  * The result is defined such that applying the Householder reflection gives
  * \f$ Hx = s e_1 \f$, where \f$ s = \pm \|x\|_2 \f$.
  *
- * See: Algorithm 5.1.1, Golub & Van Loan, 3rd ed.
+ * The choice of sign is determined to be consistent with the LAPACK DLARFG
+ * subroutine. When \f$ x = \alpha e_1 \f$, \f$ \beta = 0 \f$ so that 
+ * \f$ Hx = x \f$. Otherwise, \f$ 1 \le \beta \le 2 \f$ and 
+ * \f$ s = -\text{sign}(x_1) \|x\| \f$. The Householder vector is chosen as
+ * \f$ v = x + \text{sign}(x_1) \|x\| e_1 \f$
+ * and then normalized such that \f$ v_1 = 1 \f$.
+ *
+ * See: LAPACK DLARFG, and Algorithm 5.1.1, Golub & Van Loan, 3rd ed.
  *
  * @param x  the input vector, may be a subspan of a larger vector
  *

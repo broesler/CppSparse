@@ -34,6 +34,8 @@ these values in a more numerically stable way:
 
 so that the scaling factor is essentially a constant, and the second component
 of :math:`v` is proportional to :math:`\varepsilon`.
+In fact, LAPACK contains :math:`1 \le \beta \le 2` for all inputs except
+multiples of the unit vector, when :math:`\beta = 0`.
 
 When the first component of `x` is negative, both methods compute the same
 result.
@@ -111,6 +113,38 @@ def house(x, method='LAPACK'):
     .. [GVL] Golub, Gene H. and Charles F. Van Loan (1996).
         "Matrix Computations". Algorithm 5.1.1.
     """
+    if method == 'LAPACK':
+        return _house_lapack(x)
+    elif method == 'Davis':
+        return _house_davis(x)
+    else:
+        raise ValueError(f"Unknown method '{method}'")
+
+
+def _house_lapack(x):
+    """Compute the Householder reflection vector using the LAPACK method."""
+    v = np.copy(x)
+    σ = np.sum(v[1:]**2)
+
+    if σ == 0:
+        s = np.abs(v[0])
+        β = 0
+        v[0] = 1  # make the reflector a unit vector
+    else:
+        s = np.sqrt(v[0]**2 + σ)   # ||x||_2
+        a = v[0]
+        b = -np.sign(a) * s
+        β = (b - a) / b
+        # v = x + sign(x[0]) * ||x|| e_1
+        # v /= v[0]
+        v[0] = 1
+        v[1:] /= (a - b)  # a - b == x[0] + sign(x[0]) * ||x||
+
+    return v, β, s
+
+
+def _house_davis(x):
+    """Compute the Householder reflection vector using the Davis method."""
     v = np.copy(x)
     σ = np.sum(v[1:]**2)
 
@@ -121,24 +155,14 @@ def house(x, method='LAPACK'):
     else:
         s = np.sqrt(v[0]**2 + σ)   # ||x||_2
 
-        if method == 'LAPACK':
-            a = v[0]
-            b = -np.sign(a) * s
-            β = (b - a) / b
-            # v = x + sign(x[0]) * ||x|| e_1
-            # v /= v[0]
-            v[0] = 1
-            v[1:] /= (a - b)  # a - b == x[0] + sign(x[0]) * ||x||
-        elif method == 'Davis':
-            # These options compute equivalent values, but the v[0] > 0 case
-            # is a more numerically stable option.
-            v[0] = (v[0] - s) if v[0] <= 0 else (-σ / (v[0] + s))
-            β = -1 / (s * v[0])
-            # Normalize β and v s.t. v[0] = 1
-            β *= v[0] * v[0]
-            v /= v[0]
-        else:
-            raise ValueError(f"Unknown method '{method}'.")
+        # These options compute equivalent values, but the v[0] > 0 case
+        # is a more numerically stable option.
+        v[0] = (v[0] - s) if v[0] <= 0 else (-σ / (v[0] + s))
+        β = -1 / (s * v[0])
+
+        # Normalize β and v s.t. v[0] = 1
+        β *= v[0] * v[0]
+        v /= v[0]
 
     return v, β, s
 
@@ -253,7 +277,8 @@ if __name__ == "__main__":
     #         Plot a nice example of the vectors and reflectors
     # -------------------------------------------------------------------------
     # Create a vector with an easy norm
-    x = np.r_[3., 4.]  # |x| == 5
+    x = np.r_[-3., 0.]  # |x| == 3 * e_1
+    # x = np.r_[3., 4.]  # |x| == 5
     # x = np.r_[-3., 4.]  # both methods give the same result
 
     v_D, β_D, s_D = house(x, method='Davis')

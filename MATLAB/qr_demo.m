@@ -40,6 +40,8 @@ A = sparse(rows, cols, vals, N, N);
 %   QR = PA
 [V, Beta, p, R] = cs_qr(A);
 
+Beta = Beta';  % transpose to row vector
+
 % V is not scaled to be 1 on the diagonal, like in scipy.linalg.qr, so scale it
 % manually.
 %
@@ -60,16 +62,15 @@ for k = 1:size(V_r, 2)
 end
 
 % V_r and V_l now match the V from scipy.linalg.qr(..., mode'raw').
+% CSparse V != V_r, because of the row permutation applied, and because of the
+% Householder vector definition.
+% Likewise, Beta != Beta_r (or Beta_l)
 assert(norm(abs(V_r - V_l)) < tol);
 assert(norm(abs(Beta_r - Beta_l)) < tol);
-assert(norm(abs(R_r - R_l)) < tol);
-
-% NOTE that V != V_r, because of the row permutation applied
-% R == -R_r *except* for the last element R(N, N) == R_r(N, N)
 
 % Compute the Q matrix by applying the Householder vectors to the identity
 Q_r = cs_qright(V_r, Beta_r, [], speye(size(V_r, 1)));
-Q_l = cs_qleft(V_l, Beta_l, [], speye(size(V_l, 1)));
+Q_l = cs_qleft(V_l, Beta_l, [], speye(size(V_l, 1)))';  % transpose!
 
 % Make sure to include the row permutation p!
 Q = cs_qright(V, Beta, p, speye(size(V, 1)));
@@ -77,12 +78,37 @@ Q = cs_qright(V, Beta, p, speye(size(V, 1)));
 % Compute the QR decomposition using the built-in MATLAB function
 [Q_, R_] = qr(A);
 
-% Compare to the built-in MATLAB QR decomposition
-assert(norm(abs(Q_r - Q_l')) < tol);
+%-------------------------------------------------------------------------------
+%        Compare to the built-in MATLAB QR decomposition
+%-------------------------------------------------------------------------------
+% q_right and q_left are the same
+assert(norm(abs(Q_r - Q_l)) < tol);
+assert(norm(abs(R_r - R_l)) < tol);
+
+% q_right and q_left *differ* from the built-in MATLAB QR decomposition by signs
+assert(norm(abs(abs(Q_r) - abs(Q_))) < tol);
+assert(norm(abs(abs(R_r) - abs(R_))) < tol);
+
+% CSparse *differs* from the built-in MATLAB QR decomposition by signs.
+assert(norm(abs(abs(Q_) - abs(Q))) < tol);
+assert(norm(abs(abs(R_) - abs(R))) < tol);
+
+% q_right and q_left *differ* from CSparse by signs
+assert(norm(abs(abs(Q_r) - abs(Q))) < tol);
+assert(norm(abs(abs(R_r) - abs(R))) < tol);
+
+% All of the methods are self-consistent
 assert(norm(abs(Q_r * R_r - A)) < tol);
-assert(norm(abs(Q_l' * R_l - A)) < tol);
+assert(norm(abs(Q_l * R_l - A)) < tol);
 assert(norm(abs(Q * R - A)) < tol);
 assert(norm(abs(Q_ * R_ - A)) < tol);  % built-in
+
+% Convert to full matrices for easier visual debugging
+V = full(V);
+Q = full(Q);
+R = full(R);
+R_ = full(R_);
+R_r = full(R_r);
 
 
 %===============================================================================

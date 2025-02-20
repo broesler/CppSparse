@@ -30,10 +30,14 @@ Householder house(std::span<const double> x)
     }
 
     if (sigma == 0) {  // x is already a multiple of e1
-        s = std::fabs(v[0]);   // s = |x(0)|
-        // beta = (v[0] <= 0) ? 2 : 0;  // make direction positive if x(0) < 0
+        //---------- LAPACK DLARFG algorithm
+        s = v[0];  // H is the identity, so Hx = x
         beta = 0;  // LAPACK DLARFG: H is just the identity
         v[0] = 1;
+        //---------- Davis book code (cs_house)
+        // s = std::fabs(v[0]);         // s = |x(0)|
+        // beta = (v[0] <= 0) ? 2 : 0;  // make direction positive if x(0) < 0
+        // v[0] = 1;
     } else {
         //---------- LAPACK DLARFG algorithm
         // consistent with scipy.linalg.qr(mode='raw') and MATLAB

@@ -2618,7 +2618,7 @@ TEST_CASE("Householder Reflection")
 
         std::vector<double> expect_v = {1, 0, 0};
         double expect_beta = 0.0;
-        double expect_s = 1.0;
+        double expect_s = -1.0;
 
         Householder H = house(x);
 

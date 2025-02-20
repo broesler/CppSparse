@@ -127,7 +127,7 @@ def _house_lapack(x):
     σ = np.sum(v[1:]**2)
 
     if σ == 0:
-        s = np.abs(v[0])
+        s = v[0]  # if β = 0, H is the identity matrix, so Hx = x
         β = 0
         v[0] = 1  # make the reflector a unit vector
     else:

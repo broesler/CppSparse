@@ -1503,33 +1503,7 @@ TEST_CASE("Test band function")
     csint N = 6;
     csint nnz = N*N;
 
-    // CSCMatrix A = ones((N, N)); // TODO
-    std::vector<csint> r(N);
-    std::iota(r.begin(), r.end(), 0);  // sequence to repeat
-
-    std::vector<csint> rows;
-    rows.reserve(nnz);
-
-    std::vector<csint> cols;
-    cols.reserve(nnz);
-
-    std::vector<double> vals(nnz, 1);
-
-    // Repeat {0, 1, 2, 3, 0, 1, 2, 3, ...}
-    for (csint i = 0; i < N; i++) {
-        for (auto& x : r) {
-            rows.push_back(x);
-        }
-    }
-
-    // Repeat {0, 0, 0, 1, 1, 1, 2, 2, 2, ...}
-    for (auto& x : r) {
-        for (csint i = 0; i < N; i++) {
-            cols.push_back(x);
-        }
-    }
-
-    CSCMatrix A = COOMatrix(vals, rows, cols).tocsc();
+    CSCMatrix A(std::vector<double>(nnz, 1), {N, N});  // (N, N) of ones
 
     SECTION("Test main diagonal") {
         int kl = 0,

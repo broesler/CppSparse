@@ -20,36 +20,21 @@ import csparse
 
 ATOL = 1e-12  # random matrices need a bit larger tolerance than 1e-15
 
-
-# See: Strang Linear Algebra p 203.
-# A_strang = np.array([[1, 1, 2],
-#                      [0, 0, 1],
-#                      [1, 0, 0]],
-#                     dtype=float)
-
-# ---------- Matrix from Davis Figure 5.1, p 74.
-N = 8
-rows = np.r_[0, 1, 2, 3, 4, 5, 6, 7,
-             3, 6, 1, 6, 0, 2, 5, 7, 4, 7, 0, 1, 3, 7, 5, 6]
-cols = np.r_[0, 1, 2, 3, 4, 5, 6, 7,
-             0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7]
-vals = np.r_[np.arange(1, N), 0, np.ones(rows.size - N)]
-A_davis_qr = sparse.csc_array((vals, (rows, cols)), shape=(N, N))
-
-# ---------- Davis 4x4 example
-# TODO rename csparse.davis_example and add argument for format='scipy', etc.
-A_davis4 = csparse.to_scipy_sparse(csparse.davis_example())
-
 # Group the matrices for parameterization
+N = 7  # arbitrary matrix size for testing
 TEST_MATRICES = [
-    ("Identity", sparse.eye_array(7).tocsc()),
+    ("Identity", sparse.eye_array(N).tocsc()),
     ("Diagonal", sparse.diags(np.arange(1, N)).tocsc()),
     ("Asymmetric Banded",
         sparse.diags([np.ones(N-1), np.arange(1, N+1)], [-1, 0]).tocsc()),
     ("Laplacian (Symmetric Banded)",
         sparse.diags([1, -2, 1], [-1, 0, 1]).tocsc()),
-    ("Davis 8x8", A_davis_qr),
-    ("Davis 4x4", A_davis4),
+    ("Davis 8x8", csparse.davis_example_qr(format='csc')),
+    ("Davis 4x4", csparse.davis_small_example(format='csc')),
+    # See: Strang Linear Algebra p 203.
+    ("Strang 3x3", sparse.csc_array(
+        np.array([[1, 1, 2], [0, 0, 1], [1, 0, 0]], dtype=float)
+    )),
 ]
 
 
@@ -113,7 +98,8 @@ def _test_qr_decomposition(case_name, A):
 
 def test_apply_q():
     """Test application of the Householder reflectors."""
-    A = A_davis_qr.toarray()
+    A = csparse.davis_example_qr(format='ndarray')
+    N = A.shape[0]
 
     (Qraw, tau), Rraw = la.qr(A, mode='raw')
 
@@ -138,7 +124,7 @@ def test_apply_q():
 
 def test_qrightleft():
     """Test the python QR decomposition algorithms."""
-    A = A_davis4.toarray()
+    A = csparse.davis_small_example(format='ndarray')
 
     # Test our own python QR decomposition
     V_r, beta_r, R_r = csparse.qr_right(A)

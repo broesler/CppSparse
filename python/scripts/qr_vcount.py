@@ -9,14 +9,13 @@ Compute the Cholesky factor of A^T A for C++ testing of `vcount` function.
 """
 # =============================================================================
 
-# Matrix from Davis Figure 5.1, p 74.
-N = 8
-rows = np.r_[0, 3, 1, 6, 1, 2, 6, 0, 2, 3, 4, 5, 7, 4, 5, 7, 0, 1, 3, 6, 7, 5, 6]
-cols = np.r_[0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 6, 6, 7, 7]
-vals = np.ones(rows.size)
+import numpy as np
+from scipy import linalg as la, sparse
 
-A = sparse.csc_array((vals, (rows, cols)), shape=(N, N))
-A.setdiag(np.r_[np.arange(1, N), 0])
+import csparse
+
+# Matrix from Davis Figure 5.1, p 74.
+A = csparse.davis_example_qr(format='csc')
 
 # Compute A^T A
 ATA = A.T @ A

@@ -22,22 +22,12 @@ atol = 1e-12
 
 
 # ---------- Matrix from Davis Figure 5.1, p 74.
-N = 8
-rows = np.r_[0, 1, 2, 3, 4, 5, 6, 7,
-             3, 6, 1, 6, 0, 2, 5, 7, 4, 7, 0, 1, 3, 7, 5, 6]
-cols = np.r_[0, 1, 2, 3, 4, 5, 6, 7,
-             0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7]
-vals = np.r_[np.arange(1, N), 0, np.ones(rows.size - N)]
-
-A = sparse.csc_array((vals, (rows, cols)), shape=(N, N))
-Ac = csparse.COOMatrix(vals, rows, cols, (N, N)).tocsc()
-
+A = csparse.davis_example_qr(format='csc')
 
 # ---------- Davis 4x4 example
-# A = csparse.to_scipy_sparse(csparse.davis_example())
-# N = A.shape[0]
+# A = csparse.davis_small_example(format='csc')
 
-
+N = A.shape[0]
 Ac = csparse.from_scipy_sparse(A, format='csc')
 
 A_dense = A.toarray()

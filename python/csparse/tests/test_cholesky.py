@@ -12,37 +12,20 @@ Unit tests for the python Cholesky algorithms.
 import pytest
 import numpy as np
 
-from scipy import (linalg as la,
-                   sparse as sparse)
+from scipy import linalg as la
 
+from csparse import davis_example_chol
 from csparse._cholesky import (chol_up, chol_left, chol_left_amp, chol_right,
                                chol_super,
                                chol_update, chol_downdate, chol_updown)
 
 ATOL = 1e-15  # testing tolerance
 
+
 @pytest.fixture
 def A_matrix():
     """Define a symmetric, positive definite matrix."""
-    N = 11
-
-    # Only off-diagonal elements
-    rows = np.r_[5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10]
-    cols = np.r_[0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9]
-    vals = np.ones((rows.size,))
-
-    # Values for the lower triangle
-    L = sparse.csc_matrix((vals, (rows, cols)), shape=(N, N))
-
-    # Create the symmetric matrix A
-    A = L + L.T
-
-    # Get the sum of the off-diagonal elements to ensure positive definiteness
-    # diag_A = np.max(np.sum(A, axis=0))
-    A.setdiag(np.arange(10, 21))
-
-    # NOTE scipy Cholesky is only implemented for dense matrices!
-    return A.toarray()
+    return davis_example_chol(format='ndarray')
 
 
 CHOL_FUNCS = [

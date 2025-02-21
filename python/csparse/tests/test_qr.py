@@ -62,12 +62,7 @@ def _test_qr_decomposition(case_name, A):
     A_dense = A.toarray()
     N = A.shape[0]
 
-    # scipy QR
-    (Qraw, tau), Rraw = la.qr(A_dense, mode='raw')
-    Q_, R_ = la.qr(A_dense)
-    V_ = np.tril(Qraw, -1) + np.eye(N)
-
-    # Compute csparse QR
+    # ---------- Compute csparse QR
     S = csparse.sqr(Ac)
     QRres = csparse.qr(Ac, S)
     V, beta, R = QRres.V, QRres.beta, QRres.R
@@ -79,20 +74,32 @@ def _test_qr_decomposition(case_name, A):
 
     p = csparse.inv_permute(S.p_inv)
     Q = csparse.apply_qright(V, beta, p)
-    Ql = csparse.apply_qleft(V, beta, p)
+    Ql = csparse.apply_qleft(V, beta, p).T
 
-    np.testing.assert_allclose(Q, Ql.T, atol=ATOL)
+    # Test the apply functions both get the same Q
+    np.testing.assert_allclose(Q, Ql, atol=ATOL)
 
-    # Compare Householder reflectors (only if no row permutation)
-    if np.all(p == np.arange(N)):
-        np.testing.assert_allclose(V, V_, atol=ATOL)
-        np.testing.assert_allclose(beta, tau, atol=ATOL)
+    # ---------- scipy QR
+    # Apply the row permutation to A_dense
+    Ap = A_dense[p]
+    (Qraw, tau), Rraw = la.qr(Ap, mode='raw')
+    Q_, R_ = la.qr(Ap)
+    V_ = np.tril(Qraw, -1) + np.eye(N)
+    Qr_ = csparse.apply_qright(V_, tau, p)
 
-    # Compare Q and R except for signs
-    np.testing.assert_allclose(np.abs(Q), np.abs(Q_), atol=ATOL)
-    np.testing.assert_allclose(np.abs(R), np.abs(R_), atol=ATOL)
+    # Now we get the same Householder vectors and weights
+    np.testing.assert_allclose(V, V_, atol=ATOL)
+    np.testing.assert_allclose(beta, tau, atol=ATOL)
+    np.testing.assert_allclose(R, R_, atol=ATOL)
+
+    # Q is the same up to row permutation
+    np.testing.assert_allclose(Q, Qr_, atol=ATOL)
+    np.testing.assert_allclose(Q, Q_[S.p_inv], atol=ATOL)
+    np.testing.assert_allclose(Q[p], Q_, atol=ATOL)
 
     # Reproduce A = QR
+    np.testing.assert_allclose(Q_ @ R_, Ap, atol=ATOL)
+    np.testing.assert_allclose(Q_[S.p_inv] @ R_, A_dense, atol=ATOL)
     np.testing.assert_allclose(Q @ R, A_dense, atol=ATOL)
 
 

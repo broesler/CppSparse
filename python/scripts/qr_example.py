@@ -34,17 +34,6 @@ A_dense = A.toarray()
 print("A = ")
 print(A_dense)
 
-# TODO try permuting the rows of A_dense here with S.p_inv to see if we get the
-# same V and beta as the csparse.qr function? la.qr(pivoting=True) computes
-# a *column* permutation.
-
-# -----------------------------------------------------------------------------
-#         Compute the QR decomposition of A with scipy
-# -----------------------------------------------------------------------------
-(Qraw, tau), Rraw = la.qr(A_dense, mode='raw')
-Q_, R_ = la.qr(A_dense)
-V_ = np.tril(Qraw, -1) + np.eye(N)
-
 # -----------------------------------------------------------------------------
 #         Compute QR decomposition with csparse
 # -----------------------------------------------------------------------------
@@ -65,6 +54,21 @@ R = R.toarray()
 # Get the actual Q matrix, don't forget the row permutation!
 p = csparse.inv_permute(S.p_inv)
 Q = csparse.apply_qright(V, beta, p)
+
+# Permute the rows of A_dense here with S.p_inv to get the
+# same V and beta as the csparse.qr function.
+Ap = A_dense[p]
+
+# -----------------------------------------------------------------------------
+#         Compute the QR decomposition of A with scipy
+# -----------------------------------------------------------------------------
+(Qraw, tau), Rraw = la.qr(Ap, mode='raw')
+Q_, R_ = la.qr(Ap)
+V_ = np.tril(Qraw, -1) + np.eye(N)
+Qr_ = csparse.apply_qright(V_, tau, p)
+
+np.testing.assert_allclose(Q_ @ R_, Ap, atol=atol)
+np.testing.assert_allclose(Q, Q_[S.p_inv], atol=atol)
 
 # Reproduce A = QR
 np.testing.assert_allclose(Q @ R, A_dense, atol=atol)

@@ -2410,7 +2410,7 @@ TEST_CASE("Cholesky decomposition")
             CSCMatrix A_up = (A + W * W.T()).to_canonical();
 
             // Update the factorization in-place
-            CSCMatrix L_up = chol_update(L.to_canonical(), 1, W, S.parent);
+            CSCMatrix L_up = chol_update(L.to_canonical(), true, W, S.parent);
 
             CSCMatrix LLT_up = (L_up * L_up.T()).droptol().to_canonical();
             CHECK(LLT_up.nnz() == A_up.nnz());

@@ -471,13 +471,8 @@ SymbolicChol schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
     std::vector<csint> p(A.shape()[1]);  // the matrix permutation
 
     if (order == AMDOrder::Natural) {
-        // TODO set to empty vector?
-        // NOTE if we allow an empty p_inv here, we should support an empty
-        // p or p_inv argument to all permute functions: pvec, ipvec,
-        // inv_permute, permute, and symperm... and all of the upper/lower
-        // triangular permuted solvers!!
         std::iota(p.begin(), p.end(), 0);  // identity permutation
-        S.p_inv = p;  // identity is its own inverse
+        S.p_inv = p;                       // identity is its own inverse
     } else {
         // TODO implement amd order (see Chapter 7)
         // p = amd(order, A);  // P = amd(A + A.T()) or natural
@@ -763,7 +758,7 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 
 CSCMatrix& chol_update(
     CSCMatrix& L,
-    int σ,  // TODO use a bool and set the ±1 in the function
+    bool update,
     const CSCMatrix& C,
     const std::vector<csint>& parent
 )
@@ -775,7 +770,8 @@ CSCMatrix& chol_update(
            β = 1.0,
            β2 = 1.0,
            δ,
-           γ;
+           γ,
+           σ = (update) ? 1.0 : -1.0;
 
     std::vector<double> w(L.shape()[0]);  // sparse accumulator workspace
 
@@ -796,15 +792,15 @@ CSCMatrix& chol_update(
             throw std::runtime_error("Matrix not positive definite!");
         }
         β2 = std::sqrt(β2);
-        δ = (σ > 0) ? (β / β2) : (β2 / β);
+        δ = update ? (β / β2) : (β2 / β);
         γ = σ * α / (β2 * β);
-        L.v_[p] = δ * L.v_[p] + ((σ > 0) ? (γ * w[j]) : 0.0);
+        L.v_[p] = δ * L.v_[p] + (update ? (γ * w[j]) : 0.0);
         β = β2;
         for (p++; p < L.p_[j+1]; p++) {
             double w1 = w[L.i_[p]];
             double w2 = w1 - α * L.v_[p];
             w[L.i_[p]] = w2;
-            L.v_[p] = δ * L.v_[p] + γ * ((σ > 0) ? w1 : w2);
+            L.v_[p] = δ * L.v_[p] + γ * (update ? w1 : w2);
         }
     }
 

@@ -58,7 +58,11 @@ def test_cholesky(A_matrix, chol_func):
 
 
 def test_cholesky_update(A_matrix):
-    """Test the Cholesky update and downdate algorithms."""
+    """Test the Cholesky update and downdate algorithms.
+
+    .. note:: These tests only cover the python implementations of the
+    update/downdate functions, not the C++ cs::chol_update function.
+    """
     A = A_matrix
     N = A.shape[0]
 

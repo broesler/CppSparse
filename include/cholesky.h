@@ -374,7 +374,7 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
 /** Update the Cholesky factor for \f$ A = A + σ w w^T \f$.
  *
  * @param L  the Cholesky factor of A
- * @param σ  +1 for an update, or -1 for a downdate
+ * @param update  true for update, false for downdate
  * @param C  the update vector, as the first column in a CSCMatrix
  * @param parent  the elimination tree of A
  *
@@ -382,7 +382,7 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
  */
 CSCMatrix& chol_update(
     CSCMatrix& L,
-    int sigma,
+    bool update,
     const CSCMatrix& C,
     const std::vector<csint>& parent
 );

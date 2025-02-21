@@ -978,7 +978,7 @@ class CSCMatrix
 
         friend CSCMatrix& chol_update(
             CSCMatrix& L,
-	        int sigma,
+	        bool update,
 	        const CSCMatrix& w,
 	        const std::vector<csint>& parent
         );

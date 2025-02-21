@@ -17,15 +17,6 @@
 namespace cs {
 
 // ---------- Enums
-enum class AMDOrder
-{
-    Natural,
-    APlusAT,
-    ATANoDenseRows,
-    ATA
-};
-
-
 enum class LeafStatus {
     NotLeaf,
     FirstLeaf,

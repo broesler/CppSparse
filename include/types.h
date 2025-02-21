@@ -15,13 +15,23 @@ namespace cs {
 using csint = std::int64_t;
 using Shape = std::array<csint, 2>;
 
+// Need full enum class definition for default arguments
+enum class AMDOrder
+{
+    Natural,
+    APlusAT,
+    ATANoDenseRows,
+    ATA
+};
+
 // Forward declarations
 enum class ICholMethod;
 
 struct CholCounts;
 struct TriPerm;
 struct SparseSolution;
-struct Symbolic;
+struct SymbolicChol;
+struct SymbolicQR;
 struct QRResult;
 
 class COOMatrix;

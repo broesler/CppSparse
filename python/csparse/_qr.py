@@ -15,10 +15,13 @@ import numpy as np
 from scipy import sparse
 from scipy import linalg as la
 
-from .csparse import CSCMatrix
-from .utils import to_scipy_sparse
+from .csparse import CSCMatrix, etree
+from .utils import from_scipy_sparse, to_scipy_sparse
 
 
+# -----------------------------------------------------------------------------
+#         Householder Reflections
+# -----------------------------------------------------------------------------
 def apply_qright(V, beta, p=None, Y=None):
     r"""Apply Householder vectors on the right.
 
@@ -220,6 +223,101 @@ def qr_left(A):
         R[k, k] = Qraw[0, 0]
 
     return V, beta, R
+
+
+# -----------------------------------------------------------------------------
+#         Givens Rotations
+# -----------------------------------------------------------------------------
+def givens(x):
+    """Compute the 2x2 Givens rotation matrix.
+
+    Parameters
+    ----------
+    x : (2,) ndarray
+        The vector to rotate.
+
+    Returns
+    -------
+    G : (2, 2) ndarray
+        The Givens rotation matrix.
+    """
+    assert x.shape == (2,), "Input must be of shape (2,)"
+    a, b = x
+
+    if b == 0:
+        c = 1
+        s = 0
+    elif abs(b) > abs(a):
+        τ = -a / b
+        s = 1 / np.sqrt(1 + τ**2)
+        c = s * τ
+    else:
+        τ = -b / a
+        c = 1 / np.sqrt(1 + τ**2)
+        s = c * τ
+
+    return np.array([[c, -s], [s, c]], dtype=float)
+
+
+def qr_givens_full(A):
+    """Compute the QR decomposition of A using Givens rotations for a full
+    matrix.
+
+    Parameters
+    ----------
+    A : (M, N) array_like
+        Matrix of M vectors in N dimensions.
+
+    Returns
+    -------
+    R : (M, N) ndarray
+        The upper triangular matrix.
+    """
+    M, N = A.shape
+    R = np.copy(A)
+
+    for i in range(1, M):
+        for k in range(min(i-1, N)):
+            idx = np.r_[k, i]
+            R[idx, k:] = givens(R[idx, k]) @ R[idx, k:]
+            R[i, k] = 0
+
+    return R
+
+
+def qr_givens(A):
+    """Compute the QR decomposition of A using Givens rotations for a sparse
+    matrix.
+
+    .. note:: This function assumes that `A` has a zero-free diagonal.
+
+    Parameters
+    ----------
+    A : (M, N) array_like
+        Matrix of M vectors in N dimensions.
+
+    Returns
+    -------
+    R : (M, N) ndarray
+        The upper triangular matrix.
+    """
+    M, N = A.shape
+    R = np.copy(A)
+    # Get the elimination tree of A^T A
+    parent = etree(from_scipy_sparse(sparse.csc_array(R)), True)
+
+    for i in range(1, M):
+        nnz_idx = np.where(R[i, :])[0]
+        if len(nnz_idx) == 0:
+            continue
+        k = np.min(nnz_idx)  # find the first non-zero element
+        while (k > 0 and k <= min(i-1, N)):
+            idx = np.r_[k, i]
+            R[idx, k:] = givens(R[idx, k]) @ R[idx, k:]
+            R[i, k] = 0
+            k = parent[k]
+
+    return R
 
 
 # =============================================================================

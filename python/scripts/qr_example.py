@@ -37,6 +37,7 @@ print(A_dense)
 # -----------------------------------------------------------------------------
 #         Compute QR decomposition with csparse
 # -----------------------------------------------------------------------------
+# ---------- Compute using Householder reflections
 # TODO the row and column permutations are stored in S, but the MATLAB cs_qr
 # function returns p and q, and only uses S internally. We should implement
 # this functionality in our csparse implementation.
@@ -55,13 +56,13 @@ R = R.toarray()
 p = csparse.inv_permute(S.p_inv)
 Q = csparse.apply_qright(V, beta, p)
 
+# -----------------------------------------------------------------------------
+#         Compute the QR decomposition of A with scipy
+# -----------------------------------------------------------------------------
 # Permute the rows of A_dense here with S.p_inv to get the
 # same V and beta as the csparse.qr function.
 Ap = A_dense[p]
 
-# -----------------------------------------------------------------------------
-#         Compute the QR decomposition of A with scipy
-# -----------------------------------------------------------------------------
 (Qraw, tau), Rraw = la.qr(Ap, mode='raw')
 Q_, R_ = la.qr(Ap)
 V_ = np.tril(Qraw, -1) + np.eye(N)
@@ -74,6 +75,20 @@ np.testing.assert_allclose(Q, Q_[S.p_inv], atol=atol)
 np.testing.assert_allclose(Q @ R, A_dense, atol=atol)
 print("Q @ R = ")
 print(Q @ R)
+
+# -----------------------------------------------------------------------------
+#         Compute using Givens rotations
+# -----------------------------------------------------------------------------
+x = np.r_[3, 4]
+G = csparse.givens(x)
+
+Rf = csparse.qr_givens_full(A_dense)
+Rg = csparse.qr_givens(A_dense)
+
+print(G @ x)
+np.testing.assert_allclose(np.abs(G @ x), np.r_[la.norm(x), 0], atol=atol)
+# TODO work out what the sign of the rotation should be and test for various
+# vectors.
 
 
 # =============================================================================

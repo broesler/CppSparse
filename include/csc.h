@@ -1013,6 +1013,7 @@ class CSCMatrix
             const std::vector<double>& x
         );
 
+        friend std::vector<csint> find_leftmost(const CSCMatrix& A);
         friend void vcount(const CSCMatrix& A, SymbolicQR& S);
 
         friend QRResult qr(const CSCMatrix& A, const SymbolicQR& S);

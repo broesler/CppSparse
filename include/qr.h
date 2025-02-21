@@ -105,21 +105,30 @@ std::vector<double> happly(
 );
 
 
+/** Compute the leftmost non-zero row index of each row in `A`.
+ *
+ * @param A  a CSCMatrix
+ *
+ * @return leftmost  the leftmost non-zero row index of each row in `A`.
+ */
+std::vector<csint> find_leftmost(const CSCMatrix& A);
+
+
 /** Compute the column counts of the matrix V containing Householder vectors.
  *
  * This function also computes a row permutation vector `S.p_inv`, so that the
  * diagonal entries of PA are all structurally non-zero.
  *
- * It also computes leftmost row index of each row in `A`, `S.leftmost`. 
- *
  * If `A` is structurally rank-deficient, then this function adds fictitious
  * rows to `A` to make it structurally full rank. The total row count including
  * these fictitious rows is stored in `S.m2`.
  *
+ * @note `S.parent` is expected to have been computed by `cs::etree`, and
+ * `S.leftmost` is expected to have been computed by `cs::find_leftmost`. Only
+ * `p_inv`, `lnz`, and `m2` values are updated by this function.
+ *
  * @param A  the CSCMatrix that will be decomposed
- * @param[in,out] S  the symbolic QR decomposition of A. S.parent is expected to
- *        have been computed by cs::etree. Only p_inv, leftmost, lnz, and m2
- *        values are updated.
+ * @param[in,out] S  the symbolic QR decomposition of A.
  */
 void vcount(const CSCMatrix& A, SymbolicQR& S);
 

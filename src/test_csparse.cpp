@@ -2766,25 +2766,27 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
     // See etree in Figure 5.1, p 74
     std::vector<csint> parent = {3, 2, 3, 6, 5, 6, 7, -1};
 
+    std::vector<csint> expect_leftmost = {0, 1, 2, 0, 4, 4, 1, 4};
+    std::vector<csint> expect_p_inv = {0, 1, 3, 7, 4, 5, 2, 6};  // cs_qr MATLAB
+
+    SECTION("find_leftmost") {
+        CHECK(find_leftmost(A) == expect_leftmost);
+    }
+
     SECTION("vcount") {
         SymbolicQR S;
         S.parent.assign(parent.begin(), parent.end());
+        S.leftmost = find_leftmost(A);
         vcount(A, S);
 
-        std::vector<csint> expect_p_inv = {0, 1, 3, 7, 4, 5, 2, 6};
-        std::vector<csint> expect_leftmost = {0, 1, 2, 0, 4, 4, 1, 4};
-
         CHECK(S.p_inv == expect_p_inv);
-        CHECK(S.leftmost == expect_leftmost);
         CHECK(S.vnz == 16);
         CHECK(S.m2 == N);
     }
 
     SECTION("Symbolic factorization") {
-        std::vector<csint> expect_p_inv = {0, 1, 3, 7, 4, 5, 2, 6};  // from cs_qr MATLAB
-        std::vector<csint> expect_q = {0, 1, 2, 3, 4, 5, 6, 7};      // natural
+        std::vector<csint> expect_q = {0, 1, 2, 3, 4, 5, 6, 7};  // natural
         std::vector<csint> expect_parent = parent;
-        std::vector<csint> expect_leftmost = {0, 1, 2, 0, 4, 4, 1, 4};
 
         SymbolicQR S = sqr(A);
 

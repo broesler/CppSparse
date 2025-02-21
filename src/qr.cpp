@@ -102,10 +102,25 @@ std::vector<double> happly(
 }
 
 
-// TODO this function does a lot of things, and likely can be broken up into
-// smaller functions? e.g. leftmost at least could be separated.
+std::vector<csint> find_leftmost(const CSCMatrix& A)
+{
+    std::vector<csint> leftmost(A.M_, -1);
+
+    for (csint k = A.N_ - 1; k >= 0; k--) {
+        for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
+            leftmost[A.i_[p]] = k;  // leftmost[i] = min(find(A(i, :)))
+        }
+    }
+
+    return leftmost;
+}
+
+
 void vcount(const CSCMatrix& A, SymbolicQR& S)
 {
+    assert(S.leftmost.size() == A.M_);
+    assert(S.parent.size() == A.N_);
+
     auto [M, N] = A.shape();
     std::vector<csint> next(M),      // the next row index
                        head(N, -1),  // the first row index in each column
@@ -113,13 +128,6 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
                        nque(N);      // the number of rows in each column
 
     S.p_inv.assign(std::max(M, N), 0);  // permutation vector
-    S.leftmost.assign(N, -1);           // leftmost non-zero in each column
-
-    for (csint k = N-1; k >= 0; k--) {
-        for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
-            S.leftmost[A.i_[p]] = k;  // leftmost[i] = min(find(A(i, :)))
-        }
-    }
 
     for (csint i = M-1; i >= 0; i--) {  // scan rows in reverse order
         S.p_inv[i] = -1;                // i is not yet in the permutation
@@ -193,7 +201,8 @@ SymbolicQR sqr(const CSCMatrix& A, AMDOrder order)
     std::vector<csint> cp = counts(C, S.parent, post(S.parent), CTC);
     S.rnz = std::accumulate(cp.begin(), cp.end(), 0);
 
-    vcount(C, S);  // compute p_inv, leftmost, vnz, m2
+    S.leftmost = find_leftmost(A);
+    vcount(C, S);  // compute p_inv, vnz, m2
     assert(S.vnz >= 0 && S.rnz >= 0);  // overflow guard
 
     return S;

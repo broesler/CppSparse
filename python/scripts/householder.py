@@ -154,9 +154,9 @@ def _house_davis(x):
     σ = np.sum(v[1:]**2)
 
     if σ == 0:
-        s = np.abs(v[0])
+        s = np.abs(v[0])           # ||x|| consistent with always-positive Hx
         β = 2 if v[0] <= 0 else 0  # make direction positive if x[0] < 0
-        v[0] = 1                      # make the reflector a unit vector
+        v[0] = 1                   # make the reflector a unit vector
     else:
         s = np.sqrt(v[0]**2 + σ)   # ||x||_2
 

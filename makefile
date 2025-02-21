@@ -10,7 +10,6 @@
 CC = clang++
 CFLAGS = -Wall -pedantic -std=c++20
 
-# BREW := $(shell brew --prefix)  # FIXME adds space? run command only once
 BREW = /opt/homebrew
 
 SRC_DIR := src
@@ -30,7 +29,7 @@ info :
 # -----------------------------------------------------------------------------
 #        Make options 
 # -----------------------------------------------------------------------------
-all: test_csparse
+all: test
 
 test: OPT += -I$(BREW)/include 
 test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
@@ -39,7 +38,6 @@ test: test_csparse
 
 debug: CFLAGS += -DDEBUG -glldb -Og -fno-inline -fsanitize=address,leak
 debug: all
-
 
 # -----------------------------------------------------------------------------
 #         Compile and Link
@@ -58,7 +56,6 @@ clean:
 	rm -f $(SRC_DIR)/*.o
 	rm -rf *.dSYM/
 	rm -f test_csparse
-	rm -f test_stdvector
 
 #==============================================================================
 #==============================================================================

@@ -305,6 +305,8 @@ PYBIND11_MODULE(csparse, m) {
     // We should just be able to call "Q, R = qr(A)" like in scipy.
 
     // Cholesky decomposition
+    m.def("etree", &cs::etree, py::arg("A"), py::arg("ata")=false);
+    m.def("post", &cs::post);
     m.def("schol",
         &cs::schol,
         py::arg("A"),

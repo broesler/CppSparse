@@ -17,23 +17,25 @@ from scipy import sparse
 
 import csparse
 
-
 # Define the example matrix from Davis, Figure 4.2, p. 39
-# scipy Cholesky is only implemented for dense matrices
-A = csparse.davis_example_chol(format='ndarray')
+Ac = csparse.davis_example_chol()
+A = Ac.toarray()  # scipy Cholesky is only implemented for dense matrices
 
 # R = la.cholesky(A, lower=True)
 R = csparse.chol_up(A, lower=True)
 
 # NOTE etree is not implemented in scipy!
-# Get the elimination tree
-# [parent, post] = csparse.etree(A)
-# Rp = la.cholesky(A(post, post), lower=True)
-# assert (R.nnz == Rp.nnz)  # post-ordering does not change nnz
+# Get the elimination tree and post order it
+parent = csparse.etree(Ac)
+p = csparse.post(parent)
+Rp = la.cholesky(A[p][:, p], lower=True)
+
+# post-ordering does not change nnz
+assert (sparse.csc_array(R).nnz == sparse.csc_array(Rp).nnz)
 
 # Compute the row counts of the post-ordered Cholesky factor
-row_counts = np.sum(R != 0, axis=1)
-col_counts = np.sum(R != 0, axis=0)
+row_counts = np.sum(Rp != 0, axis=1)
+col_counts = np.sum(Rp != 0, axis=0)
 
 # Count the nonzeros of the Cholesky factor of A^T A
 ATA = A.T @ A

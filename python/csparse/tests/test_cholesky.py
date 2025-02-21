@@ -21,12 +21,11 @@ from csparse._cholesky import (chol_up, chol_left, chol_left_amp, chol_right,
 
 ATOL = 1e-15  # testing tolerance
 
-
-# TODO break into multiple individual tests with A as a fixture
-def test_cholesky():
-    """Test the Cholesky decomposition algorithms."""
-    # Create the example matrix A
+@pytest.fixture
+def A_matrix():
+    """Define a symmetric, positive definite matrix."""
     N = 11
+
     # Only off-diagonal elements
     rows = np.r_[5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10]
     cols = np.r_[0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9]
@@ -42,72 +41,82 @@ def test_cholesky():
     # diag_A = np.max(np.sum(A, axis=0))
     A.setdiag(np.arange(10, 21))
 
-    A = A.toarray()
+    # NOTE scipy Cholesky is only implemented for dense matrices!
+    return A.toarray()
 
-    # NOTE Scipy Cholesky is only implemented for dense matrices!
-    R = la.cholesky(A, lower=True)
-    R_up = chol_up(A, lower=True)
-    R_left = chol_left(A, lower=True)
-    R_left_amp = chol_left_amp(A, lower=True)
-    R_right = chol_right(A, lower=True)
 
-    # Define "supernodes" as ones, so we get the same result as left-looking
-    s = np.ones(A.shape[0], dtype=int)
-    R_super = chol_super(A, s, lower=True)
+CHOL_FUNCS = [
+    chol_up,
+    chol_left,
+    chol_left_amp,
+    chol_right,
+    chol_super
+]
 
-    # NOTE etree is not implemented in scipy!
-    # Get the elimination tree
-    # [parent, post] = etree(A)
-    # Rp = la.cholesky(A(post, post), lower=True)
-    # assert (R.nnz == Rp.nnz)  # post-ordering does not change nnz
 
-    # Compute the row counts of the post-ordered Cholesky factor
-    row_counts = np.sum(R != 0, 1)
-    col_counts = np.sum(R != 0, 0)
+@pytest.mark.parametrize("chol_func", CHOL_FUNCS)
+def test_cholesky(A_matrix, chol_func):
+    """Test the Cholesky decomposition algorithms."""
+    A = A_matrix
 
-    # -------------------------------------------------------------------------
-    #         Test Algorithms
-    # -------------------------------------------------------------------------
+    # Compute the Cholesky factor
+    L_ = la.cholesky(A, lower=True)
+
+    if chol_func == chol_super:
+        # Define "supernodes" as ones to get the same result as left-looking
+        s = np.ones(A.shape[0], dtype=int)
+        L = chol_super(A, s, lower=True)
+    else:
+        L = chol_func(A, lower=True)
+
     # Check that algorithms work
-    for L in [R, R_up, R_left, R_left_amp, R_super, R_right]:
-        np.testing.assert_allclose(L @ L.T, A, atol=ATOL)
+    np.testing.assert_allclose(L, L_, atol=ATOL)
+    np.testing.assert_allclose(L @ L.T, A, atol=ATOL)
 
-    # Test (up|down)date
-    # Generate random update with same sparsity pattern as a column of L
-    rng = np.random.default_rng(565656)
-    k = rng.integers(0, N)
-    idx = np.nonzero(R[:, k])[0]
-    w = np.zeros((N,))
-    w[idx] = rng.random(idx.size)
 
-    wwT = np.outer(w, w)  # == w[:, np.newaxis] @ w[np.newaxis, :]
+def test_cholesky_update(A_matrix):
+    """Test the Cholesky update and downdate algorithms."""
+    A = A_matrix
+    N = A.shape[0]
 
-    A_up = A + wwT
+    L = la.cholesky(A, lower=True)
 
-    L_up, w_up = chol_update(R, w)
-    np.testing.assert_allclose(L_up @ L_up.T, A_up, atol=ATOL)
-    np.testing.assert_allclose(la.solve(R, w), w_up, atol=ATOL)
+    seed = 565656
+    rng = np.random.default_rng(seed)
 
-    L_upd, w_upd = chol_updown(R, w, update=True)
-    np.testing.assert_allclose(L_up, L_upd, atol=ATOL)
-    np.testing.assert_allclose(L_upd @ L_upd.T, A_up, atol=ATOL)
-    np.testing.assert_allclose(la.solve(R, w), w_upd, atol=ATOL)
+    # Test multiple random vectors
+    for i in range(10):
+        print(f"Testing update {i} with seed {seed}")  # keep for failures
+        # Generate random update with same pattern as a random column of L
+        k = rng.integers(0, N)
+        idx = np.nonzero(L[:, k])[0]
+        w = np.zeros((N,))
+        w[idx] = rng.random(idx.size)
 
-    # Just downdate back to the original matrix!
-    A_down = A.copy()  # A_down == A_up - wwT == A
-    L_down, w_down = chol_downdate(L_up, w)
-    np.testing.assert_allclose(L_down @ L_down.T, A_down, atol=ATOL)
-    np.testing.assert_allclose(la.solve(L_up, w), w_down, atol=ATOL)
+        wwT = np.outer(w, w)  # == w[:, np.newaxis] @ w[np.newaxis, :]
 
-    L_downd, w_downd = chol_updown(L_up, w, update=False)
-    np.testing.assert_allclose(L_down, L_downd, atol=ATOL)
-    np.testing.assert_allclose(L_downd @ L_downd.T, A_down, atol=ATOL)
-    np.testing.assert_allclose(la.solve(L_up, w), w_downd, atol=ATOL)
+        A_up = A + wwT
 
-    # Count the nonzeros of the Cholesky factor of A^T A
-    ATA = A.T @ A
-    L_ATA = la.cholesky(ATA, lower=True)
-    nnz_cols = np.diff(sparse.csc_matrix(L_ATA).indptr)
+        L_up, w_up = chol_update(L, w)
+        np.testing.assert_allclose(L_up @ L_up.T, A_up, atol=ATOL)
+        np.testing.assert_allclose(la.solve(L, w), w_up, atol=ATOL)
+
+        L_upd, w_upd = chol_updown(L, w, update=True)
+        np.testing.assert_allclose(L_up, L_upd, atol=ATOL)
+        np.testing.assert_allclose(L_upd @ L_upd.T, A_up, atol=ATOL)
+        np.testing.assert_allclose(la.solve(L, w), w_upd, atol=ATOL)
+
+        # Just downdate back to the original matrix!
+        A_down = A.copy()  # A_down == A_up - wwT == A
+        L_down, w_down = chol_downdate(L_up, w)
+        np.testing.assert_allclose(L_down @ L_down.T, A_down, atol=ATOL)
+        np.testing.assert_allclose(la.solve(L_up, w), w_down, atol=ATOL)
+
+        L_downd, w_downd = chol_updown(L_up, w, update=False)
+        np.testing.assert_allclose(L_down, L_downd, atol=ATOL)
+        np.testing.assert_allclose(L_downd @ L_downd.T, A_down, atol=ATOL)
+        np.testing.assert_allclose(la.solve(L_up, w), w_downd, atol=ATOL)
+
 
 # =============================================================================
 # =============================================================================

@@ -9,9 +9,12 @@
  *============================================================================*/
 
 #include <numeric>  // accumulate
+#include <ranges>   // views::reverse
+#include <vector>
 
 #include "cholesky.h"  // etree, post
 #include "qr.h"
+#include "utils.h"
 
 namespace cs {
 
@@ -220,9 +223,11 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     std::vector<double> beta(N);  // scaling factors
 
     // Allocate workspaces
-    std::vector<csint>  w(M, -1),  // workspace
-                        s(N);      // stack
     std::vector<double> x(M);      // dense vector
+    std::vector<csint>  w(M, -1),  // workspace for pattern of V[:, k]
+                        s, t;      // stacks for pattern of R[:, k]
+    s.reserve(N);
+    t.reserve(N);
 
     // Compute V and R
     csint vnz = 0,
@@ -235,21 +240,21 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
         w[k] = k;         // add V(k, k) to pattern of V
         V.i_[vnz++] = k;  // V(k, k) is non-zero
 
-        csint top = N;
+        t.clear();
         csint col = S.q[k];  // permuted column of A
-        for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {  // find R[:, k] pattern
+        // find R[:, k] pattern
+        for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {
             csint i = S.leftmost[A.i_[p]];  // i = min(find(A(i, q)))
 
-            csint len = 0;
+            s.clear();
             while (w[i] != k) {  // traverse up to k
-                s[len++] = i;
+                s.push_back(i);
                 w[i] = k;
                 i = S.parent[i];
             }
 
-            while (len > 0) {
-                s[--top] = s[--len];  // push path on stack
-            }
+            // Push path onto "output" stack
+            std::copy(s.rbegin(), s.rend(), std::back_inserter(t));
 
             i = S.p_inv[A.i_[p]];     // i = permuted row of A(:, col)
             x[i] = A.v_[p];           // x(i) = A(:, col)
@@ -260,8 +265,8 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
             }
         }
 
-        for (csint p = top; p < N; p++) {  // for each i in pattern of R[:, k]
-            csint i = s[p];                // R(i, k) is non-zero
+        // for each i in pattern of R[:, k] (R(i, k) is non-zero)
+        for (csint i : t | std::views::reverse) {
             x = happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
             R.i_[rnz] = i;                 // R(i, k) = x(i)
             R.v_[rnz++] = x[i];
@@ -272,7 +277,8 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
             }
         }
 
-        for (csint p = p1; p < vnz; p++) {  // gather V(:, k) = x
+        // gather V(:, k) = x
+        for (csint p = p1; p < vnz; p++) {
             V.v_[p] = x[V.i_[p]];
             x[V.i_[p]] = 0;  // clear x
         }

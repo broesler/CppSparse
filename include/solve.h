@@ -219,7 +219,6 @@ std::vector<double> tri_solve_perm(
 TriPerm find_tri_permutation(const CSCMatrix& A);
 
 
-// TODO return `x` as a 1-column CSCMatrix?
 /** Solve a triangular system \f$ Lx = b_k \f$ for column `k` of `B`,
  * where `L` and `B` are sparse.
  *
@@ -229,6 +228,11 @@ TriPerm find_tri_permutation(const CSCMatrix& A);
  * If `lo` is zero, the function assumes that the diagonal entry of `U` is
  * always present and is the last entry in each column.
  *
+ * @note In the CSparse library, this function is only called within `cs_lu`
+ *       using a pre-allocated dense `x` vector, since it is called in a loop
+ *       over the columns of `A`. The dense `x` vector can then be indexed
+ *       directly by the row indices stored in `xi`.
+ *
  * @param A  the sparse, triangular system matrix
  * @param B  the sparse RHS matrix
  * @param k  the column index of `B` to solve
@@ -236,8 +240,9 @@ TriPerm find_tri_permutation(const CSCMatrix& A);
  *        true, the function solves \f$ Lx = b_k`, otherwise it solves
  *        \f$ Ux = b_k \f$.
  *
- * @return xi the row indices of the non-zero entries in `x`.
- * @return x  the numerical values of the solution vector, as a dense vector.
+ * @return res  a struct containing:
+ *         * xi the row indices of the non-zero entries in `x`.
+ *         * x  the numerical values of the solution vector, as a dense vector.
  */
 SparseSolution spsolve(
     const CSCMatrix& A,

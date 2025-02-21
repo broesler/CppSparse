@@ -110,7 +110,7 @@ PYBIND11_MODULE(csparse, m) {
             const cs::Shape>()
         )
         .def(py::init<const cs::Shape&, cs::csint>())
-        // TODO how to handle a file pointer?
+        // TODO how to handle a file pointer -> overload with std::string
         // .def(py::init<std::istream&>())
         .def_static("random",
             &cs::COOMatrix::random,
@@ -142,7 +142,6 @@ PYBIND11_MODULE(csparse, m) {
                 A.assign(i, j, v);
             }
         )
-        // TODO handle assigning to vectors
         //
         .def("compress", &cs::COOMatrix::compress)
         .def("tocsc", &cs::COOMatrix::tocsc)
@@ -205,7 +204,6 @@ PYBIND11_MODULE(csparse, m) {
         .def_property_readonly("is_symmetric", &cs::CSCMatrix::is_symmetric)
         //
         .def("__call__", py::overload_cast<cs::csint, cs::csint>(&cs::CSCMatrix::operator(), py::const_))
-        // TODO handle slices
         .def("__getitem__",
             [](cs::CSCMatrix& A, py::tuple t) {
                 cs::csint i = t[0].cast<cs::csint>();
@@ -226,7 +224,6 @@ PYBIND11_MODULE(csparse, m) {
                         const cs::CSCMatrix&>(&cs::CSCMatrix::assign))
         .def("__setitem__",
             [](cs::CSCMatrix& A, py::tuple t, double v) {
-                // TODO handle slices
                 cs::csint i = t[0].cast<cs::csint>();
                 cs::csint j = t[1].cast<cs::csint>();
                 A.assign(i, j, v);
@@ -329,6 +326,11 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("A"),
         py::arg("order")=cs::AMDOrder::Natural
     );
+    // Could name this _qr and then have a python function qr() that calls sqr,
+    // and converts from V, beta to Q, R, (and p, q), or just include p_inv and
+    // q in the QRResult struct. The python function could then just return
+    // a tuple of numpy/sparse arrays, and we don't have to expose the
+    // SymbolicQR struct.
     m.def("qr", &cs::qr);
 
     //--------------------------------------------------------------------------

@@ -62,7 +62,7 @@ Li = ichol(A, options);
 test_norm = norm(Li * Li' - A, 'fro') / norm(A, 'fro')
 assert(test_norm < droptol)
 
-% TODO fails in octave
+% TODO graph not implemented in octave
 % G = graph(A);
 % Gp = graph(R + R');
 % plot(G);

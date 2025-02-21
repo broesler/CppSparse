@@ -54,7 +54,10 @@ install(
     COMPONENT python
 )
 
-# TODO: Add install target for the C++ library
+# TODO
+# * Add install target for the C++ library
+# * Incorporate my own makefile for building and running the C++ tests
+# * Run the Python tests with pytest
 
 #==============================================================================
 #==============================================================================

@@ -29,6 +29,20 @@ struct Householder {
 };
 
 
+/** Symbolic QR decomposition return struct (see: cs_symbolic aka css) */
+struct SymbolicQR
+{
+    std::vector<csint> p_inv,     ///< inverse row permutation
+                       q,         ///< fill-reducting column permutation
+                       parent,    ///< elimination tree
+                       leftmost;  ///< leftmost[i] = min(find(A(i,:)))
+
+    csint m2,   ///< # of rows for QR, after adding fictitious rows
+          vnz,  ///< # entries in V
+          rnz;  ///< # entries in R
+};
+
+
 /** Numeric QR decomposition return struct. */
 struct QRResult {
     CSCMatrix V;               ///< the Householder vectors
@@ -107,7 +121,7 @@ std::vector<double> happly(
  *        have been computed by cs::etree. Only p_inv, leftmost, lnz, and m2
  *        values are updated.
  */
-void vcount(const CSCMatrix& A, Symbolic& S);
+void vcount(const CSCMatrix& A, SymbolicQR& S);
 
 
 /** Perform symbolic analysis for the QR decomposition of a matrix.
@@ -118,8 +132,7 @@ void vcount(const CSCMatrix& A, Symbolic& S);
  * count (including fictitious rows), `S.m2`.
  *
  * It also computes the elimination tree of the matrix `A.T @ A`, `S.parent`;
- * a column permutation vector `S.q` per the desired `order`; and the column
- * counts of the Cholesky factor of `A.T @ A`, `S.cp`.
+ * a column permutation vector `S.q` per the desired `order`.
  *
  * @param A  the matrix to factorize
  * @param order  the ordering method to use:
@@ -128,9 +141,9 @@ void vcount(const CSCMatrix& A, Symbolic& S);
  *       - 2: amd(A.T * A) with no dense rows
  *       - 3: amd(A.T * A)
  *
- * @return the Symbolic factorization
+ * @return the symbolic factorization
  */
-Symbolic sqr(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
+SymbolicQR sqr(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
 
 
 /** Perform the numeric QR decomposition of a matrix.
@@ -140,7 +153,7 @@ Symbolic sqr(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
  *
  * @return the numeric factorization
  */
-QRResult qr(const CSCMatrix& A, const Symbolic& S);
+QRResult qr(const CSCMatrix& A, const SymbolicQR& S);
 
 
 }  // namespace cs

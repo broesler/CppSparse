@@ -465,9 +465,9 @@ std::vector<csint> chol_colcounts(const CSCMatrix& A, bool ata)
 }
 
 
-Symbolic schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
+SymbolicChol schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 {
-    Symbolic S;
+    SymbolicChol S;
     std::vector<csint> p(A.shape()[1]);  // the matrix permutation
 
     if (order == AMDOrder::Natural) {
@@ -501,14 +501,14 @@ Symbolic schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 
     std::vector<csint> c = counts(C, S.parent, postorder);
 
-    S.cp = cumsum(c);                         // find column pointers for L
-    S.lnz = S.unz = S.cp.back();              // number of non-zeros in L and U
+    S.cp = cumsum(c);                   // find column pointers for L
+    S.lnz = S.cp.back();                // number of non-zeros in L
 
     return S;
 }
 
 
-CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S)
+CSCMatrix symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S)
 {
     auto [M, N] = A.shape();
     CSCMatrix L({M, N}, S.lnz);        // allocate result
@@ -538,7 +538,7 @@ CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S)
 }
 
 
-CSCMatrix chol(const CSCMatrix& A, const Symbolic& S, double drop_tol)
+CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
 {
     auto [M, N] = A.shape();
     CSCMatrix L({M, N}, S.lnz);  // allocate result
@@ -614,7 +614,7 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S, double drop_tol)
 }
 
 
-CSCMatrix& leftchol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L)
+CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 {
     // Ensure L has been allocated via symbolic_cholesky
     assert(!L.indptr().empty());
@@ -691,7 +691,7 @@ CSCMatrix& leftchol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L)
 }
 
 
-CSCMatrix& rechol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L)
+CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 {
     // Ensure L has been allocated via symbolic_cholesky
     assert(!L.p_.empty());

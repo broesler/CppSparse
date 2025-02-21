@@ -964,11 +964,11 @@ class CSCMatrix
         friend std::vector<csint> chol_rowcounts(const CSCMatrix& A);
         friend std::vector<csint> chol_colcounts(const CSCMatrix& A, bool ata);
 
-        friend CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S);
+        friend CSCMatrix symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S);
 
-        friend CSCMatrix chol(const CSCMatrix& A, const Symbolic& S, double drop_tol);
-        friend CSCMatrix& leftchol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L);
-        friend CSCMatrix& rechol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L);
+        friend CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S, double drop_tol);
+        friend CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
+        friend CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
 
         friend CSCMatrix ichol(
             const CSCMatrix& A,
@@ -1013,9 +1013,9 @@ class CSCMatrix
             const std::vector<double>& x
         );
 
-        friend void vcount(const CSCMatrix& A, Symbolic& S);
+        friend void vcount(const CSCMatrix& A, SymbolicQR& S);
 
-        friend QRResult qr(const CSCMatrix& A, const Symbolic& S);
+        friend QRResult qr(const CSCMatrix& A, const SymbolicQR& S);
 
         //----------------------------------------------------------------------
         //        Printing

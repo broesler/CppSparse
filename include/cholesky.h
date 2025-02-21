@@ -47,19 +47,14 @@ struct CholCounts {
 };
 
 
-// TODO separate this structure into SymbolicChol, SymbolicQR, and SymbolicLU.
-// See cs_symbolic aka css
-struct Symbolic
+/** SymbolicChol Cholesky decomposition return struct (see cs_symbolic aka css) */
+struct SymbolicChol
 {
-    std::vector<csint> p_inv,     // inverse row permutation for QR, fill-reducing permutation for Cholesky
-                       q,         // fill-reducting column permutation for LU and QR
-                       parent,    // elimination tree
-                       cp,        // column pointers for Cholesky, row counts for QR
-                       leftmost;  // leftmost[i] = min(find(A(i,:))) for QR
+    std::vector<csint> p_inv,   ///< fill-reducing permutation
+                       parent,  ///< elimination tree
+                       cp;      ///< column pointers
 
-    csint m2;    // # of rows for QR, after adding fictitious rows
-    double lnz,  // # entries in L for LU or Cholesky, in V for QR
-           unz;  // # entries in U for LU, in R for QR
+    csint lnz;  ///< # entries in L
 };
 
 
@@ -291,11 +286,11 @@ std::vector<csint> chol_colcounts(const CSCMatrix& A, bool ata=false);
  * @param postorder  if True, postorder the matrix in addition to the AMD
  *        (or natural) ordering. See: Davis, Exercise 4.9.
  *
- * @return the Symbolic factorization
+ * @return the SymbolicChol factorization
  *
  * @see cs_schol
  */
-Symbolic schol(
+SymbolicChol schol(
     const CSCMatrix& A,
     AMDOrder order=AMDOrder::Natural,
     bool use_postorder=false
@@ -312,7 +307,7 @@ Symbolic schol(
  * @note This function assumes that `A` is symmetric and positive definite.
  *
  * @param A the matrix to factorize
- * @param S the Symbolic factorization of `A`, from `cs::schol()`
+ * @param S the SymbolicChol factorization of `A`, from `cs::schol()`
  *
  * @return L  a CSCMatrix with the sparsity pattern of the Cholesky
  *         factor of A, and the values vector zeroed out.
@@ -322,7 +317,7 @@ Symbolic schol(
  * @see cs::schol()
  * @see cs::chol()
  */
-CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S);
+CSCMatrix symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S);
 
 
 /** Compute the up-looking Cholesky factorization of a sparse matrix.
@@ -330,12 +325,12 @@ CSCMatrix symbolic_cholesky(const CSCMatrix& A, const Symbolic& S);
  * @note This function assumes that `A` is symmetric and positive definite.
  *
  * @param A the matrix to factorize
- * @param S the Symbolic factorization of `A`
+ * @param S the SymbolicChol factorization of `A`
  * @param drop_tol  the drop tolerance for the factorization
  *
  * @return the numeric Cholesky factorization of `A`
  */
-CSCMatrix chol(const CSCMatrix& A, const Symbolic& S, double drop_tol=0.0);
+CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S, double drop_tol=0.0);
 
 
 /** Compute the left-looking Cholesky factorization of a sparse matrix, given
@@ -346,7 +341,7 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S, double drop_tol=0.0);
  * @note This function assumes that `A` is symmetric and positive definite.
  *
  * @param A the matrix to factorize
- * @param S the Symbolic factorization of `A` from `cs::schol()`
+ * @param S the SymbolicChol factorization of `A` from `cs::schol()`
  * @param[in, out] L  the symbolic Cholesky factor of `A` from
  *        `cs::symbolic_cholesky()`. This matrix is modified in place.
  *
@@ -354,7 +349,7 @@ CSCMatrix chol(const CSCMatrix& A, const Symbolic& S, double drop_tol=0.0);
  *
  * @see 'python/cholesky.py::chol_left_amp()'
  */
-CSCMatrix& leftchol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L);
+CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
 
 
 /** Compute the up-looking Cholesky factorization of a sparse matrix, given the
@@ -365,7 +360,7 @@ CSCMatrix& leftchol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L);
  * @note This function assumes that `A` is symmetric and positive definite.
  *
  * @param A the matrix to factorize
- * @param S the Symbolic factorization of `A` from `cs::schol()`
+ * @param S the SymbolicChol factorization of `A` from `cs::schol()`
  * @param[in, out] L  the symbolic Cholesky factor of `A` from
  *        `cs::symbolic_cholesky()`. This matrix is modified in place.
  *
@@ -373,7 +368,7 @@ CSCMatrix& leftchol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L);
  *
  * @see 'python/cholesky.py::chol_left_amp()'
  */
-CSCMatrix& rechol(const CSCMatrix& A, const Symbolic& S, CSCMatrix& L);
+CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
 
 
 /** Update the Cholesky factor for \f$ A = A + σ w w^T \f$.

@@ -2378,7 +2378,7 @@ TEST_CASE("Cholesky decomposition")
     }
 
     SECTION("Symbolic factorization") {
-        Symbolic S = schol(A, AMDOrder::Natural);
+        SymbolicChol S = schol(A, AMDOrder::Natural);
 
         std::vector<csint> expect_p_inv(A.shape()[1]);
         std::iota(expect_p_inv.begin(), expect_p_inv.end(), 0);
@@ -2391,7 +2391,6 @@ TEST_CASE("Cholesky decomposition")
         REQUIRE(S.cp == cumsum(chol_colcounts(A)));
         REQUIRE(S.cp.back() == expect_nnz);
         REQUIRE(S.lnz == expect_nnz);
-        REQUIRE(S.unz == expect_nnz);
     }
 
     SECTION("Numeric factorization of non-positive definite matrix") {
@@ -2399,12 +2398,12 @@ TEST_CASE("Cholesky decomposition")
         for (csint i = 0; i < N; i++) {
             A.assign(i, i, 1.0);
         }
-        Symbolic S = schol(A, AMDOrder::Natural);
+        SymbolicChol S = schol(A, AMDOrder::Natural);
         CHECK_THROWS(chol(A, S));  // A is not positive definite
     }
 
     SECTION("Numeric factorization") {
-        Symbolic S = schol(A, AMDOrder::Natural);
+        SymbolicChol S = schol(A, AMDOrder::Natural);
 
         // should be no permutation with AMDOrder::Natural
         std::vector<csint> expect_p_inv(A.shape()[1]);
@@ -2449,7 +2448,7 @@ TEST_CASE("Cholesky decomposition")
     SECTION("Exercise 4.9: Use post-ordering with natural ordering") {
         // Compute the symbolic factorization with postordering
         bool use_postorder = true;
-        Symbolic S = schol(A, AMDOrder::Natural, use_postorder);
+        SymbolicChol S = schol(A, AMDOrder::Natural, use_postorder);
         CSCMatrix L = chol(A, S);
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
 
@@ -2473,7 +2472,7 @@ TEST_CASE("Cholesky decomposition")
 
     SECTION("Exercise 4.3: Solve Lx = b") {
         // Compute the numeric factorization
-        Symbolic S = schol(A);
+        SymbolicChol S = schol(A);
         CSCMatrix L = chol(A, S);
 
         // TODO zero-out a few rows of expect to make it "sparse"
@@ -2499,7 +2498,7 @@ TEST_CASE("Cholesky decomposition")
 
     SECTION("Exercise 4.4: Solve L^T x = b") {
         // Compute the numeric factorization
-        Symbolic S = schol(A);
+        SymbolicChol S = schol(A);
         CSCMatrix L = chol(A, S);
 
         // Create RHS for Lx = b
@@ -2528,7 +2527,7 @@ TEST_CASE("Cholesky decomposition")
     }
 
     SECTION("Exercise 4.10: Symbolic Cholesky") {
-        Symbolic S = schol(A);
+        SymbolicChol S = schol(A);
         CSCMatrix L = chol(A, S);  // numeric factorization
         CSCMatrix Ls = symbolic_cholesky(A, S);
 
@@ -2540,7 +2539,7 @@ TEST_CASE("Cholesky decomposition")
     }
 
     SECTION("Exercise 4.11: Left-looking Cholesky") {
-        Symbolic S = schol(A, AMDOrder::Natural);
+        SymbolicChol S = schol(A, AMDOrder::Natural);
         CSCMatrix L = symbolic_cholesky(A, S);
 
         // Compute the numeric factorization using the non-zero pattern
@@ -2552,7 +2551,7 @@ TEST_CASE("Cholesky decomposition")
     }
 
     SECTION("Exercise 4.12: Up-looking Cholesky with Pattern") {
-        Symbolic S = schol(A, AMDOrder::Natural);
+        SymbolicChol S = schol(A, AMDOrder::Natural);
         CSCMatrix L = symbolic_cholesky(A, S);
 
         // Compute the numeric factorization using the non-zero pattern
@@ -2719,26 +2718,27 @@ TEST_CASE("QR factorization of the Identity Matrix")
 
     CSCMatrix I = COOMatrix(vals, rows, rows).tocsc();
 
-    Symbolic S = sqr(I);
+    SymbolicQR S = sqr(I);
 
     SECTION("Symbolic factorization") {
         std::vector<csint> expect_identity = {0, 1, 2, 3, 4, 5, 6, 7};
         CHECK(S.p_inv == expect_identity);
         CHECK(S.q == expect_identity);
         CHECK(S.parent == std::vector<csint>(N, -1));
-        CHECK(S.cp == std::vector<csint>(N, 1));
         CHECK(S.leftmost == expect_identity);
         CHECK(S.m2 == N);
-        CHECK(S.lnz == N);
-        CHECK(S.unz == N);
+        CHECK(S.vnz == N);
+        CHECK(S.rnz == N);
     }
 
     SECTION("Numeric factorization") {
-        QRResult QR = qr(I, S);
+        std::vector<double> expect_beta(N, 0.0);
 
-        compare_matrices(QR.V, I);
-        CHECK_THAT(is_close(QR.beta, std::vector<double>(N, 0.0), tol), AllTrue());
-        compare_matrices(QR.R, I);
+        QRResult res = qr(I, S);
+
+        compare_matrices(res.V, I);
+        CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
+        compare_matrices(res.R, I);
     }
 }
 
@@ -2767,7 +2767,7 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
     std::vector<csint> parent = {3, 2, 3, 6, 5, 6, 7, -1};
 
     SECTION("vcount") {
-        Symbolic S;
+        SymbolicQR S;
         S.parent.assign(parent.begin(), parent.end());
         vcount(A, S);
 
@@ -2776,7 +2776,7 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
 
         CHECK(S.p_inv == expect_p_inv);
         CHECK(S.leftmost == expect_leftmost);
-        CHECK(S.lnz == 16);
+        CHECK(S.vnz == 16);
         CHECK(S.m2 == N);
     }
 
@@ -2785,19 +2785,16 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
         std::vector<csint> expect_q = {0, 1, 2, 3, 4, 5, 6, 7};      // natural
         std::vector<csint> expect_parent = parent;
         std::vector<csint> expect_leftmost = {0, 1, 2, 0, 4, 4, 1, 4};
-        std::vector<csint> expect_cp = {3, 4, 4, 3, 4, 3, 2, 1};
-        // cp is the column counts of the Cholesky factor of A^T A
 
-        Symbolic S = sqr(A);
+        SymbolicQR S = sqr(A);
 
         CHECK(S.p_inv == expect_p_inv);
         CHECK(S.q == expect_q);
         CHECK(S.parent == expect_parent);
-        CHECK(S.cp == expect_cp);
         CHECK(S.leftmost == expect_leftmost);
         CHECK(S.m2 == N);
-        CHECK(S.lnz == 16);  // manual counts Figure 5.1, p 74
-        CHECK(S.unz == 24);
+        CHECK(S.vnz == 16);  // manual counts Figure 5.1, p 74
+        CHECK(S.rnz == 24);
     }
 
     SECTION("Numeric factorization") {
@@ -2845,14 +2842,17 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
         };
 
         // ---------- Factor the matrix
-        Symbolic S = sqr(A);
-        QRResult QR = qr(A, S);
+        SymbolicQR S = sqr(A);
+        QRResult res = qr(A, S);
 
-        compare_matrices(QR.V, expect_V);
-        CHECK_THAT(is_close(QR.beta, expect_beta, tol), AllTrue());
-        compare_matrices(QR.R, expect_R);
+        compare_matrices(res.V, expect_V);
+        CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
+        compare_matrices(res.R, expect_R);
     }
 }
+
+
+// TODO test QR factorization of a non-square matrix M > N, and M < N
 
 /*==============================================================================
  *============================================================================*/

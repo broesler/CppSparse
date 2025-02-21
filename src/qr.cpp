@@ -10,7 +10,7 @@
 
 #include <numeric>  // accumulate
 
-#include "cholesky.h"  // Symbolic
+#include "cholesky.h"  // etree, post
 #include "qr.h"
 
 namespace cs {
@@ -104,7 +104,7 @@ std::vector<double> happly(
 
 // TODO this function does a lot of things, and likely can be broken up into
 // smaller functions? e.g. leftmost at least could be separated.
-void vcount(const CSCMatrix& A, Symbolic& S)
+void vcount(const CSCMatrix& A, SymbolicQR& S)
 {
     auto [M, N] = A.shape();
     std::vector<csint> next(M),      // the next row index
@@ -133,13 +133,13 @@ void vcount(const CSCMatrix& A, Symbolic& S)
         }
     }
 
-    S.lnz = 0;
+    S.vnz = 0;
     S.m2 = M;
 
     csint k; // declare outside loop for final row permutation
     for (k = 0; k < N; k++) {          // find row permutation and nnz(V)
         csint i = head[k];             // remove row i from queue k
-        S.lnz++;                       // count V(k, k) as nonzero
+        S.vnz++;                       // count V(k, k) as nonzero
         if (i < 0) {
             i = S.m2++;                // add a fictitious row
         }
@@ -147,7 +147,7 @@ void vcount(const CSCMatrix& A, Symbolic& S)
         if (--nque[k] <= 0) {          // skip if V(k+1:m, k) is empty
             continue;
         }
-        S.lnz += nque[k];              // nque[k] is nnz(V(k+1:m, k))
+        S.vnz += nque[k];              // nque[k] is nnz(V(k+1:m, k))
         csint pa = S.parent[k];
         if (pa != -1) {                // move all rows to parent of k
             if (nque[pa] == 0) {
@@ -167,11 +167,11 @@ void vcount(const CSCMatrix& A, Symbolic& S)
 }
 
 
-Symbolic sqr(const CSCMatrix& A, AMDOrder order)
+SymbolicQR sqr(const CSCMatrix& A, AMDOrder order)
 {
     auto [M, N] = A.shape();
-    Symbolic S;  // allocate result
-    std::vector<csint> q(M);  // column permutation vector
+    SymbolicQR S;             // allocate result
+    std::vector<csint> q(N);  // column permutation vector
 
     if (order == AMDOrder::Natural) {
         std::iota(q.begin(), q.end(), 0);  // identity permutation
@@ -184,27 +184,30 @@ Symbolic sqr(const CSCMatrix& A, AMDOrder order)
     S.q = q;  // store the column permutation
 
     // Find pattern of Cholesky factor of A.T @ A
-    bool values = false,
+    bool values = false,  // don't copy values
          CTC = true;
-    CSCMatrix C = A.permute_cols(S.q, values);  // don't copy values
-    S.parent = etree(C, CTC);  // etree of C.T @ C, C = A[:, q]
-    S.cp = counts(C, S.parent, post(S.parent), CTC);  // col counts chol(C.T @ C)
-    vcount(C, S);  // compute p_inv, leftmost, lnz, m2
-    S.unz = std::accumulate(S.cp.begin(), S.cp.end(), 0);
-    assert(S.lnz >= 0 && S.unz >= 0);  // overflow guard
+    CSCMatrix C = A.permute_cols(S.q, values);
+    S.parent = etree(C, CTC);  // etree of C^T C, C = A[:, q]
+
+    // column counts of the Cholesky factor of C^T C
+    std::vector<csint> cp = counts(C, S.parent, post(S.parent), CTC);
+    S.rnz = std::accumulate(cp.begin(), cp.end(), 0);
+
+    vcount(C, S);  // compute p_inv, leftmost, vnz, m2
+    assert(S.vnz >= 0 && S.rnz >= 0);  // overflow guard
 
     return S;
 }
 
 
-QRResult qr(const CSCMatrix& A, const Symbolic& S)
+QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
 {
     csint M = S.m2;
     csint N = A.N_;
 
     // Allocate result matrices
-    CSCMatrix V({M, N}, S.lnz);   // Householder vectors
-    CSCMatrix R({M, N}, S.unz);   // R factor
+    CSCMatrix V({M, N}, S.vnz);   // Householder vectors
+    CSCMatrix R({M, N}, S.rnz);   // R factor
     std::vector<double> beta(N);  // scaling factors
 
     // Allocate workspaces

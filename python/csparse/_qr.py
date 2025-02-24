@@ -63,7 +63,7 @@ def apply_qright(V, beta, p=None, Y=None):
     return X
 
 
-def apply_qleft(V, beta, p=None, Y=None):
+def apply_qtleft(V, beta, p=None, Y=None):
     r"""Apply Householder vectors on the left.
 
     Computes :math:`X = H_N \dots H_1 P Y = Q^T Y`, where :math:`Q` is

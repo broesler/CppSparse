@@ -75,7 +75,7 @@ def _test_qr_decomposition(case_name, A):
 
     p = csparse.inv_permute(S.p_inv)
     Q = csparse.apply_qright(V, beta, p)
-    Ql = csparse.apply_qleft(V, beta, p).T
+    Ql = csparse.apply_qtleft(V, beta, p).T
 
     # Test the apply functions both get the same Q
     np.testing.assert_allclose(Q, Ql, atol=ATOL)
@@ -119,7 +119,7 @@ def test_apply_q():
 
     # Apply them to the identity to get back Q itself
     Q_r = csparse.apply_qright(V_, tau)
-    Q_l = csparse.apply_qleft(V_, tau).T
+    Q_l = csparse.apply_qtleft(V_, tau).T
     np.testing.assert_allclose(Q_r, Q_l, atol=ATOL)
 
     # Compare to the scipy output
@@ -139,7 +139,7 @@ def test_qrightleft():
     V_l, beta_l, R_l = csparse.qr_left(A)
 
     Q_r = csparse.apply_qright(V_r, beta_r)
-    Q_l = csparse.apply_qleft(V_l, beta_l).T
+    Q_l = csparse.apply_qtleft(V_l, beta_l).T
 
     # Compare to each other
     np.testing.assert_allclose(V_r, V_l, atol=ATOL)

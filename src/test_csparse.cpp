@@ -44,6 +44,30 @@ COOMatrix davis_21_coo()
     return COOMatrix {v, i, j};
 }
 
+
+// Davis QR example Figure 5.1, p 74.
+CSCMatrix davis_example_qr()
+{
+    // Define the test matrix A (See Davis, Figure 5.1, p 74)
+    std::vector<csint> rows = {0, 1, 2, 3, 4, 5, 6,
+                               3, 6, 1, 6, 0, 2, 5, 7, 4, 7, 0, 1, 3, 7, 5, 6};
+    std::vector<csint> cols = {0, 1, 2, 3, 4, 5, 6,
+                               0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7};
+
+    // Label the diagonal elements 1..7, skipping the 8th
+    std::vector<double> vals(rows.size(), 1.0);
+    std::iota(vals.begin(), vals.begin() + 7, 1.0);
+
+    // Non-canonical format for testing
+    CSCMatrix A = COOMatrix(vals, rows, cols).compress();
+
+    // NOTE we need to include A[7, 7] even though it is numerically zero!
+    A.assign(7, 7, 0.0);
+
+    return A;
+}
+
+
 // See: Strang, p 25
 // E = [[ 1, 0, 0],
 //      [-2, 1, 0],
@@ -2722,22 +2746,7 @@ TEST_CASE("QR factorization of the Identity Matrix")
 TEST_CASE("QR Decomposition of Square, Non-symmetric A")
 {
     csint N = 8;  // number of rows and columns
-
-    // Define the test matrix A (See Davis, Figure 5.1, p 74)
-    std::vector<csint> rows = {0, 1, 2, 3, 4, 5, 6,
-                               3, 6, 1, 6, 0, 2, 5, 7, 4, 7, 0, 1, 3, 7, 5, 6};
-    std::vector<csint> cols = {0, 1, 2, 3, 4, 5, 6,
-                               0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7};
-
-    // Label the diagonal elements 1..7, skipping the 8th
-    std::vector<double> vals(rows.size(), 1.0);
-    std::iota(vals.begin(), vals.begin() + 7, 1.0);
-
-    // Non-canonical format for testing
-    CSCMatrix A = COOMatrix(vals, rows, cols).compress();
-
-    // NOTE we need to include A[7, 7] even though it is numerically zero!
-    A.assign(7, 7, 0.0);
+    CSCMatrix A = davis_example_qr();
 
     // See etree in Figure 5.1, p 74
     std::vector<csint> parent = {3, 2, 3, 6, 5, 6, 7, -1};
@@ -2870,16 +2879,7 @@ TEST_CASE("QR factorization of overdetermined M > N")
     // except remove the last 2 columns
     csint M = 8;
     csint N = 5;
-
-    std::vector<csint> rows = {0, 1, 2, 3, 4, 3, 6, 1, 6, 0, 2, 5, 7};
-    std::vector<csint> cols = {0, 1, 2, 3, 4, 0, 1, 2, 2, 3, 3, 4, 4};
-
-    // Label the diagonal elements 1..N
-    std::vector<double> vals(rows.size(), 1.0);
-    std::iota(vals.begin(), vals.begin() + N, 1.0);
-
-    // Non-canonical format for testing
-    CSCMatrix A = COOMatrix(vals, rows, cols).compress();
+    CSCMatrix A = davis_example_qr().slice(0, M, 0, N);
 
     CHECK(A.shape() == Shape {M, N});
 

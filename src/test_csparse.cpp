@@ -2820,14 +2820,42 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
         SymbolicQR S = sqr(A);
         QRResult res = qr(A, S);
 
+        // std::cout << "R.indptr(): " << res.R.indptr() << std::endl;
+        // std::cout << "R.indices(): " << res.R.indices() << std::endl;
+        // std::cout << "R.data(): " << res.R.data() << std::endl;
+
         compare_matrices(res.V, expect_V);
         CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
         compare_matrices(res.R, expect_R);
+
+        SECTION("Exercise 5.1: Symbolic factorization") {
+            QRResult sym_res = symbolic_qr(A, S);
+
+            CHECK(sym_res.V.indptr() == expect_V.indptr());
+            CHECK_THAT(sym_res.V.indices(), UnorderedEquals(expect_V.indices()));
+            CHECK(sym_res.V.data().size() == expect_V.data().size());  // allocation only
+            CHECK(sym_res.beta.empty());
+            CHECK(sym_res.R.indptr() == expect_R.indptr());
+            CHECK_THAT(sym_res.R.indices(), UnorderedEquals(expect_R.indices()));
+            REQUIRE(sym_res.R.data().size() == expect_R.data().size());  // allocation only
+        }
+
+        SECTION("Exercise 5.3: Re-QR factorization") {
+            res = symbolic_qr(A, S);
+
+            // Compute the numeric factorization using the symbolic result
+            reqr(A, S, res);
+
+            compare_matrices(res.V, expect_V);
+            CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
+            compare_matrices(res.R, expect_R);
+        }
     }
 }
 
 
-TEST_CASE("QR factorization of overdetermined M > N") {
+TEST_CASE("QR factorization of overdetermined M > N")
+{
     // TODO move this matrix to a function
     // Define the test matrix A (See Davis, Figure 5.1, p 74)
     // except remove the last 2 columns
@@ -2927,16 +2955,27 @@ TEST_CASE("QR factorization of overdetermined M > N") {
         CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
         compare_matrices(res.R, expect_R);
 
-        SECTION("Symbolic factorization") {
+        SECTION("Exercise 5.1: Symbolic factorization") {
             QRResult sym_res = symbolic_qr(A, S);
 
             CHECK(sym_res.V.indptr() == expect_V.indptr());
             CHECK_THAT(sym_res.V.indices(), UnorderedEquals(expect_V.indices()));
-            CHECK(sym_res.V.data().empty());
+            CHECK(sym_res.V.data().size() == expect_V.data().size());
             CHECK(sym_res.beta.empty());
             CHECK(sym_res.R.indptr() == expect_R.indptr());
             CHECK_THAT(sym_res.R.indices(), UnorderedEquals(expect_R.indices()));
-            REQUIRE(sym_res.R.data().empty());
+            REQUIRE(sym_res.R.data().size() == expect_R.data().size());
+        }
+
+        SECTION("Exercise 5.3: Re-QR factorization") {
+            res = symbolic_qr(A, S);
+
+            // Compute the numeric factorization using the symbolic result
+            reqr(A, S, res);
+
+            compare_matrices(res.V, expect_V);
+            CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
+            compare_matrices(res.R, expect_R);
         }
     }
 }

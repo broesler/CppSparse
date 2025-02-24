@@ -1018,6 +1018,7 @@ class CSCMatrix
 
         friend QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S);
         friend QRResult qr(const CSCMatrix& A, const SymbolicQR& S);
+        friend void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res);
 
         //----------------------------------------------------------------------
         //        Printing

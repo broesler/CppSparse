@@ -218,9 +218,9 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
     csint M = S.m2;
     csint N = A.N_;
 
-    // Allocate result matrices without values
-    CSCMatrix V({M, N}, S.vnz, false);   // Householder vectors
-    CSCMatrix R({M, N}, S.rnz, false);   // R factor
+    // Allocate result matrices
+    CSCMatrix V({M, N}, S.vnz);   // Householder vectors
+    CSCMatrix R({M, N}, S.rnz);   // R factor
 
     // Allocate workspaces
     std::vector<double> x;         // dense vector (dummy reference for scatter)
@@ -365,6 +365,59 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     V.p_[N] = vnz;  // finalize V
 
     return {V, beta, R};
+}
+
+
+// Exercise 5.3
+void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
+{
+    csint M = S.m2;
+    csint N = A.N_;
+
+    // Check that results have been allocated
+    CSCMatrix& V = res.V;
+    CSCMatrix& R = res.R;
+    std::vector<double>& beta = res.beta;
+
+    assert(!V.indices().empty());
+    assert(!R.indices().empty());
+
+    beta = std::vector<double>(N);  // scaling factors
+
+    // Allocate workspaces
+    std::vector<double> x(M);  // dense vector
+
+    // Compute V and R
+    for (csint k = 0; k < N; k++) {
+        csint col = S.q[k];  // permuted column of A
+
+        // R[:, k] pattern known. Scatter A[:, col] into x
+        for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {
+            csint i = S.p_inv[A.i_[p]];  // i = permuted row of A(:, col)
+            x[i] = A.v_[p];              // x(i) = A(:, col)
+        }
+
+        // for each i in pattern of R[:, k] (R(i, k) is non-zero)
+        for (csint p = R.p_[k]; p < R.p_[k+1] - 1; p++) {
+            csint i = R.i_[p];             // R(i, k)
+            x = happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
+            R.v_[p] = x[i];                // R(i, k) = x(i)
+            x[i] = 0;
+        }
+
+        // gather V(:, k) = x
+        for (csint p = V.p_[k]; p < V.p_[k+1]; p++) {
+            V.v_[p] = x[V.i_[p]];
+            x[V.i_[p]] = 0;  // clear x
+        }
+
+        // [v, beta, s] = house(x) == house(V[:, k])
+        auto V_k = std::span(V.v_).subspan(V.p_[k], V.p_[k+1] - V.p_[k]);
+        Householder h = house(V_k);
+        std::copy(h.v.begin(), h.v.end(), V.v_.begin() + V.p_[k]);
+        beta[k] = h.beta;
+        R.v_[R.p_[k+1] - 1] = h.s;  // R(k, k) = -sign(x[0]) * norm(x)
+    }
 }
 
 

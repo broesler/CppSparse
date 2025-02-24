@@ -177,6 +177,22 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S);
 QRResult qr(const CSCMatrix& A, const SymbolicQR& S);
 
 
+/** Perform the numeric QR decomposition of a matrix, given the non-zero pattern
+ * of V and R.
+ *
+ * See: Davis, Exercise 5.3.
+ *
+ * @param A  the matrix to factorize
+ * @param S  the symbolic analysis of A
+ * @param[in,out] res the symbolic QR decomposition with the non-zero pattern of
+ *        V and R
+ *
+ * @return the numeric factorization
+ */
+void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res);
+
+
+
 }  // namespace cs
 
 #endif  // _CSPARSE_QR_H_

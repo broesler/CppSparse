@@ -22,6 +22,9 @@ from .utils import from_scipy_sparse, to_scipy_sparse
 # -----------------------------------------------------------------------------
 #         Householder Reflections
 # -----------------------------------------------------------------------------
+# TODO implement apply_qleft for P^T Q b = P^T H1 H2 ... HN b. 
+# See Trefethen Algorithm 10.3, p 74.
+
 def apply_qright(V, beta, p=None, Y=None):
     r"""Apply Householder vectors on the right.
 
@@ -47,6 +50,11 @@ def apply_qright(V, beta, p=None, Y=None):
     -------
     result : (M, N) ndarray
         The result of applying the Householder transformations to `Y`.
+
+    See also
+    --------
+    cs_qright : The CSparse implementation of this function.
+    apply_qtleft : Apply Householder vectors on the left as :math:`Q^T Y`.
     """
     if isinstance(V, CSCMatrix):
         V = to_scipy_sparse(V)
@@ -88,6 +96,11 @@ def apply_qtleft(V, beta, p=None, Y=None):
     -------
     result : (M, N) ndarray
         The result of applying the Householder transformations to `Y`.
+
+    See also
+    --------
+    cs_qleft : The CSparse implementation of this function.
+    apply_qright : Apply Householder vectors on the right as :math:`Y Q`.
     """
     if isinstance(V, CSCMatrix):
         V = to_scipy_sparse(V)

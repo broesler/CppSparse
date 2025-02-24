@@ -104,7 +104,9 @@ PYBIND11_MODULE(csparse, m) {
     py::class_<cs::QRResult>(m, "QRResult")
         .def_readwrite("V", &cs::QRResult::V)
         .def_readwrite("beta", &cs::QRResult::beta)
-        .def_readwrite("R", &cs::QRResult::R);
+        .def_readwrite("R", &cs::QRResult::R)
+        .def_readwrite("p_inv", &cs::QRResult::p_inv)
+        .def_readwrite("q", &cs::QRResult::q);
 
     //--------------------------------------------------------------------------
     //        COOMatrix class

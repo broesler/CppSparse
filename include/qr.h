@@ -45,9 +45,10 @@ struct SymbolicQR
 
 /** Numeric QR decomposition return struct. */
 struct QRResult {
-    CSCMatrix V;               ///< the Householder vectors
-    std::vector<double> beta;  ///< the scaling factors
-    CSCMatrix R;               ///< the upper triangular matrix
+    CSCMatrix V;                  ///< the Householder vectors
+    std::vector<double> beta;     ///< the scaling factors
+    CSCMatrix R;                  ///< the upper triangular matrix
+    std::vector<csint> p_inv, q;  ///< row and column permutations
 };
 
 
@@ -174,6 +175,19 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S);
 
 
 /** Perform the numeric QR decomposition of a matrix.
+ *
+ * This function computes the Householder vectors `V`, the scaling factors
+ * `beta`, and the upper triangular matrix `R` of the full QR decomposition of `A`.
+ *
+ * If the size of A is `M`-by-`N`, with `M >= N`, then `V` is `M`-by-`N`, `beta`
+ * is length `N`, and `R` is `M`-by-`N`. 
+ *
+ * To form the full `Q` matrix, apply the Householder vectors to the identity
+ * matrix `I_M` to form `Q = I_M - V @ diag(beta) @ V.T`,
+ * using the python function `csparse.apply_qright(V, beta)`.
+ *
+ * This process forms the "full" QR decomposition with `Q` size `M`-by-`M`. If
+ * `M > N`, `R` will have `M - N` rows of zeros at the bottom.
  *
  * @param A  the matrix to factorize
  * @param S  the symbolic analysis of A

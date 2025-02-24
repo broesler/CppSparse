@@ -288,7 +288,7 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
     R.p_[N] = rnz;  // finalize R
     V.p_[N] = vnz;  // finalize V
 
-    return {V, {}, R};
+    return {V, {}, R, S.p_inv, S.q};
 }
 
 
@@ -322,6 +322,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
 
         t.clear();
         csint col = S.q[k];  // permuted column of A
+
         // find R[:, k] pattern
         for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {
             csint i = S.leftmost[A.i_[p]];  // i = min(find(A(i, q)))
@@ -374,7 +375,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     R.p_[N] = rnz;  // finalize R
     V.p_[N] = vnz;  // finalize V
 
-    return {V, beta, R};
+    return {V, beta, R, S.p_inv, S.q};
 }
 
 
@@ -388,6 +389,8 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
     CSCMatrix& V = res.V;
     CSCMatrix& R = res.R;
     std::vector<double>& beta = res.beta;
+    res.p_inv = S.p_inv;
+    res.q = S.q;
 
     assert(!V.indices().empty());
     assert(!R.indices().empty());

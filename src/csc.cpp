@@ -92,9 +92,9 @@ CSCMatrix::CSCMatrix(
         double val;
         for (csint i = 0; i < M_; i++) {
             if (order == 'F') {
-                val = A[i + j * N_];  // linear index for column-major order
+                val = A[i + j * M_];  // linear index for column-major order
             } else {
-                val = A[j + i * M_];  // linear index for row-major order
+                val = A[j + i * N_];  // linear index for row-major order
             }
 
             // Only store non-zeros

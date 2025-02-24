@@ -33,6 +33,8 @@ using Catch::Matchers::UnorderedEquals;
 constexpr double tol = 1e-14;
 
 
+// TODO move all example definitions to the utils file, and then in the python
+// module we just have to use the wrapper function to get the format.
 COOMatrix davis_21_coo()
 {
     // See Davis pp 7-8, Eqn (2.1)
@@ -2829,11 +2831,12 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
 
 
 TEST_CASE("QR factorization of overdetermined M > N") {
+    // TODO move this matrix to a function
+    // Define the test matrix A (See Davis, Figure 5.1, p 74)
+    // except remove the last 2 columns
     csint M = 8;
     csint N = 5;
 
-    // Define the test matrix A (See Davis, Figure 5.1, p 74)
-    // except remove the last 2 columns
     std::vector<csint> rows = {0, 1, 2, 3, 4, 3, 6, 1, 6, 0, 2, 5, 7};
     std::vector<csint> cols = {0, 1, 2, 3, 4, 0, 1, 2, 2, 3, 3, 4, 4};
 
@@ -2862,7 +2865,6 @@ TEST_CASE("QR factorization of overdetermined M > N") {
         S.leftmost = find_leftmost(A);
         vcount(A, S);
 
-        // TODO check these values
         CHECK(S.p_inv == expect_p_inv);
         CHECK(S.vnz == 11);
         REQUIRE(S.m2 == M);
@@ -2883,18 +2885,50 @@ TEST_CASE("QR factorization of overdetermined M > N") {
         REQUIRE(S.rnz == 8);
     }
 
-    // TODO check these values
     SECTION("Numeric factorization") {
         SymbolicQR S = sqr(A);
         QRResult res = qr(A, S);
 
-        std::cout << "p_inv = " << S.p_inv << std::endl;
+        // Expected values from scipy.linalg.qr
+        CSCMatrix expect_V {
+            {1.                , 0.                , 0.                , 0.                , 0.                ,
+             0.                , 1.                , 0.                , 0.                , 0.                ,
+             0.                , 0.2360679774997897, 1.                , 0.                , 0.                ,
+             0.                , 0.                , 0.8619788607068873, 1.                , 0.                ,
+             0.                , 0.                , 0.                , 0.                , 1.                ,
+             0.4142135623730951, 0.                , 0.                , 0.9329077440557915, 0.                ,
+             0.                , 0.                , 0.                , 0.                , 0.0980762113533159,
+             0.                , 0.                , 0.                , 0.                , 0.0980762113533159
+            },
+            {8, 5},
+            'C'  // row-major order
+        };
 
-        std::cout << "V = " << std::endl;
-        res.V.print_dense();
-        std::cout << "R = " << std::endl;
-        res.R.print_dense();
-        std::cout << "beta = " << res.beta << std::endl;
+        std::vector<double> expect_beta {
+            1.7071067811865472,
+            1.8944271909999157,
+            1.1474419561548972,
+            1.0693375245281538,
+            1.9622504486493761
+        };
+
+        CSCMatrix expect_R {
+            {-1.4142135623730951,  0.                ,  0.                , -3.5355339059327378,  0.                ,
+              0.                , -2.23606797749979  , -1.341640786499874 ,  0.                ,  0.                ,
+              0.                ,  0.                , -3.0331501776206204, -0.9890707100936804,  0.                ,
+              0.                ,  0.                ,  0.                , -2.1264381322847794,  0.                ,
+              0.                ,  0.                ,  0.                ,  0.                , -5.196152422706632 ,
+              0.                ,  0.                ,  0.                ,  0.                ,  0.                ,
+              0.                ,  0.                ,  0.                ,  0.                ,  0.                ,
+              0.                ,  0.                ,  0.                ,  0.                ,  0.
+            },
+            {8, 5},
+            'C' // row-major order
+        };
+
+        compare_matrices(res.V, expect_V);
+        CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
+        compare_matrices(res.R, expect_R);
     }
 }
 

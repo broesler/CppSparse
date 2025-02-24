@@ -76,12 +76,15 @@ np.testing.assert_allclose(Q @ R, A_dense, atol=atol)
 print("Q @ R = ")
 print(Q @ R)
 
+
 # -----------------------------------------------------------------------------
 #         Compute using Givens rotations
 # -----------------------------------------------------------------------------
 x = np.r_[3, 4]
 G = csparse.givens(x)
 
+# NOTE not sure what to do with these yet... there is no V or Q computed, and
+# the two algorithms do not give equal results.
 Rf = csparse.qr_givens_full(A_dense)
 Rg = csparse.qr_givens(A_dense)
 
@@ -90,6 +93,37 @@ np.testing.assert_allclose(np.abs(G @ x), np.r_[la.norm(x), 0], atol=atol)
 # TODO work out what the sign of the rotation should be and test for various
 # vectors.
 
+
+# -----------------------------------------------------------------------------
+#         QR with a M > N matrix
+# -----------------------------------------------------------------------------
+Ar = A[:, :5]
+Ar_dense = Ar.toarray()
+
+Arc = csparse.from_scipy_sparse(Ar)
+Sr = csparse.sqr(Arc)
+QRr_res = csparse.qr(Arc, Sr)
+
+Vr, beta_r, Rr = QRr_res.V, QRr_res.beta, QRr_res.R
+Vr = Vr.toarray()
+beta_r = np.r_[beta_r]
+Rr = Rr.toarray()
+
+# Get the actual Q matrix
+pr = csparse.inv_permute(Sr.p_inv)
+Qr = csparse.apply_qright(Vr, beta_r, pr)
+
+# Get the scipy version
+Arp = Ar_dense[pr]
+Qr_, Rr_ = la.qr(Arp, mode='full')      # (12, 8) = (12, 12) @ (12, 8)
+# Qr_, Rr_ = la.qr(Ar_dense, mode='economic')  # (12, 8) = (12, 8) @ (8, 8)
+
+(Qraw_r, tau_r), _ = la.qr(Arp, mode='raw')
+Vr_ = np.tril(Qraw_r, -1) + np.eye(*Arp.shape)
+
+np.testing.assert_allclose(Qr, Qr_[Sr.p_inv], atol=atol)
+np.testing.assert_allclose(Rr, Rr_, atol=atol)
+np.testing.assert_allclose(Qr @ Rr, Ar_dense, atol=atol)
 
 # =============================================================================
 # =============================================================================

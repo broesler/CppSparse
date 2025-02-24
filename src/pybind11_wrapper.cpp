@@ -79,18 +79,26 @@ PYBIND11_MODULE(csparse, m) {
         .value("ATA", cs::AMDOrder::ATA)
         .export_values();
 
-    // Bind the Symbolic struct
-    py::class_<cs::Symbolic>(m, "Symbolic")
+    // Bind the Symbolic structs
+    py::class_<cs::SymbolicChol>(m, "SymbolicChol")
         // Expose the members of the struct as attributes in Python
         .def(py::init<>())  // Default constructor
-        .def_readwrite("p_inv", &cs::Symbolic::p_inv)
-        .def_readwrite("q", &cs::Symbolic::q)
-        .def_readwrite("parent", &cs::Symbolic::parent)
-        .def_readwrite("cp", &cs::Symbolic::cp)
-        .def_readwrite("leftmost", &cs::Symbolic::leftmost)
-        .def_readwrite("m2", &cs::Symbolic::m2)
-        .def_readwrite("lnz", &cs::Symbolic::lnz)
-        .def_readwrite("unz", &cs::Symbolic::unz);
+        .def_readwrite("p_inv", &cs::SymbolicChol::p_inv)
+        .def_readwrite("parent", &cs::SymbolicChol::parent)
+        .def_readwrite("cp", &cs::SymbolicChol::cp)
+        .def_readwrite("lnz", &cs::SymbolicChol::lnz);
+
+    // Bind the Symbolic structs
+    py::class_<cs::SymbolicQR>(m, "SymbolicQR")
+        // Expose the members of the struct as attributes in Python
+        .def(py::init<>())  // Default constructor
+        .def_readwrite("p_inv", &cs::SymbolicQR::p_inv)
+        .def_readwrite("q", &cs::SymbolicQR::q)
+        .def_readwrite("parent", &cs::SymbolicQR::parent)
+        .def_readwrite("leftmost", &cs::SymbolicQR::leftmost)
+        .def_readwrite("m2", &cs::SymbolicQR::m2)
+        .def_readwrite("vnz", &cs::SymbolicQR::vnz)
+        .def_readwrite("rnz", &cs::SymbolicQR::rnz);
 
     // Bind the QRResult struct
     py::class_<cs::QRResult>(m, "QRResult")

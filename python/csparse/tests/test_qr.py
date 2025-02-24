@@ -35,6 +35,7 @@ TEST_MATRICES = [
     ("Strang 3x3", sparse.csc_array(
         np.array([[1, 1, 2], [0, 0, 1], [1, 0, 0]], dtype=float)
     )),
+    ("Davis 8x5 (M > N)", csparse.davis_example_qr(format='csc')[:, :5])
 ]
 
 
@@ -84,7 +85,7 @@ def _test_qr_decomposition(case_name, A):
     Ap = A_dense[p]
     (Qraw, tau), Rraw = la.qr(Ap, mode='raw')
     Q_, R_ = la.qr(Ap)
-    V_ = np.tril(Qraw, -1) + np.eye(N)
+    V_ = np.tril(Qraw, -1) + np.eye(*A.shape)
     Qr_ = csparse.apply_qright(V_, tau, p)
 
     # Now we get the same Householder vectors and weights

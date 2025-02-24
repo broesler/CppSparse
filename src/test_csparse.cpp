@@ -2744,7 +2744,7 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
     std::vector<csint> expect_p_inv = {0, 1, 3, 7, 4, 5, 2, 6};  // cs_qr MATLAB
 
     SECTION("find_leftmost") {
-        CHECK(find_leftmost(A) == expect_leftmost);
+        REQUIRE(find_leftmost(A) == expect_leftmost);
     }
 
     SECTION("vcount") {
@@ -2755,7 +2755,7 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
 
         CHECK(S.p_inv == expect_p_inv);
         CHECK(S.vnz == 16);
-        CHECK(S.m2 == N);
+        REQUIRE(S.m2 == N);
     }
 
     SECTION("Symbolic factorization") {
@@ -2770,7 +2770,7 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
         CHECK(S.leftmost == expect_leftmost);
         CHECK(S.m2 == N);
         CHECK(S.vnz == 16);  // manual counts Figure 5.1, p 74
-        CHECK(S.rnz == 24);
+        REQUIRE(S.rnz == 24);
     }
 
     SECTION("Numeric factorization") {
@@ -2828,7 +2828,77 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
 }
 
 
-// TODO test QR factorization of a non-square matrix M > N, and M < N
+TEST_CASE("QR factorization of overdetermined M > N") {
+    csint M = 8;
+    csint N = 5;
+
+    // Define the test matrix A (See Davis, Figure 5.1, p 74)
+    // except remove the last 2 columns
+    std::vector<csint> rows = {0, 1, 2, 3, 4, 3, 6, 1, 6, 0, 2, 5, 7};
+    std::vector<csint> cols = {0, 1, 2, 3, 4, 0, 1, 2, 2, 3, 3, 4, 4};
+
+    // Label the diagonal elements 1..N
+    std::vector<double> vals(rows.size(), 1.0);
+    std::iota(vals.begin(), vals.begin() + N, 1.0);
+
+    // Non-canonical format for testing
+    CSCMatrix A = COOMatrix(vals, rows, cols).compress();
+
+    CHECK(A.shape() == Shape {M, N});
+
+    // See etree in Figure 5.1, p 74
+    std::vector<csint> parent = {3, 2, 3, -1, -1};
+
+    std::vector<csint> expect_leftmost = {0, 1, 2, 0, 4, 4, 1, 4};
+    std::vector<csint> expect_p_inv = {0, 1, 3, 5, 4, 6, 2, 7};
+
+    SECTION("find_leftmost") {
+        REQUIRE(find_leftmost(A) == expect_leftmost);
+    }
+
+    SECTION("vcount") {
+        SymbolicQR S;
+        S.parent.assign(parent.begin(), parent.end());
+        S.leftmost = find_leftmost(A);
+        vcount(A, S);
+
+        // TODO check these values
+        CHECK(S.p_inv == expect_p_inv);
+        CHECK(S.vnz == 11);
+        REQUIRE(S.m2 == M);
+    }
+
+    SECTION("Symbolic factorization") {
+        std::vector<csint> expect_q = {0, 1, 2, 3, 4};  // natural
+        std::vector<csint> expect_parent = parent;
+
+        SymbolicQR S = sqr(A);
+
+        CHECK(S.p_inv == expect_p_inv);
+        CHECK(S.q == expect_q);
+        CHECK(S.parent == expect_parent);
+        CHECK(S.leftmost == expect_leftmost);
+        CHECK(S.m2 == M);
+        CHECK(S.vnz == 11);  // manual counts Figure 5.1, p 74
+        REQUIRE(S.rnz == 8);
+    }
+
+    // TODO check these values
+    SECTION("Numeric factorization") {
+        SymbolicQR S = sqr(A);
+        QRResult res = qr(A, S);
+
+        std::cout << "p_inv = " << S.p_inv << std::endl;
+
+        std::cout << "V = " << std::endl;
+        res.V.print_dense();
+        std::cout << "R = " << std::endl;
+        res.R.print_dense();
+        std::cout << "beta = " << res.beta << std::endl;
+    }
+}
+
+// TODO test QR factorization of an underdetermined matrix M < N
 
 /*==============================================================================
  *============================================================================*/

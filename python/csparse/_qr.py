@@ -52,7 +52,7 @@ def apply_qright(V, beta, p=None, Y=None):
         V = to_scipy_sparse(V)
 
     if Y is None:
-        Y = sparse.eye_array(V.shape[1]).tocsc()
+        Y = sparse.eye_array(V.shape[0]).tocsc()
 
     M, N = V.shape
     X = Y.copy()

@@ -178,7 +178,7 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
 }
 
 
-SymbolicQR sqr(const CSCMatrix& A, AMDOrder order)
+SymbolicQR sqr(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 {
     auto [M, N] = A.shape();
     SymbolicQR S;             // allocate result
@@ -192,16 +192,26 @@ SymbolicQR sqr(const CSCMatrix& A, AMDOrder order)
         throw std::runtime_error("Ordering method not implemented!");
     }
 
-    S.q = q;  // store the column permutation
-
     // Find pattern of Cholesky factor of A.T @ A
     bool values = false,  // don't copy values
-         CTC = true;
-    CSCMatrix C = A.permute_cols(S.q, values);
+         CTC = true;      // do take the etree/counts of A^T A
+
+    CSCMatrix C = A.permute_cols(q, values);
     S.parent = etree(C, CTC);  // etree of C^T C, C = A[:, q]
+    std::vector<csint> postorder = post(S.parent);
+
+    // Exercise 5.5 combine the postordering
+    if (use_postorder) {
+        q = pvec(postorder, q);         // combine the permutations
+        C = A.permute_cols(q, values);  // apply combined permutation
+        S.parent = etree(C, CTC);       // recompute etree
+        postorder = post(S.parent);     // recompute postorder
+    }
+
+    S.q = q;  // store the column permutation
 
     // column counts of the Cholesky factor of C^T C
-    std::vector<csint> cp = counts(C, S.parent, post(S.parent), CTC);
+    std::vector<csint> cp = counts(C, S.parent, postorder, CTC);
     S.rnz = std::accumulate(cp.begin(), cp.end(), 0);
 
     S.leftmost = find_leftmost(A);

@@ -149,10 +149,16 @@ void vcount(const CSCMatrix& A, SymbolicQR& S);
  *       - 1: amd(A + A.T)
  *       - 2: amd(A.T * A) with no dense rows
  *       - 3: amd(A.T * A)
+ * @param use_postorder  if true, postorder the matrix in addition to the AMD
+ *        (or natural) ordering. See: Davis, Exercise 5.5.
  *
  * @return the symbolic factorization
  */
-SymbolicQR sqr(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
+SymbolicQR sqr(
+    const CSCMatrix& A,
+    AMDOrder order=AMDOrder::Natural,
+    bool use_postorder=false
+);
 
 
 /** Perform the symbolic QR decomposition of a matrix.

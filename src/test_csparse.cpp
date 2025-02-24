@@ -2820,10 +2820,6 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
         SymbolicQR S = sqr(A);
         QRResult res = qr(A, S);
 
-        // std::cout << "R.indptr(): " << res.R.indptr() << std::endl;
-        // std::cout << "R.indices(): " << res.R.indices() << std::endl;
-        // std::cout << "R.data(): " << res.R.data() << std::endl;
-
         compare_matrices(res.V, expect_V);
         CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
         compare_matrices(res.R, expect_R);
@@ -2846,6 +2842,19 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
             // Compute the numeric factorization using the symbolic result
             reqr(A, S, res);
 
+            compare_matrices(res.V, expect_V);
+            CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
+            compare_matrices(res.R, expect_R);
+        }
+
+        SECTION("Exercise 5.5: Use post-ordering with natural ordering") {
+            // Compute the symbolic factorization with postordering
+            bool use_postorder = true;
+            SymbolicQR S = sqr(A, AMDOrder::Natural, use_postorder);
+            QRResult res = qr(A, S);
+
+            // The postordering of this matrix *is* the natural ordering.
+            // TODO Find and example with a different postorder for testing
             compare_matrices(res.V, expect_V);
             CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
             compare_matrices(res.R, expect_R);

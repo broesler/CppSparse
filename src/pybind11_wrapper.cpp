@@ -332,7 +332,8 @@ PYBIND11_MODULE(csparse, m) {
     m.def("sqr", 
         &cs::sqr,
         py::arg("A"),
-        py::arg("order")=cs::AMDOrder::Natural
+        py::arg("order")=cs::AMDOrder::Natural,
+        py::arg("use_postorder")=false
     );
     // Could name this _qr and then have a python function qr() that calls sqr,
     // and converts from V, beta to Q, R, (and p, q), or just include p_inv and

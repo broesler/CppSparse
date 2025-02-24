@@ -2796,7 +2796,7 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
              0.                , 0.                , 0.                , 0.                , 0.0980762113533159, 0.0592952558196218, 1.                , 0.,
              0.4142135623730951, 0.                , 0.                , 0.9329077440557915, 0.                , 0.                , 0.8441594335316119, 1.
             },
-            {8, 8},
+            {N, N},
             'C'  // row-major order
         };
 
@@ -2821,7 +2821,7 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
               0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.                , -5.818914395248401 , -0.8474056139492476,
               0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.2808744717175516
             },
-            {8, 8},
+            {N, N},
             'C' // row-major order
         };
 
@@ -2872,9 +2872,8 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
 }
 
 
-TEST_CASE("QR factorization of overdetermined M > N")
+TEST_CASE("QR factorization of overdetermined matrix M > N")
 {
-    // TODO move this matrix to a function
     // Define the test matrix A (See Davis, Figure 5.1, p 74)
     // except remove the last 2 columns
     csint M = 8;
@@ -2934,7 +2933,7 @@ TEST_CASE("QR factorization of overdetermined M > N")
              0.                , 0.                , 0.                , 0.                , 0.0980762113533159,
              0.                , 0.                , 0.                , 0.                , 0.0980762113533159
             },
-            {8, 5},
+            {M, N},
             'C'  // row-major order
         };
 
@@ -2956,7 +2955,7 @@ TEST_CASE("QR factorization of overdetermined M > N")
               0.                ,  0.                ,  0.                ,  0.                ,  0.                ,
               0.                ,  0.                ,  0.                ,  0.                ,  0.
             },
-            {8, 5},
+            {M, N},
             'C' // row-major order
         };
 
@@ -2989,7 +2988,100 @@ TEST_CASE("QR factorization of overdetermined M > N")
     }
 }
 
-// TODO test QR factorization of an underdetermined matrix M < N
+
+TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
+{
+    // NOTE As written, when M < N, the cs::qr code computes a QR factorization
+    // that results in V size (N, N), and R size (N, N). The actual sizes should
+    // be V (M, M) and R (M, N). We could just slice the result to get the
+    // desired sizes.
+
+    // Define the test matrix A (See Davis, Figure 5.1, p 74)
+    // except remove the last 2 columns
+    csint M = 5;
+    csint N = 8;
+    CSCMatrix A = davis_example_qr().slice(0, M, 0, N);
+    CHECK(A.shape() == Shape {M, N});
+
+    // See etree in Figure 5.1, p 74
+    std::vector<csint> parent = {3, 2, 3, 6, 5, -1, -1, -1};
+
+    std::vector<csint> expect_leftmost = {0, 1, 2, 0, 4};
+    std::vector<csint> expect_p_inv = {0, 1, 2, 3, 4, 5, 6, 7};  // natural
+
+    SECTION("find_leftmost") {
+        REQUIRE(find_leftmost(A) == expect_leftmost);
+    }
+
+    SECTION("vcount") {
+        SymbolicQR S;
+        S.parent.assign(parent.begin(), parent.end());
+        S.leftmost = find_leftmost(A);
+        vcount(A, S);
+
+        CHECK(S.p_inv == expect_p_inv);
+        CHECK(S.vnz == 9);
+        REQUIRE(S.m2 == N);  // extra rows added!
+    }
+
+    SECTION("Symbolic analysis") {
+        std::vector<csint> expect_q = {0, 1, 2, 3, 4, 5, 6, 7};  // natural
+        std::vector<csint> expect_parent = parent;
+
+        SymbolicQR S = sqr(A);
+
+        CHECK(S.p_inv == expect_p_inv);
+        CHECK(S.q == expect_q);
+        CHECK(S.parent == expect_parent);
+        CHECK(S.leftmost == expect_leftmost);
+        CHECK(S.m2 == N);  // extra rows added!
+        CHECK(S.vnz == 9);
+        REQUIRE(S.rnz == 16);
+    }
+
+    SECTION("Numeric factorization") {
+        SymbolicQR S = sqr(A);
+        QRResult res = qr(A, S);
+
+        // Expected values from scipy.linalg.qr
+        CSCMatrix expect_V {
+            {1.                , 0.                , 0.                , 0.                , 0.                ,
+             0.                , 1.                , 0.                , 0.                , 0.                ,
+             0.                , 0.                , 1.                , 0.                , 0.                ,
+             0.4142135623730951, 0.                , 0.                , 1.                , 0.                ,
+             0.                , 0.                , 0.                , 0.                , 1.                
+            },
+            {M, M},
+            'C'  // row-major order
+        };
+
+        std::vector<double> expect_beta(M);  // (M,)
+        expect_beta[0] = 1.7071067811865472;
+
+        CSCMatrix expect_R {
+            {-1.4142135623730951,  0.                ,  0.                , -3.5355339059327378,  0.                ,  0.                , -1.414213562373095     ,  0.                ,
+              0.                ,  2.                ,  1.                ,  0.                ,  0.                ,  0.                ,  1.                    ,  0.                ,
+              0.                ,  0.                ,  3.                ,  1.                ,  0.                ,  0.                ,  0.                    ,  0.                ,
+              0.                ,  0.                ,  0.                ,  2.1213203435596424,  0.                ,  0.                , -4.7442685329306630e-17,  0.                ,
+              0.                ,  0.                ,  0.                ,  0.                ,  5.                ,  1.                ,  0.                    ,  0.                
+            },
+            {M, N},
+            'C' // row-major order
+        };
+
+        // std::cout << "V:" << std::endl;
+        // res.V.print_dense();
+        // std::cout << "beta:" << res.beta << std::endl;
+        // std::cout << "R:" << std::endl;
+        // res.R.print_dense();
+
+        compare_matrices(res.V, expect_V);
+        CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
+        compare_matrices(res.R, expect_R);
+    }
+}
+
+
 
 /*==============================================================================
  *============================================================================*/

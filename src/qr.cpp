@@ -294,7 +294,7 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
 
 QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
 {
-    csint M = S.m2;
+    csint M = S.m2;  // If M < N, m2 = N
     csint N = A.N_;
 
     // Allocate result matrices
@@ -375,7 +375,19 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     R.p_[N] = rnz;  // finalize R
     V.p_[N] = vnz;  // finalize V
 
-    return {V, beta, R, S.p_inv, S.q};
+    // Copy the permutation to the result
+    std::vector<csint> p_inv = S.p_inv;
+
+    // Exercise 5.2: underdetermined system when M < N
+    if (A.M_ < A.N_) {
+        V = V.slice(0, A.M_, 0, A.M_);  // truncate V to (M, M)
+        beta.resize(A.M_);              // truncate beta to M
+        R = R.slice(0, A.M_, 0, A.N_);  // truncate R to (M, N)
+        // Also truncate p_inv appropriately? Might not always work
+        p_inv.resize(A.M_);
+    }
+
+    return {V, beta, R, p_inv, S.q};
 }
 
 

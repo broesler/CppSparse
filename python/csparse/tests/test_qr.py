@@ -35,7 +35,8 @@ TEST_MATRICES = [
     ("Strang 3x3", sparse.csc_array(
         np.array([[1, 1, 2], [0, 0, 1], [1, 0, 0]], dtype=float)
     )),
-    ("Davis 8x5 (M > N)", csparse.davis_example_qr(format='csc')[:, :5])
+    ("Davis 8x5 (M > N)", csparse.davis_example_qr(format='csc')[:, :5]),
+    ("Davis 8x5 (M < N)", csparse.davis_example_qr(format='csc')[:5, :])
 ]
 
 
@@ -61,7 +62,7 @@ def _test_qr_decomposition(case_name, A):
     """Test QR decomposition with various matrices using parametrization."""
     Ac = csparse.from_scipy_sparse(A, format='csc')
     A_dense = A.toarray()
-    N = A.shape[0]
+    M, N = A.shape
 
     # ---------- Compute csparse QR
     S = csparse.sqr(Ac)
@@ -72,8 +73,9 @@ def _test_qr_decomposition(case_name, A):
     V = V.toarray()
     beta = np.r_[beta]
     R = R.toarray()
+    p_inv = np.r_[QRres.p_inv]
 
-    p = csparse.inv_permute(S.p_inv)
+    p = csparse.inv_permute(p_inv)
     Q = csparse.apply_qright(V, beta, p)
     Ql = csparse.apply_qtleft(V, beta, p).T
 
@@ -85,7 +87,8 @@ def _test_qr_decomposition(case_name, A):
     Ap = A_dense[p]
     (Qraw, tau), Rraw = la.qr(Ap, mode='raw')
     Q_, R_ = la.qr(Ap)
-    V_ = np.tril(Qraw, -1) + np.eye(*A.shape)
+    # Handle case when M < N
+    V_ = np.tril(Qraw, -1)[:, :M] + np.eye(M, min(M, N))
     Qr_ = csparse.apply_qright(V_, tau, p)
 
     # Now we get the same Householder vectors and weights
@@ -95,12 +98,12 @@ def _test_qr_decomposition(case_name, A):
 
     # Q is the same up to row permutation
     np.testing.assert_allclose(Q, Qr_, atol=ATOL)
-    np.testing.assert_allclose(Q, Q_[S.p_inv], atol=ATOL)
+    np.testing.assert_allclose(Q, Q_[p_inv], atol=ATOL)
     np.testing.assert_allclose(Q[p], Q_, atol=ATOL)
 
     # Reproduce A = QR
     np.testing.assert_allclose(Q_ @ R_, Ap, atol=ATOL)
-    np.testing.assert_allclose(Q_[S.p_inv] @ R_, A_dense, atol=ATOL)
+    np.testing.assert_allclose(Q_[p_inv] @ R_, A_dense, atol=ATOL)
     np.testing.assert_allclose(Q @ R, A_dense, atol=ATOL)
 
 

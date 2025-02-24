@@ -31,8 +31,8 @@ N = A.shape[0]
 Ac = csparse.from_scipy_sparse(A, format='csc')
 
 A_dense = A.toarray()
-print("A = ")
-print(A_dense)
+# print("A = ")
+# print(A_dense)
 
 # -----------------------------------------------------------------------------
 #         Compute QR decomposition with csparse
@@ -73,9 +73,57 @@ np.testing.assert_allclose(Q, Q_[S.p_inv], atol=atol)
 
 # Reproduce A = QR
 np.testing.assert_allclose(Q @ R, A_dense, atol=atol)
-print("Q @ R = ")
-print(Q @ R)
+# print("Q @ R = ")
+# print(Q @ R)
 
+# -----------------------------------------------------------------------------
+#         QR with a M < N matrix
+# -----------------------------------------------------------------------------
+# M, N = 8, 5
+M, N = 5, 8
+
+Ar = A[:M, :N]
+
+Ar_dense = Ar.toarray()
+M, N = Ar.shape
+
+print("Ar = ")
+print(Ar_dense)
+
+Arc = csparse.from_scipy_sparse(Ar)
+Sr = csparse.sqr(Arc)
+QRr_res = csparse.qr(Arc, Sr)
+
+Vr, beta_r, Rr = QRr_res.V, QRr_res.beta, QRr_res.R
+Vr = Vr.toarray()
+beta_r = np.r_[beta_r]
+Rr = Rr.toarray()
+p_inv = np.r_[QRr_res.p_inv]
+
+# Get the actual Q matrix
+pr = csparse.inv_permute(p_inv)
+Qr = csparse.apply_qright(Vr, beta_r, pr)  # (M, M)
+
+# Get the scipy version
+Arp = Ar_dense[pr]
+Qr_, Rr_ = la.qr(Arp)
+
+(Qraw_r, tau_r), _ = la.qr(Arp, mode='raw')
+Vr_ = np.tril(Qraw_r, -1)[:, :M] + np.eye(M, min(M, N))
+
+print("Qr_ = ")
+print(Qr_)
+print("Rr_ = ")
+print(Rr_)
+
+Qr_r = csparse.apply_qright(Vr_, tau_r)
+
+np.testing.assert_allclose(Qr, Qr_[p_inv], atol=atol)
+np.testing.assert_allclose(Rr, Rr_, atol=atol)
+np.testing.assert_allclose(Qr @ Rr, Ar_dense, atol=atol)
+
+print("Q @ R = ")
+print(Qr @ Rr)
 
 # -----------------------------------------------------------------------------
 #         Compute using Givens rotations
@@ -88,42 +136,10 @@ G = csparse.givens(x)
 Rf = csparse.qr_givens_full(A_dense)
 Rg = csparse.qr_givens(A_dense)
 
-print(G @ x)
+# print(G @ x)
 np.testing.assert_allclose(np.abs(G @ x), np.r_[la.norm(x), 0], atol=atol)
 # TODO work out what the sign of the rotation should be and test for various
 # vectors.
-
-
-# -----------------------------------------------------------------------------
-#         QR with a M > N matrix
-# -----------------------------------------------------------------------------
-Ar = A[:, :5]
-Ar_dense = Ar.toarray()
-
-Arc = csparse.from_scipy_sparse(Ar)
-Sr = csparse.sqr(Arc)
-QRr_res = csparse.qr(Arc, Sr)
-
-Vr, beta_r, Rr = QRr_res.V, QRr_res.beta, QRr_res.R
-Vr = Vr.toarray()
-beta_r = np.r_[beta_r]
-Rr = Rr.toarray()
-
-# Get the actual Q matrix
-pr = csparse.inv_permute(Sr.p_inv)
-Qr = csparse.apply_qright(Vr, beta_r, pr)
-
-# Get the scipy version
-Arp = Ar_dense[pr]
-Qr_, Rr_ = la.qr(Arp, mode='full')      # (12, 8) = (12, 12) @ (12, 8)
-# Qr_, Rr_ = la.qr(Ar_dense, mode='economic')  # (12, 8) = (12, 8) @ (8, 8)
-
-(Qraw_r, tau_r), _ = la.qr(Arp, mode='raw')
-Vr_ = np.tril(Qraw_r, -1) + np.eye(*Arp.shape)
-
-np.testing.assert_allclose(Qr, Qr_[Sr.p_inv], atol=atol)
-np.testing.assert_allclose(Rr, Rr_, atol=atol)
-np.testing.assert_allclose(Qr @ Rr, Ar_dense, atol=atol)
 
 # =============================================================================
 # =============================================================================

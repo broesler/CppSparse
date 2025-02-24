@@ -2353,7 +2353,7 @@ TEST_CASE("Cholesky decomposition")
         REQUIRE(chol_colcounts(A, true) == expect);
     }
 
-    SECTION("Symbolic factorization") {
+    SECTION("Symbolic analysis") {
         SymbolicChol S = schol(A, AMDOrder::Natural);
 
         std::vector<csint> expect_p_inv(A.shape()[1]);
@@ -2696,7 +2696,7 @@ TEST_CASE("QR factorization of the Identity Matrix")
 
     SymbolicQR S = sqr(I);
 
-    SECTION("Symbolic factorization") {
+    SECTION("Symbolic analysis") {
         std::vector<csint> expect_identity = {0, 1, 2, 3, 4, 5, 6, 7};
         CHECK(S.p_inv == expect_identity);
         CHECK(S.q == expect_identity);
@@ -2760,7 +2760,7 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
         REQUIRE(S.m2 == N);
     }
 
-    SECTION("Symbolic factorization") {
+    SECTION("Symbolic analysis") {
         std::vector<csint> expect_q = {0, 1, 2, 3, 4, 5, 6, 7};  // natural
         std::vector<csint> expect_parent = parent;
 
@@ -2776,10 +2776,7 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
     }
 
     SECTION("Numeric factorization") {
-        // Expected values circularly computed from python computation with
-        // csparse.qr, where we know Q @ R produces the correct result. This
-        // isn't a great test, but at least lets us know if we break anything
-        // from this point forward.
+        // Expected values computed with scipy.linalg.qr
         CSCMatrix expect_V {
             {1.                , 0.                , 0.                , 0.                , 0.                , 0.                , 0.                , 0.,
              0.                , 1.                , 0.                , 0.                , 0.                , 0.                , 0.                , 0.,
@@ -2870,7 +2867,7 @@ TEST_CASE("QR factorization of overdetermined M > N") {
         REQUIRE(S.m2 == M);
     }
 
-    SECTION("Symbolic factorization") {
+    SECTION("Symbolic analysis") {
         std::vector<csint> expect_q = {0, 1, 2, 3, 4};  // natural
         std::vector<csint> expect_parent = parent;
 
@@ -2929,6 +2926,18 @@ TEST_CASE("QR factorization of overdetermined M > N") {
         compare_matrices(res.V, expect_V);
         CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
         compare_matrices(res.R, expect_R);
+
+        SECTION("Symbolic factorization") {
+            QRResult sym_res = symbolic_qr(A, S);
+
+            CHECK(sym_res.V.indptr() == expect_V.indptr());
+            CHECK_THAT(sym_res.V.indices(), UnorderedEquals(expect_V.indices()));
+            CHECK(sym_res.V.data().empty());
+            CHECK(sym_res.beta.empty());
+            CHECK(sym_res.R.indptr() == expect_R.indptr());
+            CHECK_THAT(sym_res.R.indices(), UnorderedEquals(expect_R.indices()));
+            REQUIRE(sym_res.R.data().empty());
+        }
     }
 }
 

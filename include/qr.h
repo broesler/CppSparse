@@ -155,10 +155,22 @@ void vcount(const CSCMatrix& A, SymbolicQR& S);
 SymbolicQR sqr(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
 
 
+/** Perform the symbolic QR decomposition of a matrix.
+ *
+ * See: Davis, Exercise 5.1.
+ *
+ * @param A  the matrix to factorize
+ * @param S  the symbolic analysis of A
+ *
+ * @return the symbolic factorization
+ */
+QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S);
+
+
 /** Perform the numeric QR decomposition of a matrix.
  *
  * @param A  the matrix to factorize
- * @param S  the symbolic factorization of A
+ * @param S  the symbolic analysis of A
  *
  * @return the numeric factorization
  */

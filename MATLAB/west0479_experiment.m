@@ -9,7 +9,7 @@
 
 clear; close all;
 
-COLAMD = false;  % if true, use colamd ordering, else use natural ordering
+COLAMD = true;  % if true, use colamd ordering, else use natural ordering
 
 load west0479
 A = west0479;
@@ -20,9 +20,11 @@ else
     q = 1:size(A, 2);
 end
 
-[Q, R] = qr(A(:,q));
+Aq = A(:, q);
 
-[V, beta, p, R2] = cs_qr(A(:, q));
+[Q, R] = qr(Aq);
+
+[V, beta, p, R2] = cs_qr(Aq);
 Q2 = cs_qright(V, beta, p, speye(size(V, 1)));
 
 fprintf('nnz(A) = %d\n', nnz(A));
@@ -42,6 +44,9 @@ fprintf('nnz(V) = %d\n', nnz(V));
 % nnz(R) = 7599
 % nnz(V) = 3909
 
+assert(norm(Aq - Q*R, 'fro') < 1e-9);
+assert(norm(Aq - Q2*R2, 'fro') < 1e-9);
+
 %-------------------------------------------------------------------------------
 %        Plots
 %-------------------------------------------------------------------------------
@@ -59,18 +64,23 @@ title(fig_title);
 subplot(2, 2, 1); hold on
 title('A');
 spy(A);
+axis equal
 
 subplot(2, 2, 2); hold on
-title('V');
-spy(V); 
+title('Aq');
+spy(Aq); 
+axis equal
 
 subplot(2, 2, 3); hold on
 title('Q');
 spy(Q); 
+axis equal
 
 subplot(2, 2, 4); hold on
-title('R');
-spy(R); 
+title('V + R');
+spy(V + R); 
+axis equal
+
 
 %===============================================================================
 %===============================================================================

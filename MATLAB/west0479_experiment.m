@@ -9,22 +9,25 @@
 
 clear; close all;
 
+SAVE_FIGS = false;
+fig_path = '../plots/';
+
 COLAMD = true;  % if true, use colamd ordering, else use natural ordering
 
 load west0479
 A = west0479;
 
 if COLAMD
+    % Permute the columns by approximate minimum degree ordering
     q = colamd(A);
+    Aq = A(:, q);
 else
-    q = 1:size(A, 2);
+    Aq = A;
 end
-
-Aq = A(:, q);
 
 [Q, R] = qr(Aq);
 
-[V, beta, p, R2] = cs_qr(Aq);
+[V, beta, p] = cs_qr(Aq);
 Q2 = cs_qright(V, beta, p, speye(size(V, 1)));
 
 fprintf('nnz(A) = %d\n', nnz(A));
@@ -45,42 +48,67 @@ fprintf('nnz(V) = %d\n', nnz(V));
 % nnz(V) = 3909
 
 assert(norm(Aq - Q*R, 'fro') < 1e-9);
-assert(norm(Aq - Q2*R2, 'fro') < 1e-9);
+% assert(norm(Aq - Q2*R2, 'fro') < 1e-9);
 
 %-------------------------------------------------------------------------------
 %        Plots
 %-------------------------------------------------------------------------------
 fig = figure(1); hold on
-set(fig, 'Position', [300, 200, 900, 640]);
+set(fig, 'Position', [300, 200, 900, 380]);
 
-fig_title = 'QR factorization of A';
 if COLAMD
-    fig_title = [fig_title, ' (colamd ordering)'];
+    fig_title = 'COLAMD Ordering';
+    tag = 'COLAMD_';
 else
-    fig_title = [fig_title, ' (natural ordering)'];
+    fig_title = 'Natural Ordering';
+    tag = 'NATURAL_';
 end
-title(fig_title);
 
-subplot(2, 2, 1); hold on
+% Manually add title text
+text(0.5, 0.95, fig_title, ...
+    'HorizontalAlignment', 'center', ...
+    'FontSize', 16, ...
+    'FontWeight', 'bold', ...
+    'Units', 'normalized');
+
+subplot(1, 2, 1); hold on
 title('A');
 spy(A);
 axis equal
 
-subplot(2, 2, 2); hold on
-title('Aq');
+subplot(1, 2, 2); hold on
+title('A(:, q)');
 spy(Aq); 
 axis equal
 
-subplot(2, 2, 3); hold on
+if SAVE_FIGS
+    saveas(fig, [fig_path 'west0479_' tag 'A_MATLAB.pdf']);
+end
+
+
+fig = figure(2); hold on
+set(fig, 'Position', [300, 200, 900, 380]);
+
+% Manually add title text
+text(0.5, 0.95, fig_title, ...
+    'HorizontalAlignment', 'center', ...
+    'FontSize', 16, ...
+    'FontWeight', 'bold', ...
+    'Units', 'normalized');
+
+subplot(1, 2, 1); hold on
 title('Q');
 spy(Q); 
 axis equal
 
-subplot(2, 2, 4); hold on
+subplot(1, 2, 2); hold on
 title('V + R');
 spy(V + R); 
 axis equal
 
+if SAVE_FIGS
+    saveas(fig, [fig_path 'west0479_' tag 'QR_MATLAB.pdf']);
+end
 
 %===============================================================================
 %===============================================================================

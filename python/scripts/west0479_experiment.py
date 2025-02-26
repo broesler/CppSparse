@@ -16,10 +16,16 @@ from pathlib import Path
 
 import csparse
 
+SAVE_FIGS = False
+data_path = Path('../../data/')
+fig_path = Path('../../plots/')
+
+# 'NATURAL', 'MMD_ATA', 'MMD_AT_PLUS_A', 'COLAMD', 'RCM', 'MATLAB_COLAMD'
+permc_spec = 'MATLAB_COLAMD'
+
 # -----------------------------------------------------------------------------
 #         Load the Data
 # -----------------------------------------------------------------------------
-data_path = Path('../../data/')
 filename = Path('west0479')
 full_path = data_path / filename
 
@@ -34,24 +40,20 @@ data = np.genfromtxt(full_path, delimiter=' ', dtype=dtypes)
 A = sparse.coo_array((data['vals'], (data['rows'], data['cols']))).tocsc()
 
 assert A.shape[0] == A.shape[1] == 479
+assert A.nnz == 1888
 
 # -----------------------------------------------------------------------------
 #         Compute the QR decomposition of A with scipy
 # -----------------------------------------------------------------------------
-# Use LU to get the permutation vector?
-# (inefficient! should have a dedicated colamd interface)
-# 'NATURAL', 'MMD_ATA', 'MMD_AT_PLUS_A', 'COLAMD', 'RCM'
-
-permc_spec = 'COLAMD'
-
 q = slice(None)
 
 match permc_spec:
-    case 'MMD_ATA' | 'MMD_AT_PLUS_A':  # | 'COLAMD':
+    case 'MMD_ATA' | 'MMD_AT_PLUS_A' | 'COLAMD':
+        # Compute the permutation vector with SuperLU - doesn't work?
         lu = spla.splu(A, permc_spec=permc_spec)
         # p = lu.perm_r
         q = lu.perm_c
-    case 'COLAMD':
+    case 'MATLAB_COLAMD':
         # Read the permutation vector from file
         q = np.genfromtxt(data_path / f"{filename}_amdq",
                           delimiter=',', dtype=int)
@@ -83,7 +85,7 @@ V, beta, R, p_inv = res.V, res.beta, res.R, res.p_inv
 V = V.toarray()
 beta = np.r_[beta]
 R = R.toarray()
-p_inv = np.r_[p_inv]
+# p_inv = np.r_[p_inv]
 p = csparse.inv_permute(p_inv)
 
 Q = csparse.apply_qright(V, beta, p)
@@ -92,6 +94,7 @@ np.testing.assert_allclose(Q @ R, Aq, atol=1e-9)
 
 # ---------- Prep for plotting
 # Filter small values
+#   NOTE the difference is *not* a thresholding problem! 
 #   These are the smallest values in the MATLAB/octave matrices with COLAMD
 #   ordering and the proper number of non-zeros:
 #
@@ -115,12 +118,12 @@ np.testing.assert_allclose(Q @ R, Aq, atol=1e-9)
 #     (1, 1) -> 9.8369e-20
 #
 
-# TODO plot nnz vs tol
-tol = np.finfo(float).eps  # ϵ = 2.220446049250313e-16
+# tol = np.finfo(float).eps  # ϵ = 2.220446049250313e-16
+# Q_[np.abs(Q_) < tol] = 0
+# V_[np.abs(V_) < tol] = 0
+# R_[np.abs(R_) < tol] = 0
 
-Q_[np.abs(Q_) < tol] = 0
-V_[np.abs(V_) < tol] = 0
-R_[np.abs(R_) < tol] = 0
+np.testing.assert_allclose(Q_ @ R_, Aq, atol=1e-9)
 
 # Convert to sparse matrices
 Aq = sparse.csc_array(Aq)
@@ -172,24 +175,36 @@ for ax, M, title in zip(axs.flat, [A, Aq], ['A', 'A[:, q]']):
     ax.set_title(title)
     ax.set_xlabel(f"nnz = {M.nnz}")
 
+if SAVE_FIGS:
+    fig.savefig(fig_path / f"{filename}_{permc_spec}_A.pdf")
 
-fig, axs = plt.subplots(num=2, nrows=2, ncols=2, clear=True)
-fig.set_size_inches(6.4, 6.4, forward=True)
-fig.suptitle(f"{permc_spec} Ordering")
 
-for ax, M, title in zip(
-    axs.flat,
-    [Q_, V_ + R_, Q, V + R],
-    [
-        'Q (scipy.linalg.qr)',
-        'V + R (scipy.linalg.qr)',
-        'Q (csparse)',
-        'V + R (csparse)'
-    ]
-):
+fig, axs = plt.subplots(num=2, nrows=1, ncols=2, clear=True)
+fig.set_size_inches(6.4, 3.8, forward=True)
+fig.suptitle(f"SciPy with {permc_spec} Ordering")
+
+for ax, M, title in zip(axs.flat, [Q_, V_ + R_], ['Q', 'V + R']):
     ax.spy(M, markersize=1)
     ax.set_title(title)
     ax.set_xlabel(f"nnz = {M.nnz}")
+
+
+if SAVE_FIGS:
+    fig.savefig(fig_path / f"{filename}_{permc_spec}_QR_scipy.pdf")
+
+
+fig, axs = plt.subplots(num=3, nrows=1, ncols=2, clear=True)
+fig.set_size_inches(6.4, 3.8, forward=True)
+fig.suptitle(f"csparse with {permc_spec} Ordering")
+
+for ax, M, title in zip(axs.flat, [Q, V + R], ['Q', 'V + R']):
+    ax.spy(M, markersize=1)
+    ax.set_title(title)
+    ax.set_xlabel(f"nnz = {M.nnz}")
+
+
+if SAVE_FIGS:
+    fig.savefig(fig_path / f"{filename}_{permc_spec}_QR_csparse.pdf")
 
 plt.show()
 

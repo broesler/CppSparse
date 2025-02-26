@@ -276,7 +276,7 @@ if __name__ == "__main__":
     ax.grid(which='both')
 
     if SAVE_FIGS:
-        fig.savefig(fig_path / 'householder_stability.png')
+        fig.savefig(fig_path / 'householder_stability.pdf')
 
     # -------------------------------------------------------------------------
     #         Plot a nice example of the vectors and reflectors
@@ -385,7 +385,7 @@ if __name__ == "__main__":
     ax.grid(which='both')
 
     if SAVE_FIGS:
-        fig.savefig(fig_path / 'householder_demo.png')
+        fig.savefig(fig_path / 'householder_demo.pdf')
 
     plt.show()
 

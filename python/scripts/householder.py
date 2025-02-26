@@ -387,6 +387,25 @@ if __name__ == "__main__":
     if SAVE_FIGS:
         fig.savefig(fig_path / 'householder_demo.pdf')
 
+
+    # -------------------------------------------------------------------------
+    #         Print the table of signs for the reflector
+    # -------------------------------------------------------------------------
+    # # Create a vector with an easy norm
+    # xs = np.array(
+    #     [[ 3.,  0.],
+    #      [-3.,  0.],
+    #      [ 3.,  4.],
+    #      [-3.,  4.],
+    #      [ 3., -4.],
+    #      [-3., -4.]]
+    # )
+
+    # for x in xs:
+    #     v_D, β_D, s_D = house(x, method='Davis')
+    #     v_L, β_L, s_L = house(x, method='LAPACK')
+    #     print(x, v_D, v_L, β_D, β_L, s_D, s_L)
+
     plt.show()
 
 

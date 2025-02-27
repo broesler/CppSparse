@@ -78,6 +78,9 @@ Q = cs_qright(V, Beta, p, speye(size(V, 1)));
 % Compute the QR decomposition using the built-in MATLAB function
 [Q_, R_] = qr(A);
 
+% Compute the QR decomposition using the built-in MATLAB function
+[Qp_, Rp_, P_] = qr(A);
+
 %-------------------------------------------------------------------------------
 %        Compare to the built-in MATLAB QR decomposition
 %-------------------------------------------------------------------------------
@@ -102,6 +105,7 @@ assert(norm(abs(Q_r * R_r - A)) < tol);
 assert(norm(abs(Q_l * R_l - A)) < tol);
 assert(norm(abs(Q * R - A)) < tol);
 assert(norm(abs(Q_ * R_ - A)) < tol);  % built-in
+assert(norm(abs(Qp_ * Rp_ - A * P_)) < tol);  % built-in
 
 % Convert to full matrices for easier visual debugging
 V = full(V);

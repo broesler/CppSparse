@@ -20,7 +20,9 @@ SAVE_FIGS = False
 data_path = Path('../../data/')
 fig_path = Path('../../plots/')
 
-# 'NATURAL', 'MMD_ATA', 'MMD_AT_PLUS_A', 'COLAMD', 'RCM', 'MATLAB_COLAMD'
+# splu orders: 'NATURAL', 'MMD_ATA', 'MMD_AT_PLUS_A', 'COLAMD'
+# reverse_cuthill_mckee: 'RCM'
+# MATLAB orders: 'MATLAB_COLAMD', 'MATLAB_QRP'
 permc_spec = 'MATLAB_COLAMD'
 
 # -----------------------------------------------------------------------------
@@ -57,6 +59,10 @@ match permc_spec:
         # Read the permutation vector from file
         q = np.genfromtxt(data_path / f"{filename}_amdq",
                           delimiter=',', dtype=int)
+    case 'MATLAB_QRP':
+        # Read the permutation vector from file
+        q = np.genfromtxt(data_path / f"{filename}_qrq",
+                          delimiter=',', dtype=int)
     case 'RCM':
         q = sparse.csgraph.reverse_cuthill_mckee(A)
 
@@ -85,7 +91,6 @@ V, beta, R, p_inv = res.V, res.beta, res.R, res.p_inv
 V = V.toarray()
 beta = np.r_[beta]
 R = R.toarray()
-# p_inv = np.r_[p_inv]
 p = csparse.inv_permute(p_inv)
 
 Q = csparse.apply_qright(V, beta, p)

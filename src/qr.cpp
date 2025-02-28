@@ -130,10 +130,10 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
                        tail(N, -1),  // the last row index in each column
                        nque(N);      // the number of rows in each column
 
-    S.p_inv.assign(std::max(M, N), 0);  // permutation vector
+    S.p_inv.assign(std::max(M, N), -1);  // initialize permutation vector
 
+    // Initialize the linked lists for each row with their leftmost index
     for (csint i = M-1; i >= 0; i--) {  // scan rows in reverse order
-        S.p_inv[i] = -1;                // i is not yet in the permutation
         csint k = S.leftmost[i];
         if (k != -1) {                  // row i is not empty
             if (nque[k]++ == 0) {
@@ -147,7 +147,7 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
     S.vnz = 0;
     S.m2 = M;
 
-    csint k; // declare outside loop for final row permutation
+    csint k;  // declare outside loop for final row permutation
     for (k = 0; k < N; k++) {          // find row permutation and nnz(V)
         csint i = head[k];             // remove row i from queue k
         S.vnz++;                       // count V(k, k) as nonzero

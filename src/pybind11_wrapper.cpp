@@ -86,23 +86,6 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     //        Enums and Structs
     //--------------------------------------------------------------------------
-    // Register the enum class 'AMDOrder'
-    py::enum_<cs::AMDOrder>(m, "AMDOrder")
-        .value("Natural", cs::AMDOrder::Natural)
-        .value("APlusAT", cs::AMDOrder::APlusAT)
-        .value("ATANoDenseRows", cs::AMDOrder::ATANoDenseRows)
-        .value("ATA", cs::AMDOrder::ATA)
-        .export_values();
-
-    // Bind the Symbolic structs
-    py::class_<cs::SymbolicChol>(m, "SymbolicChol")
-        // Expose the members of the struct as attributes in Python
-        .def(py::init<>())  // Default constructor
-        .def_readwrite("p_inv", &cs::SymbolicChol::p_inv)
-        .def_readwrite("parent", &cs::SymbolicChol::parent)
-        .def_readwrite("cp", &cs::SymbolicChol::cp)
-        .def_readwrite("lnz", &cs::SymbolicChol::lnz);
-
     // Bind the QRResult struct
     py::class_<cs::QRResult>(m, "QRResult")
         .def_readwrite("V", &cs::QRResult::V)
@@ -310,28 +293,76 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     //        Decomposition Functions
     //--------------------------------------------------------------------------
-    // TODO update these interfaces so we don't need to expose the symbolic
-    // structures (or possibly even the output structures?) in python
-    // We should just be able to call "Q, R = qr(A)" like in scipy.
-
     // ---------- Cholesky decomposition
     m.def("etree", &cs::etree, py::arg("A"), py::arg("ata")=false);
     m.def("post", &cs::post);
-    m.def("schol",
-        &cs::schol,
+
+    m.def("chol",
+        [] (
+            const cs::CSCMatrix& A,
+            const std::string& order="Natural",
+            bool use_postorder=false
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
+            double drop_tol = 0.0;  // do not drop entries
+            return cs::chol(A, S, drop_tol);
+        },
         py::arg("A"),
-        py::arg("ordering")=cs::AMDOrder::Natural,
+        py::arg("order")="Natural",
         py::arg("use_postorder")=false
     );
-    m.def("symbolic_cholesky", &cs::symbolic_cholesky);
-    m.def("chol",
-        &cs::chol,
+
+    m.def("symbolic_cholesky",
+        [](
+            const cs::CSCMatrix& A,
+            const std::string& order="Natural",
+            bool use_postorder=false
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
+            // TODO Fill the values with 1.0 for the symbolic factorization?
+            // cs::CSCMatrix L = cs::symbolic_cholesky(A, S);
+            // std::fill(L.v_.begin(), L.v_.end(), 1.0);
+            // return L;
+            return cs::symbolic_cholesky(A, S);;
+        },
         py::arg("A"),
-        py::arg("S"),
-        py::arg("drop_tol")=0.0
+        py::arg("order")="Natural",
+        py::arg("use_postorder")=false
     );
-    m.def("leftchol", &cs::leftchol);
-    m.def("rechol", &cs::rechol);
+
+    m.def("leftchol",
+        [] (
+            const cs::CSCMatrix& A,
+            const std::string& order="Natural",
+            bool use_postorder=false
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
+            cs::CSCMatrix L = cs::symbolic_cholesky(A, S);
+            return cs::leftchol(A, S, L);
+        },
+        py::arg("A"),
+        py::arg("order")="Natural",
+        py::arg("use_postorder")=false
+    );
+
+    m.def("rechol",
+        [] (
+            const cs::CSCMatrix& A,
+            const std::string& order="Natural",
+            bool use_postorder=false
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
+            cs::CSCMatrix L = cs::symbolic_cholesky(A, S);
+            return cs::rechol(A, S, L);
+        },
+        py::arg("A"),
+        py::arg("order")="Natural",
+        py::arg("use_postorder")=false
+    );
 
     // ---------- QR decomposition
     // Define the python qr function here, and call the C++ sqr function.

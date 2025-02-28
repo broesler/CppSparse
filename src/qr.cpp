@@ -391,6 +391,129 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
 }
 
 
+// Exercise 5.4
+QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
+{
+    csint M = S.m2;  // If M < N, m2 = N
+    csint N = A.N_;
+
+    // Allocate result matrices
+    CSCMatrix V({M, N}, S.vnz);   // Householder vectors
+    CSCMatrix R({M, N}, S.rnz);   // R factor
+    std::vector<double> beta(N);  // scaling factors
+
+    // Allocate workspaces
+    std::vector<double> x(M);      // dense vector
+    std::vector<csint>  w(M, -1),  // workspace for pattern of V[:, k]
+                        s, t;      // stacks for pattern of R[:, k]
+    s.reserve(N);
+    t.reserve(N);
+
+    // Initialize the column norms of A
+    std::vector<double> col_norms(N);
+    for (csint k = 0; k < N; k++) {
+        double norm = 0.0;
+        for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
+            norm += A.v_[p] * A.v_[p];
+        }
+        col_norms[k] = std::sqrt(norm);
+    }
+
+    std::vector<csint> p_inv(S.p_inv);  // copy the given row permutation
+    std::vector<csint> q(S.q);  // copy the given column permutation
+
+    // Compute V and R
+    csint vnz = 0,
+          rnz = 0;
+
+    for (csint k = 0; k < N; k++) {
+        R.p_[k] = rnz;    // R[:, k] starts here
+        V.p_[k] = vnz;    // V[:, k] starts here
+        csint p1 = vnz;   // save start of V(:, k)
+
+        // Possibly pivot column k to the end
+        if ((k > 0) && (col_norms[k] < tol)) {
+            q.push_back(std::move(q[k]));  // move column k to the end
+            q.erase(q.begin() + k);        // erase the old position
+            p_inv.push_back(std::move(p_inv[k]));  // move column k to the end
+            p_inv.erase(p_inv.begin() + k);        // erase the old position
+        }
+
+        // Possibly realloc matrices (see cs_lu.c)
+        if ((vnz + N) > V.nzmax()) {
+            V.realloc(2*V.nzmax() + N);
+        }
+
+        if ((rnz + N) > R.nzmax()) {
+            R.realloc(2*R.nzmax() + N);
+        }
+
+        w[k] = k;         // add V(k, k) to pattern of V
+        V.i_[vnz++] = k;  // V(k, k) is non-zero
+
+        t.clear();
+        csint col = q[k];  // permuted column of A
+
+        // find R[:, k] pattern
+        for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {
+            csint i = S.leftmost[A.i_[p]];  // i = min(find(A(i, q)))
+
+            s.clear();
+            // FIXME i becomes -1 here after i = S.parent[7] == -1
+            // Try setting S.q artificially without pivoting
+            // Seems to break when we pivot to a column with a 0 on the
+            // diagonal!
+            while (w[i] != k) {  // traverse up to k
+                s.push_back(i);
+                w[i] = k;
+                i = S.parent[i];
+            }
+
+            // Push path onto "output" stack
+            std::copy(s.rbegin(), s.rend(), std::back_inserter(t));
+
+            i = p_inv[A.i_[p]];     // i = permuted row of A(:, col)
+            x[i] = A.v_[p];           // x(i) = A(:, col)
+
+            if (i > k && w[i] < k) {  // pattern of V(:, k) = x(k+1:m)
+                V.i_[vnz++] = i;      // add i to pattern of V(:, k)
+                w[i] = k;
+            }
+        }
+
+        // for each i in pattern of R[:, k] (R(i, k) is non-zero)
+        for (csint i : t | std::views::reverse) {
+            x = happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
+            R.i_[rnz] = i;                 // R(i, k) = x(i)
+            R.v_[rnz++] = x[i];
+            x[i] = 0;
+            if (S.parent[i] == k) {
+                // Scatter the non-zero pattern without changing the values
+                vnz = V.scatter(i, 0, w, x, k, V, vnz, false, false);
+            }
+        }
+
+        // gather V(:, k) = x
+        for (csint p = p1; p < vnz; p++) {
+            V.v_[p] = x[V.i_[p]];
+            x[V.i_[p]] = 0;  // clear x
+        }
+
+        // [v, beta, s] = house(x) == house(V[p1:vnz, k])
+        Householder h = house(std::span(V.v_).subspan(p1, vnz - p1));
+        std::copy(h.v.begin(), h.v.end(), V.v_.begin() + p1);
+        beta[k] = h.beta;
+        R.i_[rnz] = k;      // R(k, k) = -sign(x[0]) * norm(x)
+        R.v_[rnz++] = h.s;
+    }
+
+    R.p_[N] = rnz;  // finalize R
+    V.p_[N] = vnz;  // finalize V
+
+    return {V, beta, R, p_inv, q};
+}
+
+
 // Exercise 5.3
 void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 {

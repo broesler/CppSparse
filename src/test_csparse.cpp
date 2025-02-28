@@ -3069,12 +3069,6 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
             'C' // row-major order
         };
 
-        // std::cout << "V:" << std::endl;
-        // res.V.print_dense();
-        // std::cout << "beta:" << res.beta << std::endl;
-        // std::cout << "R:" << std::endl;
-        // res.R.print_dense();
-
         compare_matrices(res.V, expect_V);
         CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
         compare_matrices(res.R, expect_R);
@@ -3082,6 +3076,75 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
 }
 
 
+// Exercise 5.4
+TEST_CASE("QR factorization with column pivoting", "[qr_pivoting]")
+{
+    // csint N = 8;  // number of rows and columns
+    CSCMatrix A = davis_example_qr();
+
+    // // Expected values computed with scipy.linalg.qr
+    // CSCMatrix expect_V {
+    //     {1.                , 0.                , 0.                , 0.                , 0.                , 0.                , 0.                , 0.,
+    //      0.                , 1.                , 0.                , 0.                , 0.                , 0.                , 0.                , 0.,
+    //      0.                , 0.2360679774997897, 1.                , 0.                , 0.                , 0.                , 0.                , 0.,
+    //      0.                , 0.                , 0.8619788607068875, 1.                , 0.                , 0.                , 0.                , 0.,
+    //      0.                , 0.                , 0.                , 0.                , 1.                , 0.                , 0.                , 0.,
+    //      0.                , 0.                , 0.                , 0.                , 0.0980762113533159, 1.                , 0.                , 0.,
+    //      0.                , 0.                , 0.                , 0.                , 0.0980762113533159, 0.0592952558196218, 1.                , 0.,
+    //      0.4142135623730951, 0.                , 0.                , 0.9329077440557915, 0.                , 0.                , 0.8441594335316119, 1.
+    //     },
+    //     {N, N},
+    //     'C'  // row-major order
+    // };
+
+    // std::vector<double> expect_beta {
+    //     1.7071067811865472,
+    //     1.8944271909999157,
+    //     1.1474419561548972,
+    //     1.0693375245281538,
+    //     1.9622504486493761,
+    //     1.992992782143569 ,
+    //     1.1678115068791026,
+    //     0.
+    // };
+
+    // CSCMatrix expect_R {
+    //     {-1.4142135623730951,  0.                ,  0.                , -3.5355339059327378,  0.                ,  0.                , -1.414213562373095 ,  0.                ,
+    //       0.                , -2.23606797749979  , -1.341640786499874 ,  0.                ,  0.                ,  0.                , -4.024922359499621 , -0.4472135954999579,
+    //       0.                ,  0.                , -3.03315017762062  , -0.9890707100936806,  0.                ,  0.                , -0.8571946154145236, -0.1318760946791574,
+    //       0.                ,  0.                ,  0.                , -2.1264381322847794,  0.                ,  0.                ,  0.3987071498033972,  0.061339561508215 ,
+    //       0.                ,  0.                ,  0.                ,  0.                , -5.196152422706632 , -2.309401076758503 , -0.1924500897298752, -0.1924500897298752,
+    //       0.                ,  0.                ,  0.                ,  0.                ,  0.                , -5.715476066494082 , -0.0972019739199674, -0.9720197391996737,
+    //       0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.                , -5.818914395248401 , -0.8474056139492476,
+    //       0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.2808744717175516
+    //     },
+    //     {N, N},
+    //     'C' // row-major order
+    // };
+
+    // ---------- Factor the matrix
+    SymbolicQR S = sqr(A);
+    // NOTE HACK artificially set S.q
+    S.q = {0, 2, 3, 4, 5, 6, 7, 1};
+    std::cout << "S.q: " << S.q << std::endl;
+
+    // double tol = 3.0;  // artificially high for testing purposes
+    double tol = 0.0;  // set to 0 to turn off pivoting
+    QRResult res = qr_pivoting(A, S, tol);
+
+    std::cout << "V:" << std::endl;
+    res.V.print_dense();
+    std::cout << "beta:" << res.beta << std::endl;
+    std::cout << "R:" << std::endl;
+    res.R.print_dense();
+
+    std::cout << "S.q: " << S.q << std::endl;
+    std::cout << "res.q: " << res.q << std::endl;
+
+    // compare_matrices(res.V, expect_V);
+    // CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
+    // compare_matrices(res.R, expect_R);
+}
 
 /*==============================================================================
  *============================================================================*/

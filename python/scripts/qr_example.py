@@ -77,10 +77,16 @@ np.testing.assert_allclose(Q @ R, A_dense, atol=atol)
 # print(Q @ R)
 
 # -----------------------------------------------------------------------------
-#         QR with a M < N matrix
+#         QR with a M != N matrix and/or column pivoting
 # -----------------------------------------------------------------------------
+# NOTE that pivoting for a *dense* matrix is not the same as for a sparse
+# matrix. If we use la.qr(A_dense, pivoting=True), we get a permutation of the
+# columns that guarantees a non-increasing diagonal of R. If we use this metric
+# for a sparse matrix, we get a completely full R!
+pivoting = True
+M, N = 8, 8
 # M, N = 8, 5
-M, N = 5, 8
+# M, N = 5, 8
 
 Ar = A[:M, :N]
 
@@ -93,37 +99,53 @@ print(Ar_dense)
 Arc = csparse.from_scipy_sparse(Ar)
 Sr = csparse.sqr(Arc)
 QRr_res = csparse.qr(Arc, Sr)
+# QRr_res = csparse.qr_pivoting(Arc, Sr, tol=3.0)  # artificially high tol
 
 Vr, beta_r, Rr = QRr_res.V, QRr_res.beta, QRr_res.R
 Vr = Vr.toarray()
 beta_r = np.r_[beta_r]
 Rr = Rr.toarray()
 p_inv = np.r_[QRr_res.p_inv]
+q = np.r_[QRr_res.q]
 
 # Get the actual Q matrix
 pr = csparse.inv_permute(p_inv)
 Qr = csparse.apply_qright(Vr, beta_r, pr)  # (M, M)
 
 # Get the scipy version
+# NOTE that scipy pivots columns to generate a non-increasing R diagonal (aka
+# the norm of each vector)
 Arp = Ar_dense[pr]
-Qr_, Rr_ = la.qr(Arp)
+if pivoting:
+    Qr_, Rr_, q_ = la.qr(Arp, pivoting=True)
+    (Qraw_r, tau_r), _, _ = la.qr(Arp, mode='raw', pivoting=True)
+else:
+    Qr_, Rr_, = la.qr(Arp)
+    (Qraw_r, tau_r), _ = la.qr(Arp, mode='raw')
 
-(Qraw_r, tau_r), _ = la.qr(Arp, mode='raw')
 Vr_ = np.tril(Qraw_r, -1)[:, :M] + np.eye(M, min(M, N))
 
 print("Qr_ = ")
 print(Qr_)
+print("Vr_ = ")
+print(Vr_)
 print("Rr_ = ")
 print(Rr_)
 
 Qr_r = csparse.apply_qright(Vr_, tau_r)
 
-np.testing.assert_allclose(Qr, Qr_[p_inv], atol=atol)
-np.testing.assert_allclose(Rr, Rr_, atol=atol)
-np.testing.assert_allclose(Qr @ Rr, Ar_dense, atol=atol)
+if pivoting:
+    np.testing.assert_allclose(Qr_ @ Rr_, Arp[:, q_], atol=atol)
+    np.testing.assert_allclose((Qr_ @ Rr_)[:, q_], Arp, atol=atol)
+    np.testing.assert_allclose(Qr @ Rr, Ar_dense[:, q], atol=atol)
+else:
+    np.testing.assert_allclose(Qr, Qr_[p_inv], atol=atol)
+    np.testing.assert_allclose(Rr, Rr_, atol=atol)
+    np.testing.assert_allclose(Qr @ Rr, Ar_dense, atol=atol)
 
 print("Q @ R = ")
 print(Qr @ Rr)
+
 
 # -----------------------------------------------------------------------------
 #         Compute using Givens rotations

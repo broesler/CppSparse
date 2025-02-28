@@ -343,6 +343,11 @@ PYBIND11_MODULE(csparse, m) {
     // a tuple of numpy/sparse arrays, and we don't have to expose the
     // SymbolicQR struct.
     m.def("qr", &cs::qr);
+    m.def("qr_pivoting", &cs::qr_pivoting,
+        py::arg("A"),
+        py::arg("S"),
+        py::arg("tol")=0.0
+    );
 
     //--------------------------------------------------------------------------
     //      Solve functions

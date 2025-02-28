@@ -66,13 +66,11 @@ def _test_qr_decomposition(case_name, A):
 
     # ---------- Compute csparse QR
     QRres = csparse.qr(Ac)
-    V, beta, R = QRres.V, QRres.beta, QRres.R
+    V, beta, R, p_inv = QRres.V, QRres.beta, QRres.R, QRres.p_inv
 
     # Convert to numpy arrays
     V = V.toarray()
-    beta = np.r_[beta]
     R = R.toarray()
-    p_inv = np.r_[QRres.p_inv]
 
     p = csparse.inv_permute(p_inv)
     Q = csparse.apply_qright(V, beta, p)

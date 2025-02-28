@@ -44,7 +44,6 @@ V, beta, R = QRres.V, QRres.beta, QRres.R
 
 # Convert for easier debugging
 V = V.toarray()
-beta = np.r_[beta]
 R = R.toarray()
 
 # TODO can we turn off the row permutation in sqr/vcount?
@@ -75,8 +74,8 @@ np.testing.assert_allclose(Q @ R, A_dense, atol=atol)
 # -----------------------------------------------------------------------------
 #         QR with a M < N matrix
 # -----------------------------------------------------------------------------
-# M, N = 8, 5
-M, N = 5, 8
+M, N = 8, 5
+# M, N = 5, 8
 
 Ar = A[:M, :N]
 
@@ -89,11 +88,9 @@ print(Ar_dense)
 Arc = csparse.from_scipy_sparse(Ar)
 QRr_res = csparse.qr(Arc)
 
-Vr, beta_r, Rr = QRr_res.V, QRr_res.beta, QRr_res.R
+Vr, beta_r, Rr, p_inv = QRr_res.V, QRr_res.beta, QRr_res.R, QRr_res.p_inv
 Vr = Vr.toarray()
-beta_r = np.r_[beta_r]
 Rr = Rr.toarray()
-p_inv = np.r_[QRr_res.p_inv]
 
 # Get the actual Q matrix
 pr = csparse.inv_permute(p_inv)

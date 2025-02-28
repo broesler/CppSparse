@@ -16,6 +16,23 @@
 namespace py = pybind11;
 
 
+/** Template function to convert an array to a NumPy array.
+ *
+ * @param self  the array to convert
+ *
+ * @return a NumPy array with the same data as the array
+ */
+template <typename T>
+py::array_t<T> vector_to_numpy(const std::vector<T>& vec)
+{
+    auto result = py::array_t<T>(vec.size());
+    py::buffer_info buf = result.request();
+    T* ptr = static_cast<T*>(buf.ptr);
+    std::memcpy(ptr, vec.data(), vec.size() * sizeof(T));
+    return result;
+};
+
+
 /** Template function to convert a matrix to a NumPy array.
  *
  * @param self  the matrix to convert
@@ -89,10 +106,16 @@ PYBIND11_MODULE(csparse, m) {
     // Bind the QRResult struct
     py::class_<cs::QRResult>(m, "QRResult")
         .def_readwrite("V", &cs::QRResult::V)
-        .def_readwrite("beta", &cs::QRResult::beta)
+        .def_property_readonly("beta", [](const cs::QRResult& qr) {
+            return vector_to_numpy(qr.beta);
+        })
         .def_readwrite("R", &cs::QRResult::R)
-        .def_readwrite("p_inv", &cs::QRResult::p_inv)
-        .def_readwrite("q", &cs::QRResult::q);
+        .def_property_readonly("p_inv", [](const cs::QRResult& qr) {
+            return vector_to_numpy(qr.p_inv);
+        })
+        .def_property_readonly("q", [](const cs::QRResult& qr) {
+            return vector_to_numpy(qr.q);
+        });
 
     //--------------------------------------------------------------------------
     //        COOMatrix class

@@ -53,13 +53,13 @@ R = R.toarray()
 
 # TODO can we turn off the row permutation in sqr/vcount?
 # Get the actual Q matrix, don't forget the row permutation!
-p = csparse.inv_permute(S.p_inv)
+p = csparse.inv_permute(QRres.p_inv)
 Q = csparse.apply_qright(V, beta, p)
 
 # -----------------------------------------------------------------------------
 #         Compute the QR decomposition of A with scipy
 # -----------------------------------------------------------------------------
-# Permute the rows of A_dense here with S.p_inv to get the
+# Permute the rows of A_dense here with QRres.p_inv to get the
 # same V and beta as the csparse.qr function.
 Ap = A_dense[p]
 
@@ -69,7 +69,7 @@ V_ = np.tril(Qraw, -1) + np.eye(N)
 Qr_ = csparse.apply_qright(V_, tau, p)
 
 np.testing.assert_allclose(Q_ @ R_, Ap, atol=atol)
-np.testing.assert_allclose(Q, Q_[S.p_inv], atol=atol)
+np.testing.assert_allclose(Q, Q_[QRres.p_inv], atol=atol)
 
 # Reproduce A = QR
 np.testing.assert_allclose(Q @ R, A_dense, atol=atol)

@@ -80,7 +80,7 @@ def davis_example_chol(format='csparse_csc'):
     vals = np.ones((rows.size,))
 
     # Values for the lower triangle
-    L = sparse.csc_matrix((vals, (rows, cols)), shape=(N, N))
+    L = sparse.csc_array((vals, (rows, cols)), shape=(N, N))
 
     # Create the symmetric matrix A
     A = L + L.T
@@ -165,6 +165,24 @@ def to_ndarray(A, order='C'):
     return (np.array(A.to_dense_vector(order='F'), order=order)
               .reshape(A.shape, order='F'))
 
+
+def from_ndarray(A, format='csc'):
+    """Convert a numpy ndarray to a csparse matrix.
+
+    Parameters
+    ----------
+    x : (M, N) ndarray
+        The matrix to convert.
+    format : str, optional in {'csc', 'coo'}
+
+    Returns
+    -------
+    result : (M, N) csparse.CSCMatrix or csparse.COOMatrix
+        The matrix in the specified format.
+    """
+    A = sparse.csc_array(A)
+    return from_scipy_sparse(A, format=format)
+    
 
 def to_scipy_sparse(A, format='csc'):
     r"""Convert a csparse matrix to a scipy.sparse matrix.

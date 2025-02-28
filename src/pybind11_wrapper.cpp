@@ -64,6 +64,21 @@ auto matrix_to_ndarray(const T& self, const char order)
 };
 
 
+/** Convert a string to an AMDOrder enum.
+ *
+ * @param order  the string to convert
+ *
+ * @return the AMDOrder enum
+ */
+cs::AMDOrder string_to_amdorder(const std::string& order)
+{
+    if (order == "Natural") { return cs::AMDOrder::Natural; }
+    if (order == "APlusAT") { return cs::AMDOrder::APlusAT; }
+    if (order == "ATANoDenseRows") { return cs::AMDOrder::ATANoDenseRows; }
+    if (order == "ATA") { return cs::AMDOrder::ATA; }
+    throw std::runtime_error("Invalid AMDOrder specified.");
+}
+
 
 PYBIND11_MODULE(csparse, m) {
     m.doc() = "CSparse module for sparse matrix operations.";
@@ -87,18 +102,6 @@ PYBIND11_MODULE(csparse, m) {
         .def_readwrite("parent", &cs::SymbolicChol::parent)
         .def_readwrite("cp", &cs::SymbolicChol::cp)
         .def_readwrite("lnz", &cs::SymbolicChol::lnz);
-
-    // Bind the Symbolic structs
-    py::class_<cs::SymbolicQR>(m, "SymbolicQR")
-        // Expose the members of the struct as attributes in Python
-        .def(py::init<>())  // Default constructor
-        .def_readwrite("p_inv", &cs::SymbolicQR::p_inv)
-        .def_readwrite("q", &cs::SymbolicQR::q)
-        .def_readwrite("parent", &cs::SymbolicQR::parent)
-        .def_readwrite("leftmost", &cs::SymbolicQR::leftmost)
-        .def_readwrite("m2", &cs::SymbolicQR::m2)
-        .def_readwrite("vnz", &cs::SymbolicQR::vnz)
-        .def_readwrite("rnz", &cs::SymbolicQR::rnz);
 
     // Bind the QRResult struct
     py::class_<cs::QRResult>(m, "QRResult")
@@ -311,7 +314,7 @@ PYBIND11_MODULE(csparse, m) {
     // structures (or possibly even the output structures?) in python
     // We should just be able to call "Q, R = qr(A)" like in scipy.
 
-    // Cholesky decomposition
+    // ---------- Cholesky decomposition
     m.def("etree", &cs::etree, py::arg("A"), py::arg("ata")=false);
     m.def("post", &cs::post);
     m.def("schol",
@@ -330,19 +333,22 @@ PYBIND11_MODULE(csparse, m) {
     m.def("leftchol", &cs::leftchol);
     m.def("rechol", &cs::rechol);
 
-    // QR decomposition
-    m.def("sqr", 
-        &cs::sqr,
+    // ---------- QR decomposition
+    // Define the python qr function here, and call the C++ sqr function.
+    m.def("qr",
+        [](
+            const cs::CSCMatrix& A,
+            const std::string& order="Natural",
+            bool use_postorder=false
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::SymbolicQR S = cs::sqr(A, order_enum, use_postorder);
+            return cs::qr(A, S);
+        },
         py::arg("A"),
-        py::arg("order")=cs::AMDOrder::Natural,
+        py::arg("order")="Natural",
         py::arg("use_postorder")=false
     );
-    // Could name this _qr and then have a python function qr() that calls sqr,
-    // and converts from V, beta to Q, R, (and p, q), or just include p_inv and
-    // q in the QRResult struct. The python function could then just return
-    // a tuple of numpy/sparse arrays, and we don't have to expose the
-    // SymbolicQR struct.
-    m.def("qr", &cs::qr);
 
     //--------------------------------------------------------------------------
     //      Solve functions

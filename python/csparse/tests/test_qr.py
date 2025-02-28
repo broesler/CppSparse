@@ -65,8 +65,7 @@ def _test_qr_decomposition(case_name, A):
     M, N = A.shape
 
     # ---------- Compute csparse QR
-    S = csparse.sqr(Ac)
-    QRres = csparse.qr(Ac, S)
+    QRres = csparse.qr(Ac)
     V, beta, R = QRres.V, QRres.beta, QRres.R
 
     # Convert to numpy arrays

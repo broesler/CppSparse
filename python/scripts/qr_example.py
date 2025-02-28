@@ -38,11 +38,7 @@ A_dense = A.toarray()
 #         Compute QR decomposition with csparse
 # -----------------------------------------------------------------------------
 # ---------- Compute using Householder reflections
-# TODO the row and column permutations are stored in S, but the MATLAB cs_qr
-# function returns p and q, and only uses S internally. We should implement
-# this functionality in our csparse implementation.
-S = csparse.sqr(Ac)
-QRres = csparse.qr(Ac, S)
+QRres = csparse.qr(Ac)
 
 V, beta, R = QRres.V, QRres.beta, QRres.R
 
@@ -91,8 +87,7 @@ print("Ar = ")
 print(Ar_dense)
 
 Arc = csparse.from_scipy_sparse(Ar)
-Sr = csparse.sqr(Arc)
-QRr_res = csparse.qr(Arc, Sr)
+QRr_res = csparse.qr(Arc)
 
 Vr, beta_r, Rr = QRr_res.V, QRr_res.beta, QRr_res.R
 Vr = Vr.toarray()

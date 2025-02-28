@@ -16,14 +16,14 @@
 namespace py = pybind11;
 
 
-/** Template function to convert an array to a NumPy array.
+/** Convert an array to a NumPy array.
  *
  * @param self  the array to convert
  *
  * @return a NumPy array with the same data as the array
  */
 template <typename T>
-py::array_t<T> vector_to_numpy(const std::vector<T>& vec)
+auto vector_to_numpy(const std::vector<T>& vec)
 {
     auto result = py::array_t<T>(vec.size());
     py::buffer_info buf = result.request();
@@ -33,7 +33,7 @@ py::array_t<T> vector_to_numpy(const std::vector<T>& vec)
 };
 
 
-/** Template function to convert a matrix to a NumPy array.
+/** Convert a matrix to a NumPy array.
  *
  * @param self  the matrix to convert
  * @param order the order of the NumPy array ('C' or 'F')
@@ -81,6 +81,31 @@ auto matrix_to_ndarray(const T& self, const char order)
 };
 
 
+/** Convert a CSCMatrix to a SciPy CSC matrix.
+ *
+ * @param matrix  the CSCMatrix to convert
+ *
+ * @return a SciPy CSC matrix
+ */
+py::object csc_matrix_to_scipy_csc(const cs::CSCMatrix& A, py::module_& m) {
+    py::module_ np = py::module_::import("numpy");
+    py::module_ sparse = py::module_::import("scipy.sparse");
+
+    // Convert indptr, indices, and data to NumPy arrays
+    auto indptr_array = vector_to_numpy(A.indptr());
+    auto indices_array = vector_to_numpy(A.indices());
+    auto data_array = vector_to_numpy(A.data());
+
+    // Create the SciPy CSC A
+    auto [M, N] = A.shape();
+
+    return sparse.attr("csc_array")(
+        py::make_tuple(data_array, indices_array, indptr_array),
+        py::arg("shape")=py::make_tuple(M, N)
+    );
+}
+
+
 /** Convert a string to an AMDOrder enum.
  *
  * @param order  the string to convert
@@ -105,11 +130,15 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     // Bind the QRResult struct
     py::class_<cs::QRResult>(m, "QRResult")
-        .def_readwrite("V", &cs::QRResult::V)
+        .def_property_readonly("V", [&m](const cs::QRResult& qr) {
+            return csc_matrix_to_scipy_csc(qr.V, m);
+        })
         .def_property_readonly("beta", [](const cs::QRResult& qr) {
             return vector_to_numpy(qr.beta);
         })
-        .def_readwrite("R", &cs::QRResult::R)
+        .def_property_readonly("R", [&m](const cs::QRResult& qr) {
+            return csc_matrix_to_scipy_csc(qr.R, m);
+        })
         .def_property_readonly("p_inv", [](const cs::QRResult& qr) {
             return vector_to_numpy(qr.p_inv);
         })

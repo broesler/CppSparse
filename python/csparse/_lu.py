@@ -35,7 +35,9 @@ def lu_left(A):
     P : (M, M) ndarray
         Row permutation matrix.
     """
-    N = A.shape[0]
+    M, N = A.shape
+    if M != N:
+        raise ValueError("Input matrix must be square.")
     P = np.eye(N)
     L = np.zeros((N, N))
     U = np.zeros((N, N))
@@ -59,12 +61,13 @@ def lu_left(A):
 
 
 if __name__ == "__main__":
-    import csparse
-    A = csparse.davis_example_qr(format='ndarray')
+    import utils
+    A = utils.davis_example_qr(format='ndarray')
 
+    # Computes LU = PA
     L, U, P = lu_left(A)
 
-    # Compute using scipy (computes A = PLU)
+    # Compute using scipy (computes A = PLU -> LU = P^T A)
     P_, L_, U_ = la.lu(A)
 
     # Check the results

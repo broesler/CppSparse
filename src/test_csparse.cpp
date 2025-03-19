@@ -3087,7 +3087,7 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
 }
 
 
-TEST_CASE("LU Factorization")
+TEST_CASE("LU Factorization of Square Matrix")
 {
     CSCMatrix A = davis_example_qr();
     auto [M, N] = A.shape();
@@ -3120,6 +3120,31 @@ TEST_CASE("LU Factorization")
     }
 }
 
+
+TEST_CASE("Exercise 6.1: Solve A^T x = b")
+{
+    CSCMatrix A = davis_example_qr().to_canonical();
+    auto [M, N] = A.shape();
+
+    // Create RHS for A^T x = b
+    std::vector<double> expect(N);
+    std::iota(expect.begin(), expect.end(), 1);
+    const std::vector<double> b = A.T() * expect;
+
+    // Compute the numeric factorization
+    SymbolicLU S = slu(A);
+    LUResult res = lu(A, S);
+
+    const CSCMatrix& L = res.L,
+                     U = res.U;
+
+    // Solve A^T x = b == (P^T LU)^T x = b == U^T (L^T P x) = b
+    const std::vector<double> y = utsolve(U, b);  // solve U^T y = b
+    const std::vector<double> Px = ltsolve(L, y);  // solve L^T P x = y
+    const std::vector<double> x = pvec(res.p_inv, Px);  // permute back
+    
+    CHECK_THAT(is_close(x, expect, tol), AllTrue());
+}
 
 
 /*==============================================================================

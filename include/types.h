@@ -32,7 +32,9 @@ struct TriPerm;
 struct SparseSolution;
 struct SymbolicChol;
 struct SymbolicQR;
+struct SymbolicLU;
 struct QRResult;
+struct LUResult;
 
 class COOMatrix;
 class CSCMatrix;

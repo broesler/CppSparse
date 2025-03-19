@@ -1029,6 +1029,11 @@ class CSCMatrix
         friend QRResult qr(const CSCMatrix& A, const SymbolicQR& S);
         friend void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res);
 
+        // ---------------------------------------------------------------------
+        //         LU Decomposition
+        // ---------------------------------------------------------------------
+        friend LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol);
+
         //----------------------------------------------------------------------
         //        Printing
         //----------------------------------------------------------------------

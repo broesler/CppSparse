@@ -2251,6 +2251,9 @@ TEST_CASE("Permuted triangular solvers")
 }
 
 
+/*------------------------------------------------------------------------------
+ *         Decompositions
+ *----------------------------------------------------------------------------*/
 TEST_CASE("Cholesky decomposition")
 {
     // Define the test matrix A (See Davis, Figure 4.2, p 39)
@@ -3083,6 +3086,22 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
 }
 
 
+TEST_CASE("LU Factorization")
+{
+    CSCMatrix A = davis_example_qr();
+    auto [M, N] = A.shape();
 
+    SECTION("Symbolic Factorization") {
+        SymbolicLU S = slu(A);  // natural ordering
+
+        std::vector<csint> expect_q(N);
+        std::iota(expect_q.begin(), expect_q.end(), 0);
+        csint expect_lnz = 4 * A.nnz() + N;
+
+        CHECK(S.q == expect_q);
+        CHECK(S.lnz == expect_lnz);
+        REQUIRE(S.unz == S.lnz);
+    }
+}
 /*==============================================================================
  *============================================================================*/

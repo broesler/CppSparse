@@ -34,7 +34,7 @@ using Catch::Matchers::UnorderedEquals;
 constexpr double tol = 1e-14;
 
 
-// TODO move all example definitions to the utils file, and then in the python
+// TODO move all example definitions to an examples file, and then in the python
 // module we just have to use the wrapper function to get the format.
 COOMatrix davis_21_coo()
 {
@@ -63,6 +63,7 @@ CSCMatrix davis_example_qr()
     CSCMatrix A = COOMatrix(vals, rows, cols).compress();
 
     // NOTE we need to include A[7, 7] even though it is numerically zero!
+    // TODO try without it? See what p_inv results in
     A.assign(7, 7, 0.0);
 
     return A;
@@ -2997,7 +2998,7 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
 {
     // NOTE As written, when M < N, the cs::qr code computes a QR factorization
     // that results in V size (N, N), and R size (N, N). The actual sizes should
-    // be V (M, M) and R (M, N). We could just slice the result to get the
+    // be V (M, M) and R (M, N). We currently just slice the result to get the
     // desired sizes.
 
     // Define the test matrix A (See Davis, Figure 5.1, p 74)
@@ -3102,6 +3103,26 @@ TEST_CASE("LU Factorization")
         CHECK(S.lnz == expect_lnz);
         REQUIRE(S.unz == S.lnz);
     }
+
+    // SECTION("Numeric Factorization") {
+    //     SymbolicLU S = slu(A);
+    //     LUResult res = lu(A, S);
+
+    //     // natural ordering
+    //     std::vector<csint> expect_q(N);
+    //     std::iota(expect_q.begin(), expect_q.end(), 0);
+
+    //     std::cout << "L:" << std::endl;
+    //     res.L.print_dense();
+    //     std::cout << "U:" << std::endl;
+    //     res.U.print_dense();
+
+    //     CHECK(res.q == expect_q);
+    //     CHECK(res.p_inv == expect_q);  // natural ordering
+    //     compare_matrices(res.L * res.U, A);
+    //     compare_matrices(res.L * res.U, A.permute_rows(res.p_inv));
+    // }
 }
+
 /*==============================================================================
  *============================================================================*/

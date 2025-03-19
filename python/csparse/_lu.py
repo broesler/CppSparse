@@ -101,6 +101,47 @@ def lu_right(A):
     return np.eye(N), L, U
 
 
+def lu_rightp(A):
+    """Compute the LU decomposition of a matrix using a right-looking algorithm
+    with partial pivoting.
+
+    .. math::
+        PA = LU
+
+    Parameters
+    ----------
+    A : (M, M) array_like
+        Square matrix to decompose.
+
+    Returns
+    -------
+    P : (M, M) ndarray
+        Row permutation matrix (identity matrix).
+    L : (M, M) ndarray
+        Lower triangular matrix. The diagonal elements are all 1.
+    U : (M, M) ndarray
+        Upper triangular matrix.
+    """
+    A = np.copy(A)
+    M, N = A.shape
+
+    if M != N:
+        raise ValueError("Input matrix must be square.")
+
+    P = np.eye(N)
+
+    for k in range(N):
+        i = k + np.argmax(np.abs(A[k:, k]))  # partial pivoting
+        P[[k, i]] = P[[i, k]]  # (6.10) swap rows
+        A[[k, i]] = A[[i, k]]  # (6.11)
+        A[k+1:, k] = A[k+1:, k] / A[k, k]  # (6.12)
+        A[k+1:, k+1:] -= A[k+1:, [k]] @ A[[k], k+1:]  # (6.9)
+
+    L = np.tril(A, -1) + np.eye(N)  # L is unit diagonal
+    U = np.triu(A)
+
+    return P, L, U
+
 
 if __name__ == "__main__":
     import utils
@@ -111,7 +152,7 @@ if __name__ == "__main__":
 
     atol = 1e-15
 
-    for lu_func in [lu_left, lu_right]:
+    for lu_func in [lu_left, lu_right, lu_rightp]:
         # Computes LU = PA
         P, L, U = lu_func(A)
 

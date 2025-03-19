@@ -13,6 +13,7 @@
 #include <cassert>
 #include <functional>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <sstream>
@@ -907,15 +908,23 @@ class CSCMatrix
             const CSCMatrix& A,
             const CSCMatrix& B,
             csint k,
+            std::optional<const std::vector<csint>> p_inv,
             bool lo
         );
 
-        friend std::vector<csint> reach(const CSCMatrix& A, const CSCMatrix& B, csint k);
+        friend std::vector<csint> reach(
+            const CSCMatrix& A,
+            const CSCMatrix& B,
+            csint k,
+            std::optional<const std::vector<csint>> p_inv
+        );
+
         friend std::vector<csint>& dfs(
             const CSCMatrix& A,
             csint j,
             std::vector<bool>& marked,
-            std::vector<csint>& xi
+            std::vector<csint>& xi,
+            std::optional<const std::vector<csint>> p_inv
         );
 
         //----------------------------------------------------------------------

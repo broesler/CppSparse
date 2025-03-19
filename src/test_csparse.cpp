@@ -17,6 +17,7 @@
 #include <fstream>
 #include <map>
 #include <numeric>    // iota
+#include <optional>   // nullopt
 #include <random>
 #include <string>
 #include <sstream>
@@ -2046,7 +2047,7 @@ TEST_CASE("Reachability and DFS")
 
         std::vector<double> expect = {0., -1.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.};
 
-        auto [xi, x] = spsolve(U, B, 0, false);
+        auto [xi, x] = spsolve(U, B, 0, std::nullopt, false);
 
         REQUIRE(x == expect);
     }

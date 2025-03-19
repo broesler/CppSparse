@@ -467,6 +467,7 @@ SparseSolution spsolve(
     const CSCMatrix& A, 
     const CSCMatrix& B,
     csint k,
+    std::optional<const std::vector<csint>> p_inv,
     bool lo
 )
 {
@@ -481,7 +482,8 @@ SparseSolution spsolve(
 
     // Solve Lx = b_k or Ux = b_k
     for (auto& j : xi) {  // x(j) is nonzero
-        csint J = j;  // j maps to col J of G (TODO p_inv arg for LU)
+        // j maps to col J of G
+        csint J = p_inv.has_value() ? p_inv.value()[j] : j;
         if (J < 0) {
             continue;                                // x(j) is not in the pattern of G
         }
@@ -497,9 +499,13 @@ SparseSolution spsolve(
 }
 
 
-std::vector<csint> reach(const CSCMatrix& A, const CSCMatrix& B, csint k)
+std::vector<csint> reach(
+    const CSCMatrix& A,
+    const CSCMatrix& B,
+    csint k,
+    std::optional<const std::vector<csint>> p_inv
+)
 {
-    // TODO p_inv argument (ignore for now, used in LU decomoposition)
     std::vector<bool> marked(A.N_, false);
     std::vector<csint> xi;  // do not initialize for dfs call!
     xi.reserve(A.N_);
@@ -507,7 +513,7 @@ std::vector<csint> reach(const CSCMatrix& A, const CSCMatrix& B, csint k)
     for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
         csint j = B.i_[p];  // consider nonzero B(j, k)
         if (!marked[j]) {
-            xi = dfs(A, j, marked, xi);
+            xi = dfs(A, j, marked, xi, p_inv);
         }
     }
 
@@ -520,7 +526,8 @@ std::vector<csint>& dfs(
     const CSCMatrix& A, 
     csint j,
     std::vector<bool>& marked,
-    std::vector<csint>& xi
+    std::vector<csint>& xi,
+    std::optional<const std::vector<csint>> p_inv
 )
 {
     std::vector<csint> rstack, pstack;  // recursion and pause stacks
@@ -533,7 +540,8 @@ std::vector<csint>& dfs(
 
     while (!rstack.empty()) {
         j = rstack.back();  // get j from the top of the recursion stack
-        csint jnew = j;  // j maps to col jnew of G (NOTE ignore p_inv for now)
+        // j maps to col jnew of G
+        csint jnew = p_inv.has_value() ? p_inv.value()[j] : j;
 
         if (!marked[j]) {
             marked[j] = true;  // mark node j as visited

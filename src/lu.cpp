@@ -49,11 +49,7 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
     // Allocate result matrices
     CSCMatrix L({N, N}, S.lnz);  // lower triangular matrix
     CSCMatrix U({N, N}, S.unz);  // upper triangular matrix
-    std::vector<csint> p_inv(N);  // row permutation vector
-
-    // Allocate workspace
-    // std::vector<csint> xi(2*N);
-    // std::vector<double> x(N);
+    std::vector<csint> p_inv(N, -1);  // row permutation vector
 
     csint lnz = 0,
           unz = 0;

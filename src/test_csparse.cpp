@@ -59,14 +59,14 @@ CSCMatrix davis_example_qr()
     std::vector<double> vals(rows.size(), 1.0);
     std::iota(vals.begin(), vals.begin() + 7, 1.0);
 
-    // Non-canonical format for testing
-    CSCMatrix A = COOMatrix(vals, rows, cols).compress();
+    COOMatrix A(vals, rows, cols);
 
     // NOTE we need to include A[7, 7] even though it is numerically zero!
     // TODO try without it? See what p_inv results in
     A.assign(7, 7, 0.0);
 
-    return A;
+    // Non-canonical format for testing
+    return A.compress();
 }
 
 
@@ -3104,25 +3104,23 @@ TEST_CASE("LU Factorization")
         REQUIRE(S.unz == S.lnz);
     }
 
-    // SECTION("Numeric Factorization") {
-    //     SymbolicLU S = slu(A);
-    //     LUResult res = lu(A, S);
+    SECTION("Numeric Factorization") {
+        SymbolicLU S = slu(A);
+        LUResult res = lu(A, S);
 
-    //     // natural ordering
-    //     std::vector<csint> expect_q(N);
-    //     std::iota(expect_q.begin(), expect_q.end(), 0);
+        // natural ordering
+        std::vector<csint> expect_q(N);
+        std::iota(expect_q.begin(), expect_q.end(), 0);
 
-    //     std::cout << "L:" << std::endl;
-    //     res.L.print_dense();
-    //     std::cout << "U:" << std::endl;
-    //     res.U.print_dense();
+        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
 
-    //     CHECK(res.q == expect_q);
-    //     CHECK(res.p_inv == expect_q);  // natural ordering
-    //     compare_matrices(res.L * res.U, A);
-    //     compare_matrices(res.L * res.U, A.permute_rows(res.p_inv));
-    // }
+        CHECK(res.q == expect_q);
+        CHECK(res.p_inv == expect_q);
+        compare_matrices(LU, A.to_canonical());
+    }
 }
+
+
 
 /*==============================================================================
  *============================================================================*/

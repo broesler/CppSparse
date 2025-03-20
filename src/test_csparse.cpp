@@ -275,7 +275,7 @@ TEST_CASE("COOMatrix Constructors", "[COOMatrix]")
     }
 
     SECTION("Make new from given shape") {
-        COOMatrix A({56, 37});
+        COOMatrix A {{56, 37}};
         REQUIRE(A.nnz() == 0);
         REQUIRE(A.nzmax() == 0);
         REQUIRE(A.shape() == Shape{56, 37});
@@ -283,7 +283,7 @@ TEST_CASE("COOMatrix Constructors", "[COOMatrix]")
 
     SECTION("Allocate new from shape and nzmax") {
         int nzmax = 1e4;
-        COOMatrix A({56, 37}, nzmax);
+        COOMatrix A {{56, 37}, nzmax};
         REQUIRE(A.nnz() == 0);
         REQUIRE(A.nzmax() >= nzmax);
         REQUIRE(A.shape() == Shape{56, 37});
@@ -298,7 +298,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
     std::vector<csint>  i = {2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
     std::vector<csint>  j = {2,    0,    3,    2,    1,    0,    1,    3,    0,    1};
     std::vector<double> v = {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7};
-    COOMatrix A(v, i, j);
+    COOMatrix A {v, i, j};
 
     SECTION("Attributes") {
         REQUIRE(A.nnz() == 10);
@@ -398,7 +398,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
 
     SECTION("Read from a file") {
         std::ifstream fp("./data/t1");
-        COOMatrix F(fp);
+        COOMatrix F {fp};
 
         REQUIRE(A.row() == F.row());
         REQUIRE(A.column() == F.column());
@@ -661,7 +661,7 @@ TEST_CASE("CSCMatrix", "[CSCMatrix]")
         };
 
         SECTION("As constructor") {
-            COOMatrix B(C);  // via constructor
+            COOMatrix B {C};  // via constructor
             convert_test(B);
         }
 
@@ -738,7 +738,7 @@ TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
     REQUIRE_FALSE(C.is_symmetric());
 
     SECTION("Constructor") {
-        CSCMatrix B(A);
+        CSCMatrix B {A};
         REQUIRE(C.indptr() == B.indptr());
         REQUIRE(C.indices() == B.indices());
         REQUIRE(C.data() == B.data());
@@ -1457,7 +1457,7 @@ TEST_CASE("Exercise 2.15: Band function")
     csint N = 6;
     csint nnz = N*N;
 
-    CSCMatrix A(std::vector<double>(nnz, 1), {N, N});  // (N, N) of ones
+    CSCMatrix A {std::vector<double>(nnz, 1), {N, N}};  // (N, N) of ones
 
     SECTION("Main diagonal") {
         int kl = 0,
@@ -1903,7 +1903,7 @@ TEST_CASE("Reachability and DFS")
     CSCMatrix U = L.T();
 
     // Define the rhs matrix B
-    CSCMatrix B(Shape {N, 1});
+    CSCMatrix B {Shape {N, 1}};
 
     SECTION("dfs from a single node") {
         // Assign non-zeros to rows 3 and 5 in column 0
@@ -2333,7 +2333,7 @@ TEST_CASE("Cholesky decomposition")
             std::default_random_engine rng(56);
             std::uniform_real_distribution<double> unif(0.0, 1.0);
 
-            COOMatrix w({L.shape()[0], 1});
+            COOMatrix w {{L.shape()[0], 1}};
 
             for (csint p = L.indptr()[k]; p < L.indptr()[k + 1]; p++) {
                 w.assign(L.indices()[p], 0, unif(rng));
@@ -2391,7 +2391,7 @@ TEST_CASE("Cholesky decomposition")
         const std::vector<double> b_vals = L * expect;
 
         // Create the sparse RHS matrix
-        CSCMatrix b(b_vals, {N, 1});
+        CSCMatrix b {b_vals, {N, 1}};
 
         // Solve Lx = b
         auto [xi, x] = chol_lsolve(L, b, S.parent);
@@ -2416,7 +2416,7 @@ TEST_CASE("Cholesky decomposition")
         const std::vector<double> b_vals = L.T() * expect;
 
         // Create the sparse RHS matrix
-        CSCMatrix b(b_vals, {N, 1});
+        CSCMatrix b {b_vals, {N, 1}};
 
         // Solve Lx = b
         auto [xi, x] = chol_ltsolve(L, b, S.parent);

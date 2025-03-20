@@ -472,7 +472,7 @@ SparseSolution spsolve(
 )
 {
     // Populate xi with the non-zero indices of x
-    std::vector<csint> xi = reach(A, B, k);
+    std::vector<csint> xi = reach(A, B, k, p_inv);
     std::vector<double> x(A.N_);  // dense output vector
 
     // scatter B(:, k) into x

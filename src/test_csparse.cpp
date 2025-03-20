@@ -3092,11 +3092,17 @@ TEST_CASE("LU Factorization of Square Matrix")
     CSCMatrix A = davis_example_qr();
     auto [M, N] = A.shape();
 
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    std::vector<csint> expect_q(N);
+    std::iota(expect_q.begin(), expect_q.end(), 0);
+
     SECTION("Symbolic Factorization") {
         SymbolicLU S = slu(A);  // natural ordering
 
-        std::vector<csint> expect_q(N);
-        std::iota(expect_q.begin(), expect_q.end(), 0);
         csint expect_lnz = 4 * A.nnz() + N;
 
         CHECK(S.q == expect_q);
@@ -3104,18 +3110,38 @@ TEST_CASE("LU Factorization of Square Matrix")
         REQUIRE(S.unz == S.lnz);
     }
 
-    SECTION("Numeric Factorization") {
+    SECTION("Numeric Factorization (un-permuted)") {
         SymbolicLU S = slu(A);
         LUResult res = lu(A, S);
-
-        // natural ordering
-        std::vector<csint> expect_q(N);
-        std::iota(expect_q.begin(), expect_q.end(), 0);
 
         CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
 
         CHECK(res.q == expect_q);
         CHECK(res.p_inv == expect_q);
+        compare_matrices(LU, A.to_canonical());
+    }
+
+    SECTION("Numeric Factorization (permuted)") {
+        // Permute the rows of A to test pivoting
+        // std::vector<csint> p = {0, 1, 2, 3, 4, 5, 6, 7};  // un-permuted
+        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        std::vector<csint> p_inv = inv_permute(p);
+
+        CSCMatrix Ap = A.permute_rows(p_inv);
+
+        // Compute LU = PA
+        SymbolicLU S = slu(Ap);
+        LUResult res = lu(Ap, S);
+
+        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+
+        // Permute the rows of the input Ap to compare with LU
+        CSCMatrix PAp = Ap.permute_rows(res.p_inv).to_canonical();
+
+        CHECK(res.q == expect_q);
+        CHECK(res.p_inv == p);
+        compare_matrices(A, PAp);  // LU should match the un-permuted A
+        compare_matrices(LU, PAp);
         compare_matrices(LU, A.to_canonical());
     }
 }

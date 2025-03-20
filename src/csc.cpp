@@ -1157,8 +1157,8 @@ csint CSCMatrix::scatter(
  *         Permutations 
  *----------------------------------------------------------------------------*/
 CSCMatrix CSCMatrix::permute(
-    const std::vector<csint> p_inv,
-    const std::vector<csint> q,
+    const std::vector<csint>& p_inv,
+    const std::vector<csint>& q,
     bool values
 ) const
 {
@@ -1183,7 +1183,7 @@ CSCMatrix CSCMatrix::permute(
 }
 
 
-CSCMatrix CSCMatrix::permute_rows(const std::vector<csint> p_inv, bool values) const
+CSCMatrix CSCMatrix::permute_rows(const std::vector<csint>& p_inv, bool values) const
 {
     std::vector<csint> q(N_);
     std::iota(q.begin(), q.end(), 0);  // identity permutation
@@ -1191,7 +1191,7 @@ CSCMatrix CSCMatrix::permute_rows(const std::vector<csint> p_inv, bool values) c
 }
 
 
-CSCMatrix CSCMatrix::permute_cols(const std::vector<csint> q, bool values) const
+CSCMatrix CSCMatrix::permute_cols(const std::vector<csint>& q, bool values) const
 {
     std::vector<csint> p_inv(M_);
     std::iota(p_inv.begin(), p_inv.end(), 0);  // identity permutation
@@ -1199,7 +1199,7 @@ CSCMatrix CSCMatrix::permute_cols(const std::vector<csint> q, bool values) const
 }
 
 
-CSCMatrix CSCMatrix::symperm(const std::vector<csint> p_inv, bool values) const
+CSCMatrix CSCMatrix::symperm(const std::vector<csint>& p_inv, bool values) const
 {
     assert(M_ == N_);  // matrix must be square. Symmetry not checked.
 

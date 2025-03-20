@@ -675,8 +675,8 @@ class CSCMatrix
          * @return C  permuted matrix
          */
         CSCMatrix permute(
-            const std::vector<csint> p_inv,
-            const std::vector<csint> q,
+            const std::vector<csint>& p_inv,
+            const std::vector<csint>& q,
             bool values=true
         ) const;
 
@@ -689,7 +689,7 @@ class CSCMatrix
          *
          * @return C  permuted matrix
          */
-        CSCMatrix symperm(const std::vector<csint> p_inv, bool values=true) const;
+        CSCMatrix symperm(const std::vector<csint>& p_inv, bool values=true) const;
 
         /** Permute and transpose a matrix \f$ C = PA^TQ \f$.
          *
@@ -721,7 +721,7 @@ class CSCMatrix
          *
          * @return C  permuted matrix
          */
-        CSCMatrix permute_rows(const std::vector<csint> p_inv, bool values=true) const;
+        CSCMatrix permute_rows(const std::vector<csint>& p_inv, bool values=true) const;
 
         /** Permute the columns of a matrix.
          *
@@ -733,7 +733,7 @@ class CSCMatrix
          *
          * @return C  permuted matrix
          */
-        CSCMatrix permute_cols(const std::vector<csint> q, bool values=true) const;
+        CSCMatrix permute_cols(const std::vector<csint>& q, bool values=true) const;
 
         /** Compute the 1-norm of the matrix (maximum column sum).
          *

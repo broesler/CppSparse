@@ -19,6 +19,7 @@
 #include "lu.h"
 #include "qr.h"
 #include "solve.h"
+#include "example_matrices.h"
 
 #endif  // _CSPARSE_H_
 

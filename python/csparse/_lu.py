@@ -48,6 +48,7 @@ def lu_left(A):
         if k == 0:
             x = P @ A[:, k]  # no need to solve for the first column
         else:
+            # Solve Eqn (6.2)
             z = np.vstack([np.zeros((k, N-k)), np.eye(N-k)])  # (N, N-k)
             Y = np.c_[L[:, :k], z]
             x = la.solve(Y, P @ A[:, k])

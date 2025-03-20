@@ -416,6 +416,8 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("use_postorder")=false
     );
 
+    // TODO implement ichol
+
     // ---------- QR decomposition
     // Define the python qr function here, and call the C++ sqr function.
     m.def("qr",

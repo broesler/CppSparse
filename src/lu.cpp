@@ -3,7 +3,7 @@
  *  Created: 2025-03-19 12:32
  *   Author: Bernie Roesler
  *
- *  Description: 
+ *  Description: Implementations for LU decomposition.
  *
  *============================================================================*/
 
@@ -85,7 +85,7 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
             } else {  // x(i) is the entry U(pinv[i], k)
                 U.i_[unz] = p_inv[i];
                 U.v_[unz++] = sol.x[i];
-            } 
+            }
         }
 
         if (ipiv == -1 || a <= 0) {
@@ -104,9 +104,9 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
         p_inv[ipiv] = k;         // ipiv is the kth pivot row
         L.i_[lnz] = ipiv;        // first entry in L[:, k] is L(k, k) = 1
         L.v_[lnz++] = 1;
-        for (const auto& i : sol.xi) {  // L(k+1:n, k) = x / pivot
-            if (p_inv[i] < 0) {  // x(i) is an entry in L[:, k]
-                L.i_[lnz] = i;  // save unpermuted row in L
+        for (const auto& i : sol.xi) {           // L(k+1:n, k) = x / pivot
+            if (p_inv[i] < 0) {                  // x(i) is an entry in L[:, k]
+                L.i_[lnz] = i;                   // save unpermuted row in L
                 L.v_[lnz++] = sol.x[i] / pivot;  // scale pivot column
             }
         }

@@ -147,6 +147,7 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
     S.vnz = 0;
     S.m2 = M;
 
+    // List k contains all rows that belong to V(:, k)
     csint k;  // declare outside loop for final row permutation
     for (k = 0; k < N; k++) {          // find row permutation and nnz(V)
         csint i = head[k];             // remove row i from queue k

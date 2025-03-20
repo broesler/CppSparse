@@ -2193,28 +2193,8 @@ TEST_CASE("Permuted triangular solvers")
 TEST_CASE("Cholesky decomposition")
 {
     // Define the test matrix A (See Davis, Figure 4.2, p 39)
-    csint N = 11;
-    std::vector<csint> rows = {5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10};
-    std::vector<csint> cols = {0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9};
-
-    csint N_offdiag = rows.size();
-
-    // Include diagonals
-    std::vector<csint> diags(N);
-    std::iota(diags.begin(), diags.end(), 0);
-
-    rows.insert(rows.end(), diags.begin(), diags.end());
-    cols.insert(cols.end(), diags.begin(), diags.end());
-
-    std::vector<double> vals(rows.size(), 1);
-
-    // Make A positive definite by increasing the diagonal
-    for (csint i = 0; i < N; i++) {
-        vals[i + N_offdiag] = 10.0 + i;
-    }
-
-    CSCMatrix L = COOMatrix(vals, rows, cols).tocsc();
-    CSCMatrix A = L + L.T().band(1, N);
+    CSCMatrix A = davis_example_chol();
+    csint N = A.shape()[1];
 
     CHECK(A.is_symmetric());
     // CHECK(A.has_canonical_format());

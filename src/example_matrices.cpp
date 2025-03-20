@@ -10,6 +10,7 @@
 #include <numeric>  // iota
 #include <vector>
 
+#include "types.h"
 #include "example_matrices.h"
 #include "csc.h"
 #include "coo.h"
@@ -17,13 +18,38 @@
 namespace cs {
 
 
+// See Davis pp 7-8, Eqn (2.1)
 COOMatrix davis_21_coo()
 {
-    // See Davis pp 7-8, Eqn (2.1)
     std::vector<csint>  i = {2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
     std::vector<csint>  j = {2,    0,    3,    2,    1,    0,    1,    3,    0,    1};
     std::vector<double> v = {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7};
     return COOMatrix {v, i, j};
+}
+
+
+// Davis Cholesky example Figure 4.2, p 39.
+CSCMatrix davis_example_chol()
+{
+    csint N = 11;  // total number of rows and columns
+
+    // Only off-diagonal elements
+    std::vector<csint> rows = {5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10};
+    std::vector<csint> cols = {0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9};
+    std::vector<double> vals(rows.size(), 1.0);
+
+    // Values for the lower triangle
+    CSCMatrix L = COOMatrix(vals, rows, cols, {N, N}).tocsc();
+
+    // Create the symmetric matrix A
+    CSCMatrix A = L + L.T();
+
+    // Set the diagonal to ensure positive definiteness
+    for (csint i = 0; i < N; i++) {
+        A.assign(i, i, i + 10);
+    }
+
+    return A;
 }
 
 
@@ -51,15 +77,6 @@ CSCMatrix davis_example_qr()
     return A.compress();
 }
 
-
-// See: Strang, p 25
-// E = [[ 1, 0, 0],
-//      [-2, 1, 0],
-//      [ 0, 0, 1]]
-//
-// A = [[ 2, 1, 1],
-//      [ 4,-6, 0],
-//      [-2, 7, 2]]
 
 // Build matrices with sorted columns
 CSCMatrix E_mat()

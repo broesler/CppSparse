@@ -51,14 +51,14 @@ def lu_left(A):
             z = np.vstack([np.zeros((k, N-k)), np.eye(N-k)])  # (N, N-k)
             Y = np.c_[L[:, :k], z]
             x = la.solve(Y, P @ A[:, k])
-        U[:k, k] = x[:k]  # the column of U
+        U[:k, k] = x[:k]                  # the column of U
         i = np.argmax(np.abs(x[k:])) + k  # get the pivot index
-        L[[i, k]] = L[[k, i]]  # swap rows
+        L[[i, k]] = L[[k, i]]             # swap rows
         P[[i, k]] = P[[k, i]]
         x[[i, k]] = x[[k, i]]
         U[k, k] = x[k]
         L[k, k] = 1
-        L[k+1:, k] = x[k+1:] / x[k]  # divide the column by the pivot
+        L[k+1:, k] = x[k+1:] / x[k]       # divide the column by the pivot
 
     return P, L, U
 
@@ -131,36 +131,16 @@ def lu_rightp(A):
     P = np.eye(N)
 
     for k in range(N):
-        i = k + np.argmax(np.abs(A[k:, k]))  # partial pivoting
-        P[[k, i]] = P[[i, k]]  # (6.10) swap rows
-        A[[k, i]] = A[[i, k]]  # (6.11)
-        A[k+1:, k] = A[k+1:, k] / A[k, k]  # (6.12)
+        i = np.argmax(np.abs(A[k:, k])) + k           # partial pivoting
+        P[[k, i]] = P[[i, k]]                         # (6.10) swap rows
+        A[[k, i]] = A[[i, k]]                         # (6.11)
+        A[k+1:, k] = A[k+1:, k] / A[k, k]             # (6.12)
         A[k+1:, k+1:] -= A[k+1:, [k]] @ A[[k], k+1:]  # (6.9)
 
     L = np.tril(A, -1) + np.eye(N)  # L is unit diagonal
     U = np.triu(A)
 
     return P, L, U
-
-
-if __name__ == "__main__":
-    import utils
-    A = utils.davis_example_qr(format='ndarray')
-
-    # Compute using scipy (computes A = PLU -> LU = P^T A)
-    P_, L_, U_ = la.lu(A)
-
-    atol = 1e-15
-
-    for lu_func in [lu_left, lu_right, lu_rightp]:
-        # Computes LU = PA
-        P, L, U = lu_func(A)
-
-        # Check the results
-        np.testing.assert_allclose(P, P_.T, atol=atol)
-        np.testing.assert_allclose(L, L_, atol=atol)
-        np.testing.assert_allclose(U, U_, atol=atol)
-        np.testing.assert_allclose(L @ U, P @ A, atol=atol)
 
 
 # =============================================================================

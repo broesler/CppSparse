@@ -26,6 +26,7 @@ Version: 0.1
 # Import all bindings from the csparse module
 from .csparse import *
 from ._cholesky import *
+from ._lu import *
 from ._qr import *
 from .utils import *
 

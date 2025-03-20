@@ -19,7 +19,7 @@ namespace cs {
 
 
 // See Davis pp 7-8, Eqn (2.1)
-COOMatrix davis_21_coo()
+COOMatrix davis_example_small()
 {
     std::vector<csint>  i = {2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
     std::vector<csint>  j = {2,    0,    3,    2,    1,    0,    1,    3,    0,    1};

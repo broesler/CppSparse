@@ -443,7 +443,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
 
 TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
 {
-    COOMatrix A = davis_21_coo();
+    COOMatrix A = davis_example_small();
     CSCMatrix C = A.compress();  // unsorted columns
 
     // std::cout << "C = \n" << C;
@@ -614,7 +614,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
     }
 
     SECTION("Test droptol") {
-        C = davis_21_coo().compress().droptol(2.0);
+        C = davis_example_small().compress().droptol(2.0);
 
         REQUIRE(C.nnz() == 6);
         REQUIRE(C.shape() == Shape{4, 4});
@@ -623,7 +623,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
 
     SECTION("Test dropzeros") {
         // Assign explicit zeros
-        C = davis_21_coo()
+        C = davis_example_small()
             .assign(0, 1, 0.0)
             .assign(2, 1, 0.0)
             .assign(3, 1, 0.0)
@@ -709,7 +709,7 @@ TEST_CASE("Test canonical format", "[CSCMatrix][COOMatrix]")
     std::vector<double> data_expect   = {4.5, 3.1, 103.5, 2.9, 101.7, 0.4, 103.2, 3.0, 0.9, 1.0};
 
     COOMatrix A = (
-        davis_21_coo()        // unsorted matrix
+        davis_example_small()        // unsorted matrix
         .assign(0, 2, 100.0)  // assign duplicates
         .assign(3, 0, 100.0)
         .assign(2, 1, 100.0)
@@ -847,7 +847,7 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
     }
 
     SECTION("Test an arbitrary non-symmetric matrix.") {
-        COOMatrix Ac = davis_21_coo();
+        COOMatrix Ac = davis_example_small();
         CSCMatrix A = Ac.compress();
 
         std::vector<double> x = {1, 2, 3, 4};
@@ -885,7 +885,7 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
 // Exercise 2.27
 TEST_CASE("Matrix-(dense) matrix multiply + addition.")
 {
-    CSCMatrix A = davis_21_coo().compress();
+    CSCMatrix A = davis_example_small().compress();
 
     SECTION("Test identity op") {
         std::vector<double> I = {
@@ -1147,7 +1147,7 @@ TEST_CASE("Scaling by a constant", "[math]")
 // Exercise 2.4
 TEST_CASE("Scale rows and columns", "[math]")
 {
-    CSCMatrix A = davis_21_coo().compress();
+    CSCMatrix A = davis_example_small().compress();
 
     // Diagonals of R and C to compute RAC
     std::vector<double> r = {1, 2, 3, 4},
@@ -1291,7 +1291,7 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
 
 TEST_CASE("Test matrix permutation", "[permute]")
 {
-    CSCMatrix A = davis_21_coo().compress();
+    CSCMatrix A = davis_example_small().compress();
 
     SECTION("Test no-op") {
         std::vector<csint> p = {0, 1, 2, 3};
@@ -1507,7 +1507,7 @@ TEST_CASE("Test band function")
 // Exercise 2.16
 TEST_CASE("Test CSC from dense")
 {
-    CSCMatrix expect_A = davis_21_coo().tocsc();
+    CSCMatrix expect_A = davis_example_small().tocsc();
 
     SECTION("Column-major") {
         std::vector<double> dense_mat = {
@@ -1536,8 +1536,8 @@ TEST_CASE("Test CSC from dense")
 // Exercise 2.12 "cs_ok"
 TEST_CASE("Test validity check")
 {
-    COOMatrix C = davis_21_coo();
-    CSCMatrix A = davis_21_coo().compress();
+    COOMatrix C = davis_example_small();
+    CSCMatrix A = davis_example_small().compress();
 
     constexpr bool SORTED = true;
     constexpr bool VALUES = true;
@@ -1588,7 +1588,7 @@ TEST_CASE("Test concatentation")
 // Exercise 2.23 slicing with contiguous indices
 TEST_CASE("Test slicing")
 {
-    CSCMatrix A = davis_21_coo().tocsc();
+    CSCMatrix A = davis_example_small().tocsc();
 
     SECTION("Test row slicing") {
         CSCMatrix expect = COOMatrix(
@@ -1628,7 +1628,7 @@ TEST_CASE("Test slicing")
 // Exercise 2.24 indexing with (possibly) non-contiguous indices
 TEST_CASE("Test non-contiguous indexing")
 {
-    CSCMatrix A = davis_21_coo().tocsc();
+    CSCMatrix A = davis_example_small().tocsc();
 
     SECTION("Test indexing without duplicates") {
         CSCMatrix C = A.index({2, 0}, {0, 3, 2});
@@ -1692,7 +1692,7 @@ TEST_CASE("Test indexing for single assignment.")
     };
 
     SECTION("Canonical format") {
-        CSCMatrix A = davis_21_coo().tocsc();
+        CSCMatrix A = davis_example_small().tocsc();
 
         SECTION("Re-assign existing element") {
             test_assignment(A, 2, 1, 56.0, true);
@@ -1704,7 +1704,7 @@ TEST_CASE("Test indexing for single assignment.")
     }
 
     SECTION("Non-canonical format") {
-        CSCMatrix A = davis_21_coo().compress();
+        CSCMatrix A = davis_example_small().compress();
 
         SECTION("Re-assign existing element") {
             test_assignment(A, 2, 1, 56.0, true);
@@ -1716,7 +1716,7 @@ TEST_CASE("Test indexing for single assignment.")
     }
 
     SECTION("Test multiple assignment") {
-        CSCMatrix A = davis_21_coo().tocsc();
+        CSCMatrix A = davis_example_small().tocsc();
 
         std::vector<csint> rows = {2, 0};
         std::vector<csint> cols = {0, 3, 2};
@@ -1756,7 +1756,7 @@ TEST_CASE("Test indexing for single assignment.")
 // Exercise 2.29
 TEST_CASE("Test adding empty rows and columns to a CSCMatrix.")
 {
-    CSCMatrix A = davis_21_coo().tocsc();
+    CSCMatrix A = davis_example_small().tocsc();
     int k = 3;  // number of rows/columns to add
 
     SECTION("Add empty rows to top") {
@@ -1823,7 +1823,7 @@ TEST_CASE("Test adding empty rows and columns to a CSCMatrix.")
 
 TEST_CASE("Sum the rows and columns of a matrix")
 {
-    CSCMatrix A = davis_21_coo().tocsc();
+    CSCMatrix A = davis_example_small().tocsc();
 
     SECTION("Sum the rows") {
         std::vector<double> expect = {7.7, 6.9, 4.7, 4.9};
@@ -2075,7 +2075,7 @@ TEST_CASE("Permuted triangular solvers")
     }
 
     SECTION("Find diagonals of non-triangular matrix") {
-        const CSCMatrix A = davis_21_coo().tocsc();
+        const CSCMatrix A = davis_example_small().tocsc();
         REQUIRE_THROWS(find_lower_diagonals(A));
         REQUIRE_THROWS(find_upper_diagonals(A));
         REQUIRE_THROWS(find_tri_permutation(A));

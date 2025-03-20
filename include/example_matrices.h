@@ -24,7 +24,8 @@ namespace cs {
  * See: Davis, Timothy A. "Direct Methods for Sparse Linear Systems",
         Eqn (2.1), p. 7--8.
  */
-COOMatrix davis_21_coo();
+COOMatrix davis_example_small();
+
 
 /** Define the 11x11 matrix in Davis, Figure 4.2, p 39.
  *
@@ -48,6 +49,7 @@ COOMatrix davis_21_coo();
  */
 CSCMatrix davis_example_chol();
 
+
 /** Define the 8x8 matrix in Davis, Figure 5.1, p 74.
  *
  * This matrix is sparse, unsymmetric positive definite. We arbitrarily assign
@@ -67,6 +69,7 @@ CSCMatrix davis_example_chol();
  */
 CSCMatrix davis_example_qr();
 
+
 /** Define the 3x3 matrix E from Strang, p 25.
  *
  * E = [[ 1, 0, 0],
@@ -76,6 +79,7 @@ CSCMatrix davis_example_qr();
  */
 CSCMatrix E_mat();
 
+
 /** Define the 3x3 matrix A from Strang, p 25.
  *
  * A = [[ 2, 1, 1],
@@ -84,6 +88,7 @@ CSCMatrix E_mat();
  *
  */
 CSCMatrix A_mat();
+
 
 }  // namespace cs
 

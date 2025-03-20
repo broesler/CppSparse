@@ -337,6 +337,13 @@ PYBIND11_MODULE(csparse, m) {
             py::arg("threshold")=1000
         );
 
+    // -------------------------------------------------------------------------
+    //         Example Matrices
+    // -------------------------------------------------------------------------
+    m.def("_davis_example_small", &cs::davis_example_small);
+    m.def("_davis_example_chol", &cs::davis_example_chol);
+    m.def("_davis_example_qr", &cs::davis_example_qr);
+
     //--------------------------------------------------------------------------
     //        Utility Functions
     //--------------------------------------------------------------------------

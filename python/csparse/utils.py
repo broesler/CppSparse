@@ -12,19 +12,19 @@ Utility functions for the csparse module.
 import numpy as np
 
 from scipy import sparse
-from csparse import COOMatrix, CSCMatrix
+from .csparse import (COOMatrix, CSCMatrix,
+                    _davis_example_small, _davis_example_chol,
+                    _davis_example_qr)
 
 
-def davis_small_example(format='csparse_csc'):
+def davis_example_small(format='csparse_csc'):
     r"""Create a 4x4 example matrix from Davis [0].
 
-    .. math::
-        A = \begin{bmatrix}
-            4.5 & 0   & 3.2 & 0   \\
-            3.1 & 2.9 & 0   & 0.9 \\
-            0   & 1.7 & 3   & 0   \\
-            3.5 & 0.4 & 0   & 1
-        \end{bmatrix}
+    .. code-block:: python
+        array([[4.5,   0, 3.2,   0],
+               [3.1, 2.9,   0, 0.9],
+               [  0, 1.7,   3,   0],
+               [3.5, 0.4,   0,   1]])
 
     Returns
     -------
@@ -36,14 +36,7 @@ def davis_small_example(format='csparse_csc'):
     .. [0] Davis, Timothy A. "Direct Methods for Sparse Linear Systems",
         Eqn (2.1), p. 7-8.
     """
-    N = 4
-    rows = [2,    1,    3,    0,    1,    3,    3,    1,    0,    2]
-    cols = [2,    0,    3,    2,    1,    0,    1,    3,    0,    1]
-    vals = [3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7]
-
-    A = COOMatrix(vals, rows, cols, (N, N))
-
-    return _format_matrix(A, format)
+    return _format_matrix(_davis_example_small().tocsc(), format)
 
 
 def davis_example_chol(format='csparse_csc'):
@@ -72,23 +65,7 @@ def davis_example_chol(format='csparse_csc'):
     .. [0] Davis, Timothy A. "Direct Methods for Sparse Linear Systems",
         Figure 4.2, p 39.
     """
-    N = 11
-
-    # Only off-diagonal elements
-    rows = np.r_[5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10]
-    cols = np.r_[0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9]
-    vals = np.ones((rows.size,))
-
-    # Values for the lower triangle
-    L = sparse.csc_array((vals, (rows, cols)), shape=(N, N))
-
-    # Create the symmetric matrix A
-    A = L + L.T
-
-    # Set the diagonal to ensure positive definiteness
-    A.setdiag(np.arange(10, 21))
-
-    return _format_matrix(from_scipy_sparse(A, format='coo'), format)
+    return _format_matrix(_davis_example_chol(), format)
 
 
 def davis_example_qr(format='csparse_csc'):
@@ -114,26 +91,17 @@ def davis_example_qr(format='csparse_csc'):
     .. [0] Davis, Timothy A. "Direct Methods for Sparse Linear Systems",
         Figure 5.1, p. 74.
     """
-    N = 8
-    rows = np.r_[0, 1, 2, 3, 4, 5, 6, 7,
-                 3, 6, 1, 6, 0, 2, 5, 7, 4, 7, 0, 1, 3, 7, 5, 6]
-    cols = np.r_[0, 1, 2, 3, 4, 5, 6, 7,
-                 0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7]
-    vals = np.r_[np.arange(1, N), 0, np.ones(rows.size - N)]
-
-    A = COOMatrix(vals, rows, cols, (N, N))
-
-    return _format_matrix(A, format)
+    return _format_matrix(_davis_example_qr(), format)
 
 
 def _format_matrix(A, format):
     """Convert a matrix to the specified format."""
-    assert isinstance(A, COOMatrix), "A must be a COOMatrix"
+    assert isinstance(A, CSCMatrix), "A must be a CSCMatrix"
     match format:
         case 'csparse_csc':
-            return A.tocsc()
-        case 'csparse_coo':
             return A
+        case 'csparse_coo':
+            return A.tocoo()
         case 'bsr' | 'coo' | 'csc' | 'csr' | 'dia' | 'dok' | 'lil':
             return to_scipy_sparse(A, format=format)
         case 'ndarray':

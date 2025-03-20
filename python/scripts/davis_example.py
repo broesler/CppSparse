@@ -25,7 +25,7 @@ import csparse
 #      [3.5, 0.4, 0. , 1. ]]
 # )
 
-Ac = csparse.davis_small_example()
+Ac = csparse.davis_example_small()
 A = csparse.to_scipy_sparse(Ac)
 
 # NOTE 

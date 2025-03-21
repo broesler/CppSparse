@@ -14,6 +14,7 @@
 
 namespace cs {
 
+
 /** Define the 4x4 matrix from Davis Equation (2.1) [p 7--8].
  *
  *  A = [[4.5,   0, 3.2,   0],
@@ -22,7 +23,9 @@ namespace cs {
  *       [3.5, 0.4,   0,   1]]
  *
  * See: Davis, Timothy A. "Direct Methods for Sparse Linear Systems",
-        Eqn (2.1), p. 7--8.
+ *      Eqn (2.1), p. 7--8.
+ *
+ * @return A  A 4x4 matrix in COO format.
  */
 COOMatrix davis_example_small();
 
@@ -45,7 +48,9 @@ COOMatrix davis_example_small();
  *       [ 0,  0,  1,  0,  1,  0,  1,  1,  0,  1, 20]]
  *
  * See: Davis, Timothy A. "Direct Methods for Sparse Linear Systems",
-        Figure 4.2, p 39.
+ *      Figure 4.2, p 39.
+ *
+ * @return A  An 11x11 matrix in CSC format.
  */
 CSCMatrix davis_example_chol();
 
@@ -66,6 +71,8 @@ CSCMatrix davis_example_chol();
  *
  * See: Davis, Timothy A. "Direct Methods for Sparse Linear Systems",
  *      Figure 5.1, p 74.
+ *
+ * @return A  An 8x8 matrix in CSC format.
  */
 CSCMatrix davis_example_qr();
 
@@ -76,6 +83,7 @@ CSCMatrix davis_example_qr();
  *      [-2, 1, 0],
  *      [ 0, 0, 1]]
  *
+ * @return E  A 3x3 matrix in CSC format.
  */
 CSCMatrix E_mat();
 
@@ -86,6 +94,7 @@ CSCMatrix E_mat();
  *      [ 4,-6, 0],
  *      [-2, 7, 2]]
  *
+ * @return A  A 3x3 matrix in CSC format.
  */
 CSCMatrix A_mat();
 

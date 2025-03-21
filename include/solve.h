@@ -318,7 +318,9 @@ SparseSolution chol_lsolve(
     std::vector<csint> parent = {}
 );
 
-
+// -----------------------------------------------------------------------------
+//        Cholesky Factorization Solutions
+// -----------------------------------------------------------------------------
 /** Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is a lower-triangular
  * Cholesky factor.
  *
@@ -357,6 +359,12 @@ std::vector<csint> topological_order(
     const std::vector<csint>& parent,
     bool forward=true
 );
+
+
+// -----------------------------------------------------------------------------
+//         LU Factorization Solutions
+// -----------------------------------------------------------------------------
+std::vector<double> lu_tsolve(const CSCMatrix& A, const std::vector<double>& b);
 
 
 }  // namespace cs

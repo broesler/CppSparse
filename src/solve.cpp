@@ -13,6 +13,7 @@
 #include "solve.h"
 #include "csc.h"
 #include "utils.h"
+#include "lu.h"
 
 namespace cs {
 
@@ -573,6 +574,9 @@ std::vector<csint>& dfs(
 }
 
 
+// -----------------------------------------------------------------------------
+//         Cholesky Factorization Solvers
+// -----------------------------------------------------------------------------
 // Exercise 4.3
 SparseSolution chol_lsolve(
     const CSCMatrix& L,
@@ -694,6 +698,28 @@ std::vector<csint> topological_order(
     } else {
         return xi;
     }
+}
+
+
+// -----------------------------------------------------------------------------
+//         LU Factorization Solvers
+// -----------------------------------------------------------------------------
+std::vector<double> lu_tsolve(const CSCMatrix& A, const std::vector<double>& b)
+{
+    if (A.shape()[0] != b.size()) {
+        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
+    }
+
+    // Compute the numeric factorization
+    SymbolicLU S = slu(A);
+    LUResult res = lu(A, S);
+
+    // Solve A^T x = b == (P^T LU)^T x = b == U^T (L^T P x) = b
+    const std::vector<double> y = utsolve(res.U, b);   // solve U^T y = b
+    const std::vector<double> Px = ltsolve(res.L, y);  // solve L^T P x = y
+    std::vector<double> x = pvec(res.p_inv, Px);       // permute back
+    
+    return x;
 }
 
 

@@ -3060,9 +3060,22 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b")
     std::iota(expect.begin(), expect.end(), 1);
     const std::vector<double> b = A.T() * expect;
 
-    const std::vector<double> x = lu_tsolve(A, b);
+    SECTION("Natural Order") {
+        const std::vector<double> x = lu_tsolve(A, b);
+        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    }
 
-    CHECK_THAT(is_close(x, expect, tol), AllTrue());
+    SECTION("Permuted A") {
+        // Permute the rows of A to test pivoting
+        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        std::vector<csint> p_inv = inv_permute(p);
+        CSCMatrix Ap = A.permute_rows(p_inv);
+
+        std::vector<double> x = lu_tsolve(Ap, b);
+        std::vector<double> xp = pvec(p_inv, x);  // permute back to match x
+
+        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
+    }
 }
 
 

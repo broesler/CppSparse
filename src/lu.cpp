@@ -13,9 +13,9 @@
 #include <stdexcept>
 
 #include "types.h"
-// #include "csc.h"
 #include "lu.h"
 #include "solve.h"
+#include "utils.h"  // inv_permute
 
 namespace cs {
 
@@ -141,12 +141,12 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     // copy of R.p_inv will fail.
     std::vector<csint> p_inv(N, -1);
 
-    // NOTE the indices of L have already been permuted to the p_inv ordering by
-    // the previous call to cs::lu()
-    // std::vector<csint> p = inv_permute(p_inv);  // row permutation vector
-    // for (csint k = 0; k < L.nnz(); k++) {
-    //     L.i_[k] = p[L.i_[k]];
-    // }
+    // The indices of L have already been permuted to the p_inv ordering by
+    // the previous call to cs::lu(), so un-permute them here.
+    const std::vector<csint> R_p = inv_permute(R.p_inv);
+    for (csint p = 0; p < L.nnz(); p++) {
+        L.i_[p] = R_p[L.i_[p]];
+    }
 
     csint lnz = 0,
           unz = 0;
@@ -157,8 +157,8 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
         SparseSolution sol = spsolve(L, A, S.q[k], p_inv);  // x = L \ A[:, col]
 
         // --- Find pivot ------------------------------------------------------
-        // Use the pivot from the symbolic factorization
-        csint ipiv = R.p_inv[k];
+        // Use the (un-permuted) pivot from the symbolic factorization
+        csint ipiv = R_p[k];
         for (const auto& i : sol.xi) {
             if (p_inv[i] >= 0) {
                 U.v_[unz++] = sol.x[i];  // x(i) is the entry U(p_inv[i], k)
@@ -175,6 +175,11 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
                 L.v_[lnz++] = sol.x[i] / pivot;  // scale pivot column
             }
         }
+    }
+
+    // Permute the row indices of L back to the original
+    for (csint p = 0; p < lnz; p++) {
+        L.i_[p] = p_inv[L.i_[p]];
     }
 
     return {L, U, p_inv, S.q};

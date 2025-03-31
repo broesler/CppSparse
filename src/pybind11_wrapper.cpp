@@ -146,6 +146,21 @@ PYBIND11_MODULE(csparse, m) {
             return vector_to_numpy(qr.q);
         });
 
+    // Bind the LUResult struct
+    py::class_<cs::LUResult>(m, "LUResult")
+        .def_property_readonly("L", [&m](const cs::LUResult& lu) {
+            return csc_matrix_to_scipy_csc(lu.L, m);
+        })
+        .def_property_readonly("U", [&m](const cs::LUResult& lu) {
+            return csc_matrix_to_scipy_csc(lu.U, m);
+        })
+        .def_property_readonly("p_inv", [](const cs::LUResult& lu) {
+            return vector_to_numpy(lu.p_inv);
+        })
+        .def_property_readonly("q", [](const cs::LUResult& lu) {
+            return vector_to_numpy(lu.q);
+        });
+
     //--------------------------------------------------------------------------
     //        COOMatrix class
     //--------------------------------------------------------------------------
@@ -440,6 +455,23 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("A"),
         py::arg("order")="Natural",
         py::arg("use_postorder")=false
+    );
+
+    // ---------- LU decomposition
+    // Define the python lu function here, and call the C++ slu function.
+    m.def("lu",
+        [](
+            const cs::CSCMatrix& A,
+            const std::string& order="Natural",
+            double tol=1.0
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::SymbolicLU S = cs::slu(A, order_enum);
+            return cs::lu(A, S, tol);
+        },
+        py::arg("A"),
+        py::arg("order")="Natural",
+        py::arg("tol")=1.0
     );
 
     //--------------------------------------------------------------------------

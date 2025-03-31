@@ -24,12 +24,16 @@ def allclose(a, b, atol=1e-15):
 # Define the example matrix from Davis, Figure 4.2, p. 39
 Ac = csparse.davis_example_qr()
 
+# Permute the matrix rows arbitrarily
+p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
+Ac = Ac.permute_rows(p);
+
 N = Ac.shape[0]
 
 # Create a numerically rank-deficient matrix
-for i in range(N):
-    # Ac[i, 3] = Ac[i, 2]  # duplicate columns
-    Ac[i, 3] = 0.0  # zero column
+# for i in range(N):
+#     Ac[i, 3] = 2 * Ac[i, 2]  # linearly dependent columns
+    # Ac[i, 3] = 0.0  # zero column
 
 rank = np.linalg.matrix_rank(Ac.toarray())
 print("Size of A:", Ac.shape)
@@ -48,13 +52,13 @@ print(A)
 #   -- fails on duplicate columns (L, U computed, but L @ U != A)
 pd, Ld, Ud = la.lu(A, p_indices=True)
 
-# allclose(Ld @ Ud, A[pd])
+allclose(Ld[pd] @ Ud, A)
 
 # C++Sparse -- fails if singular
 try:
     lu_res = csparse.lu(Ac)
     p_inv, L, U = lu_res.p_inv, lu_res.L, lu_res.U
-    P = sparse.eye_array(A.shape[0]).tocsc()[p_inv]
+    P = sparse.eye_array(A.shape[0]).tocsc()[:, p_inv]  # inverse permutation
 
     allclose((L @ U).toarray(), (P @ As).toarray())
     np.testing.assert_allclose(p_inv, pd)
@@ -71,7 +75,7 @@ try:
     p_, L_, U_ = lu.perm_r, lu.L, lu.U
 
     np.testing.assert_allclose(p_, pd)
-    allclose((L_ @ U_).toarray(), As[p_].toarray())
+    allclose((L_[p_] @ U_).toarray(), As.toarray())
     allclose(Ld, L_.toarray())
     allclose(Ud, U_.toarray())
 

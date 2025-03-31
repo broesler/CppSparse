@@ -325,11 +325,16 @@ PYBIND11_MODULE(csparse, m) {
         .def("add", &cs::CSCMatrix::add)
         .def("__add__", &cs::CSCMatrix::add)
         //
-        .def("permute", &cs::CSCMatrix::permute)
-        .def("symperm", &cs::CSCMatrix::symperm)
-        .def("permute_transpose", &cs::CSCMatrix::permute_transpose)
-        .def("permute_rows", &cs::CSCMatrix::permute_rows)
-        .def("permute_cols", &cs::CSCMatrix::permute_cols)
+        .def("permute", &cs::CSCMatrix::permute,
+             py::arg("p_inv"), py::arg("q"), py::arg("values")=true)
+        .def("symperm", &cs::CSCMatrix::symperm,
+             py::arg("p_inv"), py::arg("values")=true)
+        .def("permute_transpose", &cs::CSCMatrix::permute_transpose,
+             py::arg("p_inv"), py::arg("q"), py::arg("values")=true)
+        .def("permute_rows", &cs::CSCMatrix::permute_rows,
+             py::arg("p_inv"), py::arg("values")=true)
+        .def("permute_cols", &cs::CSCMatrix::permute_cols,
+             py::arg("q"), py::arg("values")=true)
         //
         .def("norm", &cs::CSCMatrix::norm)
         .def("fronorm", &cs::CSCMatrix::fronorm)

@@ -29,15 +29,14 @@ info :
 # -----------------------------------------------------------------------------
 #        Make options 
 # -----------------------------------------------------------------------------
-all: test
-
 test: OPT += -I$(BREW)/include 
 test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
-test: CFLAGS += -glldb #-fsanitize=address #-Og 
+# test: CFLAGS += -O3
 test: test_csparse
 
-debug: CFLAGS += -DDEBUG -glldb -Og -fno-inline -fsanitize=address,leak
-debug: all
+debug: CFLAGS += -DDEBUG -glldb #-Og
+debug: CFLAGS += -fno-inline -fsanitize=address
+debug: test
 
 # -----------------------------------------------------------------------------
 #         Compile and Link

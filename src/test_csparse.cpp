@@ -2991,7 +2991,7 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
 }
 
 
-TEST_CASE("LU Factorization of Square Matrix")
+TEST_CASE("LU Factorization of Square Matrix", "[lu]")
 {
     CSCMatrix A = davis_example_qr();
     auto [M, N] = A.shape();
@@ -3047,6 +3047,28 @@ TEST_CASE("LU Factorization of Square Matrix")
         compare_matrices(LU, PAp);
         compare_matrices(LU, A.to_canonical());
     }
+
+    SECTION("Exercise 6.4: relu (no pivoting)", "[relu][no-pivot]") {
+        SymbolicLU S = slu(A);
+        LUResult R = lu(A, S);
+
+        // TODO CSCMatrix::set_data(const std::vector<double>& x) function
+        // Change the values of A to test the relu function
+        // A.set_data(A.data() + 1);
+        // Create new matrix with same sparsity pattern as A
+        std::vector<double> B_data(A.data());
+        for (auto& x : B_data) {
+            x += 1;
+        }
+        CSCMatrix B {B_data, A.indices(), A.indptr(), A.shape()};
+
+        // Compute the LU factorization of B using the pattern of LU = A
+        LUResult res = relu(B, R, S);
+
+        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+
+        compare_matrices(LU, B.to_canonical());
+    }
 }
 
 
@@ -3077,6 +3099,7 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b")
         REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
     }
 }
+
 
 
 /*==============================================================================

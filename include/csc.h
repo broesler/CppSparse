@@ -1033,6 +1033,7 @@ class CSCMatrix
         //         LU Decomposition
         // ---------------------------------------------------------------------
         friend LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol);
+        friend LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S);
 
         //----------------------------------------------------------------------
         //        Printing

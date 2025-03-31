@@ -61,9 +61,30 @@ SymbolicLU slu(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
  * #param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
  *        used. If `tol` is less than 1.0, diagonal pivoting is used.
  *
- * @return the LU decomposition, with 
+ * @return the LU decomposition
  */
 LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol=1.0);
+
+
+/** Compute the numeric LU decomposition of A with known sparsity pattern.
+ *
+ * See: Davis, Exercise 6.4.
+ *
+ * This function assumes that the sparsity pattern of `A` is the same as that
+ * used to compute the numeric factorization `R`, and the symbolic factorization
+ * `S`. It uses the same pivot permutation.
+ *
+ * @param A  the matrix to factorize
+ * @param N  the numeric factorization of the sparsity pattern of A, assumed to
+ *        be computed in a prior call to cs::lu.
+ * @param S  the symbolic factorization of A
+ *
+ * @return the LU decomposition
+ */
+LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S);
+
+
+
 
 
 }  // namespace cs

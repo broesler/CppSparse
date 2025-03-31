@@ -126,6 +126,59 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
 }
 
 
+// Exercise 6.4
+LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
+{
+    auto [M, N] = A.shape();
+
+    // Copy result matrices without values
+    CSCMatrix L {std::vector<double>(R.L.nnz()), R.L.i_, R.L.p_, R.L.shape()};
+    CSCMatrix U {std::vector<double>(R.U.nnz()), R.U.i_, R.U.p_, R.U.shape()};
+
+    // Initialize row permutation vector
+    // NOTE we need this initialization because the -1 values are used in
+    // spsolve() to determine which rows have been seen already, so a direct
+    // copy of R.p_inv will fail.
+    std::vector<csint> p_inv(N, -1);
+
+    // NOTE the indices of L have already been permuted to the p_inv ordering by
+    // the previous call to cs::lu()
+    // std::vector<csint> p = inv_permute(p_inv);  // row permutation vector
+    // for (csint k = 0; k < L.nnz(); k++) {
+    //     L.i_[k] = p[L.i_[k]];
+    // }
+
+    csint lnz = 0,
+          unz = 0;
+
+    for (csint k = 0; k < N; k++) {  // Compute L[:, k] and U[:, k]
+        // --- Triangular solve ------------------------------------------------
+        // Solve Lx = A[:, col], where col is the permuted column
+        SparseSolution sol = spsolve(L, A, S.q[k], p_inv);  // x = L \ A[:, col]
+
+        // --- Find pivot ------------------------------------------------------
+        // Use the pivot from the symbolic factorization
+        csint ipiv = R.p_inv[k];
+        for (const auto& i : sol.xi) {
+            if (p_inv[i] >= 0) {
+                U.v_[unz++] = sol.x[i];  // x(i) is the entry U(p_inv[i], k)
+            }
+        }
+
+        // --- Divide by pivot -------------------------------------------------
+        double pivot = sol.x[ipiv];  // the chosen pivot
+        p_inv[ipiv] = k;             // ipiv is the kth pivot row
+        U.v_[unz++] = pivot;
+        L.v_[lnz++] = 1;
+        for (const auto& i : sol.xi) {           // L(k+1:n, k) = x / pivot
+            if (p_inv[i] < 0) {                  // x(i) is an entry in L[:, k]
+                L.v_[lnz++] = sol.x[i] / pivot;  // scale pivot column
+            }
+        }
+    }
+
+    return {L, U, p_inv, S.q};
+}
 
 }  // namespace cs
 

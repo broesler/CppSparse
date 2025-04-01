@@ -3142,16 +3142,21 @@ TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5]")
     CSCMatrix A = davis_example_qr().to_canonical();
     auto [M, N] = A.shape();
 
-    auto lu_test = [](const CSCMatrix& B) {
-        SymbolicLU S = slu(B);
-        LUResult res = lu(B, S);
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    auto lu_test = [](const CSCMatrix& A) {
+        SymbolicLU S = slu(A);
+        LUResult res = lu(A, S);
 
         CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
 
-        // Permute the rows of B
-        CSCMatrix Bp = B.permute_rows(res.p_inv).to_canonical();
+        // Permute the rows of A
+        CSCMatrix Ap = A.permute_rows(res.p_inv).to_canonical();
 
-        compare_matrices(LU, Bp);
+        compare_matrices(LU, Ap);
     };
 
     SECTION("Single pair of linearly dependent columns") {
@@ -3248,6 +3253,52 @@ TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5]")
         }
 
         lu_test(B);
+    }
+}
+
+
+TEST_CASE("Exercise 6.6: LU Factorization of Rectangular Matrices", "[ex6.6]")
+{
+    CSCMatrix A = davis_example_qr().to_canonical();
+    auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    csint r = 3;  // number of rows or columns to remove
+
+    // TODO re-factor this lambda to a helper function for use in multiple tests
+    auto lu_test = [](const CSCMatrix& A) {
+        SymbolicLU S = slu(A);
+        LUResult res = lu(A, S);
+
+        std::cout << "L:" << std::endl;
+        res.L.print_dense();
+        std::cout << "U:" << std::endl;
+        res.U.print_dense();
+
+        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+
+        // Permute the rows of A
+        CSCMatrix Ap = A.permute_rows(res.p_inv).to_canonical();
+
+        compare_matrices(LU, Ap);
+    };
+
+    SECTION("M < N") {
+        A = A.slice(0, M - r, 0, N);
+        lu_test(A);
+    }
+
+    SECTION("M > N") {
+        SKIP("Not implemented");
+        std::cout << "---------- M > N ----------" << std::endl;
+        A = A.slice(0, M, 0, N - r);
+        std::cout << "A:" << std::endl;
+        A.print_dense();
+        lu_test(A);
     }
 }
 

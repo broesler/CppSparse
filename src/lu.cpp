@@ -47,14 +47,10 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
 {
     auto [M, N] = A.shape();
 
-    if (M != N) {
-        throw std::runtime_error("Matrix must be square!");
-    }
-
     // Allocate result matrices
-    CSCMatrix L({N, N}, S.lnz);  // lower triangular matrix
-    CSCMatrix U({N, N}, S.unz);  // upper triangular matrix
-    std::vector<csint> p_inv(N, -1);  // row permutation vector
+    CSCMatrix L({M, M}, S.lnz);  // lower triangular matrix
+    CSCMatrix U({M, N}, S.unz);  // upper triangular matrix
+    std::vector<csint> p_inv(M, -1);  // row permutation vector
 
     csint lnz = 0,
           unz = 0;
@@ -62,8 +58,13 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
 
     for (csint k = 0; k < N; k++) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
-        L.p_[k] = lnz;  // L[:, k] starts here
-        U.p_[k] = unz;  // U[:, k] starts here
+        if (k < M) {
+            L.p_[k] = lnz;  // L[:, k] starts here
+        }
+
+        if (k < N) {
+            U.p_[k] = unz;  // U[:, k] starts here
+        }
 
         // Possibly reallocate L and U
         if (lnz + N > L.nzmax()) {
@@ -92,6 +93,12 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
                 U.i_[unz] = p_inv[i];
                 U.v_[unz++] = sol.x[i];
             }
+        }
+
+        // Exercise 6.6: modify to allow rectangular matrices
+        if (k >= M) {
+            // Only the rest of the columns of U need to be updated, L is done.
+            continue;
         }
 
         // Exercise 6.5: modify to allow singular matrices
@@ -146,7 +153,7 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
     }
 
     // --- Finalize L and U ---------------------------------------------------
-    L.p_[N] = lnz;
+    L.p_[M] = lnz;
     U.p_[N] = unz;
 
     // Exercise 6.5: modify to allow singular matrices

@@ -46,6 +46,10 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
 {
     auto [M, N] = A.shape();
 
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
     // Allocate result matrices
     CSCMatrix L({N, N}, S.lnz);  // lower triangular matrix
     CSCMatrix U({N, N}, S.unz);  // upper triangular matrix
@@ -88,9 +92,17 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
             }
         }
 
-        if (ipiv == -1 || a <= 0) {
-            throw std::runtime_error("Matrix is singular!");
-        }
+        // Exercise 6.5: modify to allow singular matrices
+        // Two cases:
+        //   1. ipiv == -1: ? occurs when M < N, and we have linearly dependent
+        //      columns. Not sure about M > N since we segfault.
+        //   2. a <= 0: all entries in A[:, col] are zero, or we have linearly
+        //      dependent columns of A
+        //   In either case, the column of L is just set to the identity, and
+        //   the column of U is set to the non-zero entries of A[:, col].
+        // if (ipiv == -1 || a <= 0) {
+        //     throw std::runtime_error("Matrix is singular!");
+        // }
 
         // tol = 1 for partial pivoting; tol < 1 gives preference to diagonal
         if (p_inv[col] < 0 && std::fabs(sol.x[col]) >= a * tol) {
@@ -99,15 +111,20 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
 
         // --- Divide by pivot -------------------------------------------------
         double pivot = sol.x[ipiv];  // the chosen pivot
-        U.i_[unz] = k;           // last entry in U[:, k] is U(k, k)
-        U.v_[unz++] = pivot;
         p_inv[ipiv] = k;         // ipiv is the kth pivot row
         L.i_[lnz] = ipiv;        // first entry in L[:, k] is L(k, k) = 1
         L.v_[lnz++] = 1;
-        for (const auto& i : sol.xi) {           // L(k+1:n, k) = x / pivot
-            if (p_inv[i] < 0) {                  // x(i) is an entry in L[:, k]
-                L.i_[lnz] = i;                   // save unpermuted row in L
-                L.v_[lnz++] = sol.x[i] / pivot;  // scale pivot column
+
+        // Exercise 6.5: modify to allow singular matrices
+        if (pivot != 0) {
+            U.i_[unz] = k;           // last entry in U[:, k] is U(k, k)
+            U.v_[unz++] = pivot;
+
+            for (const auto& i : sol.xi) {           // L(k+1:n, k) = x / pivot
+                if (p_inv[i] < 0) {                  // x(i) is an entry in L[:, k]
+                    L.i_[lnz] = i;                   // save unpermuted row in L
+                    L.v_[lnz++] = sol.x[i] / pivot;  // scale pivot column
+                }
             }
         }
     }
@@ -141,6 +158,7 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     // copy of R.p_inv will fail.
     std::vector<csint> p_inv(N, -1);
 
+    // TODO might be a way to avoid permuting/re-permuting the row indices?
     // The indices of L have already been permuted to the p_inv ordering by
     // the previous call to cs::lu(), so un-permute them here.
     const std::vector<csint> R_p = inv_permute(R.p_inv);
@@ -169,7 +187,7 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
         double pivot = sol.x[ipiv];  // the chosen pivot
         p_inv[ipiv] = k;             // ipiv is the kth pivot row
         U.v_[unz++] = pivot;
-        L.v_[lnz++] = 1;
+        L.v_[lnz++] = 1;                         // L(k, k) = 1
         for (const auto& i : sol.xi) {           // L(k+1:n, k) = x / pivot
             if (p_inv[i] < 0) {                  // x(i) is an entry in L[:, k]
                 L.v_[lnz++] = sol.x[i] / pivot;  // scale pivot column

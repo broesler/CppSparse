@@ -261,6 +261,7 @@ PYBIND11_MODULE(csparse, m) {
         .def_property_readonly("indices", &cs::CSCMatrix::indices)
         .def_property_readonly("data", &cs::CSCMatrix::data)
         //
+        .def("dropzeros", &cs::CSCMatrix::dropzeros)
         .def("to_canonical", &cs::CSCMatrix::to_canonical)
         .def_property_readonly("has_sorted_indices", &cs::CSCMatrix::has_sorted_indices)
         .def_property_readonly("has_canonical_format", &cs::CSCMatrix::has_canonical_format)

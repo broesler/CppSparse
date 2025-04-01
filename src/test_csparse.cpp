@@ -1064,16 +1064,24 @@ TEST_CASE("Matrix-matrix multiply.", "[math]")
             std::vector<csint>  { 0,  1,  2,   0,   1,   2}   // cols
         ).compress();
 
+        SECTION("M < N") {
         CSCMatrix C = A * B;
         auto [M, N] = C.shape();
 
         REQUIRE(M == A.shape()[0]);
         REQUIRE(N == B.shape()[1]);
 
-        for (csint i = 0; i < M; i++) {
-            for (csint j = 0; j < N; j++) {
-                REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
+            compare_matrices(C, expect);
             }
+
+        SECTION("M > N") {
+            CSCMatrix CT = B.T() * A.T();
+            auto [N, M] = CT.shape();
+
+            REQUIRE(M == A.shape()[0]);
+            REQUIRE(N == B.shape()[1]);
+
+            compare_matrices(CT, expect.T());
         }
     }
 }

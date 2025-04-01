@@ -30,24 +30,28 @@ M, N = Ac.shape
 # p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
 # Ac = Ac.permute_rows(p);
 
-# # Create a numerically rank-deficient matrix
+# Create a numerically rank-deficient matrix
 for i in range(N):
-    Ac[i, 3] = 2 * Ac[i, 5]  # 2 linearly dependent column WORKS
-    Ac[i, 2] = 2 * Ac[i, 4]  # 2 *sets* of linearly dependent columns WORKS
+    # Numerical rank deficiency (linearly dependent rows/columns)
+    # Ac[i, 3] = 2 * Ac[i, 5]  # 2 linearly dependent column WORKS
+    # Ac[i, 2] = 2 * Ac[i, 4]  # 2 *sets* of linearly dependent columns WORKS
 
     # Ac[3, i] = 2 * Ac[4, i]  # 2 linearly dependent rows WORKS
     # Ac[2, i] = 2 * Ac[5, i]  # 2 *sets* of linearly dependent rows WORKS
 
+    # Numerical rank deficiency (zero rows/columns)
     # Ac[3, i] = 0.0  # zero row WORKS
-    # for j in [2, 3, 5]:
-    #     Ac[j, i] = 0.0  # multiple zero rows WORKS (but not for scipy.sparse)
+
+    for j in [2, 3, 5]:
+        Ac[j, i] = 0.0  # multiple zero rows WORKS (but not for scipy.sparse)
 
     # Ac[i, 3] = 0.0  # WORKS single zero column
-    # for j in [3, 4, 5]:
+    # for j in [2, 3, 5]:
     #     Ac[i, j] = 0.0  # multiple zero columns WORKS
 
-# Remove zero rows and columns to test *structural* rank deficiency
-# Ac = Ac.dropzeros()
+
+# Structural rank deficiency: remove zero rows and columns
+Ac = Ac.dropzeros()
 
 # Create a rectangular matrix
 # M < N
@@ -75,8 +79,6 @@ print(A)
 
 # Compute the LU decomposition of A
 # Scipy dense
-#   -- works with a 0 column
-#   -- fails on duplicate columns (L, U computed, but L @ U != A)
 pd, Ld, Ud = la.lu(A, p_indices=True)
 
 allclose(Ld[pd] @ Ud, A)
@@ -84,9 +86,9 @@ allclose(Ld[pd] @ Ud, A)
 # C++Sparse -- fails if singular
 try:
     lu_res = csparse.lu(Ac)
-    p, L, U = lu_res.p_inv, lu_res.L, lu_res.U
+    p_inv, L, U = lu_res.p_inv, lu_res.L, lu_res.U
 
-    allclose((L[p] @ U).toarray(), A)
+    allclose((L[p_inv] @ U).toarray(), A)
     # np.testing.assert_allclose(p, pd)  # not necessarily identical!
 
 except Exception as e:
@@ -112,6 +114,8 @@ except Exception as e:
         print("scipy.sparse: Matrix is singular!")
     elif "square" in str(e):
         print("scipy.sparse: Matrix is not square!")
+    elif "failed" in str(e):
+        print("scipy.sparse: Failed to factorize matrix!")
     else: 
         raise e
 

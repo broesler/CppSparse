@@ -9,8 +9,9 @@
 
 #include <cmath>    // fabs
 #include <numeric>  // iota
-#include <vector>
+#include <ranges>   // views::reverse
 #include <stdexcept>
+#include <vector>
 
 #include "types.h"
 #include "lu.h"
@@ -57,6 +58,7 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
 
     csint lnz = 0,
           unz = 0;
+    bool is_singular = false;
 
     for (csint k = 0; k < N; k++) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
@@ -94,15 +96,20 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
 
         // Exercise 6.5: modify to allow singular matrices
         // Two cases:
-        //   1. ipiv == -1: ? occurs when M < N, and we have linearly dependent
-        //      columns. Not sure about M > N since we segfault.
-        //   2. a <= 0: all entries in A[:, col] are zero, or we have linearly
-        //      dependent columns of A
+        //   1. ipiv == -1: occurs when we have a zero row.
+        //   2. a <= 0: all entries in A[:, col] are zero, A[:, col] is
+        //     structurally non-existent, or we have linearly dependent rows or
+        //     columns of A.
         //   In either case, the column of L is just set to the identity, and
         //   the column of U is set to the non-zero entries of A[:, col].
-        // if (ipiv == -1 || a <= 0) {
-        //     throw std::runtime_error("Matrix is singular!");
-        // }
+        if ((ipiv == -1 || a <= 0) && !is_singular) {
+            // throw std::runtime_error("Matrix is singular!");  // original
+#ifdef DEBUG
+            std::cerr << "[" << __FILE__ << ":" << __LINE__ 
+                << "]: Warning: Matrix is singular!" << std::endl;
+#endif
+            is_singular = true;
+        }
 
         // tol = 1 for partial pivoting; tol < 1 gives preference to diagonal
         if (p_inv[col] < 0 && std::fabs(sol.x[col]) >= a * tol) {
@@ -110,9 +117,18 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
         }
 
         // --- Divide by pivot -------------------------------------------------
-        double pivot = sol.x[ipiv];  // the chosen pivot
-        p_inv[ipiv] = k;         // ipiv is the kth pivot row
-        L.i_[lnz] = ipiv;        // first entry in L[:, k] is L(k, k) = 1
+        // Exercise 6.5: modify to allow singular matrices
+        double pivot = 0;
+        if (ipiv == -1) {
+            // if all elements in a row are zero, then the row will never be
+            // pivotal for any column, so ipiv stays as -1. Set it to col.
+            ipiv = col;
+        } else {
+            pivot = sol.x[ipiv];  // the chosen pivot
+            p_inv[ipiv] = k;      // ipiv is the kth pivot row
+        }
+
+        L.i_[lnz] = ipiv;  // first entry in L[:, k] is L(k, k) = 1
         L.v_[lnz++] = 1;
 
         // Exercise 6.5: modify to allow singular matrices
@@ -132,10 +148,23 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
     // --- Finalize L and U ---------------------------------------------------
     L.p_[N] = lnz;
     U.p_[N] = unz;
+
+    // Exercise 6.5: modify to allow singular matrices
+    // Assign indices to all missing rows that were pivoted to the end
+    if (is_singular) {
+        csint idx = M - 1;
+        for (auto& i : p_inv | std::views::reverse) {
+            if (i < 0) {
+                i = idx--;
+            }
+        }
+    }
+
     // permute row indices of L for final p_inv
     for (csint p = 0; p < lnz; p++) {
         L.i_[p] = p_inv[L.i_[p]];
     }
+
     L.realloc();  // trim excess storage
     U.realloc();
 

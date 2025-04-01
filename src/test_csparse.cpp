@@ -3108,7 +3108,7 @@ TEST_CASE("LU Factorization of Square Matrix", "[lu]")
 }
 
 
-TEST_CASE("Exercise 6.1: Solve A^T x = b")
+TEST_CASE("Exercise 6.1: Solve A^T x = b with LU")
 {
     CSCMatrix A = davis_example_qr().to_canonical();
     auto [M, N] = A.shape();
@@ -3136,6 +3136,120 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b")
     }
 }
 
+
+TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5]")
+{
+    CSCMatrix A = davis_example_qr().to_canonical();
+    auto [M, N] = A.shape();
+
+    auto lu_test = [](const CSCMatrix& B) {
+        SymbolicLU S = slu(B);
+        LUResult res = lu(B, S);
+
+        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+
+        // Permute the rows of B
+        CSCMatrix Bp = B.permute_rows(res.p_inv).to_canonical();
+
+        compare_matrices(LU, Bp);
+    };
+
+    SECTION("Single pair of linearly dependent columns") {
+        // Create a singular matrix by setting column 3 = 2 * column 5
+        CSCMatrix B = A;
+        for (csint i = 0; i < M; i++) {
+            B(i, 3) = 2 * B(i, 5);
+        }
+
+        lu_test(B);
+    }
+
+    SECTION("Two pairs of linearly dependent columns") {
+        CSCMatrix B = A;
+        for (csint i = 0; i < M; i++) {
+            B(i, 3) = 2 * B(i, 5);
+            B(i, 2) = 3 * B(i, 4);
+        }
+
+        lu_test(B);
+    }
+
+    SECTION("Single pair of linearly dependent rows") {
+        // Create a singular matrix by setting row 3 = 2 * row 5
+        CSCMatrix B = A;
+        for (csint j = 0; j < N; j++) {
+            B(3, j) = 2 * B(5, j);
+        }
+
+        lu_test(B);
+    }
+
+    SECTION("Two pairs of linearly dependent rows") {
+        CSCMatrix B = A;
+        for (csint j = 0; j < N; j++) {
+            B(3, j) = 2 * B(5, j);
+            B(2, j) = 3 * B(4, j);
+        }
+
+        lu_test(B);
+    }
+
+    SECTION("Single zero column") {
+        CSCMatrix B = A;
+        for (csint i = 0; i < M; i++) {
+            B(i, 3) = 0.0;
+        }
+
+        SECTION("Structural") {
+            B = B.dropzeros();
+        }
+
+        lu_test(B);
+    }
+
+    SECTION("Multiple zero columns") {
+        CSCMatrix B = A;
+        for (csint i = 0; i < M; i++) {
+            for (const auto& j : {2, 3, 4}) {
+                B(i, j) = 0.0;
+            }
+        }
+
+        SECTION("Structural") {
+            B = B.dropzeros();
+        }
+
+        lu_test(B);
+    }
+
+    SECTION("Single zero row") {
+        CSCMatrix B = A;
+        for (csint j = 0; j < N; j++) {
+            B(3, j) = 0.0;
+        }
+
+        SECTION("Structural") {
+            B = B.dropzeros();
+        }
+
+        lu_test(B);
+    }
+
+    SECTION("Multiple zero rows") {
+        CSCMatrix B = A;
+        for (const auto& i : {2, 3, 4}) {
+            for (csint j = 0; j < N; j++) {
+                B(i, j) = 0.0;
+            }
+        }
+
+        SECTION("Structural") {
+            B = B.dropzeros();
+        }
+
+        lu_test(B);
+    }
+}
 
 
 /*==============================================================================

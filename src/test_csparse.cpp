@@ -1065,14 +1065,14 @@ TEST_CASE("Matrix-matrix multiply.", "[math]")
         ).compress();
 
         SECTION("M < N") {
-        CSCMatrix C = A * B;
-        auto [M, N] = C.shape();
+            CSCMatrix C = A * B;
+            auto [M, N] = C.shape();
 
-        REQUIRE(M == A.shape()[0]);
-        REQUIRE(N == B.shape()[1]);
+            REQUIRE(M == A.shape()[0]);
+            REQUIRE(N == B.shape()[1]);
 
             compare_matrices(C, expect);
-            }
+        }
 
         SECTION("M > N") {
             CSCMatrix CT = B.T() * A.T();
@@ -3169,60 +3169,37 @@ TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5]")
         A(i, i) += 10;
     }
 
-    auto lu_test = [](const CSCMatrix& A) {
-        SymbolicLU S = slu(A);
-        LUResult res = lu(A, S);
-
-        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
-
-        // Permute the rows of A
-        CSCMatrix Ap = A.permute_rows(res.p_inv).to_canonical();
-
-        compare_matrices(LU, Ap);
-    };
+    CSCMatrix B = A;  // create a copy to edit
 
     SECTION("Single pair of linearly dependent columns") {
         // Create a singular matrix by setting column 3 = 2 * column 5
-        CSCMatrix B = A;
         for (csint i = 0; i < M; i++) {
             B(i, 3) = 2 * B(i, 5);
         }
-
-        lu_test(B);
     }
 
     SECTION("Two pairs of linearly dependent columns") {
-        CSCMatrix B = A;
         for (csint i = 0; i < M; i++) {
             B(i, 3) = 2 * B(i, 5);
             B(i, 2) = 3 * B(i, 4);
         }
-
-        lu_test(B);
     }
 
     SECTION("Single pair of linearly dependent rows") {
         // Create a singular matrix by setting row 3 = 2 * row 5
-        CSCMatrix B = A;
         for (csint j = 0; j < N; j++) {
             B(3, j) = 2 * B(5, j);
         }
-
-        lu_test(B);
     }
 
     SECTION("Two pairs of linearly dependent rows") {
-        CSCMatrix B = A;
         for (csint j = 0; j < N; j++) {
             B(3, j) = 2 * B(5, j);
             B(2, j) = 3 * B(4, j);
         }
-
-        lu_test(B);
     }
 
     SECTION("Single zero column") {
-        CSCMatrix B = A;
         for (csint i = 0; i < M; i++) {
             B(i, 3) = 0.0;
         }
@@ -3230,12 +3207,9 @@ TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5]")
         SECTION("Structural") {
             B = B.dropzeros();
         }
-
-        lu_test(B);
     }
 
     SECTION("Multiple zero columns") {
-        CSCMatrix B = A;
         for (csint i = 0; i < M; i++) {
             for (const auto& j : {2, 3, 4}) {
                 B(i, j) = 0.0;
@@ -3245,12 +3219,9 @@ TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5]")
         SECTION("Structural") {
             B = B.dropzeros();
         }
-
-        lu_test(B);
     }
 
     SECTION("Single zero row") {
-        CSCMatrix B = A;
         for (csint j = 0; j < N; j++) {
             B(3, j) = 0.0;
         }
@@ -3258,12 +3229,9 @@ TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5]")
         SECTION("Structural") {
             B = B.dropzeros();
         }
-
-        lu_test(B);
     }
 
     SECTION("Multiple zero rows") {
-        CSCMatrix B = A;
         for (const auto& i : {2, 3, 4}) {
             for (csint j = 0; j < N; j++) {
                 B(i, j) = 0.0;
@@ -3273,9 +3241,9 @@ TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5]")
         SECTION("Structural") {
             B = B.dropzeros();
         }
-
-        lu_test(B);
     }
+
+    lu_test(B);
 }
 
 

@@ -47,9 +47,12 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
 {
     auto [M, N] = A.shape();
 
+    // Exercise 6.6: modify to allow rectangular matrices
+    const csint min_MN = std::min(M, N);
+
     // Allocate result matrices
-    CSCMatrix L({M, M}, S.lnz);  // lower triangular matrix
-    CSCMatrix U({M, N}, S.unz);  // upper triangular matrix
+    CSCMatrix L({M, min_MN}, S.lnz);  // lower triangular matrix
+    CSCMatrix U({min_MN, N}, S.unz);  // upper triangular matrix
     std::vector<csint> p_inv(M, -1);  // row permutation vector
 
     csint lnz = 0,
@@ -90,14 +93,16 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
                     ipiv = i;
                 }
             } else {  // x(i) is the entry U(pinv[i], k)
-                U.i_[unz] = p_inv[i];
-                U.v_[unz++] = sol.x[i];
+                if (i < U.M_) {  // if M > N, extra rows only in L
+                    U.i_[unz] = p_inv[i];
+                    U.v_[unz++] = sol.x[i];
+                }
             }
         }
 
         // Exercise 6.6: modify to allow rectangular matrices
+        // Only the rest of the columns of U need to be updated, L is done.
         if (k >= M) {
-            // Only the rest of the columns of U need to be updated, L is done.
             continue;
         }
 
@@ -153,12 +158,13 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
     }
 
     // --- Finalize L and U ---------------------------------------------------
-    L.p_[M] = lnz;
+    L.p_[min_MN] = lnz;
     U.p_[N] = unz;
 
     // Exercise 6.5: modify to allow singular matrices
+    // Exercise 6.6: modify to allow rectangular matrices
     // Assign indices to all missing rows that were pivoted to the end
-    if (is_singular) {
+    if (is_singular || M > N) {
         csint idx = M - 1;
         for (auto& i : p_inv | std::views::reverse) {
             if (i < 0) {

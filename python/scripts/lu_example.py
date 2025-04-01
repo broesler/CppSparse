@@ -62,13 +62,13 @@ for i in range(M):
 r = 3
 
 # ---------- M < N
-# Ac = Ac.slice(0, M - r, 0, N)  # (M-r, N)
+Ac = Ac.slice(0, M - r, 0, N)  # (M-r, N)
 
 # L -> (6, 6) == (M-r, M-r)
 # U -> (6, 8) == (M-r, N)
 
 # ---------- M > N
-Ac = Ac.slice(0, M, 0, N - r)  # (M, N-r)
+# Ac = Ac.slice(0, M, 0, N - r)  # (M, N-r)
 
 # L -> (8, 8) == (M, M)
 # U -> (8, 6) == (M, N-x)
@@ -88,16 +88,16 @@ print(A)
 # Scipy dense
 pd, Ld, Ud = la.lu(A, p_indices=True)
 
-print("pd:")
-print(pd)
-print("Ld:")
-print(Ld)
-print("Ud:")
-print(Ud)
+# print("pd:")
+# print(pd)
+# print("Ld:")
+# print(Ld)
+# print("Ud:")
+# print(Ud)
 
 allclose(Ld[pd] @ Ud, A)
 
-# C++Sparse -- fails if singular
+# C++Sparse
 try:
     lu_res = csparse.lu(Ac)
     p_inv, L, U = lu_res.p_inv, lu_res.L, lu_res.U

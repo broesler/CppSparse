@@ -64,6 +64,45 @@ def lu_left(A):
     return P, L, U
 
 
+def lu_rightr(A):
+    """Compute the LU decomposition of a matrix using a recursive,
+    right-looking algorithm without pivoting.
+
+    .. math::
+        PA = LU
+
+    Parameters
+    ----------
+    A : (M, M) array_like
+        Square matrix to decompose.
+
+    Returns
+    -------
+    P : (M, M) ndarray
+        Row permutation matrix (identity matrix).
+    L : (M, M) ndarray
+        Lower triangular matrix. The diagonal elements are all 1.
+    U : (M, M) ndarray
+        Upper triangular matrix.
+    """
+    N = A.shape[0]
+    if N == 1:
+        L = np.array([[1]])  # 2D array
+        U = A.copy()
+    else:
+        u11 = A[0, 0]                                   # (6.4)
+        u12 = A[[0], 1:]                                # (6.5)
+        l21 = A[1:, [0]] / u11                          # (6.6)
+        _, L22, U22 = lu_rightr(A[1:, 1:] - l21 @ u12)  # (6.7)
+        L = np.block([[1, np.zeros((1, N-1))],
+                      [l21, L22]])
+        U = np.block([[u11, u12],
+                      [np.zeros((N-1, 1)), U22]])
+
+    return np.eye(N), L, U
+
+
+
 def lu_right(A):
     """Compute the LU decomposition of a matrix using a right-looking algorithm
     without pivoting.

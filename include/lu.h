@@ -40,8 +40,11 @@ struct LUResult
 
 /** Compute the symolic LU decomposition of A.
  *
- * This function computes the column permutation `q` and the column counts of
- * the matrices `L` and `U` in the LU decomposition of `A`.
+ * This function computes the column permutation `q` and the non-zero counts of
+ * the matrices `L` and `U` in the LU decomposition of `A`. If `order` is
+ * `AMDOrder::APlusAT`, the function computes the symbolic Cholesky
+ * factorization of `A + A^T`. Use this estimate when the matrix is nearly
+ * structrually symmetric.
  *
  * @param A  the matrix to factorize
  * @param order  the ordering method to use

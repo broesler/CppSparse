@@ -29,15 +29,24 @@ SymbolicLU slu(const CSCMatrix& A, AMDOrder order)
 
     if (order == AMDOrder::Natural) {
         std::iota(q.begin(), q.end(), 0);  // identity permutation
+    } else if (order == AMDOrder::APlusAT) {
+        // TODO write test for this method once AMD is implemented
+        // Exercise 6.10: symbolic Cholesky analysis
+        SymbolicChol S_chol = schol(A, AMDOrder::APlusAT);
+        q = S_chol.p_inv;
+        S.lnz = S.unz = S_chol.lnz;
     } else {
         // TODO implement amd order (see Chapter 7)
         // q = amd(order, A);  // P = amd(A + A.T()) or natural
         throw std::runtime_error("Ordering method not implemented!");
     }
 
-    S.q = q;
-    S.unz = 4 * A.nnz() + N;  // guess nnz(L) and nnz(U)
-    S.lnz = S.unz;
+    // Optimistic LU factorization estimate (Davis, p. 85)
+    if (order != AMDOrder::APlusAT) {
+        S.q = q;
+        S.unz = 4 * A.nnz() + N;  // guess nnz(L) and nnz(U)
+        S.lnz = S.unz;
+    }
 
     return S;
 }
@@ -107,13 +116,6 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
         }
 
         // Exercise 6.5: modify to allow singular matrices
-        // Two cases:
-        //   1. ipiv == -1: occurs when we have a zero row.
-        //   2. a <= 0: all entries in A[:, col] are zero, A[:, col] is
-        //     structurally non-existent, or we have linearly dependent rows or
-        //     columns of A.
-        //   In either case, the column of L is just set to the identity, and
-        //   the column of U is set to the non-zero entries of A[:, col].
         if ((ipiv == -1 || a <= 0) && !is_singular) {
             // throw std::runtime_error("Matrix is singular!");  // original
 #ifdef DEBUG

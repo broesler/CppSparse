@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "types.h"
+#include "cholesky.h"
 #include "lu.h"
 #include "solve.h"
 #include "utils.h"  // inv_permute
@@ -52,6 +53,47 @@ SymbolicLU slu(const CSCMatrix& A, AMDOrder order)
 }
 
 
+// TODO test this function
+/** Allocate more space for the next column.
+ *
+ * See: Davis, Exercise 6.11.
+ *
+ * @param R  the matrix to reallocate
+ * @param k  the current column index
+ * @param lower  if `true`, allocate space for the lower triangular matrix
+ *       `L`, otherwise allocate space for the upper triangular matrix `U`.
+ *
+ * @throws std::bad_alloc if memory cannot be allocated.
+ */
+static inline void lu_realloc(CSCMatrix& R, csint k, bool lower)
+{
+    auto [M, N] = R.shape();
+    csint nzmax = 2 * R.nzmax() + M;
+    csint nzmin = lower ? (R.nnz() + M - k) : (nzmin = R.nnz() + k + 1);
+
+    // Try the nzmax size, then halve the distance to nzmin until it works
+    csint size_req = nzmax;
+    std::string err_msg;
+    
+    while (size_req > nzmin) {
+        try {
+            R.realloc(size_req);
+            return;
+        } catch (const std::bad_alloc& e) {
+            err_msg = e.what();
+            size_req = (size_req + nzmin) / 2;
+        }
+    }
+
+    // if we get here, we failed to allocate memory
+    if (!err_msg.empty()) {
+        std::cerr << "Error: " << err_msg << std::endl;
+        std::cerr << "Failed to allocate memory for LU factorization." << std::endl;
+        throw std::bad_alloc();
+    }
+}
+
+
 LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
 {
     auto [M, N] = A.shape();
@@ -80,11 +122,11 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
 
         // Possibly reallocate L and U
         if (lnz + N > L.nzmax()) {
-            L.realloc(2 * L.nzmax() + N);
+            lu_realloc(L, k, true);
         }
 
-        if (lnz + N > U.nzmax()) {
-            U.realloc(2 * U.nzmax() + N);
+        if (unz + N > U.nzmax()) {
+            lu_realloc(U, k, false);
         }
 
         // Solve Lx = A[:, k]

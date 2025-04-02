@@ -26,6 +26,7 @@ LU_NOPIVOT_FUNCS = [
 LU_PIVOT_FUNCS = [
     csparse.lu_left,
     csparse.lu_rightpr,
+    csparse.lu_rightprv,
     csparse.lu_rightp,
 ]
 
@@ -47,6 +48,10 @@ def lu_helper(A, lu_func):
 
     # Computes LU = PA
     P, L, U = lu_func(A)
+
+    if lu_func is csparse.lu_rightprv:
+        # P is a vector, so create the matrix
+        P = np.eye(A.shape[0])[:, P]
 
     np.testing.assert_allclose(P, P_.T, atol=ATOL)
     np.testing.assert_allclose(L, L_, atol=ATOL)

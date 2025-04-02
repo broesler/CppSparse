@@ -13,6 +13,8 @@ Davis, Chapter 6.
 import numpy as np
 import scipy.linalg as la
 
+from csparse import inv_permute
+
 
 def lu_left(A):
     """Compute the LU decomposition of a matrix using a left-looking algorithm
@@ -184,6 +186,54 @@ def lu_rightpr(A):
 
     return P, L, U
 
+
+def lu_rightprv(A):
+    """Compute the LU decomposition of a matrix using a recursive,
+    right-looking algorithm with pivoting.
+
+    .. math::
+        PA = LU
+
+    This function is identical to `lu_rightpr`, but uses a permutation vector
+    instead of a permutation matrix.
+
+    See: Davis, Exercise 6.12.
+
+    Parameters
+    ----------
+    A : (M, M) array_like
+        Square matrix to decompose.
+
+    Returns
+    -------
+    p : (M,) ndarray
+        Row permutation vector.
+    L : (M, M) ndarray
+        Lower triangular matrix. The diagonal elements are all 1.
+    U : (M, M) ndarray
+        Upper triangular matrix.
+    """
+    A = np.copy(A)
+    N = A.shape[0]
+    if N == 1:
+        p = np.array([0])
+        L = np.array([[1]])  # 2D array
+        U = A.copy()
+    else:
+        i = np.argmax(np.abs(A[:, 0]))  # partial pivoting
+        p1 = np.arange(N)
+        p1[0], p1[i] = p1[i], p1[0]  # swap indices
+        A = A[p1]
+        u11 = A[0, 0]                                      # (6.10)
+        u12 = A[[0], 1:]                                   # (6.11)
+        l21 = A[1:, [0]] / u11                             # (6.12)
+        p2, L22, U22 = lu_rightprv(A[1:, 1:] - l21 @ u12)  # (6.9) or (6.13)
+        o = np.zeros((1, N-1))
+        p = np.r_[0, p2 + 1][p1]
+        L = np.block([[1, o], [l21[inv_permute(p2)], L22]])  # (6.13)
+        U = np.block([[u11, u12], [o.T, U22]])
+
+    return p, L, U
 
 
 def lu_rightp(A):

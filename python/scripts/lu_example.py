@@ -31,11 +31,11 @@ for i in range(M):
     # Ac[i, i] += np.random.rand()
     Ac[i, i] += 10
 
-# Permute the matrix rows arbitrarily
-# p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
-# Ac = Ac.permute_rows(p);
+# ---------- Permute the matrix rows arbitrarily
+p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
+Ac = Ac.permute_rows(p);
 
-# Create a numerically rank-deficient matrix
+# ---------- Create a numerically rank-deficient matrix
 # for i in range(N):
 #     # Numerical rank deficiency (linearly dependent rows/columns)
 #     # Ac[i, 3] = 2 * Ac[i, 5]  # 2 linearly dependent column WORKS
@@ -55,24 +55,28 @@ for i in range(M):
 #     #     Ac[i, j] = 0.0  # multiple zero columns WORKS
 
 
-# Structural rank deficiency: remove zero rows and columns
+# ---------- Structural rank deficiency: remove zero rows and columns
 # Ac = Ac.dropzeros()
 
 # ---------- Create a rectangular matrix
-r = 3
+# r = 3
 
-# ---------- M < N
-Ac = Ac.slice(0, M - r, 0, N)  # (M-r, N)
+# ----- M < N
+# Ac = Ac.slice(0, M - r, 0, N)  # (M-r, N)
 
 # L -> (6, 6) == (M-r, M-r)
 # U -> (6, 8) == (M-r, N)
 
-# ---------- M > N
+# ----- M > N
 # Ac = Ac.slice(0, M, 0, N - r)  # (M, N-r)
 
 # L -> (8, 8) == (M, M)
 # U -> (8, 6) == (M, N-x)
 
+
+# -----------------------------------------------------------------------------
+#         Run the tests
+# -----------------------------------------------------------------------------
 rank = np.linalg.matrix_rank(Ac.toarray())
 print("Size of A:", Ac.shape)
 print("Rank of A:", rank)
@@ -88,12 +92,12 @@ print(A)
 # Scipy dense
 pd, Ld, Ud = la.lu(A, p_indices=True)
 
-# print("pd:")
-# print(pd)
-# print("Ld:")
-# print(Ld)
-# print("Ud:")
-# print(Ud)
+print("pd:")
+print(pd)
+print("Ld:")
+print(Ld)
+print("Ud:")
+print(Ud)
 
 allclose(Ld[pd] @ Ud, A)
 
@@ -132,6 +136,18 @@ except Exception as e:
         print("scipy.sparse: Failed to factorize matrix!")
     else: 
         raise e
+
+# Try lu_rightprv
+pv, Lv, Uv = csparse.lu_rightprv(A)
+
+np.testing.assert_equal(pv, p_inv)
+
+Pv = np.eye(N)[:, pv]
+
+allclose(Pv @ A, A[p])
+allclose(Lv, Ld)
+allclose(Uv, Ud)
+allclose(Lv @ Uv, Pv @ A)
 
 # =============================================================================
 # =============================================================================

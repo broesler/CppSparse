@@ -1032,6 +1032,12 @@ class CSCMatrix
         // ---------------------------------------------------------------------
         friend LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol);
         friend LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S);
+        friend LUResult ilutp(
+            const CSCMatrix& A,
+            const SymbolicLU& S,
+            double drop_tol,
+            double tol
+        );
 
         //----------------------------------------------------------------------
         //        Printing

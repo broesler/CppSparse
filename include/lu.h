@@ -87,6 +87,28 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol=1.0);
 LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S);
 
 
+/** Incomplete LU decomposition using a drop threshold and pivoting.
+ *
+ * See: Davis, Exercise 6.13, and MATLAB `ilu` with option `type = 'ilutp'`.
+ *
+ * This function computes the incomplete LU decomposition of `A` with drop
+ * tolerance `drop_tol` and pivoting tolerance `tol`. The function uses the
+ * symbolic factorization `S` to compute the LU decomposition.
+ *
+ * @param A  the matrix to factorize
+ * @param S  the symbolic factorization of A
+ * @param drop_tol  the drop tolerance for the incomplete factorization.
+ * @param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
+ *        used. If `tol` is less than 1.0, diagonal pivoting is used.
+ *
+ * @return the LU decomposition
+ */
+LUResult ilutp(
+    const CSCMatrix& A,
+    const SymbolicLU& S,
+    double drop_tol=0.0,
+    double tol=1.0
+);
 
 
 

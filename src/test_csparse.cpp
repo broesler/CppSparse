@@ -3271,5 +3271,59 @@ TEST_CASE("Exercise 6.6: LU Factorization of Rectangular Matrices", "[ex6.6]")
 }
 
 
+TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13]")
+{
+    CSCMatrix A = davis_example_qr().to_canonical();
+    auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    // TODO permute A and test pivoting
+    SECTION("Threshold without Pivoting (ILUTP)") {
+        SECTION("Match LU (zero tolerance)") {
+            double drop_tol = 0.0;
+
+            SymbolicLU S = slu(A);
+            LUResult res = lu(A, S);
+            LUResult ires = ilutp(A, S, drop_tol);
+            CSCMatrix iLU = (ires.L * ires.U).droptol().to_canonical();
+
+            compare_matrices(res.L, ires.L);
+            compare_matrices(res.U, ires.U);
+            compare_matrices(iLU, A);
+        }
+
+        // TODO drop pivot elements as well?
+        SECTION("Drop all non-digonal entries (infinite tolerance)") {
+            double drop_tol = std::numeric_limits<double>::infinity();
+
+            SymbolicLU S = slu(A);
+            LUResult ires = ilutp(A, S, drop_tol);
+
+            REQUIRE(ires.L.nnz() == N);
+            REQUIRE(ires.U.nnz() == N);
+        }
+
+        SECTION("Arbitrary drop tolerance") {
+            double drop_tol = 0.08;  // quite large to drop many entries
+
+            SymbolicLU S = slu(A);
+            LUResult res = lu(A, S);
+            LUResult ires = ilutp(A, S, drop_tol);
+            CSCMatrix iLU = (ires.L * ires.U).droptol().to_canonical();
+
+            CHECK(ires.L.nnz() <= res.L.nnz());
+            CHECK(ires.U.nnz() <= res.U.nnz());
+            CHECK_THAT(ires.L.data() >= drop_tol, AllTrue());
+            CHECK_THAT(ires.U.data() >= drop_tol, AllTrue());
+            REQUIRE((iLU - A).fronorm() / A.fronorm() < drop_tol);
+        }
+    }
+}
+
+
 /*==============================================================================
  *============================================================================*/

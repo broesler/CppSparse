@@ -141,6 +141,51 @@ def lu_right(A):
     return np.eye(N), L, U
 
 
+def lu_rightpr(A):
+    """Compute the LU decomposition of a matrix using a recursive,
+    right-looking algorithm with pivoting.
+
+    .. math::
+        PA = LU
+
+    Parameters
+    ----------
+    A : (M, M) array_like
+        Square matrix to decompose.
+
+    Returns
+    -------
+    P : (M, M) ndarray
+        Row permutation matrix.
+    L : (M, M) ndarray
+        Lower triangular matrix. The diagonal elements are all 1.
+    U : (M, M) ndarray
+        Upper triangular matrix.
+    """
+    A = np.copy(A)
+    N = A.shape[0]
+    if N == 1:
+        P = np.eye(1)
+        L = np.array([[1]])  # 2D array
+        U = A.copy()
+    else:
+        i = np.argmax(np.abs(A[:, 0]))  # partial pivoting
+        P1 = np.eye(N)
+        P1[[0, i]] = P1[[i, 0]]  # swap rows
+        A = P1 @ A
+        u11 = A[0, 0]                                     # (6.10)
+        u12 = A[[0], 1:]                                  # (6.11)
+        l21 = A[1:, [0]] / u11                            # (6.12)
+        P2, L22, U22 = lu_rightpr(A[1:, 1:] - l21 @ u12)  # (6.9) or (6.13)
+        o = np.zeros((1, N-1))
+        P = np.block([[1, o], [o.T, P2]]) @ P1
+        L = np.block([[1, o], [P2 @ l21, L22]])           # (6.13)
+        U = np.block([[u11, u12], [o.T, U22]])
+
+    return P, L, U
+
+
+
 def lu_rightp(A):
     """Compute the LU decomposition of a matrix using a right-looking algorithm
     with partial pivoting.

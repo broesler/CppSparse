@@ -18,12 +18,18 @@ import csparse
 
 ATOL = 1e-15  # testing tolerance
 
-PYTHON_LU_FUNCS = [
-    csparse.lu_left,
+LU_NOPIVOT_FUNCS = [
     csparse.lu_rightr,
     csparse.lu_right,
+]
+
+LU_PIVOT_FUNCS = [
+    csparse.lu_left,
+    csparse.lu_rightpr,
     csparse.lu_rightp,
 ]
+
+LU_FUNCS = LU_NOPIVOT_FUNCS + LU_PIVOT_FUNCS
 
 
 @pytest.fixture
@@ -48,26 +54,27 @@ def lu_helper(A, lu_func):
     np.testing.assert_allclose(L @ U, P @ A, atol=ATOL)
 
 
-@pytest.mark.parametrize("lu_func", PYTHON_LU_FUNCS)
+@pytest.mark.parametrize("lu_func", LU_FUNCS)
 def test_nonpivoting_LU(A, lu_func):
     """Test the LU decomposition without pivoting."""
     lu_helper(A, lu_func)
 
 
 # Only parametrize with functions that include pivoting
-@pytest.mark.parametrize("lu_func", [csparse.lu_left, csparse.lu_rightp])
+@pytest.mark.parametrize("lu_func", LU_PIVOT_FUNCS)
 def test_pivoting_LU(A, lu_func):
     """Test the LU decomposition with pivoting."""
-    # TODO try a number of different permutations
     # Permute the rows of A so pivoting is required
     seed = 56
-    print(f"Testing LU with permuted rows, {seed=}")
-    p = np.arange(A.shape[0])
     rng = np.random.default_rng(seed)
-    rng.shuffle(p)
-    A = A[p]
+    A_in = A.copy()  # preserve the original matrix
+    for i in range(A.shape[0]):
+        print(f"Testing LU with permuted rows, {seed=}, {i=}")
+        p = np.arange(A.shape[0])
+        rng.shuffle(p)
+        A = A_in[p]
 
-    lu_helper(A, lu_func)
+        lu_helper(A, lu_func)
 
 
 # =============================================================================

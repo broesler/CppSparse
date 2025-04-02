@@ -133,10 +133,8 @@ class CSCMatrix
          * @param A      matrix to be resized
          * @param nzmax  maximum number of non-zeros. If `nzmax <= A.nzmax()`,
          *        then `nzmax` will be set to `A.nnz()`.
-         *
-         * @return A     a reference to the input object for method chaining.
          */
-        CSCMatrix& realloc(csint nzmax=0);
+        void realloc(csint nzmax=0);
 
         //----------------------------------------------------------------------
         //        Accessors

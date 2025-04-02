@@ -11,6 +11,7 @@
 #include <cassert>
 #include <cmath>      // for std::fabs
 #include <format>
+#include <new>        // for std::bad_alloc
 #include <ranges>     // for std::views::reverse
 #include <string>
 #include <sstream>
@@ -115,19 +116,23 @@ CSCMatrix::CSCMatrix(
 }
 
 
-CSCMatrix& CSCMatrix::realloc(csint nzmax)
+void CSCMatrix::realloc(csint nzmax)
 {
     csint Z = (nzmax <= 0) ? p_[N_] : nzmax;
 
-    p_.resize(N_ + 1);  // always contains N_ columns + nz
-    i_.resize(Z);
-    v_.resize(Z);
+    try {
+        p_.resize(N_ + 1);  // always contains N_ columns + nz
+        i_.resize(Z);
+        v_.resize(Z);
+    } catch (const std::bad_alloc& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "Failed to allocate memory for CSCMatrix." << std::endl;
+        throw;  // let calling code handle it
+    }
 
     p_.shrink_to_fit();  // deallocate memory
     i_.shrink_to_fit();
     v_.shrink_to_fit();
-
-    return *this;
 }
 
 

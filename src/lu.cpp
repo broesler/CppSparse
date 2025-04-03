@@ -365,7 +365,6 @@ LUResult ilutp(
         // --- Divide by pivot -------------------------------------------------
         // Exercise 6.5: modify to allow singular matrices
         double pivot = 0;
-        // TODO handle small/zero pivots?
         pivot = sol.x[ipiv];  // the chosen pivot
         p_inv[ipiv] = k;      // ipiv is the kth pivot row
         L.i_[lnz] = ipiv;     // first entry in L[:, k] is L(k, k) = 1

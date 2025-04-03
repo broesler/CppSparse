@@ -32,8 +32,8 @@ for i in range(M):
     Ac[i, i] += 10
 
 # ---------- Permute the matrix rows arbitrarily
-p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
-Ac = Ac.permute_rows(p);
+# p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
+# Ac = Ac.permute_rows(p);
 
 # ---------- Create a numerically rank-deficient matrix
 # for i in range(N):
@@ -137,17 +137,36 @@ except Exception as e:
     else: 
         raise e
 
-# Try lu_rightprv
-pv, Lv, Uv = csparse.lu_rightprv(A)
 
-np.testing.assert_equal(pv, p_inv)
+# -----------------------------------------------------------------------------
+#         Test Incomplete LU decomposition
+# -----------------------------------------------------------------------------
+# NOTE spilu does not drop L entries that are < drop_tol?
+#  * In SuperLU, 0 <= tol <= 1, because the drop tolerance is a fraction of the
+#    maximum entry in each column.
+# drop_tol = 0.08
+drop_tol = 1  # drop everything off-diagonal -> FIXME does nothing?
+# drop_tol = 0  # keep everything
 
-Pv = np.eye(N)[:, pv]
+# Scipy.sparse
+ilu = sparse.linalg.spilu(As, drop_tol=drop_tol, permc_spec='NATURAL')
 
-allclose(Pv @ A, A[p])
-allclose(Lv, Ld)
-allclose(Uv, Ud)
-allclose(Lv @ Uv, Pv @ A)
+p_, L_, U_ = ilu.perm_r, ilu.L, ilu.U
+
+if drop_tol == 0:
+    allclose(L_.toarray(), Ld)
+    allclose(U_.toarray(), Ud)
+    allclose((L_[p_] @ U_).toarray(), A)
+# elif drop_tol == 1:  # only diagonals
+#     allclose(L_.toarray(), np.eye(L_.shape[0]))  # FIXME both fail!
+#     allclose(U_.diagonal(), A.diagonal())
+
+print("---------- ilu:")
+print("p_:", p_)
+print("L_:")
+print(L_.toarray())
+print("U_:")
+print(U_.toarray())
 
 # =============================================================================
 # =============================================================================

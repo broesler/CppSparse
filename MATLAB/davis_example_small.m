@@ -1,5 +1,5 @@
-function A = davis_example()
-% DAVIS_EXAMPLE Creates a sparse matrix from Davis pp 7-8, Eqn (2.1).
+function A = davis_example_small()
+% DAVIS_EXAMPLE_SMALL Creates a sparse matrix from Davis pp 7-8, Eqn (2.1).
 %
 % Example matrix from Davis, "Direct Methods for Sparse Linear Systems", p. 7-8,
 % Eqn (2.1).
@@ -14,14 +14,13 @@ function A = davis_example()
 %        [3.5, 0.4, 0. , 1. ]]
 %
 % Example:
-%  A = davis_example();
+%  A = davis_example_small();
+%  disp(full(A));
 %
 %===============================================================================
-%     File: davis_example.m
+%     File: davis_example_small.m
 %  Created: 2025-02-05 11:43
 %   Author: Bernie Roesler
-%
-%  Description: Davis matrix example Equation (2.1).
 %===============================================================================
 
 % See Davis pp 7-8, Eqn (2.1)

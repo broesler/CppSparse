@@ -13,6 +13,7 @@ import numpy as np
 import scipy.linalg as la
 
 from scipy import sparse
+from scipy.sparse import linalg as spla
 
 import csparse
 
@@ -32,8 +33,8 @@ for i in range(M):
     Ac[i, i] += 10
 
 # ---------- Permute the matrix rows arbitrarily
-# p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
-# Ac = Ac.permute_rows(p);
+p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
+Ac = Ac.permute_rows(p)
 
 # ---------- Create a numerically rank-deficient matrix
 # for i in range(N):
@@ -119,7 +120,7 @@ except Exception as e:
 
 # Scipy sparse -- fails if singular or non-square
 try:
-    lu = sparse.linalg.splu(As, permc_spec='NATURAL')  # no column reordering
+    lu = spla.splu(As, permc_spec='NATURAL')  # no column reordering
     p_, L_, U_ = lu.perm_r, lu.L, lu.U
 
     np.testing.assert_allclose(p_, p_inv)  # not necessarily identical!
@@ -134,7 +135,7 @@ except Exception as e:
         print("scipy.sparse: Matrix is not square!")
     elif "failed" in str(e):
         print("scipy.sparse: Failed to factorize matrix!")
-    else: 
+    else:
         raise e
 
 
@@ -145,11 +146,11 @@ except Exception as e:
 #  * In SuperLU, 0 <= tol <= 1, because the drop tolerance is a fraction of the
 #    maximum entry in each column.
 # drop_tol = 0.08
-drop_tol = 1  # drop everything off-diagonal -> FIXME does nothing?
-# drop_tol = 0  # keep everything
+drop_tol = 1.0  # drop everything off-diagonal -> FIXME does nothing?
+# drop_tol = 0.0  # keep everything
 
 # Scipy.sparse
-ilu = sparse.linalg.spilu(As, drop_tol=drop_tol, permc_spec='NATURAL')
+ilu = spla.spilu(As, drop_tol=drop_tol, permc_spec='NATURAL')
 
 p_, L_, U_ = ilu.perm_r, ilu.L, ilu.U
 
@@ -161,12 +162,49 @@ if drop_tol == 0:
 #     allclose(L_.toarray(), np.eye(L_.shape[0]))  # FIXME both fail!
 #     allclose(U_.diagonal(), A.diagonal())
 
-print("---------- ilu:")
+print(f"---------- ilu ({drop_tol=}):")
 print("p_:", p_)
 print("L_:")
 print(L_.toarray())
 print("U_:")
 print(U_.toarray())
+
+
+# -----------------------------------------------------------------------------
+#         Test 1-norm Estimate
+# -----------------------------------------------------------------------------
+normd = la.norm(A, 1)
+norms = spla.norm(As, 1)
+norm_est = spla.onenormest(A)
+
+allclose(normd, norms)
+allclose(normd, norm_est)
+
+# Test out condition number estimate
+# CSparse version:
+#
+# >> [L, U, P, Q] = lu(A);
+# >> norm1est(L, U, P, Q)  % CSparse 1-norm estimate
+# ans = 0.1153750055167834
+
+# >> cond1est(A)  % CSparse 1-norm condition number estimate
+# ans = 2.422875115852452
+
+# >> condest(A)  % built-in 1-norm condition number estimate
+# ans = 2.422875115852452
+
+# C++Sparse version:
+normc = csparse.norm1est(As)  # == 0.11537500551678347
+κ = csparse.cond1est(As)      # == 2.422875115852453
+
+# allclose(norm_est, κ)  # FIXME
+
+print("---------- 1-norm estimate:")
+print("   normd:", normd)
+print("   norms:", norms)
+print("norm_est:", norm_est)
+print("   normc:", normc)
+print("       κ:", κ)
 
 # =============================================================================
 # =============================================================================

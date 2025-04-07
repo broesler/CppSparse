@@ -11,7 +11,9 @@ Davis, Chapter 6.
 # =============================================================================
 
 import numpy as np
-import scipy.linalg as la
+
+from scipy.linalg import solve, norm
+from scipy.sparse.linalg import splu, norm as spnorm
 
 from csparse import inv_permute
 
@@ -53,7 +55,7 @@ def lu_left(A):
             # Solve Eqn (6.2)
             z = np.vstack([np.zeros((k, N-k)), np.eye(N-k)])  # (N, N-k)
             Y = np.c_[L[:, :k], z]
-            x = la.solve(Y, P @ A[:, k])
+            x = solve(Y, P @ A[:, k])
         U[:k, k] = x[:k]                  # the column of U
         i = np.argmax(np.abs(x[k:])) + k  # get the pivot index
         L[[i, k]] = L[[k, i]]             # swap rows
@@ -102,7 +104,6 @@ def lu_rightr(A):
                       [np.zeros((N-1, 1)), U22]])
 
     return np.eye(N), L, U
-
 
 
 def lu_right(A):
@@ -276,6 +277,101 @@ def lu_rightp(A):
     U = np.triu(A)
 
     return P, L, U
+
+
+def cond1est(A):
+    """Estimate the 1-norm condition number of a real, square matrix.
+
+    See: Davis, Exercise 6.13.
+
+    Parameters
+    ----------
+    A : (N, N) array_like
+        Matrix of N vectors in N dimensions.
+
+    Returns
+    -------
+    result : float
+        An estimate of the 1-norm condition number of the matrix.
+    """
+    M, N = A.shape
+
+    if M != N:
+        raise ValueError("Input matrix must be square.")
+
+    if A.size == 0:
+        return 0.0
+
+    # Compute the LU decomposition of A
+    lu = splu(A)
+
+    if np.any(lu.U.diagonal() == 0):
+        return np.inf
+    else:
+        return spnorm(A, 1) * norm1est_lu(lu)
+
+
+def norm1est_lu(lu):
+    """Estimate the 1-norm of a sparse matrix, given its LU decomposition.
+
+    Parameters
+    ----------
+    lu : SuperLU object
+        The result of the LU decomposition of a sparse matrix, as computed by
+        `scipy.sparse.linalg.splu`.
+
+    Returns
+    -------
+    result : float
+        An estimate of the 1-norm of the matrix.
+    """
+    N = lu.L.shape[0]
+
+    for k in range(5):
+        if k == 0:
+            est = 0
+            x = np.ones(N) / N
+            jold = -1
+        else:
+            # j = np.min(np.argwhere(np.abs(x) == norm(x, np.inf)))
+            j = np.min(np.argmax(np.abs(x)))
+
+            if j == jold:
+                break
+
+            x = np.zeros(N)
+            x[j] = 1
+            jold = j
+
+        x = lu.solve(x)
+        est_old = est
+        est = norm(x, 1)
+
+        if k > 0 and est <= est_old:
+            break
+
+        s = np.ones(N)
+        s[x < 0] = -1
+        x = lu.solve(s, trans='T')
+
+    return est
+
+
+def norm1est(A):
+    """Estimate the 1-norm of a sparse matrix.
+
+    Parameters
+    ----------
+    A : (N, N) array_like
+        Matrix of N vectors in N dimensions.
+
+    Returns
+    -------
+    result : float
+        An estimate of the 1-norm of the matrix.
+    """
+    lu = splu(A)
+    return norm1est_lu(lu)
 
 
 # =============================================================================

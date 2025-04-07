@@ -95,6 +95,14 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S);
  * tolerance `drop_tol` and pivoting tolerance `tol`. The function uses the
  * symbolic factorization `S` to compute the LU decomposition.
  *
+ * Entries of U and L are dropped if their absolute value is less than
+ * `drop_tol`,
+ * as opposed to MATLAB, which compares entries to 
+ *   `droptol * norm(A(:, j))` (aka the 2-norm) for each column `j`,
+ * or SuperLU (used in `scipy.sparse.linalg.splu`, which compares entries to 
+ *   `drop_tol * norm(A[:, j], np.inf)` (aka the pivot) for each column, such
+ *   that `0 <= drop_tol <= 1`.
+ *
  * @param A  the matrix to factorize
  * @param S  the symbolic factorization of A
  * @param drop_tol  the drop tolerance for the incomplete factorization.

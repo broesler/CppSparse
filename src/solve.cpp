@@ -704,6 +704,38 @@ std::vector<csint> topological_order(
 // -----------------------------------------------------------------------------
 //         LU Factorization Solvers
 // -----------------------------------------------------------------------------
+std::vector<double> lu_solve(const CSCMatrix& A, const std::vector<double>& b)
+{
+    if (A.shape()[0] != b.size()) {
+        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
+    }
+
+    SymbolicLU S = slu(A);
+    LUResult res = lu(A, S);
+
+    return lu_solve(res, b);
+}
+
+
+std::vector<double> lu_solve(const LUResult& res, const std::vector<double>& b)
+{
+    if (res.L.shape()[0] != b.size()) {
+        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
+    }
+
+    // Solve A x = b
+    //   == (P^T L U Q^T) x = b
+    //
+
+    // TODO test with column permutation. Might be pvec?
+    const std::vector<double> Pb = pvec(res.p_inv, b);  // permute b -> P b
+    const std::vector<double> y = lsolve(res.L, Pb);    // solve L x = P b
+    const std::vector<double> QTx = usolve(res.U, y);   // solve U (Q^T x) = y
+    std::vector<double> x = ipvec(res.q, QTx);          // permute back
+    
+    return x;
+}
+
 
 std::vector<double> lu_tsolve(const CSCMatrix& A, const std::vector<double>& b)
 {

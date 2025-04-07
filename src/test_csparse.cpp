@@ -3116,6 +3116,23 @@ TEST_CASE("LU Factorization of Square Matrix", "[lu]")
 }
 
 
+TEST_CASE("Solve A x = b with LU")
+{
+    CSCMatrix A = davis_example_qr().to_canonical();
+    auto [M, N] = A.shape();
+
+    // Create RHS for A x = b
+    std::vector<double> expect(N);
+    std::iota(expect.begin(), expect.end(), 1);
+    const std::vector<double> b = A * expect;
+
+    SECTION("Natural Order") {
+        const std::vector<double> x = lu_solve(A, b);
+        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    }
+}
+
+
 TEST_CASE("Exercise 6.1: Solve A^T x = b with LU")
 {
     CSCMatrix A = davis_example_qr().to_canonical();
@@ -3132,7 +3149,9 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU")
     }
 
     SECTION("Permuted A") {
-        // Permute the rows of A to test pivoting
+        // Permuting the rows of A is the same as permuting the columns of A^T,
+        // so the RHS vector is not affected, but the solution vector will be
+        // permuted, so permute it back for comparison.
         std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
         std::vector<csint> p_inv = inv_permute(p);
         CSCMatrix Ap = A.permute_rows(p_inv);

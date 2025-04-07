@@ -3281,14 +3281,24 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13]")
         A(i, i) += 10;
     }
 
-    // TODO permute A and test pivoting
-    SECTION("Threshold without Pivoting (ILUTP)") {
-        SECTION("Match LU (zero tolerance)") {
+    SECTION("ILUTP: Threshold with Pivoting") {
+        // Default is no pivoting
+        CSCMatrix Ap = A;
+
+        // Permute the rows of A to test pivoting
+        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        std::vector<csint> p_inv = inv_permute(p);
+
+        SECTION("Full LU (tolerance = 0)") {
             double drop_tol = 0.0;
 
-            SymbolicLU S = slu(A);
-            LUResult res = lu(A, S);
-            LUResult ires = ilutp(A, S, drop_tol);
+            SECTION("With pivoting") {
+                Ap = A.permute_rows(p_inv);
+            }
+
+            SymbolicLU S = slu(Ap);
+            LUResult res = lu(Ap, S);
+            LUResult ires = ilutp(Ap, S, drop_tol);
             CSCMatrix iLU = (ires.L * ires.U).droptol().to_canonical();
 
             compare_matrices(res.L, ires.L);
@@ -3296,23 +3306,34 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13]")
             compare_matrices(iLU, A);
         }
 
-        // TODO drop pivot elements as well?
-        SECTION("Drop all non-digonal entries (infinite tolerance)") {
+        SECTION("Drop all non-digonal entries (tolerance = inf)") {
             double drop_tol = std::numeric_limits<double>::infinity();
 
-            SymbolicLU S = slu(A);
-            LUResult ires = ilutp(A, S, drop_tol);
+            SECTION("With pivoting") {
+                Ap = A.permute_rows(p_inv);
+            }
+
+            SymbolicLU S = slu(Ap);
+            LUResult ires = ilutp(Ap, S, drop_tol);
 
             REQUIRE(ires.L.nnz() == N);
             REQUIRE(ires.U.nnz() == N);
+            for (csint i = 0; i < N; i++) {
+                CHECK(ires.L(i, i) == 1.0);
+                CHECK_THAT(ires.U(i, i), WithinAbs(A(i, i), tol));
+            }
         }
 
         SECTION("Arbitrary drop tolerance") {
             double drop_tol = 0.08;  // quite large to drop many entries
 
-            SymbolicLU S = slu(A);
-            LUResult res = lu(A, S);
-            LUResult ires = ilutp(A, S, drop_tol);
+            SECTION("With pivoting") {
+                Ap = A.permute_rows(p_inv);
+            }
+
+            SymbolicLU S = slu(Ap);
+            LUResult res = lu(Ap, S);
+            LUResult ires = ilutp(Ap, S, drop_tol);
             CSCMatrix iLU = (ires.L * ires.U).droptol().to_canonical();
 
             CHECK(ires.L.nnz() <= res.L.nnz());
@@ -3322,6 +3343,7 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13]")
             REQUIRE((iLU - A).fronorm() / A.fronorm() < drop_tol);
         }
     }
+
 }
 
 

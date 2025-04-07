@@ -704,9 +704,10 @@ std::vector<csint> topological_order(
 // -----------------------------------------------------------------------------
 //         LU Factorization Solvers
 // -----------------------------------------------------------------------------
+
 std::vector<double> lu_tsolve(const CSCMatrix& A, const std::vector<double>& b)
 {
-    if (A.shape()[0] != b.size()) {
+    if (A.shape()[1] != b.size()) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
     }
 
@@ -714,10 +715,29 @@ std::vector<double> lu_tsolve(const CSCMatrix& A, const std::vector<double>& b)
     SymbolicLU S = slu(A);
     LUResult res = lu(A, S);
 
-    // Solve A^T x = b == (P^T LU)^T x = b == U^T (L^T P x) = b
-    const std::vector<double> y = utsolve(res.U, b);   // solve U^T y = b
-    const std::vector<double> Px = ltsolve(res.L, y);  // solve L^T P x = y
-    std::vector<double> x = pvec(res.p_inv, Px);       // permute back
+    return lu_tsolve(res, b);
+}
+
+
+std::vector<double> lu_tsolve(const LUResult& res, const std::vector<double>& b)
+{
+    if (res.U.shape()[1] != b.size()) {
+        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
+    }
+
+    // Solve A^T x = b
+    //   == (P^T L U Q^T)^T x = b
+    //   == Q U^T (L^T P x) = b
+    //
+    //   Q U^T y = b -> solve U^T y = Q^T b
+    //   L^T P x = y -> solve L^T (P x) = y
+    //   => x = P^T (L^T)^{-1} (U^T)^{-1} Q^T b
+
+    // TODO test column permutation. Might be ipvec?
+    const std::vector<double> QTb = pvec(res.q, b);     // permute b -> Q^T b
+    const std::vector<double> y = utsolve(res.U, QTb);  // solve U^T y = Q^T b
+    const std::vector<double> Px = ltsolve(res.L, y);   // solve L^T P x = y
+    std::vector<double> x = pvec(res.p_inv, Px);        // permute back
     
     return x;
 }

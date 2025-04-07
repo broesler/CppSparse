@@ -364,7 +364,28 @@ std::vector<csint> topological_order(
 // -----------------------------------------------------------------------------
 //         LU Factorization Solutions
 // -----------------------------------------------------------------------------
+/** Solve a system \f$ A^T x = b \f$ using the LU factorization of `A`.
+ *
+ * See: Davis, Exercise 6.1.
+ *
+ * @param A  a square matrix
+ * @param b  a dense vector
+ *
+ * @return x  the solution vector
+ */
 std::vector<double> lu_tsolve(const CSCMatrix& A, const std::vector<double>& b);
+
+
+/** Solve a system \f$ A^T x = b \f$ using the LU factorization of `A`.
+ *
+ * See: Davis, Exercise 6.1.
+ *
+ * @param res  the LU factorization result of a matrix `A`
+ * @param b  a dense vector
+ *
+ * @return x  the solution vector
+ */
+std::vector<double> lu_tsolve(const LUResult& res, const std::vector<double>& b);
 
 
 }  // namespace cs

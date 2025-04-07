@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # =============================================================================
-#     File: lusolve_perf.py
+#     File: trisolve_perf.py
 #  Created: 2025-01-11 10:57
 #   Author: Bernie Roesler
 #
 """
-Plot the lusolve performance data.
+Plot the triangular solve performance data.
 """
 # =============================================================================
 
@@ -24,12 +24,12 @@ SAVE_FIG = True
 
 SEED = 565656
 
-filestem = 'lusolve_perf_py'
+filestem = 'trisolve_perf_py'
 
 # -----------------------------------------------------------------------------
 #         Create the data
 # -----------------------------------------------------------------------------
-lusolve_funcs = [cs.lsolve, cs.usolve, cs.lsolve_opt, cs.usolve_opt]
+trisolve_funcs = [cs.lsolve, cs.usolve, cs.lsolve_opt, cs.usolve_opt]
 
 N = 1000  # size of the square matrix
 
@@ -67,7 +67,7 @@ for density in densities:
     bL[idx_zero] = 0.0
     bU[idx_zero] = 0.0
 
-    for func in lusolve_funcs:
+    for func in trisolve_funcs:
         func_name = func.__name__
         args = (L, bL) if func_name.startswith('l') else (U, bU)
         partial_func = partial(func, *args)

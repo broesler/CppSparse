@@ -3004,6 +3004,7 @@ TEST_CASE("LU Factorization of Square Matrix", "[lu]")
     CSCMatrix A = davis_example_qr();
     auto [M, N] = A.shape();
 
+    // TODO build this option into davis_example_qr(add_diag=10.0);
     // Add 10 to the diagonal to enforce expected pivoting
     for (csint i = 0; i < N; i++) {
         A(i, i) += 10;
@@ -3121,6 +3122,11 @@ TEST_CASE("Solve A x = b with LU")
     CSCMatrix A = davis_example_qr().to_canonical();
     auto [M, N] = A.shape();
 
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
     // Create RHS for A x = b
     std::vector<double> expect(N);
     std::iota(expect.begin(), expect.end(), 1);
@@ -3130,6 +3136,20 @@ TEST_CASE("Solve A x = b with LU")
         const std::vector<double> x = lu_solve(A, b);
         REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
     }
+
+    SECTION("Permuted A") {
+        // Permuting the rows of A requires permuting the columns of b, but the
+        // solution vector will *not* be permuted.
+        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        std::vector<csint> p_inv = inv_permute(p);
+
+        CSCMatrix Ap = A.permute_rows(p_inv);
+        std::vector<double> bp = pvec(p_inv, b);  // == ipvec(p, b)
+
+        std::vector<double> x = lu_solve(Ap, bp);
+
+        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    }
 }
 
 
@@ -3137,6 +3157,11 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU")
 {
     CSCMatrix A = davis_example_qr().to_canonical();
     auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
 
     // Create RHS for A^T x = b
     std::vector<double> expect(N);

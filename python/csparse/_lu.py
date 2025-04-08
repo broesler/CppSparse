@@ -314,6 +314,8 @@ def cond1est(A):
 def norm1est_lu(lu):
     """Estimate the 1-norm of a sparse matrix, given its LU decomposition.
 
+    See: Davis, Exercise 6.13.
+
     Parameters
     ----------
     lu : SuperLU object
@@ -359,6 +361,8 @@ def norm1est_lu(lu):
 
 def norm1est(A):
     """Estimate the 1-norm of a sparse matrix.
+
+    See: Davis, Exercise 6.13.
 
     Parameters
     ----------

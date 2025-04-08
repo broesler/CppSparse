@@ -27,14 +27,15 @@ Ac = csparse.davis_example_qr()
 
 M, N = Ac.shape
 
-# Add a random perturbation to the diagonal
+# Add a random perturbation to the diagonal to enforce expected pivoting
 for i in range(M):
     # Ac[i, i] += np.random.rand()
     Ac[i, i] += 10
 
 # ---------- Permute the matrix rows arbitrarily
 p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
-Ac = Ac.permute_rows(p)
+p_inv = csparse.inv_permute(p)
+Ac = Ac.permute_rows(p_inv)
 
 # ---------- Create a numerically rank-deficient matrix
 # for i in range(N):
@@ -162,12 +163,12 @@ if drop_tol == 0:
 #     allclose(L_.toarray(), np.eye(L_.shape[0]))  # FIXME both fail!
 #     allclose(U_.diagonal(), A.diagonal())
 
-print(f"---------- ilu ({drop_tol=}):")
-print("p_:", p_)
-print("L_:")
-print(L_.toarray())
-print("U_:")
-print(U_.toarray())
+# print(f"---------- ilu ({drop_tol=}):")
+# print("p_:", p_)
+# print("L_:")
+# print(L_.toarray())
+# print("U_:")
+# print(U_.toarray())
 
 
 # -----------------------------------------------------------------------------
@@ -205,6 +206,29 @@ print("   norms:", norms)
 print("norm_est:", norm_est)
 print("   normc:", normc)
 print("       κ:", κ)
+
+
+# -----------------------------------------------------------------------------
+#         Solve Ax = b
+# -----------------------------------------------------------------------------
+x = np.arange(1, N + 1)
+b = A @ x
+
+print("   solve(A, b):", la.solve(A, b))
+print("spsolve(As, b):", spla.spsolve(As, b))
+
+# LU solve
+lu = spla.splu(As, permc_spec='NATURAL')  # no column reordering
+L, U, p_, q = lu.L, lu.U, lu.perm_r, lu.perm_c
+
+p_inv = csparse.inv_permute(p_)
+
+Pb = b[p_inv]
+y = spla.spsolve(L, Pb)
+QTx = spla.spsolve(U, y)
+x = QTx[q]
+
+print('      LU solve:', x)
 
 # =============================================================================
 # =============================================================================

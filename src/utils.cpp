@@ -7,10 +7,12 @@
  *
  *============================================================================*/
 
+#include <algorithm>  // max_element
 #include <cassert>
 #include <cmath>
 #include <fstream>
-#include <numeric>  // partial_sum
+#include <limits>     // numeric_limits
+#include <numeric>    // partial_sum, accumulate
 
 #include "utils.h"
 
@@ -116,6 +118,65 @@ std::vector<csint> cumsum(const std::vector<csint>& w)
     std::partial_sum(w.begin(), w.end(), out.begin() + 1);
 
     return out;
+}
+
+
+double norm(const std::vector<double>& x, const double ord)
+{
+    if (x.empty()) {
+        return 0.0;
+    }
+
+    if (ord == std::numeric_limits<double>::infinity()) {
+        // infinity norm
+        return *std::max_element(
+            x.cbegin(), x.cend(),
+            [](double a, double b) { return std::fabs(a) < std::fabs(b); }
+        );
+    } else if (ord == 0) {
+        // for (const auto& val : x) {
+        //     res += (val != 0);
+        // }
+        return std::count_if(
+            x.cbegin(), x.cend(),
+            [](double val) {
+                return std::fabs(val) > std::numeric_limits<double>::epsilon(); 
+            }
+        );
+    } else if (ord == 1) {
+        // for (const auto& val : x) {
+        //     res += std::fabs(val);
+        // }
+        return std::accumulate(
+            x.cbegin(), x.cend(), 0.0,
+            [](double sum, double val) { return sum + std::fabs(val); }
+        );
+    } else if (ord == 2) {
+        // for (const auto& val : x) {
+        //     res += val * val;
+        // }
+        // res = std::sqrt(res);
+        return std::sqrt(
+            std::accumulate(
+                x.cbegin(), x.cend(), 0.0,
+                [](double sum, double val) { return sum + val * val; }
+            )
+        );
+    } else {
+        // for (const auto& val : x) {
+        //     res += std::pow(std::fabs(val), ord);
+        // }
+        // res = std::pow(res, 1.0 / ord);
+        return std::pow(
+            std::accumulate(
+                x.cbegin(), x.cend(), 0.0,
+                [ord](double sum, double val) {
+                    return sum + std::pow(std::fabs(val), ord); 
+                }
+            ),
+            1.0 / ord
+        );
+    }
 }
 
 

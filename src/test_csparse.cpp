@@ -13,6 +13,7 @@
 #include <catch2/matchers/catch_matchers_all.hpp>
 
 #include <algorithm>  // reverse
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -27,6 +28,7 @@
 
 using namespace cs;
 
+using Catch::Approx;
 using Catch::Matchers::AllTrue;
 using Catch::Matchers::WithinAbs;
 using Catch::Matchers::UnorderedEquals;
@@ -257,6 +259,33 @@ TEST_CASE("Argsort", "[vector]")
     SECTION("Vector of ints") {
         std::vector<int> v = {5, 6, 42, 1, 9};
         REQUIRE(argsort(v) == std::vector<csint> {3, 0, 1, 4, 2});
+    }
+}
+
+
+TEST_CASE("Vector norms", "[vector]")
+{
+    std::vector<double> v = {3, 4};
+
+    SECTION("L0 norm") {
+        REQUIRE(norm(v, 0) == 2);
+    }
+
+    SECTION("L1 norm") {
+        REQUIRE(norm(v, 1) == 7);
+    }
+
+    SECTION("L2 norm") {
+        REQUIRE(norm(v, 2) == Approx(5.0));
+    }
+
+    SECTION("LPI norm") {
+        double pi = 4 * atan(1.0);  // pi = 3.14159...
+        REQUIRE(norm(v, pi) == Approx(4.457284396597481));
+    }
+
+    SECTION("Linf norm") {
+        REQUIRE(norm(v, INFINITY) == 4);
     }
 }
 

@@ -66,6 +66,15 @@ std::vector<csint> argsort(const std::vector<T>& vec)
 }
 
 
+/** Compute the norm of a vector.
+ *
+ * @param x  the vector
+ * @param ord  the order of the norm
+ *
+ * @return norm  the norm of the vector
+ */
+double norm(const std::vector<double>& x, const double ord=2.0);
+
 /*------------------------------------------------------------------------------
  *          Vector Permutations
  *----------------------------------------------------------------------------*/

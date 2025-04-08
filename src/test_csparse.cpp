@@ -3430,7 +3430,7 @@ TEST_CASE("Exercise 6.15: 1-norm condition number estimate", "[ex6.15]")
         A(i, i) += 10;
     }
 
-    SECTION("1-norm estimate") {
+    SECTION("Estimate 1-norm of A inverse") {
         // Compute the LU decomposition
         SymbolicLU S = slu(A);
         LUResult res = lu(A, S);
@@ -3442,6 +3442,13 @@ TEST_CASE("Exercise 6.15: 1-norm condition number estimate", "[ex6.15]")
 
         CHECK(exact_norm >= est_norm);  // estimate is a lower bound
         REQUIRE_THAT(est_norm, WithinAbs(expect, tol));
+    }
+
+    SECTION("Estimate condition number of A") {
+        double kappa = cond1est(A);
+        double expect = 2.422875115852452;  // MATLAB and python calcs
+
+        REQUIRE(kappa == Approx(expect));
     }
 }
 

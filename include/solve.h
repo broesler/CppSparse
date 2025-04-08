@@ -422,6 +422,21 @@ std::vector<double> lu_tsolve(const LUResult& res, const std::vector<double>& b)
 double norm1est(const LUResult& res);
 
 
+/** Estimate the 1-norm condition number of a sparse matrix.
+ *
+ * The condition number for a non-symmetric matrix is defined as:
+ * \f$ \kappa_p(A) = ||A||_p ||A^{-1}||_p \f$.
+ * This function chooses \f$ p = 1 \f$.
+ *
+ * See: Davis, Exercise 6.15..
+ *
+ * @param A  a real, square matrix
+ *
+ * @return cond  the estimated 1-norm condition number of `A`
+ */
+double cond1est(const CSCMatrix& A);
+
+
 }  // namespace cs
 
 #endif  // _SOLVE_H_

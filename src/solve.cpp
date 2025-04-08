@@ -853,6 +853,34 @@ double norm1est(const LUResult& res)
 }
 
 
+double cond1est(const CSCMatrix& A)
+{
+    auto [M, N] = A.shape();
+
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    if (A.nnz() == 0) {
+        return 0.0;
+    }
+
+    // Compute the LU factorization
+    SymbolicLU S = slu(A);
+    LUResult res = lu(A, S);
+
+    // Compute the 1-norm estimate
+    for (csint i = 0; i < N; i++) {
+        if (res.U(i, i) == 0) {
+            return std::numeric_limits<double>::infinity();
+        }
+    }
+
+    // κ = |A|_1 * |A^{-1}|_1
+    return A.norm() * norm1est(res);
+}
+
+
 }  // namespace cs
 
 /*==============================================================================

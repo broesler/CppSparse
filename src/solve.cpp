@@ -7,8 +7,10 @@
  *
  *============================================================================*/
 
+#include <algorithm>  // fill
 #include <cassert>
-#include <ranges>  // for std::views::reverse
+#include <ranges>     // std::views::reverse
+#include <vector>
 
 #include "solve.h"
 #include "csc.h"
@@ -725,13 +727,11 @@ std::vector<double> lu_solve(const LUResult& res, const std::vector<double>& b)
 
     // Solve A x = b
     //   == (P^T L U Q^T) x = b
-    //
-
-    // TODO test with column permutation. Might be pvec?
+    // TODO test with column permutation.
     const std::vector<double> Pb = pvec(res.p_inv, b);  // permute b -> P b
     const std::vector<double> y = lsolve(res.L, Pb);    // solve L x = P b
     const std::vector<double> QTx = usolve(res.U, y);   // solve U (Q^T x) = y
-    std::vector<double> x = ipvec(res.q, QTx);          // permute back
+    std::vector<double> x = pvec(res.q, QTx);           // Q (Q^T x) = x
     
     return x;
 }
@@ -769,9 +769,87 @@ std::vector<double> lu_tsolve(const LUResult& res, const std::vector<double>& b)
     const std::vector<double> QTb = pvec(res.q, b);     // permute b -> Q^T b
     const std::vector<double> y = utsolve(res.U, QTb);  // solve U^T y = Q^T b
     const std::vector<double> Px = ltsolve(res.L, y);   // solve L^T P x = y
-    std::vector<double> x = pvec(res.p_inv, Px);        // permute back
+    std::vector<double> x = pvec(res.p_inv, Px);        // P^T (P x) = x
     
     return x;
+}
+
+
+/** Find the minimum index of all those where |x| == max(|x|).
+ *
+ * @param x  a vector of doubles
+ *
+ * @return j  the first index of the maximum absolute value
+ */
+static inline csint min_argmaxabs(const std::vector<double>& x)
+{
+    csint N = x.size();
+    csint j = N;         // minimum index
+    double max_val = 0;  // maximum absolute value
+
+    for (csint i = N-1; i >= 0; i--) {
+        double mval = std::fabs(x[i]);
+        if (i < j && mval > max_val) {
+            max_val = mval;
+            j = i;
+        }
+    }
+
+    return j;
+}
+
+
+double norm1est(const LUResult& res)
+{
+    csint M = res.L.shape()[0];
+    csint N = res.U.shape()[1];
+
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    double est = 0.0;
+    std::vector<double> x(N, 1.0 / N);  // sum(x) == 1.0
+    csint jold = -1;
+
+    // Estimate the 1-norm
+    for (csint k = 0; k < 5; k++) {
+        if (k > 0) {
+            // j is the first index where |x| == max(|x|) (infinity norm)
+            csint j = min_argmaxabs(x);
+
+            if (j == jold) {
+                break;
+            }
+
+            // Set x to a unit vector in the j direction
+            std::fill(x.begin(), x.end(), 0.0);
+            x[j] = 1.0;
+            jold = j;
+        }
+
+        // Solve Ax = x
+        x = lu_solve(res, x);
+
+        double est_old = est;
+        est = norm(x, 1);
+
+        if (k > 0 && est <= est_old) {
+            break;
+        }
+
+        // s elements are in {-1, 1}
+        std::vector<double> s(N, 1.0);
+        for (csint p = 0; p < N; p++) {
+            if (x[p] < 0) {
+                s[p] = -1.0;
+            }
+        }
+
+        x = lu_tsolve(res, s);
+    }
+
+    return est;
 }
 
 

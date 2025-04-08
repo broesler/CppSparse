@@ -413,6 +413,15 @@ std::vector<double> lu_tsolve(const CSCMatrix& A, const std::vector<double>& b);
 std::vector<double> lu_tsolve(const LUResult& res, const std::vector<double>& b);
 
 
+/** Estimate the 1-norm of a sparse matrix.
+ *
+ * @param res  the LU factorization result of a matrix `A`
+ *
+ * @return norm  the estimated 1-norm of `A`
+ */
+double norm1est(const LUResult& res);
+
+
 }  // namespace cs
 
 #endif  // _SOLVE_H_

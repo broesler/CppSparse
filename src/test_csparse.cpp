@@ -3420,5 +3420,30 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13]")
 }
 
 
+TEST_CASE("Exercise 6.15: 1-norm condition number estimate", "[ex6.15]")
+{
+    CSCMatrix A = davis_example_qr().to_canonical();
+    auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    SECTION("1-norm estimate") {
+        // Compute the LU decomposition
+        SymbolicLU S = slu(A);
+        LUResult res = lu(A, S);
+
+        double expect = 0.11537500551678347;  // MATLAB and python calcs
+        double exact_norm = A.norm();         // 1-norm == maximum column sum
+
+        double est_norm = norm1est(res);
+
+        CHECK(exact_norm >= est_norm);  // estimate is a lower bound
+        REQUIRE_THAT(est_norm, WithinAbs(expect, tol));
+    }
+}
+
 /*==============================================================================
  *============================================================================*/

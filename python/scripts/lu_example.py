@@ -181,6 +181,16 @@ norm_est = spla.onenormest(A)
 allclose(normd, norms)
 allclose(normd, norm_est)
 
+# Condition number == ||A||_1 * ||A^-1||_1
+condd = np.linalg.cond(A, 1)
+
+Ainv = la.inv(A)
+Asinv = spla.inv(As)
+
+normd_inv = la.norm(Ainv, 1)
+norms_inv = spla.norm(Asinv, 1)
+norm_est_inv = spla.onenormest(Ainv)
+
 # Test out condition number estimate
 # CSparse version:
 #
@@ -195,40 +205,45 @@ allclose(normd, norm_est)
 # ans = 2.422875115852452
 
 # C++Sparse version:
-normc = csparse.norm1est(As)  # == 0.11537500551678347
-κ = csparse.cond1est(As)      # == 2.422875115852453
+normc_inv = csparse.norm1est(As)  # == 0.11537500551678347
+
+allclose(normd_inv, norms_inv)
+allclose(normd_inv, norm_est_inv)
+allclose(normd_inv, normc_inv)
+
+κc = csparse.cond1est(As)          # == 2.422875115852453
+
+allclose(condd, κc)
 
 # allclose(norm_est, κ)  # FIXME
 
 print("---------- 1-norm estimate:")
-print("   normd:", normd)
-print("   norms:", norms)
-print("norm_est:", norm_est)
-print("   normc:", normc)
-print("       κ:", κ)
+print("    normd:", normd)
+print("normd_inv:", normd_inv)
+print("    condd:", condd)
 
 
-# -----------------------------------------------------------------------------
-#         Solve Ax = b
-# -----------------------------------------------------------------------------
-x = np.arange(1, N + 1)
-b = A @ x
+# # -----------------------------------------------------------------------------
+# #         Solve Ax = b
+# # -----------------------------------------------------------------------------
+# x = np.arange(1, N + 1)
+# b = A @ x
 
-print("   solve(A, b):", la.solve(A, b))
-print("spsolve(As, b):", spla.spsolve(As, b))
+# print("   solve(A, b):", la.solve(A, b))
+# print("spsolve(As, b):", spla.spsolve(As, b))
 
-# LU solve
-lu = spla.splu(As, permc_spec='NATURAL')  # no column reordering
-L, U, p_, q = lu.L, lu.U, lu.perm_r, lu.perm_c
+# # LU solve
+# lu = spla.splu(As, permc_spec='NATURAL')  # no column reordering
+# L, U, p_, q = lu.L, lu.U, lu.perm_r, lu.perm_c
 
-p_inv = csparse.inv_permute(p_)
+# p_inv = csparse.inv_permute(p_)
 
-Pb = b[p_inv]
-y = spla.spsolve(L, Pb)
-QTx = spla.spsolve(U, y)
-x = QTx[q]
+# Pb = b[p_inv]
+# y = spla.spsolve(L, Pb)
+# QTx = spla.spsolve(U, y)
+# x = QTx[q]
 
-print('      LU solve:', x)
+# print('      LU solve:', x)
 
 # =============================================================================
 # =============================================================================

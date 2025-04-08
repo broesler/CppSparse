@@ -282,7 +282,7 @@ def lu_rightp(A):
 def cond1est(A):
     """Estimate the 1-norm condition number of a real, square matrix.
 
-    See: Davis, Exercise 6.13.
+    See: Davis, Exercise 6.15.
 
     Parameters
     ----------
@@ -314,7 +314,7 @@ def cond1est(A):
 def norm1est_lu(lu):
     """Estimate the 1-norm of a sparse matrix, given its LU decomposition.
 
-    See: Davis, Exercise 6.13.
+    See: Davis, Exercise 6.15.
 
     Parameters
     ----------
@@ -362,7 +362,7 @@ def norm1est_lu(lu):
 def norm1est(A):
     """Estimate the 1-norm of a sparse matrix.
 
-    See: Davis, Exercise 6.13.
+    See: Davis, Exercise 6.15.
 
     Parameters
     ----------

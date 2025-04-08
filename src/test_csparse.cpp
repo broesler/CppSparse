@@ -2995,7 +2995,7 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
              0.                , 1.                , 0.                , 0.                , 0.                ,
              0.                , 0.                , 1.                , 0.                , 0.                ,
              0.4142135623730951, 0.                , 0.                , 1.                , 0.                ,
-             0.                , 0.                , 0.                , 0.                , 1.                
+             0.                , 0.                , 0.                , 0.                , 1.
             },
             {M, M},
             'C'  // row-major order
@@ -3009,7 +3009,7 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
               0.                ,  2.                ,  1.                ,  0.                ,  0.                ,  0.                ,  1.                    ,  0.                ,
               0.                ,  0.                ,  3.                ,  1.                ,  0.                ,  0.                ,  0.                    ,  0.                ,
               0.                ,  0.                ,  0.                ,  2.1213203435596424,  0.                ,  0.                , -4.7442685329306630e-17,  0.                ,
-              0.                ,  0.                ,  0.                ,  0.                ,  5.                ,  1.                ,  0.                    ,  0.                
+              0.                ,  0.                ,  0.                ,  0.                ,  5.                ,  1.                ,  0.                    ,  0.
             },
             {M, N},
             'C' // row-major order
@@ -3026,6 +3026,18 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
         compare_matrices(res.R, expect_R);
     }
 }
+
+
+/** Define a helper function to test LU decomposition */
+auto lu_test = [](const CSCMatrix& A)
+{
+    SymbolicLU S = slu(A);
+    LUResult res = lu(A, S);
+    CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+    CSCMatrix PA = A.permute_rows(res.p_inv).to_canonical();
+    compare_matrices(LU, PA);
+    return res;
+};
 
 
 TEST_CASE("LU Factorization of Square Matrix", "[lu]")
@@ -3052,96 +3064,34 @@ TEST_CASE("LU Factorization of Square Matrix", "[lu]")
         REQUIRE(S.unz == S.lnz);
     }
 
-    SECTION("Numeric Factorization (un-permuted)") {
-        SymbolicLU S = slu(A);
-        LUResult res = lu(A, S);
+    SECTION("Numeric Factorization") {
+        CSCMatrix Ap;
+        std::vector<csint> expect_p = expect_q;
 
-        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+        SECTION("un-permuted") {
+            Ap = A;
+            expect_p = expect_q;
+        }
 
-        CHECK(res.q == expect_q);
-        CHECK(res.p_inv == expect_q);
-        compare_matrices(LU, A.to_canonical());
-    }
+        SECTION("permuted") {
+            // Permute the rows of A to test pivoting
+            std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+            std::vector<csint> p_inv = inv_permute(p);
 
-    SECTION("Numeric Factorization (permuted)") {
-        // Permute the rows of A to test pivoting
-        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
-        std::vector<csint> p_inv = inv_permute(p);
+            // LU *should* select pivots to recover the original A matrix
+            Ap = A.permute_rows(p_inv);
+            expect_p = p;
+        }
 
-        CSCMatrix Ap = A.permute_rows(p_inv);
-
-        // LU *should* select pivots to recover the original A matrix
-        // Compute LU = PAp == P(P^T A) == A
-        SymbolicLU S = slu(Ap);
-        LUResult res = lu(Ap, S);
-
-        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+        // Test the factorization
+        LUResult res = lu_test(Ap);
 
         // Permute the rows of the input Ap to compare with LU
         CSCMatrix PAp = Ap.permute_rows(res.p_inv).to_canonical();
 
+        CHECK(res.p_inv == expect_p);
         CHECK(res.q == expect_q);
-        CHECK(res.p_inv == p);
         compare_matrices(A, PAp);  // LU should match the un-permuted A
-        compare_matrices(LU, PAp);
-        compare_matrices(LU, A.to_canonical());
-    }
-
-    SECTION("Exercise 6.4: relu (no pivoting)", "[relu][no-pivot]") {
-        SymbolicLU S = slu(A);
-        LUResult R = lu(A, S);
-
-        // TODO CSCMatrix::set_data(const std::vector<double>& x) function
-        // Change the values of A to test the relu function
-        // A.set_data(A.data() + 1);
-        // Create new matrix with same sparsity pattern as A
-        std::vector<double> B_data(A.data());
-        for (auto& x : B_data) {
-            x += 1;
-        }
-        CSCMatrix B {B_data, A.indices(), A.indptr(), A.shape()};
-
-        // Compute the LU factorization of B using the pattern of LU = A
-        LUResult res = relu(B, R, S);
-
-        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
-
-        compare_matrices(LU, B.to_canonical());
-    }
-
-    SECTION("Exercise 6.4: relu (permuted)", "[relu][pivot]") {
-        // Permute the rows of A to test pivoting
-        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
-        std::vector<csint> p_inv = inv_permute(p);
-
-        // Create new matrix with same sparsity pattern as A
-        std::vector<double> B_data(A.data());
-        for (auto& x : B_data) {
-            x += 1;
-        }
-        CSCMatrix B {B_data, A.indices(), A.indptr(), A.shape()};
-
-        // Permute the rows of A and B to test pivoting
-        CSCMatrix Ap = A.permute_rows(p_inv);
-        CSCMatrix Bp = B.permute_rows(p_inv);
-
-        // Compute LU = PA
-        SymbolicLU S = slu(Ap);
-        LUResult R = lu(Ap, S);
-
-        // Compute the LU factorization of Bp using the pattern of LU = PA
-        LUResult res = relu(Bp, R, S);
-
-        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
-
-        // Permute the rows of the input Bp to compare with LU
-        CSCMatrix PBp = Bp.permute_rows(res.p_inv).to_canonical();
-
-        CHECK(res.q == expect_q);
-        CHECK(res.p_inv == p);
-        compare_matrices(B, PBp);  // LU should match the un-permuted B
-        compare_matrices(LU, PBp);
-        compare_matrices(LU, B.to_canonical());
     }
 }
 
@@ -3218,18 +3168,68 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU")
 }
 
 
-/** Define a helper function to test LU decomposition */
-auto lu_test = [](const CSCMatrix& A) {
-    SymbolicLU S = slu(A);
-    LUResult res = lu(A, S);
+TEST_CASE("Exercise 6.4: relu", "[ex6.4]")
+{
+    CSCMatrix A = davis_example_qr();
+    auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    std::vector<csint> expect_q(N);
+    std::iota(expect_q.begin(), expect_q.end(), 0);
+
+    // TODO CSCMatrix::set_data(const std::vector<double>& x) function
+    // Change the values of A to test the relu function
+    // A.set_data(A.data() + 1);
+
+    // Create new matrix with same sparsity pattern as A
+    std::vector<double> B_data(A.data());
+    for (auto& x : B_data) {
+        x += 1;
+    }
+    CSCMatrix B {B_data, A.indices(), A.indptr(), A.shape()};
+
+    CSCMatrix Ap, Bp;
+    std::vector<csint> expect_p;
+
+    SECTION("no pivoting") {
+        // Compute the LU factorization of B using the pattern of LU = A
+        Ap = A;
+        Bp = B;
+        expect_p = expect_q;
+    }
+
+    SECTION("permuted") {
+        // Permute the rows of A to test pivoting
+        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        std::vector<csint> p_inv = inv_permute(p);
+
+        // Permute the rows of A and B to test pivoting
+        Ap = A.permute_rows(p_inv);
+        Bp = B.permute_rows(p_inv);
+        expect_p = p;
+    }
+
+    // Compute LU = PA
+    SymbolicLU S = slu(Ap);
+    LUResult R = lu(Ap, S);
+
+    // Compute the LU factorization of Bp using the pattern of LU = PA
+    LUResult res = relu(Bp, R, S);
 
     CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
 
-    // Permute the rows of A
-    CSCMatrix Ap = A.permute_rows(res.p_inv).to_canonical();
+    // Permute the rows of the input Bp to compare with LU
+    CSCMatrix PBp = Bp.permute_rows(res.p_inv).to_canonical();
 
-    compare_matrices(LU, Ap);
-};
+    CHECK(res.q == expect_q);
+    CHECK(res.p_inv == expect_p);
+    compare_matrices(B, PBp);  // LU should match the un-permuted B
+    compare_matrices(LU, B.to_canonical());
+}
 
 
 TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5]")
@@ -3441,7 +3441,7 @@ TEST_CASE("Exercise 6.15: 1-norm condition number estimate", "[ex6.15]")
         double est_norm = norm1est_inv(res);
 
         CHECK(exact_norm >= est_norm);  // estimate is a lower bound
-        REQUIRE_THAT(est_norm, WithinAbs(expect, tol));
+        REQUIRE(est_norm == Approx(expect));
     }
 
     SECTION("Estimate condition number of A") {

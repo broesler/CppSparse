@@ -205,7 +205,7 @@ norm_est_inv = spla.onenormest(Ainv)
 # ans = 2.422875115852452
 
 # C++Sparse version:
-normc_inv = csparse.norm1est(As)  # == 0.11537500551678347
+normc_inv = csparse.norm1est_inv(As)  # == 0.11537500551678347
 
 allclose(normd_inv, norms_inv)
 allclose(normd_inv, norm_est_inv)
@@ -223,27 +223,27 @@ print("normd_inv:", normd_inv)
 print("    condd:", condd)
 
 
-# # -----------------------------------------------------------------------------
-# #         Solve Ax = b
-# # -----------------------------------------------------------------------------
-# x = np.arange(1, N + 1)
-# b = A @ x
+# -----------------------------------------------------------------------------
+#         Solve Ax = b
+# -----------------------------------------------------------------------------
+x = np.arange(1, N + 1)
+b = A @ x
 
-# print("   solve(A, b):", la.solve(A, b))
-# print("spsolve(As, b):", spla.spsolve(As, b))
+print("   solve(A, b):", la.solve(A, b))
+print("spsolve(As, b):", spla.spsolve(As, b))
 
-# # LU solve
-# lu = spla.splu(As, permc_spec='NATURAL')  # no column reordering
-# L, U, p_, q = lu.L, lu.U, lu.perm_r, lu.perm_c
+# LU solve
+lu = spla.splu(As, permc_spec='NATURAL')  # no column reordering
+L, U, p_, q = lu.L, lu.U, lu.perm_r, lu.perm_c
 
-# p_inv = csparse.inv_permute(p_)
+p_inv = csparse.inv_permute(p_)
 
-# Pb = b[p_inv]
-# y = spla.spsolve(L, Pb)
-# QTx = spla.spsolve(U, y)
-# x = QTx[q]
+Pb = b[p_inv]
+y = spla.spsolve(L, Pb)
+QTx = spla.spsolve(U, y)
+x = QTx[q]
 
-# print('      LU solve:', x)
+print('      LU solve:', x)
 
 # =============================================================================
 # =============================================================================

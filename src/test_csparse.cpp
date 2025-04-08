@@ -3438,7 +3438,7 @@ TEST_CASE("Exercise 6.15: 1-norm condition number estimate", "[ex6.15]")
         double expect = 0.11537500551678347;  // MATLAB and python calcs
         double exact_norm = A.norm();         // 1-norm == maximum column sum
 
-        double est_norm = norm1est(res);
+        double est_norm = norm1est_inv(res);
 
         CHECK(exact_norm >= est_norm);  // estimate is a lower bound
         REQUIRE_THAT(est_norm, WithinAbs(expect, tol));

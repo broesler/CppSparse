@@ -413,13 +413,15 @@ std::vector<double> lu_tsolve(const CSCMatrix& A, const std::vector<double>& b);
 std::vector<double> lu_tsolve(const LUResult& res, const std::vector<double>& b);
 
 
-/** Estimate the 1-norm of a sparse matrix.
+/** Estimate the 1-norm of the *inverse* of a sparse matrix.
+ *
+ * See: Davis, Exercise 6.15.
  *
  * @param res  the LU factorization result of a matrix `A`
  *
- * @return norm  the estimated 1-norm of `A`
+ * @return norm  the estimated 1-norm of the *inverse* of `A`
  */
-double norm1est(const LUResult& res);
+double norm1est_inv(const LUResult& res);
 
 
 /** Estimate the 1-norm condition number of a sparse matrix.

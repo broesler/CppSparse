@@ -13,7 +13,7 @@ Davis, Chapter 6.
 import numpy as np
 
 from scipy.linalg import solve, norm
-from scipy.sparse.linalg import splu, norm as spnorm
+from scipy.sparse.linalg import SuperLU, splu, norm as spnorm
 
 from csparse import inv_permute
 
@@ -308,11 +308,12 @@ def cond1est(A):
     if np.any(lu.U.diagonal() == 0):
         return np.inf
     else:
-        return spnorm(A, 1) * norm1est_lu(lu)
+        return spnorm(A, 1) * norm1est_inv(lu)
 
 
-def norm1est_lu(lu):
-    """Estimate the 1-norm of a sparse matrix, given its LU decomposition.
+def _norm1est_inv_lu(lu):
+    """Estimate the 1-norm of the inverse of a sparse matrix, given its LU
+    decomposition.
 
     See: Davis, Exercise 6.15.
 
@@ -359,23 +360,27 @@ def norm1est_lu(lu):
     return est
 
 
-def norm1est(A):
-    """Estimate the 1-norm of a sparse matrix.
+def norm1est_inv(A):
+    """Estimate the 1-norm of the inverse of a sparse matrix.
 
     See: Davis, Exercise 6.15.
 
     Parameters
     ----------
-    A : (N, N) array_like
-        Matrix of N vectors in N dimensions.
+    A : (N, N) array_like or SuperLU
+        Matrix of N vectors in N dimensions, or the result of the LU
+        decomposition as computed by `scipy.sparse.linalg.splu`.
 
     Returns
     -------
     result : float
-        An estimate of the 1-norm of the matrix.
+        An estimate of the 1-norm of the inverse of the matrix.
     """
-    lu = splu(A)
-    return norm1est_lu(lu)
+    if isinstance(A, SuperLU):
+        lu = A
+    else:
+        lu = splu(A)
+    return _norm1est_inv_lu(lu)
 
 
 # =============================================================================

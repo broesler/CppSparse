@@ -799,7 +799,7 @@ static inline csint min_argmaxabs(const std::vector<double>& x)
 }
 
 
-double norm1est(const LUResult& res)
+double norm1est_inv(const LUResult& res)
 {
     csint M = res.L.shape()[0];
     csint N = res.U.shape()[1];
@@ -877,7 +877,7 @@ double cond1est(const CSCMatrix& A)
     }
 
     // κ = |A|_1 * |A^{-1}|_1
-    return A.norm() * norm1est(res);
+    return A.norm() * norm1est_inv(res);
 }
 
 

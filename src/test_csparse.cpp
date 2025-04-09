@@ -3179,8 +3179,59 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3]")
     }
 
     // Cases to test:
-    //   1. no pivot found in a column (zero column) TODO
+    //   1. no pivot found in a column (zero column)
     //   2. pivot in a column is below given tolerance
+
+    auto lu_col_test = [](
+        const CSCMatrix& A,
+        double col_tol,
+        const std::vector<csint>& expect_p_inv,
+        const std::vector<csint>& expect_q
+    ) {
+        SymbolicLU S = slu(A);
+        LUResult res = lu_col(A, S, col_tol);
+
+        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+        CSCMatrix PAQ = A.permute(res.p_inv, res.q).to_canonical();
+
+        CHECK(res.p_inv == expect_p_inv);
+        CHECK(res.q == expect_q);
+        compare_matrices(LU, PAQ);
+    };
+
+    SECTION("Zero Column") {
+        double col_tol = 0.0;  // keep all based on pivot size
+
+        std::vector<csint> expect_q;
+
+        SECTION("Single zero column") {
+            // Remove a column to test the column pivoting
+            csint k = 3;
+            for (csint i = 0; i < M; i++) {
+                A(i, k) = 0.0;
+            }
+            A = A.dropzeros();
+
+            expect_q = {0, 1, 2, 4, 5, 6, 7, 3};
+        }
+
+        SECTION("Multiple zero columns") {
+            // Remove a column to test the column pivoting
+            for (const auto& k : {2, 3, 5}) {
+                for (csint i = 0; i < M; i++) {
+                    A(i, k) = 0.0;
+                }
+            }
+            A = A.dropzeros();
+
+            expect_q = {0, 1, 4, 6, 7, 2, 3, 5};
+        }
+
+        std::vector<csint> expect_p = expect_q;  // diagonals are pivots
+        std::vector<csint> expect_p_inv = inv_permute(expect_p);
+
+        lu_col_test(A, col_tol, expect_p_inv, expect_q);
+    }
 
     SECTION("Threshold") {
         // Absolute threshold below which to pivot a column to the end
@@ -3219,15 +3270,7 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3]")
         std::vector<csint> expect_p = expect_q;  // diagonals are pivots
         std::vector<csint> expect_p_inv = inv_permute(expect_p);
 
-        SymbolicLU S = slu(A);
-        LUResult res = lu_col(A, S, col_tol);
-
-        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
-        CSCMatrix PAQ = A.permute(res.p_inv, res.q).to_canonical();
-
-        CHECK(res.p_inv == expect_p_inv);
-        CHECK(res.q == expect_q);
-        compare_matrices(LU, PAQ);
+        lu_col_test(A, col_tol, expect_p_inv, expect_q);
     }
 }
 

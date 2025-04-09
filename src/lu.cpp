@@ -175,6 +175,7 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
         // --- Divide by pivot -------------------------------------------------
         // Exercise 6.5: modify to allow singular matrices
         double pivot = 0;
+
         if (ipiv == -1) {
             // if all elements in a row are zero, then the row will never be
             // pivotal for any column, so ipiv stays as -1. Set it to col.
@@ -252,6 +253,7 @@ LUResult lu_col(const CSCMatrix& A,
 
     csint lnz = 0,
           unz = 0;
+    bool is_singular = false;
 
     for (csint k = 0; k < N; k++) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
@@ -288,8 +290,9 @@ LUResult lu_col(const CSCMatrix& A,
             }
         }
 
-        if (ipiv == -1 || a <= 0) {
-            throw std::runtime_error("Matrix is singular!");
+        if ((ipiv == -1 || a <= 0) && !is_singular) {
+            // throw std::runtime_error("Matrix is singular!");
+            is_singular = true;
         }
 
         // tol = 1 for partial pivoting; tol < 1 gives preference to diagonal
@@ -300,7 +303,7 @@ LUResult lu_col(const CSCMatrix& A,
         // --- Divide by pivot -------------------------------------------------
         double pivot = sol.x[ipiv];  // the chosen pivot
 
-        if (pivot < col_tol && k < N - K) {
+        if ((pivot == 0 || pivot < col_tol) && k < N - K) {
             // pivot the column to the end of the matrix, preserving the order
             csint v = std::move(q[k]);
             q.erase(q.begin() + k);
@@ -314,12 +317,15 @@ LUResult lu_col(const CSCMatrix& A,
         p_inv[ipiv] = k;   // ipiv is the kth pivot row
         L.i_[lnz] = ipiv;  // first entry in L[:, k] is L(k, k) = 1
         L.v_[lnz++] = 1;
-        U.i_[unz] = k;     // last entry in U[:, k] is U(k, k)
-        U.v_[unz++] = pivot;
-        for (const auto& i : sol.xi) {           // L(k+1:n, k) = x / pivot
-            if (p_inv[i] < 0) {                  // x(i) is an entry in L[:, k]
-                L.i_[lnz] = i;                   // save unpermuted row in L
-                L.v_[lnz++] = sol.x[i] / pivot;  // scale pivot column
+
+        if (pivot != 0) {
+            U.i_[unz] = k;     // last entry in U[:, k] is U(k, k)
+            U.v_[unz++] = pivot;
+            for (const auto& i : sol.xi) {           // L(k+1:n, k) = x / pivot
+                if (p_inv[i] < 0) {                  // x(i) is an entry in L[:, k]
+                    L.i_[lnz] = i;                   // save unpermuted row in L
+                    L.v_[lnz++] = sol.x[i] / pivot;  // scale pivot column
+                }
             }
         }
     }

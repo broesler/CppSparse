@@ -3028,6 +3028,84 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
 }
 
 
+TEST_CASE("Exercise 5.4: QR factorization with column pivoting", "[qr_pivoting]")
+{
+    CSCMatrix A = davis_example_qr();
+    auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    double tol = 0.0;
+    std::vector<csint> expect_q;
+
+    SECTION("tol = 0.0 (no pivoting)") {
+        std::cout << "---------- No Pivoting (tol = 0.0) ----------" << std::endl;
+        tol = 0.0;  // set to 0 to turn off pivoting
+        expect_q = {0, 1, 2, 3, 4, 5, 6, 7};  // natural
+    }
+
+    SECTION("Single small column") {
+        std::cout << "---------- Single small column ----------" << std::endl;
+        tol = 0.1;
+
+        // Scale down a column to test the column pivoting
+        csint k = 3;
+        double A_kk = A(k, k);
+        for (csint i = 0; i < M; i++) {
+            A(i, k) *= 0.95 * tol / A_kk;
+        }
+
+        // NOTE HACK: Arificially set A[3, 4] to non-zero value
+        // Then, when we pivot column "3" to the end, column "4" has a non-zero
+        // value on the diagonal. Otherwise, we segfault.
+        // A(3, 4) = 0.5;
+
+        std::cout << "A:" << std::endl;
+        A.print_dense();
+
+        expect_q = {0, 1, 2, 4, 5, 6, 7, 3};
+    }
+
+    SECTION("Multiple small columns") {
+        std::cout << "---------- Multiple small columns ----------" << std::endl;
+        tol = 0.1;
+
+        // Scale down a column to test the column pivoting
+        for (const auto& k : {2, 3, 5}) {
+            double A_kk = A(k, k);
+            for (csint i = 0; i < M; i++) {
+                A(i, k) *= 0.95 * tol / A_kk;
+            }
+        }
+
+        std::cout << "A:" << std::endl;
+        A.print_dense();
+
+        expect_q = {0, 1, 4, 6, 7, 2, 3, 5};
+    }
+
+    // ---------- Factor the matrix
+    SymbolicQR S = sqr(A);
+    QRResult res = qr_pivoting(A, S, tol);
+
+    std::cout << "V:" << std::endl;
+    res.V.print_dense();
+    std::cout << "beta:" << res.beta << std::endl;
+    std::cout << "R:" << std::endl;
+    res.R.print_dense();
+
+    CHECK(S.q == std::vector<csint> {0, 1, 2, 3, 4, 5, 6, 7});  // natural order
+    CHECK(res.q == expect_q);
+
+    // compare_matrices(res.V, expect_V);
+    // CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
+    // compare_matrices(res.R, expect_R);
+}
+
+
 /** Define a helper function to test LU decomposition */
 auto lu_test = [](const CSCMatrix& A)
 {

@@ -3168,6 +3168,70 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU")
 }
 
 
+TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3]")
+{
+    CSCMatrix A = davis_example_qr();
+    auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    // Cases to test:
+    //   1. no pivot found in a column (zero column) TODO
+    //   2. pivot in a column is below given tolerance
+
+    SECTION("Threshold") {
+        // Absolute threshold below which to pivot a column to the end
+        double col_tol = 0.1;
+
+        std::vector<csint> expect_q;
+
+        SECTION("No small columns") {
+            // No columns are small enough to pivot
+            expect_q = {0, 1, 2, 3, 4, 5, 6, 7};
+        }
+
+        SECTION("Single small column") {
+            // Scale down a column to test the column pivoting
+            csint k = 3;
+            double A_kk = A(k, k);
+            for (csint i = 0; i < M; i++) {
+                A(i, k) *= 0.95 * col_tol / A_kk;
+            }
+
+            expect_q = {0, 1, 2, 4, 5, 6, 7, 3};
+        }
+
+        SECTION("Multiple small columns") {
+            // Scale down multiple columns
+            for (const auto& k : {2, 3, 5}) {
+                double A_kk = A(k, k);
+                for (csint i = 0; i < M; i++) {
+                    A(i, k) *= 0.95 * col_tol / A_kk;
+                }
+            }
+
+            expect_q = {0, 1, 4, 6, 7, 2, 3, 5};
+        }
+
+        std::vector<csint> expect_p = expect_q;  // diagonals are pivots
+        std::vector<csint> expect_p_inv = inv_permute(expect_p);
+
+        SymbolicLU S = slu(A);
+        LUResult res = lu_col(A, S, col_tol);
+
+        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+        CSCMatrix PAQ = A.permute(res.p_inv, res.q).to_canonical();
+
+        CHECK(res.p_inv == expect_p_inv);
+        CHECK(res.q == expect_q);
+        compare_matrices(LU, PAQ);
+    }
+}
+
+
 TEST_CASE("Exercise 6.4: relu", "[ex6.4]")
 {
     CSCMatrix A = davis_example_qr();

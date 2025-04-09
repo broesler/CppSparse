@@ -69,6 +69,32 @@ SymbolicLU slu(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
 LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol=1.0);
 
 
+/** Compute the numeric LU decomposition of A, such that \f$PAQ = LU\f$.
+ *
+ * See: Davis, Exercise 6.3.
+ *
+ * This function computes the LU decomposition of `A` using the symbolic
+ * factorization `S`. It also pivots on the columns of `A`.
+ *
+ * @param A  the matrix to factorize
+ * @param S  the symbolic factorization
+ * @param col_tol  the column tolerance for pivoting. If `col_tol` is 0.0, then
+ *        no column pivoting will occur. If `col_tol` is greater than 0.0, then
+ *        a column will be pivoted to the end of the matrix if the absolute
+ *        value of the pivot candidate is less than `col_tol`.
+ * #param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
+ *        used. If `tol` is less than 1.0, diagonal pivoting is used.
+ *
+ * @return the LU decomposition
+ */
+LUResult lu_col(
+    const CSCMatrix& A,
+	const SymbolicLU& S,
+	double col_tol=0.0,
+	double tol=1.0
+);
+
+
 /** Compute the numeric LU decomposition of A with known sparsity pattern.
  *
  * See: Davis, Exercise 6.4.

@@ -10,11 +10,9 @@
 #ifndef _CSPARSE_UTILS_H_
 #define _CSPARSE_UTILS_H_
 
-#include <format>
-#include <iomanip>
 #include <iostream>
-#include <map>
 #include <numeric>  // iota
+#include <span>
 #include <string>
 #include <vector>
 
@@ -73,7 +71,7 @@ std::vector<csint> argsort(const std::vector<T>& vec)
  *
  * @return norm  the norm of the vector
  */
-double norm(const std::vector<double>& x, const double ord=2.0);
+double norm(std::span<const double> x, const double ord=2.0);
 
 /*------------------------------------------------------------------------------
  *          Vector Permutations
@@ -172,34 +170,23 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
  *
  * @param A  a dense matrix
  * @param M, N  the number of rows and columns
- * @param os  the output stream
  * @param order  the order to print the matrix ('C' for row-major or 'F' for
  *        column-major)
+ * @param precision  the number of significant digits to print
+ * @param suppress  print small numbers as 0 if true
+ * @param os  the output stream
  * 
  * @return os  the output stream
  */
-template <typename T>
 void print_dense_vec(
-    const std::vector<T>& A,
-    const csint M,
-    const csint N,
-    const char order='F',
+    const std::vector<double>& A,
+    csint M,
+    csint N,
+    char order='F',
+    int precision=4,
+    bool suppress=true,
     std::ostream& os=std::cout
-)
-{
-    const std::string indent(3, ' ');
-    for (csint i = 0; i < M; i++) {
-        os << indent;  // indent
-        for (csint j = 0; j < N; j++) {
-            if (order == 'F') {
-                os << std::format("{:6.4g}{}", A[i + j*M], indent);  // print in column-major order
-            } else {
-                os << std::format("{:6.4g}{}", A[i*N + j], indent);  // print in row-major order
-            }
-        }
-        os << std::endl;
-    }
-}
+);
 
 
 } // namespace cs

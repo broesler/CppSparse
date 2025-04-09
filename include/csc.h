@@ -1050,11 +1050,17 @@ class CSCMatrix
         //----------------------------------------------------------------------
         /** Print the matrix in dense format.
          *
+         * @param precision  the number of decimal places to print.
+         * @param suppress  if true, small values will be printed as "0".
          * @param os  a reference to the output stream.
          *
          * @return os  a reference to the output stream.
          */
-        void print_dense(std::ostream& os=std::cout) const;
+        void print_dense(
+	        int precision=4,
+	        bool suppress=true,
+            std::ostream& os=std::cout
+        ) const;
 
         /** Convert the matrix to a string.
          *

@@ -1560,9 +1560,9 @@ std::vector<double> CSCMatrix::sum_cols() const
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/
-void CSCMatrix::print_dense(std::ostream& os) const
+void CSCMatrix::print_dense(int precision, bool suppress, std::ostream& os) const
 {
-    print_dense_vec(to_dense_vector('F'), M_, N_, 'F', os);
+    print_dense_vec(to_dense_vector('F'), M_, N_, 'F', precision, suppress, os);
 }
 
 

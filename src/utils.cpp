@@ -16,6 +16,7 @@
 #include <iostream>
 #include <limits>     // numeric_limits
 #include <numeric>    // partial_sum, accumulate
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -127,7 +128,7 @@ std::vector<csint> cumsum(const std::vector<csint>& w)
 }
 
 
-double norm(const std::vector<double>& x, const double ord)
+double norm(std::span<const double> x, const double ord)
 {
     if (x.empty()) {
         return 0.0;
@@ -136,7 +137,7 @@ double norm(const std::vector<double>& x, const double ord)
     if (ord == std::numeric_limits<double>::infinity()) {
         // infinity norm
         return *std::max_element(
-            x.cbegin(), x.cend(),
+            x.begin(), x.end(),
             [](double a, double b) { return std::fabs(a) < std::fabs(b); }
         );
     } else if (ord == 0) {
@@ -144,7 +145,7 @@ double norm(const std::vector<double>& x, const double ord)
         //     res += (val != 0);
         // }
         return std::count_if(
-            x.cbegin(), x.cend(),
+            x.begin(), x.end(),
             [](double val) {
                 return std::fabs(val) > std::numeric_limits<double>::epsilon(); 
             }
@@ -154,7 +155,7 @@ double norm(const std::vector<double>& x, const double ord)
         //     res += std::fabs(val);
         // }
         return std::accumulate(
-            x.cbegin(), x.cend(), 0.0,
+            x.begin(), x.end(), 0.0,
             [](double sum, double val) { return sum + std::fabs(val); }
         );
     } else if (ord == 2) {
@@ -164,7 +165,7 @@ double norm(const std::vector<double>& x, const double ord)
         // res = std::sqrt(res);
         return std::sqrt(
             std::accumulate(
-                x.cbegin(), x.cend(), 0.0,
+                x.begin(), x.end(), 0.0,
                 [](double sum, double val) { return sum + val * val; }
             )
         );
@@ -175,7 +176,7 @@ double norm(const std::vector<double>& x, const double ord)
         // res = std::pow(res, 1.0 / ord);
         return std::pow(
             std::accumulate(
-                x.cbegin(), x.cend(), 0.0,
+                x.begin(), x.end(), 0.0,
                 [ord](double sum, double val) {
                     return sum + std::pow(std::fabs(val), ord); 
                 }

@@ -467,22 +467,22 @@ QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
         R.p_[k] = rnz;    // R[:, k] starts here
         V.p_[k] = vnz;    // V[:, k] starts here
         csint p1 = vnz;   // save start of V(:, k)
-        // w is "old" indices
-        w[q[k]] = q[k];         // add V(k, k) to pattern of V
+        // w is indexed by "old" indices, but contains "new" values
+        w[q[k]] = k;         // add V(k, k) to pattern of V
         V.i_[vnz++] = k;  // V(k, k) is non-zero
 
         t.clear();
         csint col = q[S.q[k]];  // permuted column of A
 
-        // find R[:, k] pattern
+        // find R[:, k] pattern with symbolic sparse triangular solve
         for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {
             // i is an "old" column index
             csint i = S.leftmost[A.i_[p]];  // i = min(find(A(i, q)))
 
             s.clear();
-            while (w[i] != q[k]) {  // traverse up to k
+            while (w[i] != k) {  // traverse up to k
                 s.push_back(i);
-                w[i] = q[k];
+                w[i] = k;
                 i = S.parent[i];  // old -> old
             }
 
@@ -492,9 +492,9 @@ QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
             i = S.p_inv[A.i_[p]];     // i = permuted row of A(:, col)
             x[i] = A.v_[p];           // x(i) = A(:, col)
 
-            if (i > q[k] && w[i] < q[k]) {  // pattern of V(:, k) = x(k+1:m)
+            if (i > q[k] && w[i] < k) {  // pattern of V(:, k) = x(k+1:m)
                 V.i_[vnz++] = i;      // add i to pattern of V(:, k)
-                w[i] = q[k];
+                w[i] = k;
             }
         }
 
@@ -506,7 +506,7 @@ QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
             x[i] = 0;
             if (S.parent[i] == q[k]) {
                 // Scatter the non-zero pattern without changing the values
-                vnz = V.scatter(i, 0, w, x, q[k], V, vnz, false, false);
+                vnz = V.scatter(i, 0, w, x, k, V, vnz, false, false);
             }
         }
 

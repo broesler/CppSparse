@@ -38,28 +38,23 @@ A_dense = A.toarray()
 #         Compute QR decomposition with csparse
 # -----------------------------------------------------------------------------
 # ---------- Compute using Householder reflections
-# TODO the row and column permutations are stored in S, but the MATLAB cs_qr
-# function returns p and q, and only uses S internally. We should implement
-# this functionality in our csparse implementation.
-S = csparse.sqr(Ac)
-QRres = csparse.qr(Ac, S)
+QRres = csparse.qr(Ac)
 
 V, beta, R = QRres.V, QRres.beta, QRres.R
 
 # Convert for easier debugging
 V = V.toarray()
-beta = np.r_[beta]
 R = R.toarray()
 
 # TODO can we turn off the row permutation in sqr/vcount?
 # Get the actual Q matrix, don't forget the row permutation!
-p = csparse.inv_permute(S.p_inv)
+p = csparse.inv_permute(QRres.p_inv)
 Q = csparse.apply_qright(V, beta, p)
 
 # -----------------------------------------------------------------------------
 #         Compute the QR decomposition of A with scipy
 # -----------------------------------------------------------------------------
-# Permute the rows of A_dense here with S.p_inv to get the
+# Permute the rows of A_dense here with QRres.p_inv to get the
 # same V and beta as the csparse.qr function.
 Ap = A_dense[p]
 
@@ -69,7 +64,7 @@ V_ = np.tril(Qraw, -1) + np.eye(N)
 Qr_ = csparse.apply_qright(V_, tau, p)
 
 np.testing.assert_allclose(Q_ @ R_, Ap, atol=atol)
-np.testing.assert_allclose(Q, Q_[S.p_inv], atol=atol)
+np.testing.assert_allclose(Q, Q_[QRres.p_inv], atol=atol)
 
 # Reproduce A = QR
 np.testing.assert_allclose(Q @ R, A_dense, atol=atol)
@@ -79,13 +74,7 @@ np.testing.assert_allclose(Q @ R, A_dense, atol=atol)
 # -----------------------------------------------------------------------------
 #         QR with a M != N matrix and/or column pivoting
 # -----------------------------------------------------------------------------
-# NOTE that pivoting for a *dense* matrix is not the same as for a sparse
-# matrix. If we use la.qr(A_dense, pivoting=True), we get a permutation of the
-# columns that guarantees a non-increasing diagonal of R. If we use this metric
-# for a sparse matrix, we get a completely full R!
-pivoting = True
-M, N = 8, 8
-# M, N = 8, 5
+M, N = 8, 5
 # M, N = 5, 8
 
 Ar = A[:M, :N]
@@ -97,16 +86,11 @@ print("Ar = ")
 print(Ar_dense)
 
 Arc = csparse.from_scipy_sparse(Ar)
-Sr = csparse.sqr(Arc)
-QRr_res = csparse.qr(Arc, Sr)
-# QRr_res = csparse.qr_pivoting(Arc, Sr, tol=3.0)  # artificially high tol
+QRr_res = csparse.qr(Arc)
 
-Vr, beta_r, Rr = QRr_res.V, QRr_res.beta, QRr_res.R
+Vr, beta_r, Rr, p_inv = QRr_res.V, QRr_res.beta, QRr_res.R, QRr_res.p_inv
 Vr = Vr.toarray()
-beta_r = np.r_[beta_r]
 Rr = Rr.toarray()
-p_inv = np.r_[QRr_res.p_inv]
-q = np.r_[QRr_res.q]
 
 # Get the actual Q matrix
 pr = csparse.inv_permute(p_inv)

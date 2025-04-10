@@ -13,7 +13,7 @@ project(CSparsePythonBindings)
 find_package(pybind11 REQUIRED) # Find pybind11
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
-set(BASENAMES utils coo csc cholesky qr solve)
+set(BASENAMES utils coo csc cholesky lu qr solve example_matrices)
 
 set(SOURCES "")
 set(HEADERS include/csparse.h include/types.h)

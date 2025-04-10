@@ -13,10 +13,12 @@
 #include <catch2/matchers/catch_matchers_all.hpp>
 
 #include <algorithm>  // reverse
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <map>
 #include <numeric>    // iota
+#include <optional>   // nullopt
 #include <random>
 #include <string>
 #include <sstream>
@@ -26,75 +28,12 @@
 
 using namespace cs;
 
+using Catch::Approx;
 using Catch::Matchers::AllTrue;
 using Catch::Matchers::WithinAbs;
 using Catch::Matchers::UnorderedEquals;
 
 constexpr double tol = 1e-14;
-
-
-// TODO move all example definitions to the utils file, and then in the python
-// module we just have to use the wrapper function to get the format.
-COOMatrix davis_21_coo()
-{
-    // See Davis pp 7-8, Eqn (2.1)
-    std::vector<csint>  i = {2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
-    std::vector<csint>  j = {2,    0,    3,    2,    1,    0,    1,    3,    0,    1};
-    std::vector<double> v = {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7};
-    return COOMatrix {v, i, j};
-}
-
-
-// Davis QR example Figure 5.1, p 74.
-CSCMatrix davis_example_qr()
-{
-    // Define the test matrix A (See Davis, Figure 5.1, p 74)
-    std::vector<csint> rows = {0, 1, 2, 3, 4, 5, 6,
-                               3, 6, 1, 6, 0, 2, 5, 7, 4, 7, 0, 1, 3, 7, 5, 6};
-    std::vector<csint> cols = {0, 1, 2, 3, 4, 5, 6,
-                               0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7};
-
-    // Label the diagonal elements 1..7, skipping the 8th
-    std::vector<double> vals(rows.size(), 1.0);
-    std::iota(vals.begin(), vals.begin() + 7, 1.0);
-
-    // Non-canonical format for testing
-    CSCMatrix A = COOMatrix(vals, rows, cols).compress();
-
-    // NOTE we need to include A[7, 7] even though it is numerically zero!
-    A.assign(7, 7, 0.0);
-
-    return A;
-}
-
-
-// See: Strang, p 25
-// E = [[ 1, 0, 0],
-//      [-2, 1, 0],
-//      [ 0, 0, 1]]
-//
-// A = [[ 2, 1, 1],
-//      [ 4,-6, 0],
-//      [-2, 7, 2]]
-
-// Build matrices with sorted columns
-CSCMatrix E_mat()
-{
-    return COOMatrix(
-        std::vector<double> {1, -2, 1, 1},  // vals
-        std::vector<csint>  {0,  1, 1, 2},  // rows
-        std::vector<csint>  {0,  0, 1, 2}   // cols
-    ).tocsc();
-}
-
-CSCMatrix A_mat()
-{
-    return COOMatrix(
-        std::vector<double> {2, 4, -2, 1, -6, 7, 1, 2},  // vals
-        std::vector<csint>  {0, 1,  2, 0,  1, 2, 0, 2},  // rows
-        std::vector<csint>  {0, 0,  0, 1,  1, 1, 2, 2}   // cols
-    ).tocsc();
-}
 
 
 /** Compare two matrices for equality.
@@ -256,9 +195,9 @@ std::vector<bool> is_close(
 
 
 /*------------------------------------------------------------------------------
- *         Test Utilities
+ *         Utilities
  *----------------------------------------------------------------------------*/
-TEST_CASE("Test vector ops", "[vector]")
+TEST_CASE("Vector ops", "[vector]")
 {
     std::vector<double> a = {1, 2, 3};
 
@@ -287,7 +226,7 @@ TEST_CASE("Test vector ops", "[vector]")
 }
 
 
-TEST_CASE("Test cumsum", "[vector]")
+TEST_CASE("Cumsum", "[vector]")
 {
     std::vector<csint> a = {1, 1, 1, 1};
     std::vector<csint> c = cumsum(a);
@@ -297,7 +236,7 @@ TEST_CASE("Test cumsum", "[vector]")
 }
 
 
-TEST_CASE("Test vector permutations", "[vector]")
+TEST_CASE("Vector permutations", "[vector]")
 {
     std::vector<double> b = {0, 1, 2, 3, 4};
     std::vector<csint> p = {2, 0, 1, 4, 3};
@@ -310,24 +249,51 @@ TEST_CASE("Test vector permutations", "[vector]")
 }
 
 
-TEST_CASE("Test argsort.", "[vector]")
+TEST_CASE("Argsort", "[vector]")
 {
-    SECTION("Test vector of doubles") {
+    SECTION("Vector of doubles") {
         std::vector<double> v = {5.6, 6.9, 42.0, 1.7, 9.0};
         REQUIRE(argsort(v) == std::vector<csint> {3, 0, 1, 4, 2});
     }
 
-    SECTION("Test vector of ints") {
+    SECTION("Vector of ints") {
         std::vector<int> v = {5, 6, 42, 1, 9};
         REQUIRE(argsort(v) == std::vector<csint> {3, 0, 1, 4, 2});
     }
 }
 
 
+TEST_CASE("Vector norms", "[vector]")
+{
+    std::vector<double> v = {3, 4};
+
+    SECTION("L0 norm") {
+        REQUIRE(norm(v, 0) == 2);
+    }
+
+    SECTION("L1 norm") {
+        REQUIRE(norm(v, 1) == 7);
+    }
+
+    SECTION("L2 norm") {
+        REQUIRE(norm(v, 2) == Approx(5.0));
+    }
+
+    SECTION("LPI norm") {
+        double pi = 4 * atan(1.0);  // pi = 3.14159...
+        REQUIRE(norm(v, pi) == Approx(4.457284396597481));
+    }
+
+    SECTION("Linf norm") {
+        REQUIRE(norm(v, INFINITY) == 4);
+    }
+}
+
+
 /*------------------------------------------------------------------------------
- *         Test Matrix Functions
+ *         Matrix Functions
  *----------------------------------------------------------------------------*/
-TEST_CASE("Test COOMatrix Constructors", "[COOMatrix]")
+TEST_CASE("COOMatrix Constructors", "[COOMatrix]")
 {
     SECTION("Empty constructor") {
         COOMatrix A;
@@ -338,7 +304,7 @@ TEST_CASE("Test COOMatrix Constructors", "[COOMatrix]")
     }
 
     SECTION("Make new from given shape") {
-        COOMatrix A({56, 37});
+        COOMatrix A {{56, 37}};
         REQUIRE(A.nnz() == 0);
         REQUIRE(A.nzmax() == 0);
         REQUIRE(A.shape() == Shape{56, 37});
@@ -346,7 +312,7 @@ TEST_CASE("Test COOMatrix Constructors", "[COOMatrix]")
 
     SECTION("Allocate new from shape and nzmax") {
         int nzmax = 1e4;
-        COOMatrix A({56, 37}, nzmax);
+        COOMatrix A {{56, 37}, nzmax};
         REQUIRE(A.nnz() == 0);
         REQUIRE(A.nzmax() >= nzmax);
         REQUIRE(A.shape() == Shape{56, 37});
@@ -361,9 +327,9 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
     std::vector<csint>  i = {2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
     std::vector<csint>  j = {2,    0,    3,    2,    1,    0,    1,    3,    0,    1};
     std::vector<double> v = {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7};
-    COOMatrix A(v, i, j);
+    COOMatrix A {v, i, j};
 
-    SECTION("Test attributes") {
+    SECTION("Attributes") {
         REQUIRE(A.nnz() == 10);
         REQUIRE(A.nzmax() >= 10);
         REQUIRE(A.shape() == Shape{4, 4});
@@ -372,7 +338,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         REQUIRE(A.data() == v);
     }
 
-    SECTION("Test printing") {
+    SECTION("Printing") {
         std::stringstream s;
 
         SECTION("Print short") {
@@ -434,8 +400,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
         // REQUIRE_THAT(A(4, 3), WithinAbs(69.0, tol));
     }
 
-    // Exercise 2.5
-    SECTION("Assign a dense submatrix") {
+    SECTION("Exercise 2.5: Assign a dense submatrix") {
         std::vector<csint> rows = {2, 3, 4};
         std::vector<csint> cols = {4, 5, 6};
         std::vector<double> vals = {1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -462,7 +427,7 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
 
     SECTION("Read from a file") {
         std::ifstream fp("./data/t1");
-        COOMatrix F(fp);
+        COOMatrix F {fp};
 
         REQUIRE(A.row() == F.row());
         REQUIRE(A.column() == F.column());
@@ -504,13 +469,13 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
 }
 
 
-TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
+TEST_CASE("CSCMatrix", "[CSCMatrix]")
 {
-    COOMatrix A = davis_21_coo();
+    COOMatrix A = davis_example_small();
     CSCMatrix C = A.compress();  // unsorted columns
 
     // std::cout << "C = \n" << C;
-    SECTION("Test attributes") {
+    SECTION("Attributes") {
         std::vector<csint> indptr_expect  = {  0,             3,             6,        8,  10};
         std::vector<csint> indices_expect = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
         std::vector<double> data_expect   = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
@@ -523,7 +488,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         REQUIRE(C.data() == data_expect);
     }
 
-    SECTION ("Test CSCMatrix printing") {
+    SECTION ("CSCMatrix printing") {
         std::stringstream s;
 
         SECTION("Print short") {
@@ -567,7 +532,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         s.clear();
     }
 
-    SECTION("Test indexing: unsorted, without duplicates") {
+    SECTION("Indexing: unsorted, without duplicates") {
         std::vector<csint> indptr = C.indptr();
         std::vector<csint> indices = C.indices();
         std::vector<double> data = C.data();
@@ -581,7 +546,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
 
     }
 
-    SECTION("Test indexing: unsorted, with a duplicate") {
+    SECTION("Indexing: unsorted, with a duplicate") {
         const CSCMatrix C = A.assign(3, 3, 56.0).compress();
 
         // NOTE "double& operator()" function is being called when we are
@@ -591,7 +556,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         REQUIRE_THAT(C(3, 3), WithinAbs(57.0, tol));
     }
 
-    // Test the transpose -> use indexing to test A(i, j) == A(j, i)
+    // The transpose -> use indexing to test A(i, j) == A(j, i)
     SECTION("Transpose") {
         // lambda to test on M == N, M < N, M > N
         auto transpose_test = [](CSCMatrix C) {
@@ -610,15 +575,15 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
             }
         };
 
-        SECTION("Test square matrix M == N") {
+        SECTION("Square matrix M == N") {
             transpose_test(C);  // shape = {4, 4}
         }
 
-        SECTION("Test non-square matrix M < N") {
+        SECTION("Non-square matrix M < N") {
             transpose_test(A.assign(0, 4, 1.6).compress()); // shape = {4, 5}
         }
 
-        SECTION("Test non-square matrix M > N") {
+        SECTION("Non-square matrix M > N") {
             transpose_test(A.assign(4, 0, 1.6).compress()); // shape = {5, 4}
         }
 
@@ -635,7 +600,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
     }
 
     SECTION("Sort rows/columns") {
-        // Test on non-square matrix M != N
+        // On non-square matrix M != N
         C = A.assign(0, 4, 1.6).compress();  // {4, 5}
 
         auto sort_test = [](const CSCMatrix& Cs) {
@@ -676,17 +641,17 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         REQUIRE_THAT(C(2, 1), WithinAbs(101.7, tol));
     }
 
-    SECTION("Test droptol") {
-        C = davis_21_coo().compress().droptol(2.0);
+    SECTION("Droptol") {
+        C = davis_example_small().compress().droptol(2.0);
 
         REQUIRE(C.nnz() == 6);
         REQUIRE(C.shape() == Shape{4, 4});
         REQUIRE_THAT(C.data() >= 2.0, AllTrue());
     }
 
-    SECTION("Test dropzeros") {
+    SECTION("Dropzeros") {
         // Assign explicit zeros
-        C = davis_21_coo()
+        C = davis_example_small()
             .assign(0, 1, 0.0)
             .assign(2, 1, 0.0)
             .assign(3, 1, 0.0)
@@ -700,17 +665,16 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         REQUIRE_THAT(C.data() != 0.0, AllTrue());
     }
 
-    SECTION("Test 1-norm") {
+    SECTION("1-norm") {
         REQUIRE_THAT(C.norm(), WithinAbs(11.1, tol));
     }
 
-    SECTION("Test Frobenius norm") {
+    SECTION("Frobenius norm") {
         double expect = 8.638286867197685;  // computed in MATLAB and numpy
         REQUIRE_THAT(C.fronorm(), WithinAbs(expect, tol));
     }
 
-    // Exercise 2.2
-    SECTION("Test Conversion to COOMatrix") {
+    SECTION("Exercise 2.2: Conversion to COOMatrix") {
         auto convert_test = [](const COOMatrix& B) {
             // Columns are sorted, but not rows
             std::vector<csint>  expect_i = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
@@ -726,7 +690,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         };
 
         SECTION("As constructor") {
-            COOMatrix B(C);  // via constructor
+            COOMatrix B {C};  // via constructor
             convert_test(B);
         }
 
@@ -736,8 +700,8 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         }
     }
 
-    // Exercise 2.16 (inverse)
-    SECTION("Test conversion to dense array in column-major format") {
+    // (inverse)
+    SECTION("Exercise 2.16: Conversion to dense array in column-major format") {
         // Column-major order
         std::vector<double> expect = {
             4.5, 3.1, 0.0, 3.5,
@@ -750,7 +714,7 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
         REQUIRE(C.to_dense_vector() == expect);          // non-canonical form
     }
 
-    SECTION("Test conversion to dense array in row-major format") {
+    SECTION("Conversion to dense array in row-major format") {
         // Row-major order
         std::vector<double> expect = {
             4.5, 0.0, 3.2, 0.0,
@@ -765,14 +729,14 @@ TEST_CASE("Test CSCMatrix", "[CSCMatrix]")
 }
 
 
-TEST_CASE("Test canonical format", "[CSCMatrix][COOMatrix]")
+TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
 {
     std::vector<csint> indptr_expect  = {  0,               3,                 6,        8,  10};
     std::vector<csint> indices_expect = {  0,   1,     3,   1,     2,   3,     0,   2,   1,   3};
     std::vector<double> data_expect   = {4.5, 3.1, 103.5, 2.9, 101.7, 0.4, 103.2, 3.0, 0.9, 1.0};
 
     COOMatrix A = (
-        davis_21_coo()        // unsorted matrix
+        davis_example_small()        // unsorted matrix
         .assign(0, 2, 100.0)  // assign duplicates
         .assign(3, 0, 100.0)
         .assign(2, 1, 100.0)
@@ -802,14 +766,14 @@ TEST_CASE("Test canonical format", "[CSCMatrix][COOMatrix]")
     REQUIRE(C.has_canonical_format());
     REQUIRE_FALSE(C.is_symmetric());
 
-    SECTION("Test constructor") {
-        CSCMatrix B(A);
+    SECTION("Constructor") {
+        CSCMatrix B {A};
         REQUIRE(C.indptr() == B.indptr());
         REQUIRE(C.indices() == B.indices());
         REQUIRE(C.data() == B.data());
     }
 
-    SECTION("Test indexing") {
+    SECTION("Indexing") {
         std::vector<csint> indptr = C.indptr();
         std::vector<csint> indices = C.indices();
         std::vector<double> data = C.data();
@@ -824,25 +788,24 @@ TEST_CASE("Test canonical format", "[CSCMatrix][COOMatrix]")
 }
 
 
-// Exercise 2.13
-TEST_CASE("Test is_symmetric.") {
+TEST_CASE("Exercise 2.13: Is_symmetric.") {
     std::vector<csint>  i = {0, 1, 2};
     std::vector<csint>  j = {0, 1, 2};
     std::vector<double> v = {1, 2, 3};
 
-    SECTION("Test diagonal matrix") {
+    SECTION("Diagonal matrix") {
         CSCMatrix A = COOMatrix(v, i, j).tocsc();
         REQUIRE(A.is_symmetric());
     }
 
-    SECTION("Test non-symmetric matrix with off-diagonals") {
+    SECTION("Non-symmetric matrix with off-diagonals") {
         CSCMatrix A = COOMatrix(v, i, j)
                        .assign(0, 1, 1.0)
                        .tocsc();
         REQUIRE_FALSE(A.is_symmetric());
     }
 
-    SECTION("Test symmetric matrix with off-diagonals") {
+    SECTION("Symmetric matrix with off-diagonals") {
         CSCMatrix A = COOMatrix(v, i, j)
                        .assign(0, 1, 1.0)
                        .assign(1, 0, 1.0)
@@ -874,7 +837,7 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
         REQUIRE_THAT(is_close((A * x + y),         expect_Axpy, tol), AllTrue());
     };
 
-    SECTION("Test a non-square matrix.") {
+    SECTION("A non-square matrix.") {
         CSCMatrix A = COOMatrix(
             std::vector<double> {1, 1, 2},
             std::vector<csint>  {0, 1, 2},
@@ -891,7 +854,7 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
         multiply_test(A, x, y, expect_Ax, expect_Axpy);
     }
 
-    SECTION("Test a symmetric (diagonal) matrix.") {
+    SECTION("A symmetric (diagonal) matrix.") {
         CSCMatrix A = COOMatrix(
             std::vector<double> {1, 2, 3},
             std::vector<csint>  {0, 1, 2},
@@ -909,8 +872,8 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
         REQUIRE_THAT(is_close(A.sym_gaxpy(x, y),  expect_Axpy, tol), AllTrue());
     }
 
-    SECTION("Test an arbitrary non-symmetric matrix.") {
-        COOMatrix Ac = davis_21_coo();
+    SECTION("An arbitrary non-symmetric matrix.") {
+        COOMatrix Ac = davis_example_small();
         CSCMatrix A = Ac.compress();
 
         std::vector<double> x = {1, 2, 3, 4};
@@ -922,12 +885,12 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
 
         multiply_test(A, x, y, expect_Ax, expect_Axpy);
 
-        // Test COOMatrix
+        // COOMatrix
         REQUIRE_THAT(is_close(Ac.dot(x), expect_Ax, tol), AllTrue());
         REQUIRE_THAT(is_close((Ac * x),  expect_Ax, tol), AllTrue());
     }
 
-    SECTION("Test an arbitrary symmetric matrix.") {
+    SECTION("An arbitrary symmetric matrix.") {
         // See Davis pp 7-8, Eqn (2.1)
         std::vector<csint>  i = {  0,   1,   3,   0,   1,   2,   1,   2,   0,   3};
         std::vector<csint>  j = {  0,   0,   0,   1,   1,   1,   2,   2,   3,   3};
@@ -945,12 +908,11 @@ TEST_CASE("Matrix-(dense) vector multiply + addition.", "[math]")
 }
 
 
-// Exercise 2.27
-TEST_CASE("Matrix-(dense) matrix multiply + addition.")
+TEST_CASE("Exercise 2.27: Matrix-(dense) matrix multiply + addition.")
 {
-    CSCMatrix A = davis_21_coo().compress();
+    CSCMatrix A = davis_example_small().compress();
 
-    SECTION("Test identity op") {
+    SECTION("Identity op") {
         std::vector<double> I = {
             1, 0, 0, 0,
             0, 1, 0, 0,
@@ -966,7 +928,7 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
         compare_matrices(CSCMatrix(A.T().gatxpy_col(I, Z), {4, 4}), expect);
     }
 
-    SECTION("Test arbitrary square matrix in column-major format") {
+    SECTION("Arbitrary square matrix in column-major format") {
         std::vector<double> A_dense = A.to_dense_vector();
 
         // A.T @ A + A in column-major format
@@ -988,7 +950,7 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
         REQUIRE_THAT(is_close(CT_block, expect, tol), AllTrue());
     }
 
-    SECTION("Test arbitrary square matrix in row-major format") {
+    SECTION("Arbitrary square matrix in row-major format") {
         std::vector<double> A_dense = A.to_dense_vector('C');
 
         // A.T @ A + A in row-major format
@@ -1006,7 +968,7 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
         REQUIRE_THAT(is_close(CT, expect, tol), AllTrue());
     }
 
-    SECTION("Test non-square matrix in column-major format.") {
+    SECTION("Non-square matrix in column-major format.") {
         CSCMatrix Ab = A.slice(0, 4, 0, 3);  // {4, 3}
         std::vector<double> Ac_dense = A.slice(0, 3, 0, 4).to_dense_vector();
         std::vector<double> A_dense = A.to_dense_vector();
@@ -1029,7 +991,7 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
                      AllTrue());
     }
 
-    SECTION("Test non-square matrix in row-major format.") {
+    SECTION("Non-square matrix in row-major format.") {
         CSCMatrix Ab = A.slice(0, 4, 0, 3);  // {4, 3}
         std::vector<double> Ac_dense = A.slice(0, 3, 0, 4).to_dense_vector('C');
         std::vector<double> A_dense = A.to_dense_vector('C');
@@ -1052,7 +1014,7 @@ TEST_CASE("Matrix-(dense) matrix multiply + addition.")
 
 TEST_CASE("Matrix-matrix multiply.", "[math]")
 {
-    SECTION("Test square matrices") {
+    SECTION("Square matrices") {
         // Build matrices with sorted columns
         CSCMatrix E = E_mat();
         CSCMatrix A = A_mat();
@@ -1086,18 +1048,18 @@ TEST_CASE("Matrix-matrix multiply.", "[math]")
             }
         };
 
-        SECTION("Test CSCMatrix::dot (aka cs_multiply)") {
+        SECTION("CSCMatrix::dot (aka cs_multiply)") {
             CSCMatrix C = E * A;
             multiply_test(C, E, A, expect);
         }
 
-        SECTION("Test dot_2x two-pass multiply") {
+        SECTION("Dot_2x two-pass multiply") {
             CSCMatrix C = E.dot_2x(A);
             multiply_test(C, E, A, expect);
         }
     }
 
-    SECTION("Test arbitrary size matrices") {
+    SECTION("Arbitrary size matrices") {
         // >>> A
         // ===
         // array([[1, 2, 3, 4],
@@ -1131,23 +1093,30 @@ TEST_CASE("Matrix-matrix multiply.", "[math]")
             std::vector<csint>  { 0,  1,  2,   0,   1,   2}   // cols
         ).compress();
 
-        CSCMatrix C = A * B;
-        auto [M, N] = C.shape();
+        SECTION("M < N") {
+            CSCMatrix C = A * B;
+            auto [M, N] = C.shape();
 
-        REQUIRE(M == A.shape()[0]);
-        REQUIRE(N == B.shape()[1]);
+            REQUIRE(M == A.shape()[0]);
+            REQUIRE(N == B.shape()[1]);
 
-        for (csint i = 0; i < M; i++) {
-            for (csint j = 0; j < N; j++) {
-                REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
-            }
+            compare_matrices(C, expect);
+        }
+
+        SECTION("M > N") {
+            CSCMatrix CT = B.T() * A.T();
+            auto [N, M] = CT.shape();
+
+            REQUIRE(M == A.shape()[0]);
+            REQUIRE(N == B.shape()[1]);
+
+            compare_matrices(CT, expect.T());
         }
     }
 }
 
 
-// Exercise 2.18
-TEST_CASE("Sparse Vector-Vector Multiply", "[math]")
+TEST_CASE("Exercise 2.18: Sparse Vector-Vector Multiply", "[math]")
 {
     // Sparse column vectors *without* sorting columns.
     CSCMatrix x = COOMatrix(
@@ -1164,12 +1133,12 @@ TEST_CASE("Sparse Vector-Vector Multiply", "[math]")
 
     double expect = 17.41;
 
-    SECTION("Test unsorted indices") {
+    SECTION("Unsorted indices") {
         CHECK_THAT(x.T() * y, WithinAbs(expect, tol));
         REQUIRE_THAT(x.vecdot(y), WithinAbs(expect, tol));
     }
 
-    SECTION("Test sorted indices") {
+    SECTION("Sorted indices") {
         x.sort();
         y.sort();
 
@@ -1196,7 +1165,7 @@ TEST_CASE("Scaling by a constant", "[math]")
 
     auto [M, N] = A.shape();
 
-    // Test operator overloading
+    // Operator overloading
     CSCMatrix C = 0.1 * A;
 
     for (csint i = 0; i < M; i++) {
@@ -1207,10 +1176,9 @@ TEST_CASE("Scaling by a constant", "[math]")
 }
 
 
-// Exercise 2.4
-TEST_CASE("Scale rows and columns", "[math]")
+TEST_CASE("Exercise 2.4: Scale rows and columns", "[math]")
 {
-    CSCMatrix A = davis_21_coo().compress();
+    CSCMatrix A = davis_example_small().compress();
 
     // Diagonals of R and C to compute RAC
     std::vector<double> r = {1, 2, 3, 4},
@@ -1240,7 +1208,7 @@ TEST_CASE("Scale rows and columns", "[math]")
 
 TEST_CASE("Matrix-matrix addition.", "[math]")
 {
-    SECTION("Test non-square matrices") {
+    SECTION("Non-square matrices") {
         // >>> A
         // ===
         // array([[1, 2, 3],
@@ -1273,10 +1241,10 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
                 i, j
             ).compress();
 
-            // Test function definition
+            // Function definition
             CSCMatrix Cf = add_scaled(A, B, 0.1, 9.0);
 
-            // Test operator overloading
+            // Operator overloading
             CSCMatrix C = 0.1 * A + 9.0 * B;
 
             compare_matrices(C, expect);
@@ -1289,10 +1257,10 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
                 i, j
             ).compress();
 
-            // Test function definition
+            // Function definition
             CSCMatrix Cf = add_scaled(A, B, 1.0, -1.0);
 
-            // Test operator overloading
+            // Operator overloading
             CSCMatrix C = A - B;
 
             compare_matrices(C, expect);
@@ -1300,7 +1268,7 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
         }
     }
 
-    SECTION("Test sparse column vectors") {
+    SECTION("Sparse column vectors") {
         CSCMatrix a = COOMatrix(
             std::vector<double> {4.5, 3.1, 3.5, 2.9, 0.4},
             std::vector<csint>  {0, 1, 3, 5, 7},
@@ -1321,7 +1289,7 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
 
         auto [M, N] = a.shape();
 
-        SECTION("Test operator") {
+        SECTION("Operator") {
             CSCMatrix C = a + b;
 
             REQUIRE(C.shape() == a.shape());
@@ -1333,8 +1301,7 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
             }
         }
 
-        // Exercise 2.21
-        SECTION("Test saxpy") {
+        SECTION("Exercise 2.21: Saxpy") {
             std::vector<csint> expect_w(M);
             for (auto i : expect.indices()) {
                 expect_w[i] = 1;
@@ -1352,11 +1319,11 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
 }
 
 
-TEST_CASE("Test matrix permutation", "[permute]")
+TEST_CASE("Matrix permutation", "[permute]")
 {
-    CSCMatrix A = davis_21_coo().compress();
+    CSCMatrix A = davis_example_small().compress();
 
-    SECTION("Test no-op") {
+    SECTION("No-op") {
         std::vector<csint> p = {0, 1, 2, 3};
         std::vector<csint> q = {0, 1, 2, 3};
 
@@ -1367,7 +1334,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
         compare_matrices(A.permute_cols(q), A);
     }
 
-    SECTION("Test row permutation") {
+    SECTION("Row permutation") {
         std::vector<csint> p = {1, 0, 2, 3};
         std::vector<csint> q = {0, 1, 2, 3};
 
@@ -1384,7 +1351,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
         compare_matrices(A.permute_rows(inv_permute(p)), expect);
     }
 
-    SECTION("Test column permutation") {
+    SECTION("Column permutation") {
         std::vector<csint> p = {0, 1, 2, 3};
         std::vector<csint> q = {1, 0, 2, 3};
 
@@ -1401,7 +1368,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
         compare_matrices(A.permute_cols(q), expect);
     }
 
-    SECTION("Test both row and column permutation") {
+    SECTION("Both row and column permutation") {
         std::vector<csint> p = {3, 0, 2, 1};
         std::vector<csint> q = {2, 1, 3, 0};
 
@@ -1428,7 +1395,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
         }
     }
 
-    SECTION("Test symperm") {
+    SECTION("Symperm") {
         // Define a symmetric matrix by zero-ing out below-diagonal entries in A
         A.assign(1, 0, 0.0)
          .assign(2, 1, 0.0)
@@ -1456,8 +1423,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
         }
     }
 
-    // Exercise 2.26
-    SECTION("Test non-permuted transpose") {
+    SECTION("Exercise 2.26: Non-permuted transpose") {
         std::vector<csint> p = {0, 1, 2, 3};
         std::vector<csint> q = {0, 1, 2, 3};
 
@@ -1467,7 +1433,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
         compare_matrices(C, expect);
     }
 
-    SECTION("Test row-permuted transpose") {
+    SECTION("Row-permuted transpose") {
         std::vector<csint> p = {3, 0, 1, 2};
         std::vector<csint> q = {0, 1, 2, 3};
 
@@ -1483,7 +1449,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
         compare_matrices(C, expect);
     }
 
-    SECTION("Test column-permuted transpose") {
+    SECTION("Column-permuted transpose") {
         std::vector<csint> p = {0, 1, 2, 3};
         std::vector<csint> q = {3, 0, 1, 2};
 
@@ -1499,7 +1465,7 @@ TEST_CASE("Test matrix permutation", "[permute]")
         compare_matrices(C, expect);
     }
 
-    SECTION("Test permuted transpose") {
+    SECTION("Permuted transpose") {
         std::vector<csint> p = {3, 0, 2, 1};
         std::vector<csint> q = {2, 1, 3, 0};
 
@@ -1523,15 +1489,14 @@ TEST_CASE("Test matrix permutation", "[permute]")
 }
 
 
-// Exercise 2.15
-TEST_CASE("Test band function")
+TEST_CASE("Exercise 2.15: Band function")
 {
     csint N = 6;
     csint nnz = N*N;
 
-    CSCMatrix A(std::vector<double>(nnz, 1), {N, N});  // (N, N) of ones
+    CSCMatrix A {std::vector<double>(nnz, 1), {N, N}};  // (N, N) of ones
 
-    SECTION("Test main diagonal") {
+    SECTION("Main diagonal") {
         int kl = 0,
             ku = 0;
 
@@ -1547,7 +1512,7 @@ TEST_CASE("Test band function")
         REQUIRE(Ab.data() == expect_data);
     }
 
-    SECTION("Test arbitrary diagonals") {
+    SECTION("Arbitrary diagonals") {
         int kl = -3,
             ku = 2;
 
@@ -1567,10 +1532,9 @@ TEST_CASE("Test band function")
 }
 
 
-// Exercise 2.16
-TEST_CASE("Test CSC from dense")
+TEST_CASE("Exercise 2.16: CSC from dense")
 {
-    CSCMatrix expect_A = davis_21_coo().tocsc();
+    CSCMatrix expect_A = davis_example_small().tocsc();
 
     SECTION("Column-major") {
         std::vector<double> dense_mat = {
@@ -1596,11 +1560,11 @@ TEST_CASE("Test CSC from dense")
 }
 
 
-// Exercise 2.12 "cs_ok"
-TEST_CASE("Test validity check")
+// "cs_ok"
+TEST_CASE("Exercise 2.12: Validity check")
 {
-    COOMatrix C = davis_21_coo();
-    CSCMatrix A = davis_21_coo().compress();
+    COOMatrix C = davis_example_small();
+    CSCMatrix A = davis_example_small().compress();
 
     constexpr bool SORTED = true;
     constexpr bool VALUES = true;
@@ -1618,13 +1582,13 @@ TEST_CASE("Test validity check")
 }
 
 
-// Exercise 2.22 "hcat" and "vcat"
-TEST_CASE("Test concatentation")
+// "hcat" and "vcat"
+TEST_CASE("Exercise 2.22: Concatentation")
 {
     CSCMatrix E = E_mat();
     CSCMatrix A = A_mat();
 
-    SECTION("Test horizontal concatenation") {
+    SECTION("Horizontal concatenation") {
         CSCMatrix expect = COOMatrix(
             std::vector<double> {1, -2, 1, 1, 2, 4, -2, 1, -6, 7,  1, 2},
             std::vector<csint>  {0,  1, 1, 2, 0, 1,  2, 0,  1, 2,  0, 2},
@@ -1635,7 +1599,7 @@ TEST_CASE("Test concatentation")
         compare_matrices(C, expect);
     }
 
-    SECTION("Test vertical concatenation") {
+    SECTION("Vertical concatenation") {
         CSCMatrix expect = COOMatrix(
             std::vector<double> {1, -2, 1, 1, 2, 4, -2, 1, -6, 7,  1, 2},
             std::vector<csint>  {0,  1, 1, 2, 3, 4,  5, 3,  4, 5,  3, 5},
@@ -1648,12 +1612,12 @@ TEST_CASE("Test concatentation")
 }
 
 
-// Exercise 2.23 slicing with contiguous indices
-TEST_CASE("Test slicing")
+// slicing with contiguous indices
+TEST_CASE("Exercise 2.23: Slicing")
 {
-    CSCMatrix A = davis_21_coo().tocsc();
+    CSCMatrix A = davis_example_small().tocsc();
 
-    SECTION("Test row slicing") {
+    SECTION("Row slicing") {
         CSCMatrix expect = COOMatrix(
             std::vector<double> {3.1, 2.9, 1.7, 3.0, 0.9},
             std::vector<csint>  {  0,   0,   1,   1,   0},
@@ -1664,7 +1628,7 @@ TEST_CASE("Test slicing")
         compare_matrices(C, expect);
     }
 
-    SECTION("Test column slicing") {
+    SECTION("Column slicing") {
         CSCMatrix expect = COOMatrix(
             std::vector<double> {2.9, 1.7, 0.4, 3.2, 3.0},
             std::vector<csint>  {  1,   2,   3,   0,   2},
@@ -1675,7 +1639,7 @@ TEST_CASE("Test slicing")
         compare_matrices(C, expect);
     }
 
-    SECTION("Test row and column slicing") {
+    SECTION("Row and column slicing") {
         CSCMatrix expect = COOMatrix(
             std::vector<double> {2.9, 1.7, 3.0, 0.9},
             std::vector<csint>  {  0,   1,   1,   0},
@@ -1688,12 +1652,12 @@ TEST_CASE("Test slicing")
 }
 
 
-// Exercise 2.24 indexing with (possibly) non-contiguous indices
-TEST_CASE("Test non-contiguous indexing")
+// indexing with (possibly) non-contiguous indices
+TEST_CASE("Exercise 2.24: Non-contiguous indexing")
 {
-    CSCMatrix A = davis_21_coo().tocsc();
+    CSCMatrix A = davis_example_small().tocsc();
 
-    SECTION("Test indexing without duplicates") {
+    SECTION("Indexing without duplicates") {
         CSCMatrix C = A.index({2, 0}, {0, 3, 2});
 
         CSCMatrix expect = COOMatrix(
@@ -1705,7 +1669,7 @@ TEST_CASE("Test non-contiguous indexing")
         compare_matrices(C, expect);
     }
 
-    SECTION("Test indexing with duplicate rows") {
+    SECTION("Indexing with duplicate rows") {
         CSCMatrix C = A.index({2, 0, 1, 1}, {0, 3, 2});
 
         CSCMatrix expect = COOMatrix(
@@ -1717,7 +1681,7 @@ TEST_CASE("Test non-contiguous indexing")
         compare_matrices(C, expect);
     }
 
-    SECTION("Test indexing with duplicate columns") {
+    SECTION("Indexing with duplicate columns") {
         CSCMatrix C = A.index({2, 0}, {0, 3, 2, 0});
 
         CSCMatrix expect = COOMatrix(
@@ -1731,8 +1695,8 @@ TEST_CASE("Test non-contiguous indexing")
 }
 
 
-// Exercise 2.25 indexing for assignment
-TEST_CASE("Test indexing for single assignment.")
+// indexing for assignment
+TEST_CASE("Exercise 2.25: Indexing for single assignment.")
 {
     auto test_assignment = [](
         CSCMatrix& A,
@@ -1755,7 +1719,7 @@ TEST_CASE("Test indexing for single assignment.")
     };
 
     SECTION("Canonical format") {
-        CSCMatrix A = davis_21_coo().tocsc();
+        CSCMatrix A = davis_example_small().tocsc();
 
         SECTION("Re-assign existing element") {
             test_assignment(A, 2, 1, 56.0, true);
@@ -1767,7 +1731,7 @@ TEST_CASE("Test indexing for single assignment.")
     }
 
     SECTION("Non-canonical format") {
-        CSCMatrix A = davis_21_coo().compress();
+        CSCMatrix A = davis_example_small().compress();
 
         SECTION("Re-assign existing element") {
             test_assignment(A, 2, 1, 56.0, true);
@@ -1778,8 +1742,8 @@ TEST_CASE("Test indexing for single assignment.")
         }
     }
 
-    SECTION("Test multiple assignment") {
-        CSCMatrix A = davis_21_coo().tocsc();
+    SECTION("Multiple assignment") {
+        CSCMatrix A = davis_example_small().tocsc();
 
         std::vector<csint> rows = {2, 0};
         std::vector<csint> cols = {0, 3, 2};
@@ -1816,10 +1780,9 @@ TEST_CASE("Test indexing for single assignment.")
 }
 
 
-// Exercise 2.29
-TEST_CASE("Test adding empty rows and columns to a CSCMatrix.")
+TEST_CASE("Exercise 2.29: Adding empty rows and columns to a CSCMatrix.")
 {
-    CSCMatrix A = davis_21_coo().tocsc();
+    CSCMatrix A = davis_example_small().tocsc();
     int k = 3;  // number of rows/columns to add
 
     SECTION("Add empty rows to top") {
@@ -1886,7 +1849,7 @@ TEST_CASE("Test adding empty rows and columns to a CSCMatrix.")
 
 TEST_CASE("Sum the rows and columns of a matrix")
 {
-    CSCMatrix A = davis_21_coo().tocsc();
+    CSCMatrix A = davis_example_small().tocsc();
 
     SECTION("Sum the rows") {
         std::vector<double> expect = {7.7, 6.9, 4.7, 4.9};
@@ -1910,7 +1873,7 @@ TEST_CASE("Sum the rows and columns of a matrix")
 /*------------------------------------------------------------------------------
  *          Matrix Solutions
  *----------------------------------------------------------------------------*/
-TEST_CASE("Test triangular solve with dense RHS")
+TEST_CASE("Triangular solve with dense RHS")
 {
     const CSCMatrix L = COOMatrix(
         std::vector<double> {1, 2, 3, 4, 5, 6},
@@ -1977,7 +1940,7 @@ TEST_CASE("Reachability and DFS")
     CSCMatrix U = L.T();
 
     // Define the rhs matrix B
-    CSCMatrix B(Shape {N, 1});
+    CSCMatrix B {Shape {N, 1}};
 
     SECTION("dfs from a single node") {
         // Assign non-zeros to rows 3 and 5 in column 0
@@ -2046,7 +2009,7 @@ TEST_CASE("Reachability and DFS")
 
         std::vector<double> expect = {0., -1.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.};
 
-        auto [xi, x] = spsolve(U, B, 0, false);
+        auto [xi, x] = spsolve(U, B, 0, std::nullopt, false);
 
         REQUIRE(x == expect);
     }
@@ -2138,7 +2101,7 @@ TEST_CASE("Permuted triangular solvers")
     }
 
     SECTION("Find diagonals of non-triangular matrix") {
-        const CSCMatrix A = davis_21_coo().tocsc();
+        const CSCMatrix A = davis_example_small().tocsc();
         REQUIRE_THROWS(find_lower_diagonals(A));
         REQUIRE_THROWS(find_upper_diagonals(A));
         REQUIRE_THROWS(find_tri_permutation(A));
@@ -2250,31 +2213,14 @@ TEST_CASE("Permuted triangular solvers")
 }
 
 
+/*------------------------------------------------------------------------------
+ *         Decompositions
+ *----------------------------------------------------------------------------*/
 TEST_CASE("Cholesky decomposition")
 {
     // Define the test matrix A (See Davis, Figure 4.2, p 39)
-    csint N = 11;
-    std::vector<csint> rows = {5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10};
-    std::vector<csint> cols = {0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9};
-
-    csint N_offdiag = rows.size();
-
-    // Include diagonals
-    std::vector<csint> diags(N);
-    std::iota(diags.begin(), diags.end(), 0);
-
-    rows.insert(rows.end(), diags.begin(), diags.end());
-    cols.insert(cols.end(), diags.begin(), diags.end());
-
-    std::vector<double> vals(rows.size(), 1);
-
-    // Make A positive definite by increasing the diagonal
-    for (csint i = 0; i < N; i++) {
-        vals[i + N_offdiag] = 10.0 + i;
-    }
-
-    CSCMatrix L = COOMatrix(vals, rows, cols).tocsc();
-    CSCMatrix A = L + L.T().band(1, N);
+    CSCMatrix A = davis_example_chol();
+    csint N = A.shape()[1];
 
     CHECK(A.is_symmetric());
     // CHECK(A.has_canonical_format());
@@ -2424,7 +2370,7 @@ TEST_CASE("Cholesky decomposition")
             std::default_random_engine rng(56);
             std::uniform_real_distribution<double> unif(0.0, 1.0);
 
-            COOMatrix w({L.shape()[0], 1});
+            COOMatrix w {{L.shape()[0], 1}};
 
             for (csint p = L.indptr()[k]; p < L.indptr()[k + 1]; p++) {
                 w.assign(L.indices()[p], 0, unif(rng));
@@ -2482,7 +2428,7 @@ TEST_CASE("Cholesky decomposition")
         const std::vector<double> b_vals = L * expect;
 
         // Create the sparse RHS matrix
-        CSCMatrix b(b_vals, {N, 1});
+        CSCMatrix b {b_vals, {N, 1}};
 
         // Solve Lx = b
         auto [xi, x] = chol_lsolve(L, b, S.parent);
@@ -2507,7 +2453,7 @@ TEST_CASE("Cholesky decomposition")
         const std::vector<double> b_vals = L.T() * expect;
 
         // Create the sparse RHS matrix
-        CSCMatrix b(b_vals, {N, 1});
+        CSCMatrix b {b_vals, {N, 1}};
 
         // Solve Lx = b
         auto [xi, x] = chol_ltsolve(L, b, S.parent);
@@ -2993,7 +2939,7 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
 {
     // NOTE As written, when M < N, the cs::qr code computes a QR factorization
     // that results in V size (N, N), and R size (N, N). The actual sizes should
-    // be V (M, M) and R (M, N). We could just slice the result to get the
+    // be V (M, M) and R (M, N). We currently just slice the result to get the
     // desired sizes.
 
     // Define the test matrix A (See Davis, Figure 5.1, p 74)
@@ -3049,7 +2995,7 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
              0.                , 1.                , 0.                , 0.                , 0.                ,
              0.                , 0.                , 1.                , 0.                , 0.                ,
              0.4142135623730951, 0.                , 0.                , 1.                , 0.                ,
-             0.                , 0.                , 0.                , 0.                , 1.                
+             0.                , 0.                , 0.                , 0.                , 1.
             },
             {M, M},
             'C'  // row-major order
@@ -3063,7 +3009,7 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
               0.                ,  2.                ,  1.                ,  0.                ,  0.                ,  0.                ,  1.                    ,  0.                ,
               0.                ,  0.                ,  3.                ,  1.                ,  0.                ,  0.                ,  0.                    ,  0.                ,
               0.                ,  0.                ,  0.                ,  2.1213203435596424,  0.                ,  0.                , -4.7442685329306630e-17,  0.                ,
-              0.                ,  0.                ,  0.                ,  0.                ,  5.                ,  1.                ,  0.                    ,  0.                
+              0.                ,  0.                ,  0.                ,  0.                ,  5.                ,  1.                ,  0.                    ,  0.
             },
             {M, N},
             'C' // row-major order
@@ -3076,60 +3022,67 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
 }
 
 
-// Exercise 5.4
-TEST_CASE("QR factorization with column pivoting", "[qr_pivoting]")
+TEST_CASE("Exercise 5.4: QR factorization with column pivoting", "[qr_pivoting]")
 {
-    // csint N = 8;  // number of rows and columns
     CSCMatrix A = davis_example_qr();
+    auto [M, N] = A.shape();
 
-    // // Expected values computed with scipy.linalg.qr
-    // CSCMatrix expect_V {
-    //     {1.                , 0.                , 0.                , 0.                , 0.                , 0.                , 0.                , 0.,
-    //      0.                , 1.                , 0.                , 0.                , 0.                , 0.                , 0.                , 0.,
-    //      0.                , 0.2360679774997897, 1.                , 0.                , 0.                , 0.                , 0.                , 0.,
-    //      0.                , 0.                , 0.8619788607068875, 1.                , 0.                , 0.                , 0.                , 0.,
-    //      0.                , 0.                , 0.                , 0.                , 1.                , 0.                , 0.                , 0.,
-    //      0.                , 0.                , 0.                , 0.                , 0.0980762113533159, 1.                , 0.                , 0.,
-    //      0.                , 0.                , 0.                , 0.                , 0.0980762113533159, 0.0592952558196218, 1.                , 0.,
-    //      0.4142135623730951, 0.                , 0.                , 0.9329077440557915, 0.                , 0.                , 0.8441594335316119, 1.
-    //     },
-    //     {N, N},
-    //     'C'  // row-major order
-    // };
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
 
-    // std::vector<double> expect_beta {
-    //     1.7071067811865472,
-    //     1.8944271909999157,
-    //     1.1474419561548972,
-    //     1.0693375245281538,
-    //     1.9622504486493761,
-    //     1.992992782143569 ,
-    //     1.1678115068791026,
-    //     0.
-    // };
+    double tol = 0.0;
+    std::vector<csint> expect_q;
 
-    // CSCMatrix expect_R {
-    //     {-1.4142135623730951,  0.                ,  0.                , -3.5355339059327378,  0.                ,  0.                , -1.414213562373095 ,  0.                ,
-    //       0.                , -2.23606797749979  , -1.341640786499874 ,  0.                ,  0.                ,  0.                , -4.024922359499621 , -0.4472135954999579,
-    //       0.                ,  0.                , -3.03315017762062  , -0.9890707100936806,  0.                ,  0.                , -0.8571946154145236, -0.1318760946791574,
-    //       0.                ,  0.                ,  0.                , -2.1264381322847794,  0.                ,  0.                ,  0.3987071498033972,  0.061339561508215 ,
-    //       0.                ,  0.                ,  0.                ,  0.                , -5.196152422706632 , -2.309401076758503 , -0.1924500897298752, -0.1924500897298752,
-    //       0.                ,  0.                ,  0.                ,  0.                ,  0.                , -5.715476066494082 , -0.0972019739199674, -0.9720197391996737,
-    //       0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.                , -5.818914395248401 , -0.8474056139492476,
-    //       0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.2808744717175516
-    //     },
-    //     {N, N},
-    //     'C' // row-major order
-    // };
+    SECTION("tol = 0.0 (no pivoting)") {
+        std::cout << "---------- No Pivoting (tol = 0.0) ----------" << std::endl;
+        tol = 0.0;  // set to 0 to turn off pivoting
+        expect_q = {0, 1, 2, 3, 4, 5, 6, 7};  // natural
+    }
+
+    SECTION("Single small column") {
+        std::cout << "---------- Single small column ----------" << std::endl;
+        tol = 0.1;
+
+        // Scale down a column to test the column pivoting
+        csint k = 3;
+        double A_kk = A(k, k);
+        for (csint i = 0; i < M; i++) {
+            A(i, k) *= 0.95 * tol / A_kk;
+        }
+
+        // NOTE HACK: Arificially set A[3, 4] to non-zero value
+        // Then, when we pivot column "3" to the end, column "4" has a non-zero
+        // value on the diagonal. Otherwise, we segfault.
+        // A(3, 4) = 0.5;
+
+        std::cout << "A:" << std::endl;
+        A.print_dense();
+
+        expect_q = {0, 1, 2, 4, 5, 6, 7, 3};
+    }
+
+    SECTION("Multiple small columns") {
+        std::cout << "---------- Multiple small columns ----------" << std::endl;
+        tol = 0.1;
+
+        // Scale down a column to test the column pivoting
+        for (const auto& k : {2, 3, 5}) {
+            double A_kk = A(k, k);
+            for (csint i = 0; i < M; i++) {
+                A(i, k) *= 0.95 * tol / A_kk;
+            }
+        }
+
+        std::cout << "A:" << std::endl;
+        A.print_dense();
+
+        expect_q = {0, 1, 4, 6, 7, 2, 3, 5};
+    }
 
     // ---------- Factor the matrix
     SymbolicQR S = sqr(A);
-    // NOTE HACK artificially set S.q
-    S.q = {0, 2, 3, 4, 5, 6, 7, 1};
-    std::cout << "S.q: " << S.q << std::endl;
-
-    // double tol = 3.0;  // artificially high for testing purposes
-    double tol = 0.0;  // set to 0 to turn off pivoting
     QRResult res = qr_pivoting(A, S, tol);
 
     std::cout << "V:" << std::endl;
@@ -3138,12 +3091,544 @@ TEST_CASE("QR factorization with column pivoting", "[qr_pivoting]")
     std::cout << "R:" << std::endl;
     res.R.print_dense();
 
-    std::cout << "S.q: " << S.q << std::endl;
-    std::cout << "res.q: " << res.q << std::endl;
+    CHECK(S.q == std::vector<csint> {0, 1, 2, 3, 4, 5, 6, 7});  // natural order
+    CHECK(res.q == expect_q);
 
     // compare_matrices(res.V, expect_V);
     // CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
     // compare_matrices(res.R, expect_R);
+}
+
+
+/** Define a helper function to test LU decomposition */
+auto lu_test = [](const CSCMatrix& A)
+{
+    SymbolicLU S = slu(A);
+    LUResult res = lu(A, S);
+    CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+    CSCMatrix PA = A.permute_rows(res.p_inv).to_canonical();
+    compare_matrices(LU, PA);
+    return res;
+};
+
+
+TEST_CASE("LU Factorization of Square Matrix", "[lu]")
+{
+    CSCMatrix A = davis_example_qr();
+    auto [M, N] = A.shape();
+
+    // TODO build this option into davis_example_qr(add_diag=10.0);
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    std::vector<csint> expect_q(N);
+    std::iota(expect_q.begin(), expect_q.end(), 0);
+
+    SECTION("Symbolic Factorization") {
+        SymbolicLU S = slu(A);  // natural ordering
+
+        csint expect_lnz = 4 * A.nnz() + N;
+
+        CHECK(S.q == expect_q);
+        CHECK(S.lnz == expect_lnz);
+        REQUIRE(S.unz == S.lnz);
+    }
+
+    SECTION("Numeric Factorization") {
+        CSCMatrix Ap;
+        std::vector<csint> expect_p = expect_q;
+
+        SECTION("un-permuted") {
+            Ap = A;
+            expect_p = expect_q;
+        }
+
+        SECTION("permuted") {
+            // Permute the rows of A to test pivoting
+            std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+            std::vector<csint> p_inv = inv_permute(p);
+
+            // LU *should* select pivots to recover the original A matrix
+            Ap = A.permute_rows(p_inv);
+            expect_p = p;
+        }
+
+        // Test the factorization
+        LUResult res = lu_test(Ap);
+
+        // Permute the rows of the input Ap to compare with LU
+        CSCMatrix PAp = Ap.permute_rows(res.p_inv).to_canonical();
+
+        CHECK(res.p_inv == expect_p);
+        CHECK(res.q == expect_q);
+        compare_matrices(A, PAp);  // LU should match the un-permuted A
+    }
+}
+
+
+TEST_CASE("Solve A x = b with LU")
+{
+    CSCMatrix A = davis_example_qr().to_canonical();
+    auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    // Create RHS for A x = b
+    std::vector<double> expect(N);
+    std::iota(expect.begin(), expect.end(), 1);
+    const std::vector<double> b = A * expect;
+
+    SECTION("Natural Order") {
+        const std::vector<double> x = lu_solve(A, b);
+        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    }
+
+    SECTION("Permuted A") {
+        // Permuting the rows of A requires permuting the columns of b, but the
+        // solution vector will *not* be permuted.
+        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        std::vector<csint> p_inv = inv_permute(p);
+
+        CSCMatrix Ap = A.permute_rows(p_inv);
+        std::vector<double> bp = pvec(p_inv, b);  // == ipvec(p, b)
+
+        std::vector<double> x = lu_solve(Ap, bp);
+
+        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    }
+}
+
+
+TEST_CASE("Exercise 6.1: Solve A^T x = b with LU")
+{
+    CSCMatrix A = davis_example_qr().to_canonical();
+    auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    // Create RHS for A^T x = b
+    std::vector<double> expect(N);
+    std::iota(expect.begin(), expect.end(), 1);
+    const std::vector<double> b = A.T() * expect;
+
+    SECTION("Natural Order") {
+        const std::vector<double> x = lu_tsolve(A, b);
+        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    }
+
+    SECTION("Permuted A") {
+        // Permuting the rows of A is the same as permuting the columns of A^T,
+        // so the RHS vector is not affected, but the solution vector will be
+        // permuted, so permute it back for comparison.
+        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        std::vector<csint> p_inv = inv_permute(p);
+        CSCMatrix Ap = A.permute_rows(p_inv);
+
+        std::vector<double> x = lu_tsolve(Ap, b);
+        std::vector<double> xp = pvec(p_inv, x);  // permute back to match x
+
+        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
+    }
+}
+
+
+TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3]")
+{
+    CSCMatrix A = davis_example_qr();
+    auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    // Cases to test:
+    //   1. no pivot found in a column (zero column)
+    //   2. pivot in a column is below given tolerance
+
+    auto lu_col_test = [](
+        const CSCMatrix& A,
+        double col_tol,
+        const std::vector<csint>& expect_p_inv,
+        const std::vector<csint>& expect_q
+    ) {
+        SymbolicLU S = slu(A);
+        LUResult res = lu_col(A, S, col_tol);
+
+        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+        CSCMatrix PAQ = A.permute(res.p_inv, res.q).to_canonical();
+
+        CHECK(res.p_inv == expect_p_inv);
+        CHECK(res.q == expect_q);
+        compare_matrices(LU, PAQ);
+    };
+
+    SECTION("Zero Column") {
+        double col_tol = 0.0;  // keep all based on pivot size
+
+        std::vector<csint> expect_q;
+
+        SECTION("Single zero column") {
+            // Remove a column to test the column pivoting
+            csint k = 3;
+            for (csint i = 0; i < M; i++) {
+                A(i, k) = 0.0;
+            }
+            A = A.dropzeros();
+
+            expect_q = {0, 1, 2, 4, 5, 6, 7, 3};
+        }
+
+        SECTION("Multiple zero columns") {
+            // Remove a column to test the column pivoting
+            for (const auto& k : {2, 3, 5}) {
+                for (csint i = 0; i < M; i++) {
+                    A(i, k) = 0.0;
+                }
+            }
+            A = A.dropzeros();
+
+            expect_q = {0, 1, 4, 6, 7, 2, 3, 5};
+        }
+
+        std::vector<csint> expect_p = expect_q;  // diagonals are pivots
+        std::vector<csint> expect_p_inv = inv_permute(expect_p);
+
+        lu_col_test(A, col_tol, expect_p_inv, expect_q);
+    }
+
+    SECTION("Threshold") {
+        // Absolute threshold below which to pivot a column to the end
+        double col_tol = 0.1;
+
+        std::vector<csint> expect_q;
+
+        SECTION("No small columns") {
+            // No columns are small enough to pivot
+            expect_q = {0, 1, 2, 3, 4, 5, 6, 7};
+        }
+
+        SECTION("Single small column") {
+            // Scale down a column to test the column pivoting
+            csint k = 3;
+            double A_kk = A(k, k);
+            for (csint i = 0; i < M; i++) {
+                A(i, k) *= 0.95 * col_tol / A_kk;
+            }
+
+            expect_q = {0, 1, 2, 4, 5, 6, 7, 3};
+        }
+
+        SECTION("Multiple small columns") {
+            // Scale down multiple columns
+            for (const auto& k : {2, 3, 5}) {
+                double A_kk = A(k, k);
+                for (csint i = 0; i < M; i++) {
+                    A(i, k) *= 0.95 * col_tol / A_kk;
+                }
+            }
+
+            expect_q = {0, 1, 4, 6, 7, 2, 3, 5};
+        }
+
+        std::vector<csint> expect_p = expect_q;  // diagonals are pivots
+        std::vector<csint> expect_p_inv = inv_permute(expect_p);
+
+        lu_col_test(A, col_tol, expect_p_inv, expect_q);
+    }
+}
+
+
+TEST_CASE("Exercise 6.4: relu", "[ex6.4]")
+{
+    CSCMatrix A = davis_example_qr();
+    auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    std::vector<csint> expect_q(N);
+    std::iota(expect_q.begin(), expect_q.end(), 0);
+
+    // TODO CSCMatrix::set_data(const std::vector<double>& x) function
+    // Change the values of A to test the relu function
+    // A.set_data(A.data() + 1);
+
+    // Create new matrix with same sparsity pattern as A
+    std::vector<double> B_data(A.data());
+    for (auto& x : B_data) {
+        x += 1;
+    }
+    CSCMatrix B {B_data, A.indices(), A.indptr(), A.shape()};
+
+    CSCMatrix Ap, Bp;
+    std::vector<csint> expect_p;
+
+    SECTION("no pivoting") {
+        // Compute the LU factorization of B using the pattern of LU = A
+        Ap = A;
+        Bp = B;
+        expect_p = expect_q;
+    }
+
+    SECTION("permuted") {
+        // Permute the rows of A to test pivoting
+        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        std::vector<csint> p_inv = inv_permute(p);
+
+        // Permute the rows of A and B to test pivoting
+        Ap = A.permute_rows(p_inv);
+        Bp = B.permute_rows(p_inv);
+        expect_p = p;
+    }
+
+    // Compute LU = PA
+    SymbolicLU S = slu(Ap);
+    LUResult R = lu(Ap, S);
+
+    // Compute the LU factorization of Bp using the pattern of LU = PA
+    LUResult res = relu(Bp, R, S);
+
+    CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+
+    // Permute the rows of the input Bp to compare with LU
+    CSCMatrix PBp = Bp.permute_rows(res.p_inv).to_canonical();
+
+    CHECK(res.q == expect_q);
+    CHECK(res.p_inv == expect_p);
+    compare_matrices(B, PBp);  // LU should match the un-permuted B
+    compare_matrices(LU, B.to_canonical());
+}
+
+
+TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5]")
+{
+    CSCMatrix A = davis_example_qr().to_canonical();
+    auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    CSCMatrix B = A;  // create a copy to edit
+
+    SECTION("Single pair of linearly dependent columns") {
+        // Create a singular matrix by setting column 3 = 2 * column 5
+        for (csint i = 0; i < M; i++) {
+            B(i, 3) = 2 * B(i, 5);
+        }
+    }
+
+    SECTION("Two pairs of linearly dependent columns") {
+        for (csint i = 0; i < M; i++) {
+            B(i, 3) = 2 * B(i, 5);
+            B(i, 2) = 3 * B(i, 4);
+        }
+    }
+
+    SECTION("Single pair of linearly dependent rows") {
+        // Create a singular matrix by setting row 3 = 2 * row 5
+        for (csint j = 0; j < N; j++) {
+            B(3, j) = 2 * B(5, j);
+        }
+    }
+
+    SECTION("Two pairs of linearly dependent rows") {
+        for (csint j = 0; j < N; j++) {
+            B(3, j) = 2 * B(5, j);
+            B(2, j) = 3 * B(4, j);
+        }
+    }
+
+    SECTION("Single zero column") {
+        for (csint i = 0; i < M; i++) {
+            B(i, 3) = 0.0;
+        }
+
+        SECTION("Structural") {
+            B = B.dropzeros();
+        }
+    }
+
+    SECTION("Multiple zero columns") {
+        for (csint i = 0; i < M; i++) {
+            for (const auto& j : {2, 3, 4}) {
+                B(i, j) = 0.0;
+            }
+        }
+
+        SECTION("Structural") {
+            B = B.dropzeros();
+        }
+    }
+
+    SECTION("Single zero row") {
+        for (csint j = 0; j < N; j++) {
+            B(3, j) = 0.0;
+        }
+
+        SECTION("Structural") {
+            B = B.dropzeros();
+        }
+    }
+
+    SECTION("Multiple zero rows") {
+        for (const auto& i : {2, 3, 4}) {
+            for (csint j = 0; j < N; j++) {
+                B(i, j) = 0.0;
+            }
+        }
+
+        SECTION("Structural") {
+            B = B.dropzeros();
+        }
+    }
+
+    lu_test(B);
+}
+
+
+TEST_CASE("Exercise 6.6: LU Factorization of Rectangular Matrices", "[ex6.6]")
+{
+    CSCMatrix A = davis_example_qr().to_canonical();
+    auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    csint r = 3;  // number of rows or columns to remove
+
+    SECTION("M < N") {
+        A = A.slice(0, M - r, 0, N);
+    }
+
+    SECTION("M > N") {
+        A = A.slice(0, M, 0, N - r);
+    }
+
+    lu_test(A);
+}
+
+
+TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13]")
+{
+    CSCMatrix A = davis_example_qr().to_canonical();
+    auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    SECTION("ILUTP: Threshold with Pivoting") {
+        // Default is no pivoting
+        CSCMatrix Ap = A;
+
+        // Permute the rows of A to test pivoting
+        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        std::vector<csint> p_inv = inv_permute(p);
+
+        SECTION("Full LU (tolerance = 0)") {
+            double drop_tol = 0.0;
+
+            SECTION("With pivoting") {
+                Ap = A.permute_rows(p_inv);
+            }
+
+            SymbolicLU S = slu(Ap);
+            LUResult res = lu(Ap, S);
+            LUResult ires = ilutp(Ap, S, drop_tol);
+            CSCMatrix iLU = (ires.L * ires.U).droptol().to_canonical();
+
+            compare_matrices(res.L, ires.L);
+            compare_matrices(res.U, ires.U);
+            compare_matrices(iLU, A);
+        }
+
+        SECTION("Drop all non-digonal entries (tolerance = inf)") {
+            double drop_tol = std::numeric_limits<double>::infinity();
+
+            SECTION("With pivoting") {
+                Ap = A.permute_rows(p_inv);
+            }
+
+            SymbolicLU S = slu(Ap);
+            LUResult ires = ilutp(Ap, S, drop_tol);
+
+            REQUIRE(ires.L.nnz() == N);
+            REQUIRE(ires.U.nnz() == N);
+            for (csint i = 0; i < N; i++) {
+                CHECK(ires.L(i, i) == 1.0);
+                CHECK_THAT(ires.U(i, i), WithinAbs(A(i, i), tol));
+            }
+        }
+
+        SECTION("Arbitrary drop tolerance") {
+            double drop_tol = 0.08;  // quite large to drop many entries
+
+            SECTION("With pivoting") {
+                Ap = A.permute_rows(p_inv);
+            }
+
+            SymbolicLU S = slu(Ap);
+            LUResult res = lu(Ap, S);
+            LUResult ires = ilutp(Ap, S, drop_tol);
+            CSCMatrix iLU = (ires.L * ires.U).droptol().to_canonical();
+
+            CHECK(ires.L.nnz() <= res.L.nnz());
+            CHECK(ires.U.nnz() <= res.U.nnz());
+            CHECK_THAT(ires.L.data() >= drop_tol, AllTrue());
+            CHECK_THAT(ires.U.data() >= drop_tol, AllTrue());
+            REQUIRE((iLU - A).fronorm() / A.fronorm() < drop_tol);
+        }
+    }
+
+}
+
+
+TEST_CASE("Exercise 6.15: 1-norm condition number estimate", "[ex6.15]")
+{
+    CSCMatrix A = davis_example_qr().to_canonical();
+    auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    SECTION("Estimate 1-norm of A inverse") {
+        // Compute the LU decomposition
+        SymbolicLU S = slu(A);
+        LUResult res = lu(A, S);
+
+        double expect = 0.11537500551678347;  // MATLAB and python calcs
+        double exact_norm = A.norm();         // 1-norm == maximum column sum
+
+        double est_norm = norm1est_inv(res);
+
+        CHECK(exact_norm >= est_norm);  // estimate is a lower bound
+        REQUIRE(est_norm == Approx(expect));
+    }
+
+    SECTION("Estimate condition number of A") {
+        double kappa = cond1est(A);
+        double expect = 2.422875115852452;  // MATLAB and python calcs
+
+        REQUIRE(kappa == Approx(expect));
+    }
 }
 
 /*==============================================================================

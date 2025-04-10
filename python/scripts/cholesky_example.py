@@ -42,6 +42,17 @@ ATA = A.T @ A
 L_ATA = la.cholesky(ATA, lower=True)
 nnz_cols = np.diff(sparse.csc_matrix(L_ATA).indptr)
 
+# Compute the Cholesky factor using csparse C++ algorithms
+L = csparse.chol(Ac)
+Ls = csparse.symbolic_cholesky(Ac)
+Ll = csparse.leftchol(Ac)
+Lr = csparse.rechol(Ac)
+
+np.testing.assert_allclose(L.indptr, Ls.indptr)
+np.testing.assert_allclose(L.indices, Ls.indices)
+np.testing.assert_allclose(L.toarray(), Ll.toarray())
+np.testing.assert_allclose(Ll.toarray(), Lr.toarray())
+
 
 # =============================================================================
 # =============================================================================

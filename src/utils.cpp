@@ -7,10 +7,19 @@
  *
  *============================================================================*/
 
+#include <algorithm>  // max_element
 #include <cassert>
 #include <cmath>
+#include <format>
 #include <fstream>
-#include <numeric>  // partial_sum
+#include <iomanip>    // setw, fixed, setprecision
+#include <iostream>
+#include <limits>     // numeric_limits
+#include <numeric>    // partial_sum, accumulate
+#include <span>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 #include "utils.h"
 
@@ -116,6 +125,123 @@ std::vector<csint> cumsum(const std::vector<csint>& w)
     std::partial_sum(w.begin(), w.end(), out.begin() + 1);
 
     return out;
+}
+
+
+double norm(std::span<const double> x, const double ord)
+{
+    if (x.empty()) {
+        return 0.0;
+    }
+
+    if (ord == std::numeric_limits<double>::infinity()) {
+        // infinity norm
+        return *std::max_element(
+            x.begin(), x.end(),
+            [](double a, double b) { return std::fabs(a) < std::fabs(b); }
+        );
+    } else if (ord == 0) {
+        // for (const auto& val : x) {
+        //     res += (val != 0);
+        // }
+        return std::count_if(
+            x.begin(), x.end(),
+            [](double val) {
+                return std::fabs(val) > std::numeric_limits<double>::epsilon(); 
+            }
+        );
+    } else if (ord == 1) {
+        // for (const auto& val : x) {
+        //     res += std::fabs(val);
+        // }
+        return std::accumulate(
+            x.begin(), x.end(), 0.0,
+            [](double sum, double val) { return sum + std::fabs(val); }
+        );
+    } else if (ord == 2) {
+        // for (const auto& val : x) {
+        //     res += val * val;
+        // }
+        // res = std::sqrt(res);
+        return std::sqrt(
+            std::accumulate(
+                x.begin(), x.end(), 0.0,
+                [](double sum, double val) { return sum + val * val; }
+            )
+        );
+    } else {
+        // for (const auto& val : x) {
+        //     res += std::pow(std::fabs(val), ord);
+        // }
+        // res = std::pow(res, 1.0 / ord);
+        return std::pow(
+            std::accumulate(
+                x.begin(), x.end(), 0.0,
+                [ord](double sum, double val) {
+                    return sum + std::pow(std::fabs(val), ord); 
+                }
+            ),
+            1.0 / ord
+        );
+    }
+}
+
+
+/*------------------------------------------------------------------------------
+ *         Printing 
+ *----------------------------------------------------------------------------*/
+void print_dense_vec(
+    const std::vector<double>& A,
+    csint M,
+    csint N,
+    char order,
+    int precision,
+    bool suppress,
+    std::ostream& os
+)
+{
+    if (A.size() != (M * N)) {
+        throw std::runtime_error("Matrix size does not match dimensions!");
+    }
+
+    // Determine whether to use scientific notation
+    double abs_max = 0.0;
+    for (const auto& val : A) {
+        if (std::isfinite(val)) {
+            abs_max = std::max(abs_max, std::fabs(val));
+        }
+    }
+
+    bool use_scientific = !suppress || (abs_max < 1e-4 || abs_max > 1e4);
+
+    // Compute column width
+    int width = use_scientific ? (9 + precision) : (6 + precision);
+    width = std::max(width, 5);  // enough for "nan", "-inf", etc.
+
+    constexpr double suppress_tol = 1e-10;
+
+    const std::string indent(1, ' ');
+
+    for (csint i = 0; i < M; i++) {
+        os << indent;
+        for (csint j = 0; j < N; j++) {
+            csint idx = (order == 'F') ? (i + j*M) : (i*N + j);
+            double val = A[idx];
+
+            if (val == 0.0 || (suppress && std::fabs(val) < suppress_tol)) {
+                os << std::format("{:>{}}", "0", width);
+            } else {
+                // bool is_integer = std::abs(val - std::round(val)) < suppress_tol;
+                // bool print_integer = is_integer && !use_scientific;
+                os << std::setw(width)
+                   // << std::setprecision(print_integer ? 0 : precision)
+                   << std::setprecision(precision)
+                   << (use_scientific ? std::scientific : std::fixed)
+                   << val;
+            }
+        }
+        os << std::endl;
+    }
 }
 
 

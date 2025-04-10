@@ -14,10 +14,7 @@ import numpy as np
 
 from scipy import linalg as la
 
-from csparse import davis_example_chol
-from csparse._cholesky import (chol_up, chol_left, chol_left_amp, chol_right,
-                               chol_super,
-                               chol_update, chol_downdate, chol_updown)
+import csparse
 
 ATOL = 1e-15  # testing tolerance
 
@@ -25,30 +22,46 @@ ATOL = 1e-15  # testing tolerance
 @pytest.fixture
 def A_matrix():
     """Define a symmetric, positive definite matrix."""
-    return davis_example_chol(format='ndarray')
+    return csparse.davis_example_chol(format='ndarray')
 
 
-CHOL_FUNCS = [
-    chol_up,
-    chol_left,
-    chol_left_amp,
-    chol_right,
-    chol_super
+PYTHON_CHOL_FUNCS = [
+    csparse.chol_up,
+    csparse.chol_left,
+    csparse.chol_left_amp,
+    csparse.chol_right,
+    csparse.chol_super
 ]
 
 
-@pytest.mark.parametrize("chol_func", CHOL_FUNCS)
-def test_cholesky(A_matrix, chol_func):
+# Test the csparse Cholesky conversion?
+def test_cholesky_interface():
+    """Test the Cholesky decomposition python interface."""
+    A = csparse.davis_example_chol()
+
+    L = csparse.chol(A)
+    Ls = csparse.symbolic_cholesky(A)
+    Ll = csparse.leftchol(A)
+    Lr = csparse.rechol(A)
+
+    np.testing.assert_allclose(L.indptr, Ls.indptr)
+    np.testing.assert_allclose(L.indices, Ls.indices)
+    np.testing.assert_allclose(L.toarray(), Ll.toarray())
+    np.testing.assert_allclose(Ll.toarray(), Lr.toarray())
+
+
+@pytest.mark.parametrize("chol_func", PYTHON_CHOL_FUNCS)
+def test_python_cholesky(A_matrix, chol_func):
     """Test the Cholesky decomposition algorithms."""
     A = A_matrix
 
     # Compute the Cholesky factor
     L_ = la.cholesky(A, lower=True)
 
-    if chol_func == chol_super:
+    if chol_func == csparse.chol_super:
         # Define "supernodes" as ones to get the same result as left-looking
         s = np.ones(A.shape[0], dtype=int)
-        L = chol_super(A, s, lower=True)
+        L = csparse.chol_super(A, s, lower=True)
     else:
         L = chol_func(A, lower=True)
 
@@ -57,7 +70,7 @@ def test_cholesky(A_matrix, chol_func):
     np.testing.assert_allclose(L @ L.T, A, atol=ATOL)
 
 
-def test_cholesky_update(A_matrix):
+def test_python_cholesky_update(A_matrix):
     """Test the Cholesky update and downdate algorithms.
 
     .. note:: These tests only cover the python implementations of the
@@ -84,22 +97,22 @@ def test_cholesky_update(A_matrix):
 
         A_up = A + wwT
 
-        L_up, w_up = chol_update(L, w)
+        L_up, w_up = csparse.chol_update(L, w)
         np.testing.assert_allclose(L_up @ L_up.T, A_up, atol=ATOL)
         np.testing.assert_allclose(la.solve(L, w), w_up, atol=ATOL)
 
-        L_upd, w_upd = chol_updown(L, w, update=True)
+        L_upd, w_upd = csparse.chol_updown(L, w, update=True)
         np.testing.assert_allclose(L_up, L_upd, atol=ATOL)
         np.testing.assert_allclose(L_upd @ L_upd.T, A_up, atol=ATOL)
         np.testing.assert_allclose(la.solve(L, w), w_upd, atol=ATOL)
 
         # Just downdate back to the original matrix!
         A_down = A.copy()  # A_down == A_up - wwT == A
-        L_down, w_down = chol_downdate(L_up, w)
+        L_down, w_down = csparse.chol_downdate(L_up, w)
         np.testing.assert_allclose(L_down @ L_down.T, A_down, atol=ATOL)
         np.testing.assert_allclose(la.solve(L_up, w), w_down, atol=ATOL)
 
-        L_downd, w_downd = chol_updown(L_up, w, update=False)
+        L_downd, w_downd = csparse.chol_updown(L_up, w, update=False)
         np.testing.assert_allclose(L_down, L_downd, atol=ATOL)
         np.testing.assert_allclose(L_downd @ L_downd.T, A_down, atol=ATOL)
         np.testing.assert_allclose(la.solve(L_up, w), w_downd, atol=ATOL)

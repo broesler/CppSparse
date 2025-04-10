@@ -203,7 +203,9 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S);
  *
  * @param A  the matrix to factorize
  * @param S  the symbolic analysis of A
- * @param tol  the tolerance for the column pivoting
+ * @param tol  the tolerance for the column pivoting. If the norm of a column of
+ *        `A` is less than `tol`, then the column is pivoted to the end of the
+ *        matrix.
  *
  * @return the numeric factorization
  */

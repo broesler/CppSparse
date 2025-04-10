@@ -20,11 +20,11 @@ from pathlib import Path
 
 from scipy.sparse.linalg import LaplacianNd
 
-import csparse as cs
+import csparse
 
 
-LAPLACE = False
-SAVE_FIG = True
+LAPLACE = True
+SAVE_FIG = False
 
 SEED = 565656
 
@@ -36,7 +36,7 @@ else:
 # -----------------------------------------------------------------------------
 #         Create the data
 # -----------------------------------------------------------------------------
-chol_funcs = [cs.chol, cs.leftchol, cs.rechol]
+chol_funcs = [csparse.chol, csparse.leftchol, csparse.rechol]
 
 if LAPLACE:
     # for Lapalacian, define sqrtN and N = sqrtN^2
@@ -59,35 +59,23 @@ for N in Ns:
     if LAPLACE:
         # Use a non-random matrix like a 2D Laplacian
         lap = LaplacianNd((N, N)).tosparse().tocsc()
-        A = cs.CSCMatrix(lap.data, lap.indices, lap.indptr, lap.shape)
+        A = csparse.CSCMatrix(lap.data, lap.indices, lap.indptr, lap.shape)
     else:
         # Create a random matrix
-        A = cs.COOMatrix.random(N, N, density, SEED).tocsc()
+        A = csparse.COOMatrix.random(N, N, density, SEED).tocsc()
 
     # Ensure all diagonals are non-zero so that L is non-singular
-    for i in range(A.shape()[0]):
+    for i in range(A.shape[0]):
         A[i, i] = N
 
     # Make sure the matrix is symmetric, positive definite
-    A = A + A.T()
+    A = A + A.T
 
-    print(f"---------- N = {A.shape()[1]:6,d} ----------")
-
-    # Get the symbolic factorization (same for all methods)
-    S = cs.schol(A)
+    print(f"---------- N = {A.shape[1]:6,d} ----------")
 
     for func in chol_funcs:
         func_name = func.__name__
-        args = (A, S)
-
-        if func_name == 'chol':
-            partial_func = partial(func, *args)
-        else:  # 'leftchol' or 'rechol'
-            # The function should capture the symbolic_cholesky step
-            partial_func = partial(
-                lambda A, S: func(A, S, cs.symbolic_cholesky(A, S)),
-                *args
-            )
+        partial_func = partial(func, A)
 
         # Time the function
         ts = timeit.repeat(partial_func, repeat=N_repeats, number=N_samples)
@@ -101,8 +89,8 @@ for N in Ns:
               f"({N_repeats} runs, {N_samples} loops each)")
 
     # Compute fill-in
-    L = cs.chol(A, S)
-    fill_in.append((L.nnz() - A.nnz()) / A.nnz())
+    L = csparse.chol(A)
+    fill_in.append((L.nnz - A.nnz) / A.nnz)
 
 
 print(np.c_[Ns, fill_in])
@@ -134,7 +122,7 @@ if SAVE_FIG:
     fig_fullpath = f"../plots/{filestem}.png"
 
     if not LAPLACE:
-        fig_fullpath = re.sub('\.png', f"_d{int(100*density):02d}.png", fig_fullpath)
+        fig_fullpath = re.sub(r'\.png', f"_d{int(100*density):02d}.png", fig_fullpath)
 
     try:
         fig.savefig(Path(fig_fullpath))
@@ -145,12 +133,9 @@ if SAVE_FIG:
 
 
 # Plot the spy of each matrix to see fill-in
-# fig, axs = plt.subplots(num=2, ncols=2, clear=True)
-# Aa = np.array(A.toarray('C')).reshape(lap.shape)
-# La = np.array(L.toarray('C')).reshape(lap.shape)
-
-# axs[0].spy(Aa)
-# axs[1].spy(La)
+fig, axs = plt.subplots(num=2, ncols=2, clear=True)
+axs[0].spy(A.toarray())
+axs[1].spy(L.toarray())
 
 plt.show()
 

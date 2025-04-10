@@ -18,7 +18,7 @@ INCL_DIR := include
 OPT := -I$(INCL_DIR)
 
 INCL := $(wildcard $(INCL_DIR)/*.h)
-SRC_BASE := test_csparse utils coo csc cholesky qr solve
+SRC_BASE := test_csparse utils coo csc cholesky qr lu solve example_matrices
 SRC := $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(SRC_BASE)))
 OBJ := $(SRC:%.cpp=%.o)
 
@@ -29,15 +29,14 @@ info :
 # -----------------------------------------------------------------------------
 #        Make options 
 # -----------------------------------------------------------------------------
-all: test
-
 test: OPT += -I$(BREW)/include 
 test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
-test: CFLAGS += -glldb #-fsanitize=address #-Og 
+# test: CFLAGS += -O3
 test: test_csparse
 
-debug: CFLAGS += -DDEBUG -glldb -Og -fno-inline -fsanitize=address,leak
-debug: all
+debug: CFLAGS += -DDEBUG -glldb #-Og
+debug: CFLAGS += -fno-inline -fsanitize=address
+debug: test
 
 # -----------------------------------------------------------------------------
 #         Compile and Link

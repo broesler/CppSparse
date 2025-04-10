@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # =============================================================================
-#     File: lusolve.py
+#     File: permuted_trisolve.py
 #  Created: 2025-01-21 09:48
 #   Author: Bernie Roesler
 #

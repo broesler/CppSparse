@@ -18,10 +18,10 @@ using Shape = std::array<csint, 2>;
 // Need full enum class definition for default arguments
 enum class AMDOrder
 {
-    Natural,
-    APlusAT,
-    ATANoDenseRows,
-    ATA
+    Natural,         // Natural ordering (no-op)
+    APlusAT,         // Chol: A + A.T
+    ATANoDenseRows,  // LU: A.T @ A, but no dense rows
+    ATA              // QR: A.T * A
 };
 
 // Forward declarations
@@ -32,7 +32,9 @@ struct TriPerm;
 struct SparseSolution;
 struct SymbolicChol;
 struct SymbolicQR;
+struct SymbolicLU;
 struct QRResult;
+struct LUResult;
 
 class COOMatrix;
 class CSCMatrix;

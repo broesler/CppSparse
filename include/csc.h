@@ -13,6 +13,7 @@
 #include <cassert>
 #include <functional>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <sstream>
@@ -132,10 +133,8 @@ class CSCMatrix
          * @param A      matrix to be resized
          * @param nzmax  maximum number of non-zeros. If `nzmax <= A.nzmax()`,
          *        then `nzmax` will be set to `A.nnz()`.
-         *
-         * @return A     a reference to the input object for method chaining.
          */
-        CSCMatrix& realloc(csint nzmax=0);
+        void realloc(csint nzmax=0);
 
         //----------------------------------------------------------------------
         //        Accessors
@@ -674,8 +673,8 @@ class CSCMatrix
          * @return C  permuted matrix
          */
         CSCMatrix permute(
-            const std::vector<csint> p_inv,
-            const std::vector<csint> q,
+            const std::vector<csint>& p_inv,
+            const std::vector<csint>& q,
             bool values=true
         ) const;
 
@@ -688,7 +687,7 @@ class CSCMatrix
          *
          * @return C  permuted matrix
          */
-        CSCMatrix symperm(const std::vector<csint> p_inv, bool values=true) const;
+        CSCMatrix symperm(const std::vector<csint>& p_inv, bool values=true) const;
 
         /** Permute and transpose a matrix \f$ C = PA^TQ \f$.
          *
@@ -720,7 +719,7 @@ class CSCMatrix
          *
          * @return C  permuted matrix
          */
-        CSCMatrix permute_rows(const std::vector<csint> p_inv, bool values=true) const;
+        CSCMatrix permute_rows(const std::vector<csint>& p_inv, bool values=true) const;
 
         /** Permute the columns of a matrix.
          *
@@ -732,7 +731,7 @@ class CSCMatrix
          *
          * @return C  permuted matrix
          */
-        CSCMatrix permute_cols(const std::vector<csint> q, bool values=true) const;
+        CSCMatrix permute_cols(const std::vector<csint>& q, bool values=true) const;
 
         /** Compute the 1-norm of the matrix (maximum column sum).
          *
@@ -907,15 +906,23 @@ class CSCMatrix
             const CSCMatrix& A,
             const CSCMatrix& B,
             csint k,
+            std::optional<const std::vector<csint>> p_inv,
             bool lo
         );
 
-        friend std::vector<csint> reach(const CSCMatrix& A, const CSCMatrix& B, csint k);
+        friend std::vector<csint> reach(
+            const CSCMatrix& A,
+            const CSCMatrix& B,
+            csint k,
+            std::optional<const std::vector<csint>> p_inv
+        );
+
         friend std::vector<csint>& dfs(
             const CSCMatrix& A,
             csint j,
             std::vector<bool>& marked,
-            std::vector<csint>& xi
+            std::vector<csint>& xi,
+            std::optional<const std::vector<csint>> p_inv
         );
 
         //----------------------------------------------------------------------
@@ -1018,23 +1025,43 @@ class CSCMatrix
 
         friend QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S);
         friend QRResult qr(const CSCMatrix& A, const SymbolicQR& S);
-        friend QRResult qr_pivoting(
+        friend QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol);
+        friend void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res);
+
+        // ---------------------------------------------------------------------
+        //         LU Decomposition
+        // ---------------------------------------------------------------------
+        friend LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol);
+        friend LUResult lu_col(
             const CSCMatrix& A,
-            const SymbolicQR& S,
+            const SymbolicLU& S,
+            double col_tol,
             double tol
         );
-        friend void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res);
+        friend LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S);
+        friend LUResult ilutp(
+            const CSCMatrix& A,
+            const SymbolicLU& S,
+            double drop_tol,
+            double tol
+        );
 
         //----------------------------------------------------------------------
         //        Printing
         //----------------------------------------------------------------------
         /** Print the matrix in dense format.
          *
+         * @param precision  the number of decimal places to print.
+         * @param suppress  if true, small values will be printed as "0".
          * @param os  a reference to the output stream.
          *
          * @return os  a reference to the output stream.
          */
-        void print_dense(std::ostream& os=std::cout) const;
+        void print_dense(
+	        int precision=4,
+	        bool suppress=true,
+            std::ostream& os=std::cout
+        ) const;
 
         /** Convert the matrix to a string.
          *

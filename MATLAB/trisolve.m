@@ -1,6 +1,6 @@
 %!/usr/bin/env python3
 % =============================================================================
-%     File: lusolve.m
+%     File: trisolve.m
 %  Created: 2025-01-21 10:01
 %   Author: Bernie Roesler
 %

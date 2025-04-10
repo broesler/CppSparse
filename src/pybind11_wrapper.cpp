@@ -16,7 +16,24 @@
 namespace py = pybind11;
 
 
-/** Template function to convert a matrix to a NumPy array.
+/** Convert an array to a NumPy array.
+ *
+ * @param self  the array to convert
+ *
+ * @return a NumPy array with the same data as the array
+ */
+template <typename T>
+auto vector_to_numpy(const std::vector<T>& vec)
+{
+    auto result = py::array_t<T>(vec.size());
+    py::buffer_info buf = result.request();
+    T* ptr = static_cast<T*>(buf.ptr);
+    std::memcpy(ptr, vec.data(), vec.size() * sizeof(T));
+    return result;
+};
+
+
+/** Convert a matrix to a NumPy array.
  *
  * @param self  the matrix to convert
  * @param order the order of the NumPy array ('C' or 'F')
@@ -64,6 +81,46 @@ auto matrix_to_ndarray(const T& self, const char order)
 };
 
 
+/** Convert a CSCMatrix to a SciPy CSC matrix.
+ *
+ * @param matrix  the CSCMatrix to convert
+ *
+ * @return a SciPy CSC matrix
+ */
+py::object csc_matrix_to_scipy_csc(const cs::CSCMatrix& A, py::module_& m) {
+    py::module_ np = py::module_::import("numpy");
+    py::module_ sparse = py::module_::import("scipy.sparse");
+
+    // Convert indptr, indices, and data to NumPy arrays
+    auto indptr_array = vector_to_numpy(A.indptr());
+    auto indices_array = vector_to_numpy(A.indices());
+    auto data_array = vector_to_numpy(A.data());
+
+    // Create the SciPy CSC A
+    auto [M, N] = A.shape();
+
+    return sparse.attr("csc_array")(
+        py::make_tuple(data_array, indices_array, indptr_array),
+        py::arg("shape")=py::make_tuple(M, N)
+    );
+}
+
+
+/** Convert a string to an AMDOrder enum.
+ *
+ * @param order  the string to convert
+ *
+ * @return the AMDOrder enum
+ */
+cs::AMDOrder string_to_amdorder(const std::string& order)
+{
+    if (order == "Natural") { return cs::AMDOrder::Natural; }
+    if (order == "APlusAT") { return cs::AMDOrder::APlusAT; }
+    if (order == "ATANoDenseRows") { return cs::AMDOrder::ATANoDenseRows; }
+    if (order == "ATA") { return cs::AMDOrder::ATA; }
+    throw std::runtime_error("Invalid AMDOrder specified.");
+}
+
 
 PYBIND11_MODULE(csparse, m) {
     m.doc() = "CSparse module for sparse matrix operations.";
@@ -71,42 +128,38 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     //        Enums and Structs
     //--------------------------------------------------------------------------
-    // Register the enum class 'AMDOrder'
-    py::enum_<cs::AMDOrder>(m, "AMDOrder")
-        .value("Natural", cs::AMDOrder::Natural)
-        .value("APlusAT", cs::AMDOrder::APlusAT)
-        .value("ATANoDenseRows", cs::AMDOrder::ATANoDenseRows)
-        .value("ATA", cs::AMDOrder::ATA)
-        .export_values();
-
-    // Bind the Symbolic structs
-    py::class_<cs::SymbolicChol>(m, "SymbolicChol")
-        // Expose the members of the struct as attributes in Python
-        .def(py::init<>())  // Default constructor
-        .def_readwrite("p_inv", &cs::SymbolicChol::p_inv)
-        .def_readwrite("parent", &cs::SymbolicChol::parent)
-        .def_readwrite("cp", &cs::SymbolicChol::cp)
-        .def_readwrite("lnz", &cs::SymbolicChol::lnz);
-
-    // Bind the Symbolic structs
-    py::class_<cs::SymbolicQR>(m, "SymbolicQR")
-        // Expose the members of the struct as attributes in Python
-        .def(py::init<>())  // Default constructor
-        .def_readwrite("p_inv", &cs::SymbolicQR::p_inv)
-        .def_readwrite("q", &cs::SymbolicQR::q)
-        .def_readwrite("parent", &cs::SymbolicQR::parent)
-        .def_readwrite("leftmost", &cs::SymbolicQR::leftmost)
-        .def_readwrite("m2", &cs::SymbolicQR::m2)
-        .def_readwrite("vnz", &cs::SymbolicQR::vnz)
-        .def_readwrite("rnz", &cs::SymbolicQR::rnz);
-
     // Bind the QRResult struct
     py::class_<cs::QRResult>(m, "QRResult")
-        .def_readwrite("V", &cs::QRResult::V)
-        .def_readwrite("beta", &cs::QRResult::beta)
-        .def_readwrite("R", &cs::QRResult::R)
-        .def_readwrite("p_inv", &cs::QRResult::p_inv)
-        .def_readwrite("q", &cs::QRResult::q);
+        .def_property_readonly("V", [&m](const cs::QRResult& qr) {
+            return csc_matrix_to_scipy_csc(qr.V, m);
+        })
+        .def_property_readonly("beta", [](const cs::QRResult& qr) {
+            return vector_to_numpy(qr.beta);
+        })
+        .def_property_readonly("R", [&m](const cs::QRResult& qr) {
+            return csc_matrix_to_scipy_csc(qr.R, m);
+        })
+        .def_property_readonly("p_inv", [](const cs::QRResult& qr) {
+            return vector_to_numpy(qr.p_inv);
+        })
+        .def_property_readonly("q", [](const cs::QRResult& qr) {
+            return vector_to_numpy(qr.q);
+        });
+
+    // Bind the LUResult struct
+    py::class_<cs::LUResult>(m, "LUResult")
+        .def_property_readonly("L", [&m](const cs::LUResult& lu) {
+            return csc_matrix_to_scipy_csc(lu.L, m);
+        })
+        .def_property_readonly("U", [&m](const cs::LUResult& lu) {
+            return csc_matrix_to_scipy_csc(lu.U, m);
+        })
+        .def_property_readonly("p_inv", [](const cs::LUResult& lu) {
+            return vector_to_numpy(lu.p_inv);
+        })
+        .def_property_readonly("q", [](const cs::LUResult& lu) {
+            return vector_to_numpy(lu.q);
+        });
 
     //--------------------------------------------------------------------------
     //        COOMatrix class
@@ -208,6 +261,7 @@ PYBIND11_MODULE(csparse, m) {
         .def_property_readonly("indices", &cs::CSCMatrix::indices)
         .def_property_readonly("data", &cs::CSCMatrix::data)
         //
+        .def("dropzeros", &cs::CSCMatrix::dropzeros)
         .def("to_canonical", &cs::CSCMatrix::to_canonical)
         .def_property_readonly("has_sorted_indices", &cs::CSCMatrix::has_sorted_indices)
         .def_property_readonly("has_canonical_format", &cs::CSCMatrix::has_canonical_format)
@@ -272,11 +326,16 @@ PYBIND11_MODULE(csparse, m) {
         .def("add", &cs::CSCMatrix::add)
         .def("__add__", &cs::CSCMatrix::add)
         //
-        .def("permute", &cs::CSCMatrix::permute)
-        .def("symperm", &cs::CSCMatrix::symperm)
-        .def("permute_transpose", &cs::CSCMatrix::permute_transpose)
-        .def("permute_rows", &cs::CSCMatrix::permute_rows)
-        .def("permute_cols", &cs::CSCMatrix::permute_cols)
+        .def("permute", &cs::CSCMatrix::permute,
+             py::arg("p_inv"), py::arg("q"), py::arg("values")=true)
+        .def("symperm", &cs::CSCMatrix::symperm,
+             py::arg("p_inv"), py::arg("values")=true)
+        .def("permute_transpose", &cs::CSCMatrix::permute_transpose,
+             py::arg("p_inv"), py::arg("q"), py::arg("values")=true)
+        .def("permute_rows", &cs::CSCMatrix::permute_rows,
+             py::arg("p_inv"), py::arg("values")=true)
+        .def("permute_cols", &cs::CSCMatrix::permute_cols,
+             py::arg("q"), py::arg("values")=true)
         //
         .def("norm", &cs::CSCMatrix::norm)
         .def("fronorm", &cs::CSCMatrix::fronorm)
@@ -299,6 +358,13 @@ PYBIND11_MODULE(csparse, m) {
             py::arg("threshold")=1000
         );
 
+    // -------------------------------------------------------------------------
+    //         Example Matrices
+    // -------------------------------------------------------------------------
+    m.def("_davis_example_small", &cs::davis_example_small);
+    m.def("_davis_example_chol", &cs::davis_example_chol);
+    m.def("_davis_example_qr", &cs::davis_example_qr);
+
     //--------------------------------------------------------------------------
     //        Utility Functions
     //--------------------------------------------------------------------------
@@ -307,46 +373,111 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     //        Decomposition Functions
     //--------------------------------------------------------------------------
-    // TODO update these interfaces so we don't need to expose the symbolic
-    // structures (or possibly even the output structures?) in python
-    // We should just be able to call "Q, R = qr(A)" like in scipy.
-
-    // Cholesky decomposition
+    // ---------- Cholesky decomposition
     m.def("etree", &cs::etree, py::arg("A"), py::arg("ata")=false);
     m.def("post", &cs::post);
-    m.def("schol",
-        &cs::schol,
-        py::arg("A"),
-        py::arg("ordering")=cs::AMDOrder::Natural,
-        py::arg("use_postorder")=false
-    );
-    m.def("symbolic_cholesky", &cs::symbolic_cholesky);
-    m.def("chol",
-        &cs::chol,
-        py::arg("A"),
-        py::arg("S"),
-        py::arg("drop_tol")=0.0
-    );
-    m.def("leftchol", &cs::leftchol);
-    m.def("rechol", &cs::rechol);
 
-    // QR decomposition
-    m.def("sqr", 
-        &cs::sqr,
+    m.def("chol",
+        [] (
+            const cs::CSCMatrix& A,
+            const std::string& order="Natural",
+            bool use_postorder=false
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
+            double drop_tol = 0.0;  // do not drop entries
+            return cs::chol(A, S, drop_tol);
+        },
         py::arg("A"),
-        py::arg("order")=cs::AMDOrder::Natural,
+        py::arg("order")="Natural",
         py::arg("use_postorder")=false
     );
-    // Could name this _qr and then have a python function qr() that calls sqr,
-    // and converts from V, beta to Q, R, (and p, q), or just include p_inv and
-    // q in the QRResult struct. The python function could then just return
-    // a tuple of numpy/sparse arrays, and we don't have to expose the
-    // SymbolicQR struct.
-    m.def("qr", &cs::qr);
-    m.def("qr_pivoting", &cs::qr_pivoting,
+
+    m.def("symbolic_cholesky",
+        [](
+            const cs::CSCMatrix& A,
+            const std::string& order="Natural",
+            bool use_postorder=false
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
+            // TODO Fill the values with 1.0 for the symbolic factorization?
+            // cs::CSCMatrix L = cs::symbolic_cholesky(A, S);
+            // std::fill(L.v_.begin(), L.v_.end(), 1.0);
+            // return L;
+            return cs::symbolic_cholesky(A, S);;
+        },
         py::arg("A"),
-        py::arg("S"),
-        py::arg("tol")=0.0
+        py::arg("order")="Natural",
+        py::arg("use_postorder")=false
+    );
+
+    m.def("leftchol",
+        [] (
+            const cs::CSCMatrix& A,
+            const std::string& order="Natural",
+            bool use_postorder=false
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
+            cs::CSCMatrix L = cs::symbolic_cholesky(A, S);
+            return cs::leftchol(A, S, L);
+        },
+        py::arg("A"),
+        py::arg("order")="Natural",
+        py::arg("use_postorder")=false
+    );
+
+    m.def("rechol",
+        [] (
+            const cs::CSCMatrix& A,
+            const std::string& order="Natural",
+            bool use_postorder=false
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
+            cs::CSCMatrix L = cs::symbolic_cholesky(A, S);
+            return cs::rechol(A, S, L);
+        },
+        py::arg("A"),
+        py::arg("order")="Natural",
+        py::arg("use_postorder")=false
+    );
+
+    // TODO implement ichol
+
+    // ---------- QR decomposition
+    // Define the python qr function here, and call the C++ sqr function.
+    m.def("qr",
+        [](
+            const cs::CSCMatrix& A,
+            const std::string& order="Natural",
+            bool use_postorder=false
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::SymbolicQR S = cs::sqr(A, order_enum, use_postorder);
+            return cs::qr(A, S);
+        },
+        py::arg("A"),
+        py::arg("order")="Natural",
+        py::arg("use_postorder")=false
+    );
+
+    // ---------- LU decomposition
+    // Define the python lu function here, and call the C++ slu function.
+    m.def("lu",
+        [](
+            const cs::CSCMatrix& A,
+            const std::string& order="Natural",
+            double tol=1.0
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::SymbolicLU S = cs::slu(A, order_enum);
+            return cs::lu(A, S, tol);
+        },
+        py::arg("A"),
+        py::arg("order")="Natural",
+        py::arg("tol")=1.0
     );
 
     //--------------------------------------------------------------------------

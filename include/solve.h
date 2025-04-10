@@ -10,6 +10,7 @@
 #ifndef _CSPARSE_SOLVE_H_
 #define _CSPARSE_SOLVE_H_
 
+#include <optional>
 #include <vector>
 
 #include "types.h"
@@ -236,6 +237,8 @@ TriPerm find_tri_permutation(const CSCMatrix& A);
  * @param A  the sparse, triangular system matrix
  * @param B  the sparse RHS matrix
  * @param k  the column index of `B` to solve
+ * @param p_inv  the inverse permutation vector of the matrix `A`. If not given,
+ *        A is taken in natural order.
  * @param lo  the lower bound of the diagonal entries of `G`. If `lo` is
  *        true, the function solves \f$ Lx = b_k`, otherwise it solves
  *        \f$ Ux = b_k \f$.
@@ -248,6 +251,7 @@ SparseSolution spsolve(
     const CSCMatrix& A,
     const CSCMatrix& B,
     csint k,
+    std::optional<const std::vector<csint>> p_inv=std::nullopt,
     bool lo=true
 );
 
@@ -258,11 +262,18 @@ SparseSolution spsolve(
  * @param A  a sparse system matrix
  * @param B  a sparse matrix containing the RHS in column `k`
  * @param k  the column index of `B` containing the RHS
+ * @param p_inv  the inverse permutation vector of the matrix `A`. If not given,
+ *        A is taken in natural order.
  *
  * @return xi  the row indices of the non-zero entries in `x`, in topological
  *         order of the graph.
  */
-std::vector<csint> reach(const CSCMatrix& A, const CSCMatrix& B, csint k);
+std::vector<csint> reach(
+    const CSCMatrix& A,
+    const CSCMatrix& B,
+    csint k,
+    std::optional<const std::vector<csint>> p_inv=std::nullopt
+);
 
 
 /** Perform depth-first search on the matrix graph.
@@ -273,6 +284,8 @@ std::vector<csint> reach(const CSCMatrix& A, const CSCMatrix& B, csint k);
  * @param[in,out] xi  the row indices of the non-zero entries in `x`. This
  *       vector is used as a stack to store the output. It should not be
  *       initialized, other than by a previous call to `dfs`.
+ * #param p_inv  the inverse permutation vector of the matrix `A`. If not given,
+ *        A is taken in natural order.
  *
  * @return xi  a reference to the row indices of the non-zero entries in `x`.
  */
@@ -280,7 +293,8 @@ std::vector<csint>& dfs(
     const CSCMatrix& A,
     csint j,
     std::vector<bool>& marked,
-    std::vector<csint>& xi
+    std::vector<csint>& xi,
+    std::optional<const std::vector<csint>> p_inv=std::nullopt
 );
 
 
@@ -304,7 +318,9 @@ SparseSolution chol_lsolve(
     std::vector<csint> parent = {}
 );
 
-
+// -----------------------------------------------------------------------------
+//        Cholesky Factorization Solutions
+// -----------------------------------------------------------------------------
 /** Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is a lower-triangular
  * Cholesky factor.
  *
@@ -343,6 +359,84 @@ std::vector<csint> topological_order(
     const std::vector<csint>& parent,
     bool forward=true
 );
+
+
+// -----------------------------------------------------------------------------
+//         LU Factorization Solutions
+// -----------------------------------------------------------------------------
+
+/** Solve a system \f$ A x = b \f$ using the LU factorization of `A`.
+ *
+ * See also: Davis, Exercise 6.1.
+ *
+ * @param A  a square matrix
+ * @param b  a dense vector
+ *
+ * @return x  the solution vector
+ */
+std::vector<double> lu_solve(const CSCMatrix& A, const std::vector<double>& b);
+
+
+/** Solve a system \f$ A x = b \f$ using the LU factorization of `A`.
+ *
+ * See also: Davis, Exercise 6.1.
+ *
+ * @param res  the LU factorization result of a matrix `A`
+ * @param b  a dense vector
+ *
+ * @return x  the solution vector
+ */
+std::vector<double> lu_solve(const LUResult& res, const std::vector<double>& b);
+
+
+/** Solve a system \f$ A^T x = b \f$ using the LU factorization of `A`.
+ *
+ * See: Davis, Exercise 6.1.
+ *
+ * @param A  a square matrix
+ * @param b  a dense vector
+ *
+ * @return x  the solution vector
+ */
+std::vector<double> lu_tsolve(const CSCMatrix& A, const std::vector<double>& b);
+
+
+/** Solve a system \f$ A^T x = b \f$ using the LU factorization of `A`.
+ *
+ * See: Davis, Exercise 6.1.
+ *
+ * @param res  the LU factorization result of a matrix `A`
+ * @param b  a dense vector
+ *
+ * @return x  the solution vector
+ */
+std::vector<double> lu_tsolve(const LUResult& res, const std::vector<double>& b);
+
+
+/** Estimate the 1-norm of the *inverse* of a sparse matrix.
+ *
+ * See: Davis, Exercise 6.15.
+ *
+ * @param res  the LU factorization result of a matrix `A`
+ *
+ * @return norm  the estimated 1-norm of the *inverse* of `A`
+ */
+double norm1est_inv(const LUResult& res);
+
+
+/** Estimate the 1-norm condition number of a sparse matrix.
+ *
+ * The condition number for a non-symmetric matrix is defined as:
+ * \f$ \kappa_p(A) = ||A||_p ||A^{-1}||_p \f$.
+ * This function chooses \f$ p = 1 \f$.
+ *
+ * See: Davis, Exercise 6.15..
+ *
+ * @param A  a real, square matrix
+ *
+ * @return cond  the estimated 1-norm condition number of `A`
+ */
+double cond1est(const CSCMatrix& A);
 
 
 }  // namespace cs

@@ -11,6 +11,7 @@
 #include <cassert>
 #include <cmath>      // for std::fabs
 #include <format>
+#include <new>        // for std::bad_alloc
 #include <ranges>     // for std::views::reverse
 #include <string>
 #include <sstream>
@@ -115,19 +116,23 @@ CSCMatrix::CSCMatrix(
 }
 
 
-CSCMatrix& CSCMatrix::realloc(csint nzmax)
+void CSCMatrix::realloc(csint nzmax)
 {
     csint Z = (nzmax <= 0) ? p_[N_] : nzmax;
 
-    p_.resize(N_ + 1);  // always contains N_ columns + nz
-    i_.resize(Z);
-    v_.resize(Z);
+    try {
+        p_.resize(N_ + 1);  // always contains N_ columns + nz
+        i_.resize(Z);
+        v_.resize(Z);
+    } catch (const std::bad_alloc& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "Failed to allocate memory for CSCMatrix." << std::endl;
+        throw;  // let calling code handle it
+    }
 
     p_.shrink_to_fit();  // deallocate memory
     i_.shrink_to_fit();
     v_.shrink_to_fit();
-
-    return *this;
 }
 
 
@@ -1157,8 +1162,8 @@ csint CSCMatrix::scatter(
  *         Permutations 
  *----------------------------------------------------------------------------*/
 CSCMatrix CSCMatrix::permute(
-    const std::vector<csint> p_inv,
-    const std::vector<csint> q,
+    const std::vector<csint>& p_inv,
+    const std::vector<csint>& q,
     bool values
 ) const
 {
@@ -1183,7 +1188,7 @@ CSCMatrix CSCMatrix::permute(
 }
 
 
-CSCMatrix CSCMatrix::permute_rows(const std::vector<csint> p_inv, bool values) const
+CSCMatrix CSCMatrix::permute_rows(const std::vector<csint>& p_inv, bool values) const
 {
     std::vector<csint> q(N_);
     std::iota(q.begin(), q.end(), 0);  // identity permutation
@@ -1191,7 +1196,7 @@ CSCMatrix CSCMatrix::permute_rows(const std::vector<csint> p_inv, bool values) c
 }
 
 
-CSCMatrix CSCMatrix::permute_cols(const std::vector<csint> q, bool values) const
+CSCMatrix CSCMatrix::permute_cols(const std::vector<csint>& q, bool values) const
 {
     std::vector<csint> p_inv(M_);
     std::iota(p_inv.begin(), p_inv.end(), 0);  // identity permutation
@@ -1199,7 +1204,7 @@ CSCMatrix CSCMatrix::permute_cols(const std::vector<csint> q, bool values) const
 }
 
 
-CSCMatrix CSCMatrix::symperm(const std::vector<csint> p_inv, bool values) const
+CSCMatrix CSCMatrix::symperm(const std::vector<csint>& p_inv, bool values) const
 {
     assert(M_ == N_);  // matrix must be square. Symmetry not checked.
 
@@ -1555,9 +1560,9 @@ std::vector<double> CSCMatrix::sum_cols() const
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/
-void CSCMatrix::print_dense(std::ostream& os) const
+void CSCMatrix::print_dense(int precision, bool suppress, std::ostream& os) const
 {
-    print_dense_vec(to_dense_vector('F'), M_, N_, 'F', os);
+    print_dense_vec(to_dense_vector('F'), M_, N_, 'F', precision, suppress, os);
 }
 
 

@@ -30,7 +30,7 @@ TEST_MATRICES = [
     ("Laplacian (Symmetric Banded)",
         sparse.diags([1, -2, 1], [-1, 0, 1]).tocsc()),
     ("Davis 8x8", csparse.davis_example_qr(format='csc')),
-    ("Davis 4x4", csparse.davis_small_example(format='csc')),
+    ("Davis 4x4", csparse.davis_example_small(format='csc')),
     # See: Strang Linear Algebra p 203.
     ("Strang 3x3", sparse.csc_array(
         np.array([[1, 1, 2], [0, 0, 1], [1, 0, 0]], dtype=float)
@@ -65,15 +65,12 @@ def _test_qr_decomposition(case_name, A):
     M, N = A.shape
 
     # ---------- Compute csparse QR
-    S = csparse.sqr(Ac)
-    QRres = csparse.qr(Ac, S)
-    V, beta, R = QRres.V, QRres.beta, QRres.R
+    QRres = csparse.qr(Ac)
+    V, beta, R, p_inv = QRres.V, QRres.beta, QRres.R, QRres.p_inv
 
     # Convert to numpy arrays
     V = V.toarray()
-    beta = np.r_[beta]
     R = R.toarray()
-    p_inv = np.r_[QRres.p_inv]
 
     p = csparse.inv_permute(p_inv)
     Q = csparse.apply_qright(V, beta, p)
@@ -135,7 +132,7 @@ def test_apply_q():
 
 def test_qrightleft():
     """Test the python QR decomposition algorithms."""
-    A = csparse.davis_small_example(format='ndarray')
+    A = csparse.davis_example_small(format='ndarray')
 
     # Test our own python QR decomposition
     V_r, beta_r, R_r = csparse.qr_right(A)

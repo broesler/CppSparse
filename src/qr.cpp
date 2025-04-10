@@ -130,10 +130,10 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
                        tail(N, -1),  // the last row index in each column
                        nque(N);      // the number of rows in each column
 
-    S.p_inv.assign(std::max(M, N), 0);  // permutation vector
+    S.p_inv.assign(std::max(M, N), -1);  // initialize permutation vector
 
+    // Initialize the linked lists for each row with their leftmost index
     for (csint i = M-1; i >= 0; i--) {  // scan rows in reverse order
-        S.p_inv[i] = -1;                // i is not yet in the permutation
         csint k = S.leftmost[i];
         if (k != -1) {                  // row i is not empty
             if (nque[k]++ == 0) {
@@ -147,7 +147,8 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
     S.vnz = 0;
     S.m2 = M;
 
-    csint k; // declare outside loop for final row permutation
+    // List k contains all rows that belong to V(:, k)
+    csint k;  // declare outside loop for final row permutation
     for (k = 0; k < N; k++) {          // find row permutation and nnz(V)
         csint i = head[k];             // remove row i from queue k
         S.vnz++;                       // count V(k, k) as nonzero
@@ -404,50 +405,54 @@ QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
 
     // Allocate workspaces
     std::vector<double> x(M);      // dense vector
-    std::vector<csint>  w(M, -1),  // workspace for pattern of V[:, k]
-                        s, t;      // stacks for pattern of R[:, k]
+    std::vector<csint>  w(M, -1);  // workspace for pattern of V[:, k]
+    std::vector<csint> s, t;       // stacks for pattern of R[:, k]
     s.reserve(N);
     t.reserve(N);
 
-    // Initialize the column norms of A
+    // Compute the column norms of A
     std::vector<double> col_norms(N);
     for (csint k = 0; k < N; k++) {
-        double norm = 0.0;
-        for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
-            norm += A.v_[p] * A.v_[p];
-        }
-        col_norms[k] = std::sqrt(norm);
+        auto col_k = std::span(A.v_).subspan(A.p_[k], A.p_[k+1] - A.p_[k]);
+        col_norms[k] = norm(col_k);
     }
 
-    std::vector<csint> p_inv(S.p_inv);  // copy the given row permutation
-    std::vector<csint> q(S.q);  // copy the given column permutation
+    std::vector<csint> q = S.q;  // copy the given column permutation
+    csint K = 0;  // number of small columns
 
     // Compute V and R
     csint vnz = 0,
           rnz = 0;
 
     for (csint k = 0; k < N; k++) {
-        R.p_[k] = rnz;    // R[:, k] starts here
-        V.p_[k] = vnz;    // V[:, k] starts here
-        csint p1 = vnz;   // save start of V(:, k)
-
         // Possibly pivot column k to the end
-        if ((k > 0) && (col_norms[k] < tol)) {
-            q.push_back(std::move(q[k]));  // move column k to the end
-            q.erase(q.begin() + k);        // erase the old position
-            p_inv.push_back(std::move(p_inv[k]));  // move column k to the end
-            p_inv.erase(p_inv.begin() + k);        // erase the old position
+        if (col_norms[q[k]] < tol && k < N - K) {
+#ifdef DEBUG
+            std::cout 
+                << "[" << __FILE__ << ":" << __LINE__ << "]: "
+                << "k=" << k 
+                << ", pivot column " << q[k] << " to end" << std::endl;
+#endif
+            csint v = std::move(q[k]);  // move the column to a temp location
+            q.erase(q.begin() + k);     // erase the old position
+            q.push_back(v);             // append column k to the end
+            K++;                        // count small pivots
+            k--;                        // decrement k to recompute this column
+            continue;
         }
 
         // Possibly realloc matrices (see cs_lu.c)
         if ((vnz + N) > V.nzmax()) {
-            V.realloc(2*V.nzmax() + N);
+            V.realloc(2 * V.nzmax() + N);
         }
 
         if ((rnz + N) > R.nzmax()) {
-            R.realloc(2*R.nzmax() + N);
+            R.realloc(2 * R.nzmax() + N);
         }
 
+        R.p_[k] = rnz;    // R[:, k] starts here
+        V.p_[k] = vnz;    // V[:, k] starts here
+        csint p1 = vnz;   // save start of V(:, k)
         w[k] = k;         // add V(k, k) to pattern of V
         V.i_[vnz++] = k;  // V(k, k) is non-zero
 
@@ -460,9 +465,11 @@ QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
 
             s.clear();
             // FIXME i becomes -1 here after i = S.parent[7] == -1
-            // Try setting S.q artificially without pivoting
-            // Seems to break when we pivot to a column with a 0 on the
-            // diagonal!
+            // Breaks when we pivot to a column with a 0 on the diagonal!
+            // if (i == -1) {
+            //     continue;
+            // }
+
             while (w[i] != k) {  // traverse up to k
                 s.push_back(i);
                 w[i] = k;
@@ -472,7 +479,7 @@ QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
             // Push path onto "output" stack
             std::copy(s.rbegin(), s.rend(), std::back_inserter(t));
 
-            i = p_inv[A.i_[p]];     // i = permuted row of A(:, col)
+            i = S.p_inv[A.i_[p]];     // i = permuted row of A(:, col)
             x[i] = A.v_[p];           // x(i) = A(:, col)
 
             if (i > k && w[i] < k) {  // pattern of V(:, k) = x(k+1:m)
@@ -510,7 +517,7 @@ QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
     R.p_[N] = rnz;  // finalize R
     V.p_[N] = vnz;  // finalize V
 
-    return {V, beta, R, p_inv, q};
+    return {V, beta, R, S.p_inv, q};
 }
 
 

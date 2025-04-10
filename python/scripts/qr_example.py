@@ -22,17 +22,18 @@ atol = 1e-12
 
 
 # ---------- Matrix from Davis Figure 5.1, p 74.
-A = csparse.davis_example_qr(format='csc')
+Ac = csparse.davis_example_qr()
 
 # ---------- Davis 4x4 example
-# A = csparse.davis_small_example(format='csc')
+# Ac = csparse.davis_small_example()
 
-N = A.shape[0]
-Ac = csparse.from_scipy_sparse(A, format='csc')
+M, N = Ac.shape
 
-A_dense = A.toarray()
-# print("A = ")
-# print(A_dense)
+A = Ac.toarray()
+As = sparse.csc_matrix(A)
+
+print("A = ")
+print(A)
 
 # -----------------------------------------------------------------------------
 #         Compute QR decomposition with csparse
@@ -56,7 +57,7 @@ Q = csparse.apply_qright(V, beta, p)
 # -----------------------------------------------------------------------------
 # Permute the rows of A_dense here with QRres.p_inv to get the
 # same V and beta as the csparse.qr function.
-Ap = A_dense[p]
+Ap = A[p]
 
 (Qraw, tau), Rraw = la.qr(Ap, mode='raw')
 Q_, R_ = la.qr(Ap)
@@ -67,17 +68,18 @@ np.testing.assert_allclose(Q_ @ R_, Ap, atol=atol)
 np.testing.assert_allclose(Q, Q_[QRres.p_inv], atol=atol)
 
 # Reproduce A = QR
-np.testing.assert_allclose(Q @ R, A_dense, atol=atol)
+np.testing.assert_allclose(Q @ R, A, atol=atol)
 # print("Q @ R = ")
 # print(Q @ R)
 
 # -----------------------------------------------------------------------------
 #         QR with a M != N matrix and/or column pivoting
 # -----------------------------------------------------------------------------
+print("---------- QR with M ≠ N ----------")
 M, N = 8, 5
 # M, N = 5, 8
 
-Ar = A[:M, :N]
+Ar = As[:M, :N]
 
 Ar_dense = Ar.toarray()
 M, N = Ar.shape
@@ -139,13 +141,80 @@ G = csparse.givens(x)
 
 # NOTE not sure what to do with these yet... there is no V or Q computed, and
 # the two algorithms do not give equal results.
-Rf = csparse.qr_givens_full(A_dense)
-Rg = csparse.qr_givens(A_dense)
+Rf = csparse.qr_givens_full(A)
+Rg = csparse.qr_givens(A)
 
 # print(G @ x)
 np.testing.assert_allclose(np.abs(G @ x), np.r_[la.norm(x), 0], atol=atol)
 # TODO work out what the sign of the rotation should be and test for various
 # vectors.
+
+# -----------------------------------------------------------------------------
+#         Compute QR with column pivoting
+# -----------------------------------------------------------------------------
+print("---------- QR with column pivoting ----------")
+# Add 10 to diagonal to enforce expected pivoting
+for i in range(M):
+    A[i, i] += 10
+
+tol = 0.1  # tolerance for column pivoting
+
+# Create small column(s)
+ks = [3]
+# ks = [2, 3, 5]
+for k in ks:
+    A_kk = A[k, k]
+    A[:, k] *= 0.95 * tol / A_kk;
+
+print("A = ")
+print(A)
+
+# # Manually pivot the columns to the end
+# q = list(range(N))
+# for k in ks:
+#     q.append(q.pop(k))
+# q = np.r_[q]
+# A = A[:, q]
+# print("A = ")
+# print(A)
+
+Ac = csparse.from_ndarray(A)
+
+# ---------- Compute using Householder reflections
+QRres = csparse.qr_pivoting(Ac, tol)
+
+# FIXME p_inv has repeated 0 at end??
+V, beta, R, p_inv, q = QRres.V, QRres.beta, QRres.R, QRres.p_inv, QRres.q
+
+# Convert for easier debugging
+V = V.toarray()
+R = R.toarray()
+
+# Get the actual Q matrix, don't forget the row permutation!
+p = np.r_[csparse.inv_permute(p_inv)]
+Q = csparse.apply_qright(V, beta, p)
+
+# -----------------------------------------------------------------------------
+#         Compute the QR decomposition of A with scipy
+# -----------------------------------------------------------------------------
+# Permute the rows of A_dense here with QRres.p_inv to get the
+# same V and beta as the csparse.qr function.
+Ap = A[p][:, q]
+
+(Qraw, tau), Rraw = la.qr(Ap, mode='raw')
+Q_, R_ = la.qr(Ap)
+V_ = np.tril(Qraw, -1) + np.eye(A.shape[1])
+Qr_ = csparse.apply_qright(V_, tau, p)
+
+np.testing.assert_allclose(Q_ @ R_, Ap, atol=atol)
+# np.testing.assert_allclose(Q, Q_[QRres.p_inv], atol=atol)
+
+# Reproduce PAQ = QR
+# np.testing.assert_allclose(Q @ R, A[:, q], atol=atol)
+print("PAQ = ")
+print(Ap)
+print("Q @ R = ")
+print(Q @ R)
 
 # =============================================================================
 # =============================================================================

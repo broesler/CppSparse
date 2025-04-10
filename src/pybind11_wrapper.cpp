@@ -463,6 +463,23 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("use_postorder")=false
     );
 
+    m.def("qr_pivoting",
+        [](
+            const cs::CSCMatrix& A,
+            double tol=0.0,
+            const std::string& order="Natural",
+            bool use_postorder=false
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::SymbolicQR S = cs::sqr(A, order_enum, use_postorder);
+            return cs::qr_pivoting(A, S, tol);
+        },
+        py::arg("A"),
+        py::arg("tol")=0.0,
+        py::arg("order")="Natural",
+        py::arg("use_postorder")=false
+    );
+
     // ---------- LU decomposition
     // Define the python lu function here, and call the C++ slu function.
     m.def("lu",

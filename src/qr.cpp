@@ -330,10 +330,11 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
         for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {
             std::cout << "  p: " << p << std::endl;
             csint i = S.leftmost[A.i_[p]];  // i = min(find(A(i, q)))
+            std::cout << "left i: " << i << std::endl;
 
             s.clear();
             while (w[i] != k) {  // traverse up to k
-                std::cout << "    i: " << i << std::endl;
+                std::cout << "     i: " << i << std::endl;
                 s.push_back(i);
                 w[i] = k;
                 i = S.parent[i];
@@ -436,15 +437,17 @@ QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
     for (csint k = 0; k < N; k++) {
         // Possibly pivot column k to the end
         if (col_norms[q[k]] < tol && k < N - K) {
-            csint v = std::move(q[k]);                      // move the column to a temp location
-            q.erase(q.begin() + k);                         // erase the old position
-            q.push_back(std::move(v));                      // append column k to the end
-                                                            // Perform the reverse permutation
+            csint v = std::move(q[k]);  // move the column to a temp location
+            q.erase(q.begin() + k);     // erase the old position
+            q.push_back(std::move(v));  // append column k to the end
+
+            // Perform the reverse permutation
             v = std::move(q_inv.back());                    // move the column to a temp location
             q_inv.pop_back();                               // erase the old position
             q_inv.insert(q_inv.begin() + k, std::move(v));  // insert the end at k
-            K++;                                            // count small pivots
-            k--;                                            // decrement k to recompute this column
+
+            K++;  // count small pivots
+            k--;  // decrement k to recompute this column
             continue;
             // NOTE when we permute the columns, we are just relabeling the
             // column elimination tree (since AQ -> Q^T A^T A Q == Q^T C Q)
@@ -464,29 +467,23 @@ QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
         R.p_[k] = rnz;    // R[:, k] starts here
         V.p_[k] = vnz;    // V[:, k] starts here
         csint p1 = vnz;   // save start of V(:, k)
-        w[k] = k;         // add V(k, k) to pattern of V
+        // w is "old" indices
+        w[q[k]] = q[k];         // add V(k, k) to pattern of V
         V.i_[vnz++] = k;  // V(k, k) is non-zero
 
         t.clear();
         csint col = q[S.q[k]];  // permuted column of A
 
-        std::cout << "----- k: " << k << std::endl;
-        std::cout << "w: " << w << std::endl;
         // find R[:, k] pattern
         for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {
-            std::cout << "    p: " << p << std::endl;
+            // i is an "old" column index
             csint i = S.leftmost[A.i_[p]];  // i = min(find(A(i, q)))
 
             s.clear();
-            while (w[i] != k) {  // traverse up to k
-                std::cout << "    i: " << i << std::endl;
+            while (w[i] != q[k]) {  // traverse up to k
                 s.push_back(i);
-                w[i] = k;
-                // op = parent of i in un-permuted tree
-                csint op = S.parent[q[i]];
-                i = (op == -1) ? -1 : q_inv[op];
-                // FIXME i becomes -1 here after i = S.parent[7] == -1
-                // Breaks when we pivot to a column with a 0 on the diagonal!
+                w[i] = q[k];
+                i = S.parent[i];  // old -> old
             }
 
             // Push path onto "output" stack
@@ -495,9 +492,9 @@ QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
             i = S.p_inv[A.i_[p]];     // i = permuted row of A(:, col)
             x[i] = A.v_[p];           // x(i) = A(:, col)
 
-            if (i > k && w[i] < k) {  // pattern of V(:, k) = x(k+1:m)
+            if (i > q[k] && w[i] < q[k]) {  // pattern of V(:, k) = x(k+1:m)
                 V.i_[vnz++] = i;      // add i to pattern of V(:, k)
-                w[i] = k;
+                w[i] = q[k];
             }
         }
 
@@ -507,9 +504,9 @@ QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
             R.i_[rnz] = i;                 // R(i, k) = x(i)
             R.v_[rnz++] = x[i];
             x[i] = 0;
-            if (S.parent[i] == k) {
+            if (S.parent[i] == q[k]) {
                 // Scatter the non-zero pattern without changing the values
-                vnz = V.scatter(i, 0, w, x, k, V, vnz, false, false);
+                vnz = V.scatter(i, 0, w, x, q[k], V, vnz, false, false);
             }
         }
 

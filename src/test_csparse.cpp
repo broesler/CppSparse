@@ -3031,13 +3031,18 @@ TEST_CASE("Exercise 5.4: QR factorization with column pivoting", "[qr_pivoting]"
     for (csint i = 0; i < N; i++) {
         A(i, i) += 10;
     }
+    A = A.to_canonical();
 
     double tol = 0.0;
+    std::vector<csint> expect_p_inv = {0, 1, 3, 7, 4, 5, 2, 6};  // cs_qr MATLAB
     std::vector<csint> expect_q;
+
+    std::vector<csint> A_indices = A.indices();
+    std::vector<csint> A_indptr = A.indptr();
 
     SECTION("tol = 0.0 (no pivoting)") {
         std::cout << "---------- No Pivoting (tol = 0.0) ----------" << std::endl;
-        tol = 0.0;  // set to 0 to turn off pivoting
+        tol = 0.0;                            // set to 0 to turn off pivoting
         expect_q = {0, 1, 2, 3, 4, 5, 6, 7};  // natural
     }
 
@@ -3051,14 +3056,7 @@ TEST_CASE("Exercise 5.4: QR factorization with column pivoting", "[qr_pivoting]"
         for (csint i = 0; i < M; i++) {
             A(i, k) *= 0.95 * tol / A_kk;
         }
-
-        // NOTE HACK: Arificially set A[3, 4] to non-zero value
-        // Then, when we pivot column "3" to the end, column "4" has a non-zero
-        // value on the diagonal. Otherwise, we segfault.
-        // A(3, 4) = 0.5;
-
-        std::cout << "A:" << std::endl;
-        A.print_dense();
+        A = A.to_canonical();
 
         expect_q = {0, 1, 2, 4, 5, 6, 7, 3};
     }
@@ -3074,16 +3072,22 @@ TEST_CASE("Exercise 5.4: QR factorization with column pivoting", "[qr_pivoting]"
                 A(i, k) *= 0.95 * tol / A_kk;
             }
         }
-
-        std::cout << "A:" << std::endl;
-        A.print_dense();
+        A = A.to_canonical();
 
         expect_q = {0, 1, 4, 6, 7, 2, 3, 5};
     }
 
+    // std::cout << "A:" << std::endl;
+    // A.print_dense();
+
+    // Structure of A should be unchanged
+    CHECK(A.indices() == A_indices);
+    CHECK(A.indptr() == A_indptr);
+
     // ---------- Factor the matrix
     SymbolicQR S = sqr(A);
     QRResult res = qr_pivoting(A, S, tol);
+    // QRResult res = qr(A, S);
 
     std::cout << "V:" << std::endl;
     res.V.print_dense();
@@ -3091,7 +3095,13 @@ TEST_CASE("Exercise 5.4: QR factorization with column pivoting", "[qr_pivoting]"
     std::cout << "R:" << std::endl;
     res.R.print_dense();
 
+    CSCMatrix PAQ = A.permute(res.p_inv, res.q).to_canonical();
+    // std::cout << "PAQ:" << std::endl;
+    // PAQ.print_dense();
+
+    // S is untouched by qr[_pivoting]
     CHECK(S.q == std::vector<csint> {0, 1, 2, 3, 4, 5, 6, 7});  // natural order
+    CHECK(res.p_inv == expect_p_inv);
     CHECK(res.q == expect_q);
 
     // compare_matrices(res.V, expect_V);

@@ -324,12 +324,16 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
         t.clear();
         csint col = S.q[k];  // permuted column of A
 
+        std::cout << "----- k: " << k << std::endl;
+        std::cout << "w: " << w << std::endl;
         // find R[:, k] pattern
         for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {
+            std::cout << "  p: " << p << std::endl;
             csint i = S.leftmost[A.i_[p]];  // i = min(find(A(i, q)))
 
             s.clear();
             while (w[i] != k) {  // traverse up to k
+                std::cout << "    i: " << i << std::endl;
                 s.push_back(i);
                 w[i] = k;
                 i = S.parent[i];
@@ -392,6 +396,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
 }
 
 
+// TODO refactor name to qr_colpiv?
 // Exercise 5.4
 QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
 {
@@ -417,7 +422,11 @@ QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
         col_norms[k] = norm(col_k);
     }
 
-    std::vector<csint> q = S.q;  // copy the given column permutation
+    // Keep separate permutation vector for column pivoting
+    std::vector<csint> q(N);
+    std::iota(q.begin(), q.end(), 0);  // identity permutation
+    std::vector<csint> q_inv = q;      // inverse permutation
+
     csint K = 0;  // number of small columns
 
     // Compute V and R
@@ -427,18 +436,20 @@ QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
     for (csint k = 0; k < N; k++) {
         // Possibly pivot column k to the end
         if (col_norms[q[k]] < tol && k < N - K) {
-#ifdef DEBUG
-            std::cout 
-                << "[" << __FILE__ << ":" << __LINE__ << "]: "
-                << "k=" << k 
-                << ", pivot column " << q[k] << " to end" << std::endl;
-#endif
-            csint v = std::move(q[k]);  // move the column to a temp location
-            q.erase(q.begin() + k);     // erase the old position
-            q.push_back(v);             // append column k to the end
-            K++;                        // count small pivots
-            k--;                        // decrement k to recompute this column
+            csint v = std::move(q[k]);                      // move the column to a temp location
+            q.erase(q.begin() + k);                         // erase the old position
+            q.push_back(std::move(v));                      // append column k to the end
+                                                            // Perform the reverse permutation
+            v = std::move(q_inv.back());                    // move the column to a temp location
+            q_inv.pop_back();                               // erase the old position
+            q_inv.insert(q_inv.begin() + k, std::move(v));  // insert the end at k
+            K++;                                            // count small pivots
+            k--;                                            // decrement k to recompute this column
             continue;
+            // NOTE when we permute the columns, we are just relabeling the
+            // column elimination tree (since AQ -> Q^T A^T A Q == Q^T C Q)
+            // We can either re-label S.parent or just use the new q[k] to find
+            // the leftmost index of the column. The latter is easier.
         }
 
         // Possibly realloc matrices (see cs_lu.c)
@@ -457,23 +468,25 @@ QRResult qr_pivoting(const CSCMatrix& A, const SymbolicQR& S, double tol)
         V.i_[vnz++] = k;  // V(k, k) is non-zero
 
         t.clear();
-        csint col = q[k];  // permuted column of A
+        csint col = q[S.q[k]];  // permuted column of A
 
+        std::cout << "----- k: " << k << std::endl;
+        std::cout << "w: " << w << std::endl;
         // find R[:, k] pattern
         for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {
+            std::cout << "    p: " << p << std::endl;
             csint i = S.leftmost[A.i_[p]];  // i = min(find(A(i, q)))
 
             s.clear();
-            // FIXME i becomes -1 here after i = S.parent[7] == -1
-            // Breaks when we pivot to a column with a 0 on the diagonal!
-            // if (i == -1) {
-            //     continue;
-            // }
-
             while (w[i] != k) {  // traverse up to k
+                std::cout << "    i: " << i << std::endl;
                 s.push_back(i);
                 w[i] = k;
-                i = S.parent[i];
+                // op = parent of i in un-permuted tree
+                csint op = S.parent[q[i]];
+                i = (op == -1) ? -1 : q_inv[op];
+                // FIXME i becomes -1 here after i = S.parent[7] == -1
+                // Breaks when we pivot to a column with a 0 on the diagonal!
             }
 
             // Push path onto "output" stack

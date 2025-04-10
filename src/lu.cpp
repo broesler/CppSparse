@@ -230,6 +230,7 @@ LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol)
 }
 
 
+// TODO integrate this function into cs::lu().
 // Exercise 6.3
 LUResult lu_col(const CSCMatrix& A,
 	const SymbolicLU& S,

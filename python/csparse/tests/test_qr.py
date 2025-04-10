@@ -43,7 +43,7 @@ TEST_MATRICES = [
 @pytest.mark.parametrize("case_name, A", TEST_MATRICES)
 def test_qr_fixed(case_name, A):
     """Test QR decomposition with various matrices."""
-    _test_qr_decomposition(case_name, A)
+    _test_qr_decomposition(A, case_name)
 
 
 @pytest.mark.parametrize("N", [2, 7, 10])
@@ -55,18 +55,48 @@ def test_qr_random(N):
     for i in range(N_runs):
         A = sparse.random(N, N, density=0.5, format='csc', random_state=rng)
         A.setdiag(N * np.arange(1, N+1))  # ensure structural full rank
-        _test_qr_decomposition(f"Random {N}x{N} ({seed=}, {i=})", A)
+        _test_qr_decomposition(A, f"Random {N}x{N} ({seed=}, {i=})")
 
 
-def _test_qr_decomposition(case_name, A):
+class TestQRColumnPivoting:
+    @pytest.fixture
+    def A(self):
+        """Create a test matrix for column pivoting."""
+        A = csparse.davis_example_qr(format='ndarray')
+        # Add 10 to diagonal to enforce expected pivoting
+        M, N = A.shape
+        i = range(M)
+        A[i, i] += 10
+        return A
+
+    @pytest.mark.parametrize("ks", [[], [3], [2, 3, 5]])
+    def test_qr_pivoting(self, A, ks):
+        """Test QR decomposition with column pivoting."""
+        tol = 0.1  # tolerance for column pivoting
+
+        # Create small columns so that they pivot
+        for k in ks:
+            A_kk = A[k, k]
+            A[:, k] *= 0.95 * tol / A_kk
+
+        As = sparse.csc_array(A)
+
+        def qr_func(A):
+            return csparse.qr_pivoting(A, tol)
+
+        _test_qr_decomposition(As, qr_func=qr_func)
+
+
+def _test_qr_decomposition(A, case_name='', qr_func=csparse.qr):
     """Test QR decomposition with various matrices using parametrization."""
+    print(case_name)
     Ac = csparse.from_scipy_sparse(A, format='csc')
     A_dense = A.toarray()
     M, N = A.shape
 
     # ---------- Compute csparse QR
-    QRres = csparse.qr(Ac)
-    V, beta, R, p_inv = QRres.V, QRres.beta, QRres.R, QRres.p_inv
+    QRres = qr_func(Ac)
+    V, beta, R, p_inv, q = QRres.V, QRres.beta, QRres.R, QRres.p_inv, QRres.q
 
     # Convert to numpy arrays
     V = V.toarray()
@@ -80,10 +110,10 @@ def _test_qr_decomposition(case_name, A):
     np.testing.assert_allclose(Q, Ql, atol=ATOL)
 
     # ---------- scipy QR
-    # Apply the row permutation to A_dense
-    Ap = A_dense[p]
-    (Qraw, tau), Rraw = la.qr(Ap, mode='raw')
-    Q_, R_ = la.qr(Ap)
+    # Apply the row and column permutation to A_dense
+    PAQ = A_dense[p][:, q]
+    (Qraw, tau), Rraw = la.qr(PAQ, mode='raw')
+    Q_, R_ = la.qr(PAQ)
     # Handle case when M < N
     V_ = np.tril(Qraw, -1)[:, :M] + np.eye(M, min(M, N))
     Qr_ = csparse.apply_qright(V_, tau, p)
@@ -99,7 +129,7 @@ def _test_qr_decomposition(case_name, A):
     np.testing.assert_allclose(Q[p], Q_, atol=ATOL)
 
     # Reproduce A = QR
-    np.testing.assert_allclose(Q_ @ R_, Ap, atol=ATOL)
+    np.testing.assert_allclose(Q_ @ R_, PAQ, atol=ATOL)
     np.testing.assert_allclose(Q_[p_inv] @ R_, A_dense, atol=ATOL)
     np.testing.assert_allclose(Q @ R, A_dense, atol=ATOL)
 

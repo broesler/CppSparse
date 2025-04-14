@@ -424,9 +424,6 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
     // TODO implement partial pivoting
     std::iota(p_inv.begin(), p_inv.end(), 0);  // identity permutation
 
-    // Build U as its transpose since the algorithm goes row by row
-    CSCMatrix AT = A.T();
-
     csint lnz = 0,
           unz = 0;
 
@@ -443,9 +440,24 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
             lu_realloc(UT, k, false);
         }
 
-        // Compute the row of U first
+        // ---------- Compute the row of U
         // U[k, k:] = A[k, k:] - L[k, :k] @ U[:k, k:]
-        // TODO how to do in a sparse way
+        // NOTE how to do in a sparse way?
+        //   * non-zeros will occur in row of U where either:
+        //      * A[k, j] is non-zero, or
+        //      * L[k, :k] @ U[:k, j] is non-zero.
+        //   * The dot product will be non-zero where *both* 
+        //      * L[k, :k] (row of L) and U[:k, j] (col of U) are non-zero.
+        //
+        //   * Set operation is J = A ∪ (L ∩ U).
+        //   * Need to do slice of U for each j to compute intersection of L and
+        //     U, so we *do* need to loop over all j values.
+        //   * `vecdot` is already a sparse dot product.
+        //   * `slice` is already a sparse operation (albeit a "slow" copy).
+        //   * A(k, j) is already a sparse operation.
+        //
+        //   => looping over all j values is actually the most efficient way to
+        //      do this operation.
         CSCMatrix L_col = L.slice(k, k+1, 0, k).T();  // == L[k, :k].T
         for (csint j = k; j < N; j++) {
             double lu_dot = 0.0;
@@ -462,14 +474,13 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
             }
         }
 
-        // Compute the column of L
+        // ---------- Compute the column of L
         // Place 1.0 on the diagonal
         L.i_[lnz] = k;
         L.v_[lnz++] = 1.0;
 
         // Compute the rest of the column
         // L[k+1:n, k] = (A[k+1:n, k] - L[k+1:n, :k] @ U[:k, k]) / U[k, k]
-        // TODO how to do in a sparse way
         CSCMatrix U_col = UT.slice(k, k+1, 0, k).T();  // == U[:k, k]
         for (csint i = k+1; i < N; i++) {
             double lu_dot = 0.0;
@@ -498,6 +509,14 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
 
     L.realloc();  // trim excess storage
     UT.realloc();
+
+    // By construction:
+    //   * L and UT computed in increasing row index order
+    //   * transpose of U on output also sorts
+    //   * Numerically zero entries are excluded
+    //   * A(i, k) sums duplicates
+    L.has_canonical_format_ = true;
+    UT.has_canonical_format_ = true;
 
     return {L, UT.T(), p_inv, S.q};
 }

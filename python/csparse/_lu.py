@@ -385,7 +385,7 @@ def norm1est_inv(A):
 
 def lu_crout(A):
     """Compute the LU decomposition of a matrix using Crout's algorithm
-    *without* partial pivoting.
+    with partial pivoting.
 
     This method computes the `k`th column of `L` and `k`th row of `U` at each
     step of the factorization.
@@ -416,8 +416,17 @@ def lu_crout(A):
     P = np.eye(N)  # no pivoting (yet)
 
     for k in range(N):
+        # Find the pivot element
+        i = np.argmax(np.abs(A[k:, k])) + k  # partial pivoting
+
+        # Swap rows in P and A
+        if i != k:
+            P[[k, i]] = P[[i, k]]
+            A[[k, i]] = A[[i, k]]
+
         # update row of U
         A[k, k:] = A[k, k:] - A[k, :k] @ A[:k, k:]
+
         # update column of L (unit diagonal not stored)
         A[k+1:, k] = (A[k+1:, k] - A[k+1:, :k] @ A[:k, k]) / A[k, k]
 

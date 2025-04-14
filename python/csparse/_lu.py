@@ -387,8 +387,6 @@ def lu_crout(A):
     """Compute the LU decomposition of a matrix using Crout's algorithm
     *without* partial pivoting.
 
-    See: Davis, Exercise 6.7.
-
     This method computes the `k`th column of `L` and `k`th row of `U` at each
     step of the factorization.
 
@@ -411,14 +409,24 @@ def lu_crout(A):
     """
     A = A.copy()
     M, N = A.shape
-    P = np.eye(N)
-    L = np.zeros((N, N))
-    U = np.zeros((N, N))
+
+    if M != N:
+        raise ValueError("Input matrix must be square.")
+
+    P = np.eye(N)  # no pivoting (yet)
+
     for k in range(N):
-        U[k, k:] = A[k, k:] - L[k, :k] @ U[:k, k:]
-        L[k:, k] = (A[k:, k] - L[k:, :k] @ U[:k, k]) / U[k, k]
+        # update row of U
+        A[k, k:] = A[k, k:] - A[k, :k] @ A[:k, k:]
+        # update column of L (unit diagonal not stored)
+        A[k+1:, k] = (A[k+1:, k] - A[k+1:, :k] @ A[:k, k]) / A[k, k]
+
+    # Get the individual factors
+    L = np.tril(A, -1) + np.eye(N)  # L is unit diagonal
+    U = np.triu(A)
 
     return P, L, U
-    
+
+
 # =============================================================================
 # =============================================================================

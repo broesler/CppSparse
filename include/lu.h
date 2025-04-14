@@ -113,6 +113,22 @@ LUResult lu_col(
 LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S);
 
 
+/** Compute the numeric LU decomposition of A, such that \f$PA = LU\f$.
+ *
+ * See: Davis, Exercise 6.7.
+ *
+ * This function computes the LU decomposition of `A` using the symbolic
+ * factorization `S`. The numeric factorization is computed using Crout's
+ * method, where each step computes one column of L and one row of U.
+ *
+ * @param A  the matrix to factorize
+ * @param S  the symbolic factorization
+ *
+ * @return the LU decomposition
+ */
+LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S);
+
+
 /** Incomplete LU decomposition using a drop threshold and pivoting.
  *
  * See: Davis, Exercise 6.13, and MATLAB `ilu` with option `type = 'ilutp'`.

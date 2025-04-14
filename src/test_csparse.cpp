@@ -3464,6 +3464,38 @@ TEST_CASE("Exercise 6.6: LU Factorization of Rectangular Matrices", "[ex6.6]")
 }
 
 
+TEST_CASE("Exercise 6.7: Crout's method LU Factorization", "[ex6.7]")
+{
+    CSCMatrix A = davis_example_qr();
+    auto [M, N] = A.shape();
+
+    // Add 10 to the diagonal to enforce expected pivoting
+    for (csint i = 0; i < N; i++) {
+        A(i, i) += 10;
+    }
+
+    A = A.to_canonical();
+
+    SECTION("No pivoting") {
+        // Compute the LU factorization of A using Crout's method
+        SymbolicLU S = slu(A);
+        LUResult res = lu_crout(A, S);
+
+        // std::cout << "A:" << std::endl;
+        // A.print_dense();
+        // std::cout << "L:" << std::endl;
+        // res.L.print_dense();
+        // std::cout << "U:" << std::endl;
+        // res.U.print_dense();
+
+        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+        CSCMatrix PA = A.permute_rows(res.p_inv).to_canonical();
+
+        compare_matrices(LU, PA);
+    }
+}
+
+
 TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13]")
 {
     CSCMatrix A = davis_example_qr().to_canonical();

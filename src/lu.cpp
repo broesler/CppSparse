@@ -346,6 +346,7 @@ LUResult lu_col(const CSCMatrix& A,
     return {L, U, p_inv, q};
 }
 
+
 // Exercise 6.4
 LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
 {
@@ -404,6 +405,101 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     }
 
     return {L, U, p_inv, S.q};
+}
+
+
+// Exercise 6.7
+LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
+{
+    auto [M, N] = A.shape();
+
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    // Allocate result matrices
+    CSCMatrix L({N, N}, S.lnz);       // lower triangular matrix
+    CSCMatrix UT({N, N}, S.unz);      // (transpose of) upper triangular matrix
+    std::vector<csint> p_inv(N, -1);  // row permutation vector
+    // TODO implement partial pivoting
+    std::iota(p_inv.begin(), p_inv.end(), 0);  // identity permutation
+
+    // Build U as its transpose since the algorithm goes row by row
+    CSCMatrix AT = A.T();
+
+    csint lnz = 0,
+          unz = 0;
+
+    for (csint k = 0; k < N; k++) {  // Compute L[:, k] and U[k, :]
+        L.p_[k] = lnz;   // L[:, k] starts here
+        UT.p_[k] = unz;  // U[k, :] starts here
+
+        // Possibly reallocate L and U
+        if (lnz + N > L.nzmax()) {
+            lu_realloc(L, k, true);
+        }
+
+        if (unz + N > UT.nzmax()) {
+            lu_realloc(UT, k, false);
+        }
+
+        // Compute the row of U first
+        // U[k, k:] = A[k, k:] - L[k, :k] @ U[:k, k:]
+        // TODO how to do in a sparse way
+        CSCMatrix L_col = L.slice(k, k+1, 0, k).T();  // == L[k, :k].T
+        for (csint j = k; j < N; j++) {
+            double lu_dot = 0.0;
+            if (k > 0) {
+                CSCMatrix U_col = UT.slice(j, j+1, 0, k).T();  // == U[:k, j]
+                lu_dot = L_col.vecdot(U_col);
+            }
+
+            double a = A(k, j) - lu_dot;
+
+            if (std::fabs(a) > 0) {
+                UT.i_[unz] = j;
+                UT.v_[unz++] = a;
+            }
+        }
+
+        // Compute the column of L
+        // Place 1.0 on the diagonal
+        L.i_[lnz] = k;
+        L.v_[lnz++] = 1.0;
+
+        // Compute the rest of the column
+        // L[k+1:n, k] = (A[k+1:n, k] - L[k+1:n, :k] @ U[:k, k]) / U[k, k]
+        // TODO how to do in a sparse way
+        CSCMatrix U_col = UT.slice(k, k+1, 0, k).T();  // == U[:k, k]
+        for (csint i = k+1; i < N; i++) {
+            double lu_dot = 0.0;
+            if (k > 0) {
+                CSCMatrix L_col = L.slice(i, i+1, 0, k).T();  // == L[i, :k].T
+                lu_dot = L_col.vecdot(U_col);
+            }
+
+            double a = A(i, k) - lu_dot;
+            double pivot = UT.v_[UT.p_[k]];  // first element in col == UT(k, k);
+
+            if (pivot == 0.0) {
+                throw std::runtime_error("Matrix is singular!");
+            }
+
+            if (std::fabs(a) > 0) {
+                L.i_[lnz] = i;
+                L.v_[lnz++] = a / pivot;
+            }
+        }
+    }
+
+    // Finalize L and U
+    L.p_[N] = lnz;
+    UT.p_[N] = unz;
+
+    L.realloc();  // trim excess storage
+    UT.realloc();
+
+    return {L, UT.T(), p_inv, S.q};
 }
 
 

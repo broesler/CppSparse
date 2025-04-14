@@ -383,5 +383,42 @@ def norm1est_inv(A):
     return _norm1est_inv_lu(lu)
 
 
+def lu_crout(A):
+    """Compute the LU decomposition of a matrix using Crout's algorithm
+    *without* partial pivoting.
+
+    See: Davis, Exercise 6.7.
+
+    This method computes the `k`th column of `L` and `k`th row of `U` at each
+    step of the factorization.
+
+    .. math::
+        PA = LU
+
+    Parameters
+    ----------
+    A : (M, M) array_like
+        Square matrix to decompose.
+
+    Returns
+    -------
+    P : (M, M) ndarray
+        Row permutation matrix.
+    L : (M, M) ndarray
+        Lower triangular matrix. The diagonal elements are all 1.
+    U : (M, M) ndarray
+        Upper triangular matrix.
+    """
+    A = A.copy()
+    M, N = A.shape
+    P = np.eye(N)
+    L = np.zeros((N, N))
+    U = np.zeros((N, N))
+    for k in range(N):
+        U[k, k:] = A[k, k:] - L[k, :k] @ U[:k, k:]
+        L[k:, k] = (A[k:, k] - L[k:, :k] @ U[:k, k]) / U[k, k]
+
+    return P, L, U
+    
 # =============================================================================
 # =============================================================================

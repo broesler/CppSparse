@@ -21,6 +21,7 @@ ATOL = 1e-15  # testing tolerance
 LU_NOPIVOT_FUNCS = [
     csparse.lu_rightr,
     csparse.lu_right,
+    csparse.lu_crout,  # Exercise 6.7
 ]
 
 LU_PIVOT_FUNCS = [

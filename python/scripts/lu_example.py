@@ -33,9 +33,9 @@ for i in range(M):
     Ac[i, i] += 10
 
 # ---------- Permute the matrix rows arbitrarily
-p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
-p_inv = csparse.inv_permute(p)
-Ac = Ac.permute_rows(p_inv)
+# p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
+# p_inv = csparse.inv_permute(p)
+# Ac = Ac.permute_rows(p_inv)
 
 # ---------- Create a numerically rank-deficient matrix
 # for i in range(N):
@@ -80,26 +80,26 @@ Ac = Ac.permute_rows(p_inv)
 #         Run the tests
 # -----------------------------------------------------------------------------
 rank = np.linalg.matrix_rank(Ac.toarray())
-print("Size of A:", Ac.shape)
-print("Rank of A:", rank)
+# print("Size of A:", Ac.shape)
+# print("Rank of A:", rank)
 
 # Convert to dense and sparse formats
 A = Ac.toarray()
 As = sparse.csc_matrix(A)
 
-print("A:")
-print(A)
+# print("A:")
+# print(A)
 
 # Compute the LU decomposition of A
 # Scipy dense
 pd, Ld, Ud = la.lu(A, p_indices=True)
 
-print("pd:")
-print(pd)
-print("Ld:")
-print(Ld)
-print("Ud:")
-print(Ud)
+# print("pd:")
+# print(pd)
+# print("Ld:")
+# print(Ld)
+# print("Ud:")
+# print(Ud)
 
 allclose(Ld[pd] @ Ud, A)
 
@@ -217,10 +217,10 @@ allclose(condd, κc)
 
 # allclose(norm_est, κ)  # FIXME
 
-print("---------- 1-norm estimate:")
-print("    normd:", normd)
-print("normd_inv:", normd_inv)
-print("    condd:", condd)
+# print("---------- 1-norm estimate:")
+# print("    normd:", normd)
+# print("normd_inv:", normd_inv)
+# print("    condd:", condd)
 
 
 # -----------------------------------------------------------------------------
@@ -229,8 +229,8 @@ print("    condd:", condd)
 x = np.arange(1, N + 1)
 b = A @ x
 
-print("   solve(A, b):", la.solve(A, b))
-print("spsolve(As, b):", spla.spsolve(As, b))
+# print("   solve(A, b):", la.solve(A, b))
+# print("spsolve(As, b):", spla.spsolve(As, b))
 
 # LU solve
 lu = spla.splu(As, permc_spec='NATURAL')  # no column reordering
@@ -243,7 +243,15 @@ y = spla.spsolve(L, Pb)
 QTx = spla.spsolve(U, y)
 x = QTx[q]
 
-print('      LU solve:', x)
+# print('      LU solve:', x)
+
+
+# -----------------------------------------------------------------------------
+#         Test Crout's Method
+# -----------------------------------------------------------------------------
+P, L, U = csparse.lu_crout(A)
+
+allclose(L @ U, A)
 
 # =============================================================================
 # =============================================================================

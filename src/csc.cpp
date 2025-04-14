@@ -980,6 +980,7 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
     return C;
 }
 
+
 double CSCMatrix::vecdot(const CSCMatrix& y) const
 {
     assert((N_ == 1) && (y.N_ == 1));  // both must be column vectors
@@ -1021,6 +1022,7 @@ double CSCMatrix::vecdot(const CSCMatrix& y) const
 
     return z;
 }
+
 
 std::vector<double> operator*(const CSCMatrix& A, const std::vector<double>& x) { return A.dot(x); }
 CSCMatrix operator*(const CSCMatrix& A, const double c) { return A.dot(c); }
@@ -1421,8 +1423,8 @@ CSCMatrix CSCMatrix::slice(
     const csint j_end
     ) const
 {
-    assert((i_start >= 0) && (i_end <= M_) && (i_start < i_end));
-    assert((j_start >= 0) && (j_end <= N_) && (j_start < j_end));
+    assert((i_start >= 0) && (i_end <= M_) && (i_start <= i_end));
+    assert((j_start >= 0) && (j_end <= N_) && (j_start <= j_end));
 
     CSCMatrix C({i_end - i_start, j_end - j_start}, nnz());
 

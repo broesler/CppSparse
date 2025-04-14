@@ -1616,6 +1616,7 @@ TEST_CASE("Exercise 2.22: Concatentation")
 TEST_CASE("Exercise 2.23: Slicing")
 {
     CSCMatrix A = davis_example_small().tocsc();
+    auto [M, N] = A.shape();
 
     SECTION("Row slicing") {
         CSCMatrix expect = COOMatrix(
@@ -1647,6 +1648,18 @@ TEST_CASE("Exercise 2.23: Slicing")
         ).tocsc();
 
         CSCMatrix C = A.slice(1, 3, 1, 4);
+        compare_matrices(C, expect);
+    }
+
+    SECTION("Empty row") {
+        CSCMatrix expect {{M, 0}, 0};
+        CSCMatrix C = A.slice(0, M, 0, 0);
+        compare_matrices(C, expect);
+    }
+
+    SECTION("Empty column") {
+        CSCMatrix expect {{0, N}, 0};
+        CSCMatrix C = A.slice(0, 0, 0, N);
         compare_matrices(C, expect);
     }
 }

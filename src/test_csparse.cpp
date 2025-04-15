@@ -627,6 +627,12 @@ TEST_CASE("CSCMatrix", "[CSCMatrix]")
         SECTION("Efficient two transposes") {
             sort_test(C.sort());
         }
+
+        SECTION("Brute force check") {
+            CHECK_FALSE(C.has_sorted_indices());
+            CHECK_FALSE(C._test_sorted());
+            REQUIRE(C.sort()._test_sorted());
+        }
     }
 
     SECTION("Sum duplicates") {

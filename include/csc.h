@@ -171,6 +171,17 @@ class CSCMatrix
         */
         bool is_symmetric() const;
 
+        /** Check if the columns have sorted indices by iteration.
+         *
+         * This function actually iterates through the columns and checks if the
+         * indices are sorted, as opposed to just checking the property
+         * `has_sorted_indices_`. This is a brute-force method, and is only
+         * intended for internal testing purposes.
+         *
+         * @return true if the columns are sorted, false otherwise.
+         */
+        bool _test_sorted() const;
+
         /** Return the value of the requested element.
          *
          * This function takes O(log M) time if the columns are sorted, and O(M) time

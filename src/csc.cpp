@@ -182,6 +182,21 @@ bool CSCMatrix::is_symmetric() const
 }
 
 
+bool CSCMatrix::_test_sorted() const
+{
+    for (csint j = 0; j < N_; j++) {
+        // Check that the column is sorted
+        for (csint p = p_[j]; p < p_[j+1] - 1; p++) {
+            if (i_[p] > i_[p + 1]) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+
 const double CSCMatrix::operator()(csint i, csint j) const
 {
     // Assert indices are in-bounds

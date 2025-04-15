@@ -14,6 +14,7 @@
 
 #include <algorithm>  // reverse
 #include <cmath>
+#include <iomanip>  // setprecision, scientific, etc.
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -3579,30 +3580,36 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13]")
 
     SECTION("ILU0: Zero-fill with no pivoting") {
         // Compute the LU factorization of A using the pattern of LU = A
-        SymbolicLU S = slu(A);
-        LUResult ires = ilu_nofill(A, S);
+        const SymbolicLU S = slu(A);
+        const LUResult ires = ilu_nofill(A, S);
 
-        std::cout << "A:" << std::endl;
-        A.print_dense();
-
-        std::cout << "L:" << std::endl;
-        ires.L.print_dense();
-        std::cout << "U:" << std::endl;
-        ires.U.print_dense();
-
-        CSCMatrix LU = (ires.L * ires.U).droptol().to_canonical();
-        CSCMatrix PA = A.permute_rows(ires.p_inv).to_canonical();
-
-        std::cout << "LU:" << std::endl;
-        LU.print_dense();
-
-        CSCMatrix LpU = (ires.L + ires.U).droptol().to_canonical();
+        const CSCMatrix LU = (ires.L * ires.U).droptol().to_canonical();
+        const CSCMatrix PA = A.permute_rows(ires.p_inv).to_canonical();
 
         // L + U and PA are *structurally* identical (no fill-in!)
+        const CSCMatrix LpU = (ires.L + ires.U).droptol().to_canonical();
+
         CHECK(LpU.nnz() == PA.nnz());
         CHECK(LpU.indices() == PA.indices());
         CHECK(LpU.indptr() == PA.indptr());
-        // TODO test fronorm just on non-zero pattern of A
+
+        // Test norm just on non-zero pattern of A
+        // MATLAB >> norm(A - (L * U) * spones(A), "fro") / norm(A, "fro")
+
+        const CSCMatrix LU_PAnz = LU.fkeep(
+            [PA](csint i, csint j, double Aij) { return PA(i, j) != 0.0; }
+        );
+        const CSCMatrix PAmLU = (PA - LU).droptol(tol).to_canonical();
+
+        CHECK(PAmLU.nnz() == 1);  // LU(6, 3) == 0.0705 , A(6, 3) == 0.0
+
+        double nz_norm = (PA - LU_PAnz).fronorm() / PA.fronorm();
+        double norm = PAmLU.fronorm() / PA.fronorm();  // total norm
+
+        // std::cout << "   norm: " << std::format("{:6.4g}", norm) << std::endl;
+
+        CHECK_THAT(nz_norm, WithinAbs(0.0, 1e-16));
+        CHECK(norm > nz_norm * 1e10);  // hack number
     }
 
 }

@@ -988,6 +988,7 @@ class CSCMatrix
         friend CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
         friend CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
 
+        friend CSCMatrix ichol_nofill(const CSCMatrix& A, const SymbolicChol& S);
         friend CSCMatrix ichol(
             const CSCMatrix& A,
             ICholMethod method,

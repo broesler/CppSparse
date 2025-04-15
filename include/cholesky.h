@@ -298,7 +298,7 @@ SymbolicChol schol(
 
 
 /** Compute the complete symbolic Cholesky factorization of a sparse matrix.
- * 
+ *
  * This functions computes the entire sparsity pattern of `L` in *O(|L|)* time.
  * It returns the matrix with sorted columns.
  *
@@ -407,6 +407,20 @@ CSCMatrix& chol_update(
  * @return colcount  the number of non-zeros in each column of L
  */
 CholCounts chol_etree_counts(const CSCMatrix& A);
+
+
+/** Compute the incomplete Cholesky factorization with no fill-in.
+ *
+ * See: Davis, Exercise 4.13.
+ *
+ * @param A  the matrix to factorize
+ * @param S  the SymbolicChol factorization of `A` from `cs::schol()`
+ *
+ * @return L  the incomplete Cholesky factor of `A`
+ *
+ * @throws std::runtime_error if `A` is not square or positive definite.
+ */
+CSCMatrix ichol_nofill(const CSCMatrix& A, const SymbolicChol& S);
 
 
 /** Compute the incomplete Cholesky factor \f$ L L^T = A \f$.

@@ -843,20 +843,107 @@ CholCounts chol_etree_counts(const CSCMatrix& A)
 }
 
 
+CSCMatrix ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
+{
+    auto [M, N] = A.shape();
+
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    // Get structure of "lower" tri of A (may be stored as upper only)
+    CSCMatrix A_tril = A.band(0, N).T();
+
+    CSCMatrix L {{N, N}, A_tril.nnz()};  // allocate result
+
+    // Workspaces
+    std::vector<csint> c(A_tril.indptr());  // column pointers for L
+    std::vector<csint> w(N, -1);       // row indices for column of C
+    std::vector<double> x(N);          // values for column of C
+
+    const CSCMatrix C = A.symperm(S.p_inv);
+
+    L.p_ = A_tril.indptr();  // column pointers for L (same pattern as A)
+
+    // Compute L(k, :) for L*L' = C in up-looking order
+    for (csint k = 0; k < N; k++) {
+        //--- Nonzero pattern of L(k, :) ---------------------------------------
+        x[k] = 0.0;  // x(0:k) is now zero
+
+        // scatter C into x = full(triu(C(:,k)))
+        // C does not have to be in sorted order (d = x[k] gets the diagonal)
+        for (csint p = C.p_[k]; p < C.p_[k+1]; p++) {
+            csint i = C.i_[p];
+            if (i <= k) {
+                x[i] = C.v_[p];
+            }
+            w[i] = k;
+        }
+
+        double d = x[k];  // d = C(k, k)
+        x[k] = 0.0;       // clear x for k + 1st iteration
+
+        //--- Triangular Solve -------------------------------------------------
+        // Solve L(0:k-1, 0:k-1) * x = C(0:k-1, k) == L[:k, :k] * x = C[:k, k]
+        //   => L[k, :k] := x.T
+        // ereach gives the pattern of L(k, :) in topological order
+        for (const auto& i : ereach(C, k, S.parent)) {
+            // Only keep entries that are in the column of C
+            if (w[i] != k) {
+                continue;
+            }
+
+            double lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
+            x[i] = 0.0;                         // clear x for k + 1st iteration
+
+            for (csint p = L.p_[i] + 1; p < c[i]; p++) {
+                x[L.i_[p]] -= L.v_[p] * lki;    // x -= L(i, :) * L(k, i)
+            }
+
+            // subtract the sparse dot product from the diagonal
+            d -= lki * lki;                     // d -= L(k, i) * L(k, i)
+
+            // We build L one *row* at a time, in topological order. All
+            // i < k since they are reachable, so the diagonal is always the
+            // first element in its column, and all other elements are in order.
+            csint p = c[i]++;
+            L.i_[p] = k;                        // store L(k, i) in column i
+            L.v_[p] = lki;
+        }
+
+        //--- Compute L(k, k) --------------------------------------------------
+        if (d <= 0) {
+            throw std::runtime_error("Matrix not positive definite!");
+        }
+
+        csint p = c[k]++;
+        L.i_[p] = k;  // store L(k, k) = sqrt(d) in column k
+        L.v_[p] = std::sqrt(d);
+    }
+
+    // Guaranteed by construction
+    L.has_sorted_indices_ = true;
+    L.has_canonical_format_ = true;
+
+    return L;
+}
+
+
 CSCMatrix ichol(
     const CSCMatrix& A,
     ICholMethod method,
     double drop_tol
 )
 {
+    SymbolicChol S = schol(A);
+
     switch (method) {
         case ICholMethod::NoFill:
-            // L = A;  // just copy the matrix and update the values
-            throw std::runtime_error("Not implemented!");
+            return ichol_nofill(A, S);
             break;
 
         case ICholMethod::ICT:
-            return chol(A, schol(A), drop_tol);
+            return chol(A, S, drop_tol);
             break;
 
         default:

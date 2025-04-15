@@ -2529,29 +2529,92 @@ TEST_CASE("Cholesky decomposition")
     }
 
     SECTION("Exercise 4.13: Incomplete Cholesky") {
-        // Compute the incomplete Cholesky factorization with no fill-in
-        double drop_tol = 1e-2;
-        CSCMatrix Li = ichol(A, ICholMethod::ICT, drop_tol);
+        SECTION("IC0: No Fill") {
+            // Compute the incomplete Cholesky factorization with no fill-in.
+            const CSCMatrix Li = ichol(A, ICholMethod::NoFill);
 
-        // Compute the complete Cholesky factorization for comparison
-        CSCMatrix L = chol(A, schol(A));
+            // Compute the complete Cholesky factorization for comparison
+            const CSCMatrix L = chol(A, schol(A));
 
-        CSCMatrix LLT = (Li * Li.T()).droptol().to_canonical();
+            const CSCMatrix LLT = (Li * Li.T()).droptol().to_canonical();
 
-        // std::cout << "Li:" << std::endl;
-        // Li.print_dense();
-        // std::cout << "LLT:" << std::endl;
-        // LLT.print_dense();
-        // std::cout << "A:" << std::endl;
-        // A.print_dense();
+            // std::cout << "L:" << std::endl;
+            // L.print_dense();
+            // std::cout << "Li:" << std::endl;
+            // Li.print_dense();
 
-        CHECK(Li.nnz() <= L.nnz());
-        CHECK(LLT.nnz() >= A.nnz());
-        // NOTE the ICT method uses the column counts from `schol`, so any
-        // entries that are dropped will be exactly 0 in L.
-        // REQUIRE_THAT(Li.data() >= drop_tol, AllTrue());
+            // std::cout << "LLT:" << std::endl;
+            // LLT.print_dense();
+            // std::cout << "A:" << std::endl;
+            // A.print_dense();
 
-        REQUIRE((LLT - A).fronorm() / A.fronorm() < drop_tol);
+            // Li is lower triangular with the same sparsity pattern as A
+            const CSCMatrix A_tril = A.band(-N, 0);
+
+            csint fill_in = 6;  // shown in book example
+            CHECK(Li.nnz() == L.nnz() - fill_in);  // fill-in is 6
+            CHECK(Li.nnz() == A_tril.nnz());
+            CHECK(Li.indptr() == A_tril.indptr());
+            CHECK(Li.indices() == A_tril.indices());
+
+            // // Test norm just on non-zero pattern of A
+            // // MATLAB >> norm(A - (L * L') * spones(A), "fro") / norm(A, "fro")
+
+            // const CSCMatrix LLT_Anz = LLT.fkeep(
+            //     [A](csint i, csint j, double x) { return A(i, j) != 0.0; }
+            // );
+
+            // const CSCMatrix AmLLT = (A - LLT).droptol(tol).to_canonical();
+
+            // CHECK(LLT_Anz.nnz() == A.nnz());
+
+            // // FIXME many non-zeros?? Should only be 6 small-ish numbers
+            // std::cout << "A - LLT:" << std::endl;
+            // AmLLT.print_dense();
+
+            // CHECK(AmLLT.is_symmetric());  // FIXME? AmLLT is *not* symmetric?
+            // // compare_matrices(A, LLT);
+
+            // // std::cout << "LLT:" << LLT << std::endl;
+            // // std::cout << "AmLLT:" << AmLLT << std::endl;
+
+            // // CHECK(AmLLT.nnz() == fill_in);  // Fill-in is 6, so 12 is symmetry
+
+            // double nz_norm = (A - LLT_Anz).fronorm() / A.fronorm();
+            // double norm = AmLLT.fronorm() / A.fronorm();  // total norm
+
+            // std::cout << "nz_norm: " << std::format("{:6.4g}", nz_norm) << std::endl;
+            // std::cout << "   norm: " << std::format("{:6.4g}", norm) << std::endl;
+
+            // CHECK_THAT(nz_norm, WithinAbs(0.0, 1e-15));
+            // CHECK(norm > nz_norm * 1e10);  // hack number
+        }
+
+        SECTION("ICT: Threshold") {
+            // Compute the incomplete Cholesky factorization with a threshold
+            double drop_tol = 1e-2;
+            CSCMatrix Li = ichol(A, ICholMethod::ICT, drop_tol);
+
+            // Compute the complete Cholesky factorization for comparison
+            CSCMatrix L = chol(A, schol(A));
+
+            CSCMatrix LLT = (Li * Li.T()).droptol().to_canonical();
+
+            // std::cout << "Li:" << std::endl;
+            // Li.print_dense();
+            // std::cout << "LLT:" << std::endl;
+            // LLT.print_dense();
+            // std::cout << "A:" << std::endl;
+            // A.print_dense();
+
+            CHECK(Li.nnz() <= L.nnz());
+            CHECK(LLT.nnz() >= A.nnz());
+            // NOTE the ICT method uses the column counts from `schol`, so any
+            // entries that are dropped will be exactly 0 in L.
+            // REQUIRE_THAT(Li.data() >= drop_tol, AllTrue());
+
+            REQUIRE((LLT - A).fronorm() / A.fronorm() < drop_tol);
+        }
     }
 }
 

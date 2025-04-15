@@ -418,16 +418,58 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
     }
 
     // Allocate result matrices
-    CSCMatrix L({N, N}, S.lnz);       // lower triangular matrix
-    CSCMatrix UT({N, N}, S.unz);      // (transpose of) upper triangular matrix
-    std::vector<csint> p_inv(N, -1);  // row permutation vector
-    // TODO implement partial pivoting
-    std::iota(p_inv.begin(), p_inv.end(), 0);  // identity permutation
+    CSCMatrix L({N, N}, S.lnz);   // lower triangular matrix
+    CSCMatrix UT({N, N}, S.unz);  // (transpose of) upper triangular matrix
+
+    std::vector<csint> ptest(N, -1);
+    std::vector<csint> perm(N);
+    std::iota(perm.begin(), perm.end(), 0);
+    std::vector<csint> p_inv = perm;
 
     csint lnz = 0,
           unz = 0;
 
+    // TODO use col = S.q[k]
+
     for (csint k = 0; k < N; k++) {  // Compute L[:, k] and U[k, :]
+        std::cout << "----- k = " << k << std::endl;
+        // TODO partial pivoting
+        // ---------- Find the pivot below the diagonal
+        csint ipiv = -1;
+        double a = -1;
+
+        for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
+            csint i = p_inv[A.i_[p]];  // use the permuted index
+            if (i >= k) {  // TODO perm[i] < 0 (row i is not yet pivotal)
+                double t = std::fabs(A.v_[p]);
+                if (t > a) {
+                    a = t;  // largest pivot candidate so far
+                    ipiv = i;
+                }
+            }
+        }
+
+        std::cout << "ipiv = " << ipiv << ", a = " << a << std::endl;
+
+        // if (ipiv == -1 || a <= 0) {
+        //     throw std::runtime_error("Matrix is singular!");
+        // }
+
+        // No need to actually swap rows, just use the permuted index?
+        ptest[perm[ipiv]] = k;  // ipiv is the kth pivot row
+
+        // Permute the rows?
+        std::swap(p_inv[perm[k]], p_inv[perm[ipiv]]);
+        std::swap(perm[k], perm[ipiv]);
+        // p_inv = inv_permute(perm);
+
+        std::cout << "perm = " << perm << std::endl;
+        std::cout << "p_inv = " << p_inv << std::endl;
+        std::cout << "ptest = " << ptest << std::endl;
+        std::cout << "A[p] = " << std::endl;
+        A.permute_rows(p_inv).print_dense();
+
+        // ---------- Compute the entries
         L.p_[k] = lnz;   // L[:, k] starts here
         UT.p_[k] = unz;  // U[k, :] starts here
 
@@ -458,19 +500,21 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
         //
         //   => looping over all j values is actually the most efficient way to
         //      do this operation.
-        CSCMatrix L_col = L.slice(k, k+1, 0, k).T();  // == L[k, :k].T
+        csint row = perm[k];
+        CSCMatrix L_col = L.slice(row, row+1, 0, k).T();  // == L[p_inv[k], :k].T
         for (csint j = k; j < N; j++) {
             double lu_dot = 0.0;
             if (k > 0) {
-                CSCMatrix U_col = UT.slice(j, j+1, 0, k).T();  // == U[:k, j]
+                CSCMatrix U_col = UT.slice(j, j+1, 0, k)
+                                    .T().permute_rows(p_inv);  // == U[:k, j]
                 lu_dot = L_col.vecdot(U_col);
             }
 
-            double a = A(k, j) - lu_dot;
+            double u_kj = A(p_inv[k], j) - lu_dot;
 
-            if (std::fabs(a) > 0) {
+            if (std::fabs(u_kj) > 0) {
                 UT.i_[unz] = j;
-                UT.v_[unz++] = a;
+                UT.v_[unz++] = u_kj;
             }
         }
 
@@ -481,24 +525,22 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
 
         // Compute the rest of the column
         // L[k+1:n, k] = (A[k+1:n, k] - L[k+1:n, :k] @ U[:k, k]) / U[k, k]
-        CSCMatrix U_col = UT.slice(k, k+1, 0, k).T();  // == U[:k, k]
+        CSCMatrix U_col = UT.slice(k, k+1, 0, k)
+                            .T().permute_rows(p_inv);  // == U[:k, k]
         for (csint i = k+1; i < N; i++) {
             double lu_dot = 0.0;
             if (k > 0) {
-                CSCMatrix L_col = L.slice(i, i+1, 0, k).T();  // == L[i, :k].T
+                csint row = perm[i];
+                CSCMatrix L_col = L.slice(row, row+1, 0, k).T();  // == L[p_inv[i], :k].T
                 lu_dot = L_col.vecdot(U_col);
             }
 
-            double a = A(i, k) - lu_dot;
-            double pivot = UT.v_[UT.p_[k]];  // first element in col == UT(k, k);
+            double l_ik = A(p_inv[i], k) - lu_dot;
+            double pivot = UT.v_[UT.p_[k]];  // == U[k, k]
 
-            if (pivot == 0.0) {
-                throw std::runtime_error("Matrix is singular!");
-            }
-
-            if (std::fabs(a) > 0) {
+            if (std::fabs(l_ik) > 0) {
                 L.i_[lnz] = i;
-                L.v_[lnz++] = a / pivot;
+                L.v_[lnz++] = l_ik / pivot;
             }
         }
     }
@@ -506,6 +548,11 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
     // Finalize L and U
     L.p_[N] = lnz;
     UT.p_[N] = unz;
+
+    // // Permute row indices of L for final p_inv
+    // for (csint p = 0; p < lnz; p++) {
+    //     L.i_[p] = p_inv[L.i_[p]];
+    // }
 
     L.realloc();  // trim excess storage
     UT.realloc();

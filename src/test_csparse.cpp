@@ -3477,21 +3477,47 @@ TEST_CASE("Exercise 6.7: Crout's method LU Factorization", "[ex6.7]")
     A = A.to_canonical();
 
     SECTION("No pivoting") {
+        std::cout << "---------- No pivoting ----------" << std::endl;
         // Compute the LU factorization of A using Crout's method
         SymbolicLU S = slu(A);
         LUResult res = lu_crout(A, S);
-
-        // std::cout << "A:" << std::endl;
-        // A.print_dense();
-        // std::cout << "L:" << std::endl;
-        // res.L.print_dense();
-        // std::cout << "U:" << std::endl;
-        // res.U.print_dense();
 
         CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
         CSCMatrix PA = A.permute_rows(res.p_inv).to_canonical();
 
         compare_matrices(LU, PA);
+    }
+
+    SECTION("Pivoting") {
+        std::cout << "---------- Yes Pivoting ----------" << std::endl;
+        // Permute the rows of A to test pivoting
+        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        std::vector<csint> p_inv = inv_permute(p);
+
+        // LU *should* select pivots to recover the original A matrix
+        CSCMatrix Ap = A.permute_rows(p_inv);
+
+        std::cout << "A: " << std::endl;
+        Ap.print_dense();
+
+        // Compute the LU factorization of A using Crout's method
+        SymbolicLU S = slu(Ap);
+        LUResult res = lu_crout(Ap, S);
+
+        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+        CSCMatrix PAp = Ap.permute_rows(res.p_inv).to_canonical();
+
+        std::cout << "L: " << std::endl;
+        res.L.print_dense();
+        std::cout << "U: " << std::endl;
+        res.U.print_dense();
+
+        std::cout << "LU: " << std::endl;
+        LU.print_dense();
+
+        CHECK(res.p_inv == p);
+        compare_matrices(A, PAp);
+        compare_matrices(LU, PAp);
     }
 }
 

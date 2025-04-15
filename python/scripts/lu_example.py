@@ -215,8 +215,6 @@ allclose(normd_inv, normc_inv)
 
 allclose(condd, κc)
 
-# allclose(norm_est, κ)  # FIXME
-
 # print("---------- 1-norm estimate:")
 # print("    normd:", normd)
 # print("normd_inv:", normd_inv)

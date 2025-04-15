@@ -69,7 +69,7 @@ static inline void lu_realloc(CSCMatrix& R, csint k, bool lower)
 {
     auto [M, N] = R.shape();
     csint nzmax = 2 * R.nzmax() + M;
-    csint nzmin = lower ? (R.nnz() + M - k) : (nzmin = R.nnz() + k + 1);
+    csint nzmin = lower ? (R.nnz() + M - k) : (R.nnz() + k + 1);
 
     // Try the nzmax size, then halve the distance to nzmin until it works
     csint size_req = nzmax;

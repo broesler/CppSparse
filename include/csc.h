@@ -1057,11 +1057,7 @@ class CSCMatrix
             double drop_tol,
             double tol
         );
-        friend LUResult ilu_nofill(
-            const CSCMatrix& A,
-            const SymbolicLU& S,
-            double tol
-        );
+        friend LUResult ilu_nofill(const CSCMatrix& A, const SymbolicLU& S);
 
         //----------------------------------------------------------------------
         //        Printing

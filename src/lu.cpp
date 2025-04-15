@@ -722,8 +722,7 @@ LUResult ilutp(
 // Exercise 6.13
 LUResult ilu_nofill(
     const CSCMatrix& A,
-    const SymbolicLU& S,
-    double tol
+    const SymbolicLU& S
 )
 {
     auto [M, N] = A.shape();
@@ -758,34 +757,24 @@ LUResult ilu_nofill(
         }
 
         // --- Find pivot ------------------------------------------------------
-        csint ipiv = -1;
-        double a = -1;
+        // Use diagonal as pivot. MATLAB's ilu(type='nofill') errors when
+        // there is a zero on the diagonal, and does not support pivoting.
+        csint ipiv = k;
         for (const auto& i : sol.xi) {
-            if (p_inv[i] < 0) {  // row i is not yet pivotal
-                double t = std::fabs(sol.x[i]);
-                if (t > a) {
-                    a = t;  // largest pivot candidate so far
-                    ipiv = i;
-                }
-            } else {  // x(i) is the entry U(pinv[i], k)
-                if (w[i] == k) {  // x(i) is in the pattern of A[:, col]
-                    U.i_[unz] = p_inv[i];
-                    U.v_[unz++] = sol.x[i];
-                }
+            if (p_inv[i] >= 0 && w[i] == k) {
+                // x(i) is the entry U(pinv[i], k) in the pattern of A[:, col]
+                U.i_[unz] = p_inv[i];
+                U.v_[unz++] = sol.x[i];
             }
-        }
-
-        if (ipiv == -1 || a <= 0) {
-            throw std::runtime_error("Matrix is singular!");
-        }
-
-        // tol = 1 for partial pivoting; tol < 1 gives preference to diagonal
-        if (p_inv[col] < 0 && std::fabs(sol.x[col]) >= a * tol) {
-            ipiv = col;
         }
 
         // --- Divide by pivot -------------------------------------------------
         double pivot = sol.x[ipiv];  // the chosen pivot
+
+        if (pivot == 0) {
+            throw std::runtime_error("Matrix is singular!");
+        }
+
         p_inv[ipiv] = k;             // ipiv is the kth pivot row
         L.i_[lnz] = ipiv;            // first entry in L[:, k] is L(k, k) = 1
         L.v_[lnz++] = 1;
@@ -803,10 +792,6 @@ LUResult ilu_nofill(
     // --- Finalize L and U ---------------------------------------------------
     L.p_[N] = lnz;
     U.p_[N] = unz;
-    // permute row indices of L for final p_inv
-    for (csint p = 0; p < lnz; p++) {
-        L.i_[p] = p_inv[L.i_[p]];
-    }
     L.realloc();  // trim excess storage
     U.realloc();
 

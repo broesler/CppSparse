@@ -188,17 +188,19 @@ LUResult ilutp(
  * fill-in, *e.g.* using the same non-zero pattern as `A`. The function uses the
  * symbolic factorization `S` to compute the LU decomposition.
  *
+ * No pivoting is performed.
+ *
  * @param A  the matrix to factorize
  * @param S  the symbolic factorization of A
- * @param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
- *        used. If `tol` is less than 1.0, diagonal pivoting is used.
  *
  * @return the LU decomposition
+ *
+ * @throws std::runtime_error if the matrix is not square, or if the matrix is
+ *         singular (has a zero on the diagonal).
  */
 LUResult ilu_nofill(
     const CSCMatrix& A,
-    const SymbolicLU& S,
-    double tol=1.0
+    const SymbolicLU& S
 );
 
 

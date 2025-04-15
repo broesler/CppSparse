@@ -3584,27 +3584,26 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13]")
         const LUResult ires = ilu_nofill(A, S);
 
         const CSCMatrix LU = (ires.L * ires.U).droptol().to_canonical();
-        const CSCMatrix PA = A.permute_rows(ires.p_inv).to_canonical();
 
-        // L + U and PA are *structurally* identical (no fill-in!)
+        // L + U and A are *structurally* identical (no fill-in!)
         const CSCMatrix LpU = (ires.L + ires.U).droptol().to_canonical();
 
-        CHECK(LpU.nnz() == PA.nnz());
-        CHECK(LpU.indices() == PA.indices());
-        CHECK(LpU.indptr() == PA.indptr());
+        CHECK(LpU.nnz() == A.nnz());
+        CHECK(LpU.indices() == A.indices());
+        CHECK(LpU.indptr() == A.indptr());
 
         // Test norm just on non-zero pattern of A
         // MATLAB >> norm(A - (L * U) * spones(A), "fro") / norm(A, "fro")
 
-        const CSCMatrix LU_PAnz = LU.fkeep(
-            [PA](csint i, csint j, double Aij) { return PA(i, j) != 0.0; }
+        const CSCMatrix LU_Anz = LU.fkeep(
+            [A](csint i, csint j, double Aij) { return A(i, j) != 0.0; }
         );
-        const CSCMatrix PAmLU = (PA - LU).droptol(tol).to_canonical();
+        const CSCMatrix AmLU = (A - LU).droptol(tol).to_canonical();
 
-        CHECK(PAmLU.nnz() == 1);  // LU(6, 3) == 0.0705 , A(6, 3) == 0.0
+        CHECK(AmLU.nnz() == 1);  // LU(6, 3) == 0.0705 , A(6, 3) == 0.0
 
-        double nz_norm = (PA - LU_PAnz).fronorm() / PA.fronorm();
-        double norm = PAmLU.fronorm() / PA.fronorm();  // total norm
+        double nz_norm = (A - LU_Anz).fronorm() / A.fronorm();
+        double norm = AmLU.fronorm() / A.fronorm();  // total norm
 
         // std::cout << "   norm: " << std::format("{:6.4g}", norm) << std::endl;
 

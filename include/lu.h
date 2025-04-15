@@ -180,6 +180,27 @@ LUResult ilutp(
 );
 
 
+/** Incomplete LU decomposition with zero fill-in.
+ *
+ * See: Davis, Exercise 6.13, and MATLAB `ilu` with option `type = 'nofill'`.
+ *
+ * This function computes the incomplete LU decomposition of `A` with zero
+ * fill-in, *e.g.* using the same non-zero pattern as `A`. The function uses the
+ * symbolic factorization `S` to compute the LU decomposition.
+ *
+ * @param A  the matrix to factorize
+ * @param S  the symbolic factorization of A
+ * @param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
+ *        used. If `tol` is less than 1.0, diagonal pivoting is used.
+ *
+ * @return the LU decomposition
+ */
+LUResult ilu_nofill(
+    const CSCMatrix& A,
+    const SymbolicLU& S,
+    double tol=1.0
+);
+
 
 }  // namespace cs
 

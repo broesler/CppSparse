@@ -3512,6 +3512,8 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13]")
         A(i, i) += 10;
     }
 
+    A = A.to_canonical();
+
     SECTION("ILUTP: Threshold with Pivoting") {
         // Default is no pivoting
         CSCMatrix Ap = A;
@@ -3573,6 +3575,34 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13]")
             CHECK_THAT(ires.U.data() >= drop_tol, AllTrue());
             REQUIRE((iLU - A).fronorm() / A.fronorm() < drop_tol);
         }
+    }
+
+    SECTION("ILU0: Zero-fill with no pivoting") {
+        // Compute the LU factorization of A using the pattern of LU = A
+        SymbolicLU S = slu(A);
+        LUResult ires = ilu_nofill(A, S);
+
+        std::cout << "A:" << std::endl;
+        A.print_dense();
+
+        std::cout << "L:" << std::endl;
+        ires.L.print_dense();
+        std::cout << "U:" << std::endl;
+        ires.U.print_dense();
+
+        CSCMatrix LU = (ires.L * ires.U).droptol().to_canonical();
+        CSCMatrix PA = A.permute_rows(ires.p_inv).to_canonical();
+
+        std::cout << "LU:" << std::endl;
+        LU.print_dense();
+
+        CSCMatrix LpU = (ires.L + ires.U).droptol().to_canonical();
+
+        // L + U and PA are *structurally* identical (no fill-in!)
+        CHECK(LpU.nnz() == PA.nnz());
+        CHECK(LpU.indices() == PA.indices());
+        CHECK(LpU.indptr() == PA.indptr());
+        // TODO test fronorm just on non-zero pattern of A
     }
 
 }

@@ -54,6 +54,25 @@ struct LUResult
 SymbolicLU slu(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
 
 
+/** Compute the numeric LU decomposition of A, such that \f$PA = LU\f$.
+ *
+ * The implementation of `cs_lu` from CSparse (Davis, pp 86-87). This function
+ * does not support non-square matrices or singular matrices, and does not do
+ * column pivoting or symmetric pruning. 
+ *
+ * See `cs::lu` and related functions `cs::lu_col` and `cs::lu_symprune` for
+ * more general LU decompositions per the Davis exercises.
+ *
+ * @param A  the matrix to factorize
+ * @param S  the symbolic factorization
+ * #param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
+ *        used. If `tol` is less than 1.0, diagonal pivoting is used.
+ *
+ * @return the LU decomposition
+ */
+LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol=1.0);
+
+
 /** Compute the numeric LU decomposition of A, such that \f$PAQ = LU\f$.
  *
  * This function computes the LU decomposition of `A` using the symbolic

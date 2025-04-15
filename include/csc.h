@@ -1057,6 +1057,7 @@ class CSCMatrix
             double drop_tol,
             double tol
         );
+        friend LUResult lu_symprune(const CSCMatrix& A, const SymbolicLU& S, double tol);
 
         //----------------------------------------------------------------------
         //        Printing

@@ -180,6 +180,21 @@ LUResult ilutp(
 );
 
 
+/** Compute the numeric LU decomposition of A, such that \f$PA = LU\f$, using
+ * symmetric pruning.
+ *
+ * See: Davis, Exercise 6.14.
+ *
+ * @param A  the matrix to factorize
+ * @param S  the symbolic factorization
+ * #param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
+ *        used. If `tol` is less than 1.0, diagonal pivoting is used.
+ *
+ * @return the LU decomposition
+ */
+LUResult lu_symprune(const CSCMatrix& A, const SymbolicLU& S, double tol=1.0);
+
+
 
 }  // namespace cs
 

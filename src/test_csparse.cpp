@@ -3578,6 +3578,54 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13]")
 }
 
 
+TEST_CASE("Exercise 6.14: Symmetric Pruning", "[ex6.14]")
+{
+    SECTION("Non-symmetric matrix") {
+        CSCMatrix A = davis_example_qr().to_canonical();
+        auto [M, N] = A.shape();
+
+        // Add 10 to the diagonal to enforce expected pivoting
+        for (csint i = 0; i < N; i++) {
+            A(i, i) += 10;
+        }
+
+        A = A.to_canonical();
+
+        // Compute the LU decomposition
+        SymbolicLU S = slu(A);
+        LUResult res = lu_symprune(A, S);
+        LUResult full_res = lu(A, S);  // compare to full LU
+
+        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+        CSCMatrix PA = A.permute_rows(res.p_inv).to_canonical();
+
+        CSCMatrix full_LU = (full_res.L * full_res.U).droptol().to_canonical();
+
+        CHECK_FALSE(full_res.L._test_sorted());
+        CHECK_FALSE(full_res.U._test_sorted());
+
+        // std::cout << "Pruned L:" << std::endl;
+        // res.L.print_dense();
+        // std::cout << "L:" << std::endl;
+        // full_res.L.print_dense();
+
+        // std::cout << "Pruned LU:" << std::endl;
+        // LU.print_dense();
+        // std::cout << "PA:" << std::endl;
+        // PA.print_dense();
+
+        CHECK(res.L.nnz() == full_res.L.nnz() - 1);
+        CHECK(res.U.nnz() == full_res.U.nnz());
+        compare_matrices(res.U, full_res.U);
+        compare_matrices(LU, PA);  // FIXME fails
+    }
+
+    // TODO when A is symmetric, we should get the elimination tree of A
+    // SECTION("Symmetric Matrix") {
+    // }
+}
+
+
 TEST_CASE("Exercise 6.15: 1-norm condition number estimate", "[ex6.15]")
 {
     CSCMatrix A = davis_example_qr().to_canonical();
@@ -3609,6 +3657,7 @@ TEST_CASE("Exercise 6.15: 1-norm condition number estimate", "[ex6.15]")
         REQUIRE(kappa == Approx(expect));
     }
 }
+
 
 /*==============================================================================
  *============================================================================*/

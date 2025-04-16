@@ -851,19 +851,19 @@ CSCMatrix ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
         throw std::runtime_error("Matrix must be square!");
     }
 
-    // Get structure of "lower" tri of A (may be stored as upper only)
-    CSCMatrix A_tril = A.band(0, N).T();
-
-    CSCMatrix L {{N, N}, A_tril.nnz()};  // allocate result
-
-    // Workspaces
-    std::vector<csint> c(A_tril.indptr());  // column pointers for L
-    std::vector<csint> w(N, -1);       // row indices for column of C
-    std::vector<double> x(N);          // values for column of C
-
     const CSCMatrix C = A.symperm(S.p_inv);
 
-    L.p_ = A_tril.indptr();  // column pointers for L (same pattern as A)
+    // Get structure of "lower" tri of C (may be stored as upper only)
+    const CSCMatrix C_tril = C.band(0, N).T();
+
+    CSCMatrix L {{N, N}, C_tril.nnz()};  // allocate result
+
+    // Workspaces
+    std::vector<csint> c(C_tril.indptr());  // column pointers for L
+    std::vector<csint> w(N, -1);            // row indices for column of C
+    std::vector<double> x(N);               // values for column of C
+
+    L.p_ = C_tril.indptr();  // column pointers for L (same pattern as A)
 
     // Compute L(k, :) for L*L' = C in up-looking order
     for (csint k = 0; k < N; k++) {

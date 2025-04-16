@@ -24,6 +24,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <utility>  // as_const
 
 #include "csparse.h"
 
@@ -2536,20 +2537,16 @@ TEST_CASE("Cholesky decomposition")
             // Compute the complete Cholesky factorization for comparison
             const CSCMatrix L = chol(A, schol(A));
 
-            const CSCMatrix LLT = (Li * Li.T()).droptol().to_canonical();
-
             // std::cout << "L:" << std::endl;
             // L.print_dense();
             // std::cout << "Li:" << std::endl;
             // Li.print_dense();
 
-            // std::cout << "LLT:" << std::endl;
-            // LLT.print_dense();
             // std::cout << "A:" << std::endl;
             // A.print_dense();
 
             // Li is lower triangular with the same sparsity pattern as A
-            const CSCMatrix A_tril = A.band(-N, 0);
+            const CSCMatrix A_tril = std::as_const(A).band(-N, 0);
 
             csint fill_in = 6;  // shown in book example
             CHECK(Li.nnz() == L.nnz() - fill_in);  // fill-in is 6
@@ -2557,37 +2554,32 @@ TEST_CASE("Cholesky decomposition")
             CHECK(Li.indptr() == A_tril.indptr());
             CHECK(Li.indices() == A_tril.indices());
 
-            // // Test norm just on non-zero pattern of A
-            // // MATLAB >> norm(A - (L * L') * spones(A), "fro") / norm(A, "fro")
+            // Test norm just on non-zero pattern of A
+            // MATLAB >> norm(A - (L * L') * spones(A), "fro") / norm(A, "fro")
 
-            // const CSCMatrix LLT_Anz = LLT.fkeep(
-            //     [A](csint i, csint j, double x) { return A(i, j) != 0.0; }
-            // );
+            const CSCMatrix LLT = (Li * Li.T()).droptol().to_canonical();
+            const CSCMatrix LLT_Anz = LLT.fkeep(
+                [A](csint i, csint j, double x) {
+                    return std::as_const(A)(i, j) != 0.0;
+                }
+            );
+            const CSCMatrix AmLLT = (A - LLT).droptol(tol).to_canonical();
 
-            // const CSCMatrix AmLLT = (A - LLT).droptol(tol).to_canonical();
-
-            // CHECK(LLT_Anz.nnz() == A.nnz());
-
-            // // FIXME many non-zeros?? Should only be 6 small-ish numbers
             // std::cout << "A - LLT:" << std::endl;
             // AmLLT.print_dense();
 
-            // CHECK(AmLLT.is_symmetric());  // FIXME? AmLLT is *not* symmetric?
-            // // compare_matrices(A, LLT);
+            CHECK(LLT_Anz.nnz() == A.nnz());
+            CHECK(AmLLT.is_symmetric());
+            CHECK(AmLLT.nnz() == fill_in);
 
-            // // std::cout << "LLT:" << LLT << std::endl;
-            // // std::cout << "AmLLT:" << AmLLT << std::endl;
-
-            // // CHECK(AmLLT.nnz() == fill_in);  // Fill-in is 6, so 12 is symmetry
-
-            // double nz_norm = (A - LLT_Anz).fronorm() / A.fronorm();
-            // double norm = AmLLT.fronorm() / A.fronorm();  // total norm
+            double nz_norm = (A - LLT_Anz).fronorm() / A.fronorm();
+            double norm = AmLLT.fronorm() / A.fronorm();  // total norm
 
             // std::cout << "nz_norm: " << std::format("{:6.4g}", nz_norm) << std::endl;
             // std::cout << "   norm: " << std::format("{:6.4g}", norm) << std::endl;
 
-            // CHECK_THAT(nz_norm, WithinAbs(0.0, 1e-15));
-            // CHECK(norm > nz_norm * 1e10);  // hack number
+            CHECK_THAT(nz_norm, WithinAbs(0.0, 1e-15));
+            CHECK(norm > nz_norm * 1e10);  // hack number
         }
 
         SECTION("ICT: Threshold") {

@@ -47,7 +47,7 @@ A = L + L';
 
 % Set the diagonal to ensure positive definiteness
 for i = 1:N
-    A(i, i) = i + 10;
+    A(i, i) = i + 9;
 end
 
 end

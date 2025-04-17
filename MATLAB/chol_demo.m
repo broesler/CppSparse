@@ -7,18 +7,21 @@
 %
 %===============================================================================
 
-N = 11;
-rows = [1:N, 1 + [5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10]];
-cols = [1:N, 1 + [0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9]];
-vals = ones(size(rows));
+% N = 11;
+% rows = [1:N, 1 + [5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10]];
+% cols = [1:N, 1 + [0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9]];
+% vals = ones(size(rows));
 
-% Values for the lower triangle
-L = sparse(rows, cols, vals, N, N);
+% % Values for the lower triangle
+% L = sparse(rows, cols, vals, N, N);
 
-% Create the symmetric matrix A, and add to diagonal to ensure positive definite
-diag_A = max(sum(L + L' - 2*diag(diag(L))));
-A = full(L + triu(L', 1) + diag_A*eye(N));  % use full for easier display
-A = sparse(A);
+% % Create the symmetric matrix A, and add to diagonal to ensure positive definite
+% diag_A = max(sum(L + L' - 2*diag(diag(L))));
+% A = full(L + triu(L', 1) + diag_A*eye(N));  % use full for easier display
+% A = sparse(A);
+
+A = davis_example_chol();
+N = size(A, 1);
 
 % Get the elimination tree
 [parent, post] = etree(A);
@@ -53,13 +56,73 @@ R_up = cholupdate(R', w, '+')';
 
 assert(norm(R_up * R_up' - A_up) < 1e-14)
 
-% Compute the incomplete Cholesky factorization
-droptol = 1e-2
+% ---------- Compute the incomplete Cholesky factorization
+% The local drop tolerance at step j of the factorization is:
+%   norm(A(j:end, j), 1) * droptol.
+droptol = 0.005;
 options = struct('type', 'ict', 'droptol', droptol);
-Li = ichol(A, options);
 
-% check that Li is a good approximation to A
-test_norm = norm(Li * Li' - A, 'fro') / norm(A, 'fro')
+L = ichol(A, options);  % lower by default
+Lf = chol(A, 'lower');  % upper by default
+
+% Compute the 1-norm of each A(j:end, j), and show a comparison with the
+% actual values of the full L to see which elements would be dropped. Compare
+% this to an absolute drop tolerance like in our implementation.
+col_norms = zeros(N, 1);
+for k = 1:N
+    col_norms(k) = norm(A(k:end, k), 1);
+end
+
+% Compute the drop tolerance for each column
+col_droptols = col_norms * droptol;
+
+% Compare the drop tolerance to the actual values of L
+Lf_expectdrop = sparse(Lf);  % pre-allocate
+for k = 1:N
+    col = Lf(k:end, k);
+    cond = abs(col) < col_droptols(k);
+    Lf_expectdrop(k:end, k) = col .* cond;
+end
+
+disp('Expected drops in Lf:');
+disp(full(Lf_expectdrop))
+fprintf('nnz(Lf_expectdrop): %d\n', nnz(Lf_expectdrop));  % == 7
+
+% Get the actual entries where Lf is non-zero, but L is zero
+% (i.e. the entries that were dropped)
+Lf_isdropped = Lf .* (L == 0);
+
+% disp('Entries of Lf that are dropped:');
+% disp(full(Lf_isdropped));
+fprintf('nnz(Lf_isdropped): %d\n', nnz(Lf_isdropped));  % == 6
+
+% NOTE 
+% For droptol = 0.01,
+% In column 10, the drop tolerance as computed from A(10:end, 10) is 0.2,
+% so the value L(10, 11) ~ 0.19 should get dropped by ichol, but doesn't?
+% 
+% Similar results for other droptol values. We expect to drop many more elements
+% than actually get dropped, despite applying the stated drop tolerance from the
+% MATLAB documentation.
+%
+% disp(nnz(Lf_expectdrop - Lf_isdropped))
+
+% check that L*L' is a good approximation to A
+drop_small = @(x) x .* (abs(x) > 1e-14);
+
+LLT = L * L';
+AmLLT = spfun(drop_small, A - LLT);  % maintain shape of matrix with spfun
+
+fprintf('nnz(AmLLT): %d\n', nnz(AmLLT))  % 6 for droptol = 1e-2
+
+% Test norm only on pattern of A
+LLT_Anz = LLT .* spones(A);
+
+Anz_norm = norm(A - LLT_Anz, 'fro') / norm(A, 'fro');
+assert(Anz_norm < 1e-15)
+
+% Test norm on entire matrix
+test_norm = norm(AmLLT, 'fro') / norm(A, 'fro');
 assert(test_norm < droptol)
 
 % TODO graph not implemented in octave

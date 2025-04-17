@@ -667,6 +667,13 @@ LUResult ilutp(
                     ipiv = i;
                 }
             } else {  // x(i) is the entry U(pinv[i], k)
+                // NOTE to do relative tolerance, we need to separate the
+                // assignment to U from the pivot search, so that we can compare
+                // the U elements to the pivot.
+                // Might be able to combine with the L update loop, as long as
+                // we add the diagonal U(k, k) after the loop. The only issue is
+                // the p_inv[ipiv] = k assignment, which needs to be done before
+                // the L update loop, but after the U update loop.
                 double x = sol.x[i];
                 if (std::fabs(x) > drop_tol) {
                     U.i_[unz] = p_inv[i];
@@ -685,13 +692,12 @@ LUResult ilutp(
         }
 
         // --- Divide by pivot -------------------------------------------------
-        // Exercise 6.5: modify to allow singular matrices
-        double pivot = 0;
-        pivot = sol.x[ipiv];  // the chosen pivot
-        p_inv[ipiv] = k;      // ipiv is the kth pivot row
-        L.i_[lnz] = ipiv;     // first entry in L[:, k] is L(k, k) = 1
+        // TODO modify to allow singular matrices (see Exercise 6.5)
+        double pivot = sol.x[ipiv];  // the chosen pivot
+        p_inv[ipiv] = k;             // ipiv is the kth pivot row
+        L.i_[lnz] = ipiv;            // first entry in L[:, k] is L(k, k) = 1
         L.v_[lnz++] = 1;
-        U.i_[unz] = k;        // last entry in U[:, k] is U(k, k)
+        U.i_[unz] = k;               // last entry in U[:, k] is U(k, k)
         U.v_[unz++] = pivot;
 
         for (const auto& i : sol.xi) {          // L(k+1:n, k) = x / pivot

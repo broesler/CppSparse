@@ -3679,8 +3679,12 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13]")
             LUResult ires = ilutp(Ap, S, drop_tol);
             CSCMatrix iLU = (ires.L * ires.U).droptol().to_canonical();
 
-            CHECK(ires.L.nnz() <= res.L.nnz());
-            CHECK(ires.U.nnz() <= res.U.nnz());
+            csint expect_L_drops = 6;  // abs_drop_tol = 0.08
+            csint expect_U_drops = 0;
+
+            CHECK(ires.L.nnz() == res.L.nnz() - expect_L_drops);
+            CHECK(ires.U.nnz() == res.U.nnz() - expect_U_drops);
+            // NOTE only true to absolute tolerance
             CHECK_THAT(ires.L.data() >= drop_tol, AllTrue());
             CHECK_THAT(ires.U.data() >= drop_tol, AllTrue());
             REQUIRE((iLU - A).fronorm() / A.fronorm() < drop_tol);

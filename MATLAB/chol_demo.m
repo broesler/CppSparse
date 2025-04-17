@@ -59,7 +59,7 @@ assert(norm(R_up * R_up' - A_up) < 1e-14)
 % ---------- Compute the incomplete Cholesky factorization
 % The local drop tolerance at step j of the factorization is:
 %   norm(A(j:end, j), 1) * droptol.
-droptol = 0.005;
+droptol = 0.01;
 options = struct('type', 'ict', 'droptol', droptol);
 
 L = ichol(A, options);  % lower by default
@@ -76,11 +76,11 @@ end
 % Compute the drop tolerance for each column
 col_droptols = col_norms * droptol;
 
-% Compare the drop tolerance to the actual values of L
+% Compare the drop tolerance to the actual values of L (before scaling by pivot)
 Lf_expectdrop = sparse(Lf);  % pre-allocate
 for k = 1:N
     col = Lf(k:end, k);
-    cond = abs(col) < col_droptols(k);
+    cond = abs(col * col(1)) < col_droptols(k);
     Lf_expectdrop(k:end, k) = col .* cond;
 end
 
@@ -106,6 +106,20 @@ fprintf('nnz(Lf_isdropped): %d\n', nnz(Lf_isdropped));  % == 6
 % MATLAB documentation.
 %
 % disp(nnz(Lf_expectdrop - Lf_isdropped))
+%
+% Octave checks 
+%   std::abs (w_data[jrow]) < (droptol * cols_norm[k])      (line 358)
+% *before* scaling by the pivot on  lines 391-393:
+%     // Once elements are dropped and compensation of column sums are done,
+%     // scale the elements by the pivot.
+%     data_l[total_len] = std::sqrt (data_l[total_len]);
+%     for (jj = total_len + 1; jj < (total_len + w_len); jj++)
+%         data_l[jj] /= data_l[total_len];
+% See permalink: <https://github.com/gnu-octave/octave/blob/ab54952a577d012156cbb6f3288be69c20183d86/libinterp/corefcn/__ichol__.cc#L358>
+%
+% We need to update our filter to re-scale the elements by the diagonal of L.
+%
+% TODO plot a graph of nnz vs. droptol for each filter to show difference.
 
 % check that L*L' is a good approximation to A
 drop_small = @(x) x .* (abs(x) > 1e-14);

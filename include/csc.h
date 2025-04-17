@@ -984,14 +984,14 @@ class CSCMatrix
 
         friend CSCMatrix symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S);
 
-        friend CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S, double drop_tol);
+        friend CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S);
         friend CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
         friend CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
 
         friend CSCMatrix ichol_nofill(const CSCMatrix& A, const SymbolicChol& S);
-        friend CSCMatrix ichol(
+        friend CSCMatrix icholt(
             const CSCMatrix& A,
-            ICholMethod method,
+            const SymbolicChol& S,
             double drop_tol
         );
 

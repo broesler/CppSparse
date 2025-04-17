@@ -2380,6 +2380,9 @@ TEST_CASE("Cholesky decomposition")
         // Now compute the numeric factorization
         CSCMatrix L = chol(A, S);
 
+        CHECK(L.has_sorted_indices());
+        CHECK(L._test_sorted());
+
         // Check that the factorization is correct
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
 
@@ -2530,34 +2533,37 @@ TEST_CASE("Cholesky decomposition")
     }
 
     SECTION("Exercise 4.13: Incomplete Cholesky") {
+        const SymbolicChol S = schol(A, AMDOrder::Natural);
+
         SECTION("IC0: No Fill") {
             // Compute the incomplete Cholesky factorization with no fill-in.
-            const CSCMatrix Li = ichol(A, ICholMethod::NoFill);
+            const CSCMatrix L = ichol_nofill(A, S);
 
             // Compute the complete Cholesky factorization for comparison
-            const CSCMatrix L = chol(A, schol(A));
+            const CSCMatrix Lf = chol(A, schol(A));
 
+            // std::cout << "Lf:" << std::endl;
+            // Lf.print_dense();
             // std::cout << "L:" << std::endl;
             // L.print_dense();
-            // std::cout << "Li:" << std::endl;
-            // Li.print_dense();
 
             // std::cout << "A:" << std::endl;
             // A.print_dense();
 
-            // Li is lower triangular with the same sparsity pattern as A
+            // L is lower triangular with the same sparsity pattern as A
             const CSCMatrix A_tril = std::as_const(A).band(-N, 0);
 
             csint fill_in = 6;  // shown in book example
-            CHECK(Li.nnz() == L.nnz() - fill_in);  // fill-in is 6
-            CHECK(Li.nnz() == A_tril.nnz());
-            CHECK(Li.indptr() == A_tril.indptr());
-            CHECK(Li.indices() == A_tril.indices());
+            CHECK(L._test_sorted());
+            CHECK(L.nnz() == Lf.nnz() - fill_in);  // fill-in is 6
+            CHECK(L.nnz() == A_tril.nnz());
+            CHECK(L.indptr() == A_tril.indptr());
+            CHECK(L.indices() == A_tril.indices());
 
             // Test norm just on non-zero pattern of A
-            // MATLAB >> norm(A - (L * L') * spones(A), "fro") / norm(A, "fro")
+            // MATLAB >> norm(A - (Lf * Lf') * spones(A), "fro") / norm(A, "fro")
 
-            const CSCMatrix LLT = (Li * Li.T()).droptol().to_canonical();
+            const CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
             const CSCMatrix LLT_Anz = LLT.fkeep(
                 [A](csint i, csint j, double x) {
                     return std::as_const(A)(i, j) != 0.0;
@@ -2583,32 +2589,80 @@ TEST_CASE("Cholesky decomposition")
         }
 
         SECTION("ICT: Threshold") {
-            // Compute the incomplete Cholesky factorization with a threshold
-            double drop_tol = 1e-2;
-            CSCMatrix Li = ichol(A, ICholMethod::ICT, drop_tol);
+            SECTION("Full Cholesky (drop_tol = 0)") {
+                // Should match full decomposition
+                double drop_tol = 0.0;
+                const CSCMatrix L = icholt(A, S, drop_tol);
+                const CSCMatrix Lf = chol(A, S);
+                compare_matrices(L, Lf);
+            }
 
-            // Compute the complete Cholesky factorization for comparison
-            CSCMatrix L = chol(A, schol(A));
+            SECTION("Drop all non-diagonal entries (drop_tol = inf)") {
+                double drop_tol = 1.0;
+                const CSCMatrix L = icholt(A, S, drop_tol);
+                const CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
+                CHECK(L.nnz() == N);
+                for (csint k = 0; k < N; k++) {
+                    CHECK(LLT(k, k) == Approx(A(k, k)));
+                }
+            }
 
-            CSCMatrix LLT = (Li * Li.T()).droptol().to_canonical();
+            SECTION("Arbitrary Tolerance") {
+                // Compute the incomplete Cholesky factorization with a threshold
+                double drop_tol = 0.005;
+                const CSCMatrix L = icholt(A, S, drop_tol);
 
-            // std::cout << "Li:" << std::endl;
-            // Li.print_dense();
-            // std::cout << "LLT:" << std::endl;
-            // LLT.print_dense();
-            // std::cout << "A:" << std::endl;
-            // A.print_dense();
+                // Compute the complete Cholesky factorization for comparison
+                const CSCMatrix Lf = chol(A, S);
+                const CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
 
-            CHECK(Li.nnz() <= L.nnz());
-            CHECK(LLT.nnz() >= A.nnz());
-            // NOTE the ICT method uses the column counts from `schol`, so any
-            // entries that are dropped will be exactly 0 in L.
-            // REQUIRE_THAT(Li.data() >= drop_tol, AllTrue());
+                // std::cout << "Lf:" << std::endl;
+                // Lf.print_dense();
+                // std::cout << "L:" << std::endl;
+                // L.print_dense();
 
-            REQUIRE((LLT - A).fronorm() / A.fronorm() < drop_tol);
+                // std::cout << "LLT:" << std::endl;
+                // LLT.print_dense();
+                // std::cout << "A:" << std::endl;
+                // A.print_dense();
+
+                // std::cout << "A - LLT:" << std::endl;
+                // (A - LLT).print_dense();
+
+                csint expect_drops = 6;  // rel_drop_tol = 0.005;
+
+                CHECK(L._test_sorted());
+                CHECK(L.nnz() == Lf.nnz() - expect_drops);
+
+                // Only true for absolute drop tolerance
+                // for (const auto& x : L.data()) {
+                //     CHECK(std::fabs(x) > drop_tol);
+                // }
+
+                // Test the norm just on the pattern of A
+                const CSCMatrix LLT_Anz = LLT.fkeep(
+                    [A](csint i, csint j, double x) {
+                        return std::as_const(A)(i, j) != 0.0;
+                    }
+                );
+
+                const CSCMatrix AmLLTnz = (A - LLT_Anz).droptol(tol).to_canonical();
+                const CSCMatrix AmLLT = (A - LLT).droptol(tol).to_canonical();
+
+                CHECK(LLT_Anz.nnz() == A.nnz());
+                CHECK(AmLLT.is_symmetric());
+                CHECK(AmLLT.nnz() == expect_drops);
+
+                double nz_norm = AmLLTnz.fronorm() / A.fronorm();
+                double norm = (A - LLT).fronorm() / A.fronorm();
+
+                // Only really true for realistically small drop_tol
+                CHECK_THAT(nz_norm, WithinAbs(0.0, 1e-15));
+                CHECK(norm < drop_tol);  // not always true!
+            }
         }
     }
-}
+}  // cholesky
 
 
 TEST_CASE("Householder Reflection")

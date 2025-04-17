@@ -24,12 +24,6 @@ enum class LeafStatus {
 };
 
 
-enum class ICholMethod {
-    NoFill,
-    ICT
-};
-
-
 // ---------- Structs
 struct FirstDesc {
     std::vector<csint> first, level;
@@ -330,7 +324,7 @@ CSCMatrix symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S);
  *
  * @return the numeric Cholesky factorization of `A`
  */
-CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S, double drop_tol=0.0);
+CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S);
 
 
 /** Compute the left-looking Cholesky factorization of a sparse matrix, given
@@ -413,43 +407,42 @@ CholCounts chol_etree_counts(const CSCMatrix& A);
  *
  * See: Davis, Exercise 4.13.
  *
- * @param A  the matrix to factorize
+ * This function uses the up-looking algorithm, like `chol`.
+ *
+ * @param A  the matrix to factorize. Only the upper triangle is used.
  * @param S  the SymbolicChol factorization of `A` from `cs::schol()`
  *
  * @return L  the incomplete Cholesky factor of `A`
  *
  * @throws std::runtime_error if `A` is not square or positive definite.
- */
-CSCMatrix ichol_nofill(const CSCMatrix& A, const SymbolicChol& S);
-
-
-/** Compute the incomplete Cholesky factor \f$ L L^T = A \f$.
- *
- * This function uses the up-looking algorithm, like `chol`.
- *
- * See: Davis, Exercise 4.13 and MATLAB ichol.
- *
- * @note This function assumes that `A` is symmetric and positive definite.
- *
- * @param A  the matrix to factorize. Only the upper triangle is used.
- * @param method the method to use: NoFill or ICT
- *        * NoFill: no fill-in. The factor will have the same non-zero pattern
- *           as the input `A`.
- *        * ICT: incomplete Cholesky with threshold drop tolerance. Any
- *          element that is smaller than `drop_tol` will not be included in `L`.
- * @param drop_tol  the drop tolerance, default is 1e-4
- *
- * @return L  the incomplete (lower triangular) Cholesky factor of A.
  *
  * @see cs::chol()
  * @see cs::leftchol()
  * @see cs::ilu()
  */
-CSCMatrix ichol(
-    const CSCMatrix& A,
-    ICholMethod method=ICholMethod::NoFill,
-    double drop_tol=1e-4
-);
+CSCMatrix ichol_nofill(const CSCMatrix& A, const SymbolicChol& S);
+
+
+/** Compute the incomplete Cholesky factorization with drop tolerance.
+ *
+ * See: Davis, Exercise 4.13.
+ *
+ * This function uses the up-looking algorithm, like `chol`.
+ *
+ * @param A  the matrix to factorize. Only the upper triangle is used.
+ * @param S  the SymbolicChol factorization of `A` from `cs::schol()`
+ * @param drop_tol  the drop tolerance for the factorization. Any element that
+ *        is smaller than `drop_tol` will not be included in `L`.
+ *
+ * @return L  the incomplete Cholesky factor of `A`
+ *
+ * @throws std::runtime_error if `A` is not square or positive definite.
+ *
+ * @see cs::chol()
+ * @see cs::leftchol()
+ * @see cs::ilu()
+ */
+CSCMatrix icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol=0);
 
 
 }  // namespace cs

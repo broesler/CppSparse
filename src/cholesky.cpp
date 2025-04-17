@@ -533,7 +533,7 @@ CSCMatrix symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S)
 }
 
 
-CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
+CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S)
 {
     auto [M, N] = A.shape();
     CSCMatrix L({M, N}, S.lnz);  // allocate result
@@ -581,11 +581,9 @@ CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
             // We build L one *row* at a time, in topological order. All
             // i < k since they are reachable, so the diagonal is always the
             // first element in its column, and all other elements are in order.
-            if (std::abs(lki) > drop_tol) {
-                csint p = c[i]++;
-                L.i_[p] = k;                        // store L(k, i) in column i
-                L.v_[p] = lki;
-            }
+            csint p = c[i]++;
+            L.i_[p] = k;                        // store L(k, i) in column i
+            L.v_[p] = lki;
         }
 
         //--- Compute L(k, k) --------------------------------------------------
@@ -593,17 +591,15 @@ CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
             throw std::runtime_error("Matrix not positive definite!");
         }
 
-        double sqrt_d = std::sqrt(d);
-        if (std::abs(sqrt_d) > drop_tol) {
-            csint p = c[k]++;
-            L.i_[p] = k;  // store L(k, k) = sqrt(d) in column k
-            L.v_[p] = sqrt_d;
-        }
+        // store L(k, k) = sqrt(d) in column k
+        csint p = c[k]++;
+        L.i_[p] = k;
+        L.v_[p] = std::sqrt(d);
     }
 
     // Guaranteed by construction
     L.has_sorted_indices_ = true;
-    L.has_canonical_format_ = (drop_tol == 0);  // retains numerically 0 entries
+    L.has_canonical_format_ = true;
 
     return L;
 }
@@ -625,8 +621,6 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 
     // Need the *lower* triangular part for a_{32}, so do a full permutation
     const CSCMatrix C = A.permute(S.p_inv, inv_permute(S.p_inv));
-
-    L.p_ = S.cp;  // column pointers for L
 
     // Compute L(:, k) for L*L' = C in left-looking order
     for (csint k = 0; k < N; k++) {
@@ -843,6 +837,7 @@ CholCounts chol_etree_counts(const CSCMatrix& A)
 }
 
 
+// Exercise 4.13
 CSCMatrix ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
 {
     auto [M, N] = A.shape();
@@ -929,26 +924,117 @@ CSCMatrix ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
 }
 
 
-CSCMatrix ichol(
-    const CSCMatrix& A,
-    ICholMethod method,
-    double drop_tol
-)
+// Exercise 4.13
+CSCMatrix icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
 {
-    SymbolicChol S = schol(A);
+    auto [M, N] = A.shape();
 
-    switch (method) {
-        case ICholMethod::NoFill:
-            return ichol_nofill(A, S);
-            break;
-
-        case ICholMethod::ICT:
-            return chol(A, S, drop_tol);
-            break;
-
-        default:
-            throw std::runtime_error("Invalid incomplete Cholesky method!");
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
     }
+
+    if (drop_tol < 0) {
+        throw std::runtime_error("drop_tol must be non-negative!");
+    }
+
+    CSCMatrix L({M, N}, S.lnz);  // allocate result
+
+    // Workspaces
+    std::vector<csint> c(S.cp);  // column pointers for L
+    std::vector<double> x(N);    // sparse accumulator
+
+    const CSCMatrix C = A.symperm(S.p_inv);
+
+    L.p_ = S.cp;  // column pointers for L
+
+    // Compute L(k, :) for L*L' = C in up-looking order
+    for (csint k = 0; k < N; k++) {
+        //--- Nonzero pattern of L(k, :) ---------------------------------------
+        x[k] = 0.0;  // x(0:k) is now zero
+
+        // scatter C into x = full(triu(C(:,k)))
+        // C does not have to be in sorted order (d = x[k] gets the diagonal)
+        for (csint p = C.p_[k]; p < C.p_[k+1]; p++) {
+            csint i = C.i_[p];
+            if (i <= k) {
+                x[i] = C.v_[p];
+            }
+        }
+
+        // NOTE MATLAB compares elements to the 1-norm of drop_tol * A[k:, k]
+        // (lower tri of column k)
+        // however, we only access A[:k, k] (upper tri) on a given iteration, so
+        // computing the 1-norm of the lower tri is more difficult.
+        //
+        // It is the same as computing the 1-norm of A[k, k:] since A is
+        // symmetric, but that is not helpful as we haven't seen the column yet.
+        //
+        // We would have to re-write symperm, ereach, and this function to only
+        // consider the lower tri of A.
+        //
+        // Instead, compare the elements of L to drop_tol * A[k, k], like
+        // SuperLU does for ilu.
+        //
+        // IDEA: The leftchol algorithm scatters the *lower* triangular of
+        // A for computation. We could use that algorithm instead to easily
+        // compute the 1-norm of each column lower tri for comparison.
+        //
+        // Problem: MATLAB seems to use a dropping criteria that is different
+        // than the one stated in their documentation. Filtering the full
+        // L factor based on their criteria gives a different result than
+        // computing L = ichol(A, options).
+
+        double d = x[k];  // d = C(k, k)
+        x[k] = 0.0;       // clear x for k + 1st iteration
+
+        double abs_diag = std::fabs(d);  // store diagonal for drop_tol check
+
+        //--- Triangular Solve -------------------------------------------------
+        // Solve L(0:k-1, 0:k-1) * x = C(0:k-1, k) == L[:k, :k] * x = C[:k, k]
+        //   => L[k, :k] := x.T
+        // ereach gives the pattern of L(k, :) in topological order
+        for (const auto& i : ereach(C, k, S.parent)) {
+            double lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
+            x[i] = 0.0;                         // clear x for k + 1st iteration
+
+            for (csint p = L.p_[i] + 1; p < c[i]; p++) {
+                x[L.i_[p]] -= L.v_[p] * lki;    // x -= L(i, :) * L(k, i)
+            }
+
+            // We build L one *row* at a time, in topological order. All
+            // i < k since they are reachable, so the diagonal is always the
+            // first element in its column, and all other elements are in order.
+            if (std::abs(lki) > drop_tol * abs_diag) {
+                // subtract the sparse dot product from the diagonal
+                d -= lki * lki;  // d -= L(k, i) * L(k, i)
+
+                // store L(k, i) in column i
+                csint p = c[i]++;
+                L.i_[p] = k;
+                L.v_[p] = lki;
+            }
+        }
+
+        //--- Compute L(k, k) --------------------------------------------------
+        if (d <= 0) {
+            throw std::runtime_error("Matrix not positive definite!");
+        }
+
+        // store L(k, k) = sqrt(d) in column k
+        csint p = c[k]++;
+        L.i_[p] = k;
+        L.v_[p] = std::sqrt(d);
+    }
+
+    if (drop_tol > 0) {
+        L.dropzeros();   // remove numerically zero entries
+    }
+
+    // Guaranteed by construction
+    L.has_sorted_indices_ = true;
+    L.has_canonical_format_ = true;
+
+    return L;
 }
 
 

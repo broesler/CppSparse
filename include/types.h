@@ -25,8 +25,6 @@ enum class AMDOrder
 };
 
 // Forward declarations
-enum class ICholMethod;
-
 struct CholCounts;
 struct TriPerm;
 struct SparseSolution;

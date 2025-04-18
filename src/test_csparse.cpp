@@ -1255,8 +1255,12 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
             // Operator overloading
             CSCMatrix C = 0.1 * A + 9.0 * B;
 
+            // Add method
+            CSCMatrix Cm = (0.1 * A).add(9.0 * B);
+
             compare_matrices(C, expect);
             compare_matrices(Cf, expect);
+            compare_matrices(Cm, expect);
         }
 
         SECTION("Subtraction") {

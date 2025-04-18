@@ -663,12 +663,11 @@ class CSCMatrix
             csint j,
             double beta,
             std::vector<csint>& w,
-            std::vector<double>& x,
+            std::optional<std::reference_wrapper<std::vector<double>>> x_ref,
             csint mark,
             CSCMatrix& C,
             csint nz,
-            bool fs=false,    // Exercise 2.19
-            bool values=true  // needed in qr
+            bool fs=false    // Exercise 2.19
         ) const;
 
         //----------------------------------------------------------------------

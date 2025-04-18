@@ -7,13 +7,15 @@
  *
  *============================================================================*/
 
-#include <algorithm>  // lower_bound
+#include <algorithm>   // lower_bound
 #include <cassert>
-#include <cmath>      // fabs
+#include <cmath>       // fabs
 #include <format>
-#include <new>        // bad_alloc
-#include <numeric>    // iota
-#include <ranges>     // views::reverse
+#include <functional>  // reference_wrapper
+#include <new>         // bad_alloc
+#include <numeric>     // iota
+#include <optional>    // optional
+#include <ranges>      // views::reverse
 #include <sstream>
 #include <string>
 #include <vector>
@@ -937,7 +939,7 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
         // Compute x = A @ B[:, j]
         for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
             // Compute x += A[:, B.i_[p]] * B.v_[p]
-            nz = scatter(B.i_[p], values ? B.v_[p] : 1, w, x, j+1, C, nz, fs, values);
+            nz = scatter(B.i_[p], values ? B.v_[p] : 1, w, x, j+1, C, nz, fs);
             fs = false;
         }
 
@@ -1093,9 +1095,9 @@ CSCMatrix add_scaled(
 
     for (csint j = 0; j < N; j++) {
         C.p_[j] = nz;  // column j of C starts here
-        nz = A.scatter(j, alpha, w, x, j+1, C, nz, fs, values);  // alpha * A(:, j)
+        nz = A.scatter(j, alpha, w, x, j+1, C, nz, fs);  // alpha * A(:, j)
         fs = false;
-        nz = B.scatter(j,  beta, w, x, j+1, C, nz, fs, values);  //  beta * B(:, j)
+        nz = B.scatter(j,  beta, w, x, j+1, C, nz, fs);  //  beta * B(:, j)
 
         // Gather results into the correct column of C
         if (values) {
@@ -1164,14 +1166,19 @@ csint CSCMatrix::scatter(
     csint j,
     double beta,
     std::vector<csint>& w,
-    std::vector<double>& x,
+    std::optional<std::reference_wrapper<std::vector<double>>> x_ref,
     csint mark,
     CSCMatrix& C,
     csint nz,
-    bool fs,  // Exercise 2.19
-    bool values
+    bool fs  // Exercise 2.19
 ) const
 {
+    // Check if x is passed as a reference
+    std::vector<double> empty_vec;
+    std::vector<double>& x = x_ref ? x_ref->get() : empty_vec;
+    bool values = !v_.empty() && !x.empty();
+
+    // Exercise 2.19
     if (fs) {
         // If it's the first call, we can just copy the (scaled) column
         for (csint p = p_[j]; p < p_[j+1]; p++) {
@@ -1183,6 +1190,7 @@ csint CSCMatrix::scatter(
             }
         }
     } else {
+        // Original scatter
         // Otherwise, we need to accumulate the values
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             csint i = i_[p];           // A(i, j) is non-zero

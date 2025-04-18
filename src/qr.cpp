@@ -11,6 +11,7 @@
 #include <numeric>  // accumulate
 #include <ranges>   // views::reverse
 #include <vector>
+#include <optional>
 
 #include "cholesky.h"  // etree, post
 #include "qr.h"
@@ -234,9 +235,8 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
     CSCMatrix R({M, N}, S.rnz);   // R factor
 
     // Allocate workspaces
-    std::vector<double> x;         // dense vector (dummy reference for scatter)
-    std::vector<csint>  w(M, -1),  // workspace for pattern of V[:, k]
-                        s, t;      // stacks for pattern of R[:, k]
+    std::vector<csint> w(M, -1),  // workspace for pattern of V[:, k]
+                       s, t;      // stacks for pattern of R[:, k]
     s.reserve(N);
     t.reserve(N);
 
@@ -279,7 +279,7 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
             R.i_[rnz++] = i;  // R(i, k)
             if (S.parent[i] == k) {
                 // Scatter the non-zero pattern without changing the values
-                vnz = V.scatter(i, 0, w, x, k, V, vnz, false, false);
+                vnz = V.scatter(i, 0, w, std::nullopt, k, V, vnz, false);
             }
         }
 
@@ -355,7 +355,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
             x[i] = 0;
             if (S.parent[i] == k) {
                 // Scatter the non-zero pattern without changing the values
-                vnz = V.scatter(i, 0, w, x, k, V, vnz, false, false);
+                vnz = V.scatter(i, 0, w, std::nullopt, k, V, vnz, false);
             }
         }
 

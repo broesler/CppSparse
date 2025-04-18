@@ -74,10 +74,13 @@ class CSCMatrix
          *
          * The matrix shape `(M, N)` will be inferred from the maximum indices given.
          *
-         * @param data the values of the entries in the matrix
-         * @param indices row indices of each element.
-         * @param indptr array indices of the start of each column in `indices`. The
-         *        first `indptr` element is always 0.
+         * @param data the values of the entries in the matrix. This vector may
+         *        be empty to create a symbolic matrix.
+         * @param indices row indices of each element. The length of this array
+         *        must be equal to the length of `data`, if `data` is not empty.
+         * @param indptr array indices of the start of each column in `indices`.
+         *        The first `indptr` element is always 0, and the last element
+         *        is always `nnz()`, which is the length of `indices`.
          * @param shape the dimensions of the matrix
          *
          * @return a new CSCMatrix object

@@ -62,7 +62,8 @@ class COOMatrix
          *
          * The matrix shape `(M, N)` will be inferred from the maximum indices given.
          *
-         * @param vals  the values of the entries in the matrix
+         * @param vals  the values of the entries in the matrix. This vector may
+         *        be empty to create a symbolic matrix of just nonzero indices.
          * @param rows, cols  the non-negative integer row and column indices of
          *        the values
          * @param shape  the dimensions of the matrix

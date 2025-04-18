@@ -40,8 +40,11 @@ COOMatrix::COOMatrix(
       N_(shape[1] ? shape[1] : *std::max_element(j_.begin(), j_.end()) + 1)
 {
     // Check that all vectors are the same size
-    assert(v_.size() == i_.size());
-    assert(v_.size() == j_.size());
+    assert(i_.size() == j_.size());
+    // Allow v_ to be empty for symbolic computation
+    if (!v_.empty()) {
+        assert(v_.size() == i_.size());
+    }
     assert(M_ > 0 && N_ > 0);
 }
 
@@ -210,7 +213,9 @@ CSCMatrix COOMatrix::compress() const
         // A(i, j) is the pth entry in the CSC matrix
         csint p = w[j_[k]]++;  // "pointer" to the current element's column
         C.i_[p] = i_[k];
-        C.v_[p] = v_[k];
+        if (!v_.empty()) {
+            C.v_[p] = v_[k];
+        }
     }
 
     return C;

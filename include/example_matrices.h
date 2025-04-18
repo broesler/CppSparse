@@ -77,6 +77,26 @@ CSCMatrix davis_example_chol();
 CSCMatrix davis_example_qr();
 
 
+/** Build the 10 x 10 symmetric, positive definite AMD example matrix.
+ *
+ * A = [[10.,  0.,  0.,  1.,  0.,  1.,  0.,  0.,  0.,  0.],
+ *      [ 0., 11.,  0.,  0.,  1.,  1.,  0.,  0.,  1.,  0.],
+ *      [ 0.,  0., 12.,  0.,  1.,  1.,  1.,  0.,  0.,  0.],
+ *      [ 1.,  0.,  0., 13.,  0.,  0.,  1.,  1.,  0.,  0.],
+ *      [ 0.,  1.,  1.,  0., 14.,  0.,  1.,  0.,  1.,  0.],
+ *      [ 1.,  1.,  1.,  0.,  0., 15.,  0.,  0.,  0.,  0.],
+ *      [ 0.,  0.,  1.,  1.,  1.,  0., 16.,  1.,  1.,  1.],
+ *      [ 0.,  0.,  0.,  1.,  0.,  0.,  1., 17.,  1.,  1.],
+ *      [ 0.,  1.,  0.,  0.,  1.,  0.,  1.,  1., 18.,  1.],
+ *      [ 0.,  0.,  0.,  0.,  0.,  0.,  1.,  1.,  1., 19.]]
+ *
+ * See: Davis, Figure 7.1, p 101.
+ *
+ * @return the matrix in compressed sparse column format.
+ */
+CSCMatrix davis_example_amd();
+
+
 /** Define the 3x3 matrix E from Strang, p 25.
  *
  * E = [[ 1, 0, 0],

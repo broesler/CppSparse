@@ -18,7 +18,7 @@
 namespace cs {
 
 
-// See Davis pp 7-8, Eqn (2.1)
+// 4 x 4 non-symmetric example. Davis, pp 7-8, Eqn (2.1)
 COOMatrix davis_example_small()
 {
     std::vector<csint>  i = {2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
@@ -28,7 +28,7 @@ COOMatrix davis_example_small()
 }
 
 
-// Davis Cholesky example Figure 4.2, p 39.
+// 11 x 11 symmetric, positive definite Cholesky example. Davis, Fig 4.2, p 39.
 CSCMatrix davis_example_chol()
 {
     csint N = 11;  // total number of rows and columns
@@ -53,7 +53,7 @@ CSCMatrix davis_example_chol()
 }
 
 
-// Davis QR example Figure 5.1, p 74.
+// 8 x 8, non-symmetric QR example. Davis, Figure 5.1, p 74.
 CSCMatrix davis_example_qr()
 {
     // Define the test matrix A (See Davis, Figure 5.1, p 74)
@@ -78,7 +78,34 @@ CSCMatrix davis_example_qr()
 }
 
 
-// Build matrices with sorted columns
+// 10 x 10 symmetric, positive definite AMD example. Davis, Figure 7.1, p 101.
+CSCMatrix davis_example_amd()
+{
+    csint N = 10;  // total number of rows (and columns)
+
+    // Only off-diagonal elements
+    std::vector<csint> rows = {0, 3, 5, 1, 4, 5, 8, 2, 4, 5, 6, 3, 6, 7, 
+                               4, 6, 8, 5, 6, 7, 8, 9, 7, 8, 9, 8, 9, 9};
+    std::vector<csint> cols = {0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3,
+                               4, 4, 4, 5, 6, 6, 6, 6, 7, 7, 7, 8, 8, 9};
+    std::vector<double> vals(rows.size(), 1.0);
+
+    // Values for the lower triangle
+    CSCMatrix L = COOMatrix(vals, rows, cols, {N, N}).tocsc();
+
+    // Create the symmetric matrix A
+    CSCMatrix A = L + L.T();
+
+    // Set the diagonal to ensure positive definiteness
+    for (csint i = 0; i < N; i++) {
+        A.assign(i, i, i + 10);
+    }
+
+    return A.to_canonical();
+}
+
+
+// Build matrices with sorted columns for internal testing
 CSCMatrix E_mat()
 {
     return COOMatrix(

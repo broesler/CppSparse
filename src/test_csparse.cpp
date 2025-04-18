@@ -3759,5 +3759,14 @@ TEST_CASE("Exercise 6.15: 1-norm condition number estimate", "[ex6.15]")
     }
 }
 
+
+TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
+{
+    const CSCMatrix A = davis_example_amd();
+
+    A.print_dense();
+    std::cout << "A.nnz() = " << A.nnz() << std::endl;
+}
+
 /*==============================================================================
  *============================================================================*/

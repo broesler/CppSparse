@@ -14,7 +14,7 @@ import numpy as np
 from scipy import sparse
 from .csparse import (COOMatrix, CSCMatrix,
                     _davis_example_small, _davis_example_chol,
-                    _davis_example_qr)
+                    _davis_example_qr, _davis_example_amd)
 
 
 def davis_example_small(format='csparse_csc'):
@@ -92,6 +92,36 @@ def davis_example_qr(format='csparse_csc'):
         Figure 5.1, p. 74.
     """
     return _format_matrix(_davis_example_qr(), format)
+
+
+def davis_example_amd(format='csparse_csc'):
+    r"""Create a 10x10 example matrix from Davis Figure 7.1 [0].
+
+    The matrix is symmetric, positive definite.
+
+    .. code-block:: python
+        array([[10.,  0.,  0.,  1.,  0.,  1.,  0.,  0.,  0.,  0.],
+               [ 0., 11.,  0.,  0.,  1.,  1.,  0.,  0.,  1.,  0.],
+               [ 0.,  0., 12.,  0.,  1.,  1.,  1.,  0.,  0.,  0.],
+               [ 1.,  0.,  0., 13.,  0.,  0.,  1.,  1.,  0.,  0.],
+               [ 0.,  1.,  1.,  0., 14.,  0.,  1.,  0.,  1.,  0.],
+               [ 1.,  1.,  1.,  0.,  0., 15.,  0.,  0.,  0.,  0.],
+               [ 0.,  0.,  1.,  1.,  1.,  0., 16.,  1.,  1.,  1.],
+               [ 0.,  0.,  0.,  1.,  0.,  0.,  1., 17.,  1.,  1.],
+               [ 0.,  1.,  0.,  0.,  1.,  0.,  1.,  1., 18.,  1.],
+               [ 0.,  0.,  0.,  0.,  0.,  0.,  1.,  1.,  1., 19.]])
+
+    Returns
+    -------
+    A : (10, 10) csparse.CSCMatrix
+        The example matrix from Davis.
+
+    References
+    ----------
+    .. [0] Davis, Timothy A. "Direct Methods for Sparse Linear Systems",
+        Figure 7.1, p. 101.
+    """
+    return _format_matrix(_davis_example_amd(), format)
 
 
 def _format_matrix(A, format):

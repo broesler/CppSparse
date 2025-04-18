@@ -46,8 +46,9 @@ CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense)
 
     switch (order) {
         case AMDOrder::Natural:
-            // NOTE should never get here since amd returns early
-            C = A;  // natural ordering (no permutation)
+            // NOTE should never get here since amd returns early, but if it
+            // does, return the original matrix without values
+            C = CSCMatrix {{}, A.indices(), A.indptr(), A.shape()};
             break;
         case AMDOrder::APlusAT:
             if (M != N) {
@@ -83,10 +84,6 @@ CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense)
     // Drop diagonal entries from C (no self-edges in the graph)
     C.fkeep([] (csint i, csint j, double v) { return i != j; });
 
-    csint cnz = C.nnz();
-    csint t = cnz + cnz / 5 + 2 * N;  // elbow room for C
-    C.realloc(t);
-
     return C;
 }
 
@@ -111,6 +108,11 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
 
     // Create the working matrix, subsequent operations are done in-place
     CSCMatrix C = build_graph(A, order, dense);
+
+    // Allocate elbow room for C
+    csint cnz = C.nnz();
+    csint t = cnz + cnz / 5 + 2 * N;
+    C.realloc(t);
 
     // --- Allocate result + workspaces ----------------------------------------
     p = std::vector<csint>(N + 1);

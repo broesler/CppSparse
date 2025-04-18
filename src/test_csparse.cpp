@@ -11,7 +11,6 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_all.hpp>
-#include <catch2/generators/catch_generators.hpp>
 
 #include <algorithm>  // reverse
 #include <cmath>
@@ -3806,18 +3805,47 @@ TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
 {
     const CSCMatrix A = davis_example_amd();
 
+    auto [M, N] = A.shape();
+
     // Test build_graph for each value of AMDOrder
     SECTION("Build Graph") {
-        AMDOrder order = GENERATE(
-            AMDOrder::Natural,
-            AMDOrder::APlusAT,
-            AMDOrder::ATANoDenseRows,
-            AMDOrder::ATA
-        );
+        // Number of entries required for a dense row
+        csint dense = N + 1;  // force keeping all rows
 
-        csint dense = 8;  // min(N-2, max(16, 10*sqrt(N)));
+        CSCMatrix expect;
+        AMDOrder order = AMDOrder::Natural;
+        bool values = false;
 
-        REQUIRE_NOTHROW(build_graph(A, order, dense));
+        SECTION("Natural") {
+            order = AMDOrder::Natural;
+            expect = CSCMatrix {{}, A.indices(), A.indptr(), A.shape()};
+        }
+
+        SECTION("A + A^T") {
+            order = AMDOrder::APlusAT;
+            expect = A + A.transpose(values);
+        }
+
+        SECTION("A^T A (no dense)") {
+            order = AMDOrder::ATANoDenseRows;
+            expect = A.transpose(values) * A;
+        }
+
+        SECTION("A^T A") {
+            order = AMDOrder::ATA;
+            expect = A.transpose(values) * A;
+        }
+
+        // Remove diagonal elements function
+        auto remove_diagonals = [](CSCMatrix& A) {
+            A.fkeep([] (csint i, csint j, double v) { return i != j; });
+        };
+
+        const CSCMatrix C = build_graph(A, order, dense);
+        remove_diagonals(expect);
+
+        CHECK(C.data().empty());
+        compare_matrices(C, expect, values);
     }
 
     // std::cout << "A:" << std::endl;

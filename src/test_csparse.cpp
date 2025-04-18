@@ -1020,7 +1020,7 @@ TEST_CASE("Exercise 2.27: Matrix-(dense) matrix multiply + addition.")
 }
 
 
-TEST_CASE("Matrix-matrix multiply.", "[math]")
+TEST_CASE("Matrix-matrix multiply.", "[math][dot]")
 {
     SECTION("Square matrices") {
         // Build matrices with sorted columns
@@ -1120,6 +1120,34 @@ TEST_CASE("Matrix-matrix multiply.", "[math]")
 
             compare_matrices(CT, expect.T());
         }
+    }
+
+    SECTION("Symbolic Multiply") {
+        CSCMatrix A = COOMatrix(
+            std::vector<double> {},  // vals
+            std::vector<csint>  {0, 0, 0, 0, 1, 1, 1, 1},  // rows
+            std::vector<csint>  {0, 1, 2, 3, 0, 1, 2, 3}   // cols
+        ).compress();
+
+        CSCMatrix B = COOMatrix(
+            std::vector<double> {},  // vals
+            std::vector<csint>  {0, 0, 0, 1, 1, 1, 2, 2, 2,  3,  3,  3},  // rows
+            std::vector<csint>  {0, 1, 2, 0, 1, 2, 0, 1, 2,  0,  1,  2}   // cols
+        ).compress();
+
+        CSCMatrix expect = COOMatrix(
+            std::vector<double> {},  // vals
+            std::vector<csint>  { 0,  0,  0,   1,   1,   1},  // rows
+            std::vector<csint>  { 0,  1,  2,   0,   1,   2}   // cols
+        ).compress();
+
+        // M < N
+        CSCMatrix C = A * B;
+        auto [M, N] = C.shape();
+
+        REQUIRE(M == A.shape()[0]);
+        REQUIRE(N == B.shape()[1]);
+        compare_matrices(C, expect, false);
     }
 }
 

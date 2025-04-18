@@ -896,12 +896,17 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
     auto [Kb, N] = B.shape();
     assert(Ka == Kb);
 
+    bool values = !v_.empty() && !B.v_.empty();
+
     // NOTE See Problem 2.20 for how to compute nnz(A*B)
-    CSCMatrix C({M, N}, nnz() + B.nnz());  // output
+    CSCMatrix C({M, N}, nnz() + B.nnz(), values);  // output
 
     // Allocate workspaces
     std::vector<csint> w(M);
-    std::vector<double> x(M);
+    std::vector<double> x;
+    if (values) {
+        x.resize(M);
+    }
 
     csint nz = 0;  // track total number of non-zeros in C
 
@@ -917,14 +922,16 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
         // Compute x = A @ B[:, j]
         for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
             // Compute x += A[:, B.i_[p]] * B.v_[p]
-            nz = scatter(B.i_[p], B.v_[p], w, x, j+1, C, nz, fs);
+            nz = scatter(B.i_[p], values ? B.v_[p] : 1, w, x, j+1, C, nz, fs, values);
             fs = false;
         }
 
         // Gather values into the correct locations in C
+        if (values) {
         for (csint p = C.p_[j]; p < nz; p++) {
             C.v_[p] = x[C.i_[p]];
         }
+    }
     }
 
     // Finalize and deallocate unused memory

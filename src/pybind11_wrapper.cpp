@@ -385,8 +385,7 @@ PYBIND11_MODULE(csparse, m) {
         ) {
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
-            double drop_tol = 0.0;  // do not drop entries
-            return cs::chol(A, S, drop_tol);
+            return cs::chol(A, S);
         },
         py::arg("A"),
         py::arg("order")="Natural",

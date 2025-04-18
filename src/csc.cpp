@@ -1055,25 +1055,32 @@ CSCMatrix add_scaled(
     assert(A.shape() == B.shape());
     auto [M, N] = A.shape();
 
-    CSCMatrix C({M, N}, A.nnz() + B.nnz());  // output
+    bool values = !A.v_.empty() && !B.v_.empty();
+
+    CSCMatrix C({M, N}, A.nnz() + B.nnz(), values);  // output
 
     // Allocate workspaces
     std::vector<csint> w(M);
-    std::vector<double> x(M);
+    std::vector<double> x;
+    if (values) {
+        x.resize(M);
+    }
 
     csint nz = 0;    // track total number of non-zeros in C
     bool fs = true;  // Exercise 2.19 -- first call to scatter
 
     for (csint j = 0; j < N; j++) {
         C.p_[j] = nz;  // column j of C starts here
-        nz = A.scatter(j, alpha, w, x, j+1, C, nz, fs);  // alpha * A(:, j)
+        nz = A.scatter(j, alpha, w, x, j+1, C, nz, fs, values);  // alpha * A(:, j)
         fs = false;
-        nz = B.scatter(j,  beta, w, x, j+1, C, nz, fs);  //  beta * B(:, j)
+        nz = B.scatter(j,  beta, w, x, j+1, C, nz, fs, values);  //  beta * B(:, j)
 
         // Gather results into the correct column of C
+        if (values) {
         for (csint p = C.p_[j]; p < nz; p++) {
             C.v_[p] = x[C.i_[p]];
         }
+    }
     }
 
     // Finalize and deallocate unused memory

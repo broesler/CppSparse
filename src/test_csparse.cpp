@@ -1214,7 +1214,7 @@ TEST_CASE("Exercise 2.4: Scale rows and columns", "[math]")
 }
 
 
-TEST_CASE("Matrix-matrix addition.", "[math]")
+TEST_CASE("Matrix-matrix addition.", "[math][add_scaled]")
 {
     SECTION("Non-square matrices") {
         // >>> A
@@ -1277,6 +1277,15 @@ TEST_CASE("Matrix-matrix addition.", "[math]")
 
             compare_matrices(C, expect);
             compare_matrices(Cf, expect);
+        }
+
+        SECTION("Symbolic Addition") {
+            CSCMatrix As = COOMatrix(std::vector<double> {}, i, j).compress();
+            CSCMatrix expect = COOMatrix(std::vector<double> {}, i, j).compress();
+
+            CSCMatrix Cs = add_scaled(As, B, 1.0, 1.0);
+
+            compare_matrices(Cs, expect, false);  // don't compare values
         }
     }
 

@@ -7,14 +7,15 @@
  *
  *============================================================================*/
 
-#include <algorithm>  // for std::lower_bound
+#include <algorithm>  // lower_bound
 #include <cassert>
-#include <cmath>      // for std::fabs
+#include <cmath>      // fabs
 #include <format>
-#include <new>        // for std::bad_alloc
-#include <ranges>     // for std::views::reverse
-#include <string>
+#include <new>        // bad_alloc
+#include <numeric>    // iota
+#include <ranges>     // views::reverse
 #include <sstream>
+#include <string>
 #include <vector>
 
 #include "utils.h"
@@ -928,10 +929,10 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
 
         // Gather values into the correct locations in C
         if (values) {
-        for (csint p = C.p_[j]; p < nz; p++) {
-            C.v_[p] = x[C.i_[p]];
+            for (csint p = C.p_[j]; p < nz; p++) {
+                C.v_[p] = x[C.i_[p]];
+            }
         }
-    }
     }
 
     // Finalize and deallocate unused memory
@@ -1084,10 +1085,10 @@ CSCMatrix add_scaled(
 
         // Gather results into the correct column of C
         if (values) {
-        for (csint p = C.p_[j]; p < nz; p++) {
-            C.v_[p] = x[C.i_[p]];
+            for (csint p = C.p_[j]; p < nz; p++) {
+                C.v_[p] = x[C.i_[p]];
+            }
         }
-    }
     }
 
     // Finalize and deallocate unused memory

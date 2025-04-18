@@ -61,8 +61,10 @@ CSCMatrix::CSCMatrix(const Shape& shape, csint nzmax, bool values)
 
 CSCMatrix::CSCMatrix(const COOMatrix& A) : CSCMatrix(A.compress())
 {
-    sum_duplicates();  // O(N) space, O(nnz) time
-    dropzeros();       // O(nnz) time
+    if (!v_.empty()) {
+        sum_duplicates();  // O(N) space, O(nnz) time
+        dropzeros();       // O(nnz) time
+    }
     sort();            // O(M) space, O(M + N + nnz) time
     has_canonical_format_ = true;
 }
@@ -458,7 +460,10 @@ CSCMatrix& CSCMatrix::sort()
 {
     // ----- first transpose
     std::vector<csint> w(M_);   // workspace
-    CSCMatrix C({N_, M_}, nnz());  // intermediate transpose
+
+    bool values = !v_.empty();
+
+    CSCMatrix C({N_, M_}, nnz(), values);  // intermediate transpose
 
     // Compute number of elements in each row
     for (csint p = 0; p < nnz(); p++)
@@ -473,7 +478,9 @@ CSCMatrix& CSCMatrix::sort()
             // place A(i, j) as C(j, i)
             csint q = w[i_[p]]++;
             C.i_[q] = j;
-            C.v_[q] = v_[p];
+            if (values) {
+                C.v_[q] = v_[p];
+            }
         }
     }
 
@@ -486,7 +493,9 @@ CSCMatrix& CSCMatrix::sort()
             // place C(i, j) as A(j, i)
             csint q = w[C.i_[p]]++;
             i_[q] = j;
-            v_[q] = C.v_[p];
+            if (values) {
+                v_[q] = C.v_[p];
+            }
         }
     }
 

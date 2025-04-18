@@ -198,7 +198,8 @@ COOMatrix& COOMatrix::assign(
 CSCMatrix COOMatrix::compress() const 
 {
     csint nnz_ = nnz();
-    CSCMatrix C({M_, N_}, nnz_);
+    bool values = !v_.empty();
+    CSCMatrix C {{M_, N_}, nnz_, values};
     std::vector<csint> w(N_);  // workspace
 
     // Compute number of elements in each column
@@ -213,7 +214,7 @@ CSCMatrix COOMatrix::compress() const
         // A(i, j) is the pth entry in the CSC matrix
         csint p = w[j_[k]]++;  // "pointer" to the current element's column
         C.i_[p] = i_[k];
-        if (!v_.empty()) {
+        if (values) {
             C.v_[p] = v_[k];
         }
     }

@@ -1128,19 +1128,19 @@ TEST_CASE("Matrix-matrix multiply.", "[math][dot]")
             std::vector<double> {},  // vals
             std::vector<csint>  {0, 0, 0, 0, 1, 1, 1, 1},  // rows
             std::vector<csint>  {0, 1, 2, 3, 0, 1, 2, 3}   // cols
-        ).compress();
+        ).tocsc();
 
         CSCMatrix B = COOMatrix(
             std::vector<double> {},  // vals
             std::vector<csint>  {0, 0, 0, 1, 1, 1, 2, 2, 2,  3,  3,  3},  // rows
             std::vector<csint>  {0, 1, 2, 0, 1, 2, 0, 1, 2,  0,  1,  2}   // cols
-        ).compress();
+        ).tocsc();
 
         CSCMatrix expect = COOMatrix(
             std::vector<double> {},  // vals
             std::vector<csint>  { 0,  0,  0,   1,   1,   1},  // rows
             std::vector<csint>  { 0,  1,  2,   0,   1,   2}   // cols
-        ).compress();
+        ).tocsc();
 
         // M < N
         CSCMatrix C = A * B;
@@ -1309,8 +1309,8 @@ TEST_CASE("Matrix-matrix addition.", "[math][add_scaled]")
         }
 
         SECTION("Symbolic Addition") {
-            CSCMatrix As = COOMatrix(std::vector<double> {}, i, j).compress();
-            CSCMatrix expect = COOMatrix(std::vector<double> {}, i, j).compress();
+            CSCMatrix As = COOMatrix(std::vector<double> {}, i, j).tocsc();
+            CSCMatrix expect = COOMatrix(std::vector<double> {}, i, j).tocsc();
 
             CSCMatrix Cs = add_scaled(As, B, 1.0, 1.0);
 

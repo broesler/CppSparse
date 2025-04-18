@@ -126,7 +126,9 @@ void CSCMatrix::realloc(csint nzmax)
     try {
         p_.resize(N_ + 1);  // always contains N_ columns + nz
         i_.resize(Z);
-        v_.resize(Z);
+        if (!v_.empty()) {
+            v_.resize(Z);
+        }
     } catch (const std::bad_alloc& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         std::cerr << "Failed to allocate memory for CSCMatrix." << std::endl;
@@ -535,13 +537,16 @@ CSCMatrix& CSCMatrix::sum_duplicates()
 CSCMatrix& CSCMatrix::fkeep(KeepFunc fk)
 {
     csint nz = 0;  // count actual number of non-zeros
+    bool values = !v_.empty();
 
     for (csint j = 0; j < N_; j++) {
         csint p = p_[j];  // get current location of column j
         p_[j] = nz;       // record new location of column j
         for (; p < p_[j+1]; p++) {
-            if (fk(i_[p], j, v_[p])) {
-                v_[nz] = v_[p];  // keep A(i, j)
+            if (fk(i_[p], j, values ? v_[p] : 1.0)) {
+                if (values) {
+                    v_[nz] = v_[p];  // keep A(i, j)
+                }
                 i_[nz++] = i_[p];
             }
         }

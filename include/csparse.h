@@ -18,6 +18,7 @@
 #include "cholesky.h"
 #include "lu.h"
 #include "qr.h"
+#include "amd.h"
 #include "solve.h"
 #include "example_matrices.h"
 

@@ -1063,6 +1063,12 @@ class CSCMatrix
         );
         friend LUResult ilu_nofill(const CSCMatrix& A, const SymbolicLU& S);
 
+        // ---------------------------------------------------------------------
+        //         Fill-reducing Orderings
+        // ---------------------------------------------------------------------
+        friend CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense);
+        friend std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order);
+
         //----------------------------------------------------------------------
         //        Printing
         //----------------------------------------------------------------------

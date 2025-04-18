@@ -11,6 +11,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_all.hpp>
+#include <catch2/generators/catch_generators.hpp>
 
 #include <algorithm>  // reverse
 #include <cmath>
@@ -1282,7 +1283,7 @@ TEST_CASE("Matrix-matrix addition.", "[math][add_scaled]")
 
             // Operator overloading
             CSCMatrix C = 0.1 * A + 9.0 * B;
-
+            
             // Add method
             CSCMatrix Cm = (0.1 * A).add(9.0 * B);
 
@@ -3805,8 +3806,30 @@ TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
 {
     const CSCMatrix A = davis_example_amd();
 
-    A.print_dense();
-    std::cout << "A.nnz() = " << A.nnz() << std::endl;
+    // Test build_graph for each value of AMDOrder
+    SECTION("Build Graph") {
+        AMDOrder order = GENERATE(
+            AMDOrder::Natural,
+            AMDOrder::APlusAT,
+            AMDOrder::ATANoDenseRows,
+            AMDOrder::ATA
+        );
+
+        csint dense = 8;  // min(N-2, max(16, 10*sqrt(N)));
+
+        REQUIRE_NOTHROW(build_graph(A, order, dense));
+    }
+
+    // std::cout << "A:" << std::endl;
+    // A.print_dense();
+
+    // std::vector<csint> p = amd(A, AMDOrder::APlusAT);
+    // std::vector<csint> p_inv = inv_permute(p);
+
+    // CSCMatrix Ap = A.symperm(p_inv);
+
+    // std::cout << "Ap:" << std::endl;
+    // Ap.print_dense();
 }
 
 /*==============================================================================

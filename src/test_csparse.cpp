@@ -3817,6 +3817,9 @@ TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
         bool values = false;
 
         SECTION("Natural") {
+            std::cout << "A:" << std::endl;
+            A.print_dense();
+
             order = AMDOrder::Natural;
             expect = CSCMatrix {{}, A.indices(), A.indptr(), A.shape()};
         }
@@ -3848,16 +3851,31 @@ TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
         compare_matrices(C, expect, values);
     }
 
-    // std::cout << "A:" << std::endl;
-    // A.print_dense();
+    SECTION("Natural Order") {
+        // std::cout << "Order: Natural" << std::endl;
+        // std::cout << "Order: A + A^T" << std::endl;
+        // std::cout << "Order: A^T * A (no dense)" << std::endl;
+        // std::cout << "Order: A^T * A" << std::endl;
 
-    // std::vector<csint> p = amd(A, AMDOrder::APlusAT);
-    // std::vector<csint> p_inv = inv_permute(p);
+        AMDOrder order = AMDOrder::Natural;
 
-    // CSCMatrix Ap = A.symperm(p_inv);
+        // ordering should be the same as the original
+        std::vector<csint> expect_p(N);
+        std::iota(expect_p.begin(), expect_p.end(), 0);
 
-    // std::cout << "Ap:" << std::endl;
-    // Ap.print_dense();
+        std::vector<csint> p = amd(A, order);
+        std::vector<csint> p_inv = inv_permute(p);
+
+        std::cout << "p: " << p << std::endl;
+
+        CSCMatrix Ap = A.permute(p_inv, p);
+
+        std::cout << "Ap:" << std::endl;
+        Ap.print_dense();
+
+        CHECK(p == expect_p);
+        compare_matrices(A, Ap);
+    }
 }
 
 /*==============================================================================

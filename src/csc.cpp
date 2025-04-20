@@ -373,7 +373,9 @@ std::vector<double> CSCMatrix::to_dense_vector(const char order) const
                 throw std::invalid_argument("Invalid order argument. Use 'F' or 'C'.");
             }
 
-            if (has_canonical_format_) {
+            if (v_.empty()) {
+                A[idx] = 1.0; // no values, so set to 1.0
+            } else if (has_canonical_format_) {
                 A[idx] = v_[p];
             } else {
                 A[idx] += v_[p];  // account for duplicates

@@ -403,7 +403,8 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
         }  // supernode detection
 
         // --- Finalize new element -------------------------------------------
-        for (csint p = pk1, pk = pk1; pk < pk2; pk++) {  // finalize Lk
+        p = pk1;
+        for (csint pk = pk1; pk < pk2; pk++) {  // finalize Lk
             csint i = C.i_[pk];
             csint nvi = -nv[i];
             if (nvi <= 0) {

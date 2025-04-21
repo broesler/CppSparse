@@ -174,7 +174,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
         csint k = -1;
         while (mindeg < N) {
             k = head[mindeg];
-            if (k == -1) {
+            if (k != -1) {
                 break;
             }
             mindeg++;

@@ -199,8 +199,9 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
                 }
             }
 
-            csint q = 0;
-            for (csint p = 0; p < cnz;) {  // scan all of memory
+            csint p = 0,
+                  q = 0;
+            while (p < cnz) {               // scan all of memory
                 csint j = flip(C.i_[p++]);        // found object j
                 if (j >= 0) {
                     C.i_[q] = C.p_[j];            // restore first entry of object

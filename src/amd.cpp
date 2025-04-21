@@ -285,7 +285,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
                 csint e = C.i_[p];
                 if (w[e] >= mark) {
                     w[e] -= nvi;  // decrement |Le \ Lk|
-                } else if (w[i] != 0) {  // ensure e is a live element
+                } else if (w[e] != 0) {       // ensure e is a live element
                     w[e] = degree[e] + wnvi;  // 1st time e seen in scan 1
                 }
             }

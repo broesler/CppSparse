@@ -3801,6 +3801,9 @@ TEST_CASE("Exercise 6.15: 1-norm condition number estimate", "[ex6.15]")
 }
 
 
+/*------------------------------------------------------------------------------
+ *          Chapter 7: Fill-Reducing Orderings
+ *----------------------------------------------------------------------------*/
 TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
 {
     const CSCMatrix A = davis_example_amd();
@@ -3817,9 +3820,6 @@ TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
         bool values = false;
 
         SECTION("Natural") {
-            std::cout << "A:" << std::endl;
-            A.print_dense();
-
             order = AMDOrder::Natural;
             expect = CSCMatrix {{}, A.indices(), A.indptr(), A.shape()};
         }
@@ -3844,37 +3844,42 @@ TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
             A.fkeep([] (csint i, csint j, double v) { return i != j; });
         };
 
-        const CSCMatrix C = build_graph(A, order, dense);
         remove_diagonals(expect);
+
+        const CSCMatrix C = build_graph(A, order, dense);
 
         CHECK(C.data().empty());
         compare_matrices(C, expect, values);
     }
 
-    SECTION("Natural Order") {
-        // std::cout << "Order: Natural" << std::endl;
-        // std::cout << "Order: A + A^T" << std::endl;
-        // std::cout << "Order: A^T * A (no dense)" << std::endl;
-        // std::cout << "Order: A^T * A" << std::endl;
-
+    SECTION("AMD ordering") {
         AMDOrder order = AMDOrder::Natural;
+        std::vector<csint> expect_p;
 
-        // ordering should be the same as the original
-        std::vector<csint> expect_p(N);
-        std::iota(expect_p.begin(), expect_p.end(), 0);
+        SECTION("Natural") {
+            order = AMDOrder::Natural;
+            // ordering should be the same as the original
+            expect_p.resize(N);
+            std::iota(expect_p.begin(), expect_p.end(), 0);
+        }
+
+        SECTION("A + A^T") {
+            order = AMDOrder::APlusAT;
+            expect_p = {0, 5, 9, 7, 3, 2, 4, 6, 8, 1};  // MATLAB cs_amd
+        }
+
+        SECTION("A^T A (no dense)") {
+            order = AMDOrder::ATANoDenseRows;
+            expect_p = {0, 3, 4, 5, 7, 8, 9, 1, 2, 6};
+        }
+
+        SECTION("A^T A") {
+            order = AMDOrder::ATA;
+            expect_p = {0, 3, 4, 5, 7, 8, 9, 1, 2, 6};
+        }
 
         std::vector<csint> p = amd(A, order);
-        std::vector<csint> p_inv = inv_permute(p);
-
-        std::cout << "p: " << p << std::endl;
-
-        CSCMatrix Ap = A.permute(p_inv, p);
-
-        std::cout << "Ap:" << std::endl;
-        Ap.print_dense();
-
         CHECK(p == expect_p);
-        compare_matrices(A, Ap);
     }
 }
 

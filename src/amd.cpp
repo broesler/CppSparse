@@ -116,8 +116,6 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
     C.realloc(t);
 
     // --- Allocate result + workspaces ----------------------------------------
-    P.resize(N + 1);
-
     std::vector<csint> len(N + 1);
 
     for (csint k = 0; k < N; k++) {
@@ -202,10 +200,10 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
             csint p = 0,
                   q = 0;
             while (p < cnz) {               // scan all of memory
-                csint j = flip(C.i_[p++]);        // found object j
+                csint j = flip(C.i_[p++]);  // found object j
                 if (j >= 0) {
-                    C.i_[q] = C.p_[j];            // restore first entry of object
-                    C.p_[j] = q++;                // new pointer to object j
+                    C.i_[q] = C.p_[j];      // restore first entry of object
+                    C.p_[j] = q++;          // new pointer to object j
                     for (csint k3 = 0; k3 < len[j] - 1; k3++) {
                         C.i_[q++] = C.i_[p++];
                     }
@@ -280,12 +278,12 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
             if (eln <= 0) {
                 continue;                 // skip if elen[i] empty
             }
-            csint nvi = -nv[i];  // nv[i] was negated
+            csint nvi = -nv[i];          // nv[i] was negated
             csint wnvi = mark - nvi;
             for (csint p = C.p_[i]; p <= C.p_[i] + eln - 1; p++) {  // scan Ei
                 csint e = C.i_[p];
                 if (w[e] >= mark) {
-                    w[e] -= nvi;  // decrement |Le \ Lk|
+                    w[e] -= nvi;              // decrement |Le \ Lk|
                 } else if (w[e] != 0) {       // ensure e is a live element
                     w[e] = degree[e] + wnvi;  // 1st time e seen in scan 1
                 }
@@ -464,14 +462,16 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
         }
     }
 
-    // postorder the assembly tree
+    // Postorder the assembly tree
+    P.reserve(N + 1);
     for (csint i = 0; i <= N; i++) {
         if (C.p_[i] == -1) {
             tdfs(i, head, next, P);
         }
     }
 
-    return P;
+    // Only return the first N elements of P
+    return std::vector<csint>(P.begin(), P.begin() + N);
 }
 
 

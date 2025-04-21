@@ -92,7 +92,7 @@ CSCMatrix davis_example_qr();
  *
  * See: Davis, Figure 7.1, p 101.
  *
- * @return the matrix in compressed sparse column format.
+ * @return the 10x10 matrix in CSC format.
  */
 CSCMatrix davis_example_amd();
 

@@ -432,7 +432,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
         }
 
         if (elenk != 0) {
-            cnz = pk2;  // free unuzed space in Lk
+            cnz = p;  // free unuzed space in Lk
         }
     }  // while selecting pivots
 

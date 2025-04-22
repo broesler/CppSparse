@@ -135,6 +135,18 @@ std::vector<T> ipvec(
 }
 
 
+/** Create a random permutation of integers [0, N-1].
+ *
+ * @param N  the size of the permutation
+ * @param seed  the seed for the random number generator. If `seed` is 0, no
+ *        permutation is applied. If `seed` is -1, the permutation is the
+ *        reverse of the identity. Otherwise, a random permutation is generated.
+ *
+ * @return p  the random permutation vector
+ */
+std::vector<csint> randperm(csint N, csint seed=0);
+
+
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/

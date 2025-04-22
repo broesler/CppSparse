@@ -16,6 +16,7 @@
 #include <iostream>
 #include <limits>     // numeric_limits
 #include <numeric>    // partial_sum, accumulate
+#include <random>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -185,6 +186,28 @@ double norm(std::span<const double> x, const double ord)
         );
     }
 }
+
+
+std::vector<csint> randperm(csint N, csint seed)
+{
+    std::vector<csint> res(N);
+    std::iota(res.begin(), res.end(), 0);  // itentity permutation
+
+    if (seed == 0) {
+        return res;
+    } else if (seed == -1) {
+        std::reverse(res.begin(), res.end());
+        return res;
+    } else {
+        if (seed < 0) {
+            throw std::invalid_argument("Seed must be non-negative.");
+        }
+        std::default_random_engine rng(seed);
+        std::shuffle(res.begin(), res.end(), rng);
+        return res;
+    }
+}
+
 
 
 /*------------------------------------------------------------------------------

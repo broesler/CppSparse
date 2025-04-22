@@ -251,6 +251,40 @@ TEST_CASE("Vector permutations", "[vector]")
 }
 
 
+TEST_CASE("Random permutation", "[randperm]")
+{
+    csint N = 10;
+    csint seed = 0;
+    std::vector<csint> expect_p = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+    SECTION("Identity permutation") {
+        seed = 0;
+    }
+
+    SECTION("Reverse permutation") {
+        seed = -1;
+        std::reverse(expect_p.begin(), expect_p.end());
+    }
+
+    SECTION("Arbitrary permutation") {
+        seed = 565656;
+        std::default_random_engine rng(seed);
+        std::shuffle(expect_p.begin(), expect_p.end(), rng);
+    }
+
+    std::vector<csint> p = randperm(N, seed);
+    std::vector<csint> p_inv = inv_permute(p);
+
+    REQUIRE(p == expect_p);
+
+    // Check that the inverse permutation is correct
+    for (csint i = 0; i < N; i++) {
+        REQUIRE(p[p_inv[i]] == i);
+        REQUIRE(p_inv[p[i]] == i);
+    }
+}
+
+
 TEST_CASE("Argsort", "[vector]")
 {
     SECTION("Vector of doubles") {

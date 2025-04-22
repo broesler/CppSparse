@@ -9,19 +9,46 @@
 
 #include <algorithm>  // min, max
 #include <cmath>      // sqrt
-#include <numeric>    // iota
+#include <numeric>    // iota, accumulate
 #include <stdexcept>
+#include <vector>
 
+#include "types.h"
 #include "amd.h"
 #include "csc.h"
 #include "cholesky.h"  // tdfs
+#include "utils.h"     // randperm
 
 namespace cs {
 
 
 // Helper functions for AMD ordering
+
+/** Flip the sign of an integer
+ * 
+ * This function flips the sign of an integer `i` and returns the result.
+ * It is used to mark elements as dead in the AMD algorithm.
+ *
+ * @param i  the integer to flip
+ *
+ * @return the flipped integer
+ */
 static inline csint flip(csint i) {  return -i - 2; }
 
+
+/** Clear the workspace
+ * 
+ * This function clears the workspace `w` and returns the updated mark.
+ * If `mark` is less than 2 or if `mark + lemax` is less than 0, it clears
+ * the workspace and sets `mark` to 2.
+ *
+ * @param mark  the current mark
+ * @param lemax  the maximum length of the workspace
+ * @param w  the workspace vector
+ * @param N  the size of the matrix
+ *
+ * @return the updated mark
+ */
 static csint wclear(csint mark, csint lemax, std::vector<csint>& w, csint N)
 {
     if (mark < 2 || (mark + lemax < 0)) {
@@ -474,6 +501,136 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
     return std::vector<csint>(P.begin(), P.begin() + N);
 }
 
+
+// TODO rewrite with explicit stacks created in the function
+void augment(
+    csint k,
+    const CSCMatrix& A,
+    std::vector<csint>& jmatch,
+    std::vector<csint>& cheap,
+    std::vector<csint>& w,
+    std::vector<csint>& js,
+    std::vector<csint>& is,
+    std::vector<csint>& ps
+)
+{
+    bool found = false;
+    csint head = 0;
+    js[0] = k;  // start with just node k in jstack
+
+    while (head >= 0) {
+        // --- Start (or continue) depth-first-search at node j ----------------
+        csint j = js[head];      // get j from top of jstack
+        if (w[j] != k) {         // 1st time j visited for kth path
+            w[j] = k;            // mark j as visited for kth path
+            csint i = -1;
+
+            csint p;
+            for (p = cheap[j]; p < A.p_[j+1]; p++) {
+                i = A.i_[p];     // try a cheap assignment (i,j)
+                found = (jmatch[i] == -1);
+                if (found) {
+                    break;
+                }
+            }
+
+            cheap[j] = p;        // start here next time j is traversed
+
+            if (found) {
+                is[head] = i;    // column j matched with row i
+                break;           // end of augmenting path
+            }
+
+            ps[head] = A.p_[j];  // no cheap match: start dfs for j
+        }
+
+        // --- Depth-first-search of neighbors of j ----------------------------
+        csint p;
+        for (p = ps[head]; p < A.p_[j+1]; p++) {
+            csint i = A.i_[p];        // consider row i
+            if (w[jmatch[i]] == k) {
+                continue;             // skip jmatch [i] if marked
+            }
+            ps[head] = p + 1;         // pause dfs of node j
+            is[head] = i;             // i will be matched with j if found
+            js[++head] = jmatch[i];   // start dfs at column jmatch [i]
+            break;
+        }
+
+        if (p == A.p_[j+1]) {
+            head--;                   // node j is done; pop from stack
+        }
+    }
+
+    if (found) {
+        for (csint p = head; p >= 0; p--) {
+            jmatch[is[p]] = js[p];    // augment the match
+        }
+    }
+}
+
+
+// Maximum matching
+MaxMatch maxtrans(const CSCMatrix& A, csint seed)
+{
+    auto [M, N] = A.shape();
+
+    MaxMatch jimatch(M, N, -1);  // allocate result
+
+    // count non-empty rows and columns
+    std::vector<csint> w(M); // workspace
+    csint k = 0;
+    csint n2 = 0;
+
+    for (csint j = 0; j < N; j++) {
+        n2 += (A.p_[j] < A.p_[j+1]);
+        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            w[A.i_[p]] = 1;
+            k += (j == A.i_[p]);  // count entries already on diagonal
+        }
+    }
+
+    if (k == std::min(M, N)) {  // quick return if diagonal zero-free
+        std::iota(jimatch.jmatch.begin(), jimatch.jmatch.begin() + k, 0);
+        std::iota(jimatch.imatch.begin(), jimatch.imatch.begin() + k, 0);
+        return jimatch;
+    }
+
+    csint m2 = std::accumulate(w.begin(), w.end(), 0);  // count non-empty rows
+
+    // transpose if needed
+    const CSCMatrix C = (m2 < n2) ? A.transpose(false) : A;
+    std::tie(M, N) = C.shape();
+
+    // If we transposed, we need to swap the imatch and jmatch vectors
+    std::vector<csint>& jmatch = (m2 < n2) ? jimatch.imatch : jimatch.jmatch;
+    std::vector<csint>& imatch = (m2 < n2) ? jimatch.jmatch : jimatch.imatch;
+
+    // Alloate workspaces
+    w.resize(N);
+    std::fill(w.begin(), w.end(), -1);  // mark all nodes as unvisited
+
+    std::vector<csint> cheap(C.p_),  // cheap assignment
+                       is(N),        // row indices stack
+                       js(N),        // col indices stack
+                       ps(N);        // pause stack for DFS in augment
+
+    // randperm can help with worst-case behavioe O(|A|N), see Davis, p 118.
+    std::vector<csint> q = randperm(N, seed);  // random permutation of columns
+
+    for (csint k = 0; k < N; k++) {
+        augment(q[k], C, jmatch, cheap, w, js, is, ps);
+    }
+
+    std::fill(imatch.begin(), imatch.end(), -1);  // find row match
+    for (csint i = 0; i < M; i++) {
+        if (jmatch[i] >= 0) {
+            imatch[jmatch[i]] = i;
+        }
+    }
+
+    return jimatch;
+}
 
 
 }  // namespace cs

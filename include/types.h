@@ -33,6 +33,7 @@ struct SymbolicQR;
 struct SymbolicLU;
 struct QRResult;
 struct LUResult;
+struct MaxMatch;
 
 class COOMatrix;
 class CSCMatrix;

@@ -3917,5 +3917,81 @@ TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
     }
 }
 
+
+TEST_CASE("Maximum Matching", "[maxmatch]")
+{
+    // TODO Test on non-symmetric matrices M > N and M < N
+    CSCMatrix A = davis_example_amd();
+    auto [M, N] = A.shape();
+
+    csint seed = 0;
+
+    csint expect_rank = M;
+    std::vector<csint> expect_jmatch(M);
+    std::vector<csint> expect_imatch(N);
+
+    SECTION("Square, Symmetric Full rank") {
+        // Matrix is full rank, so should be identity permutation
+        expect_rank = 10;
+        std::iota(expect_jmatch.begin(), expect_jmatch.end(), 0);
+        std::iota(expect_imatch.begin(), expect_imatch.end(), 0);
+    }
+
+    SECTION("Square, Rank-deficient (zero rows)") {
+        // Zero-out some rows
+        for (csint i = 2; i < 5; i++) {
+            for (csint j = 0; j < N; j++) {
+                A(i, j) = 0.0;
+            }
+        }
+        A = A.to_canonical();
+
+        expect_rank = 7;
+        expect_jmatch = {0, 1, -1, -1, -1,  2, 3, 6,  4,  7};
+        expect_imatch = {0, 1,  5,  6,  8, -1, 7, 9, -1, -1};
+    }
+
+    SECTION("Square, Rank-deficient (zero columns)") {
+        // Zero-out some columns
+        for (csint j = 2; j < 5; j++) {
+            for (csint i = 0; i < M; i++) {
+                A(i, j) = 0.0;
+            }
+        }
+        A = A.to_canonical();
+
+        expect_rank = 7;
+        expect_jmatch = {0, 1,  5,  6,  8, -1, 7, 9, -1, -1};
+        expect_imatch = {0, 1, -1, -1, -1,  2, 3, 6,  4,  7};
+    }
+
+    MaxMatch res = maxtrans(A, seed);
+
+    // Count number of non-negative entries in jmatch
+    csint row_rank = std::accumulate(
+        res.jmatch.begin(), res.jmatch.end(), 0,
+        [](csint sum, csint j) { return sum + (j >= 0); }
+    );
+
+    csint col_rank = std::accumulate(
+        res.imatch.begin(), res.imatch.end(), 0,
+        [](csint sum, csint i) { return sum + (i >= 0); }
+    );
+
+    // std::cout << "row_rank = " << row_rank << std::endl;
+    // std::cout << "col_rank = " << col_rank << std::endl;
+
+    csint sprank = std::min(row_rank, col_rank);
+
+    CHECK(sprank == expect_rank);
+
+    // std::cout << "jmatch = " << res.jmatch << std::endl;
+    // std::cout << "imatch = " << res.imatch << std::endl;
+
+    CHECK(res.jmatch == expect_jmatch);
+    CHECK(res.imatch == expect_imatch);
+}
+
+
 /*==============================================================================
  *============================================================================*/

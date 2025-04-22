@@ -1067,6 +1067,17 @@ class CSCMatrix
         // ---------------------------------------------------------------------
         friend CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense);
         friend std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order);
+        friend MaxMatch maxtrans(const CSCMatrix& A, csint seed);
+        friend void augment(
+            csint k,
+            const CSCMatrix& A,
+            std::vector<csint>& jmatch,
+            std::vector<csint>& cheap,
+            std::vector<csint>& w,
+            std::vector<csint>& js,
+            std::vector<csint>& is,
+            std::vector<csint>& ps
+        );
 
         //----------------------------------------------------------------------
         //        Printing

@@ -1078,6 +1078,7 @@ class CSCMatrix
             std::vector<csint>& is,
             std::vector<csint>& ps
         );
+        friend SCCResult scc(const CSCMatrix& A);
 
         //----------------------------------------------------------------------
         //        Printing

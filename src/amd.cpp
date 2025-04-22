@@ -10,6 +10,8 @@
 #include <algorithm>  // min, max
 #include <cmath>      // sqrt
 #include <numeric>    // iota, accumulate
+#include <optional>
+#include <ranges>     // reverse
 #include <stdexcept>
 #include <vector>
 
@@ -17,6 +19,7 @@
 #include "amd.h"
 #include "csc.h"
 #include "cholesky.h"  // tdfs
+#include "solve.h"     // dfs
 #include "utils.h"     // randperm
 
 namespace cs {
@@ -630,6 +633,68 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
     }
 
     return jimatch;
+}
+
+
+// Strongly-connected components
+SCCResult scc(const CSCMatrix& A)
+{
+    auto [M, N] = A.shape();
+
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    SCCResult D(M, N);  // allocate result
+
+    const CSCMatrix AT = A.transpose(false);  // symbolic transpose
+
+    std::vector<bool> marked(N, false);  // mark visited nodes
+    std::vector<csint> xi;
+    xi.reserve(N);
+
+    // ----- DFS through all of A
+    for (csint i = 0; i < N; i++) {
+        if (!marked[i]) {
+            xi = dfs(A, i, marked, xi);
+        }
+    }
+
+    // ----- DFS through A^T
+    std::fill(marked.begin(), marked.end(), false);  // clear marks
+
+    // get i in reverse order of finish time
+    for (const auto& i : std::views::reverse(xi)) {
+        if (!marked[i]) {
+            D.r.push_back(N - D.p.size());  // node i is the start of a block
+            D.p = dfs(AT, i, marked, D.p);
+        }
+    }
+
+    D.r.push_back(0);  // first block starts at zero
+
+    // reverse the order of the blocks and nodes since dfs returns in reverse
+    std::reverse(D.r.begin(), D.r.end());
+    std::reverse(D.p.begin(), D.p.end());
+
+    D.Nb = D.r.size() - 1;  // number of strongly connected components
+
+    // ----- Sort each block in natural order
+    // Number each node by its block number
+    std::vector<csint> Blk(N);
+    for (csint b = 0; b < D.Nb; b++) {
+        for (csint k = D.r[b]; k < D.r[b+1]; k++) {
+            Blk[D.p[k]] = b;
+        }
+    }
+
+    // Sort the indices of each block
+    std::vector<csint> rcopy = D.r;  // pointers to start of blocks
+    for (csint i = 0; i < N; i++) {
+        D.p[rcopy[Blk[i]]++] = i;
+    }
+
+    return D;
 }
 
 

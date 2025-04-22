@@ -27,6 +27,20 @@ struct MaxMatch {
 };
 
 
+/** Strongly connected components result struct. */
+struct SCCResult {
+    std::vector<csint> p,  ///< (M,) row permutation
+                       r;  ///< (Nb+1,) block k is rows r[k] to r[k+1]-1 in A[p, q]
+    csint Nb;              ///< # of blocks in fine dmperm decomposition
+
+    SCCResult() = default;
+    SCCResult(csint M, csint N) : Nb(0) {
+        p.reserve(M);  // used as stacks in dfs, queues in bfs, so start empty
+        r.reserve(M + 6);
+    }
+};
+
+
 /** Compute the approximate minimum degree ordering of a matrix.
  *
  * This function computes the approximate minimum degree ordering of a matrix
@@ -98,6 +112,15 @@ void augment(
  * @return the matching permutation vector
  */
 MaxMatch maxtrans(const CSCMatrix& A, csint seed=0);
+
+
+/** Find the strongly connected components of a matrix.
+ *
+ * @param A  the matrix to reorder
+ *
+ * @return the strongly connected components of the matrix
+ */
+SCCResult scc(const CSCMatrix& A);
 
 
 }  // namespace cs

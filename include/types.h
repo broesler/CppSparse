@@ -34,6 +34,7 @@ struct SymbolicLU;
 struct QRResult;
 struct LUResult;
 struct MaxMatch;
+struct SCCResult;
 
 class COOMatrix;
 class CSCMatrix;

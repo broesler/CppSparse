@@ -4045,5 +4045,42 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
 }
 
 
+TEST_CASE("Strongly Connected Components", "[scc]")
+{
+    CSCMatrix A = davis_example_amd();
+    auto [M, N] = A.shape();
+
+    csint expect_Nb = 0;
+    std::vector<csint> expect_p(N);
+    std::vector<csint> expect_r(N);
+
+    SECTION("Full Rank") {
+        expect_Nb = 1;  // full rank
+        expect_p = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        expect_r = {0, 10};
+    }
+
+    SECTION("Zero Rows") {
+        // Zero out some rows
+        for (csint i = 2; i < 5; i++) {
+            for (csint j = 0; j < N; j++) {
+                A(i, j) = 0.0;
+            }
+        }
+        A = A.to_canonical();
+
+        expect_Nb = 4;  // test with cs_scc
+        expect_p = {0, 1, 5, 6, 7, 8, 9, 2, 3, 4};
+        expect_r = {0, 7, 8, 9, 10};
+    }
+
+    SCCResult D = scc(A);
+
+    CHECK(D.p == expect_p);
+    CHECK(D.r == expect_r);
+    CHECK(D.Nb == expect_Nb);
+}
+
+
 /*==============================================================================
  *============================================================================*/

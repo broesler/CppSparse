@@ -35,6 +35,7 @@ struct QRResult;
 struct LUResult;
 struct MaxMatch;
 struct SCCResult;
+struct DMPermResult;
 
 class COOMatrix;
 class CSCMatrix;

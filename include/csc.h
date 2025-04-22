@@ -1079,6 +1079,17 @@ class CSCMatrix
             std::vector<csint>& ps
         );
         friend SCCResult scc(const CSCMatrix& A);
+        friend DMPermResult dmperm(const CSCMatrix& A, csint seed);
+        friend bool bfs(
+            const CSCMatrix& A,
+            csint N,
+            std::vector<csint>& wi,
+            std::vector<csint>& wj,
+            std::vector<csint>& queue,
+            const std::vector<csint>& imatch,
+            const std::vector<csint>& jmatch,
+            csint mark
+        );
 
         //----------------------------------------------------------------------
         //        Printing

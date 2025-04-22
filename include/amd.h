@@ -41,6 +41,26 @@ struct SCCResult {
 };
 
 
+/** Dulmage-Mendelsohn permutation result struct. */
+struct DMPermResult {
+    std::vector<csint> p,     ///< (M,) row permutation
+                       q,     ///< (N,) column permutation
+                       r,     ///< (Nb+1,) block k is rows r[k] to r[k+1]-1 in A[p, q]
+                       s;     ///< (Nb+1,) block k is cols s[k] to s[k+1]-1 in A[p, q]
+    csint Nb;                 ///< # of blocks in fine dmperm decomposition
+    std::array<csint, 5> rr;  ///< coarse row decomposition
+    std::array<csint, 5> cc;  ///< coarse column decomposition
+
+    DMPermResult() = default;
+    DMPermResult(csint M, csint N) : r(M+6), s(N+6), Nb(0) {
+        p.reserve(M);  // used as stacks in dfs, queues in bfs, so start empty
+        q.reserve(N);
+        rr.fill(0);
+        cc.fill(0);
+    }
+};
+
+
 /** Compute the approximate minimum degree ordering of a matrix.
  *
  * This function computes the approximate minimum degree ordering of a matrix
@@ -121,6 +141,48 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed=0);
  * @return the strongly connected components of the matrix
  */
 SCCResult scc(const CSCMatrix& A);
+
+
+/** Breadth-first search for Dulmage-Mendelsohn permutation.
+ *
+ * This function performs a breadth-first search (BFS) on the bipartite graph
+ * represented by the CSCMatrix A. It finds the unmatched nodes and marks them
+ * in the workspace vectors `wi` and `wj`. The BFS is used to find the
+ * Dulmage-Mendelsohn permutation of the matrix.
+ *
+ * @param A  the matrix to reorder
+ * @param N  the number of rows or columns in the matrix
+ * @param wi  the workspace vector for rows
+ * @param wj  the workspace vector for columns
+ * @param queue  the queue for BFS traversal
+ * @param imatch  the current matching vector for rows
+ * @param jmatch  the current matching vector for columns
+ * @param mark  the mark for BFS traversal
+ *
+ * @return true if successful, false otherwise
+ */
+bool bfs(
+    const CSCMatrix& A,
+    csint N,
+    std::vector<csint>& wi,
+    std::vector<csint>& wj,
+    std::vector<csint>& queue,
+    const std::vector<csint>& imatch,
+    const std::vector<csint>& jmatch,
+    csint mark
+);
+
+
+/** Compute the Dulmage-Mendelsohn permutation of a matrix.
+ *
+ * @param A  the matrix to reorder
+ * @param seed  the seed for the random number generator. If `seed` is 0, no
+ *       permutation is applied. If `seed` is -1, the permutation is the
+ *       reverse of the identity. Otherwise, a random permutation is generated.
+ *
+ * @return the Dulmage-Mendelsohn permutation result
+ */
+DMPermResult dmperm(const CSCMatrix& A, csint seed=0);
 
 
 }  // namespace cs

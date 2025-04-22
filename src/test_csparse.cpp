@@ -4019,6 +4019,7 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
 
     MaxMatch res = maxtrans(A, seed);
 
+    // TODO make sprank its own function?
     // Count number of non-negative entries in jmatch
     csint row_rank = std::accumulate(
         res.jmatch.begin(), res.jmatch.end(), 0,
@@ -4030,16 +4031,9 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
         [](csint sum, csint i) { return sum + (i >= 0); }
     );
 
-    // std::cout << "row_rank = " << row_rank << std::endl;
-    // std::cout << "col_rank = " << col_rank << std::endl;
-
     csint sprank = std::min(row_rank, col_rank);
 
     CHECK(sprank == expect_rank);
-
-    // std::cout << "jmatch = " << res.jmatch << std::endl;
-    // std::cout << "imatch = " << res.imatch << std::endl;
-
     CHECK(res.jmatch == expect_jmatch);
     CHECK(res.imatch == expect_imatch);
 }
@@ -4081,6 +4075,65 @@ TEST_CASE("Strongly Connected Components", "[scc]")
     CHECK(D.Nb == expect_Nb);
 }
 
+
+TEST_CASE("Dulmage-Mendelsohn Permutation", "[dmperm]")
+{
+    CSCMatrix A = davis_example_amd();
+    auto [M, N] = A.shape();
+
+    csint seed = 0;
+
+    csint expect_Nb = 0;
+    std::vector<csint> expect_p(N),
+                       expect_q(N),
+                       expect_r(N),
+                       expect_s(N);
+    std::array<csint, 5> expect_cc;
+    std::array<csint, 5> expect_rr;
+
+    SECTION("Full Rank") {
+        // MATLAB results
+        expect_Nb = 1;  // full rank
+        expect_p = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        expect_q = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        expect_r = {0, 10};
+        expect_s = {0, 10};
+        expect_cc = {0, 0,  0, 10, 10};
+        expect_rr = {0, 0, 10, 10, 10};
+    }
+
+    // SECTION("Zero Rows") {
+    //     // Zero out some rows
+    //     for (csint i = 2; i < 5; i++) {
+    //         for (csint j = 0; j < N; j++) {
+    //             A(i, j) = 0.0;
+    //         }
+    //     }
+    //     A = A.to_canonical();
+
+    //     expect_Nb = 4;  // test with cs_scc
+    //     expect_p = {0, 1, 5, 6, 7, 8, 9, 2, 3, 4};
+    //     expect_r = {0, 7, 8, 9, 10};
+    // }
+
+    DMPermResult D = dmperm(A, seed);
+
+    std::cout << "p: " << D.p << std::endl;
+    std::cout << "q: " << D.q << std::endl;
+    std::cout << "r: " << D.r << std::endl;
+    std::cout << "s: " << D.s << std::endl;
+    std::cout << "Nb: " << D.Nb << std::endl;
+    // std::cout << "rr: " << D.rr << std::endl;
+    // std::cout << "cc: " << D.cc << std::endl;
+
+    // CHECK(D.p == expect_p);
+    // CHECK(D.q == expect_q);
+    // CHECK(D.r == expect_r);
+    // CHECK(D.s == expect_s);
+    // CHECK(D.Nb == expect_Nb);
+    // CHECK(D.rr == expect_rr);
+    // CHECK(D.cc == expect_cc);
+}
 
 /*==============================================================================
  *============================================================================*/

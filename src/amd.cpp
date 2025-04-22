@@ -698,6 +698,216 @@ SCCResult scc(const CSCMatrix& A)
 }
 
 
+// --- Dulmage-Mendelsohn Permutation ----------------------------------------
+bool bfs(
+    const CSCMatrix& A,
+    csint N,
+    std::vector<csint>& wi,
+    std::vector<csint>& wj,
+    std::vector<csint>& queue,
+    const std::vector<csint>& imatch,
+    const std::vector<csint>& jmatch,
+    csint mark
+)
+{
+    csint head = 0;
+    csint tail = 0;
+
+    // Place all unmatched nodes in queue
+    for (csint j = 0; j < N; j++) {
+        if (imatch[j] < 0) {    // skip j if matched
+            wj[j] = 0;          // j in set C0 (R0 if transpose)
+            queue[tail++] = j;  // place unmatched col j in queue
+        }
+    }
+
+    if (tail == 0) {
+        return true;  // no unmatched nodes
+    }
+
+    const CSCMatrix C = (mark == 1) ? A : A.transpose(false);
+
+    // BFS loop
+    while (head < tail) {
+        csint j = queue[head++];  // get j from front of queue
+
+        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            csint i = A.i_[p];     // consider row i
+
+            if (wi[i] >= 0) {
+                continue;          // skip if i is marked
+            }
+
+            wi[i] = mark;          // i in set R1 (C3 if transpose)
+            csint j2 = jmatch[i];  // transverse alternating path to j2
+
+            if (wj[j2] >= 0) {
+                continue;          // skip if j2 is marked
+            }
+
+            wj[j2] = mark;         // j2 in set C1 (R3 if transpose)
+            queue[tail++] = j2;    // add j2 to queue
+        }
+    }
+
+    return true;
+}
+
+
+static void matched(
+    csint N,
+    const std::vector<csint>& wj,
+    const std::vector<csint>& imatch,
+    std::vector<csint>& p,
+    std::vector<csint>& q,
+    std::array<csint, 5>& cc,
+    std::array<csint, 5>& rr,
+    csint set,
+    csint mark
+)
+{
+    csint kc = cc[set],
+          kr = rr[set-1];
+    for (csint j = 0; j < N; j++) {
+        if (wj[j] == mark) {
+            p[kr++] = imatch[j];
+            q[kc++] = j;
+        }
+    }
+    cc[set+1] = kc;
+    rr[set] = kr;
+}
+
+
+static void unmatched(
+    csint M,
+    const std::vector<csint>& wi,
+    std::vector<csint>& p,
+    std::array<csint, 5>& rr,
+    csint set
+)
+{
+    csint kr = rr[set];
+    for (csint i = 0; i < M; i++) {
+        if (wi[i] == 0) {
+            p[kr++] = i;
+        }
+    }
+    rr[set+1] = kr;
+}
+
+
+// Dulmage-Mendelsohn Permutation
+DMPermResult dmperm(const CSCMatrix& A, csint seed)
+{
+    // --- Maximum Matching ----------------------------------------------------
+    auto [M, N] = A.shape();
+
+    DMPermResult D(M, N);  // allocate result
+
+    auto [jmatch, imatch] = maxtrans(A, seed);  // maximum matching
+
+    // --- Coarse Decomposition ------------------------------------------------
+    std::vector<csint> wi(M, -1),  // unmark all row and columns for bfs
+                       wj(N, -1);
+
+    bfs(A, N, wi, wj, D.q, imatch, jmatch, 1);  // find C1, R1 from C0
+    bool ok = bfs(A, M, wj, wi, D.p, jmatch, imatch, 3);  // find C3, R3 from R0
+
+    if (ok) {
+        return D;
+    }
+
+    unmatched(N, wj, D.q, D.cc, 0);  // unmatched set C0
+    matched(N, wj, imatch, D.p, D.q, D.cc, D.rr, 1,  1);  // set R1 and C1
+    matched(N, wj, imatch, D.p, D.q, D.cc, D.rr, 2, -1);  // set R2 and C2
+    matched(N, wj, imatch, D.p, D.q, D.cc, D.rr, 3,  3);  // set R3 and C3
+    unmatched(M, wi, D.p, D.rr, 3);  // unmatched set R0
+
+    // --- Fine decomposition --------------------------------------------------
+    std::vector<csint> p_inv = inv_permute(D.p);
+
+    // C = A(p, q) will hold A(R2, C2)
+    CSCMatrix C = A.permute(p_inv, D.q, false);
+
+    // delete cols C0, C1, and C3 from C
+    csint nc = D.cc[3] - D.cc[2];
+
+    if (D.cc[2] > 0) {
+        for (csint j = D.cc[2]; j <= D.cc[3]; j++) {
+            C.p_[j - D.cc[2]] = C.p_[j];
+        }
+    }
+
+    C.N_ = nc;  // update cols
+
+    // Delete rows R0, R1, and R3 from C
+    if (D.rr[2] - D.rr[1] < M) {
+        C.fkeep(
+            [D](csint i, csint j, double v) {
+                return i >= D.rr[1] || i < D.rr[2];  // true if row i is in R2
+            }
+        );
+
+        csint cnz = C.p_[nc];
+
+        if (D.rr[1] > 0) {
+            for (csint k = 0; k < cnz; k++) {
+                C.i_[k] -= D.rr[1];
+            }
+        }
+    }
+
+    C.M_ = nc;  // update rows
+
+    // Find strongly connected components
+    SCCResult strong_cc = scc(C);
+
+    // --- Combine coarse and fine decompositions ------------------------------
+    // C(scc.p, scc.p) is the permuted matrix
+    // kth block is scc.r[k]..r[k+1]-1
+    // scc.Nb is the number of blocks of A(R2, C2)
+    std::vector<csint>& ps = strong_cc.p;
+    std::vector<csint>& rs = strong_cc.r;
+    // TODO rewrite as sub-function
+    for (csint k = 0; k < nc; k++) { wj[k] = D.q[ps[k] + D.cc[2]]; }
+    for (csint k = 0; k < nc; k++) { D.q[k + D.cc[2]] = wj[k]; }
+    for (csint k = 0; k < nc; k++) { wi[k] = D.p[ps[k] + D.rr[1]]; }
+    for (csint k = 0; k < nc; k++) { D.p[k + D.rr[1]] = wi[k]; }
+
+    // Create the fine block partitions
+    csint nb1 = strong_cc.Nb;
+    csint nb2 = 0;
+
+    D.r[0] = 0;
+    D.s[0] = 0;
+
+    // Leading coarse block A(R1, [C0 C1])
+    if (D.cc[2] > 0) {
+        nb2++;
+    }
+
+    // Coarse block A(R2, C2)
+    for (csint k = 0; k< nb1; k++) {
+        D.r[nb2] = rs[k] + D.rr[1];  // A(R2, C2) splits into nb1 fine blocks
+        D.s[nb2] = rs[k] + D.cc[2];
+        nb2++;
+    }
+
+    if (D.rr[2] < M) {
+        D.r[nb2] = D.rr[2];
+        D.s[nb2] = D.cc[3];
+        nb2++;
+    }
+
+    D.r[nb2] = M;
+    D.s[nb2] = N;
+    D.Nb = nb2;
+
+    return D;
+}
+
+
 }  // namespace cs
 
 /*==============================================================================

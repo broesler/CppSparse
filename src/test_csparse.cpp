@@ -3965,6 +3965,58 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
         expect_imatch = {0, 1, -1, -1, -1,  2, 3, 6,  4,  7};
     }
 
+    SECTION("M < N, Full Row Rank") {
+        // Slice some rows
+        A = A.slice(0, M - 3, 0, N);
+
+        expect_rank = 7;
+        expect_jmatch = {0, 1, 2, 3, 4, 5, 6};
+        expect_imatch = {0, 1, 2, 3, 4, 5, 6, -1, -1, -1};
+    }
+
+    SECTION("M > N, Full Column Rank") {
+        // Slice some columns
+        A = A.slice(0, M, 0, N - 3);
+
+        expect_rank = 7;
+        expect_jmatch = {0, 1, 2, 3, 4, 5, 6, -1, -1, -1};
+        expect_imatch = {0, 1, 2, 3, 4, 5, 6};
+    }
+
+    SECTION("M < N, Row Rank-Deficient") {
+        // Slice some rows
+        A = A.slice(0, M - 3, 0, N);
+
+        // Zero out some rows
+        for (csint i = 2; i < 5; i++) {
+            for (csint j = 0; j < N; j++) {
+                A(i, j) = 0.0;
+            }
+        }
+        A = A.to_canonical();
+
+        expect_rank = 4;
+        expect_jmatch = {0, 1, -1, -1, -1,  2,  3};
+        expect_imatch = {0, 1,  5,  6, -1, -1, -1, -1, -1, -1};
+    }
+
+    SECTION("M > N, Column Rank-Deficient") {
+        // Slice some columns
+        A = A.slice(0, M, 0, N - 3);
+
+        // Zero out some columns
+        for (csint j = 2; j < 5; j++) {
+            for (csint i = 0; i < M; i++) {
+                A(i, j) = 0.0;
+            }
+        }
+        A = A.to_canonical();
+
+        expect_rank = 4;
+        expect_jmatch = {0, 1,  5,  6, -1, -1, -1, -1, -1, -1};
+        expect_imatch = {0, 1, -1, -1, -1,  2,  3};
+    }
+
     MaxMatch res = maxtrans(A, seed);
 
     // Count number of non-negative entries in jmatch

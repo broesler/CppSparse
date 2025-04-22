@@ -699,7 +699,8 @@ SCCResult scc(const CSCMatrix& A)
 
 
 // --- Dulmage-Mendelsohn Permutation ----------------------------------------
-bool bfs(
+// TODO rewrite with explicit queues created in the function?
+void bfs(
     const CSCMatrix& A,
     csint N,
     std::vector<csint>& wi,
@@ -722,7 +723,7 @@ bool bfs(
     }
 
     if (tail == 0) {
-        return true;  // no unmatched nodes
+        return;  // no unmatched nodes
     }
 
     const CSCMatrix C = (mark == 1) ? A : A.transpose(false);
@@ -750,7 +751,7 @@ bool bfs(
         }
     }
 
-    return true;
+    return;
 }
 
 
@@ -769,7 +770,7 @@ static void matched(
     csint kc = cc[set],
           kr = rr[set-1];
     for (csint j = 0; j < N; j++) {
-        if (wj[j] == mark) {
+        if (wj[j] == mark) {  // skip if j is not in C set
             p[kr++] = imatch[j];
             q[kc++] = j;
         }
@@ -797,6 +798,21 @@ static void unmatched(
 }
 
 
+static void gather_scatter(
+    std::vector<csint>& source,
+    std::vector<csint>& temp,
+    const std::vector<csint>& ps,
+    csint nc,
+    csint offset
+)
+{
+    for (csint k = 0; k < nc; k++) {
+        temp[k] = source[ps[k] + offset];
+    }
+    std::copy(temp.begin(), temp.begin() + nc, source.begin() + offset);
+}
+
+
 // Dulmage-Mendelsohn Permutation
 DMPermResult dmperm(const CSCMatrix& A, csint seed)
 {
@@ -812,11 +828,7 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
                        wj(N, -1);
 
     bfs(A, N, wi, wj, D.q, imatch, jmatch, 1);  // find C1, R1 from C0
-    bool ok = bfs(A, M, wj, wi, D.p, jmatch, imatch, 3);  // find C3, R3 from R0
-
-    if (ok) {
-        return D;
-    }
+    bfs(A, M, wj, wi, D.p, jmatch, imatch, 3);  // find C3, R3 from R0
 
     unmatched(N, wj, D.q, D.cc, 0);  // unmatched set C0
     matched(N, wj, imatch, D.p, D.q, D.cc, D.rr, 1,  1);  // set R1 and C1
@@ -869,11 +881,8 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
     // scc.Nb is the number of blocks of A(R2, C2)
     std::vector<csint>& ps = strong_cc.p;
     std::vector<csint>& rs = strong_cc.r;
-    // TODO rewrite as sub-function
-    for (csint k = 0; k < nc; k++) { wj[k] = D.q[ps[k] + D.cc[2]]; }
-    for (csint k = 0; k < nc; k++) { D.q[k + D.cc[2]] = wj[k]; }
-    for (csint k = 0; k < nc; k++) { wi[k] = D.p[ps[k] + D.rr[1]]; }
-    for (csint k = 0; k < nc; k++) { D.p[k + D.rr[1]] = wi[k]; }
+    gather_scatter(D.q, wj, ps, nc, D.cc[2]);
+    gather_scatter(D.p, wi, ps, nc, D.rr[1]);
 
     // Create the fine block partitions
     csint nb1 = strong_cc.Nb;
@@ -894,6 +903,7 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
         nb2++;
     }
 
+    // Trailing coarse block A([R3 R0], C3)
     if (D.rr[2] < M) {
         D.r[nb2] = D.rr[2];
         D.s[nb2] = D.cc[3];
@@ -903,6 +913,12 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
     D.r[nb2] = M;
     D.s[nb2] = N;
     D.Nb = nb2;
+
+    // Reallocate the result
+    D.r.resize(D.Nb + 1);
+    D.s.resize(D.Nb + 1);
+    D.r.shrink_to_fit();
+    D.s.shrink_to_fit();
 
     return D;
 }

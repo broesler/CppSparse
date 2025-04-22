@@ -52,9 +52,7 @@ struct DMPermResult {
     std::array<csint, 5> cc;  ///< coarse column decomposition
 
     DMPermResult() = default;
-    DMPermResult(csint M, csint N) : r(M+6), s(N+6), Nb(0) {
-        p.reserve(M);  // used as stacks in dfs, queues in bfs, so start empty
-        q.reserve(N);
+    DMPermResult(csint M, csint N) : p(M), q(N), r(M+6), s(N+6), Nb(0) {
         rr.fill(0);
         cc.fill(0);
     }
@@ -161,7 +159,7 @@ SCCResult scc(const CSCMatrix& A);
  *
  * @return true if successful, false otherwise
  */
-bool bfs(
+void bfs(
     const CSCMatrix& A,
     csint N,
     std::vector<csint>& wi,

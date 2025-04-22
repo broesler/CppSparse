@@ -1080,7 +1080,7 @@ class CSCMatrix
         );
         friend SCCResult scc(const CSCMatrix& A);
         friend DMPermResult dmperm(const CSCMatrix& A, csint seed);
-        friend bool bfs(
+        friend void bfs(
             const CSCMatrix& A,
             csint N,
             std::vector<csint>& wi,

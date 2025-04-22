@@ -4102,37 +4102,41 @@ TEST_CASE("Dulmage-Mendelsohn Permutation", "[dmperm]")
         expect_rr = {0, 0, 10, 10, 10};
     }
 
-    // SECTION("Zero Rows") {
-    //     // Zero out some rows
-    //     for (csint i = 2; i < 5; i++) {
-    //         for (csint j = 0; j < N; j++) {
-    //             A(i, j) = 0.0;
-    //         }
-    //     }
-    //     A = A.to_canonical();
+    SECTION("Zero Rows") {
+        // Zero out some rows
+        for (csint i = 2; i < 5; i++) {
+            for (csint j = 0; j < N; j++) {
+                A(i, j) = 0.0;
+            }
+        }
+        A = A.to_canonical();
 
-    //     expect_Nb = 4;  // test with cs_scc
-    //     expect_p = {0, 1, 5, 6, 7, 8, 9, 2, 3, 4};
-    //     expect_r = {0, 7, 8, 9, 10};
-    // }
+        expect_Nb = 2;  // test with MATLAB dmperm
+        expect_p = {0, 1, 5, 6, 8, 7, 9, 2, 3, 4};
+        expect_q = {5, 8, 9, 0, 1, 2, 3, 4, 6, 7};
+        expect_r = {0,  7, 10};
+        expect_s = {0, 10, 10};
+        expect_cc = {0, 3, 10, 10, 10};
+        expect_rr = {0, 7,  7,  7, 10};
+    }
 
     DMPermResult D = dmperm(A, seed);
 
-    std::cout << "p: " << D.p << std::endl;
-    std::cout << "q: " << D.q << std::endl;
-    std::cout << "r: " << D.r << std::endl;
-    std::cout << "s: " << D.s << std::endl;
-    std::cout << "Nb: " << D.Nb << std::endl;
+    // std::cout << "p: " << D.p << std::endl;
+    // std::cout << "q: " << D.q << std::endl;
+    // std::cout << "r: " << D.r << std::endl;
+    // std::cout << "s: " << D.s << std::endl;
+    // std::cout << "Nb: " << D.Nb << std::endl;
     // std::cout << "rr: " << D.rr << std::endl;
     // std::cout << "cc: " << D.cc << std::endl;
 
-    // CHECK(D.p == expect_p);
-    // CHECK(D.q == expect_q);
-    // CHECK(D.r == expect_r);
-    // CHECK(D.s == expect_s);
-    // CHECK(D.Nb == expect_Nb);
-    // CHECK(D.rr == expect_rr);
-    // CHECK(D.cc == expect_cc);
+    CHECK(D.p == expect_p);
+    CHECK(D.q == expect_q);
+    CHECK(D.r == expect_r);
+    CHECK(D.s == expect_s);
+    CHECK(D.Nb == expect_Nb);
+    CHECK(D.rr == expect_rr);
+    CHECK(D.cc == expect_cc);
 }
 
 /*==============================================================================

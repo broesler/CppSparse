@@ -54,7 +54,7 @@ CSCMatrix davis_example_chol()
 
 
 // 8 x 8, non-symmetric QR example. Davis, Figure 5.1, p 74.
-CSCMatrix davis_example_qr()
+CSCMatrix davis_example_qr(float add_diag)
 {
     // Define the test matrix A (See Davis, Figure 5.1, p 74)
     std::vector<csint> rows = {0, 1, 2, 3, 4, 5, 6,
@@ -73,8 +73,15 @@ CSCMatrix davis_example_qr()
     // rank, but this is not necessary.
     // A.assign(7, 7, 0.0);
 
+    // Set the diagonal
+    if (add_diag) {
+        for (csint i = 0; i < 8; i++) {
+            A.assign(i, i, add_diag);  // duplicates will be added
+        }
+    }
+
     // Non-canonical format for testing
-    return A.compress();
+    return A.compress().sum_duplicates();
 }
 
 

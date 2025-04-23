@@ -72,9 +72,11 @@ CSCMatrix davis_example_chol();
  * See: Davis, Timothy A. "Direct Methods for Sparse Linear Systems",
  *      Figure 5.1, p 74.
  *
+ * @param add_diag  If non-zero, add this value to the diagonal of the matrix.
+ *        Can be used to make the matrix positive definite.
  * @return A  An 8x8 matrix in CSC format.
  */
-CSCMatrix davis_example_qr();
+CSCMatrix davis_example_qr(float add_diag=0.0);
 
 
 /** Build the 10 x 10 symmetric, positive definite AMD example matrix.

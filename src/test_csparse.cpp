@@ -3257,14 +3257,8 @@ auto lu_test = [](const CSCMatrix& A)
 
 TEST_CASE("LU Factorization of Square Matrix", "[lu]")
 {
-    CSCMatrix A = davis_example_qr();
+    const CSCMatrix A = davis_example_qr(10);
     auto [M, N] = A.shape();
-
-    // TODO build this option into davis_example_qr(add_diag=10.0);
-    // Add 10 to the diagonal to enforce expected pivoting
-    for (csint i = 0; i < N; i++) {
-        A(i, i) += 10;
-    }
 
     std::vector<csint> expect_q(N);
     std::iota(expect_q.begin(), expect_q.end(), 0);
@@ -3313,13 +3307,8 @@ TEST_CASE("LU Factorization of Square Matrix", "[lu]")
 
 TEST_CASE("Solve A x = b with LU")
 {
-    CSCMatrix A = davis_example_qr().to_canonical();
+    CSCMatrix A = davis_example_qr(10).to_canonical();
     auto [M, N] = A.shape();
-
-    // Add 10 to the diagonal to enforce expected pivoting
-    for (csint i = 0; i < N; i++) {
-        A(i, i) += 10;
-    }
 
     // Create RHS for A x = b
     std::vector<double> expect(N);
@@ -3349,13 +3338,8 @@ TEST_CASE("Solve A x = b with LU")
 
 TEST_CASE("Exercise 6.1: Solve A^T x = b with LU")
 {
-    CSCMatrix A = davis_example_qr().to_canonical();
+    CSCMatrix A = davis_example_qr(10).to_canonical();
     auto [M, N] = A.shape();
-
-    // Add 10 to the diagonal to enforce expected pivoting
-    for (csint i = 0; i < N; i++) {
-        A(i, i) += 10;
-    }
 
     // Create RHS for A^T x = b
     std::vector<double> expect(N);
@@ -3385,13 +3369,8 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU")
 
 TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3]")
 {
-    CSCMatrix A = davis_example_qr();
+    CSCMatrix A = davis_example_qr(10);
     auto [M, N] = A.shape();
-
-    // Add 10 to the diagonal to enforce expected pivoting
-    for (csint i = 0; i < N; i++) {
-        A(i, i) += 10;
-    }
 
     // Cases to test:
     //   1. no pivot found in a column (zero column)
@@ -3492,13 +3471,8 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3]")
 
 TEST_CASE("Exercise 6.4: relu", "[ex6.4]")
 {
-    CSCMatrix A = davis_example_qr();
+    CSCMatrix A = davis_example_qr(10);
     auto [M, N] = A.shape();
-
-    // Add 10 to the diagonal to enforce expected pivoting
-    for (csint i = 0; i < N; i++) {
-        A(i, i) += 10;
-    }
 
     std::vector<csint> expect_q(N);
     std::iota(expect_q.begin(), expect_q.end(), 0);
@@ -3556,13 +3530,8 @@ TEST_CASE("Exercise 6.4: relu", "[ex6.4]")
 
 TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5]")
 {
-    CSCMatrix A = davis_example_qr().to_canonical();
+    CSCMatrix A = davis_example_qr(10).to_canonical();
     auto [M, N] = A.shape();
-
-    // Add 10 to the diagonal to enforce expected pivoting
-    for (csint i = 0; i < N; i++) {
-        A(i, i) += 10;
-    }
 
     CSCMatrix B = A;  // create a copy to edit
 
@@ -3644,13 +3613,8 @@ TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5]")
 
 TEST_CASE("Exercise 6.6: LU Factorization of Rectangular Matrices", "[ex6.6]")
 {
-    CSCMatrix A = davis_example_qr().to_canonical();
+    CSCMatrix A = davis_example_qr(10).to_canonical();
     auto [M, N] = A.shape();
-
-    // Add 10 to the diagonal to enforce expected pivoting
-    for (csint i = 0; i < N; i++) {
-        A(i, i) += 10;
-    }
 
     csint r = 3;  // number of rows or columns to remove
 
@@ -3668,15 +3632,7 @@ TEST_CASE("Exercise 6.6: LU Factorization of Rectangular Matrices", "[ex6.6]")
 
 TEST_CASE("Exercise 6.7: Crout's method LU Factorization", "[ex6.7]")
 {
-    CSCMatrix A = davis_example_qr();
-    auto [M, N] = A.shape();
-
-    // Add 10 to the diagonal to enforce expected pivoting
-    for (csint i = 0; i < N; i++) {
-        A(i, i) += 10;
-    }
-
-    A = A.to_canonical();
+    const CSCMatrix A = davis_example_qr(10);
 
     SECTION("No pivoting") {
         // Compute the LU factorization of A using Crout's method
@@ -3700,15 +3656,8 @@ TEST_CASE("Exercise 6.7: Crout's method LU Factorization", "[ex6.7]")
 
 TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13]")
 {
-    CSCMatrix A = davis_example_qr().to_canonical();
+    const CSCMatrix A = davis_example_qr(10).to_canonical();
     auto [M, N] = A.shape();
-
-    // Add 10 to the diagonal to enforce expected pivoting
-    for (csint i = 0; i < N; i++) {
-        A(i, i) += 10;
-    }
-
-    A = A.to_canonical();
 
     SECTION("ILUTP: Threshold with Pivoting") {
         // Default is no pivoting
@@ -3815,13 +3764,7 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13]")
 
 TEST_CASE("Exercise 6.15: 1-norm condition number estimate", "[ex6.15]")
 {
-    CSCMatrix A = davis_example_qr().to_canonical();
-    auto [M, N] = A.shape();
-
-    // Add 10 to the diagonal to enforce expected pivoting
-    for (csint i = 0; i < N; i++) {
-        A(i, i) += 10;
-    }
+    const CSCMatrix A = davis_example_qr(10).to_canonical();
 
     SECTION("Estimate 1-norm of A inverse") {
         // Compute the LU decomposition

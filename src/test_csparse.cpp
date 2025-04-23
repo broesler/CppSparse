@@ -2312,7 +2312,7 @@ TEST_CASE("Permuted triangular solvers")
 /*------------------------------------------------------------------------------
  *         Decompositions
  *----------------------------------------------------------------------------*/
-TEST_CASE("Cholesky decomposition")
+TEST_CASE("Cholesky Factorization")
 {
     // Define the test matrix A (See Davis, Figure 4.2, p 39)
     CSCMatrix A = davis_example_chol();
@@ -2501,19 +2501,6 @@ TEST_CASE("Cholesky decomposition")
         }
     }
 
-    SECTION("Exercise 4.9: Use post-ordering with natural ordering") {
-        // Compute the symbolic factorization with postordering
-        bool use_postorder = true;
-        SymbolicChol S = schol(A, AMDOrder::Natural, use_postorder);
-        CSCMatrix L = chol(A, S);
-        CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
-
-        // The factorization will be postordered!
-        CSCMatrix expect_A = A.permute(S.p_inv, inv_permute(S.p_inv));
-
-        compare_matrices(LLT, expect_A);
-    }
-
     SECTION("Exercise 4.1: etree and counts from ereach") {
         std::vector<csint> expect_parent = etree(A);
         std::vector<csint> expect_rowcounts = chol_rowcounts(A);
@@ -2580,6 +2567,19 @@ TEST_CASE("Cholesky decomposition")
     SECTION("Exercise 4.6: etree height") {
         std::vector<csint> parent = etree(A);
         REQUIRE(etree_height(parent) == 6);
+    }
+
+    SECTION("Exercise 4.9: Use post-ordering with natural ordering") {
+        // Compute the symbolic factorization with postordering
+        bool use_postorder = true;
+        SymbolicChol S = schol(A, AMDOrder::Natural, use_postorder);
+        CSCMatrix L = chol(A, S);
+        CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
+
+        // The factorization will be postordered!
+        CSCMatrix expect_A = A.permute(S.p_inv, inv_permute(S.p_inv));
+
+        compare_matrices(LLT, expect_A);
     }
 
     SECTION("Exercise 4.10: Symbolic Cholesky") {

@@ -28,6 +28,7 @@ from .csparse import *
 from ._cholesky import *
 from ._lu import *
 from ._qr import *
+from ._fillreducing import *
 from .utils import *
 
 __all__ = [x for x in dir() if not x.startswith('_')]

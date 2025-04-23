@@ -16,11 +16,11 @@
 namespace py = pybind11;
 
 
-/** Convert an array to a NumPy array.
+/** Convert a vector to a NumPy array.
  *
- * @param self  the array to convert
+ * @param self  the vector to convert
  *
- * @return a NumPy array with the same data as the array
+ * @return a NumPy array with the same data as the vector
  */
 template <typename T>
 auto vector_to_numpy(const std::vector<T>& vec)
@@ -31,6 +31,24 @@ auto vector_to_numpy(const std::vector<T>& vec)
     std::memcpy(ptr, vec.data(), vec.size() * sizeof(T));
     return result;
 };
+
+
+/** Convert an array to a NumPy array.
+ *
+ * @param self  the array to convert
+ *
+ * @return a NumPy array with the same data as the array
+ */
+template <typename T, std::size_t N>
+auto array_to_numpy(const std::array<T, N>& arr)
+{
+    auto result = py::array_t<T>(N);
+    py::buffer_info buf = result.request();
+    T* ptr = static_cast<T*>(buf.ptr);
+    std::memcpy(ptr, arr.data(), N * sizeof(T));
+    return result;
+};
+
 
 
 /** Convert a matrix to a NumPy array.
@@ -161,6 +179,30 @@ PYBIND11_MODULE(csparse, m) {
             return vector_to_numpy(lu.q);
         });
 
+    // Bind the DMPermResult struct
+    py::class_<cs::DMPermResult>(m, "DMPermResult")
+        .def_property_readonly("p", [](const cs::DMPermResult& res) {
+            return vector_to_numpy(res.p);
+        })
+        .def_property_readonly("q", [](const cs::DMPermResult& res) {
+            return vector_to_numpy(res.q);
+        })
+        .def_property_readonly("r", [](const cs::DMPermResult& res) {
+            return vector_to_numpy(res.r);
+        })
+        .def_property_readonly("s", [](const cs::DMPermResult& res) {
+            return vector_to_numpy(res.s);
+        })
+        .def_property_readonly("Nb", [](const cs::DMPermResult& res) {
+            return res.Nb;
+        })
+        .def_property_readonly("cc", [](const cs::DMPermResult& res) {
+            return array_to_numpy(res.cc);
+        })
+        .def_property_readonly("rr", [](const cs::DMPermResult& res) {
+            return array_to_numpy(res.rr);
+        });
+
     //--------------------------------------------------------------------------
     //        COOMatrix class
     //--------------------------------------------------------------------------
@@ -230,6 +272,9 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     py::class_<cs::CSCMatrix>(m, "CSCMatrix")
         .def(py::init<>())
+        // Define the copy constructor explicitly so pybind11 knows how to do
+        // the type conversion
+        .def(py::init<const cs::CSCMatrix&>(), "Copy constructor")
         .def(py::init<
             const std::vector<double>&,
             const std::vector<cs::csint>&,
@@ -479,6 +524,22 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("order")="Natural",
         py::arg("tol")=1.0
     );
+
+    // ---------- Fill-reducing orderings
+    m.def("amd",
+        [](
+            const cs::CSCMatrix& A,
+            const std::string& order="Natural"
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            return cs::amd(A, order_enum);
+        },
+        py::arg("A"),
+        py::arg("order")="APlusAT"
+    );
+
+    m.def("dmperm", &cs::dmperm, py::arg("A"), py::arg("seed")=0);
+
 
     //--------------------------------------------------------------------------
     //      Solve functions

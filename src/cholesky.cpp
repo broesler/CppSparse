@@ -474,10 +474,9 @@ SymbolicChol schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
         std::iota(p.begin(), p.end(), 0);  // identity permutation
         S.p_inv = p;                       // identity is its own inverse
     } else {
-        // TODO implement amd order (see Chapter 7)
-        // p = amd(order, A);  // P = amd(A + A.T()) or natural
-        // S.p_inv = inv_permute(p);
-        throw std::runtime_error("Ordering method not implemented!");
+        // TODO test this function
+        p = amd(A, order);  // order = APlusAT for Cholesky
+        S.p_inv = inv_permute(p);
     }
 
     // Find pattern of Cholesky factor

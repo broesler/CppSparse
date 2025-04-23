@@ -2445,12 +2445,20 @@ TEST_CASE("Cholesky decomposition")
     }
 
     SECTION("Numeric factorization") {
-        SymbolicChol S = schol(A, AMDOrder::Natural);
+        AMDOrder order = AMDOrder::Natural;
 
-        // should be no permutation with AMDOrder::Natural
-        std::vector<csint> expect_p_inv(A.shape()[1]);
-        std::iota(expect_p_inv.begin(), expect_p_inv.end(), 0);
-        CHECK(S.p_inv == expect_p_inv);
+        SECTION("APlusAT ordering") {
+            order = AMDOrder::APlusAT;
+        }
+
+        SymbolicChol S = schol(A, order);
+
+        if (order == AMDOrder::Natural) {
+            // should be no permutation with AMDOrder::Natural
+            std::vector<csint> expect_p_inv(A.shape()[1]);
+            std::iota(expect_p_inv.begin(), expect_p_inv.end(), 0);
+            CHECK(S.p_inv == expect_p_inv);
+        }
 
         // Now compute the numeric factorization
         CSCMatrix L = chol(A, S);
@@ -2461,7 +2469,10 @@ TEST_CASE("Cholesky decomposition")
         // Check that the factorization is correct
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
 
-        compare_matrices(LLT, A);
+        std::vector<csint> q = inv_permute(S.p_inv);
+        CSCMatrix PAPT = A.permute(S.p_inv, q);
+
+        compare_matrices(LLT, PAPT);
 
         SECTION("Update Cholesky") {
             // Create a random vector with the sparsity of a column of L

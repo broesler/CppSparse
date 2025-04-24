@@ -468,14 +468,13 @@ std::vector<csint> chol_colcounts(const CSCMatrix& A, bool ata)
 SymbolicChol schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 {
     SymbolicChol S;
-    std::vector<csint> p(A.shape()[1]);  // the matrix permutation
+    std::vector<csint> p(A.shape()[1]);    // the matrix permutation
 
     if (order == AMDOrder::Natural) {
         std::iota(p.begin(), p.end(), 0);  // identity permutation
         S.p_inv = p;                       // identity is its own inverse
     } else {
-        // TODO test this function
-        p = amd(A, order);  // order = APlusAT for Cholesky
+        p = amd(A, order);                 // order = APlusAT for Cholesky
         S.p_inv = inv_permute(p);
     }
 

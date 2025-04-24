@@ -2445,20 +2445,24 @@ TEST_CASE("Cholesky Factorization")
     }
 
     SECTION("Numeric factorization") {
+        // CSparse only uses AMDOrder::Natural and AMDOrder::APlusAT for
+        // Cholesky factorization in cs_chol.m (see Test/test3.m)
         AMDOrder order = AMDOrder::Natural;
+
+        // should be no permutation with AMDOrder::Natural
+        std::vector<csint> expect_p(N);
+        std::iota(expect_p.begin(), expect_p.end(), 0);
 
         SECTION("APlusAT ordering") {
             order = AMDOrder::APlusAT;
+            // MATLAB [L, p] = cs_chol(A) -> order = 1
+            expect_p = {1, 4, 6, 8, 0, 3, 5, 2, 9, 10, 7};
         }
 
         SymbolicChol S = schol(A, order);
 
-        if (order == AMDOrder::Natural) {
-            // should be no permutation with AMDOrder::Natural
-            std::vector<csint> expect_p_inv(A.shape()[1]);
-            std::iota(expect_p_inv.begin(), expect_p_inv.end(), 0);
-            CHECK(S.p_inv == expect_p_inv);
-        }
+        std::vector<csint> expect_p_inv = inv_permute(expect_p);
+        CHECK(S.p_inv == expect_p_inv);
 
         // Now compute the numeric factorization
         CSCMatrix L = chol(A, S);
@@ -2469,36 +2473,40 @@ TEST_CASE("Cholesky Factorization")
         // Check that the factorization is correct
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
 
+        // Permute the input matrix to match LL^T = P^T A P
         std::vector<csint> q = inv_permute(S.p_inv);
-        CSCMatrix PAPT = A.permute(S.p_inv, q);
+        CSCMatrix PTAP = A.permute(S.p_inv, q).to_canonical();
 
-        compare_matrices(LLT, PAPT);
+        compare_matrices(LLT, PTAP);
+    }
 
-        SECTION("Update Cholesky") {
-            // Create a random vector with the sparsity of a column of L
-            csint k = 3;  // arbitrary column index
-            std::default_random_engine rng(56);
-            std::uniform_real_distribution<double> unif(0.0, 1.0);
+    SECTION("Update Cholesky") {
+        SymbolicChol S = schol(A, AMDOrder::Natural);
+        CSCMatrix L = chol(A, S);
 
-            COOMatrix w {{L.shape()[0], 1}};
+        // Create a random vector with the sparsity of a column of L
+        csint k = 3;  // arbitrary column index
+        std::default_random_engine rng(56);
+        std::uniform_real_distribution<double> unif(0.0, 1.0);
 
-            for (csint p = L.indptr()[k]; p < L.indptr()[k + 1]; p++) {
-                w.assign(L.indices()[p], 0, unif(rng));
-            }
+        COOMatrix w {{L.shape()[0], 1}};
 
-            CSCMatrix W = w.tocsc();  // for arithmetic operations
-
-            // Update the input matrix for testing
-            CSCMatrix A_up = (A + W * W.T()).to_canonical();
-
-            // Update the factorization in-place
-            CSCMatrix L_up = chol_update(L.to_canonical(), true, W, S.parent);
-
-            CSCMatrix LLT_up = (L_up * L_up.T()).droptol().to_canonical();
-            CHECK(LLT_up.nnz() == A_up.nnz());
-
-            compare_matrices(LLT_up, A_up);
+        for (csint p = L.indptr()[k]; p < L.indptr()[k + 1]; p++) {
+            w.assign(L.indices()[p], 0, unif(rng));
         }
+
+        CSCMatrix W = w.tocsc();  // for arithmetic operations
+
+        // Update the input matrix for testing
+        CSCMatrix A_up = (A + W * W.T()).to_canonical();
+
+        // Update the factorization in-place
+        CSCMatrix L_up = chol_update(L.to_canonical(), true, W, S.parent);
+
+        CSCMatrix LLT_up = (L_up * L_up.T()).droptol().to_canonical();
+        CHECK(LLT_up.nnz() == A_up.nnz());
+
+        compare_matrices(LLT_up, A_up);
     }
 
     SECTION("Exercise 4.1: etree and counts from ereach") {

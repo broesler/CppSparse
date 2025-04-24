@@ -2454,6 +2454,8 @@ TEST_CASE("Cholesky Factorization")
         std::vector<csint> expect_p(N);
         std::iota(expect_p.begin(), expect_p.end(), 0);
 
+        SECTION("Natural") {}
+
         SECTION("APlusAT ordering") {
             order = AMDOrder::APlusAT;
             // MATLAB [L, p] = cs_chol(A) -> order = 1
@@ -2578,11 +2580,14 @@ TEST_CASE("Cholesky Factorization")
         REQUIRE(etree_height(parent) == 6);
     }
 
+    // TODO combine Exercise 4.9, 4.11 and 4.12 into one test?
     SECTION("Exercise 4.9: Use post-ordering with natural ordering") {
         // Compute the symbolic factorization with postordering
         bool use_postorder = true;
 
         AMDOrder order = AMDOrder::Natural;
+
+        SECTION("Natural") {}
 
         SECTION("APlusAT") {
             order = AMDOrder::APlusAT;
@@ -2962,6 +2967,8 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
 
         AMDOrder order = AMDOrder::Natural;
 
+        SECTION("Natural") {}
+
         // CSparse only uses 2 possible orders for QR factorization:
         // MATLAB [V, beta, p, R] = cs_qr(A); -> order = 0
         //        [V, beta, p, R, q] = cs_qr(A); -> order = 3
@@ -3284,15 +3291,15 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
 
 
 /** Define a helper function to test LU decomposition */
-auto lu_test = [](const CSCMatrix& A)
+LUResult lu_test(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural)
 {
-    SymbolicLU S = slu(A);
+    SymbolicLU S = slu(A, order);
     LUResult res = lu(A, S);
     CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
-    CSCMatrix PA = A.permute_rows(res.p_inv).to_canonical();
-    compare_matrices(LU, PA);
+    CSCMatrix PAQ = A.permute(res.p_inv, res.q).to_canonical();
+    compare_matrices(LU, PAQ);
     return res;
-};
+}
 
 
 TEST_CASE("LU Factorization of Square Matrix", "[lu]")
@@ -3300,7 +3307,7 @@ TEST_CASE("LU Factorization of Square Matrix", "[lu]")
     const CSCMatrix A = davis_example_qr(10);
     auto [M, N] = A.shape();
 
-    std::vector<csint> expect_q(N);
+    std::vector<csint> expect_q(N);  // natural ordering
     std::iota(expect_q.begin(), expect_q.end(), 0);
 
     SECTION("Symbolic Factorization") {
@@ -3315,31 +3322,34 @@ TEST_CASE("LU Factorization of Square Matrix", "[lu]")
 
     SECTION("Numeric Factorization") {
         CSCMatrix Ap;
-        std::vector<csint> expect_p = expect_q;
+        std::vector<csint> expect_p;
 
-        SECTION("un-permuted") {
+        SECTION("No row permutation") {
             Ap = A;
             expect_p = expect_q;
         }
 
-        SECTION("permuted") {
+        SECTION("Rows permuted") {
             // Permute the rows of A to test pivoting
             std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
             std::vector<csint> p_inv = inv_permute(p);
 
             // LU *should* select pivots to recover the original A matrix
             Ap = A.permute_rows(p_inv);
-            expect_p = p;
+            expect_p = p_inv;
         }
 
         // Test the factorization
         LUResult res = lu_test(Ap);
 
-        // Permute the rows of the input Ap to compare with LU
-        CSCMatrix PAp = Ap.permute_rows(res.p_inv).to_canonical();
+        std::vector<csint> expect_p_inv = inv_permute(expect_p);
 
-        CHECK(res.p_inv == expect_p);
+        CHECK(res.p_inv == expect_p_inv);
         CHECK(res.q == expect_q);
+
+        // Permute the rows of the input Ap to compare with LU
+        // Columns should be unpermuted
+        CSCMatrix PAp = Ap.permute_rows(res.p_inv).to_canonical();
         compare_matrices(A, PAp);  // LU should match the un-permuted A
     }
 }

@@ -28,25 +28,23 @@ SymbolicLU slu(const CSCMatrix& A, AMDOrder order)
     SymbolicLU S;             // allocate result
     std::vector<csint> q(N);  // column permutation vector
 
+    // Determine column ordering of A
     if (order == AMDOrder::Natural) {
         std::iota(q.begin(), q.end(), 0);  // identity permutation
-    } else if (order == AMDOrder::APlusAT) {
-        // TODO write test for this method once AMD is implemented
-        // Exercise 6.10: symbolic Cholesky analysis
-        SymbolicChol S_chol = schol(A, AMDOrder::APlusAT);
-        q = S_chol.p_inv;
-        S.lnz = S.unz = S_chol.lnz;
     } else {
-        // TODO implement amd order (see Chapter 7)
-        // q = amd(order, A);  // P = amd(A + A.T()) or natural
-        throw std::runtime_error("Ordering method not implemented!");
+        q = amd(A, order);  // order = ATANoDenseRows for LU
     }
 
-    // Optimistic LU factorization estimate (Davis, p. 85)
-    if (order != AMDOrder::APlusAT) {
-        S.q = q;
-        S.unz = 4 * A.nnz() + N;  // guess nnz(L) and nnz(U)
-        S.lnz = S.unz;
+    S.q = q;  // store the column permutation
+
+    // Estimate non-zeros in L and U
+    if (order == AMDOrder::APlusAT) {
+        // Exercise 6.10: symbolic Cholesky analysis
+        SymbolicChol S_chol = schol(A, AMDOrder::APlusAT);
+        S.lnz = S.unz = S_chol.lnz;
+    } else {
+        // Optimistic LU factorization estimate (Davis, p. 85)
+        S.lnz = S.unz = 4 * A.nnz() + N;  // guess nnz(L) and nnz(U)
     }
 
     return S;

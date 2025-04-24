@@ -3345,6 +3345,44 @@ TEST_CASE("LU Factorization of Square Matrix", "[lu]")
 }
 
 
+TEST_CASE("LU Numeric Factorization: Column Permutation", "[lu]")
+{
+    CSCMatrix Ap = davis_example_qr(10);
+    std::vector<csint> expect_p,
+                       expect_q;
+    AMDOrder order = AMDOrder::Natural;
+
+    SECTION("Natural") {
+        expect_q = {0, 1, 2, 3, 4, 5, 6, 7};
+    }
+
+    SECTION("APlusAT") {
+        // MATLAB [L, U, p, q] = cs_lu(A, 1.0); -> order = 1
+        order = AMDOrder::APlusAT;
+        expect_q = {4, 5, 7, 1, 2, 0, 6, 3};
+    }
+
+    SECTION("ATANoDenseRows") {
+        // MATLAB [L, U, p, q] = cs_lu(A); -> order = 2
+        order = AMDOrder::ATANoDenseRows;
+        expect_q = {0, 3, 1, 2, 4, 5, 7, 6};
+    }
+
+    // Expect the permutation to be the same as the column permutation due to
+    // the pivoting algorithm for a square, positive definite matrix.
+    expect_p = expect_q;
+
+    // Test the factorization
+    LUResult res = lu_test(Ap, order);
+
+    // Check the permutations
+    std::vector<csint> expect_p_inv = inv_permute(expect_p);
+
+    CHECK(res.p_inv == expect_p_inv);
+    CHECK(res.q == expect_q);
+}
+
+
 TEST_CASE("Solve A x = b with LU")
 {
     CSCMatrix A = davis_example_qr(10).to_canonical();

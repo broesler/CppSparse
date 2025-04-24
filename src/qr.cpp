@@ -189,9 +189,7 @@ SymbolicQR sqr(const CSCMatrix& A, AMDOrder order, bool use_postorder)
     if (order == AMDOrder::Natural) {
         std::iota(q.begin(), q.end(), 0);  // identity permutation
     } else {
-        // TODO implement amd order (see Chapter 7)
-        // q = amd(order, A);  // P = amd(A + A.T()) or natural
-        throw std::runtime_error("Ordering method not implemented!");
+        q = amd(A, order);                 // order = ATA for QR
     }
 
     // Find pattern of Cholesky factor of A.T @ A
@@ -216,7 +214,7 @@ SymbolicQR sqr(const CSCMatrix& A, AMDOrder order, bool use_postorder)
     std::vector<csint> cp = counts(C, S.parent, postorder, CTC);
     S.rnz = std::accumulate(cp.begin(), cp.end(), 0);
 
-    S.leftmost = find_leftmost(A);
+    S.leftmost = find_leftmost(C);
     vcount(C, S);  // compute p_inv, vnz, m2
     assert(S.vnz >= 0 && S.rnz >= 0);  // overflow guard
 

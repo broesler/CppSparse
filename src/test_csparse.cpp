@@ -2580,14 +2580,22 @@ TEST_CASE("Cholesky Factorization")
     SECTION("Exercise 4.9: Use post-ordering with natural ordering") {
         // Compute the symbolic factorization with postordering
         bool use_postorder = true;
-        SymbolicChol S = schol(A, AMDOrder::Natural, use_postorder);
+
+        AMDOrder order = AMDOrder::Natural;
+
+        SECTION("APlusAT") {
+            order = AMDOrder::APlusAT;
+        }
+
+        SymbolicChol S = schol(A, order, use_postorder);
         CSCMatrix L = chol(A, S);
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
 
         // The factorization will be postordered!
-        CSCMatrix expect_A = A.permute(S.p_inv, inv_permute(S.p_inv));
+        std::vector<csint> q = inv_permute(S.p_inv);
+        CSCMatrix PTAP = A.permute(S.p_inv, q).to_canonical();
 
-        compare_matrices(LLT, expect_A);
+        compare_matrices(LLT, PTAP);
     }
 
     SECTION("Exercise 4.10: Symbolic Cholesky") {

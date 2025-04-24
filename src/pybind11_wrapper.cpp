@@ -408,7 +408,7 @@ PYBIND11_MODULE(csparse, m) {
     // -------------------------------------------------------------------------
     m.def("_davis_example_small", &cs::davis_example_small);
     m.def("_davis_example_chol", &cs::davis_example_chol);
-    m.def("_davis_example_qr", &cs::davis_example_qr);
+    m.def("_davis_example_qr", &cs::davis_example_qr, py::arg("add_diag")=0.0);
     m.def("_davis_example_amd", &cs::davis_example_amd);
 
     //--------------------------------------------------------------------------

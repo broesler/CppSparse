@@ -2477,10 +2477,9 @@ TEST_CASE("Cholesky Factorization")
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
 
         // Permute the input matrix to match LL^T = P^T A P
-        std::vector<csint> q = inv_permute(S.p_inv);
-        CSCMatrix PTAP = A.permute(S.p_inv, q).to_canonical();
+        CSCMatrix PAPT = A.permute(S.p_inv, inv_permute(S.p_inv)).to_canonical();
 
-        compare_matrices(LLT, PTAP);
+        compare_matrices(LLT, PAPT);
     }
 
     SECTION("Update Cholesky") {
@@ -2597,10 +2596,9 @@ TEST_CASE("Cholesky Factorization")
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
 
         // The factorization will be postordered!
-        std::vector<csint> q = inv_permute(S.p_inv);
-        CSCMatrix PTAP = A.permute(S.p_inv, q).to_canonical();
+        CSCMatrix PAPT = A.permute(S.p_inv, inv_permute(S.p_inv)).to_canonical();
 
-        compare_matrices(LLT, PTAP);
+        compare_matrices(LLT, PAPT);
     }
 
     SECTION("Exercise 4.10: Symbolic Cholesky") {
@@ -2626,27 +2624,51 @@ TEST_CASE("Cholesky Factorization")
     }
 
     SECTION("Exercise 4.11: Left-looking Cholesky") {
-        SymbolicChol S = schol(A, AMDOrder::Natural);
+        AMDOrder order;
+
+        SECTION("Natural") {
+            std::cout << "Natural" << std::endl;
+            order = AMDOrder::Natural;
+        }
+
+        SECTION("APlusAT") {
+            std::cout << "APlusAT" << std::endl;
+            order = AMDOrder::APlusAT;
+        }
+
+        SymbolicChol S = schol(A, order);
         CSCMatrix L = symbolic_cholesky(A, S);
 
         // Compute the numeric factorization using the non-zero pattern
         L = leftchol(A, S, L);
 
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
+        CSCMatrix PAPT = A.permute(S.p_inv, inv_permute(S.p_inv)).to_canonical();
 
-        compare_matrices(LLT, A);
+        compare_matrices(LLT, PAPT);
     }
 
     SECTION("Exercise 4.12: Up-looking Cholesky with Pattern") {
-        SymbolicChol S = schol(A, AMDOrder::Natural);
+        AMDOrder order;
+
+        SECTION("Natural") {
+            order = AMDOrder::Natural;
+        }
+
+        SECTION("APlusAT") {
+            order = AMDOrder::APlusAT;
+        }
+
+        SymbolicChol S = schol(A, order);
         CSCMatrix L = symbolic_cholesky(A, S);
 
         // Compute the numeric factorization using the non-zero pattern
         L = rechol(A, S, L);
 
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
+        CSCMatrix PAPT = A.permute(S.p_inv, inv_permute(S.p_inv)).to_canonical();
 
-        compare_matrices(LLT, A);
+        compare_matrices(LLT, PAPT);
     }
 
     SECTION("Exercise 4.13: Incomplete Cholesky") {

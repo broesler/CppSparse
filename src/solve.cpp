@@ -739,14 +739,18 @@ std::vector<double> lu_solve(const LUResult& res, const std::vector<double>& b)
 }
 
 
-std::vector<double> lu_tsolve(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> lu_tsolve(
+    const CSCMatrix& A,
+    const std::vector<double>& b,
+    AMDOrder order
+)
 {
     if (A.shape()[1] != b.size()) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
     }
 
     // Compute the numeric factorization
-    SymbolicLU S = slu(A);
+    SymbolicLU S = slu(A, order);
     LUResult res = lu(A, S);
 
     return lu_tsolve(res, b);
@@ -767,7 +771,6 @@ std::vector<double> lu_tsolve(const LUResult& res, const std::vector<double>& b)
     //   L^T P x = y -> solve L^T (P x) = y
     //   => x = P^T (L^T)^{-1} (U^T)^{-1} Q^T b
 
-    // TODO test column permutation. Might be ipvec?
     const std::vector<double> QTb = pvec(res.q, b);     // permute b -> Q^T b
     const std::vector<double> y = utsolve(res.U, QTb);  // solve U^T y = Q^T b
     const std::vector<double> Px = ltsolve(res.L, y);   // solve L^T P x = y

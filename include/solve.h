@@ -402,7 +402,11 @@ std::vector<double> lu_solve(const LUResult& res, const std::vector<double>& b);
  *
  * @return x  the solution vector
  */
-std::vector<double> lu_tsolve(const CSCMatrix& A, const std::vector<double>& b);
+std::vector<double> lu_tsolve(
+    const CSCMatrix& A,
+    const std::vector<double>& b,
+    AMDOrder order=AMDOrder::Natural
+);
 
 
 /** Solve a system \f$ A^T x = b \f$ using the LU factorization of `A`.

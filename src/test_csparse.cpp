@@ -3541,6 +3541,10 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3]")
     CSCMatrix A = davis_example_qr(10);
     auto [M, N] = A.shape();
 
+    double col_tol = 0.0;
+    std::vector<csint> expect_q;
+    std::vector<csint> expect_p;  // diagonals are pivots
+
     // Cases to test:
     //   1. no pivot found in a column (zero column)
     //   2. pivot in a column is below given tolerance
@@ -3562,10 +3566,13 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3]")
         compare_matrices(LU, PAQ);
     };
 
-    SECTION("Zero Column") {
-        double col_tol = 0.0;  // keep all based on pivot size
+    SECTION("No Column Pivoting") {
+        col_tol = 0.0;
+        expect_q = {0, 1, 2, 3, 4, 5, 6, 7};  // no pivoting
+    }
 
-        std::vector<csint> expect_q;
+    SECTION("Zero Column") {
+        col_tol = 1e-10;  // only pivot empty columns
 
         SECTION("Single zero column") {
             // Remove a column to test the column pivoting
@@ -3589,18 +3596,24 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3]")
 
             expect_q = {0, 1, 4, 6, 7, 2, 3, 5};
         }
-
-        std::vector<csint> expect_p = expect_q;  // diagonals are pivots
-        std::vector<csint> expect_p_inv = inv_permute(expect_p);
-
-        lu_col_test(A, col_tol, expect_p_inv, expect_q);
     }
+
+    // TODO integrate into lu() with handling of zero rows
+    // SECTION("Zero Row") {
+    //     std::cout << "--- LU Column Pivoting: Zero Row ---" << std::endl;
+    //     col_tol = 0.0;  // keep all based on pivot size
+    //     // Remove a row to test the column pivoting
+    //     csint k = 3;
+    //     for (csint j = 0; j < N; j++) {
+    //         A(k, j) = 0.0;
+    //     }
+    //     A = A.dropzeros();
+    //     expect_q = {0, 1, 2, 3, 4, 5, 6, 7};
+    // }
 
     SECTION("Threshold") {
         // Absolute threshold below which to pivot a column to the end
-        double col_tol = 0.1;
-
-        std::vector<csint> expect_q;
+        col_tol = 0.1;
 
         SECTION("No small columns") {
             // No columns are small enough to pivot
@@ -3629,12 +3642,13 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3]")
 
             expect_q = {0, 1, 4, 6, 7, 2, 3, 5};
         }
-
-        std::vector<csint> expect_p = expect_q;  // diagonals are pivots
-        std::vector<csint> expect_p_inv = inv_permute(expect_p);
-
-        lu_col_test(A, col_tol, expect_p_inv, expect_q);
     }
+
+    // Run the Tests
+    expect_p = expect_q;  // diagonals are pivots
+    std::vector<csint> expect_p_inv = inv_permute(expect_p);
+
+    lu_col_test(A, col_tol, expect_p_inv, expect_q);
 }
 
 

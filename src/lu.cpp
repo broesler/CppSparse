@@ -428,7 +428,7 @@ LUResult lu_col(const CSCMatrix& A,
         // --- Divide by pivot -------------------------------------------------
         double pivot = sol.x[ipiv];  // the chosen pivot
 
-        if ((pivot == 0 || pivot < col_tol) && k < N - K) {
+        if ((std::fabs(pivot) < col_tol) && k < N - K) {
             // pivot the column to the end of the matrix, preserving the order
             csint v = std::move(q[k]);
             q.erase(q.begin() + k);

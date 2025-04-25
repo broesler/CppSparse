@@ -3393,7 +3393,7 @@ TEST_CASE("LU Numeric Factorization: Column Permutation", "[lu]")
 }
 
 
-TEST_CASE("Solve A x = b with LU")
+TEST_CASE("Solve Ax = b with LU")
 {
     CSCMatrix A = davis_example_qr(10).to_canonical();
     auto [M, N] = A.shape();
@@ -3404,21 +3404,54 @@ TEST_CASE("Solve A x = b with LU")
     const std::vector<double> b = A * expect;
 
     SECTION("Natural Order") {
-        const std::vector<double> x = lu_solve(A, b);
+        std::vector<double> x = lu_solve(A, b);
+
+        SymbolicLU S = slu(A);
+        LUResult res = lu(A, S);
+        std::vector<double> x_ov = lu_solve(res, b);
+
+        REQUIRE_THAT(is_close(x, x_ov, tol), AllTrue());
         REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
     }
 
-    SECTION("Permuted A") {
+    SECTION("Row-Permuted A") {
         // Permuting the rows of A requires permuting the columns of b, but the
         // solution vector will *not* be permuted.
         std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
         std::vector<csint> p_inv = inv_permute(p);
 
         CSCMatrix Ap = A.permute_rows(p_inv);
-        std::vector<double> bp = pvec(p_inv, b);  // == ipvec(p, b)
+        std::vector<double> bp = pvec(p, b);
 
         std::vector<double> x = lu_solve(Ap, bp);
 
+        // TODO build `solve` and `tsolve` methods into the LUResult class?
+        // Test overload that takes LUResult directly
+        SymbolicLU S = slu(Ap);
+        LUResult res = lu(Ap, S);
+
+        std::vector<double> x_ov = lu_solve(res, bp);
+
+        REQUIRE_THAT(is_close(x, x_ov, tol), AllTrue());
+        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    }
+
+    SECTION("Column-Permuted A") {
+        // If A has permuted columns, then the RHS vector b is not affected,
+        // but the *solution* vector will be permuted.
+
+        // Compute our own LU decomposition with specified column ordering
+        AMDOrder order = AMDOrder::APlusAT;
+
+        std::vector<double> x = lu_solve(A, b, order);  // test overload
+
+        // Test overload
+        SymbolicLU S = slu(A, order);
+        LUResult res = lu(A, S);
+
+        std::vector<double> x_ov = lu_solve(res, b);
+
+        REQUIRE_THAT(is_close(x, x_ov, tol), AllTrue());
         REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
     }
 }
@@ -3439,7 +3472,7 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU")
         REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
     }
 
-    SECTION("Permuted A") {
+    SECTION("Row-Permuted A") {
         // Permuting the rows of A is the same as permuting the columns of A^T,
         // so the RHS vector is not affected, but the solution vector will be
         // permuted, so permute it back for comparison.

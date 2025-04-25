@@ -28,6 +28,7 @@ struct SymbolicLU
 };
 
 
+// TODO build `solve` and `tsolve` methods into the LUResult class?
 /** Numeric LU decomposition return struct (see: cs_numeric aka csn) */
 struct LUResult
 {

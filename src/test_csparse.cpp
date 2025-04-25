@@ -2627,12 +2627,10 @@ TEST_CASE("Cholesky Factorization")
         AMDOrder order;
 
         SECTION("Natural") {
-            std::cout << "Natural" << std::endl;
             order = AMDOrder::Natural;
         }
 
         SECTION("APlusAT") {
-            std::cout << "APlusAT" << std::endl;
             order = AMDOrder::APlusAT;
         }
 
@@ -3338,13 +3336,32 @@ TEST_CASE("LU Factorization of Square Matrix", "[lu]")
     const CSCMatrix A = davis_example_qr(10);
     auto [M, N] = A.shape();
 
-    std::vector<csint> expect_q(N);  // natural ordering
-    std::iota(expect_q.begin(), expect_q.end(), 0);
+    std::vector<csint> expect_q = {0, 1, 2, 3, 4, 5, 6, 7};
 
     SECTION("Symbolic Factorization") {
-        SymbolicLU S = slu(A);  // natural ordering
+        AMDOrder order = AMDOrder::Natural;
+        csint expect_lnz;
 
-        csint expect_lnz = 4 * A.nnz() + N;
+        SECTION("Natural") {
+            order = AMDOrder::Natural;
+            expect_lnz = 4 * A.nnz() + N;
+        }
+
+        SECTION("APlusAT") {
+            order = AMDOrder::APlusAT;
+            // MATLAB [L, U, p, q] = cs_lu(A, 1.0); -> order = 1
+            expect_q = {4, 5, 7, 1, 2, 0, 6, 3};
+            expect_lnz = schol(A, order).lnz;
+        }
+
+        SECTION("ATANoDenseRows") {
+            order = AMDOrder::ATANoDenseRows;
+            // MATLAB [L, U, p, q] = cs_lu(A); -> order = 2
+            expect_q = {0, 3, 1, 2, 4, 5, 7, 6};
+            expect_lnz = 4 * A.nnz() + N;
+        }
+
+        SymbolicLU S = slu(A, order);
 
         CHECK(S.q == expect_q);
         CHECK(S.lnz == expect_lnz);
@@ -3373,9 +3390,7 @@ TEST_CASE("LU Factorization of Square Matrix", "[lu]")
         // Test the factorization
         LUResult res = lu_test(Ap);
 
-        std::vector<csint> expect_p_inv = inv_permute(expect_p);
-
-        CHECK(res.p_inv == expect_p_inv);
+        CHECK(res.p_inv == inv_permute(expect_p));
         CHECK(res.q == expect_q);
 
         // Permute the rows of the input Ap to compare with LU

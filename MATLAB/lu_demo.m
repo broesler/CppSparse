@@ -24,7 +24,7 @@ p_inv = inv_permute(p);
 
 Ap = A(p, :);
 
-% Permuted Solve
+%% Permuted Solve
 b = A * expect;
 bp = b(p);
 
@@ -43,7 +43,7 @@ x = Q * QTx;
 
 assert(norm(x - expect) < 1e-14, 'LU solve failed');
 
-% Repeat with vector form of permutation
+%% Repeat with vector form of permutation
 [L, U, pv] = lu(full(Ap), 'vector');
 
 assert(norm(L * U - Ap(pv, :)) < 1e-14, 'LU decomposition failed');
@@ -53,7 +53,7 @@ assert(norm(L * U - Ap(pv, :)) < 1e-14, 'LU decomposition failed');
 assert(norm(pv - pv_) < 1e-14, 'LU permutation failed');
 
 
-% Test solution with column permutation
+%% Test solution with column permutation
 [L, U, P, Q] = lu(A);
 
 assert(norm(L * U - P * A * Q) < 1e-14, 'LU decomposition failed');
@@ -66,7 +66,7 @@ x = Q * QTx;
 
 assert(norm(x - expect) < 1e-14, 'LU solve failed');
 
-% Repeat with vector form of permutation
+%% Repeat with vector form of permutation
 [L, U, pv, qv] = lu(A, 'vector');
 
 assert(norm(L * U - A(pv, qv)) < 1e-14, 'LU decomposition failed');
@@ -80,7 +80,7 @@ x = QTx(inv_permute(qv));  % == Q * QTx requires inverse of qv
 assert(norm(x - expect) < 1e-14, 'LU solve failed');
 
 
-% Test A' x = b
+%% Test A' x = b
 bt = A' * expect;
 
 [L, U, P] = lu(full(Ap));
@@ -104,6 +104,20 @@ xt = P' * Px;
 x = xt(p_inv);  % == P' x
 
 assert(norm(x - expect) < 1e-14, 'LU transpose solve failed');
+
+
+%% Test Column permutations from cs_lu
+% nargout == 4 && nargin == 2 -> order = 1 (APlusAT)
+[L, U, p_, q_] = cs_lu(A, 1.0);
+
+printf('APlusAT:\n  p = %s\n  q = %s\n', ...
+       mat2str(p_ - 1), mat2str(q_ - 1));
+
+% nargout == 4 && nargin == 1 -> order = 2 (ATANoDenseRows)
+[L, U, p_, q_] = cs_lu(A);
+
+printf('ATANoDenseRows:\n  p = %s\n  q = %s\n', ...
+       mat2str(p_ - 1), mat2str(q_ - 1));
 
 %===============================================================================
 %===============================================================================

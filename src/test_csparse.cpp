@@ -2580,7 +2580,6 @@ TEST_CASE("Cholesky Factorization")
         REQUIRE(etree_height(parent) == 6);
     }
 
-    // TODO combine Exercise 4.9, 4.11 and 4.12 into one test?
     SECTION("Exercise 4.9: Use post-ordering with natural ordering") {
         // Compute the symbolic factorization with postordering
         bool use_postorder = true;
@@ -2605,7 +2604,17 @@ TEST_CASE("Cholesky Factorization")
     }
 
     SECTION("Exercise 4.10: Symbolic Cholesky") {
-        SymbolicChol S = schol(A);
+        AMDOrder order;
+
+        SECTION("Natural") {
+            order = AMDOrder::Natural;
+        }
+
+        SECTION("APlusAT") {
+            order = AMDOrder::APlusAT;
+        }
+
+        SymbolicChol S = schol(A, order);
         CSCMatrix L = chol(A, S);  // numeric factorization
         CSCMatrix Ls = symbolic_cholesky(A, S);
 

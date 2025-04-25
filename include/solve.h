@@ -381,18 +381,6 @@ std::vector<double> lu_solve(
 );
 
 
-/** Solve a system \f$ A x = b \f$ using the LU factorization of `A`.
- *
- * See also: Davis, Exercise 6.1.
- *
- * @param res  the LU factorization result of a matrix `A`
- * @param b  a dense vector
- *
- * @return x  the solution vector
- */
-std::vector<double> lu_solve(const LUResult& res, const std::vector<double>& b);
-
-
 /** Solve a system \f$ A^T x = b \f$ using the LU factorization of `A`.
  *
  * See: Davis, Exercise 6.1.
@@ -407,18 +395,6 @@ std::vector<double> lu_tsolve(
     const std::vector<double>& b,
     AMDOrder order=AMDOrder::Natural
 );
-
-
-/** Solve a system \f$ A^T x = b \f$ using the LU factorization of `A`.
- *
- * See: Davis, Exercise 6.1.
- *
- * @param res  the LU factorization result of a matrix `A`
- * @param b  a dense vector
- *
- * @return x  the solution vector
- */
-std::vector<double> lu_tsolve(const LUResult& res, const std::vector<double>& b);
 
 
 /** Estimate the 1-norm of the *inverse* of a sparse matrix.

@@ -3437,7 +3437,7 @@ TEST_CASE("Solve Ax = b with LU")
     // Test overload
     SymbolicLU S = slu(Ap, order);
     LUResult res = lu(Ap, S);
-    x_ov = lu_solve(res, bp);
+    x_ov = res.solve(bp);
 
     CHECK_THAT(is_close(x, x_ov, tol), AllTrue());
     REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
@@ -3482,7 +3482,7 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU")
     // Test overload
     SymbolicLU S = slu(Ap, order);
     LUResult res = lu(Ap, S);
-    x_ov = lu_tsolve(res, b);
+    x_ov = res.tsolve(b);
 
     // Permuting the rows of A is the same as permuting the columns of A^T, so
     // the RHS vector is not affected, but the solution vector will be permuted,

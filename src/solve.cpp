@@ -719,23 +719,7 @@ std::vector<double> lu_solve(
     SymbolicLU S = slu(A, order);
     LUResult res = lu(A, S);
 
-    return lu_solve(res, b);
-}
-
-
-std::vector<double> lu_solve(const LUResult& res, const std::vector<double>& b)
-{
-    if (res.L.shape()[0] != b.size()) {
-        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
-    }
-
-    // Solve A x = b == (P^T L U Q^T) x = b
-    const std::vector<double> Pb = ipvec(res.p_inv, b);  // permute b -> P b
-    const std::vector<double> y = lsolve(res.L, Pb);     // solve L x = P b
-    const std::vector<double> QTx = usolve(res.U, y);    // solve U (Q^T x) = y
-    std::vector<double> x = ipvec(res.q, QTx);           // Q (Q^T x) = x
-    
-    return x;
+    return res.solve(b);
 }
 
 
@@ -753,30 +737,7 @@ std::vector<double> lu_tsolve(
     SymbolicLU S = slu(A, order);
     LUResult res = lu(A, S);
 
-    return lu_tsolve(res, b);
-}
-
-
-std::vector<double> lu_tsolve(const LUResult& res, const std::vector<double>& b)
-{
-    if (res.U.shape()[1] != b.size()) {
-        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
-    }
-
-    // Solve A^T x = b
-    //   == (P^T L U Q^T)^T x = b
-    //   == Q U^T (L^T P x) = b
-    //
-    //   Q U^T y = b -> solve U^T y = Q^T b
-    //   L^T P x = y -> solve L^T (P x) = y
-    //   => x = P^T (L^T)^{-1} (U^T)^{-1} Q^T b
-
-    const std::vector<double> QTb = pvec(res.q, b);     // permute b -> Q^T b
-    const std::vector<double> y = utsolve(res.U, QTb);  // solve U^T y = Q^T b
-    const std::vector<double> Px = ltsolve(res.L, y);   // solve L^T P x = y
-    std::vector<double> x = pvec(res.p_inv, Px);        // P^T (P x) = x
-    
-    return x;
+    return res.tsolve(b);
 }
 
 
@@ -834,7 +795,7 @@ double norm1est_inv(const LUResult& res)
         }
 
         // Solve Ax = x
-        x = lu_solve(res, x);
+        x = res.solve(x);
 
         double est_old = est;
         est = norm(x, 1);
@@ -851,7 +812,7 @@ double norm1est_inv(const LUResult& res)
             }
         }
 
-        x = lu_tsolve(res, s);
+        x = res.tsolve(s);
     }
 
     return est;

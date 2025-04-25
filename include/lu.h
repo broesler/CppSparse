@@ -19,6 +19,7 @@
 
 namespace cs {
 
+
 /** Symbolic LU decomposition return struct (see: cs_symbolic aka css) */
 struct SymbolicLU
 {
@@ -39,43 +40,23 @@ struct LUResult
 
     /** Solve the linear system Ax = b.
      *
+     * See also: Davis, Exercise 6.1.
+     *
      * @param b  the right-hand side vector
      *
      * @return x  the solution vector
      */
-    std::vector<double> solve(const std::vector<double>& b) const {
-        if (L.shape()[0] != b.size()) {
-            throw std::runtime_error("Matrix and RHS vector sizes do not match!");
-        }
-
-        // Solve A x = b == (P^T L U Q^T) x = b
-        const std::vector<double> Pb = ipvec(p_inv, b);  // permute b -> Pb
-        const std::vector<double> y = lsolve(L, Pb);     // solve Ly = Pb
-        const std::vector<double> QTx = usolve(U, y);    // solve U (Q^T x) = y
-        std::vector<double> x = ipvec(q, QTx);           // Q (Q^T x) = x
-        
-        return x;
-    }
+    std::vector<double> solve(const std::vector<double>& b) const; 
 
     /** Solve the linear system A^T x = b.
      *
+     * See: Davis, Exercise 6.1.
+     *
      * @param b  the right-hand side vector
      *
      * @return x  the solution vector
      */
-    std::vector<double> tsolve(const std::vector<double>& b) const {
-        if (U.shape()[1] != b.size()) {
-            throw std::runtime_error("Matrix and RHS vector sizes do not match!");
-        }
-
-        // Solve A^T x = b == (P^T L U Q^T)^T x = b == (Q U^T L^T P) x = b
-        const std::vector<double> QTb = pvec(q, b);     // permute b -> Q^T b
-        const std::vector<double> y = utsolve(U, QTb);  // solve U^T y = Q^T b
-        const std::vector<double> Px = ltsolve(L, y);   // solve L^T P x = y
-        std::vector<double> x = pvec(p_inv, Px);        // P^T (P x) = x
-        
-        return x;
-    }
+    std::vector<double> tsolve(const std::vector<double>& b) const; 
 };
 
 

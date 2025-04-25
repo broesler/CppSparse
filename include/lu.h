@@ -88,7 +88,10 @@ SymbolicLU slu(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
  * @param A  the matrix to factorize
  * @param S  the symbolic factorization
  * #param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
- *        used. If `tol` is less than 1.0, diagonal pivoting is used.
+ *        used. If `tol` is less than 1.0, diagonal pivoting is used. 
+ *        See: 
+ *          - MATLAB: `thresh` in `lu`, or `options.thresh` in `ilu`.
+ *          - Python: `diag_pivot_thresh` argument to `scipy.sparse.linalg.splu`.
  *
  * @return the LU decomposition
  */
@@ -104,6 +107,9 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol=1.0);
  * @param S  the symbolic factorization
  * @param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
  *        used. If `tol` is less than 1.0, diagonal pivoting is used.
+ *        See: 
+ *          - MATLAB: `thresh` in `lu`, or `options.thresh` in `ilu`.
+ *          - Python: `diag_pivot_thresh` argument to `scipy.sparse.linalg.splu`.
  * @param col_tol  the column tolerance for pivoting. If `col_tol` is 0.0, then
  *        no column pivoting will occur. If `col_tol` is greater than 0.0, then
  *        a column will be pivoted to the end of the matrix if the absolute
@@ -173,7 +179,10 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S);
  * @param S  the symbolic factorization of A
  * @param drop_tol  the drop tolerance for the incomplete factorization.
  * @param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
- *        used. If `tol` is less than 1.0, diagonal pivoting is used.
+ *        used. If `tol` is less than 1.0, diagonal pivoting is used. 
+ *        See: 
+ *          - MATLAB: `thresh` in `lu`, or `options.thresh` in `ilu`.
+ *          - Python: `diag_pivot_thresh` argument to `scipy.sparse.linalg.splu`.
  *
  * @return the LU decomposition
  */

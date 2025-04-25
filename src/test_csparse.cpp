@@ -3367,74 +3367,67 @@ TEST_CASE("LU Factorization of Square Matrix", "[lu]")
         CHECK(S.lnz == expect_lnz);
         REQUIRE(S.unz == S.lnz);
     }
-
-    SECTION("Numeric Factorization") {
-        CSCMatrix Ap;
-        std::vector<csint> expect_p;
-
-        SECTION("No row permutation") {
-            Ap = A;
-            expect_p = expect_q;
-        }
-
-        SECTION("Rows permuted") {
-            // Permute the rows of A to test pivoting
-            std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
-            std::vector<csint> p_inv = inv_permute(p);
-
-            // LU *should* select pivots to recover the original A matrix
-            Ap = A.permute_rows(p_inv);
-            expect_p = p_inv;
-        }
-
-        // Test the factorization
-        LUResult res = lu_test(Ap);
-
-        CHECK(res.p_inv == inv_permute(expect_p));
-        CHECK(res.q == expect_q);
-
-        // Permute the rows of the input Ap to compare with LU
-        // Columns should be unpermuted
-        CSCMatrix PAp = Ap.permute_rows(res.p_inv).to_canonical();
-        compare_matrices(A, PAp);  // LU should match the un-permuted A
-    }
 }
 
 
-TEST_CASE("LU Numeric Factorization: Column Permutation", "[lu]")
+TEST_CASE("Numeric LU Factorization of Square Matrix", "[lu_numeric]")
 {
-    CSCMatrix Ap = davis_example_qr(10);
+    CSCMatrix A = davis_example_qr(10);
+    CSCMatrix Ap = A;
     std::vector<csint> expect_p,
                        expect_q;
-    AMDOrder order = AMDOrder::Natural;
 
-    SECTION("Natural") {
-        expect_q = {0, 1, 2, 3, 4, 5, 6, 7};
+    // Cycle through each order and row permutation
+    AMDOrder order = GENERATE(
+        AMDOrder::Natural,
+        AMDOrder::APlusAT,
+        AMDOrder::ATANoDenseRows
+    );
+    bool row_perm = GENERATE(true, false);
+    CAPTURE(order, row_perm);  // track which order and row_perm are being used
+
+    std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+    std::vector<csint> p_inv = inv_permute(p);
+
+    if (row_perm) {
+        Ap = A.permute_rows(p_inv);
     }
 
-    SECTION("APlusAT") {
+    if (order == AMDOrder::Natural) {
+        expect_q = {0, 1, 2, 3, 4, 5, 6, 7};  // no column permutation
+        if (row_perm) {
+            // LU *should* select pivots to recover the original A matrix
+            expect_p = p_inv;
+        }
+    } else if (order == AMDOrder::APlusAT) {
         // MATLAB [L, U, p, q] = cs_lu(A, 1.0); -> order = 1
-        order = AMDOrder::APlusAT;
-        expect_q = {4, 5, 7, 1, 2, 0, 6, 3};
-    }
-
-    SECTION("ATANoDenseRows") {
+        if (row_perm) {
+            expect_p = {1, 4, 3, 7, 0, 5, 2, 6};
+            expect_q = {1, 2, 0, 3, 5, 6, 7, 4};
+        } else {
+            expect_q = {4, 5, 7, 1, 2, 0, 6, 3};
+        }
+    } else if (order == AMDOrder::ATANoDenseRows) {
         // MATLAB [L, U, p, q] = cs_lu(A); -> order = 2
-        order = AMDOrder::ATANoDenseRows;
-        expect_q = {0, 3, 1, 2, 4, 5, 7, 6};
+        if (row_perm) {
+            expect_p = {3, 7, 1, 4, 6, 0, 2, 5};
+            expect_q = {0, 3, 1, 2, 4, 5, 7, 6};
+        } else {
+            expect_q = {0, 3, 1, 2, 4, 5, 7, 6};
+        }
     }
 
     // Expect the permutation to be the same as the column permutation due to
     // the pivoting algorithm for a square, positive definite matrix.
-    expect_p = expect_q;
+    if (!row_perm) {
+        expect_p = expect_q;
+    }
 
     // Test the factorization
     LUResult res = lu_test(Ap, order);
 
     // Check the permutations
-    std::vector<csint> expect_p_inv = inv_permute(expect_p);
-
-    CHECK(res.p_inv == expect_p_inv);
+    CHECK(res.p_inv == inv_permute(expect_p));
     CHECK(res.q == expect_q);
 }
 

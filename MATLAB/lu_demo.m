@@ -20,6 +20,8 @@ end
 expect = [1:N]';
 
 p = 1 + [5, 1, 7, 0, 2, 6, 4, 3]';  % arbitrary permutation
+p_inv = inv_permute(p);
+
 Ap = A(p, :);
 
 % Permuted Solve
@@ -76,6 +78,32 @@ QTx = U \ y;
 x = QTx(inv_permute(qv));  % == Q * QTx requires inverse of qv
 
 assert(norm(x - expect) < 1e-14, 'LU solve failed');
+
+
+% Test A' x = b
+bt = A' * expect;
+
+[L, U, P] = lu(full(Ap));
+Q = eye(N);
+
+% Solve A' x = bt
+QTb = Q' * bt;
+y = U' \ QTb;
+Px = L' \ y;
+xt = P' * Px;
+
+% Solution for permuted rows of A:
+% A' x = b
+% => A -> PA  (permute rows of A)
+% Now we are solving:
+% (PA)' xp = b
+% A' P' xp = b
+% x = P' xp.
+
+% permute x by P' == p_inv to match Ap'
+x = xt(p_inv);  % == P' x
+
+assert(norm(x - expect) < 1e-14, 'LU transpose solve failed');
 
 %===============================================================================
 %===============================================================================

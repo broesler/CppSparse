@@ -3395,23 +3395,22 @@ TEST_CASE("LU Numeric Factorization: Column Permutation", "[lu]")
 
 TEST_CASE("Solve Ax = b with LU")
 {
-    CSCMatrix A = davis_example_qr(10).to_canonical();
-    auto [M, N] = A.shape();
+    const CSCMatrix A = davis_example_qr(10).to_canonical();
 
     // Create RHS for A x = b
-    std::vector<double> expect(N);
-    std::iota(expect.begin(), expect.end(), 1);
+    const std::vector<double> expect = {1, 2, 3, 4, 5, 6, 7, 8};
     const std::vector<double> b = A * expect;
 
+    AMDOrder order = AMDOrder::Natural;
+    CSCMatrix Ap;
+    std::vector<double> bp;
+
+    std::vector<double> x; 
+    std::vector<double> x_ov; 
+
     SECTION("Natural Order") {
-        std::vector<double> x = lu_solve(A, b);
-
-        SymbolicLU S = slu(A);
-        LUResult res = lu(A, S);
-        std::vector<double> x_ov = lu_solve(res, b);
-
-        REQUIRE_THAT(is_close(x, x_ov, tol), AllTrue());
-        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+        Ap = A;
+        bp = b;
     }
 
     SECTION("Row-Permuted A") {
@@ -3420,71 +3419,81 @@ TEST_CASE("Solve Ax = b with LU")
         std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
         std::vector<csint> p_inv = inv_permute(p);
 
-        CSCMatrix Ap = A.permute_rows(p_inv);
-        std::vector<double> bp = pvec(p, b);
-
-        std::vector<double> x = lu_solve(Ap, bp);
-
-        // TODO build `solve` and `tsolve` methods into the LUResult class?
-        // Test overload that takes LUResult directly
-        SymbolicLU S = slu(Ap);
-        LUResult res = lu(Ap, S);
-
-        std::vector<double> x_ov = lu_solve(res, bp);
-
-        REQUIRE_THAT(is_close(x, x_ov, tol), AllTrue());
-        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+        Ap = A.permute_rows(p_inv);
+        bp = pvec(p, b);
     }
 
     SECTION("Column-Permuted A") {
         // If A has permuted columns, then the RHS vector b is not affected,
         // but the *solution* vector will be permuted.
-
-        // Compute our own LU decomposition with specified column ordering
-        AMDOrder order = AMDOrder::APlusAT;
-
-        std::vector<double> x = lu_solve(A, b, order);  // test overload
-
-        // Test overload
-        SymbolicLU S = slu(A, order);
-        LUResult res = lu(A, S);
-
-        std::vector<double> x_ov = lu_solve(res, b);
-
-        REQUIRE_THAT(is_close(x, x_ov, tol), AllTrue());
-        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+        order = AMDOrder::APlusAT;
+        Ap = A;
+        bp = b;
     }
+
+    // Solve the system
+    x = lu_solve(Ap, bp, order);
+
+    // Test overload
+    SymbolicLU S = slu(Ap, order);
+    LUResult res = lu(Ap, S);
+    x_ov = lu_solve(res, bp);
+
+    CHECK_THAT(is_close(x, x_ov, tol), AllTrue());
+    REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
 }
 
 
 TEST_CASE("Exercise 6.1: Solve A^T x = b with LU")
 {
-    CSCMatrix A = davis_example_qr(10).to_canonical();
-    auto [M, N] = A.shape();
+    const CSCMatrix A = davis_example_qr(10).to_canonical();
 
     // Create RHS for A^T x = b
-    std::vector<double> expect(N);
-    std::iota(expect.begin(), expect.end(), 1);
+    const std::vector<double> expect = {1, 2, 3, 4, 5, 6, 7, 8};
     const std::vector<double> b = A.T() * expect;
 
+    bool row_perm = false;
+    AMDOrder order = AMDOrder::Natural;
+    CSCMatrix Ap;
+
+    std::vector<double> x; 
+    std::vector<double> x_ov; 
+    std::vector<csint> p_inv;
+
     SECTION("Natural Order") {
-        const std::vector<double> x = lu_tsolve(A, b);
-        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+        Ap = A;
     }
 
     SECTION("Row-Permuted A") {
-        // Permuting the rows of A is the same as permuting the columns of A^T,
-        // so the RHS vector is not affected, but the solution vector will be
-        // permuted, so permute it back for comparison.
+        row_perm = true;
         std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
-        std::vector<csint> p_inv = inv_permute(p);
-        CSCMatrix Ap = A.permute_rows(p_inv);
-
-        std::vector<double> x = lu_tsolve(Ap, b);
-        std::vector<double> xp = pvec(p_inv, x);  // permute back to match x
-
-        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
+        p_inv = inv_permute(p);
+        Ap = A.permute_rows(p_inv);
     }
+
+    SECTION("Column-Permuted A") {
+        order = AMDOrder::APlusAT;
+        Ap = A;
+    }
+
+    // Solve the system
+    x = lu_tsolve(Ap, b, order);
+
+    // Test overload
+    SymbolicLU S = slu(Ap, order);
+    LUResult res = lu(Ap, S);
+    x_ov = lu_tsolve(res, b);
+
+    // Permuting the rows of A is the same as permuting the columns of A^T, so
+    // the RHS vector is not affected, but the solution vector will be permuted,
+    // so permute it back for comparison.
+    if (row_perm) {
+        x = pvec(p_inv, x);         // permute back to match expect
+        x_ov = pvec(p_inv, x_ov);
+    }
+
+    REQUIRE_THAT(is_close(x, x_ov, tol), AllTrue());
+    REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
 }
 
 

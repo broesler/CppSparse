@@ -3541,9 +3541,9 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3]")
     CSCMatrix A = davis_example_qr(10);
     auto [M, N] = A.shape();
 
-    double col_tol = 0.0;
-    std::vector<csint> expect_q;
-    std::vector<csint> expect_p;  // diagonals are pivots
+    double col_tol;
+    std::vector<csint> expect_p,
+                       expect_q;
 
     // Cases to test:
     //   1. no pivot found in a column (zero column)
@@ -3556,7 +3556,8 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3]")
         const std::vector<csint>& expect_q
     ) {
         SymbolicLU S = slu(A);
-        LUResult res = lu_col(A, S, col_tol);
+        double tol = 1.0;  // the row pivot tolerance
+        LUResult res = lu(A, S, tol, col_tol);
 
         CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
         CSCMatrix PAQ = A.permute(res.p_inv, res.q).to_canonical();
@@ -3597,19 +3598,6 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3]")
             expect_q = {0, 1, 4, 6, 7, 2, 3, 5};
         }
     }
-
-    // TODO integrate into lu() with handling of zero rows
-    // SECTION("Zero Row") {
-    //     std::cout << "--- LU Column Pivoting: Zero Row ---" << std::endl;
-    //     col_tol = 0.0;  // keep all based on pivot size
-    //     // Remove a row to test the column pivoting
-    //     csint k = 3;
-    //     for (csint j = 0; j < N; j++) {
-    //         A(k, j) = 0.0;
-    //     }
-    //     A = A.dropzeros();
-    //     expect_q = {0, 1, 2, 3, 4, 5, 6, 7};
-    // }
 
     SECTION("Threshold") {
         // Absolute threshold below which to pivot a column to the end

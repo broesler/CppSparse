@@ -1045,12 +1045,11 @@ class CSCMatrix
         //         LU Decomposition
         // ---------------------------------------------------------------------
         friend LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol);
-        friend LUResult lu(const CSCMatrix& A, const SymbolicLU& S, double tol);
-        friend LUResult lu_col(
+        friend LUResult lu(
             const CSCMatrix& A,
             const SymbolicLU& S,
-            double col_tol,
-            double tol
+            double tol,
+            double col_tol
         );
         friend LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S);
         friend LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S);

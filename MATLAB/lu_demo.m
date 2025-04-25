@@ -106,15 +106,41 @@ x = xt(p_inv);  % == P' x
 assert(norm(x - expect) < 1e-14, 'LU transpose solve failed');
 
 
-%% Test Column permutations from cs_lu
+%% Test Column permutations from cs_lu with no row permutation
+disp('cs_lu column permutations: A (no row permutation)');
+
 % nargout == 4 && nargin == 2 -> order = 1 (APlusAT)
 [L, U, p_, q_] = cs_lu(A, 1.0);
+
+assert(norm(L * U - A(p_, q_)) < 1e-14, 'LU decomposition failed');
 
 printf('APlusAT:\n  p = %s\n  q = %s\n', ...
        mat2str(p_ - 1), mat2str(q_ - 1));
 
 % nargout == 4 && nargin == 1 -> order = 2 (ATANoDenseRows)
 [L, U, p_, q_] = cs_lu(A);
+
+assert(norm(L * U - A(p_, q_)) < 1e-14, 'LU decomposition failed');
+
+printf('ATANoDenseRows:\n  p = %s\n  q = %s\n', ...
+       mat2str(p_ - 1), mat2str(q_ - 1));
+
+
+%% Test Column permutations from cs_lu with row permutation
+disp('cs_lu column permutations: Ap (with row permutation)');
+
+% nargout == 4 && nargin == 2 -> order = 1 (APlusAT)
+[L, U, p_, q_] = cs_lu(Ap, 1.0);
+
+assert(norm(L * U - Ap(p_, q_)) < 1e-14, 'LU decomposition failed');
+
+printf('APlusAT:\n  p = %s\n  q = %s\n', ...
+       mat2str(p_ - 1), mat2str(q_ - 1));
+
+% nargout == 4 && nargin == 1 -> order = 2 (ATANoDenseRows)
+[L, U, p_, q_] = cs_lu(Ap);
+
+assert(norm(L * U - Ap(p_, q_)) < 1e-14, 'LU decomposition failed');
 
 printf('ATANoDenseRows:\n  p = %s\n  q = %s\n', ...
        mat2str(p_ - 1), mat2str(q_ - 1));

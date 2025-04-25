@@ -374,7 +374,11 @@ std::vector<csint> topological_order(
  *
  * @return x  the solution vector
  */
-std::vector<double> lu_solve(const CSCMatrix& A, const std::vector<double>& b);
+std::vector<double> lu_solve(
+    const CSCMatrix& A,
+    const std::vector<double>& b,
+    AMDOrder order=AMDOrder::Natural
+);
 
 
 /** Solve a system \f$ A x = b \f$ using the LU factorization of `A`.

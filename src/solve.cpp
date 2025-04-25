@@ -706,13 +706,17 @@ std::vector<csint> topological_order(
 // -----------------------------------------------------------------------------
 //         LU Factorization Solvers
 // -----------------------------------------------------------------------------
-std::vector<double> lu_solve(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> lu_solve(
+    const CSCMatrix& A,
+    const std::vector<double>& b,
+    AMDOrder order
+)
 {
     if (A.shape()[0] != b.size()) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
     }
 
-    SymbolicLU S = slu(A);
+    SymbolicLU S = slu(A, order);
     LUResult res = lu(A, S);
 
     return lu_solve(res, b);

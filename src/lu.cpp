@@ -177,7 +177,6 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
 }
 
 
-// TODO test this function
 /** Allocate more space for the next column.
  *
  * See: Davis, Exercise 6.11.

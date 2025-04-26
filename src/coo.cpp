@@ -298,7 +298,7 @@ std::string COOMatrix::to_string(bool verbose, csint threshold) const
         ss << std::endl;
         if (nnz_ < threshold) {
             // Print all elements
-            write_elems_(ss, 0, nnz_);  // FIXME memory leak?
+            write_elems_(ss, 0, nnz_);
         } else {
             // Print just the first and last Nelems non-zero elements
             int Nelems = 3;

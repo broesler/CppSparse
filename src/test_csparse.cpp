@@ -405,12 +405,12 @@ TEST_CASE("COOMatrix from (v, i, j) literals.", "[COOMatrix]")
                 "(2, 1): 1.7\n";
 
             SECTION("Print from function") {
-                A.print(s, true);  // FIXME memory leak?
+                A.print(s, true);
                 REQUIRE(s.str() == expect);
             }
 
             SECTION("Print from operator<< overload") {
-                s << A;  // FIXME memory leak?
+                s << A;
                 REQUIRE(s.str() == expect);
             }
         }
@@ -555,12 +555,12 @@ TEST_CASE("CSCMatrix", "[CSCMatrix]")
                 "(1, 3): 0.9\n";
 
             SECTION("Print from function") {
-                C.print(s, true);  // FIXME memory leak?
+                C.print(s, true);
                 REQUIRE(s.str() == expect);
             }
 
             SECTION("Print from operator<< overload") {
-                s << C;  // FIXME memory leak?
+                s << C;
                 REQUIRE(s.str() == expect);
             }
         }
@@ -2484,7 +2484,6 @@ TEST_CASE("Cholesky Factorization")
     }
 
     SECTION("Update Cholesky") {
-        // TODO test with AMDOrder::APlusAT ordering
         SymbolicChol S = schol(A, AMDOrder::Natural);
         CSCMatrix L = chol(A, S);
 

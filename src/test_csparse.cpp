@@ -2484,6 +2484,7 @@ TEST_CASE("Cholesky Factorization")
     }
 
     SECTION("Update Cholesky") {
+        // TODO test with AMDOrder::APlusAT ordering
         SymbolicChol S = schol(A, AMDOrder::Natural);
         CSCMatrix L = chol(A, S);
 
@@ -2525,8 +2526,18 @@ TEST_CASE("Cholesky Factorization")
     }
 
     SECTION("Exercise 4.3: Solve Lx = b") {
+        AMDOrder order;
+
+        SECTION("Natural") {
+            order = AMDOrder::Natural;
+        }
+
+        SECTION("APlusAT") {
+            order = AMDOrder::APlusAT;
+        }
+
         // Compute the numeric factorization
-        SymbolicChol S = schol(A);
+        SymbolicChol S = schol(A, order);
         CSCMatrix L = chol(A, S);
 
         // Create RHS for Lx = b
@@ -2555,8 +2566,18 @@ TEST_CASE("Cholesky Factorization")
     }
 
     SECTION("Exercise 4.4: Solve L^T x = b") {
+        AMDOrder order;
+
+        SECTION("Natural") {
+            order = AMDOrder::Natural;
+        }
+
+        SECTION("APlusAT") {
+            order = AMDOrder::APlusAT;
+        }
+
         // Compute the numeric factorization
-        SymbolicChol S = schol(A);
+        SymbolicChol S = schol(A, order);
         CSCMatrix L = chol(A, S);
 
         // Create RHS for Lx = b

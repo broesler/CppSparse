@@ -137,7 +137,7 @@ class CSCMatrix
          * @param nzmax  maximum number of non-zeros. If `nzmax <= A.nzmax()`,
          *        then `nzmax` will be set to `A.nnz()`.
          */
-        void realloc(csint nzmax=0);
+        virtual void realloc(csint nzmax=0);
 
         //----------------------------------------------------------------------
         //        Accessors

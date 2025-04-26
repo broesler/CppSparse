@@ -125,6 +125,23 @@ LUResult lu(
 );
 
 
+/** Reallocate memory for L or U in the LU decomposition.
+ *
+ * This function reallocates memory for the L or U matrix in the LU
+ * decomposition. It is used to ensure that the matrix has enough space for
+ * the non-zero entries. It begins with an overly conservative estimate of the
+ * number of non-zero entries, and then halves the size until it finds a 
+ * size that can be allocated, but is at least the minimum size.
+ *
+ * @param R  the matrix to reallocate
+ * @param k  the current column of the matrix
+ * @param lower  true if reallocating L, false if reallocating U
+ *
+ * @throws std::bad_alloc if memory cannot be allocated.
+ */
+void lu_realloc(CSCMatrix& R, csint k, bool lower);
+
+
 /** Compute the numeric LU decomposition of A with known sparsity pattern.
  *
  * See: Davis, Exercise 6.4.

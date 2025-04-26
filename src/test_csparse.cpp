@@ -19,6 +19,7 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <new>         // bad_alloc
 #include <numeric>    // iota
 #include <optional>   // nullopt
 #include <random>
@@ -3821,6 +3822,141 @@ TEST_CASE("Exercise 6.7: Crout's method LU Factorization", "[ex6.7]")
         CSCMatrix PA = A.permute_rows(res.p_inv).to_canonical();
 
         compare_matrices(LU, PA);
+    }
+}
+
+
+TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11]")
+{
+    // Subclass CSCMatrix to override the realloc function
+    class LowMemoryMatrix : public CSCMatrix {
+        csint fail_thresh_ = 1000;             // threshold for realloc failure
+        std::vector<csint> realloc_attempts_;  // log realloc attempts
+
+    public:
+        LowMemoryMatrix(Shape shape, csint fail_thresh) 
+            : CSCMatrix(shape), fail_thresh_(fail_thresh) 
+        {
+            for (csint i = 0; i < shape[0]; i++) {
+                assign(i, i, 1.0);
+            }
+        }
+
+        /** Override realloc to log the number of attempts.
+         * @param request  new capacity of the matrix
+         */
+        void realloc(csint request) override {
+            realloc_attempts_.push_back(request);
+
+            if (request > fail_thresh_) {
+                throw std::bad_alloc();
+            } else {
+                CSCMatrix::realloc(request);
+            }
+        }
+
+        /** Get the number of realloc attempts.
+         * @return vector of realloc attempts
+         */
+        std::vector<csint> get_realloc_attempts() const {
+            return realloc_attempts_;
+        }
+    };
+
+    // Create a low memory matrix with a small nzmax threshold
+    csint N = 100;
+    csint k = 3;    // arbitrary column index
+    csint nnz = N;  // arbitrary, defined the class to assign diagonal
+
+    bool lower = GENERATE(true, false);
+    CAPTURE(lower);
+
+    csint max_request = 2 * nnz + N;
+    csint min_request = lower ? nnz + N - k : nnz + k + 1;
+
+    double diff = max_request - min_request;
+    REQUIRE(diff > 0);
+    csint max_total_requests = 1 + static_cast<csint>(std::log2(diff));
+
+    // allocation failure threshold, requesets above threshold will fail
+    csint thresh;
+
+    // Expect results (see python/scripts/lu_realloc_calcs.py
+    // N: 100
+    // max request:  300
+    // --- lower:
+    // min request:  197
+    // requests:  [300, 248, 222, 209, 203, 200, 198]
+    // --- upper:
+    // min request:  104
+    // requests:  [300, 202, 153, 128, 116, 110, 107, 105]
+
+    SECTION("Test without failure: Single Request") {
+        thresh = 1000;  // min_request < max_request < threshold 
+        LowMemoryMatrix L {Shape {N, N}, thresh};
+
+        csint original_nzmax = L.nzmax();
+
+        REQUIRE_NOTHROW(lu_realloc(L, k, lower));
+        REQUIRE(L.nzmax() > original_nzmax);
+        REQUIRE(L.nzmax() == max_request);
+    }
+
+    SECTION("Test without failure: Multiple Requests") {
+        thresh = 200;  // min_request < threshold < max_request
+        LowMemoryMatrix L {Shape {N, N}, thresh};
+
+        csint original_nzmax = L.nzmax();
+
+        REQUIRE_NOTHROW(lu_realloc(L, k, lower));
+
+        REQUIRE(L.nzmax() > original_nzmax);
+
+        std::vector<csint> requests = L.get_realloc_attempts();
+
+        // std::cout << "--- Test without failure:" << std::endl;
+        // if (lower) {
+        //     std::cout << "(lower) ";
+        // } else {
+        //     std::cout << "(upper) ";
+        // }
+        // std::cout << "requests: " << requests << std::endl;
+
+        CHECK(requests.front() == max_request);
+        CHECK(requests.back() >= min_request);
+        CHECK(requests.size() <= max_total_requests);
+    }
+
+    SECTION("Test with failure") {
+        thresh = 75;  // threshold < min_request < max_request
+        LowMemoryMatrix L {Shape {N, N}, thresh};
+
+        // --- Redirect std::cerr to capture the error message ---
+        // Save the original cerr buffer
+        std::streambuf* original_cerr = std::cerr.rdbuf();
+
+        // Redirect cerr to a stringstream
+        std::stringstream captured_cerr;
+        std::cerr.rdbuf(captured_cerr.rdbuf());
+
+        REQUIRE_THROWS_AS(lu_realloc(L, k, lower), std::bad_alloc);
+
+        // Restore the original cerr buffer
+        std::cerr.rdbuf(original_cerr);
+
+        std::vector<csint> requests = L.get_realloc_attempts();
+
+        // std::cout << "--- Test with failure:" << std::endl;
+        // if (lower) {
+        //     std::cout << "(lower) ";
+        // } else {
+        //     std::cout << "(upper) ";
+        // }
+        // std::cout << "requests: " << requests << std::endl;
+
+        REQUIRE(requests.front() == max_request);
+        REQUIRE(requests.back() >= min_request);
+        CHECK(requests.size() <= static_cast<csint>(std::log2(max_request - min_request)) + 1);
     }
 }
 

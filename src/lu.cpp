@@ -189,16 +189,16 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
  *
  * @throws std::bad_alloc if memory cannot be allocated.
  */
-static inline void lu_realloc(CSCMatrix& R, csint k, bool lower)
+void lu_realloc(CSCMatrix& R, csint k, bool lower)
 {
     auto [M, N] = R.shape();
-    csint nzmax = 2 * R.nzmax() + M;
+    csint nzmax = 2 * R.nnz() + M;
     csint nzmin = lower ? (R.nnz() + M - k) : (R.nnz() + k + 1);
 
     // Try the nzmax size, then halve the distance to nzmin until it works
     csint size_req = nzmax;
     std::string err_msg;
-    
+
     while (size_req > nzmin) {
         try {
             R.realloc(size_req);
@@ -211,8 +211,10 @@ static inline void lu_realloc(CSCMatrix& R, csint k, bool lower)
 
     // if we get here, we failed to allocate memory
     if (!err_msg.empty()) {
-        std::cerr << "Error: " << err_msg << std::endl;
-        std::cerr << "Failed to allocate memory for LU factorization." << std::endl;
+        // Print error message with file and line number
+        std::cerr << "Error in " << __FILE__ << ":" << __LINE__ << ": " 
+            << err_msg << std::endl;
+        std::cerr << "    Failed to allocate memory for LU factorization." << std::endl;
         throw std::bad_alloc();
     }
 }

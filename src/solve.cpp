@@ -692,8 +692,6 @@ std::vector<csint> topological_order(
         }
     }
 
-    assert(xi.size() == N);
-
     if (forward) {
         // Reverse the order of the stack to get the topological order
         return std::vector<csint>(xi.rbegin(), xi.rend());

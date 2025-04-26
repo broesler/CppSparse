@@ -2529,10 +2529,14 @@ TEST_CASE("Cholesky Factorization")
         SymbolicChol S = schol(A);
         CSCMatrix L = chol(A, S);
 
-        // TODO zero-out a few rows of expect to make it "sparse"
         // Create RHS for Lx = b
         std::vector<double> expect(N);
         std::iota(expect.begin(), expect.end(), 1);
+        // zero-out a few rows of expect to make it "sparse"
+        for (const auto& i : {2, 4, 7, 9}) {
+            expect[i] = 0;
+        }
+
         const std::vector<double> b_vals = L * expect;
 
         // Create the sparse RHS matrix
@@ -2558,6 +2562,11 @@ TEST_CASE("Cholesky Factorization")
         // Create RHS for Lx = b
         std::vector<double> expect(N);
         std::iota(expect.begin(), expect.end(), 1);
+        // zero-out a few rows of expect to make it "sparse"
+        for (const auto& i : {2, 4, 7, 9}) {
+            expect[i] = 0;
+        }
+
         const std::vector<double> b_vals = L.T() * expect;
 
         // Create the sparse RHS matrix

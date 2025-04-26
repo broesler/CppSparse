@@ -609,10 +609,10 @@ SparseSolution chol_lsolve(
 
     // Solve Lx = b
     for (const auto& j : xi) {
-        // TODO cache x[j] in a reference
-        x[j] /= L.v_[L.p_[j]];
+        double& x_val = x[j];  // cache diagonal value
+        x_val /= L.v_[L.p_[j]];
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
-            x[L.i_[p]] -= L.v_[p] * x[j];
+            x[L.i_[p]] -= L.v_[p] * x_val;
         }
     }
 
@@ -651,11 +651,11 @@ SparseSolution chol_ltsolve(
 
     // Solve Lx = b
     for (const auto& j : xi) {
-        // TODO cache x[j] in a reference
+        double& x_val = x[j];  // cache diagonal value
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
-            x[j] -= L.v_[p] * x[L.i_[p]];
+            x_val -= L.v_[p] * x[L.i_[p]];
         }
-        x[j] /= L.v_[L.p_[j]];
+        x_val /= L.v_[L.p_[j]];
     }
 
     return {xi, x};

@@ -2312,7 +2312,7 @@ TEST_CASE("Permuted triangular solvers")
 
 
 /*------------------------------------------------------------------------------
- *         Decompositions
+ *         Chapter 4: Cholesky Factorization
  *----------------------------------------------------------------------------*/
 TEST_CASE("Cholesky Factorization")
 {
@@ -2833,6 +2833,9 @@ TEST_CASE("Cholesky Factorization")
 }  // cholesky
 
 
+// -----------------------------------------------------------------------------
+//         Chapter 5: QR Factorization
+// -----------------------------------------------------------------------------
 TEST_CASE("Householder Reflection")
 {
     SECTION("Unit x") {
@@ -3350,6 +3353,9 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
 }
 
 
+// -----------------------------------------------------------------------------
+//         Chapter 6: LU Factorization
+// -----------------------------------------------------------------------------
 /** Define a helper function to test LU decomposition */
 LUResult lu_test(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural)
 {

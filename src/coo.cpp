@@ -185,6 +185,7 @@ COOMatrix& COOMatrix::assign(
         }
     }
 
+    // TODO inefficient. Track new max in loop above instead
     M_ = std::max(M_, *std::max_element(rows.begin(), rows.end()) + 1);
     N_ = std::max(N_, *std::max_element(cols.begin(), cols.end()) + 1);
 

@@ -272,9 +272,6 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     py::class_<cs::CSCMatrix>(m, "CSCMatrix")
         .def(py::init<>())
-        // Define the copy constructor explicitly so pybind11 knows how to do
-        // the type conversion
-        .def(py::init<const cs::CSCMatrix&>(), "Copy constructor")
         .def(py::init<
             const std::vector<double>&,
             const std::vector<cs::csint>&,
@@ -349,16 +346,6 @@ PYBIND11_MODULE(csparse, m) {
         .def("band", py::overload_cast<cs::csint, cs::csint>
                         (&cs::CSCMatrix::band, py::const_))
         //
-        .def("gaxpy", &cs::CSCMatrix::gaxpy)
-        .def("gaxpy_row", &cs::CSCMatrix::gaxpy_row)
-        .def("gaxpy_col", &cs::CSCMatrix::gaxpy_col)
-        .def("gaxpy_block", &cs::CSCMatrix::gaxpy_block)
-        .def("gatxpy", &cs::CSCMatrix::gatxpy)
-        .def("gatxpy_row", &cs::CSCMatrix::gatxpy_row)
-        .def("gatxpy_col", &cs::CSCMatrix::gatxpy_col)
-        .def("gatxpy_block", &cs::CSCMatrix::gatxpy_block)
-        .def("sym_gaxpy", &cs::CSCMatrix::sym_gaxpy)
-        //
         .def("scale", &cs::CSCMatrix::scale)
         //
         .def("dot", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
@@ -410,6 +397,19 @@ PYBIND11_MODULE(csparse, m) {
     m.def("_davis_example_chol", &cs::davis_example_chol);
     m.def("_davis_example_qr", &cs::davis_example_qr, py::arg("add_diag")=0.0);
     m.def("_davis_example_amd", &cs::davis_example_amd);
+
+    // -------------------------------------------------------------------------
+    //         General Functions
+    // -------------------------------------------------------------------------
+    m.def("gaxpy", &cs::gaxpy);
+    m.def("gaxpy_row", &cs::gaxpy_row);
+    m.def("gaxpy_col", &cs::gaxpy_col);
+    m.def("gaxpy_block", &cs::gaxpy_block);
+    m.def("gatxpy", &cs::gatxpy);
+    m.def("gatxpy_row", &cs::gatxpy_row);
+    m.def("gatxpy_col", &cs::gatxpy_col);
+    m.def("gatxpy_block", &cs::gatxpy_block);
+    m.def("sym_gaxpy", &cs::sym_gaxpy);
 
     //--------------------------------------------------------------------------
     //        Utility Functions
@@ -537,7 +537,6 @@ PYBIND11_MODULE(csparse, m) {
     );
 
     m.def("dmperm", &cs::dmperm, py::arg("A"), py::arg("seed")=0);
-
 
     //--------------------------------------------------------------------------
     //      Solve functions

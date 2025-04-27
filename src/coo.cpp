@@ -177,17 +177,26 @@ COOMatrix& COOMatrix::assign(
     csint N = rows.size();
     assert(vals.size() == (N * N));
 
+    // Track maximum indices
+    csint max_row_idx = 0, 
+          max_col_idx = 0;
+
     for (csint i = 0; i < N; i++) {
+        csint row = rows[i];  // cache value
+        max_row_idx = std::max(max_row_idx, row);
+
         for (csint j = 0; j < N; j++) {
-            i_.push_back(rows[i]);
-            j_.push_back(cols[j]);
+            csint col = cols[j];  // cache value
+            max_col_idx = std::max(max_col_idx, col);
+            // Assign the indices and value
+            i_.push_back(row);
+            j_.push_back(col);
             v_.push_back(vals[i + j*N]);  // column-major order
         }
     }
 
-    // TODO inefficient. Track new max in loop above instead
-    M_ = std::max(M_, *std::max_element(rows.begin(), rows.end()) + 1);
-    N_ = std::max(N_, *std::max_element(cols.begin(), cols.end()) + 1);
+    M_ = std::max(M_, max_row_idx + 1);
+    N_ = std::max(N_, max_col_idx + 1);
 
     return *this;
 }

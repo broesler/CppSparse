@@ -1384,37 +1384,59 @@ bool CSCMatrix::is_valid(const bool sorted, const bool values) const
 {
     // Check number of columns
     if (p_.size() != (N_ + 1)) {
-        // std::cout << "Columns inconsistent!" << std::endl;
-        return false;
+        throw std::runtime_error("Number of columns inconsistent!");
     }
 
-    // TODO not sure how we're supposed to use O(M) space? Column counts can't
-    // be independently checked.
-    // A: for printing the matrix?
-    // A: to check for duplicates! We need to store the row indices of each
-    // column, which requires O(M) space. Then we need to sort them and go
-    // through the list to check for duplicates. This is O(M log M) time.
-    // See: `scipy.sparse._compressed._cs_matrix.check_format` 
-    //  for O(1) and O(|A|) checks.
-    //  TODO print to std::cerr
+    if (p_.front() != 0) {
+        throw std::runtime_error("First column index should be 0!");
+    }
 
+    if (p_.back() != nnz()) {
+        throw std::runtime_error("Column counts inconsistent!");
+    }
+
+    // Check array sizes
+    if (values) {
+        if (i_.size() != v_.size()) {
+            throw std::runtime_error("Indices and values sizes inconsistent!");
+        }
+
+        if (v_.empty()) {
+            throw std::runtime_error("No values!");
+        }
+    }
+
+    // See also: `scipy.sparse._compressed._cs_matrix.check_format` 
+    //  for O(1) and O(|A|) checks.
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             csint i = i_[p];
 
-            if (i > M_) {
-                // std::cout << "Invalid row index!" << std::endl;
-                return false;  // invalid row index
+            if (i < 0 || i > M_) {
+                throw std::runtime_error("Invalid row index!");
             }
 
             if (sorted && (p < (p_[j+1] - 1)) && (i > i_[p+1])) {
-                // std::cout << "Columns not sorted!" << std::endl;
-                return false;  // not sorted in ascending order
+                throw std::runtime_error("Columns not sorted!");
             }
 
-            if (values && v_[p] == 0.0) {
-                // std::cout << "Explicit zeros!" << std::endl;
-                return false;  // no zeros allowed
+            if (values && v_[p] == 0) {
+                throw std::runtime_error("Explicit zeros!");
+            }
+
+            // Quick check for duplicates, but won't catch all cases
+            if ((p < (p_[j+1] - 1)) && (i == i_[p+1])) {
+                throw std::runtime_error("Duplicate entries exist!");
+            }
+        }
+
+        // At this point, matrix is valid up to column j
+        // Check for duplicates in the column
+        if (sorted) {
+            for (csint p = p_[j]; p < p_[j+1]-1; p++) {
+                if (i_[p] == i_[p+1]) {
+                    throw std::runtime_error("Duplicate entries exist!");
+                }
             }
         }
     }

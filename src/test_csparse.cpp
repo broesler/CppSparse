@@ -1648,22 +1648,32 @@ TEST_CASE("Exercise 2.16: CSC from dense")
 // "cs_ok"
 TEST_CASE("Exercise 2.12: Validity check")
 {
-    COOMatrix C = davis_example_small();
+    // TODO create a dummy class that build an invalid matrix to test *all*
+    // cases of is_valid()
     CSCMatrix A = davis_example_small().compress();
 
     constexpr bool SORTED = true;
     constexpr bool VALUES = true;
 
-    REQUIRE(A.is_valid());
-    REQUIRE_FALSE(A.is_valid(SORTED));
-    REQUIRE_FALSE(A.is_valid(SORTED));
+    REQUIRE(A.is_valid(!SORTED, !VALUES));
+    REQUIRE_THROWS_WITH(A.is_valid(), "Columns not sorted!");
+    REQUIRE_THROWS_WITH(A.is_valid(SORTED, !VALUES), "Columns not sorted!");
 
-    REQUIRE(A.sort().is_valid(SORTED));
-    REQUIRE(A.sort().is_valid(SORTED, VALUES));  // no non-zeros
+    REQUIRE(A.sort().is_valid(SORTED, !VALUES));
+    REQUIRE(A.sort().is_valid());  // no non-zeros
 
     // Add explicit non-zeros
-    A = C.assign(0, 1, 0.0).compress();
-    REQUIRE_FALSE(A.is_valid(!SORTED, VALUES));
+    A = davis_example_small().assign(0, 1, 0.0).compress();
+
+    REQUIRE_THROWS_WITH(A.is_valid(!SORTED), "Explicit zeros!");
+    REQUIRE_THROWS_WITH(A.sort().is_valid(), "Explicit zeros!");
+
+    // Add duplicate entry
+    A = davis_example_small().assign(1, 1, 1.0).compress();
+
+    // Un-sorted columns will fail before duplicates are checked
+    REQUIRE_THROWS_WITH(A.is_valid(), "Columns not sorted!");
+    REQUIRE_THROWS_WITH(A.sort().is_valid(), "Duplicate entries exist!");
 }
 
 

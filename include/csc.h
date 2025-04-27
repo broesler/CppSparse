@@ -789,7 +789,7 @@ class CSCMatrix
          *
          * @return true if matrix is valid compressed sparse column format.
          */
-        bool is_valid(const bool sorted=false, const bool values=false) const;
+        bool is_valid(const bool sorted=true, const bool values=true) const;
 
         /** Concatenate two matrices horizontally.
          *

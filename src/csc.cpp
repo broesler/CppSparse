@@ -608,19 +608,20 @@ CSCMatrix CSCMatrix::band(const csint kl, const csint ku) const
 /*------------------------------------------------------------------------------
        Math Operations
 ----------------------------------------------------------------------------*/
-std::vector<double> CSCMatrix::gaxpy(
+std::vector<double> gaxpy(
+    const CSCMatrix& A,
     const std::vector<double>& x,
     const std::vector<double>& y
-    ) const
+)
 {
-    assert(M_ == y.size());  // addition
-    assert(N_ == x.size());  // multiplication
+    assert(A.M_ == y.size());  // addition
+    assert(A.N_ == x.size());  // multiplication
 
     std::vector<double> out = y;  // copy the input vector
 
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
-            out[i_[p]] += v_[p] * x[j];
+    for (csint j = 0; j < A.N_; j++) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            out[A.i_[p]] += A.v_[p] * x[j];
         }
     }
 
@@ -628,19 +629,20 @@ std::vector<double> CSCMatrix::gaxpy(
 };
 
 
-std::vector<double> CSCMatrix::gatxpy(
+std::vector<double> gatxpy(
+    const CSCMatrix& A,
     const std::vector<double>& x,
     const std::vector<double>& y
-    ) const
+)
 {
-    assert(M_ == x.size());  // multiplication
-    assert(N_ == y.size());  // addition
+    assert(A.M_ == x.size());  // multiplication
+    assert(A.N_ == y.size());  // addition
 
     std::vector<double> out = y;  // copy the input vector
 
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
-            out[j] += v_[p] * x[i_[p]];
+    for (csint j = 0; j < A.N_; j++) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            out[j] += A.v_[p] * x[A.i_[p]];
         }
     }
 
@@ -648,30 +650,31 @@ std::vector<double> CSCMatrix::gatxpy(
 };
 
 
-std::vector<double> CSCMatrix::sym_gaxpy(
+std::vector<double> sym_gaxpy(
+    const CSCMatrix& A,
     const std::vector<double>& x,
     const std::vector<double>& y
-    ) const
+)
 {
-    assert(M_ == N_);  // matrix must be square to be symmetric
-    assert(N_ == x.size());
+    assert(A.M_ == A.N_);  // matrix must be square to be symmetric
+    assert(A.N_ == x.size());
     assert(x.size() == y.size());
 
     std::vector<double> out = y;  // copy the input vector
 
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
-            csint i = i_[p];
+    for (csint j = 0; j < A.N_; j++) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            csint i = A.i_[p];
 
             if (i > j)
                 continue;  // skip lower triangular
 
             // Add the upper triangular elements
-            out[i] += v_[p] * x[j];
+            out[i] += A.v_[p] * x[j];
 
             // If off-diagonal, also add the symmetric element
             if (i < j)
-                out[j] += v_[p] * x[i];
+                out[j] += A.v_[p] * x[i];
         }
     }
 
@@ -679,29 +682,30 @@ std::vector<double> CSCMatrix::sym_gaxpy(
 };
 
 
-std::vector<double> CSCMatrix::gaxpy_col(
+std::vector<double> gaxpy_col(
+    const CSCMatrix& A,
     const std::vector<double>& X,
     const std::vector<double>& Y
-    ) const
+)
 {
-    assert(X.size() % N_ == 0);  // check that X.size() is a multiple of N_
-    assert(Y.size() == M_ * (X.size() / N_));
+    assert(X.size() % A.N_ == 0);  // check that X.size() is a multiple of A.N_
+    assert(Y.size() == A.M_ * (X.size() / A.N_));
 
     std::vector<double> out = Y;  // copy the input matrix
 
-    csint K = X.size() / N_;  // number of columns in X
+    csint K = X.size() / A.N_;  // number of columns in X
 
     // For each column of X
     for (csint k = 0; k < K; k++) {
         // Compute one column of Y (see gaxpy)
-        for (csint j = 0; j < N_; j++) {
-            double x_val = X[j + k * N_];  // cache value
+        for (csint j = 0; j < A.N_; j++) {
+            double x_val = X[j + k * A.N_];  // cache value
 
             // Only compute if x_val is non-zero
             if (x_val != 0.0) {
-                for (csint p = p_[j]; p < p_[j+1]; p++) {
+                for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
                     // Indexing in column-major order
-                    out[i_[p] + k * M_] += v_[p] * x_val;
+                    out[A.i_[p] + k * A.M_] += A.v_[p] * x_val;
                 }
             }
         }
@@ -711,34 +715,35 @@ std::vector<double> CSCMatrix::gaxpy_col(
 }
 
 
-std::vector<double> CSCMatrix::gaxpy_block(
+std::vector<double> gaxpy_block(
+    const CSCMatrix& A,
     const std::vector<double>& X,
     const std::vector<double>& Y
-    ) const
+)
 {
-    assert(X.size() % N_ == 0);  // check that X.size() is a multiple of N_
-    assert(Y.size() == M_ * (X.size() / N_));
+    assert(X.size() % A.N_ == 0);  // check that X.size() is a multiple of A.N_
+    assert(Y.size() == A.M_ * (X.size() / A.N_));
 
     std::vector<double> out = Y;  // copy the input matrix
 
-    csint K = X.size() / N_;  // number of columns in X
+    csint K = X.size() / A.N_;  // number of columns in X
 
     const csint BLOCK_SIZE = 32;  // block size for column operations
 
     // For each column of X
     for (csint k = 0; k < K; k++) {
         // Take a block of columns
-        for (csint j_start = 0; j_start < N_; j_start += BLOCK_SIZE) {
-            csint j_end = std::min(j_start + BLOCK_SIZE, N_);
+        for (csint j_start = 0; j_start < A.N_; j_start += BLOCK_SIZE) {
+            csint j_end = std::min(j_start + BLOCK_SIZE, A.N_);
             // Compute one column of Y (see gaxpy)
             for (csint j = j_start; j < j_end; j++) {
-                double x_val = X[j + k * N_];  // cache value
+                double x_val = X[j + k * A.N_];  // cache value
 
                 // Only compute if x_val is non-zero
                 if (x_val != 0.0) {
-                    for (csint p = p_[j]; p < p_[j+1]; p++) {
+                    for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
                         // Indexing in column-major order
-                        out[i_[p] + k * M_] += v_[p] * x_val;
+                        out[A.i_[p] + k * A.M_] += A.v_[p] * x_val;
                     }
                 }
             }
@@ -749,29 +754,30 @@ std::vector<double> CSCMatrix::gaxpy_block(
 }
 
 
-std::vector<double> CSCMatrix::gaxpy_row(
+std::vector<double> gaxpy_row(
+    const CSCMatrix& A,
     const std::vector<double>& X,
     const std::vector<double>& Y
-    ) const
+)
 {
-    assert(X.size() % N_ == 0);  // check that X.size() is a multiple of N_
-    assert(Y.size() == M_ * (X.size() / N_));
+    assert(X.size() % A.N_ == 0);  // check that X.size() is a multiple of A.N_
+    assert(Y.size() == A.M_ * (X.size() / A.N_));
 
     std::vector<double> out = Y;  // copy the input matrix
 
-    csint K = X.size() / N_;  // number of columns in X
+    csint K = X.size() / A.N_;  // number of columns in X
 
     // For each column of X
     for (csint k = 0; k < K; k++) {
         // Compute one column of Y (see gaxpy)
-        for (csint j = 0; j < N_; j++) {
+        for (csint j = 0; j < A.N_; j++) {
             double x_val = X[k + j * K];  // cache value (row-major indexing)
 
             // Only compute if x_val is non-zero
             if (x_val != 0.0) {
-                for (csint p = p_[j]; p < p_[j+1]; p++) {
+                for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
                     // Indexing in row-major order
-                    out[k + i_[p] * K] += v_[p] * x_val;
+                    out[k + A.i_[p] * K] += A.v_[p] * x_val;
                 }
             }
         }
@@ -781,25 +787,26 @@ std::vector<double> CSCMatrix::gaxpy_row(
 }
 
 
-std::vector<double> CSCMatrix::gatxpy_col(
+std::vector<double> gatxpy_col(
+    const CSCMatrix& A,
     const std::vector<double>& X,
     const std::vector<double>& Y
-    ) const
+)
 {
-    assert(X.size() % M_ == 0);  // check that X.size() is a multiple of M_
-    assert(Y.size() == N_ * (X.size() / M_));
+    assert(X.size() % A.M_ == 0);  // check that X.size() is a multiple of A.M_
+    assert(Y.size() == A.N_ * (X.size() / A.M_));
 
     std::vector<double> out = Y;  // copy the input matrix
 
-    csint K = X.size() / M_;  // number of columns in X
+    csint K = X.size() / A.M_;  // number of columns in X
 
     // For each column of X
     for (csint k = 0; k < K; k++) {
         // Compute one column of Y (see gaxpy)
-        for (csint j = 0; j < N_; j++) {
-            for (csint p = p_[j]; p < p_[j+1]; p++) {
+        for (csint j = 0; j < A.N_; j++) {
+            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
                 // Indexing in column-major order
-                out[j + k * N_] += v_[p] * X[i_[p] + k * M_];
+                out[j + k * A.N_] += A.v_[p] * X[A.i_[p] + k * A.M_];
             }
         }
     }
@@ -808,30 +815,31 @@ std::vector<double> CSCMatrix::gatxpy_col(
 }
 
 
-std::vector<double> CSCMatrix::gatxpy_block(
+std::vector<double> gatxpy_block(
+    const CSCMatrix& A,
     const std::vector<double>& X,
     const std::vector<double>& Y
-    ) const
+)
 {
-    assert(X.size() % M_ == 0);  // check that X.size() is a multiple of N_
-    assert(Y.size() == N_ * (X.size() / M_));
+    assert(X.size() % A.M_ == 0);  // check that X.size() is a multiple of A.N_
+    assert(Y.size() == A.N_ * (X.size() / A.M_));
 
     std::vector<double> out = Y;  // copy the input matrix
 
-    csint K = X.size() / M_;  // number of columns in X
+    csint K = X.size() / A.M_;  // number of columns in X
 
     const csint BLOCK_SIZE = 32;  // block size for column operations
 
     // For each column of X
     for (csint k = 0; k < K; k++) {
         // Take a block of columns
-        for (csint j_start = 0; j_start < N_; j_start += BLOCK_SIZE) {
-            csint j_end = std::min(j_start + BLOCK_SIZE, N_);
+        for (csint j_start = 0; j_start < A.N_; j_start += BLOCK_SIZE) {
+            csint j_end = std::min(j_start + BLOCK_SIZE, A.N_);
             // Compute one column of Y (see gaxpy)
             for (csint j = j_start; j < j_end; j++) {
-                for (csint p = p_[j]; p < p_[j+1]; p++) {
+                for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
                     // Indexing in column-major order
-                    out[j + k * N_] += v_[p] * X[i_[p] + k * M_];
+                    out[j + k * A.N_] += A.v_[p] * X[A.i_[p] + k * A.M_];
                 }
             }
         }
@@ -841,25 +849,26 @@ std::vector<double> CSCMatrix::gatxpy_block(
 }
 
 
-std::vector<double> CSCMatrix::gatxpy_row(
+std::vector<double> gatxpy_row(
+    const CSCMatrix& A,
     const std::vector<double>& X,
     const std::vector<double>& Y
-    ) const
+)
 {
-    assert(X.size() % M_ == 0);  // check that X.size() is a multiple of N_
-    assert(Y.size() == N_ * (X.size() / M_));
+    assert(X.size() % A.M_ == 0);  // check that X.size() is a multiple of A.N_
+    assert(Y.size() == A.N_ * (X.size() / A.M_));
 
     std::vector<double> out = Y;  // copy the input matrix
 
-    csint K = X.size() / M_;  // number of columns in X
+    csint K = X.size() / A.M_;  // number of columns in X
 
     // For each column of X
     for (csint k = 0; k < K; k++) {
         // Compute one column of Y (see gaxpy)
-        for (csint j = 0; j < N_; j++) {
-            for (csint p = p_[j]; p < p_[j+1]; p++) {
+        for (csint j = 0; j < A.N_; j++) {
+            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
                 // Indexing in row-major order
-                out[k + j * K] += v_[p] * X[k + i_[p] * K];
+                out[k + j * K] += A.v_[p] * X[k + A.i_[p] * K];
             }
         }
     }

@@ -398,7 +398,7 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     // copy of R.p_inv will fail.
     std::vector<csint> p_inv(N, -1);
 
-    // TODO might be a way to avoid permuting/re-permuting the row indices?
+    // NOTE might be a way to avoid permuting/re-permuting the row indices?
     // The indices of L have already been permuted to the p_inv ordering by
     // the previous call to cs::lu(), so un-permute them here.
     const std::vector<csint> R_p = inv_permute(R.p_inv);

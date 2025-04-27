@@ -46,7 +46,6 @@ V, beta, R = QRres.V, QRres.beta, QRres.R
 V = V.toarray()
 R = R.toarray()
 
-# TODO can we turn off the row permutation in sqr/vcount?
 # Get the actual Q matrix, don't forget the row permutation!
 p = csparse.inv_permute(QRres.p_inv)
 Q = csparse.apply_qright(V, beta, p)

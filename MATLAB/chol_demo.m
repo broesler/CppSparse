@@ -139,7 +139,7 @@ assert(Anz_norm < 1e-15)
 test_norm = norm(AmLLT, 'fro') / norm(A, 'fro');
 assert(test_norm < droptol)
 
-% TODO graph not implemented in octave
+% NOTE graph not implemented in octave
 % G = graph(A);
 % Gp = graph(R + R');
 % plot(G);

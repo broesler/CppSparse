@@ -1370,6 +1370,7 @@ double CSCMatrix::fronorm() const
 }
 
 
+// Exercise 2.12
 bool CSCMatrix::is_valid(const bool sorted, const bool values) const
 {
     // Check number of columns
@@ -1384,6 +1385,9 @@ bool CSCMatrix::is_valid(const bool sorted, const bool values) const
     // A: to check for duplicates! We need to store the row indices of each
     // column, which requires O(M) space. Then we need to sort them and go
     // through the list to check for duplicates. This is O(M log M) time.
+    // See: `scipy.sparse._compressed._cs_matrix.check_format` 
+    //  for O(1) and O(|A|) checks.
+    //  TODO print to std::cerr
 
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {

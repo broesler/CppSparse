@@ -20,7 +20,7 @@ SAVE_FIGS = True
 
 # Ms = np.r_[10, 20, 50, 100]
 Ms = np.r_[10, 20, 50, 100, 200, 500, 1000]
-# Ms = [10, 20, 50, 100, 200, 500, 1000, 2000]  # 5000 is SLOW
+# Ms = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000]  # 5000 is SLOW
 density = 0.2
 
 times = np.zeros(len(Ms))
@@ -29,37 +29,39 @@ log_times = np.zeros(len(Ms))
 fig1, ax = plt.subplots(num=1, clear=True)
 
 # Create a random sparse matrix and time row indexing
-for k, M in tqdm(enumerate(Ms)):
-    print('M = ', M)
+with tqdm(total=len(Ms), desc=f"M", leave=False) as pbar0:
+    for k, M in enumerate(Ms):
+        A = sparse.random_array((M, M), density=density, format='csc')
 
-    A = sparse.random_array((M, M), density=density, format='csc')
+        # Time row indexing for each row and average
+        row_times = np.zeros(M)
 
-    row_times = np.zeros(M)
+        with tqdm(total=M, desc="i", leave=False) as pbar1:
+            for i in range(M):
+                ts = timeit.repeat(lambda: A[i, :], repeat=5, number=7)
+                row_times[i] = np.mean(ts)
+                pbar1.update(1)
 
-    # Time row indexing for each row and average
-    with tqdm(total=M, leave=False) as pbar:
-        for i in range(M):
-            ts = timeit.repeat(lambda: A[i, :])
-            row_times[i] = np.mean(ts)
-            pbar.update(1)
+        times[k] = np.mean(row_times)
 
-    times[k] = np.mean(row_times)
+        if M == 1000:
+            # Plot the distribution of times for each row
+            # hist(mean(row_times, 1))
 
-    if M == 1000:
-        # Plot the distribution of times for each row
-        # hist(mean(row_times, 1))
+            # Plot the of times for each row
+            ax.scatter(0, row_times[0], marker='x', c='C3')
+            ax.scatter(np.arange(1, M-1), row_times[1:-1], marker='.', c='C0')
+            ax.scatter(M-1, row_times[-1], marker='x', c='C3')
+            ax.set(xlabel='Row index',
+                ylabel='Time to index row (s)',
+                title=f"Density = {density:0.2f}")
 
-        # Plot the of times for each row
-        ax.scatter(0, row_times[0], marker='x', c='C3')
-        ax.scatter(np.arange(1, M-1), row_times[1:-1], marker='.', c='C0')
-        ax.scatter(M-1, row_times[-1], marker='x', c='C3')
-        ax.set(xlabel='Row index',
-               ylabel='Time to index row (s)',
-               title=f"Density = {density:0.2f}")
+        # Compute the sum of the log of each column size
+        # col_sizes = np.sum(A ~= 0, axis=1)
+        # log_times[k] = np.mean(np.log(col_sizes))
 
-    # Compute the sum of the log of each column size
-    # col_sizes = np.sum(A ~= 0, axis=1)
-    # log_times[k] = np.mean(np.log(col_sizes))
+        pbar0.set_postfix(M=M)
+        pbar0.update(1)
 
 # ------------------------------------------------------------------------------
 #        Plot the results

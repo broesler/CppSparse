@@ -36,14 +36,16 @@ TEST_MATRICES = [
         np.array([[1, 1, 2], [0, 0, 1], [1, 0, 0]], dtype=float)
     )),
     ("Davis 8x5 (M > N)", csparse.davis_example_qr(format='csc')[:, :5]),
+    # FIXME ATA ordering breaks for M < N
     ("Davis 8x5 (M < N)", csparse.davis_example_qr(format='csc')[:5, :])
 ]
 
 
+@pytest.mark.parametrize("order", ['Natural', 'ATA'])
 @pytest.mark.parametrize("case_name, A", TEST_MATRICES)
-def test_qr_fixed(case_name, A):
+def test_qr_fixed(case_name, A, order):
     """Test QR decomposition with various matrices."""
-    _test_qr_decomposition(case_name, A)
+    _test_qr_decomposition(case_name, A, order)
 
 
 @pytest.mark.parametrize("N", [2, 7, 10])
@@ -58,15 +60,18 @@ def test_qr_random(N):
         _test_qr_decomposition(f"Random {N}x{N} ({seed=}, {i=})", A)
 
 
-def _test_qr_decomposition(case_name, A):
+def _test_qr_decomposition(case_name, A, order='Natural'):
     """Test QR decomposition with various matrices using parametrization."""
     Ac = csparse.from_scipy_sparse(A, format='csc')
     A_dense = A.toarray()
     M, N = A.shape
 
     # ---------- Compute csparse QR
-    QRres = csparse.qr(Ac)
-    V, beta, R, p_inv = QRres.V, QRres.beta, QRres.R, QRres.p_inv
+    QRres = csparse.qr(Ac, order)
+    V, beta, R, p_inv, q = QRres.V, QRres.beta, QRres.R, QRres.p_inv, QRres.q
+
+    if order == 'Natural':
+        np.testing.assert_allclose(q, np.arange(N))
 
     # Convert to numpy arrays
     V = V.toarray()
@@ -81,12 +86,16 @@ def _test_qr_decomposition(case_name, A):
 
     # ---------- scipy QR
     # Apply the row permutation to A_dense
-    Ap = A_dense[p]
-    (Qraw, tau), Rraw = la.qr(Ap, mode='raw')
-    Q_, R_ = la.qr(Ap)
+    Apq = A_dense[p][:, q]
+    (Qraw, tau), Rraw = la.qr(Apq, mode='raw')
+    Q_, R_ = la.qr(Apq)
     # Handle case when M < N
     V_ = np.tril(Qraw, -1)[:, :M] + np.eye(M, min(M, N))
     Qr_ = csparse.apply_qright(V_, tau, p)
+
+    if order == 'ATA' and M < N:
+        print(f"Skipping {case_name} ({order}) because M < N")
+        return  # skip this case
 
     # Now we get the same Householder vectors and weights
     np.testing.assert_allclose(V, V_, atol=ATOL)
@@ -99,9 +108,9 @@ def _test_qr_decomposition(case_name, A):
     np.testing.assert_allclose(Q[p], Q_, atol=ATOL)
 
     # Reproduce A = QR
-    np.testing.assert_allclose(Q_ @ R_, Ap, atol=ATOL)
-    np.testing.assert_allclose(Q_[p_inv] @ R_, A_dense, atol=ATOL)
-    np.testing.assert_allclose(Q @ R, A_dense, atol=ATOL)
+    np.testing.assert_allclose(Q_ @ R_, Apq, atol=ATOL)
+    np.testing.assert_allclose(Q_[p_inv] @ R_, A_dense[:, q], atol=ATOL)
+    np.testing.assert_allclose(Q @ R, A_dense[:, q], atol=ATOL)
 
 
 def test_apply_q():

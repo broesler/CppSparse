@@ -38,8 +38,8 @@ A_dense = A.toarray()
 #         Compute QR decomposition with csparse
 # -----------------------------------------------------------------------------
 # ---------- Compute using Householder reflections
-# QRres = csparse.qr(Ac, order='Natural')
-QRres = csparse.qr(Ac, order='ATA')
+order = 'ATA'  # 'Natural' or 'ATA'
+QRres = csparse.qr(Ac, order=order)
 
 V, beta, R, p_inv, q = QRres.V, QRres.beta, QRres.R, QRres.p_inv, QRres.q
 
@@ -57,20 +57,29 @@ Q = csparse.apply_qright(V, beta, p)
 # -----------------------------------------------------------------------------
 # Permute the rows of A_dense here with QRres.p_inv to get the
 # same V and beta as the csparse.qr function.
-Ap = A_dense[p][:, q]
+Apq = A_dense[p][:, q]
 
-(Qraw, tau), Rraw = la.qr(Ap, mode='raw')
-Q_, R_ = la.qr(Ap)
+(Qraw, tau), Rraw = la.qr(Apq, mode='raw')
+Q_, R_ = la.qr(Apq)
 V_ = np.tril(Qraw, -1) + np.eye(N)
 Qr_ = csparse.apply_qright(V_, tau, p)
 
-np.testing.assert_allclose(Q_ @ R_, Ap, atol=atol)
+# Now we get the same Householder vectors and weights
+np.testing.assert_allclose(V, V_, atol=atol)
+np.testing.assert_allclose(beta, tau, atol=atol)
+np.testing.assert_allclose(R, R_, atol=atol)
+
+np.testing.assert_allclose(Q, Qr_, atol=atol)
 np.testing.assert_allclose(Q, Q_[p_inv], atol=atol)
+np.testing.assert_allclose(Q[p], Q_, atol=atol)
 
 # Reproduce A = QR
+np.testing.assert_allclose(Q_ @ R_, Apq, atol=atol)
+np.testing.assert_allclose(Q_[p_inv] @ R_, A_dense[:, q], atol=atol)
 np.testing.assert_allclose(Q @ R, A_dense[:, q], atol=atol)
 # print("Q @ R = ")
 # print(Q @ R)
+
 
 # -----------------------------------------------------------------------------
 #         QR with a M < N matrix
@@ -87,18 +96,26 @@ print("Ar = ")
 print(Ar_dense)
 
 Arc = csparse.from_scipy_sparse(Ar)
-QRr_res = csparse.qr(Arc)
+QRr_res = csparse.qr(Arc, order=order)
 
-Vr, beta_r, Rr, p_inv = QRr_res.V, QRr_res.beta, QRr_res.R, QRr_res.p_inv
+Vr, beta_r, Rr, p_inv, q = QRr_res.V, QRr_res.beta, QRr_res.R, QRr_res.p_inv, QRr_res.q
 Vr = Vr.toarray()
 Rr = Rr.toarray()
 
 # Get the actual Q matrix
 pr = csparse.inv_permute(p_inv)
+
+# FIXME p_inv vector is invalid for M < N, contains index == M (not < M)
+# p_inv = [2, 0, 1, 3, 5]
+#                      x  invalid index
+# pr =    [1, 2, 0, 3, 0]
+#
+# cs_qright is not implemented for M < N.
+
 Qr = csparse.apply_qright(Vr, beta_r, pr)  # (M, M)
 
 # Get the scipy version
-Arp = Ar_dense[pr]
+Arp = Ar_dense[pr][:, q]
 Qr_, Rr_ = la.qr(Arp)
 
 (Qraw_r, tau_r), _ = la.qr(Arp, mode='raw')
@@ -109,11 +126,11 @@ print(Qr_)
 print("Rr_ = ")
 print(Rr_)
 
-Qr_r = csparse.apply_qright(Vr_, tau_r)
+# Qr_r = csparse.apply_qright(Vr_, tau_r)
 
 np.testing.assert_allclose(Qr, Qr_[p_inv], atol=atol)
 np.testing.assert_allclose(Rr, Rr_, atol=atol)
-np.testing.assert_allclose(Qr @ Rr, Ar_dense, atol=atol)
+np.testing.assert_allclose(Qr @ Rr, Ar_dense[:, q], atol=atol)
 
 print("Q @ R = ")
 print(Qr @ Rr)

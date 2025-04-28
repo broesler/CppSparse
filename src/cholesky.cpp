@@ -100,7 +100,8 @@ std::vector<csint> ereach(
     }
 
     // Reverse the stack to get the topological order
-    return std::vector<csint>(xi.rbegin(), xi.rend());
+    std::reverse(xi.begin(), xi.end());
+    return xi;
 }
 
 

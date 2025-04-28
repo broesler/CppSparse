@@ -49,6 +49,7 @@ import scipy.linalg as la
 from pathlib import Path
 
 SAVE_FIGS = False
+verbose = False
 fig_path = Path('../../plots/')
 
 
@@ -281,126 +282,140 @@ if __name__ == "__main__":
     # -------------------------------------------------------------------------
     #         Plot a nice example of the vectors and reflectors
     # -------------------------------------------------------------------------
-    # TODO make plots for each of these cases?
-    # Create a vector with an easy norm
-    # x = np.r_[3., 0.]
-    # x = np.r_[-3., 0.]
-    x = np.r_[3., 4.]       # |x| == 5
-    # x = np.r_[-3., 4.]    # both methods give the same result
-    # x = np.r_[3., -4.]
-    # x = np.r_[-3., -4.]
+    # Figure for vectors with 0 on y-axis
+    fig2, axs2 = plt.subplots(num=2, ncols=2, clear=True)
+    fig2.set_size_inches(8, 4, forward=True)
 
-    v_D, β_D, s_D = house(x, method='Davis')
-    v_L, β_L, s_L = house(x, method='LAPACK')
+    # Figure for vectors with non-zeros
+    fig3, axs3 = plt.subplots(num=3, nrows=2, ncols=2, clear=True)
+    fig3.set_size_inches(9.4, 8, forward=True)
 
-    # Compute the Householder matrices
-    I = np.eye(x.size)
-    H_D = I - β_D * np.outer(v_D, v_D)
-    H_L = I - β_L * np.outer(v_L, v_L)
-
-    Hx_D = H_D @ x
-    Hx_L = H_L @ x
-
-    # print("   x:", x)
-    # print("Hx_D:", Hx_D)
-    # print("Hx_L:", Hx_L)
-    # print("β_D:", β_D)
-    # print("β_L:", β_L)
-
-    # Compare to hand calculations
-    atol = 1e-15
-    if np.allclose(x, np.r_[3, 4]):
-        np.testing.assert_allclose(v_D, np.r_[1, -2])
-        np.testing.assert_allclose(v_L, np.r_[1, 0.5])
-        np.testing.assert_allclose(β_D, 0.4)
-        np.testing.assert_allclose(β_L, 1.6)
-        np.testing.assert_allclose(s_D, 5)
-        np.testing.assert_allclose(s_L, -5)
-        # Need atol when comparing to 0
-        np.testing.assert_allclose(H_L, -H_D)
-        np.testing.assert_allclose(Hx_D, np.r_[s_D, 0], atol=atol)
-        np.testing.assert_allclose(Hx_L, np.r_[s_L, 0], atol=atol)
-    elif np.allclose(x, np.r_[-3, 4]):
-        np.testing.assert_allclose(v_D, np.r_[1, -0.5])
-        np.testing.assert_allclose(v_L, np.r_[1, -0.5])
-        np.testing.assert_allclose(β_D, 1.6)
-        np.testing.assert_allclose(β_L, 1.6)
-        np.testing.assert_allclose(s_D, 5)
-        np.testing.assert_allclose(s_L, 5)
-        # Need atol when comparing to 0
-        np.testing.assert_allclose(H_L, H_D)
-        np.testing.assert_allclose(Hx_D, np.r_[s_D, 0], atol=atol)
-        np.testing.assert_allclose(Hx_L, np.r_[s_L, 0], atol=atol)
-
-    # ---------- Get the raw LAPACK output for a test vector
-    (Qraw, tau), _ = la.qr(np.c_[x], mode='raw')
-    v = np.vstack([1.0, Qraw[1:]])
-    H = np.eye(x.size) - tau * (v @ v.T)
-    Hx = H @ x
-    print("LAPACK (via scipy.linalg.qr(mode='raw')):")
-    print("x = ")
-    print(x)
-    print("v = ")
-    print(v.flatten())
-    print("beta = ")
-    print(tau[0])
-    print("Hx = ")
-    print(Hx)
-    np.testing.assert_allclose(
-        Hx.flatten(),
-        # np.r_[-np.sign(x[0])*la.norm(x), np.zeros(x.size - 1)],
-        np.r_[Qraw[0, 0], np.zeros(x.size - 1)],
-        atol=atol
+    xs = np.array(
+        [[ 3.,  0.],
+         [-3.,  0.],
+         [-3.,  4.],  # both methods give the same result
+         [ 3.,  4.],  # |x| == 5
+         [-3., -4.],
+         [ 3., -4.]]
     )
 
-    # ---------- Plot the results
-    fig, ax = plt.subplots(num=2, clear=True)
+    for i, x in enumerate(xs):
+        # Get the axes for the current plot
+        if x[1] == 0:
+            ax = axs2.flatten()[i]
+        else:
+            ax = axs3.flatten()[i-2]
 
-    # Plot the axes
-    ax.axhline(0, color='k', zorder=0)
-    ax.axvline(0, color='k', zorder=0)
+        # Create functions so we can loop over the xs array?
+        #   * function to create overall plot and labels given x and ax
+        #   * function to plot v and Hx given x and the method name
+        #   * testing function to compare the results of the two methods
+        #
+        # --> v and Hx used for plotting
+        # --> β, s, H use for testing only
+        v_D, β_D, s_D = house(x, method='Davis')
+        v_L, β_L, s_L = house(x, method='LAPACK')
 
-    # Plot the Householder planes (normal to the reflector)
-    ax.axline((0, 0), (-v_D[1], v_D[0]), color=CD, linestyle='--', zorder=0)
-    ax.axline((0, 0), (-v_L[1], v_L[0]), color=CL, linestyle='--', zorder=0)
+        # Compute the Householder matrices
+        I = np.eye(x.size)
+        H_D = I - β_D * np.outer(v_D, v_D)
+        H_L = I - β_L * np.outer(v_L, v_L)
 
-    # Plot the vectors
-    plot_vector(x, 'x', color='k')
-    plot_vector(v_D, 'v', color=CD, label='Davis')
-    plot_vector(v_L, 'v', color=CL, label='LAPACK')
+        Hx_D = H_D @ x
+        Hx_L = H_L @ x
 
-    # Plot the reflected vectors
-    plot_vector(Hx_D, 'Hx', color=CD)
-    plot_vector(Hx_L, 'Hx', color=CL)
+        if verbose:
+            print("   x:", x)
+            print("Hx_D:", Hx_D)
+            print("Hx_L:", Hx_L)
+            print("β_D:", β_D)
+            print("β_L:", β_L)
 
-    ax.legend(loc='lower left')
-    AX_LIM = 6
-    ax.set(
-        xlabel='$e_1$',
-        ylabel='$e_2$',
-        xlim=(-AX_LIM, AX_LIM),
-        ylim=(-AX_LIM, AX_LIM),
-        aspect='equal',
-    )
-    ax.grid(which='both')
+        # Compare to hand calculations
+        atol = 1e-15
+        if np.allclose(x, np.r_[3, 4]):
+            np.testing.assert_allclose(v_D, np.r_[1, -2])
+            np.testing.assert_allclose(v_L, np.r_[1, 0.5])
+            np.testing.assert_allclose(β_D, 0.4)
+            np.testing.assert_allclose(β_L, 1.6)
+            np.testing.assert_allclose(s_D, 5)
+            np.testing.assert_allclose(s_L, -5)
+            # Need atol when comparing to 0
+            np.testing.assert_allclose(H_L, -H_D)
+            np.testing.assert_allclose(Hx_D, np.r_[s_D, 0], atol=atol)
+            np.testing.assert_allclose(Hx_L, np.r_[s_L, 0], atol=atol)
+        elif np.allclose(x, np.r_[-3, 4]):
+            np.testing.assert_allclose(v_D, np.r_[1, -0.5])
+            np.testing.assert_allclose(v_L, np.r_[1, -0.5])
+            np.testing.assert_allclose(β_D, 1.6)
+            np.testing.assert_allclose(β_L, 1.6)
+            np.testing.assert_allclose(s_D, 5)
+            np.testing.assert_allclose(s_L, 5)
+            # Need atol when comparing to 0
+            np.testing.assert_allclose(H_L, H_D)
+            np.testing.assert_allclose(Hx_D, np.r_[s_D, 0], atol=atol)
+            np.testing.assert_allclose(Hx_L, np.r_[s_L, 0], atol=atol)
+
+        # ---------- Get the raw LAPACK output for a test vector
+        (Qraw, tau), _ = la.qr(np.c_[x], mode='raw')
+        v = np.vstack([1.0, Qraw[1:]])
+        H = np.eye(x.size) - tau * (v @ v.T)
+        Hx = H @ x
+
+        if verbose:
+            print("LAPACK (via scipy.linalg.qr(mode='raw')):")
+            print("x =", x)
+            print("v =", v.flatten())
+            print("beta =", tau[0])
+            print("Hx =", Hx)
+
+        np.testing.assert_allclose(
+            Hx.flatten(),
+            # np.r_[-np.sign(x[0])*la.norm(x), np.zeros(x.size - 1)],
+            np.r_[Qraw[0, 0], np.zeros(x.size - 1)],
+            atol=atol
+        )
+
+        # ---------- Plot the results
+        # Plot the axes
+        ax.axhline(0, color='k', zorder=0)
+        ax.axvline(0, color='k', zorder=0)
+
+        # Plot the Householder planes (normal to the reflector)
+        ax.axline((0, 0), (-v_D[1], v_D[0]), color=CD, linestyle='--', zorder=0)
+        ax.axline((0, 0), (-v_L[1], v_L[0]), color=CL, linestyle='--', zorder=0)
+
+        # Plot the vectors
+        plot_vector(x, 'x', ax=ax, color='k')
+        plot_vector(v_D, 'v', ax=ax, color=CD, label='Davis')
+        plot_vector(v_L, 'v', ax=ax, color=CL, label='LAPACK')
+
+        # Plot the reflected vectors
+        plot_vector(Hx_D, 'Hx', ax=ax, color=CD)
+        plot_vector(Hx_L, 'Hx', ax=ax, color=CL)
+
+        ss = ax.get_subplotspec() 
+        if ss.is_first_row() and ss.is_first_col():
+            ax.legend(loc='lower left')
+
+        AX_LIM = 6
+        ax.set(
+            xlabel='$e_1$',
+            ylabel='$e_2$',
+            xlim=(-AX_LIM, AX_LIM),
+            ylim=(-AX_LIM, AX_LIM),
+            aspect='equal',
+        )
+        ax.grid(which='both')
 
     if SAVE_FIGS:
-        fig.savefig(fig_path / 'householder_demo.pdf')
+        fig2.savefig(fig_path / 'householder_demo_y0.pdf')
+        fig3.savefig(fig_path / 'householder_demo.pdf')
 
 
     # -------------------------------------------------------------------------
     #         Print the table of signs for the reflector
     # -------------------------------------------------------------------------
-    # # Create a vector with an easy norm
-    # xs = np.array(
-    #     [[ 3.,  0.],
-    #      [-3.,  0.],
-    #      [ 3.,  4.],
-    #      [-3.,  4.],
-    #      [ 3., -4.],
-    #      [-3., -4.]]
-    # )
-
     # for x in xs:
     #     v_D, β_D, s_D = house(x, method='Davis')
     #     v_L, β_L, s_L = house(x, method='LAPACK')

@@ -38,24 +38,26 @@ A_dense = A.toarray()
 #         Compute QR decomposition with csparse
 # -----------------------------------------------------------------------------
 # ---------- Compute using Householder reflections
-QRres = csparse.qr(Ac)
+# QRres = csparse.qr(Ac, order='Natural')
+QRres = csparse.qr(Ac, order='ATA')
 
-V, beta, R = QRres.V, QRres.beta, QRres.R
+V, beta, R, p_inv, q = QRres.V, QRres.beta, QRres.R, QRres.p_inv, QRres.q
 
 # Convert for easier debugging
 V = V.toarray()
 R = R.toarray()
 
 # Get the actual Q matrix, don't forget the row permutation!
-p = csparse.inv_permute(QRres.p_inv)
+p = csparse.inv_permute(p_inv)
 Q = csparse.apply_qright(V, beta, p)
+
 
 # -----------------------------------------------------------------------------
 #         Compute the QR decomposition of A with scipy
 # -----------------------------------------------------------------------------
 # Permute the rows of A_dense here with QRres.p_inv to get the
 # same V and beta as the csparse.qr function.
-Ap = A_dense[p]
+Ap = A_dense[p][:, q]
 
 (Qraw, tau), Rraw = la.qr(Ap, mode='raw')
 Q_, R_ = la.qr(Ap)
@@ -63,10 +65,10 @@ V_ = np.tril(Qraw, -1) + np.eye(N)
 Qr_ = csparse.apply_qright(V_, tau, p)
 
 np.testing.assert_allclose(Q_ @ R_, Ap, atol=atol)
-np.testing.assert_allclose(Q, Q_[QRres.p_inv], atol=atol)
+np.testing.assert_allclose(Q, Q_[p_inv], atol=atol)
 
 # Reproduce A = QR
-np.testing.assert_allclose(Q @ R, A_dense, atol=atol)
+np.testing.assert_allclose(Q @ R, A_dense[:, q], atol=atol)
 # print("Q @ R = ")
 # print(Q @ R)
 

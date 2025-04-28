@@ -1647,34 +1647,35 @@ TEST_CASE("Exercise 2.16: CSC from dense")
 // Create a dummy class that builds an invalid matrix
 namespace cs {
 
-class TestCSCMatrix : public CSCMatrix {
-public:
-    using CSCMatrix::CSCMatrix;  // inherit constructors
+class TestCSCMatrix {
+    CSCMatrix& test_matrix_;  // matrix to test
 
-    TestCSCMatrix(const CSCMatrix& A) : CSCMatrix(A) {}
+public:
+    TestCSCMatrix(CSCMatrix& A) : test_matrix_(A) {}
 
     void corrupt_p_size(csint wrong_size) {
-        p_.resize(wrong_size);
+        test_matrix_.p_.resize(wrong_size);
     }
 
     void corrupt_p_front(csint wrong_value) {
-        if (!p_.empty()) {
-            p_.front() = wrong_value;
+        if (!test_matrix_.p_.empty()) {
+            test_matrix_.p_.front() = wrong_value;
         }
     }
 
     void corrupt_p_back(csint wrong_value) {
-        if (!p_.empty()) {
-            p_.back() = wrong_value;
+        if (!test_matrix_.p_.empty()) {
+            test_matrix_.p_.back() = wrong_value;
         }
     }
 
     void corrupt_value_size() {
-        v_.resize(i_.size() + 56); // make v_ larger
+        // make test_matrix_.v_ larger
+        test_matrix_.v_.resize(test_matrix_.i_.size() + 56);
     }
 
     void empty_values() {
-        v_.clear();
+        test_matrix_.v_.clear();
     }
 };
 
@@ -1684,7 +1685,8 @@ public:
 // "cs_ok"
 TEST_CASE("Exercise 2.12: Validity check")
 {
-    TestCSCMatrix A = davis_example_small().compress();
+    CSCMatrix A = davis_example_small().compress();
+    TestCSCMatrix A_test_helper(A);
 
     constexpr bool SORTED = true;
     constexpr bool VALUES = true;
@@ -1697,35 +1699,35 @@ TEST_CASE("Exercise 2.12: Validity check")
 
     // Create corrupted matrix
     SECTION("Wrong number of columns (p_.size() != N+1)") {
-        A.corrupt_p_size(56);
+        A_test_helper.corrupt_p_size(56);
 
         REQUIRE_THROWS_WITH(A.is_valid(!SORTED, !VALUES),
             "Number of columns inconsistent!");
     }
 
     SECTION("First column index not zero (p_.front() != 0)") {
-        A.corrupt_p_front(1);
+        A_test_helper.corrupt_p_front(1);
 
         REQUIRE_THROWS_WITH(A.is_valid(!SORTED, !VALUES),
             "First column index should be 0!");
     }
 
     SECTION("Last column count inconsistent (p_.back() != nnz())") {
-        A.corrupt_p_back(56);
+        A_test_helper.corrupt_p_back(56);
 
         REQUIRE_THROWS_WITH(A.is_valid(!SORTED, !VALUES),
             "Column counts inconsistent!");
     }
 
     SECTION("Mismatch between indices and values sizes") {
-        A.corrupt_value_size();  // makes v_.size() != i_.size()
+        A_test_helper.corrupt_value_size();  // makes v_.size() != i_.size()
 
         REQUIRE_THROWS_WITH(A.is_valid(!SORTED, VALUES),
             "Indices and values sizes inconsistent!");
     }
 
     SECTION("Empty values vector (v_ empty)") {
-        A.empty_values();
+        A_test_helper.empty_values();
 
         REQUIRE_THROWS_WITH(A.is_valid(!SORTED, VALUES),
             "No values!");

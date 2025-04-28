@@ -63,63 +63,6 @@ droptol = 0.01;
 options = struct('type', 'ict', 'droptol', droptol);
 
 L = ichol(A, options);  % lower by default
-Lf = chol(A, 'lower');  % upper by default
-
-% Compute the 1-norm of each A(j:end, j), and show a comparison with the
-% actual values of the full L to see which elements would be dropped. Compare
-% this to an absolute drop tolerance like in our implementation.
-col_norms = zeros(N, 1);
-for k = 1:N
-    col_norms(k) = norm(A(k:end, k), 1);
-end
-
-% Compute the drop tolerance for each column
-col_droptols = col_norms * droptol;
-
-% Compare the drop tolerance to the actual values of L (before scaling by pivot)
-Lf_expectdrop = sparse(Lf);  % pre-allocate
-for k = 1:N
-    col = Lf(k:end, k);
-    cond = abs(col * col(1)) < col_droptols(k);
-    Lf_expectdrop(k:end, k) = col .* cond;
-end
-
-disp('Expected drops in Lf:');
-disp(full(Lf_expectdrop))
-fprintf('nnz(Lf_expectdrop): %d\n', nnz(Lf_expectdrop));  % == 7
-
-% Get the actual entries where Lf is non-zero, but L is zero
-% (i.e. the entries that were dropped)
-Lf_isdropped = Lf .* (L == 0);
-
-% disp('Entries of Lf that are dropped:');
-% disp(full(Lf_isdropped));
-fprintf('nnz(Lf_isdropped): %d\n', nnz(Lf_isdropped));  % == 6
-
-% NOTE 
-% For droptol = 0.01,
-% In column 10, the drop tolerance as computed from A(10:end, 10) is 0.2,
-% so the value L(10, 11) ~ 0.19 should get dropped by ichol, but doesn't?
-% 
-% Similar results for other droptol values. We expect to drop many more elements
-% than actually get dropped, despite applying the stated drop tolerance from the
-% MATLAB documentation.
-%
-% disp(nnz(Lf_expectdrop - Lf_isdropped))
-%
-% Octave checks 
-%   std::abs (w_data[jrow]) < (droptol * cols_norm[k])      (line 358)
-% *before* scaling by the pivot on  lines 391-393:
-%     // Once elements are dropped and compensation of column sums are done,
-%     // scale the elements by the pivot.
-%     data_l[total_len] = std::sqrt (data_l[total_len]);
-%     for (jj = total_len + 1; jj < (total_len + w_len); jj++)
-%         data_l[jj] /= data_l[total_len];
-% See permalink: <https://github.com/gnu-octave/octave/blob/ab54952a577d012156cbb6f3288be69c20183d86/libinterp/corefcn/__ichol__.cc#L358>
-%
-% We need to update our filter to re-scale the elements by the diagonal of L.
-%
-% TODO plot a graph of nnz vs. droptol for each filter to show difference.
 
 % check that L*L' is a good approximation to A
 drop_small = @(x) x .* (abs(x) > 1e-14);

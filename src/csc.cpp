@@ -1397,12 +1397,12 @@ bool CSCMatrix::is_valid(const bool sorted, const bool values) const
 
     // Check array sizes
     if (values) {
-        if (i_.size() != v_.size()) {
-            throw std::runtime_error("Indices and values sizes inconsistent!");
-        }
-
         if (v_.empty()) {
             throw std::runtime_error("No values!");
+        }
+
+        if (i_.size() != v_.size()) {
+            throw std::runtime_error("Indices and values sizes inconsistent!");
         }
     }
 

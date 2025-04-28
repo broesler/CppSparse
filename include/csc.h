@@ -45,6 +45,7 @@ class CSCMatrix
 
     public:
         friend class COOMatrix;
+        friend class TestCSCMatrix;  // dummy class for testing
 
         /** 
          * @typedef KeepFunc

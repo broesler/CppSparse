@@ -39,6 +39,7 @@ struct DMPermResult;
 
 class COOMatrix;
 class CSCMatrix;
+class TestCSCMatrix;
 
 }  // namespace cs
 

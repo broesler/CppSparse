@@ -94,6 +94,7 @@ std::vector<double> utsolve(const CSCMatrix& L, const std::vector<double>& b)
 }
 
 
+// Exercise 3.8
 std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
 {
     assert(L.M_ == L.N_);
@@ -116,6 +117,7 @@ std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
 }
 
 
+// Exercise 3.8
 std::vector<double> usolve_opt(const CSCMatrix& L, const std::vector<double>& b)
 {
     assert(L.M_ == L.N_);
@@ -137,6 +139,7 @@ std::vector<double> usolve_opt(const CSCMatrix& L, const std::vector<double>& b)
 }
 
 
+// Exercise 3.3
 std::vector<csint> find_lower_diagonals(const CSCMatrix& L)
 {
     assert(L.M_ == L.N_);
@@ -167,6 +170,7 @@ std::vector<csint> find_lower_diagonals(const CSCMatrix& L)
 }
 
 
+// Exercise 3.3
 std::vector<double> lsolve_rows(const CSCMatrix& L, const std::vector<double>& b)
 {
     assert(L.M_ == L.N_);
@@ -204,7 +208,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& L, const std::vector<double>& b
     return x;
 }
 
-
+// Exercise 3.5
 std::vector<double> lsolve_cols(const CSCMatrix& L, const std::vector<double>& b)
 {
     assert(L.M_ == L.N_);
@@ -248,6 +252,7 @@ std::vector<double> lsolve_cols(const CSCMatrix& L, const std::vector<double>& b
 }
 
 
+// Exercise 3.4
 std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
 {
     assert(U.M_ == U.N_);
@@ -278,6 +283,7 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
 }
 
 
+// Exercise 3.4
 std::vector<double> usolve_rows(const CSCMatrix& U, const std::vector<double>& b)
 {
     assert(U.M_ == U.N_);
@@ -359,6 +365,7 @@ std::vector<double> usolve_cols(const CSCMatrix& U, const std::vector<double>& b
 }
 
 
+// Exercise 3.7
 TriPerm find_tri_permutation(const CSCMatrix& A)
 {
     assert(A.M_ == A.N_);
@@ -420,6 +427,7 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
 }
 
 
+// Exercise 3.7
 std::vector<double> tri_solve_perm(
     const CSCMatrix& A, 
     const std::vector<double>& b,
@@ -706,6 +714,7 @@ std::vector<csint> topological_order(
 // -----------------------------------------------------------------------------
 //         LU Factorization Solvers
 // -----------------------------------------------------------------------------
+// Exercise 6.1
 std::vector<double> lu_solve(
     const CSCMatrix& A,
     const std::vector<double>& b,
@@ -723,6 +732,7 @@ std::vector<double> lu_solve(
 }
 
 
+// Exercise 6.1
 std::vector<double> lu_tsolve(
     const CSCMatrix& A,
     const std::vector<double>& b,
@@ -765,6 +775,7 @@ static inline csint min_argmaxabs(const std::vector<double>& x)
 }
 
 
+// Exercise 6.15
 double norm1est_inv(const LUResult& res)
 {
     csint M = res.L.shape()[0];
@@ -819,6 +830,7 @@ double norm1est_inv(const LUResult& res)
 }
 
 
+// Exercise 6.15
 double cond1est(const CSCMatrix& A)
 {
     auto [M, N] = A.shape();

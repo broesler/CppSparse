@@ -59,6 +59,7 @@ COOMatrix::COOMatrix(const Shape& shape, csint nzmax)
 }
 
 
+// Exercise 2.2
 COOMatrix::COOMatrix(const CSCMatrix& A)
     : v_(A.nnz()),
       i_(A.nnz()),
@@ -97,6 +98,7 @@ COOMatrix::COOMatrix(std::istream& fp)
 }
 
 
+// Exercise 2.27
 COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
 {
     csint nzmax = M * N * density;
@@ -272,6 +274,7 @@ COOMatrix COOMatrix::transpose() const
 COOMatrix COOMatrix::T() const { return this->transpose(); }
 
 
+// Exercise 2.10
 std::vector<double> COOMatrix::dot(const std::vector<double>& x) const
 {
     assert(N_ == x.size());

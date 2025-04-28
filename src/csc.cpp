@@ -61,6 +61,7 @@ CSCMatrix::CSCMatrix(const Shape& shape, csint nzmax, bool values)
 }
 
 
+// Exercise 2.2, 2.9
 CSCMatrix::CSCMatrix(const COOMatrix& A) : CSCMatrix(A.compress())
 {
     if (!v_.empty()) {
@@ -72,6 +73,7 @@ CSCMatrix::CSCMatrix(const COOMatrix& A) : CSCMatrix(A.compress())
 }
 
 
+// Exercise 2.16
 CSCMatrix::CSCMatrix(
     const std::vector<double>& A,
     const Shape& shape,
@@ -155,6 +157,7 @@ const std::vector<csint>& CSCMatrix::indptr() const { return p_; }
 const std::vector<double>& CSCMatrix::data() const { return v_; }
 
 
+// Exercise 2.9
 CSCMatrix& CSCMatrix::to_canonical()
 {
     sum_duplicates();
@@ -169,6 +172,7 @@ bool CSCMatrix::has_sorted_indices() const { return has_sorted_indices_; }
 bool CSCMatrix::has_canonical_format() const { return has_canonical_format_; }
 
 
+// Exercise 2.13
 bool CSCMatrix::is_symmetric() const
 {
     assert(M_ == N_);
@@ -292,6 +296,7 @@ double& CSCMatrix::operator()(const csint i, const csint j)
 }
 
 
+// Exercise 2.25
 CSCMatrix& CSCMatrix::assign(csint i, csint j, double v)
 {
     (*this)(i, j) = v;
@@ -299,6 +304,7 @@ CSCMatrix& CSCMatrix::assign(csint i, csint j, double v)
 }
 
 
+// Exercise 2.25
 CSCMatrix& CSCMatrix::assign(
     const std::vector<csint>& rows,
     const std::vector<csint>& cols,
@@ -354,9 +360,11 @@ double& CSCMatrix::insert(csint i, csint j, double v, csint p)
 /*------------------------------------------------------------------------------
  *     Format Operations
  *----------------------------------------------------------------------------*/
+// Exercise 2.2
 COOMatrix CSCMatrix::tocoo() const { return COOMatrix(*this); }
 
 
+// Exercise 2.16
 std::vector<double> CSCMatrix::to_dense_vector(const char order) const
 {
     std::vector<double> A(M_ * N_, 0.0);
@@ -419,6 +427,7 @@ CSCMatrix CSCMatrix::transpose(bool values) const
 CSCMatrix CSCMatrix::T() const { return this->transpose(); }
 
 
+// Exercise 2.7
 CSCMatrix CSCMatrix::tsort() const
 {
     CSCMatrix C = this->transpose().transpose();
@@ -427,6 +436,7 @@ CSCMatrix CSCMatrix::tsort() const
 }
 
 
+// Exercise 2.8
 CSCMatrix& CSCMatrix::qsort()
 {
     // Allocate workspaces
@@ -462,6 +472,7 @@ CSCMatrix& CSCMatrix::qsort()
 }
 
 
+// Exercise 2.11
 CSCMatrix& CSCMatrix::sort()
 {
     // ----- first transpose
@@ -586,6 +597,7 @@ CSCMatrix& CSCMatrix::droptol(double tol)
 }
 
 
+// Exercise 2.15
 CSCMatrix& CSCMatrix::band(const csint kl, const csint ku)
 {
     assert(kl <= ku);
@@ -629,6 +641,7 @@ std::vector<double> gaxpy(
 };
 
 
+// Exercise 2.1
 std::vector<double> gatxpy(
     const CSCMatrix& A,
     const std::vector<double>& x,
@@ -650,6 +663,7 @@ std::vector<double> gatxpy(
 };
 
 
+// Exercise 2.3
 std::vector<double> sym_gaxpy(
     const CSCMatrix& A,
     const std::vector<double>& x,
@@ -682,6 +696,7 @@ std::vector<double> sym_gaxpy(
 };
 
 
+// Exercise 2.27
 std::vector<double> gaxpy_col(
     const CSCMatrix& A,
     const std::vector<double>& X,
@@ -715,6 +730,7 @@ std::vector<double> gaxpy_col(
 }
 
 
+// Exercise 2.27
 std::vector<double> gaxpy_block(
     const CSCMatrix& A,
     const std::vector<double>& X,
@@ -754,6 +770,7 @@ std::vector<double> gaxpy_block(
 }
 
 
+// Exercise 2.27
 std::vector<double> gaxpy_row(
     const CSCMatrix& A,
     const std::vector<double>& X,
@@ -787,6 +804,7 @@ std::vector<double> gaxpy_row(
 }
 
 
+// Exercise 2.28
 std::vector<double> gatxpy_col(
     const CSCMatrix& A,
     const std::vector<double>& X,
@@ -815,6 +833,7 @@ std::vector<double> gatxpy_col(
 }
 
 
+// Exercise 2.28
 std::vector<double> gatxpy_block(
     const CSCMatrix& A,
     const std::vector<double>& X,
@@ -849,6 +868,7 @@ std::vector<double> gatxpy_block(
 }
 
 
+// Exercise 2.28
 std::vector<double> gatxpy_row(
     const CSCMatrix& A,
     const std::vector<double>& X,
@@ -877,6 +897,7 @@ std::vector<double> gatxpy_row(
 }
 
 
+// Exercise 2.4
 CSCMatrix CSCMatrix::scale(const std::vector<double>& r, const std::vector<double> c) const
 {
     assert(r.size() == M_);
@@ -970,6 +991,7 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
 }
 
 
+// Exercise 2.20
 CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
 {
     auto [M, Ka] = shape();
@@ -1031,6 +1053,7 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
 }
 
 
+// Exercise 2.18
 double CSCMatrix::vecdot(const CSCMatrix& y) const
 {
     assert((N_ == 1) && (y.N_ == 1));  // both must be column vectors
@@ -1126,6 +1149,7 @@ CSCMatrix add_scaled(
 }
 
 
+// Exercise 2.21
 std::vector<csint> saxpy(
     const CSCMatrix& a,
     const CSCMatrix& b,
@@ -1317,6 +1341,7 @@ CSCMatrix CSCMatrix::symperm(const std::vector<csint>& p_inv, bool values) const
 }
 
 
+// Exercise 2.26
 CSCMatrix CSCMatrix::permute_transpose(
     const std::vector<csint>& p_inv,
     const std::vector<csint>& q_inv,
@@ -1445,6 +1470,7 @@ bool CSCMatrix::is_valid(const bool sorted, const bool values) const
 }
 
 
+// Exercise 2.22
 CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
 {
     assert(A.M_ == B.M_);
@@ -1473,6 +1499,7 @@ CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
 }
 
 
+// Exercise 2.22
 CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
 {
     assert(A.N_ == B.N_);
@@ -1505,6 +1532,7 @@ CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
 }
 
 
+// Exercise 2.23
 CSCMatrix CSCMatrix::slice(
     const csint i_start,
     const csint i_end,
@@ -1545,6 +1573,7 @@ CSCMatrix CSCMatrix::slice(
 }
 
 
+// Exercise 2.24
 CSCMatrix CSCMatrix::index(
     const std::vector<csint>& rows,
     const std::vector<csint>& cols
@@ -1580,6 +1609,7 @@ CSCMatrix CSCMatrix::index(
 }
 
 
+// Exercise 2.29
 CSCMatrix CSCMatrix::add_empty_top(const csint k) const
 {
     CSCMatrix C = *this;  // copy the matrix
@@ -1594,6 +1624,7 @@ CSCMatrix CSCMatrix::add_empty_top(const csint k) const
 }
 
 
+// Exercise 2.29
 CSCMatrix CSCMatrix::add_empty_bottom(const csint k) const
 {
     CSCMatrix C = *this;  // copy the matrix
@@ -1602,6 +1633,7 @@ CSCMatrix CSCMatrix::add_empty_bottom(const csint k) const
 }
 
 
+// Exercise 2.29
 CSCMatrix CSCMatrix::add_empty_left(const csint k) const
 {
     CSCMatrix C = *this;  // copy the matrix
@@ -1611,6 +1643,7 @@ CSCMatrix CSCMatrix::add_empty_left(const csint k) const
 }
 
 
+// Exercise 2.29
 CSCMatrix CSCMatrix::add_empty_right(const csint k) const
 {
     CSCMatrix C = *this;  // copy the matrix

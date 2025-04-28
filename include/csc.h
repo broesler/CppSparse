@@ -144,14 +144,14 @@ class CSCMatrix
          */
         virtual void realloc(csint nzmax=0);
 
-        //----------------------------------------------------------------------
-        //        Accessors
-        //----------------------------------------------------------------------
-        csint nnz() const;                   // number of non-zeros
-        csint nzmax() const;                 // maximum number of non-zeros
+        // ----------------------------------------------------------------------
+        //          Accessors
+        // ----------------------------------------------------------------------
+        csint nnz() const;    // number of non-zeros
+        csint nzmax() const;  // maximum number of non-zeros
         Shape shape() const;  // the dimensions of the matrix
 
-        const std::vector<csint>& indices() const;     // indices and data
+        const std::vector<csint>& indices() const;
         const std::vector<csint>& indptr() const;
         const std::vector<double>& data() const;
 

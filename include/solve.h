@@ -108,6 +108,8 @@ std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
 /** Backsolve an upper-triangular system \f$ Ux = b \f$, but optimized for cache
  * efficiency.
  *
+ * See: Davis, Exercise 3.8
+ *
  * @note This function assumes that the diagonal entry of `U` is always present
  * and is the last entry in each column. Otherwise, the row indices in each
  * column of `U` may appear in any order.
@@ -414,7 +416,7 @@ double norm1est_inv(const LUResult& res);
  * \f$ \kappa_p(A) = ||A||_p ||A^{-1}||_p \f$.
  * This function chooses \f$ p = 1 \f$.
  *
- * See: Davis, Exercise 6.15..
+ * See: Davis, Exercise 6.15.
  *
  * @param A  a real, square matrix
  *

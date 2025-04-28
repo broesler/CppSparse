@@ -1691,7 +1691,7 @@ TEST_CASE("Exercise 2.12: Validity check")
 
     // Create canonical matrix
     SECTION("Canonical") {
-    REQUIRE(A.is_valid(!SORTED, !VALUES));
+        REQUIRE(A.is_valid(!SORTED, !VALUES));
         REQUIRE(A.to_canonical().is_valid());
     }
 
@@ -1732,25 +1732,25 @@ TEST_CASE("Exercise 2.12: Validity check")
     }
 
     SECTION("Sorted") {
-    REQUIRE_THROWS_WITH(A.is_valid(), "Columns not sorted!");
-    REQUIRE_THROWS_WITH(A.is_valid(SORTED, !VALUES), "Columns not sorted!");
-    REQUIRE(A.sort().is_valid(SORTED, !VALUES));
-    REQUIRE(A.sort().is_valid());  // no non-zeros
+        REQUIRE_THROWS_WITH(A.is_valid(), "Columns not sorted!");
+        REQUIRE_THROWS_WITH(A.is_valid(SORTED, !VALUES), "Columns not sorted!");
+        REQUIRE(A.sort().is_valid(SORTED, !VALUES));
+        REQUIRE(A.sort().is_valid());  // no non-zeros
     }
 
     SECTION("Explicit Non-zeros") {
-    A = davis_example_small().assign(0, 1, 0.0).compress();
+        A = davis_example_small().assign(0, 1, 0.0).compress();
 
-    REQUIRE_THROWS_WITH(A.is_valid(!SORTED), "Explicit zeros!");
-    REQUIRE_THROWS_WITH(A.sort().is_valid(), "Explicit zeros!");
+        REQUIRE_THROWS_WITH(A.is_valid(!SORTED), "Explicit zeros!");
+        REQUIRE_THROWS_WITH(A.sort().is_valid(), "Explicit zeros!");
     }
 
     SECTION("Duplicate Entry") {
-    A = davis_example_small().assign(1, 1, 1.0).compress();
+        A = davis_example_small().assign(1, 1, 1.0).compress();
 
-    // Un-sorted columns will fail before duplicates are checked
-    REQUIRE_THROWS_WITH(A.is_valid(), "Columns not sorted!");
-    REQUIRE_THROWS_WITH(A.sort().is_valid(), "Duplicate entries exist!");
+        // Un-sorted columns will fail before duplicates are checked
+        REQUIRE_THROWS_WITH(A.is_valid(), "Columns not sorted!");
+        REQUIRE_THROWS_WITH(A.sort().is_valid(), "Duplicate entries exist!");
     }
 }
 
@@ -3772,10 +3772,6 @@ TEST_CASE("Exercise 6.4: relu", "[ex6.4]")
     std::vector<csint> expect_q(N);
     std::iota(expect_q.begin(), expect_q.end(), 0);
 
-    // TODO CSCMatrix::set_data(const std::vector<double>& x) function
-    // Change the values of A to test the relu function
-    // A.set_data(A.data() + 1);
-
     // Create new matrix with same sparsity pattern as A
     std::vector<double> B_data(A.data());
     for (auto& x : B_data) {
@@ -4403,7 +4399,6 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
 
     MaxMatch res = maxtrans(A, seed);
 
-    // TODO make sprank its own function?
     // Count number of non-negative entries in jmatch
     csint row_rank = std::accumulate(
         res.jmatch.begin(), res.jmatch.end(), 0,

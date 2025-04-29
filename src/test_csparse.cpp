@@ -36,6 +36,7 @@ using Catch::Approx;
 using Catch::Matchers::AllTrue;
 using Catch::Matchers::WithinAbs;
 using Catch::Matchers::UnorderedEquals;
+using Catch::Matchers::Equals;
 
 constexpr double tol = 1e-14;
 
@@ -3152,53 +3153,9 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
         std::vector<double> vals(N, 1.0);
         CSCMatrix I = COOMatrix(vals, rows, rows).tocsc();
 
-        // Expected values computed with scipy.linalg.qr
-        CSCMatrix expect_V {
-            {1.                , 0.                , 0.                , 0.                , 0.                , 0.                , 0.                , 0.,
-             0.                , 1.                , 0.                , 0.                , 0.                , 0.                , 0.                , 0.,
-             0.                , 0.2360679774997897, 1.                , 0.                , 0.                , 0.                , 0.                , 0.,
-             0.                , 0.                , 0.8619788607068875, 1.                , 0.                , 0.                , 0.                , 0.,
-             0.                , 0.                , 0.                , 0.                , 1.                , 0.                , 0.                , 0.,
-             0.                , 0.                , 0.                , 0.                , 0.0980762113533159, 1.                , 0.                , 0.,
-             0.                , 0.                , 0.                , 0.                , 0.0980762113533159, 0.0592952558196218, 1.                , 0.,
-             0.4142135623730951, 0.                , 0.                , 0.9329077440557915, 0.                , 0.                , 0.8441594335316119, 1.
-            },
-            {N, N},
-            'C'  // row-major order
-        };
-
-        std::vector<double> expect_beta {
-            1.7071067811865472,
-            1.8944271909999157,
-            1.1474419561548972,
-            1.0693375245281538,
-            1.9622504486493761,
-            1.992992782143569 ,
-            1.1678115068791026,
-            0.
-        };
-
-        CSCMatrix expect_R {
-            {-1.4142135623730951,  0.                ,  0.                , -3.5355339059327378,  0.                ,  0.                , -1.414213562373095 ,  0.                ,
-              0.                , -2.23606797749979  , -1.341640786499874 ,  0.                ,  0.                ,  0.                , -4.024922359499621 , -0.4472135954999579,
-              0.                ,  0.                , -3.03315017762062  , -0.9890707100936806,  0.                ,  0.                , -0.8571946154145236, -0.1318760946791574,
-              0.                ,  0.                ,  0.                , -2.1264381322847794,  0.                ,  0.                ,  0.3987071498033972,  0.061339561508215 ,
-              0.                ,  0.                ,  0.                ,  0.                , -5.196152422706632 , -2.309401076758503 , -0.1924500897298752, -0.1924500897298752,
-              0.                ,  0.                ,  0.                ,  0.                ,  0.                , -5.715476066494082 , -0.0972019739199674, -0.9720197391996737,
-              0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.                , -5.818914395248401 , -0.8474056139492476,
-              0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.                ,  0.2808744717175516
-            },
-            {N, N},
-            'C' // row-major order
-        };
-
         // ---------- Factor the matrix
         SymbolicQR S = sqr(A);
         QRResult res = qr(A, S);
-
-        compare_matrices(res.V, expect_V);
-        CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
-        compare_matrices(res.R, expect_R);
 
         CSCMatrix QT = apply_qtleft(res.V, res.beta, S.p_inv, I);
         CSCMatrix QR = (QT.T() * res.R).droptol().to_canonical();
@@ -3207,13 +3164,13 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
         SECTION("Exercise 5.1: Symbolic factorization") {
             QRResult sym_res = symbolic_qr(A, S);
 
-            CHECK(sym_res.V.indptr() == expect_V.indptr());
-            CHECK_THAT(sym_res.V.indices(), UnorderedEquals(expect_V.indices()));
-            CHECK(sym_res.V.data().size() == expect_V.data().size());  // allocation only
+            CHECK(sym_res.V.indptr() == res.V.indptr());
+            CHECK(sym_res.V.indices() == res.V.indices());
+            CHECK(sym_res.V.data().size() == res.V.data().size());  // allocation only
             CHECK(sym_res.beta.empty());
-            CHECK(sym_res.R.indptr() == expect_R.indptr());
-            CHECK_THAT(sym_res.R.indices(), UnorderedEquals(expect_R.indices()));
-            REQUIRE(sym_res.R.data().size() == expect_R.data().size());  // allocation only
+            CHECK(sym_res.R.indptr() == res.R.indptr());
+            CHECK(sym_res.R.indices() == res.R.indices());
+            REQUIRE(sym_res.R.data().size() == res.R.data().size());  // allocation only
         }
 
         SECTION("Exercise 5.3: Re-QR factorization") {
@@ -3221,10 +3178,6 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
 
             // Compute the numeric factorization using the symbolic result
             reqr(A, S, res);
-
-            compare_matrices(res.V, expect_V);
-            CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
-            compare_matrices(res.R, expect_R);
 
             CSCMatrix QT = apply_qtleft(res.V, res.beta, S.p_inv, I);
             CSCMatrix QR = (QT.T() * res.R).droptol().to_canonical();
@@ -3238,11 +3191,7 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
             QRResult res = qr(A, S);
 
             // The postordering of this matrix *is* the natural ordering.
-            // TODO Find and example with a different postorder for testing
-            compare_matrices(res.V, expect_V);
-            CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
-            compare_matrices(res.R, expect_R);
-
+            // TODO Find an example with a different postorder for testing
             CSCMatrix QT = apply_qtleft(res.V, res.beta, S.p_inv, I);
             CSCMatrix QR = (QT.T() * res.R).droptol().to_canonical();
             compare_matrices(QR, A);

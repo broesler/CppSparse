@@ -3146,6 +3146,12 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
     }
 
     SECTION("Numeric factorization") {
+        // Create the identity matrix for testing
+        std::vector<csint> rows(N);
+        std::iota(rows.begin(), rows.end(), 0);
+        std::vector<double> vals(N, 1.0);
+        CSCMatrix I = COOMatrix(vals, rows, rows).tocsc();
+
         // Expected values computed with scipy.linalg.qr
         CSCMatrix expect_V {
             {1.                , 0.                , 0.                , 0.                , 0.                , 0.                , 0.                , 0.,
@@ -3194,6 +3200,10 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
         CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
         compare_matrices(res.R, expect_R);
 
+        CSCMatrix QT = apply_qtleft(res.V, res.beta, S.p_inv, I);
+        CSCMatrix QR = (QT.T() * res.R).droptol().to_canonical();
+        compare_matrices(QR, A);
+
         SECTION("Exercise 5.1: Symbolic factorization") {
             QRResult sym_res = symbolic_qr(A, S);
 
@@ -3215,6 +3225,10 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
             compare_matrices(res.V, expect_V);
             CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
             compare_matrices(res.R, expect_R);
+
+            CSCMatrix QT = apply_qtleft(res.V, res.beta, S.p_inv, I);
+            CSCMatrix QR = (QT.T() * res.R).droptol().to_canonical();
+            compare_matrices(QR, A);
         }
 
         SECTION("Exercise 5.5: Use post-ordering with natural ordering") {
@@ -3228,6 +3242,10 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
             compare_matrices(res.V, expect_V);
             CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
             compare_matrices(res.R, expect_R);
+
+            CSCMatrix QT = apply_qtleft(res.V, res.beta, S.p_inv, I);
+            CSCMatrix QR = (QT.T() * res.R).droptol().to_canonical();
+            compare_matrices(QR, A);
         }
     }
 }

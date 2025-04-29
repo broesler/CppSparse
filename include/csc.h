@@ -972,6 +972,12 @@ class CSCMatrix
         friend QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S);
         friend QRResult qr(const CSCMatrix& A, const SymbolicQR& S);
         friend void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res);
+        friend CSCMatrix apply_qtleft(
+            const CSCMatrix& V,
+            const std::vector<double>& beta,
+            const std::vector<csint>& p_inv,
+            const CSCMatrix& Y
+        );
 
         // ---------------------------------------------------------------------
         //         LU Decomposition

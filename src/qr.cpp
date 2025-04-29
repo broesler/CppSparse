@@ -445,6 +445,80 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 }
 
 
+std::vector<double> apply_qtleft(
+    const CSCMatrix& V,
+    const std::vector<double>& beta,
+    const std::vector<csint>& p_inv,
+    const std::vector<double>& y
+)
+{
+    auto [M2, N] = V.shape();
+
+    std::vector<double> x = ipvec(p_inv, y);  // x = Py
+
+    for (csint j = 0; j < N; j++) {
+        x = happly(V, j, beta[j], x);
+    }
+
+    return x;
+}
+
+
+CSCMatrix apply_qtleft(
+    const CSCMatrix& V,
+    const std::vector<double>& beta,
+    const std::vector<csint>& p_inv,
+    const CSCMatrix& Y
+)
+{
+    auto [M2, N] = V.shape();
+    auto [M, NY] = Y.shape();
+
+    CSCMatrix X = Y;  // copy Y into X, work in-place
+    CSCMatrix C({M, NY}, Y.nnz());  // allocate C for the result
+
+    if (M2 > M) {
+        X.add_empty_bottom(M2 - M);
+    }
+
+    // NOTE p_inv is passed along to apply_qtleft(V, beta, p_inv, x)
+    // X = X.permute_rows(p_inv);  // apply p_inv to Y
+
+    csint nz = 0;
+
+    // Apply the Householder reflectors to each column of Y
+    for (csint k = 0; k < N; k++) {
+        if (nz + M > C.nzmax()) {
+            C.realloc(2 * C.nzmax() + M);
+        }
+
+        C.p_[k] = nz;  // column j of C starts here
+
+        // Scatter X(:, k) into x
+        std::vector<double> x(M);
+        for (csint p = X.p_[k]; p < X.p_[k+1]; p++) {
+            x[X.i_[p]] = X.v_[p];
+        }
+
+        // Apply Householder reflection to x
+        x = apply_qtleft(V, beta, p_inv, x);
+
+        // Gather x into X(:, k)
+        for (csint i = 0; i < M; i++) {
+            if (x[i] != 0) {
+                C.i_[nz] = i;
+                C.v_[nz++] = x[i];
+            }
+        }
+    }
+
+    C.p_[N] = nz;  // finalize C
+    C.realloc();
+
+    return C;
+}
+
+
 }  // namespace cs
 
 /*==============================================================================

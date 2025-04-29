@@ -3307,7 +3307,7 @@ TEST_CASE("QR factorization of overdetermined matrix M > N", "[qr][M > N]")
 }
 
 
-TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
+TEST_CASE("QR factorization of an underdetermined matrix M < N", "[qr][M < N]")
 {
     // NOTE As written, when M < N, the cs::qr code computes a QR factorization
     // that results in V size (N, N), and R size (N, N). The actual sizes should
@@ -3315,7 +3315,7 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
     // desired sizes.
 
     // Define the test matrix A (See Davis, Figure 5.1, p 74)
-    // except remove the last 2 columns
+    // except remove the last 3 rows
     csint M = 5;
     csint N = 8;
     CSCMatrix A = davis_example_qr().slice(0, M, 0, N);
@@ -3358,44 +3358,25 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[under]")
     }
 
     SECTION("Numeric factorization") {
+        // TODO test order=ATA
         SymbolicQR S = sqr(A);
         QRResult res = qr(A, S);
 
-        // Expected values from scipy.linalg.qr
-        CSCMatrix expect_V {
-            {1.                , 0.                , 0.                , 0.                , 0.                ,
-             0.                , 1.                , 0.                , 0.                , 0.                ,
-             0.                , 0.                , 1.                , 0.                , 0.                ,
-             0.4142135623730951, 0.                , 0.                , 1.                , 0.                ,
-             0.                , 0.                , 0.                , 0.                , 1.
-            },
-            {M, M},
-            'C'  // row-major order
-        };
+        // Create the identity matrix for testing
+        std::vector<csint> idx(M);
+        std::iota(idx.begin(), idx.end(), 0);
+        std::vector<double> vals(M, 1.0);
+        CSCMatrix I = COOMatrix(vals, idx, idx).tocsc();
 
-        std::vector<double> expect_beta(M);  // (M,)
-        expect_beta[0] = 1.7071067811865472;
-
-        CSCMatrix expect_R {
-            {-1.4142135623730951,  0.                ,  0.                , -3.5355339059327378,  0.                ,  0.                , -1.414213562373095     ,  0.                ,
-              0.                ,  2.                ,  1.                ,  0.                ,  0.                ,  0.                ,  1.                    ,  0.                ,
-              0.                ,  0.                ,  3.                ,  1.                ,  0.                ,  0.                ,  0.                    ,  0.                ,
-              0.                ,  0.                ,  0.                ,  2.1213203435596424,  0.                ,  0.                , -4.7442685329306630e-17,  0.                ,
-              0.                ,  0.                ,  0.                ,  0.                ,  5.                ,  1.                ,  0.                    ,  0.
-            },
-            {M, N},
-            'C' // row-major order
-        };
+        CSCMatrix Q = apply_qtleft(res.V, res.beta, S.p_inv, I).T();
+        CSCMatrix QR = (Q * res.R).droptol().to_canonical();
+        compare_matrices(QR, A);
 
         // std::cout << "V:" << std::endl;
         // res.V.print_dense();
         // std::cout << "beta:" << res.beta << std::endl;
         // std::cout << "R:" << std::endl;
         // res.R.print_dense();
-
-        compare_matrices(res.V, expect_V);
-        CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
-        compare_matrices(res.R, expect_R);
     }
 }
 

@@ -1970,11 +1970,12 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.")
 
 TEST_CASE("Exercise 2.29: Adding empty rows and columns to a CSCMatrix.")
 {
-    CSCMatrix A = davis_example_small().tocsc();
+    const CSCMatrix A = davis_example_small().tocsc();
+    CSCMatrix C = A;
     int k = 3;  // number of rows/columns to add
 
     SECTION("Add empty rows to top") {
-        CSCMatrix C = A.add_empty_top(k);
+        C.add_empty_top(k);
 
         std::vector<csint> expect_indices = A.indices();
         for (auto& x : expect_indices) {
@@ -1989,7 +1990,7 @@ TEST_CASE("Exercise 2.29: Adding empty rows and columns to a CSCMatrix.")
     }
 
     SECTION("Add empty rows to bottom") {
-        CSCMatrix C = A.add_empty_bottom(k);
+        C.add_empty_bottom(k);
 
         REQUIRE(C.nnz() == A.nnz());
         REQUIRE(C.shape()[0] == A.shape()[0] + k);
@@ -1999,7 +2000,7 @@ TEST_CASE("Exercise 2.29: Adding empty rows and columns to a CSCMatrix.")
     }
 
     SECTION("Add empty columns to left") {
-        CSCMatrix C = A.add_empty_left(k);
+        C.add_empty_left(k);
 
         std::vector<csint> expect_indptr(k, 0);
         expect_indptr.insert(
@@ -2016,7 +2017,7 @@ TEST_CASE("Exercise 2.29: Adding empty rows and columns to a CSCMatrix.")
     }
 
     SECTION("Add empty columns to right") {
-        CSCMatrix C = A.add_empty_right(k);
+        C.add_empty_right(k);
 
         std::vector<csint> expect_indptr = A.indptr();
         std::vector<csint> nnzs(k, A.nnz());

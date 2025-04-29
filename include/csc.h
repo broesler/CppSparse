@@ -769,41 +769,41 @@ class CSCMatrix
         *
         * See: Davis, Exercise 2.29.
         *
-        * @param k  the number of rows to add.
+        * @param k  the number of rows to add
         *
-        * @return C  the matrix with `k` empty rows added to the top.
+        * @return  a reference to the modified matrix
         */
-        CSCMatrix add_empty_top(const csint k) const;
+        CSCMatrix& add_empty_top(const csint k);
 
         /** Add empty rows to the bottom of the matrix.
          *
          * See: Davis, Exercise 2.29.
          *
-         * @param k  the number of rows to add.
+         * @param k  the number of rows to add
          *
-         * @return C  the matrix with `k` empty rows added to the bottom.
+        * @return  a reference to the modified matrix
          */
-        CSCMatrix add_empty_bottom(const csint k) const;
+        CSCMatrix& add_empty_bottom(const csint k);
 
         /** Add empty columns to the left of the matrix.
          *
          * See: Davis, Exercise 2.29.
          *
-         * @param k  the number of columns to add.
+         * @param k  the number of columns to add
          *
-         * @return C  the matrix with `k` empty columns added to the left.
+        * @return  a reference to the modified matrix
          */
-        CSCMatrix add_empty_left(const csint k) const;
+        CSCMatrix& add_empty_left(const csint k);
 
         /** Add empty columns to the right of the matrix.
         *
         * See: Davis, Exercise 2.29.
         *
-        * @param k  the number of columns to add.
+        * @param k  the number of columns to add
         *
-        * @return C  the matrix with `k` empty columns added to the right.
+        * @return  a reference to the modified matrix
         */
-        CSCMatrix add_empty_right(const csint k) const;
+        CSCMatrix& add_empty_right(const csint k);
 
         /** Sum the rows of a matrix.
          *

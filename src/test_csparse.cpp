@@ -3087,6 +3087,7 @@ TEST_CASE("QR factorization of the Identity Matrix")
 }
 
 
+// TODO combine cases with sliced A?
 TEST_CASE("QR Decomposition of Square, Non-symmetric A")
 {
     csint N = 8;  // number of rows and columns
@@ -3157,8 +3158,8 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
         SymbolicQR S = sqr(A);
         QRResult res = qr(A, S);
 
-        CSCMatrix QT = apply_qtleft(res.V, res.beta, S.p_inv, I);
-        CSCMatrix QR = (QT.T() * res.R).droptol().to_canonical();
+        CSCMatrix Q = apply_qtleft(res.V, res.beta, S.p_inv, I).T();
+        CSCMatrix QR = (Q * res.R).droptol().to_canonical();
         compare_matrices(QR, A);
 
         SECTION("Exercise 5.1: Symbolic factorization") {
@@ -3179,8 +3180,8 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
             // Compute the numeric factorization using the symbolic result
             reqr(A, S, res);
 
-            CSCMatrix QT = apply_qtleft(res.V, res.beta, S.p_inv, I);
-            CSCMatrix QR = (QT.T() * res.R).droptol().to_canonical();
+            CSCMatrix Q = apply_qtleft(res.V, res.beta, S.p_inv, I).T();
+            CSCMatrix QR = (Q * res.R).droptol().to_canonical();
             compare_matrices(QR, A);
         }
 
@@ -3192,15 +3193,15 @@ TEST_CASE("QR Decomposition of Square, Non-symmetric A")
 
             // The postordering of this matrix *is* the natural ordering.
             // TODO Find an example with a different postorder for testing
-            CSCMatrix QT = apply_qtleft(res.V, res.beta, S.p_inv, I);
-            CSCMatrix QR = (QT.T() * res.R).droptol().to_canonical();
+            CSCMatrix Q = apply_qtleft(res.V, res.beta, S.p_inv, I).T();
+            CSCMatrix QR = (Q * res.R).droptol().to_canonical();
             compare_matrices(QR, A);
         }
     }
 }
 
 
-TEST_CASE("QR factorization of overdetermined matrix M > N")
+TEST_CASE("QR factorization of overdetermined matrix M > N", "[qr][M > N]")
 {
     // Define the test matrix A (See Davis, Figure 5.1, p 74)
     // except remove the last 2 columns
@@ -3247,71 +3248,41 @@ TEST_CASE("QR factorization of overdetermined matrix M > N")
     }
 
     SECTION("Numeric factorization") {
+        // TODO test order=ATA
         SymbolicQR S = sqr(A);
         QRResult res = qr(A, S);
 
-        // Expected values from scipy.linalg.qr
-        CSCMatrix expect_V {
-            {1.                , 0.                , 0.                , 0.                , 0.                ,
-             0.                , 1.                , 0.                , 0.                , 0.                ,
-             0.                , 0.2360679774997897, 1.                , 0.                , 0.                ,
-             0.                , 0.                , 0.8619788607068873, 1.                , 0.                ,
-             0.                , 0.                , 0.                , 0.                , 1.                ,
-             0.4142135623730951, 0.                , 0.                , 0.9329077440557915, 0.                ,
-             0.                , 0.                , 0.                , 0.                , 0.0980762113533159,
-             0.                , 0.                , 0.                , 0.                , 0.0980762113533159
-            },
-            {M, N},
-            'C'  // row-major order
-        };
+        // Create the identity matrix for testing
+        std::vector<csint> idx(M);
+        std::iota(idx.begin(), idx.end(), 0);
+        std::vector<double> vals(M, 1.0);
+        CSCMatrix I = COOMatrix(vals, idx, idx).tocsc();
 
-        std::vector<double> expect_beta {
-            1.7071067811865472,
-            1.8944271909999157,
-            1.1474419561548972,
-            1.0693375245281538,
-            1.9622504486493761
-        };
-
-        CSCMatrix expect_R {
-            {-1.4142135623730951,  0.                ,  0.                , -3.5355339059327378,  0.                ,
-              0.                , -2.23606797749979  , -1.341640786499874 ,  0.                ,  0.                ,
-              0.                ,  0.                , -3.0331501776206204, -0.9890707100936804,  0.                ,
-              0.                ,  0.                ,  0.                , -2.1264381322847794,  0.                ,
-              0.                ,  0.                ,  0.                ,  0.                , -5.196152422706632 ,
-              0.                ,  0.                ,  0.                ,  0.                ,  0.                ,
-              0.                ,  0.                ,  0.                ,  0.                ,  0.                ,
-              0.                ,  0.                ,  0.                ,  0.                ,  0.
-            },
-            {M, N},
-            'C' // row-major order
-        };
-
-        compare_matrices(res.V, expect_V);
-        CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
-        compare_matrices(res.R, expect_R);
+        CSCMatrix Q = apply_qtleft(res.V, res.beta, S.p_inv, I).T();
+        CSCMatrix QR = (Q * res.R).droptol().to_canonical();
+        compare_matrices(QR, A);
 
         SECTION("Exercise 5.1: Symbolic factorization") {
             QRResult sym_res = symbolic_qr(A, S);
 
-            CHECK(sym_res.V.indptr() == expect_V.indptr());
-            CHECK_THAT(sym_res.V.indices(), UnorderedEquals(expect_V.indices()));
-            CHECK(sym_res.V.data().size() == expect_V.data().size());
+            CHECK(sym_res.V.indptr() == res.V.indptr());
+            CHECK(sym_res.V.indices() == res.V.indices());
+            CHECK(sym_res.V.data().size() == res.V.data().size());
             CHECK(sym_res.beta.empty());
-            CHECK(sym_res.R.indptr() == expect_R.indptr());
-            CHECK_THAT(sym_res.R.indices(), UnorderedEquals(expect_R.indices()));
-            REQUIRE(sym_res.R.data().size() == expect_R.data().size());
+            CHECK(sym_res.R.indptr() == res.R.indptr());
+            CHECK(sym_res.R.indices() == res.R.indices());
+            REQUIRE(sym_res.R.data().size() == res.R.data().size());
         }
 
         SECTION("Exercise 5.3: Re-QR factorization") {
-            res = symbolic_qr(A, S);
+            QRResult res = symbolic_qr(A, S);
 
             // Compute the numeric factorization using the symbolic result
             reqr(A, S, res);
 
-            compare_matrices(res.V, expect_V);
-            CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
-            compare_matrices(res.R, expect_R);
+            CSCMatrix Q = apply_qtleft(res.V, res.beta, S.p_inv, I).T();
+            CSCMatrix QR = (Q * res.R).droptol().to_canonical();
+            compare_matrices(QR, A);
         }
     }
 }

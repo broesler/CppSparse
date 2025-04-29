@@ -296,8 +296,10 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     csint M = S.m2;  // If M < N, m2 = N
     csint N = A.N_;
 
+    csint Nv = std::min(M, N);
+
     // Allocate result matrices
-    CSCMatrix V({M, N}, S.vnz);   // Householder vectors
+    CSCMatrix V({M, Nv}, S.vnz);   // Householder vectors
     CSCMatrix R({M, N}, S.rnz);   // R factor
     std::vector<double> beta(N);  // scaling factors
 
@@ -382,6 +384,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
         V = V.slice(0, A.M_, 0, A.M_);  // truncate V to (M, M)
         beta.resize(A.M_);              // truncate beta to M
         R = R.slice(0, A.M_, 0, A.N_);  // truncate R to (M, N)
+        // FIXME p_inv breaks with davis_example_qr, order=ATA
         // Also truncate p_inv appropriately? Might not always work
         p_inv.resize(A.M_);
     }
@@ -475,7 +478,7 @@ CSCMatrix apply_qtleft(
     auto [M, NY] = Y.shape();
 
     CSCMatrix X = Y;  // copy Y into X, work in-place
-    CSCMatrix C({M, NY}, Y.nnz());  // allocate C for the result
+    CSCMatrix C({M, NY}, 2 * V.nnz());  // allocate C for the result
 
     if (M2 > M) {
         X.add_empty_bottom(M2 - M);
@@ -484,10 +487,11 @@ CSCMatrix apply_qtleft(
     // NOTE p_inv is passed along to apply_qtleft(V, beta, p_inv, x)
     // X = X.permute_rows(p_inv);  // apply p_inv to Y
 
+    std::vector<double> x(M);
     csint nz = 0;
 
     // Apply the Householder reflectors to each column of Y
-    for (csint k = 0; k < N; k++) {
+    for (csint k = 0; k < NY; k++) {
         if (nz + M > C.nzmax()) {
             C.realloc(2 * C.nzmax() + M);
         }
@@ -495,7 +499,6 @@ CSCMatrix apply_qtleft(
         C.p_[k] = nz;  // column j of C starts here
 
         // Scatter X(:, k) into x
-        std::vector<double> x(M);
         for (csint p = X.p_[k]; p < X.p_[k+1]; p++) {
             x[X.i_[p]] = X.v_[p];
         }
@@ -508,11 +511,12 @@ CSCMatrix apply_qtleft(
             if (x[i] != 0) {
                 C.i_[nz] = i;
                 C.v_[nz++] = x[i];
+                x[i] = 0.0;  // clear x
             }
         }
     }
 
-    C.p_[N] = nz;  // finalize C
+    C.p_[NY] = nz;  // finalize C
     C.realloc();
 
     return C;

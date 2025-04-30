@@ -3204,6 +3204,61 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N]")
 }
 
 
+TEST_CASE("Square, rank-deficient A", "[qr][rank-deficient]") 
+{
+    CSCMatrix A = davis_example_qr();
+    auto [M, N] = A.shape();
+
+    // CSparse only uses 2 possible orders for QR factorization:
+    AMDOrder order = AMDOrder::Natural;
+
+    SECTION("Single Zero Row") {
+        // Zero out an arbitrary row to make A rank-deficient
+        csint k = 3;
+        for (csint j = 0; j < N; j++) {
+            A.assign(k, j, 0.0);
+        }
+        A = A.to_canonical();
+    }
+
+    SECTION("Single Zero Column") {
+        // Zero out an arbitrary row to make A rank-deficient
+        csint k = 3;
+        for (csint i = 0; i < N; i++) {
+            A.assign(i, k, 0.0);
+        }
+        A = A.to_canonical();
+    }
+
+    SymbolicQR S = sqr(A, order);
+    QRResult res = qr(A, S);
+
+    // M2 - M is the number of dependent rows in the matrix
+    // V and R will be size (M2, N), so Q will be (M2, M2), and QR (M2, N).
+    // The last rows will just be zeros, so slice QR to (M, N) to match A.
+
+    csint M2 = res.V.shape()[0];
+
+    // Identity matrix for building Q
+    std::vector<csint> idx(M2);
+    std::iota(idx.begin(), idx.end(), 0);
+    std::vector<double> vals(M2, 1.0);
+    CSCMatrix I = COOMatrix(vals, idx, idx).tocsc();
+
+    REQUIRE(res.V.shape() == Shape {M2, N});
+    REQUIRE(res.R.shape() == Shape {M2, N});
+
+    CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
+
+    REQUIRE(Q.shape() == Shape {M2, M2});
+
+    CSCMatrix QR = (Q * res.R).slice(0, M, 0, N).droptol(tol).to_canonical();
+    CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
+
+    compare_matrices(QR, Aq);
+}
+
+
 TEST_CASE("Symbolic QR factorization of overdetermined matrix M > N", "[qr][M > N]")
 {
     // Define the test matrix A (See Davis, Figure 5.1, p 74)

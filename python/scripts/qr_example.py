@@ -115,7 +115,8 @@ Qr = csparse.apply_qright(Vr, beta_r, pr)  # (M, M)
 Qrt = csparse.apply_qtleft(Vr, beta_r, pr).T  # (M, M)
 
 # Get the scipy version
-Arp = Ar_dense[pr][:, q]
+# Arp = Ar_dense[pr][:, q]
+Arp = Ar_dense[:, q]
 Qr_, Rr_ = la.qr(Arp)
 
 (Qraw_r, tau_r), _ = la.qr(Arp, mode='raw')
@@ -136,7 +137,7 @@ Vr_ = np.tril(Qraw_r, -1)[:, :M] + np.eye(M, min(M, N))
 # print(Qr @ Rr)
 
 # Try a random sparse A matrix
-rng = np.random.default_rng(565656)
+rng = np.random.default_rng(56565)
 A = sparse.random(M, N, density=0.5, format='csc', dtype=np.float64, rng=rng)
 
 # Set the diagonal to 1..M to ensure full rank
@@ -159,6 +160,12 @@ np.testing.assert_allclose(tau, beta_l, atol=atol)
 np.testing.assert_allclose(Q, Q_l, atol=atol)
 np.testing.assert_allclose(R, R_l, atol=atol)
 np.testing.assert_allclose(Q_l @ R_l, A, atol=atol)
+
+# Run our own python QR
+A = A[:, :M]  # (5, 5)
+A[2, :] = 0   # make it rank deficient
+V, beta, R = csparse.qr_left(A)
+Q = csparse.apply_qtleft(V, beta).T
 
 # -----------------------------------------------------------------------------
 #         Compute using Givens rotations

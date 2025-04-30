@@ -3167,8 +3167,8 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N]")
 
         CHECK(sym_res.V.indptr() == res.V.indptr());
         CHECK(sym_res.V.indices() == res.V.indices());
-        CHECK(sym_res.V.data().size() == res.V.data().size());  // allocation only
-        CHECK(sym_res.beta.empty());
+        CHECK(sym_res.V.data().size() == res.V.data().size());    // allocation only
+        CHECK(sym_res.beta.size() == res.beta.size());            // allocation only
         CHECK(sym_res.R.indptr() == res.R.indptr());
         CHECK(sym_res.R.indices() == res.R.indices());
         REQUIRE(sym_res.R.data().size() == res.R.data().size());  // allocation only
@@ -3224,8 +3224,28 @@ TEST_CASE("Square, rank-deficient A", "[qr][rank-deficient]")
     SECTION("Single Zero Column") {
         // Zero out an arbitrary row to make A rank-deficient
         csint k = 3;
-        for (csint i = 0; i < N; i++) {
+        for (csint i = 0; i < M; i++) {
             A.assign(i, k, 0.0);
+        }
+        A = A.to_canonical();
+    }
+
+    SECTION("Multiple Zero Rows") {
+        // Zero out an arbitrary row to make A rank-deficient
+        for (const auto& k : {2, 3, 5}) {
+            for (csint j = 0; j < N; j++) {
+                A.assign(k, j, 0.0);
+            }
+        }
+        A = A.to_canonical();
+    }
+
+    SECTION("Multiple Zero Columns") {
+        // Zero out an arbitrary row to make A rank-deficient
+        for (const auto& k : {2, 3, 5}) {
+            for (csint i = 0; i < M; i++) {
+                A.assign(i, k, 0.0);
+            }
         }
         A = A.to_canonical();
     }
@@ -3348,7 +3368,7 @@ TEST_CASE("Numeric QR factorization of overdetermined matrix M > N", "[qr][M > N
         CHECK(sym_res.V.indptr() == res.V.indptr());
         CHECK(sym_res.V.indices() == res.V.indices());
         CHECK(sym_res.V.data().size() == res.V.data().size());
-        CHECK(sym_res.beta.empty());
+        CHECK(sym_res.beta.size() == res.beta.size());
         CHECK(sym_res.R.indptr() == res.R.indptr());
         CHECK(sym_res.R.indices() == res.R.indices());
         REQUIRE(sym_res.R.data().size() == res.R.data().size());
@@ -3369,7 +3389,7 @@ TEST_CASE("Numeric QR factorization of overdetermined matrix M > N", "[qr][M > N
 }
 
 
-TEST_CASE("QR factorization of an underdetermined matrix M < N", "[qr][M < N]")
+TEST_CASE("Symbolic QR Factorization of Underdetermined Matrix M < N", "[qr][M < N]")
 {
     // NOTE As written, when M < N, the cs::qr code computes a QR factorization
     // that results in V size (N, N), and R size (N, N). The actual sizes should
@@ -3418,27 +3438,77 @@ TEST_CASE("QR factorization of an underdetermined matrix M < N", "[qr][M < N]")
         CHECK(S.vnz == 9);
         REQUIRE(S.rnz == 16);
     }
+}
+
+
+TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < N]")
+{
+    // NOTE As written, when M < N, the cs::qr code computes a QR factorization
+    // that results in V size (N, N), and R size (N, N). The actual sizes should
+    // be V (M, M) and R (M, N). We currently just slice the result to get the
+    // desired sizes.
+
+    // Define the test matrix A (See Davis, Figure 5.1, p 74)
+    // except remove the last 3 rows
+    csint M = 5;
+    csint N = 8;
+    CSCMatrix A = davis_example_qr().slice(0, M, 0, N);
+    CHECK(A.shape() == Shape {M, N});
+
+    // CSparse only uses 2 possible orders for QR factorization:
+    AMDOrder order = GENERATE(
+        AMDOrder::Natural,
+        AMDOrder::ATA
+    );
+    CAPTURE(order);
+
+    // ---------- Factor the matrix
+    SymbolicQR S = sqr(A, order);
+    QRResult res = qr(A, S);
+
+    // M2 - M is the number of dependent rows in the matrix
+    // V and R will be size (M2, N), so Q will be (M2, M2), and QR (M2, N).
+    // The last rows will just be zeros, so slice QR to (M, N) to match A.
+
+    csint M2 = res.V.shape()[0];
+
+    // Create the identity matrix for testing
+    std::vector<csint> idx(M2);
+    std::iota(idx.begin(), idx.end(), 0);
+    std::vector<double> vals(M2, 1.0);
+    CSCMatrix I = COOMatrix(vals, idx, idx).tocsc();
 
     SECTION("Numeric factorization") {
-        // TODO test order=ATA
-        SymbolicQR S = sqr(A);
-        QRResult res = qr(A, S);
+        CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
+        CSCMatrix QR = (Q * res.R).slice(0, M, 0, N).droptol(tol).to_canonical();
+        CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
-        // Create the identity matrix for testing
-        std::vector<csint> idx(M);
-        std::iota(idx.begin(), idx.end(), 0);
-        std::vector<double> vals(M, 1.0);
-        CSCMatrix I = COOMatrix(vals, idx, idx).tocsc();
+        compare_matrices(QR, Aq);
+    }
 
-        CSCMatrix Q = apply_qtleft(res.V, res.beta, S.p_inv, I).T();
-        CSCMatrix QR = (Q * res.R).droptol().to_canonical();
-        compare_matrices(QR, A);
+    SECTION("Exercise 5.1: Symbolic factorization") {
+        QRResult sym_res = symbolic_qr(A, S);
 
-        // std::cout << "V:" << std::endl;
-        // res.V.print_dense();
-        // std::cout << "beta:" << res.beta << std::endl;
-        // std::cout << "R:" << std::endl;
-        // res.R.print_dense();
+        CHECK(sym_res.V.indptr() == res.V.indptr());
+        CHECK(sym_res.V.indices() == res.V.indices());
+        CHECK(sym_res.V.data().size() == res.V.data().size());
+        CHECK(sym_res.beta.size() == res.beta.size());
+        CHECK(sym_res.R.indptr() == res.R.indptr());
+        CHECK(sym_res.R.indices() == res.R.indices());
+        REQUIRE(sym_res.R.data().size() == res.R.data().size());
+    }
+
+    SECTION("Exercise 5.3: Re-QR factorization") {
+        res = symbolic_qr(A, S);
+
+        // Compute the numeric factorization using the symbolic result
+        reqr(A, S, res);
+
+        CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
+        CSCMatrix QR = (Q * res.R).slice(0, M, 0, N).droptol(tol).to_canonical();
+        CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
+
+        compare_matrices(QR, Aq);
     }
 }
 

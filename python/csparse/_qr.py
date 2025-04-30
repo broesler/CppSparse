@@ -205,28 +205,15 @@ def qr_left(A):
         The upper triangular matrix.
     """
     M, N = A.shape
-    M2 = max(M, N)
+    Nv = min(M, N)  # number of Householder reflectors
+    V = np.eye(M, Nv)
+    beta = np.zeros(Nv)
+    R = np.zeros((M, N))
 
-    # NOTE if M < N, this function tries to access V[:, i] for i > M, which
-    # will cause an error.
-    # HACK: add empty rows to A to make it N x N, then remove the extra rows
-    # and columns at the end. This method is not efficient if M << N, since we
-    # do a lot of operations on the empty rows.
-    #
-    # The extra rows/columns of V are just the identity, extra beta entries are
-    # zeros, and the extra rows of R are just zeros.
-    #
-    # Can we just skip the extra rows/columns in the loop?
-    if M < N:
-        A = np.vstack([A, np.zeros((N - M, N))])
-
-    V = np.eye(M2)
-    beta = np.zeros(V.shape[1])
-    R = np.zeros((M2, N))
-
-    for k in range(N):
+    for k in range(Nv):
         x = A[:, [k]]
 
+        # Apply the Householder reflectors to the current column
         for i in range(k):
             v = V[i:, [i]]
             b = beta[i]
@@ -236,7 +223,7 @@ def qr_left(A):
         x_k = x[k:]
         (Qraw, b), _ = la.qr(x_k, mode='raw')
         V[k+1:, [k]] = Qraw[1:]  # extract the reflector
-        beta[k] = float(b[0])    # get the scalar
+        beta[k] = b[0]    # get the scalar
         R[:k, [k]] = x[:k]
         # NOTE If beta == 0, H is the identity matrix, so Hx == x:
         # if beta[k] == 0:
@@ -248,10 +235,15 @@ def qr_left(A):
         R[k, k] = Qraw[0, 0]
 
     if M < N:
-        # Remove the empty rows and column
-        V = V[:M, :M]
-        R = R[:M, :]
-        beta = beta[:M]
+        # If M < N, A = [A1 | A2], where A1 is (M, M) and A2 is (M, N-M).
+        # Let Q1 R1 = A1 be a QR decomposition of A1.
+        # Then, A = Q1 [ R1 | Q1.T @ A2 ] is a QR decomposition of A.
+        #
+        # We have found Q1 R1 = A1 in V, beta, R. So R2 = Q1.T @ A2
+        # See:
+        # <https://math.stackexchange.com/questions/678843/householder-qr-factorization-for-m-by-n-matrix-both-m-n-and-mn>
+        # and Golub & Van Loan, 3rd ed., §5.7.2 *Underdetermined Systems*.
+        R[:, M:] = apply_qtleft(V, beta, p=None, Y=A[:, M:])
 
     return V, beta, R
 

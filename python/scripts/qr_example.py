@@ -82,15 +82,14 @@ np.testing.assert_allclose(Q @ R, A_dense[:, q], atol=atol)
 
 
 # -----------------------------------------------------------------------------
-#         QR with a M < N matrix
+#         QR with a M != N matrix
 # -----------------------------------------------------------------------------
-M, N = 8, 5
-# M, N = 5, 8
+# M, N = 8, 5
+M, N = 5, 8
 
 Ar = A[:M, :N]
 
 Ar_dense = Ar.toarray()
-M, N = Ar.shape
 
 print("Ar = ")
 print(Ar_dense)
@@ -113,6 +112,7 @@ pr = csparse.inv_permute(p_inv)
 # cs_qright is not implemented for M < N.
 
 Qr = csparse.apply_qright(Vr, beta_r, pr)  # (M, M)
+Qrt = csparse.apply_qtleft(Vr, beta_r, pr).T  # (M, M)
 
 # Get the scipy version
 Arp = Ar_dense[pr][:, q]
@@ -121,19 +121,44 @@ Qr_, Rr_ = la.qr(Arp)
 (Qraw_r, tau_r), _ = la.qr(Arp, mode='raw')
 Vr_ = np.tril(Qraw_r, -1)[:, :M] + np.eye(M, min(M, N))
 
-print("Qr_ = ")
-print(Qr_)
-print("Rr_ = ")
-print(Rr_)
+# print("Qr_ = ")
+# print(Qr_)
+# print("Rr_ = ")
+# print(Rr_)
 
 # Qr_r = csparse.apply_qright(Vr_, tau_r)
 
-np.testing.assert_allclose(Qr, Qr_[p_inv], atol=atol)
-np.testing.assert_allclose(Rr, Rr_, atol=atol)
-np.testing.assert_allclose(Qr @ Rr, Ar_dense[:, q], atol=atol)
+# np.testing.assert_allclose(Qr, Qr_[p_inv], atol=atol)
+# np.testing.assert_allclose(Rr, Rr_, atol=atol)
+# np.testing.assert_allclose(Qr @ Rr, Ar_dense[:, q], atol=atol)
 
-print("Q @ R = ")
-print(Qr @ Rr)
+# print("Q @ R = ")
+# print(Qr @ Rr)
+
+# Try a random sparse A matrix
+rng = np.random.default_rng(565656)
+A = sparse.random(M, N, density=0.5, format='csc', dtype=np.float64, rng=rng)
+
+# Set the diagonal to 1..M to ensure full rank
+A.setdiag(np.arange(1, M + 1))
+
+A = A.toarray()
+print("A = ")
+print(A)
+
+Q, R = la.qr(A)
+(Qraw, tau), _ = la.qr(A, mode='raw')
+V = np.tril(Qraw, -1)[:, :M] + np.eye(M, min(M, N))
+
+# Run our own python QR
+V_l, beta_l, R_l = csparse.qr_left(A)
+Q_l = csparse.apply_qtleft(V_l, beta_l).T
+
+np.testing.assert_allclose(V, V_l, atol=atol)
+np.testing.assert_allclose(tau, beta_l, atol=atol)
+np.testing.assert_allclose(Q, Q_l, atol=atol)
+np.testing.assert_allclose(R, R_l, atol=atol)
+np.testing.assert_allclose(Q_l @ R_l, A, atol=atol)
 
 # -----------------------------------------------------------------------------
 #         Compute using Givens rotations

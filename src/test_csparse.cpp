@@ -3147,6 +3147,7 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N]")
     SymbolicQR S = sqr(A, order);
     QRResult res = qr(A, S);
 
+    // TODO create cs::build_Q(V, beta, p_inv) to avoid creating I manually
     // Create the identity matrix for testing
     std::vector<csint> idx(N);
     std::iota(idx.begin(), idx.end(), 0);
@@ -3154,7 +3155,7 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N]")
     CSCMatrix I = COOMatrix(vals, idx, idx).tocsc();
 
     SECTION("Numeric Factorization") {
-        CSCMatrix Q = apply_qtleft(res.V, res.beta, S.p_inv, I).T();
+        CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
         CSCMatrix QR = (Q * res.R).droptol().to_canonical();
         CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
@@ -3179,7 +3180,7 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N]")
         // Compute the numeric factorization using the symbolic result
         reqr(A, S, res);
 
-        CSCMatrix Q = apply_qtleft(res.V, res.beta, S.p_inv, I).T();
+        CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
         CSCMatrix QR = (Q * res.R).droptol().to_canonical();
         CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
@@ -3194,7 +3195,7 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N]")
 
         // The postordering of this matrix *is* the natural ordering.
         // TODO Find an example with a different postorder for testing
-        CSCMatrix Q = apply_qtleft(res.V, res.beta, S.p_inv, I).T();
+        CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
         CSCMatrix QR = (Q * res.R).droptol().to_canonical();
         CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
@@ -3279,7 +3280,7 @@ TEST_CASE("Numeric QR factorization of overdetermined matrix M > N", "[qr][M > N
     CSCMatrix I = COOMatrix(vals, idx, idx).tocsc();
 
     SECTION("Numeric factorization") {
-        CSCMatrix Q = apply_qtleft(res.V, res.beta, S.p_inv, I).T();
+        CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
         CSCMatrix QR = (Q * res.R).droptol().to_canonical();
         CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
@@ -3304,7 +3305,7 @@ TEST_CASE("Numeric QR factorization of overdetermined matrix M > N", "[qr][M > N
         // Compute the numeric factorization using the symbolic result
         reqr(A, S, res);
 
-        CSCMatrix Q = apply_qtleft(res.V, res.beta, S.p_inv, I).T();
+        CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
         CSCMatrix QR = (Q * res.R).droptol().to_canonical();
         CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 

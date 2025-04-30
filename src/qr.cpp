@@ -131,7 +131,7 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
                        tail(N, -1),  // the last row index in each column
                        nque(N);      // the number of rows in each column
 
-    S.p_inv.assign(std::max(M, N), -1);  // initialize permutation vector
+    S.p_inv.assign(M + N, -1);  // initialize permutation vector
 
     // Initialize the linked lists for each row with their leftmost index
     for (csint i = M-1; i >= 0; i--) {  // scan rows in reverse order
@@ -177,6 +177,9 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
             S.p_inv[i] = k++;
         }
     }
+
+    S.p_inv.resize(S.m2);     // resize to the actual number of rows
+    S.p_inv.shrink_to_fit();  // shrink to fit
 }
 
 

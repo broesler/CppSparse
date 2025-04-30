@@ -34,17 +34,16 @@ def apply_qright(V, beta, p=None, Y=None):
 
     Parameters
     ----------
-    Y : (M, N) ndarray or sparse array
-        The matrix to which the Householder transformations are applied.
-    V : (M, N) CSCMatrix
+    V : (M, min(M, N)) CSCMatrix
         The matrix of Householder vectors.
-    beta : (N,) ndarray
+    beta : (min(M, N),) ndarray
         The Householder coefficients.
-    p : (N,) ndarray, optional
-        The column permutation vector.
+    p : (M,) ndarray, optional
+        The row permutation vector to apply to `Y`.
     Y : (M, N) ndarray or sparse array, optional
         The matrix to which the Householder transformations are applied. If not
         given, the identity matrix is used, resulting in the full `Q` matrix.
+
 
     Returns
     -------
@@ -80,14 +79,12 @@ def apply_qtleft(V, beta, p=None, Y=None):
 
     Parameters
     ----------
-    Y : (M2, N) ndarray or sparse array
-        The matrix to which the Householder transformations are applied.
-    V : (M, NY) CSCMatrix
+    V : (M, min(M, N)) CSCMatrix
         The matrix of Householder vectors.
-    beta : (N,) ndarray
+    beta : (min(M, N),) ndarray
         The Householder coefficients.
-    p : (N,) ndarray, optional
-        The row permutation vector.
+    p : (M,) ndarray, optional
+        The row permutation vector to apply to `Y`.
     Y : (M, N) ndarray or sparse array, optional
         The matrix to which the Householder transformations are applied. If not
         given, the identity matrix is used, resulting in the full `Q` matrix.
@@ -208,9 +205,24 @@ def qr_left(A):
         The upper triangular matrix.
     """
     M, N = A.shape
-    V = np.zeros((M, N))
-    R = np.zeros((M, N))
-    beta = np.zeros(N)
+    M2 = max(M, N)
+
+    # NOTE if M < N, this function tries to access V[:, i] for i > M, which
+    # will cause an error.
+    # HACK: add empty rows to A to make it N x N, then remove the extra rows
+    # and columns at the end. This method is not efficient if M << N, since we
+    # do a lot of operations on the empty rows.
+    #
+    # The extra rows/columns of V are just the identity, extra beta entries are
+    # zeros, and the extra rows of R are just zeros.
+    #
+    # Can we just skip the extra rows/columns in the loop?
+    if M < N:
+        A = np.vstack([A, np.zeros((N - M, N))])
+
+    V = np.eye(M2)
+    beta = np.zeros(V.shape[1])
+    R = np.zeros((M2, N))
 
     for k in range(N):
         x = A[:, [k]]
@@ -223,8 +235,8 @@ def qr_left(A):
         # Compute the Householder reflector
         x_k = x[k:]
         (Qraw, b), _ = la.qr(x_k, mode='raw')
-        V[k:, [k]] = np.vstack([1.0, Qraw[1:]])  # extract the reflector
-        beta[k] = float(b[0])                    # get the scalar
+        V[k+1:, [k]] = Qraw[1:]  # extract the reflector
+        beta[k] = float(b[0])    # get the scalar
         R[:k, [k]] = x[:k]
         # NOTE If beta == 0, H is the identity matrix, so Hx == x:
         # if beta[k] == 0:
@@ -234,6 +246,12 @@ def qr_left(A):
         #
         # Qraw computes Hx internally to give the correct result.
         R[k, k] = Qraw[0, 0]
+
+    if M < N:
+        # Remove the empty rows and column
+        V = V[:M, :M]
+        R = R[:M, :]
+        beta = beta[:M]
 
     return V, beta, R
 

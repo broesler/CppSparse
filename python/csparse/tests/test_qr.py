@@ -142,10 +142,11 @@ def test_apply_q(shape_cat, case_name, A):
     A = A.toarray()  # only test with dense matrices
     M, N = A.shape
 
-    if M > N:
-        pytest.skip(f"Skipping {case_name} because M > N")
-
     (Qraw, tau), Rraw = la.qr(A, mode='raw')
+
+    if M > N:
+        # Extra rows of zeros are not included in the LAPACK output
+        Rraw = np.vstack([Rraw, np.zeros((M - N, N))])
 
     # Check that the raw LAPACK output is as expected
     np.testing.assert_allclose(np.triu(Qraw), Rraw, atol=ATOL)

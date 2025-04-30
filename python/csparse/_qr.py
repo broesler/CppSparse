@@ -44,7 +44,6 @@ def apply_qright(V, beta, p=None, Y=None):
         The matrix to which the Householder transformations are applied. If not
         given, the identity matrix is used, resulting in the full `Q` matrix.
 
-
     Returns
     -------
     result : (M, N) ndarray

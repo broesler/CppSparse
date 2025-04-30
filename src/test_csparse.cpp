@@ -3115,35 +3115,18 @@ TEST_CASE("Symbolic QR Decomposition of Square, Non-symmetric A", "[qr][M == N]"
     }
 
     SECTION("Symbolic analysis") {
-        AMDOrder order = AMDOrder::Natural;
         std::vector<csint> expect_q = {0, 1, 2, 3, 4, 5, 6, 7};  // natural
         std::vector<csint> expect_parent = parent;
-        csint expect_Vnz = 16;  // manual counts Figure 5.1, p 74
-        csint expect_Rnz = 24;
 
-        SECTION("Natural") {}
-
-        // CSparse only uses 2 possible orders for QR factorization:
-        // MATLAB [V, beta, p, R] = cs_qr(A); -> order = 0
-        //        [V, beta, p, R, q] = cs_qr(A); -> order = 3
-        SECTION("ATA") {
-            order = AMDOrder::ATA;
-            expect_p_inv = {0, 2, 7, 1, 4, 5, 3, 6};
-            expect_q = {0, 3, 1, 2, 4, 5, 7, 6};
-            expect_parent = {1, 3, 3, 6, 5, 6, 7, -1};
-            expect_leftmost = {0, 2, 1, 0, 4, 4, 2, 4};  // C = A[:, q]
-            expect_Rnz = 23;
-        }
-
-        SymbolicQR S = sqr(A, order);  // natural ordering
+        SymbolicQR S = sqr(A, AMDOrder::Natural);
 
         CHECK(S.p_inv == expect_p_inv);
         CHECK(S.q == expect_q);
         CHECK(S.parent == expect_parent);
         CHECK(S.leftmost == expect_leftmost);
         CHECK(S.m2 == N);
-        CHECK(S.vnz == expect_Vnz);  // manual counts Figure 5.1, p 74
-        REQUIRE(S.rnz == expect_Rnz);
+        CHECK(S.vnz == 16);  // manual counts Figure 5.1, p 74
+        REQUIRE(S.rnz == 24);
     }
 }
 

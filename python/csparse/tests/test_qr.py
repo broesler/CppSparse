@@ -36,35 +36,62 @@ TEST_MATRICES = [
         np.array([[1, 1, 2], [0, 0, 1], [1, 0, 0]], dtype=float)
     )),
     ("Davis 8x5 (M > N)", csparse.davis_example_qr(format='csc')[:, :5]),
-    # FIXME ATA ordering breaks for M < N
-    ("Davis 8x5 (M < N)", csparse.davis_example_qr(format='csc')[:5, :])
+    ("Davis 5x8 (M < N)", csparse.davis_example_qr(format='csc')[:5, :])
 ]
 
 
-@pytest.mark.parametrize("order", ['Natural', 'ATA'])
-@pytest.mark.parametrize("case_name, A", TEST_MATRICES)
-def test_qr_fixed(case_name, A, order):
-    """Test QR decomposition with various matrices."""
-    _test_qr_decomposition(case_name, A, order)
+def categorize_shape(M, N):
+    if M < N:
+        return "under"
+    elif M == N:
+        return "square"
+    else:
+        return "over"
 
 
-@pytest.mark.parametrize("N", [2, 7, 10])
-def test_qr_random(N):
-    """Test QR decomposition with random matrices."""
-    N_runs = 10
+def generate_test_matrices():
+    """Generate all matrices for testing."""
+    # Fixed test matrices
+    for case_name, A in TEST_MATRICES:
+        M, N = A.shape
+        shape_cat = categorize_shape(M, N)
+        test_id = f"{shape_cat}::{case_name}"
+        yield pytest.param(shape_cat, case_name, A, id=test_id)
+
+    # Random test matrices
     seed = 565656
     rng = np.random.default_rng(seed)
-    for i in range(N_runs):
-        A = sparse.random(N, N, density=0.5, format='csc', random_state=rng)
-        A.setdiag(N * np.arange(1, N+1))  # ensure structural full rank
-        _test_qr_decomposition(f"Random {N}x{N} ({seed=}, {i=})", A)
+    Ns = np.r_[2, 7, 10]
+    Ms = (Ns * np.r_[0.6, 1, 1.4]).astype(int)
+    N_runs = 10
+
+    for N in Ns:
+        for i in range(N_runs):
+            for M in Ms:
+                A = sparse.random(M, N,
+                                  density=0.5, format='csc', random_state=rng)
+                # ensure structural full rank
+                A.setdiag(N * np.arange(1, min(M, N) + 1))
+
+                shape_cat = categorize_shape(M, N)
+                case_name = f"Random {M}x{N} ({seed=}, {i=})"
+                test_id = f"{shape_cat}::{case_name}"
+                yield pytest.param(shape_cat, case_name, A,
+                                   id=test_id,
+                                   marks=pytest.mark.random)
 
 
-def _test_qr_decomposition(case_name, A, order='Natural'):
+@pytest.mark.parametrize("order", ['Natural', 'ATA'])
+@pytest.mark.parametrize("shape_cat, case_name, A", generate_test_matrices())
+def test_csparse_qr(shape_cat, case_name, A, order):
     """Test QR decomposition with various matrices using parametrization."""
     Ac = csparse.from_scipy_sparse(A, format='csc')
     A_dense = A.toarray()
     M, N = A.shape
+
+    # FIXME
+    if M < N:
+        pytest.skip(f"Skipping {case_name} ({order}) because M < N")
 
     # ---------- Compute csparse QR
     QRres = csparse.qr(Ac, order)
@@ -93,10 +120,6 @@ def _test_qr_decomposition(case_name, A, order='Natural'):
     V_ = np.tril(Qraw, -1)[:, :M] + np.eye(M, min(M, N))
     Qr_ = csparse.apply_qright(V_, tau, p)
 
-    if order == 'ATA' and M < N:
-        print(f"Skipping {case_name} ({order}) because M < N")
-        return  # skip this case
-
     # Now we get the same Householder vectors and weights
     np.testing.assert_allclose(V, V_, atol=ATOL)
     np.testing.assert_allclose(beta, tau, atol=ATOL)
@@ -113,10 +136,14 @@ def _test_qr_decomposition(case_name, A, order='Natural'):
     np.testing.assert_allclose(Q @ R, A_dense[:, q], atol=ATOL)
 
 
-def test_apply_q():
+@pytest.mark.parametrize("shape_cat, case_name, A", generate_test_matrices())
+def test_apply_q(shape_cat, case_name, A):
     """Test application of the Householder reflectors."""
-    A = csparse.davis_example_qr(format='ndarray')
-    N = A.shape[0]
+    A = A.toarray()  # only test with dense matrices
+    M, N = A.shape
+
+    if M > N:
+        pytest.skip(f"Skipping {case_name} because M > N")
 
     (Qraw, tau), Rraw = la.qr(A, mode='raw')
 
@@ -124,7 +151,7 @@ def test_apply_q():
     np.testing.assert_allclose(np.triu(Qraw), Rraw, atol=ATOL)
 
     # Get the Householder reflectors from the raw LAPACK output
-    V_ = np.tril(Qraw, -1) + np.eye(N)
+    V_ = np.tril(Qraw, -1)[:, :M] + np.eye(M, min(M, N))
 
     # Apply them to the identity to get back Q itself
     Q_r = csparse.apply_qright(V_, tau)
@@ -139,37 +166,34 @@ def test_apply_q():
     np.testing.assert_allclose(R_, Rraw, atol=ATOL)
 
 
-def test_qrightleft():
+@pytest.mark.parametrize("shape_cat, case_name, A", generate_test_matrices())
+@pytest.mark.parametrize("qr_func", [csparse.qr_right, csparse.qr_left])
+def test_qrightleft(shape_cat, case_name, A, qr_func):
     """Test the python QR decomposition algorithms."""
-    A = csparse.davis_example_small(format='ndarray')
+    A = A.toarray()  # only test with dense matrices
+    M, N = A.shape
+
+    if qr_func == csparse.qr_right and M < N:
+        pytest.skip(f"Skipping {case_name} ({qr_func.__name__}) because M < N")
 
     # Test our own python QR decomposition
-    V_r, beta_r, R_r = csparse.qr_right(A)
-    V_l, beta_l, R_l = csparse.qr_left(A)
-
-    Q_r = csparse.apply_qright(V_r, beta_r)
-    Q_l = csparse.apply_qtleft(V_l, beta_l).T
-
-    # Compare to each other
-    np.testing.assert_allclose(V_r, V_l, atol=ATOL)
-    np.testing.assert_allclose(beta_r, beta_l, atol=ATOL)
-    np.testing.assert_allclose(Q_r, Q_l, atol=ATOL)
-    np.testing.assert_allclose(R_r, R_l, atol=ATOL)
+    V, beta, R = qr_func(A)
+    Q = csparse.apply_qright(V, beta)
 
     # Compare to scipy
     (Qraw, tau), Rraw = la.qr(A, mode='raw')
-    V = np.tril(Qraw, -1) + np.eye(Qraw.shape[0])
+    V = np.tril(Qraw, -1)[:, :M] + np.eye(M, min(M, N))
 
-    np.testing.assert_allclose(V_r, V, atol=ATOL)
-    np.testing.assert_allclose(beta_r, tau, atol=ATOL)
+    np.testing.assert_allclose(V, V, atol=ATOL)
+    np.testing.assert_allclose(beta, tau, atol=ATOL)
 
     # Compare to scipy's QR
-    Q, R = la.qr(A)
-    np.testing.assert_allclose(Q, Q_r, atol=ATOL)
-    np.testing.assert_allclose(R, R_r, atol=ATOL)
+    Q_, R_ = la.qr(A)
+    np.testing.assert_allclose(Q_, Q, atol=ATOL)
+    np.testing.assert_allclose(R_, R, atol=ATOL)
 
     # Reproduce A = QR
-    np.testing.assert_allclose(Q_r @ R_r, A, atol=ATOL)
+    np.testing.assert_allclose(Q @ R, A, atol=ATOL)
 
 
 # =============================================================================

@@ -228,16 +228,16 @@ SymbolicQR sqr(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 // Exercise 5.1
 QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
 {
-    csint M = S.m2;
-    csint N = A.N_;
+    auto [M, N] = A.shape();
+    csint M2 = S.m2;
 
     // Allocate result matrices
-    CSCMatrix V({M, N}, S.vnz);   // Householder vectors
-    CSCMatrix R({M, N}, S.rnz);   // R factor
+    CSCMatrix V({M2, N}, S.vnz);   // Householder vectors
+    CSCMatrix R({M2, N}, S.rnz);   // R factor
 
     // Allocate workspaces
-    std::vector<csint> w(M, -1),  // workspace for pattern of V[:, k]
-                       s, t;      // stacks for pattern of R[:, k]
+    std::vector<csint> w(M2, -1),  // workspace for pattern of V[:, k]
+                       s, t;       // stacks for pattern of R[:, k]
     s.reserve(N);
     t.reserve(N);
 
@@ -290,30 +290,28 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
     R.p_[N] = rnz;  // finalize R
     V.p_[N] = vnz;  // finalize V
 
-    return {V, {}, R, S.p_inv, S.q};
+    return {V, std::vector<double>(N), R, S.p_inv, S.q};
 }
 
 
 QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
 {
-    csint M = S.m2;  // If M < N, m2 = N
-    csint N = A.N_;
-
-    csint Nv = std::min(M, N);
+    auto [M, N] = A.shape();
+    csint M2 = S.m2;
 
     // Allocate result matrices
-    CSCMatrix V({M, Nv}, S.vnz);   // Householder vectors
-    CSCMatrix R({M, N}, S.rnz);   // R factor
+    CSCMatrix V({M2, N}, S.vnz);  // Householder vectors
+    CSCMatrix R({M2, N}, S.rnz);  // R factor
     std::vector<double> beta(N);  // scaling factors
 
     // Allocate workspaces
-    std::vector<double> x(M);      // dense vector
-    std::vector<csint>  w(M, -1),  // workspace for pattern of V[:, k]
-                        s, t;      // stacks for pattern of R[:, k]
+    std::vector<double> x(M2);      // dense vector
+    std::vector<csint>  w(M2, -1),  // workspace for pattern of V[:, k]
+                        s, t;       // stacks for pattern of R[:, k]
     s.reserve(N);
     t.reserve(N);
 
-    // Compute V and R
+    // Compute the V and R column by column
     csint vnz = 0,
           rnz = 0;
 
@@ -379,28 +377,15 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     R.p_[N] = rnz;  // finalize R
     V.p_[N] = vnz;  // finalize V
 
-    // Copy the permutation to the result
-    std::vector<csint> p_inv = S.p_inv;
-
-    // Exercise 5.2: underdetermined system when M < N
-    if (A.M_ < A.N_) {
-        V = V.slice(0, A.M_, 0, A.M_);  // truncate V to (M, M)
-        beta.resize(A.M_);              // truncate beta to M
-        R = R.slice(0, A.M_, 0, A.N_);  // truncate R to (M, N)
-        // FIXME p_inv breaks with davis_example_qr, order=ATA
-        // Also truncate p_inv appropriately? Might not always work
-        p_inv.resize(A.M_);
-    }
-
-    return {V, beta, R, p_inv, S.q};
+    return {V, beta, R, S.p_inv, S.q};
 }
 
 
 // Exercise 5.3
 void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 {
-    csint M = S.m2;
-    csint N = A.N_;
+    auto [M, N] = A.shape();
+    csint M2 = S.m2;
 
     // Check that results have been allocated
     CSCMatrix& V = res.V;
@@ -412,10 +397,8 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
     assert(!V.indices().empty());
     assert(!R.indices().empty());
 
-    beta = std::vector<double>(N);  // scaling factors
-
     // Allocate workspaces
-    std::vector<double> x(M);  // dense vector
+    std::vector<double> x(M2);  // dense vector
 
     // Compute V and R
     for (csint k = 0; k < N; k++) {

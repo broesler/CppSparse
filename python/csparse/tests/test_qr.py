@@ -89,10 +89,6 @@ def test_csparse_qr(shape_cat, case_name, A, order):
     A_dense = A.toarray()
     M, N = A.shape
 
-    # FIXME
-    if M < N:
-        pytest.skip(f"Skipping {case_name} ({order}) because M < N")
-
     # ---------- Compute csparse QR
     QRres = csparse.qr(Ac, order)
     V, beta, R, p_inv, q = QRres.V, QRres.beta, QRres.R, QRres.p_inv, QRres.q

@@ -104,39 +104,34 @@ Rr = Rr.toarray()
 # Get the actual Q matrix
 pr = csparse.inv_permute(p_inv)
 
-# FIXME p_inv vector is invalid for M < N, contains index == M (not < M)
-# p_inv = [2, 0, 1, 3, 5]
-#                      x  invalid index
-# pr =    [1, 2, 0, 3, 0]
-#
-# cs_qright is not implemented for M < N.
-
 Qr = csparse.apply_qright(Vr, beta_r, pr)  # (M, M)
 Qrt = csparse.apply_qtleft(Vr, beta_r, pr).T  # (M, M)
 
 # Get the scipy version
-# Arp = Ar_dense[pr][:, q]
-Arp = Ar_dense[:, q]
+Arp = Ar_dense[pr][:, q]
+# Arp = Ar_dense[:, q]
 Qr_, Rr_ = la.qr(Arp)
 
 (Qraw_r, tau_r), _ = la.qr(Arp, mode='raw')
 Vr_ = np.tril(Qraw_r, -1)[:, :M] + np.eye(M, min(M, N))
 
-# print("Qr_ = ")
-# print(Qr_)
-# print("Rr_ = ")
-# print(Rr_)
+print("Qr_ = ")
+print(Qr_)
+print("Rr_ = ")
+print(Rr_)
 
 # Qr_r = csparse.apply_qright(Vr_, tau_r)
 
-# np.testing.assert_allclose(Qr, Qr_[p_inv], atol=atol)
-# np.testing.assert_allclose(Rr, Rr_, atol=atol)
-# np.testing.assert_allclose(Qr @ Rr, Ar_dense[:, q], atol=atol)
+np.testing.assert_allclose(Qr, Qr_[p_inv], atol=atol)
+np.testing.assert_allclose(Rr, Rr_, atol=atol)
+np.testing.assert_allclose(Qr @ Rr, Ar_dense[:, q], atol=atol)
 
-# print("Q @ R = ")
-# print(Qr @ Rr)
+print("Q @ R = ")
+print(Qr @ Rr)
 
-# Try a random sparse A matrix
+# -----------------------------------------------------------------------------
+#         Try a random sparse A matrix
+# -----------------------------------------------------------------------------
 rng = np.random.default_rng(56565)
 A = sparse.random(M, N, density=0.5, format='csc', dtype=np.float64, rng=rng)
 

@@ -186,29 +186,39 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
 SymbolicQR sqr(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 {
     auto [M, N] = A.shape();
+    CSCMatrix C = A;
+
+    if (M < N) {
+        C = A.slice(0, M, 0, M);  // slice to (M, M)
+        N = M;
+    }
+
+    const CSCMatrix Ac = C;  // copy original (sliced) matrix for postordering
+
     SymbolicQR S;             // allocate result
     std::vector<csint> q(N);  // column permutation vector
 
     if (order == AMDOrder::Natural) {
         std::iota(q.begin(), q.end(), 0);  // identity permutation
     } else {
-        q = amd(A, order);                 // order = ATA for QR
+        q = amd(C, order);                 // order = ATA for QR
     }
 
     // Find pattern of Cholesky factor of A.T @ A
     bool values = false,  // don't copy values
          CTC = true;      // do take the etree/counts of A^T A
 
-    CSCMatrix C = A.permute_cols(q, values);
+    C = C.permute_cols(q, values);
+
     S.parent = etree(C, CTC);  // etree of C^T C, C = A[:, q]
     std::vector<csint> postorder = post(S.parent);
 
     // Exercise 5.5 combine the postordering
     if (use_postorder) {
-        q = pvec(postorder, q);         // combine the permutations
-        C = A.permute_cols(q, values);  // apply combined permutation
-        S.parent = etree(C, CTC);       // recompute etree
-        postorder = post(S.parent);     // recompute postorder
+        q = pvec(postorder, q);          // combine the permutations
+        C = Ac.permute_cols(q, values);  // apply combined permutation
+        S.parent = etree(C, CTC);        // recompute etree
+        postorder = post(S.parent);      // recompute postorder
     }
 
     S.q = q;  // store the column permutation
@@ -228,17 +238,19 @@ SymbolicQR sqr(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
 {
     auto [M, N] = A.shape();
-    csint M2 = S.m2;
+    csint M2 = S.m2;  // if M < N, M2 = M
+
+    csint Nv = std::min(M, N);
 
     // Allocate result matrices
-    CSCMatrix V({M2, N}, S.vnz);   // Householder vectors
-    CSCMatrix R({M2, N}, S.rnz);   // R factor
-    std::vector<double> beta(N);  // scaling factors
+    CSCMatrix V({M2, Nv}, S.vnz);  // Householder vectors
+    CSCMatrix R({M2, Nv}, S.rnz);  // R factor
+    std::vector<double> beta(Nv);  // scaling factors
 
     // Allocate workspaces
     std::vector<double> x(M2);      // dense vector
-    std::vector<csint> w(M2, -1),  // workspace for pattern of V[:, k]
-                       s, t;       // stacks for pattern of R[:, k]
+    std::vector<csint>  w(M2, -1),  // workspace for pattern of V[:, k]
+                        s, t;       // stacks for pattern of R[:, k]
     s.reserve(N);
     t.reserve(N);
 
@@ -246,7 +258,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     csint vnz = 0,
           rnz = 0;
 
-    for (csint k = 0; k < N; k++) {
+    for (csint k = 0; k < Nv; k++) {
         R.p_[k] = rnz;    // R[:, k] starts here
         V.p_[k] = vnz;    // V[:, k] starts here
         csint p1 = vnz;   // save start of V(:, k)
@@ -305,10 +317,20 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
         R.v_[rnz++] = h.s;
     }
 
-    R.p_[N] = rnz;  // finalize R
-    V.p_[N] = vnz;  // finalize V
+    R.p_[Nv] = rnz;  // finalize R
+    V.p_[Nv] = vnz;  // finalize V
 
-    return {V, beta, R, S.p_inv, S.q};
+    std::vector<csint> q = S.q;
+    if (M < N) {
+        // Compute the remaining columns of R
+        R = hstack(R, apply_qtleft(V, beta, S.p_inv, A.slice(0, M, M, N)));  // append Q^T A to R
+        // Append the remaining columns of A onto q
+        for (csint k = M; k < N; k++) {
+            q.push_back(k);
+        }
+    }
+
+    return {V, beta, R, S.p_inv, q};
 }
 
 
@@ -319,12 +341,12 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
     csint M2 = S.m2;
 
     // Allocate result matrices
-    CSCMatrix V({M2, N}, S.vnz);  // Householder vectors
-    CSCMatrix R({M2, N}, S.rnz);  // R factor
+    CSCMatrix V({M2, N}, S.vnz);   // Householder vectors
+    CSCMatrix R({M2, N}, S.rnz);   // R factor
 
     // Allocate workspaces
-    std::vector<csint>  w(M2, -1),  // workspace for pattern of V[:, k]
-                        s, t;       // stacks for pattern of R[:, k]
+    std::vector<csint> w(M2, -1),  // workspace for pattern of V[:, k]
+                       s, t;       // stacks for pattern of R[:, k]
     s.reserve(N);
     t.reserve(N);
 

@@ -4685,7 +4685,7 @@ TEST_CASE("QR Solution", "[qrsol]")
         x = qr_solve(A, b);  // (M - k, N)
 
         // Actual expect (python and MATLAB)
-        std::vector<double> min_norm_x = {3.2222222222222143,
+        const std::vector<double> min_norm_x = {3.2222222222222143,
             3.1111111111111125,
             3.                ,
             4.000000000000004 ,
@@ -4699,6 +4699,31 @@ TEST_CASE("QR Solution", "[qrsol]")
         REQUIRE_THAT(is_close(x, min_norm_x, tol), AllTrue());
     }
 }
+
+
+TEST_CASE("LU Solution", "[lusol]") {
+    CSCMatrix A = davis_example_qr();
+    auto [M, N] = A.shape();
+
+    AMDOrder order = GENERATE(
+        AMDOrder::Natural,
+        AMDOrder::ATANoDenseRows,
+        AMDOrder::ATA
+    );
+
+    // Create RHS for Ax = b
+    std::vector<double> expect(N);
+    std::iota(expect.begin(), expect.end(), 1);
+
+    const std::vector<double> b = A * expect;
+
+    // Solve Ax = b
+    std::vector<double> x = lu_solve(A, b, order);
+
+    // Check that Ax = b
+    REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+}
+
 
 /*==============================================================================
  *============================================================================*/

@@ -34,15 +34,16 @@ PYTHON_CHOL_FUNCS = [
 ]
 
 
-# Test the csparse Cholesky conversion?
-def test_cholesky_interface():
+@pytest.mark.parametrize("use_postorder", [False, True])
+@pytest.mark.parametrize("order", ['Natural', 'APlusAT'])
+def test_cholesky_interface(order, use_postorder):
     """Test the Cholesky decomposition python interface."""
     A = csparse.davis_example_chol()
 
-    L = csparse.chol(A)
-    Ls = csparse.symbolic_cholesky(A)
-    Ll = csparse.leftchol(A)
-    Lr = csparse.rechol(A)
+    L = csparse.chol(A, order, use_postorder)
+    Ls = csparse.symbolic_cholesky(A, order, use_postorder)
+    Ll = csparse.leftchol(A, order, use_postorder)
+    Lr = csparse.rechol(A, order, use_postorder)
 
     np.testing.assert_allclose(L.indptr, Ls.indptr)
     np.testing.assert_allclose(L.indices, Ls.indices)

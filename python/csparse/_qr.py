@@ -22,7 +22,7 @@ from .utils import from_scipy_sparse, to_scipy_sparse
 # -----------------------------------------------------------------------------
 #         Householder Reflections
 # -----------------------------------------------------------------------------
-# TODO implement apply_qleft for P^T Q b = P^T H1 H2 ... HN b. 
+# Could implement apply_qleft for P^T Q b = P^T H1 H2 ... HN b. 
 # See Trefethen Algorithm 10.3, p 74.
 
 def apply_qright(V, beta, p=None, Y=None):

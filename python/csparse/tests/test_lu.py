@@ -40,6 +40,20 @@ def A():
     return csparse.davis_example_qr(format='ndarray')
 
 
+@pytest.mark.parametrize("order", ['Natural', 'ATANoDenseRows', 'ATA'])
+def test_lu_interface(order):
+    """Test the LU decomposition python interface."""
+    Ac = csparse.davis_example_qr()
+    A = Ac.toarray()
+
+    # Test the LU decomposition with the default order
+    lu_res = csparse.lu(Ac, order=order)
+    L, U, p_inv, q = lu_res.L, lu_res.U, lu_res.p_inv, lu_res.q
+    p = csparse.inv_permute(p_inv)
+
+    np.testing.assert_allclose((L @ U).toarray(), A[p][:, q], atol=ATOL)
+
+
 def lu_helper(A, lu_func):
     """Helper function to test the LU decomposition."""
     # Compare to scipy PLU = A

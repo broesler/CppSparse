@@ -144,6 +144,12 @@ void vcount(const CSCMatrix& A, SymbolicQR& S);
  * It also computes the elimination tree of the matrix `A.T @ A`, `S.parent`;
  * a column permutation vector `S.q` per the desired `order`.
  *
+ * Note that for a matrix `A` with `M` rows and `N` columns, if `M < N`, then 
+ * `sqr` will only compute the symbolic analysis of the first `M` columns of
+ * `A`. The numeric factorization in `cs::qr` will compute the remaining `N - M`
+ * columns of `R`. This method is more efficient than using `S.m2` ficticious
+ * rows when `M << N`.
+ *
  * @param A  the matrix to factorize
  * @param order  the ordering method to use:
  *       - 0: natural ordering
@@ -165,6 +171,13 @@ SymbolicQR sqr(
 /** Perform the symbolic QR decomposition of a matrix.
  *
  * See: Davis, Exercise 5.1.
+ *
+ * Note that for a matrix `A` with `M` rows and `N` columns, if `M < N`, then 
+ * `sqr` will only compute the symbolic analysis of the first `M` columns of
+ * `A`, and the `QRResult` from `symbolic_qr` will only contain the first `M`
+ * columns of `R`. The numeric factorization in `cs::reqr` will compute the
+ * remaining `N - M` columns of `R`. This method is more efficient than using
+ * `S.m2` ficticious rows when `M << N`.
  *
  * @param A  the matrix to factorize
  * @param S  the symbolic analysis of A

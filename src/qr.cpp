@@ -9,7 +9,7 @@
  *============================================================================*/
 
 #include <numeric>  // accumulate
-#include <ranges>   // views::reverse
+#include <ranges>   // views::reverse, span
 #include <vector>
 #include <optional>
 
@@ -341,6 +341,7 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
     auto [M, N] = A.shape();
     csint M2 = S.m2;
 
+    // Exercise 5.2: handle M < N
     csint Nv = std::min(M, N);
 
     // Allocate result matrices with no values
@@ -403,19 +404,7 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
     R.p_[Nv] = rnz;  // finalize R
     V.p_[Nv] = vnz;  // finalize V
 
-    std::vector<csint> q = S.q;
-
-    if (M < N) {
-        // Compute the remaining columns of R
-        std::vector<double> beta(Nv, 1.0);  // dummy beta
-        R = hstack(R, apply_qtleft(V, beta, S.p_inv, A.slice(0, M, M, N)));
-        // Append the remaining columns of A onto q
-        for (csint k = M; k < N; k++) {
-            q.push_back(k);
-        }
-    }
-
-    return {V, {}, R, S.p_inv, q};
+    return {V, {}, R, S.p_inv, S.q};
 }
 
 
@@ -424,6 +413,8 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 {
     auto [M, N] = A.shape();
     csint M2 = S.m2;
+
+    csint Nv = std::min(M, N);
 
     // Check that results have been allocated
     CSCMatrix& V = res.V;
@@ -443,7 +434,7 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
     std::vector<double> x(M2);  // dense vector
 
     // Compute V and R
-    for (csint k = 0; k < N; k++) {
+    for (csint k = 0; k < Nv; k++) {
         csint col = res.q[k];  // permuted column of A
 
         // R[:, k] pattern known. Scatter A[:, col] into x
@@ -472,6 +463,15 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
         std::copy(h.v.begin(), h.v.end(), V.v_.begin() + V.p_[k]);
         beta[k] = h.beta;
         R.v_[R.p_[k+1] - 1] = h.s;  // R(k, k) = -sign(x[0]) * norm(x)
+    }
+
+    if (M < N) {
+        // Compute the remaining columns of R
+        R = hstack(R, apply_qtleft(V, beta, res.p_inv, A.slice(0, M, M, N)));
+        // Append the remaining columns of A onto q
+        for (csint k = M; k < N; k++) {
+            res.q.push_back(k);
+        }
     }
 }
 

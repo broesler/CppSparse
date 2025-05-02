@@ -23,6 +23,7 @@
 #include <numeric>    // iota
 #include <optional>   // nullopt
 #include <random>
+#include <ranges>     // span
 #include <string>
 #include <sstream>
 #include <vector>
@@ -36,7 +37,7 @@ using Catch::Approx;
 using Catch::Matchers::AllTrue;
 using Catch::Matchers::WithinAbs;
 using Catch::Matchers::UnorderedEquals;
-using Catch::Matchers::Equals;
+using Catch::Matchers::RangeEquals;
 
 constexpr double tol = 1e-14;
 
@@ -3444,7 +3445,6 @@ TEST_CASE("Symbolic QR Factorization of Underdetermined Matrix M < N", "[qr][M <
 
 TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < N][numeric]")
 {
-    SKIP();
     // Define the test matrix A (See Davis, Figure 5.1, p 74)
     // except remove the last 3 rows
     csint M = 5;
@@ -3454,8 +3454,8 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
 
     // CSparse only uses 2 possible orders for QR factorization:
     AMDOrder order = GENERATE(
-        AMDOrder::Natural  //,
-        // AMDOrder::ATA
+        AMDOrder::Natural,
+        AMDOrder::ATA
     );
     CAPTURE(order);
 
@@ -3484,14 +3484,28 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
     }
 
     SECTION("Exercise 5.1: Symbolic factorization") {
+        // NOTE symbolic_qr will only compute the factorization of A(:, :M) for
+        // M < N, whereas `res` is the full factorization of A.
         QRResult sym_res = symbolic_qr(A, S);
 
         CHECK(sym_res.V.indptr() == res.V.indptr());
         CHECK(sym_res.V.indices() == res.V.indices());
         CHECK(sym_res.V.data().empty());
         CHECK(sym_res.beta.empty());
-        CHECK(sym_res.R.indptr() == res.R.indptr());
-        CHECK(sym_res.R.indices() == res.R.indices());
+
+        // sym_res does not include the last N - M columns of R
+        auto res_indptr = std::span(res.R.indptr().data(), M + 1);
+        CHECK_THAT(sym_res.R.indptr(), RangeEquals(res_indptr));
+
+        // NOTE hstack sorts the indices, whereas qr/symbolic_qr does not, so we
+        // can either:
+        //   * remove sorting from hstack
+        //   * check the unordered sets of indices (not as robust)
+        //   * sort the indices of sym_res.R (for testing only)
+        auto res_indices = std::span(res.R.indices().data(), sym_res.R.nnz());
+        sym_res.R.sort();  // sort columns in-place
+        CHECK_THAT(sym_res.R.indices(), RangeEquals(res_indices));
+
         REQUIRE(sym_res.R.data().empty());
     }
 

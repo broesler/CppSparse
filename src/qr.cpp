@@ -476,6 +476,26 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 }
 
 
+// FIXME
+// std::vector<double> apply_qright(
+//     const CSCMatrix& V,
+//     const std::vector<double>& beta,
+//     const std::vector<csint>& p_inv,
+//     const std::vector<double>& y
+// )
+// {
+//     auto [M2, N] = V.shape();
+
+//     std::vector<double> x = pvec(p_inv, y);  // x = Py
+
+//     for (csint j = N - 1; j >= 0; j++) {
+//         x = happly(V, j, beta[j], x);
+//     }
+
+//     return x;
+// }
+
+
 std::vector<double> apply_qtleft(
     const CSCMatrix& V,
     const std::vector<double>& beta,

@@ -15,6 +15,8 @@
 #include "solve.h"
 #include "csc.h"
 #include "utils.h"
+#include "cholesky.h"
+#include "qr.h"
 #include "lu.h"
 
 namespace cs {
@@ -60,12 +62,13 @@ std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
 
 std::vector<double> usolve(const CSCMatrix& L, const std::vector<double>& b)
 {
-    assert(L.M_ == L.N_);
-    assert(L.M_ == b.size());
+    auto [M, N] = L.shape();
+    assert(M == b.size());
 
-    std::vector<double> x = b;
+    // Copy the RHS vector, only taking N elements if M > N
+    std::vector<double> x = (M <= N) ? b : std::vector<double>(b.begin(), b.begin() + N);
 
-    for (csint j = L.N_ - 1; j >= 0; j--) {
+    for (csint j = N - 1; j >= 0; j--) {
         x[j] /= L.v_[L.p_[j+1] - 1];  // diagonal entry
         for (csint p = L.p_[j]; p < L.p_[j+1] - 1; p++) {
             x[L.i_[p]] -= L.v_[p] * x[j];
@@ -78,10 +81,11 @@ std::vector<double> usolve(const CSCMatrix& L, const std::vector<double>& b)
 
 std::vector<double> utsolve(const CSCMatrix& L, const std::vector<double>& b)
 {
-    assert(L.M_ == L.N_);
-    assert(L.M_ == b.size());
+    auto [M, N] = L.shape();
+    assert(N == b.size());
 
-    std::vector<double> x = b;
+    // Copy the RHS vector, only taking M elements if N > M
+    std::vector<double> x = (N <= M) ? b : std::vector<double>(b.begin(), b.begin() + M);
 
     for (csint j = 0; j < L.N_; j++) {
         for (csint p = L.p_[j]; p < L.p_[j+1] - 1; p++) {
@@ -587,6 +591,47 @@ std::vector<csint>& dfs(
 // -----------------------------------------------------------------------------
 //         Cholesky Factorization Solvers
 // -----------------------------------------------------------------------------
+std::vector<csint> topological_order(
+    const CSCMatrix& b,
+    const std::vector<csint>& parent,
+    bool forward
+)
+{
+    assert(b.N_ == 1);
+    csint N = b.M_;
+
+    std::vector<bool> marked(N, false);
+    std::vector<csint> s, xi;
+    s.reserve(N);
+    xi.reserve(N);
+
+    // Search up the tree for each non-zero in b
+    for (csint p = b.p_[0]; p < b.p_[1]; p++) {
+        csint i = b.i_[p];
+
+        // Traverse up the elimination tree
+        while (i != -1 && !marked[i]) {
+            s.push_back(i);
+            marked[i] = true;
+            i = parent[i];
+        }
+
+        // Push pash onto output stack
+        while (!s.empty()) {
+            xi.push_back(s.back());
+            s.pop_back();
+        }
+    }
+
+    if (forward) {
+        // Reverse the order of the stack to get the topological order
+        return std::vector<csint>(xi.rbegin(), xi.rend());
+    } else {
+        return xi;
+    }
+}
+
+
 // Exercise 4.3
 SparseSolution chol_lsolve(
     const CSCMatrix& L,
@@ -670,44 +715,81 @@ SparseSolution chol_ltsolve(
 }
 
 
-std::vector<csint> topological_order(
-    const CSCMatrix& b,
-    const std::vector<csint>& parent,
-    bool forward
+std::vector<double> chol_solve(
+    const CSCMatrix& A,
+    const std::vector<double>& b,
+    AMDOrder order
 )
 {
-    assert(b.N_ == 1);
-    csint N = b.M_;
+    auto [M, N] = A.shape();
 
-    std::vector<bool> marked(N, false);
-    std::vector<csint> s, xi;
-    s.reserve(N);
-    xi.reserve(N);
-
-    // Search up the tree for each non-zero in b
-    for (csint p = b.p_[0]; p < b.p_[1]; p++) {
-        csint i = b.i_[p];
-
-        // Traverse up the elimination tree
-        while (i != -1 && !marked[i]) {
-            s.push_back(i);
-            marked[i] = true;
-            i = parent[i];
-        }
-
-        // Push pash onto output stack
-        while (!s.empty()) {
-            xi.push_back(s.back());
-            s.pop_back();
-        }
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
     }
 
-    if (forward) {
-        // Reverse the order of the stack to get the topological order
-        return std::vector<csint>(xi.rbegin(), xi.rend());
+    if (M != b.size()) {
+        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
+    }
+
+    SymbolicChol S = schol(A, order);
+    CSCMatrix L = chol(A, S);
+
+    // TODO use chol_lsolve for more efficient solution?
+    // std::vector<double> y = chol_lsolve(L, Pb, S.parent).x;
+    // std::vector<double> PTx = chol_ltsolve(L, Pb, S.parent).x;
+
+    // TODO overwrite x each time? Need to change [i]pvec to take
+    // a workspace vector
+    const std::vector<double> Pb = ipvec(S.p_inv, b);  // permute b
+    const std::vector<double> y = lsolve(L, Pb);       // y = L \ b
+    const std::vector<double> PTx = ltsolve(L, y);     // P^T x = L^T \ y
+    std::vector<double> x = pvec(S.p_inv, PTx);        // x = P P^T x
+
+    return x;
+}
+
+
+// -----------------------------------------------------------------------------
+//         QR Factorization Solvers
+// -----------------------------------------------------------------------------
+std::vector<double> qr_solve(
+    const CSCMatrix& A,
+    const std::vector<double>& b,
+    AMDOrder order
+)
+{
+    auto [M, N] = A.shape();
+    std::vector<double> x;
+
+    if (M >= N) {
+        SymbolicQR S = sqr(A, order);
+        QRResult res = qr(A, S);
+
+        // b permutation is done by apply_qtleft
+        // const std::vector<double> Pb = ipvec(S.p_inv, b);  // permute b
+        const std::vector<double> QTPb = apply_qtleft(res.V, res.beta, res.p_inv, b);
+        const std::vector<double> qx = usolve(res.R, QTPb);
+        x = ipvec(res.q, qx);  // x = q^T q x
     } else {
-        return xi;
+        CSCMatrix AT = A.transpose();
+
+        SymbolicQR S = sqr(AT, order);
+        QRResult res = qr(AT, S);
+
+        const std::vector<double> qb = pvec(S.q, b);          // permute b
+        const std::vector<double> QTPx = utsolve(res.R, qb);  // y = R^T \ qb
+        // TODO create this function
+        // const std::vector<double> Px = apply_qleft(res.V, res.beta, res.p_inv, QTPx);
+        std::vector<double> Px = QTPx;
+        // Px is size M, but happly expects size S.m2 (== N > M)
+        Px.insert(Px.end(), N - M, 0.0);  // pad with zeros
+        for (csint k = M - 1; k >= 0; k--) {
+            Px = happly(res.V, k, res.beta[k], Px);
+        }
+        x = pvec(res.p_inv, Px);  // x = P^T P x
     }
+
+    return x;
 }
 
 

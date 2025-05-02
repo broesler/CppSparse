@@ -300,6 +300,9 @@ std::vector<csint>& dfs(
 );
 
 
+// -----------------------------------------------------------------------------
+//        Cholesky Factorization Solutions
+// -----------------------------------------------------------------------------
 /** Solve \f$ Lx = b \f$ with sparse RHS `b`, where `L` is a lower-triangular
  * Cholesky factor.
  *
@@ -320,9 +323,7 @@ SparseSolution chol_lsolve(
     std::vector<csint> parent = {}
 );
 
-// -----------------------------------------------------------------------------
-//        Cholesky Factorization Solutions
-// -----------------------------------------------------------------------------
+
 /** Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is a lower-triangular
  * Cholesky factor.
  *
@@ -362,6 +363,47 @@ std::vector<csint> topological_order(
     bool forward=true
 );
 
+
+/** Solve the system Ax = b using the Cholesky factorization.
+ *
+ * @param A  a symmetric, positive-definite matrix
+ * @param b  a dense vector
+ * @param order  the fill-reducing ordering of the matrix to compute
+ *
+ * @return x  the dense solution vector
+ *
+ * @see cs_cholsol
+ */
+std::vector<double> chol_solve(
+    const CSCMatrix& A,
+    const std::vector<double>& b,
+    AMDOrder order=AMDOrder::Natural
+);
+
+
+// -----------------------------------------------------------------------------
+//         QR Factorization Solvers
+// -----------------------------------------------------------------------------
+
+/** Solve the system Ax = b using the QR factorization.
+ *
+ * This method is useful for solving least-squares problems where the matrix `A`
+ * is `M`-by`N` and `M` > `N`. It can also be used to solve under-determined
+ * systems where `M` < `N`.
+ *
+ * @param A  a matrix
+ * @param b  a dense vector
+ * @param order  the fill-reducing ordering of the matrix to compute
+ *
+ * @return x  the solution vector
+ *
+ * @see cs_qrsol
+ */
+std::vector<double> qr_solve(
+    const CSCMatrix& A,
+    const std::vector<double>& b,
+    AMDOrder order=AMDOrder::Natural
+);
 
 // -----------------------------------------------------------------------------
 //         LU Factorization Solutions

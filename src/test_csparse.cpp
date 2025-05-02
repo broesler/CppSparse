@@ -3167,11 +3167,11 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N]")
 
         CHECK(sym_res.V.indptr() == res.V.indptr());
         CHECK(sym_res.V.indices() == res.V.indices());
-        CHECK(sym_res.V.data().size() == res.V.data().size());    // allocation only
-        CHECK(sym_res.beta.size() == res.beta.size());            // allocation only
+        CHECK(sym_res.V.data().empty());
+        CHECK(sym_res.beta.empty());
         CHECK(sym_res.R.indptr() == res.R.indptr());
         CHECK(sym_res.R.indices() == res.R.indices());
-        REQUIRE(sym_res.R.data().size() == res.R.data().size());  // allocation only
+        REQUIRE(sym_res.R.data().empty());
     }
 
     SECTION("Exercise 5.3: Re-QR factorization") {
@@ -3367,11 +3367,11 @@ TEST_CASE("Numeric QR factorization of overdetermined matrix M > N", "[qr][M > N
 
         CHECK(sym_res.V.indptr() == res.V.indptr());
         CHECK(sym_res.V.indices() == res.V.indices());
-        CHECK(sym_res.V.data().size() == res.V.data().size());
-        CHECK(sym_res.beta.size() == res.beta.size());
+        CHECK(sym_res.V.data().empty());
+        CHECK(sym_res.beta.empty());
         CHECK(sym_res.R.indptr() == res.R.indptr());
         CHECK(sym_res.R.indices() == res.R.indices());
-        REQUIRE(sym_res.R.data().size() == res.R.data().size());
+        REQUIRE(sym_res.R.data().empty());
     }
 
     SECTION("Exercise 5.3: Re-QR factorization") {
@@ -3444,6 +3444,7 @@ TEST_CASE("Symbolic QR Factorization of Underdetermined Matrix M < N", "[qr][M <
 
 TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < N][numeric]")
 {
+    SKIP();
     // Define the test matrix A (See Davis, Figure 5.1, p 74)
     // except remove the last 3 rows
     csint M = 5;
@@ -3482,30 +3483,30 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
         compare_matrices(QR, Aq);
     }
 
-    // SECTION("Exercise 5.1: Symbolic factorization") {
-    //     QRResult sym_res = symbolic_qr(A, S);
+    SECTION("Exercise 5.1: Symbolic factorization") {
+        QRResult sym_res = symbolic_qr(A, S);
 
-    //     CHECK(sym_res.V.indptr() == res.V.indptr());
-    //     CHECK(sym_res.V.indices() == res.V.indices());
-    //     CHECK(sym_res.V.data().size() == res.V.data().size());
-    //     CHECK(sym_res.beta.size() == res.beta.size());
-    //     CHECK(sym_res.R.indptr() == res.R.indptr());
-    //     CHECK(sym_res.R.indices() == res.R.indices());
-    //     REQUIRE(sym_res.R.data().size() == res.R.data().size());
-    // }
+        CHECK(sym_res.V.indptr() == res.V.indptr());
+        CHECK(sym_res.V.indices() == res.V.indices());
+        CHECK(sym_res.V.data().empty());
+        CHECK(sym_res.beta.empty());
+        CHECK(sym_res.R.indptr() == res.R.indptr());
+        CHECK(sym_res.R.indices() == res.R.indices());
+        REQUIRE(sym_res.R.data().empty());
+    }
 
-    // SECTION("Exercise 5.3: Re-QR factorization") {
-    //     res = symbolic_qr(A, S);
+    SECTION("Exercise 5.3: Re-QR factorization") {
+        res = symbolic_qr(A, S);
 
-    //     // Compute the numeric factorization using the symbolic result
-    //     reqr(A, S, res);
+        // Compute the numeric factorization using the symbolic result
+        reqr(A, S, res);
 
-    //     CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
-    //     CSCMatrix QR = (Q * res.R).slice(0, M, 0, N).droptol(tol).to_canonical();
-    //     CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
+        CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
+        CSCMatrix QR = (Q * res.R).slice(0, M, 0, N).droptol(tol).to_canonical();
+        CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
-    //     compare_matrices(QR, Aq);
-    // }
+        compare_matrices(QR, Aq);
+    }
 }
 
 

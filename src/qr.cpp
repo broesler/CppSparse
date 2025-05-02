@@ -251,8 +251,8 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     std::vector<double> x(M2);      // dense vector
     std::vector<csint>  w(M2, -1),  // workspace for pattern of V[:, k]
                         s, t;       // stacks for pattern of R[:, k]
-    s.reserve(N);
-    t.reserve(N);
+    s.reserve(Nv);
+    t.reserve(Nv);
 
     // Compute the V and R column by column
     csint vnz = 0,
@@ -321,9 +321,10 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     V.p_[Nv] = vnz;  // finalize V
 
     std::vector<csint> q = S.q;
+
     if (M < N) {
-        // Compute the remaining columns of R
-        R = hstack(R, apply_qtleft(V, beta, S.p_inv, A.slice(0, M, M, N)));  // append Q^T A to R
+        // Compute the remaining columns of R: append Q^T A[:, M:] to R
+        R = hstack(R, apply_qtleft(V, beta, S.p_inv, A.slice(0, M, M, N)));
         // Append the remaining columns of A onto q
         for (csint k = M; k < N; k++) {
             q.push_back(k);
@@ -340,21 +341,24 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
     auto [M, N] = A.shape();
     csint M2 = S.m2;
 
-    // Allocate result matrices
-    CSCMatrix V({M2, N}, S.vnz);   // Householder vectors
-    CSCMatrix R({M2, N}, S.rnz);   // R factor
+    csint Nv = std::min(M, N);
+
+    // Allocate result matrices with no values
+    bool values = false;
+    CSCMatrix V({M2, Nv}, S.vnz, values);   // Householder vectors
+    CSCMatrix R({M2, Nv}, S.rnz, values);   // R factor
 
     // Allocate workspaces
     std::vector<csint> w(M2, -1),  // workspace for pattern of V[:, k]
                        s, t;       // stacks for pattern of R[:, k]
-    s.reserve(N);
-    t.reserve(N);
+    s.reserve(Nv);
+    t.reserve(Nv);
 
     // Compute V and R
     csint vnz = 0,
           rnz = 0;
 
-    for (csint k = 0; k < N; k++) {
+    for (csint k = 0; k < Nv; k++) {
         R.p_[k] = rnz;    // R[:, k] starts here
         V.p_[k] = vnz;    // V[:, k] starts here
         w[k] = k;         // add V(k, k) to pattern of V
@@ -389,17 +393,29 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
             R.i_[rnz++] = i;  // R(i, k)
             if (S.parent[i] == k) {
                 // Scatter the non-zero pattern without changing the values
-                vnz = V.scatter(i, 0, w, std::nullopt, k, V, vnz, false);
+                vnz = V.scatter(i, 0, w, std::nullopt, k, V, vnz, values);
             }
         }
 
         R.i_[rnz++] = k;  // R(k, k)
     }
 
-    R.p_[N] = rnz;  // finalize R
-    V.p_[N] = vnz;  // finalize V
+    R.p_[Nv] = rnz;  // finalize R
+    V.p_[Nv] = vnz;  // finalize V
 
-    return {V, std::vector<double>(N), R, S.p_inv, S.q};
+    std::vector<csint> q = S.q;
+
+    if (M < N) {
+        // Compute the remaining columns of R
+        std::vector<double> beta(Nv, 1.0);  // dummy beta
+        R = hstack(R, apply_qtleft(V, beta, S.p_inv, A.slice(0, M, M, N)));
+        // Append the remaining columns of A onto q
+        for (csint k = M; k < N; k++) {
+            q.push_back(k);
+        }
+    }
+
+    return {V, {}, R, S.p_inv, q};
 }
 
 
@@ -413,23 +429,27 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
     CSCMatrix& V = res.V;
     CSCMatrix& R = res.R;
     std::vector<double>& beta = res.beta;
-    res.p_inv = S.p_inv;
-    res.q = S.q;
 
-    assert(!V.indices().empty());
-    assert(!R.indices().empty());
+    if (V.indices().empty() || R.indices().empty()) {
+        throw std::runtime_error("V and R patterns have not been computed!");
+    }
+
+    // Allocate values in the result matrices
+    V.v_.resize(V.nnz());
+    beta.resize(V.N_);
+    R.v_.resize(R.nnz());
 
     // Allocate workspaces
     std::vector<double> x(M2);  // dense vector
 
     // Compute V and R
     for (csint k = 0; k < N; k++) {
-        csint col = S.q[k];  // permuted column of A
+        csint col = res.q[k];  // permuted column of A
 
         // R[:, k] pattern known. Scatter A[:, col] into x
         for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {
-            csint i = S.p_inv[A.i_[p]];  // i = permuted row of A(:, col)
-            x[i] = A.v_[p];              // x(i) = A(:, col)
+            csint i = res.p_inv[A.i_[p]];  // i = permuted row of A(:, col)
+            x[i] = A.v_[p];                // x(i) = A(:, col)
         }
 
         // for each i in pattern of R[:, k] (R(i, k) is non-zero)

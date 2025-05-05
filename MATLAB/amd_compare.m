@@ -9,10 +9,12 @@
 
 clear;
 
+SAVE_FIGS = false;
+
 % Ns = [10, 20, 50, 100];
-% Ns = [10, 20, 50, 100, 200, 500, 1000];
-Ns = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
-density = 0.1;
+Ns = [10, 20, 50, 100, 200, 500, 1000];
+% Ns = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
+density = 0.02;
 N_trials = 5;
 N_samples = 10;
 
@@ -29,8 +31,13 @@ for i = 1:length(Ns)
     N = Ns(i);
     disp(['N = ', num2str(N)]);
 
-    % TODO repeat for a number of matrices at each size
     A = sprandsym(N, density);
+
+    % Specify bandwidth by eliminating elements outside bands
+    [J, I] = meshgrid(1:N, 1:N);
+    bw = round(N/10);
+    is_within_band = abs(I - J) <= bw;
+    A(~is_within_band) = 0;
 
     amd_times(i) = timeit(@() amd(A), N_trials, N_samples);
     amd2_times(i) = timeit(@() amd2(A), N_trials, N_samples);
@@ -45,6 +52,25 @@ for i = 1:length(Ns)
 
     p = cs_amd(A);
     cs_amd_lnzs(i) = sum(symbfact(A(p,p)));
+
+    % Display a matrix
+    if N == 1000
+        figure(3); clf;
+
+        subplot(1, 2, 1);
+        spy(A);
+        title('Matrix A');
+
+        subplot(1, 2, 2);
+        spy(A(p,p));
+        title('AMD Permuted Matrix');
+
+        orient landscape;
+
+        if SAVE_FIGS
+            saveas(3, '../plots/amd_matrix.png');
+        end
+    end
 end
 
 
@@ -64,7 +90,9 @@ title(sprintf('AMD Timing Comparison (density = %.2f)', density));
 xlabel('Number of Columns');
 ylabel('Time to Permute [s]');
 
-% saveas(1, '../plots/amd_times.png');
+if SAVE_FIGS
+    saveas(1, '../plots/amd_times.png');
+end
 
 figure(2); clf; hold on;
 loglog(Ns, amd_lnzs, 'k.-');
@@ -79,7 +107,9 @@ title(sprintf('AMD Quality Comparison (density = %.2f)', density));
 xlabel('Number of Columns');
 ylabel('Number of Non-zeros in Factorization');
 
-% saveas(2, '../plots/amd_lnzs.png');
+if SAVE_FIGS
+    saveas(2, '../plots/amd_lnzs.png');
+end
 
 %===============================================================================
 %===============================================================================

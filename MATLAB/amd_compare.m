@@ -20,6 +20,10 @@ amd_times = zeros(length(Ns), 1);
 amd2_times = zeros(length(Ns), 1);
 cs_amd_times = zeros(length(Ns), 1);
 
+amd_lnzs = zeros(length(Ns), 1);
+amd2_lnzs = zeros(length(Ns), 1);
+cs_amd_lnzs = zeros(length(Ns), 1);
+
 % Create a random sparse matrix and time row indexing
 for i = 1:length(Ns)
     N = Ns(i);
@@ -33,9 +37,14 @@ for i = 1:length(Ns)
     cs_amd_times(i) = timeit(@() cs_amd(A), N_trials, N_samples);
 
     % Compare the number of non-zeros in the factorization
-    % p = amd(A);
-    % lnz = sum(symbfact(A(p,p)))
+    p = amd(A);
+    amd_lnzs(i) = sum(symbfact(A(p,p)));
 
+    p = amd2(A);
+    amd2_lnzs(i) = sum(symbfact(A(p,p)));
+
+    p = cs_amd(A);
+    cs_amd_lnzs(i) = sum(symbfact(A(p,p)));
 end
 
 
@@ -56,6 +65,21 @@ xlabel('Number of Columns');
 ylabel('Time to Permute [s]');
 
 % saveas(1, '../plots/amd_times.png');
+
+figure(2); clf; hold on;
+loglog(Ns, amd_lnzs, 'k.-');
+loglog(Ns, amd2_lnzs, 'o-');
+loglog(Ns, cs_amd_lnzs, 'x-');
+
+legend('Built-In AMD', 'AMD', 'CSparse AMD', 'Location', 'SouthEast');
+
+grid on;
+orient landscape;
+title(sprintf('AMD Quality Comparison (density = %.2f)', density));
+xlabel('Number of Columns');
+ylabel('Number of Non-zeros in Factorization');
+
+% saveas(2, '../plots/amd_lnzs.png');
 
 %===============================================================================
 %===============================================================================

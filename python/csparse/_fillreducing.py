@@ -15,7 +15,8 @@ import numpy as np
 from scipy import sparse
 from scipy.sparse import linalg as spla
 
-from .csparse import CSCMatrix, amd, dmperm
+from .csparse import CSCMatrix, amd, dmperm, lu_solve, qr_solve
+from .utils import to_scipy_sparse
 
 
 def fiedler(A):
@@ -120,7 +121,7 @@ def node_from_edge_sep(A, a, b):
     Ap = A[a][:, b]  # permute the matrix
     # dmperm requires a CSCMatrix
     res = dmperm(CSCMatrix(Ap.data, Ap.indices, Ap.indptr, Ap.shape))
-    p, q, r, s, _, cc, rr = res.p, res.q, res.r, res.s, res.Nb, res.cc, res.rr
+    p, q, s, cc, rr = res.p, res.q, res.s, res.cc, res.rr
     s = np.r_[a[p[:rr[1]]], b[q[cc[2]:cc[4]]]]
     w = np.ones(A.shape[1]).astype(bool)
     w[s] = False
@@ -197,6 +198,64 @@ def nested_dissection(A):
 
         # Return the permutation vector
         return p
+
+
+def dm_solve(A, b):
+    """Solve `Ax = b` using the Dulmage-Mendelsohn decomposition.
+
+    `A` may be rectangular and/or structurally rank deficient. `b` is a dense
+    vector.
+
+    Parameters
+    ----------
+    A : (M, N) array_like
+        Matrix of M vectors in N dimensions
+    b : (M,) array_like
+        Right-hand side vector
+
+    Returns
+    -------
+    x : (N,) ndarray
+        Solution vector. If `A` is overdetermined, `x` is the least-squares
+        solution.
+    """
+    M, N = A.shape
+
+    # dmperm requires a CSCMatrix
+    if isinstance(A, CSCMatrix):
+        A = to_scipy_sparse(A)
+    elif not isinstance(A, sparse.csc_array):
+        A = sparse.csc_array(A)
+
+    res = dmperm(CSCMatrix(A.data, A.indices, A.indptr, A.shape))
+    p, q, cc, rr = res.p, res.q, res.cc, res.rr
+
+    # Permute the matrix and the right-hand side
+    C = A[p][:, q]
+    b = b[p]
+    x = np.zeros(N)
+
+    # Solve the system
+    if rr[2] <= M and rr[3] <= N:
+        Cp = C[rr[2]:, rr[3]:]
+        Cpc = CSCMatrix(Cp.data, Cp.indices, Cp.indptr, Cp.shape)
+        x[cc[3]:] = qr_solve(Cpc, b[rr[2]:], order='ATA')
+        b[:rr[2]] -= C[:rr[2], cc[3]:] @ x[cc[3]:]
+
+    if rr[1] < rr[2] and cc[2] < cc[3]:
+        Cp = C[rr[1]:rr[2], cc[2]:cc[3]]
+        Cpc = CSCMatrix(Cp.data, Cp.indices, Cp.indptr, Cp.shape)
+        x[cc[2]:cc[3]] = lu_solve(Cpc, b[rr[1]:rr[2]], order='ATANoDenseRows')
+        b[:rr[1]] -= C[:rr[1], cc[2]:cc[3]] @ x[cc[2]:cc[3]]
+
+    if rr[1] > 0 and cc[2] > 0:
+        Cp = C[:rr[1], :cc[2]]
+        Cpc = CSCMatrix(Cp.data, Cp.indices, Cp.indptr, Cp.shape)
+        x[:cc[2]] = qr_solve(Cpc, b[:rr[1]], order='ATA')
+
+    x[q] = x  # inverse permute the solution
+
+    return x
 
 
 # =============================================================================

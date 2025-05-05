@@ -388,8 +388,9 @@ std::vector<double> chol_solve(
 /** Solve the system Ax = b using the QR factorization.
  *
  * This method is useful for solving least-squares problems where the matrix `A`
- * is `M`-by`N` and `M` > `N`. It can also be used to solve under-determined
- * systems where `M` < `N`.
+ * is `M`-by-`N` and `M` > `N`. It can also be used to solve under-determined
+ * systems where `M` < `N`. In the under-determined case, the solution is
+ * the minimum-norm solution.
  *
  * @param A  a matrix
  * @param b  a dense vector

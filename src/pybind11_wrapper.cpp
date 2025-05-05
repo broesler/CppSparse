@@ -545,6 +545,50 @@ PYBIND11_MODULE(csparse, m) {
     m.def("usolve", &cs::usolve);
     m.def("lsolve_opt", &cs::lsolve_opt);
     m.def("usolve_opt", &cs::usolve_opt);
+
+    m.def("chol_solve",
+        [](
+            const cs::CSCMatrix& A,
+            const std::vector<double>& b,
+            const std::string& order
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            return cs::chol_solve(A, b, order_enum);
+        },
+        py::arg("A"),
+        py::arg("b"),
+        py::arg("order")="Natural"  // CSparse default is "ATANoDenseRows"
+    );
+
+    m.def("qr_solve",
+        [](
+            const cs::CSCMatrix& A,
+            const std::vector<double>& b,
+            const std::string& order
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            return cs::qr_solve(A, b, order_enum);
+        },
+        py::arg("A"),
+        py::arg("b"),
+        py::arg("order")="Natural"  // CSparse default is "ATA"
+    );
+
+    m.def("lu_solve",
+        [](
+            const cs::CSCMatrix& A,
+            const std::vector<double>& b,
+            const std::string& order
+        ) {
+            cs::AMDOrder order_enum = string_to_amdorder(order);
+            return cs::lu_solve(A, b, order_enum);
+        },
+        py::arg("A"),
+        py::arg("b"),
+        py::arg("order")="Natural"  // CSparse default is "ATANoDenseRows"
+    );
+
+
 }
 
 /*==============================================================================

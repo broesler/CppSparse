@@ -50,7 +50,7 @@ test: test_csparse
 
 debug: CFLAGS += -DDEBUG -glldb #-Og
 debug: CFLAGS += -fno-inline -fsanitize=address
-debug: test
+debug: test demos
 
 .PHONY: demos
 demos: $(DEMO_EXEC)

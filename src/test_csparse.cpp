@@ -827,7 +827,8 @@ TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
 }
 
 
-TEST_CASE("Exercise 2.13: Is_symmetric.") {
+TEST_CASE("Exercise 2.13: is_symmetric.")
+{
     std::vector<csint>  i = {0, 1, 2};
     std::vector<csint>  j = {0, 1, 2};
     std::vector<double> v = {1, 2, 3};
@@ -850,6 +851,26 @@ TEST_CASE("Exercise 2.13: Is_symmetric.") {
                        .assign(1, 0, 1.0)
                        .tocsc();
         REQUIRE(A.is_symmetric());
+    }
+}
+
+
+TEST_CASE("is_triangular")
+{
+    const CSCMatrix A = davis_example_chol();
+    auto [M, N] = A.shape();
+
+    SECTION("Symmetric, Non-triangular matrix") {
+        REQUIRE(A.is_symmetric());
+        REQUIRE(A.is_triangular() == 0);
+    }
+
+    SECTION("Lower triangular matrix") {
+        REQUIRE(A.band(-M, 0).is_triangular() == -1);
+    }
+
+    SECTION("Upper triangular matrix") {
+        REQUIRE(A.band(0, N).is_triangular() == 1);
     }
 }
 

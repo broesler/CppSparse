@@ -179,6 +179,15 @@ class CSCMatrix
         */
         bool is_symmetric() const;
 
+        /** Return -1 if lower triangular, 1 if upper triangular, 0 otherwise.
+         *
+         * See: Davis, Exercise 2.13.
+         *
+         * @return -1 if square and lower triangular, 1 if square and upper
+         *         triangular, 0 otherwise.
+         */
+        csint is_triangular() const;
+
         /** Check if the columns have sorted indices by iteration.
          *
          * This function actually iterates through the columns and checks if the

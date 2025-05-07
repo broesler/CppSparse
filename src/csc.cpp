@@ -195,6 +195,32 @@ bool CSCMatrix::is_symmetric() const
 }
 
 
+// CSparse demo2 is_sym
+csint CSCMatrix::is_triangular() const
+{
+    if (M_ != N_) {
+        return 0;  // not square
+    }
+
+    bool is_upper = true;
+    bool is_lower = true;
+
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            csint i = i_[p];
+
+            if (i > j) {
+                is_upper = false;
+            } else if (i < j) {
+                is_lower = false;
+            }
+        }
+    }
+
+    return (is_upper ? 1 : (is_lower ? -1 : 0));
+}
+
+
 bool CSCMatrix::_test_sorted() const
 {
     for (csint j = 0; j < N_; j++) {

@@ -13,9 +13,8 @@
 #include <chrono>
 #include <iomanip>    // format
 #include <iostream>
-#include <limits>
+#include <limits>     // numeric_limits
 #include <vector>
-#include <thread>    // sleep_for
 
 #include "csparse.h"
 // #include "demo.h"
@@ -77,12 +76,12 @@ static CSCMatrix make_sym(const CSCMatrix& A)
 // Get a problem from the input stream
 struct Problem
 {
-    CSCMatrix A,  ///< original matrix
-              C;  ///< symmetric version of original matrix
-    bool is_sym;     ///< true if A is symmetric
-    std::vector<double> x,      ///< solution
-                        b,      ///< rhs
-                        resid;  ///< residuals
+    CSCMatrix A,                // /< original matrix
+              C;                // /< symmetric version of original matrix
+    csint is_sym;               // /< -1 if lower, 1 if upper, 0 otherwise
+    std::vector<double> x,      // /< solution
+                        b,      // /< rhs
+                        resid;  // /< residuals
 };
 
 
@@ -91,7 +90,7 @@ static Problem get_problem(std::istream& in, double tol)
     COOMatrix T(in);              // read the matrix
     CSCMatrix A = T.tocsc();      // convert to CSC format
     A.sum_duplicates();           // sum up duplicates
-    bool is_sym = A.is_symmetric();  // determine if A is symmetric
+    csint is_sym = A.is_triangular();  // determine if A is symmetric
     auto [M, N] = A.shape();
     csint nz1 = A.nnz();
     A.dropzeros();                // drop zero entries
@@ -104,7 +103,7 @@ static Problem get_problem(std::istream& in, double tol)
     CSCMatrix C = is_sym ? make_sym(A) : A;  // C = A + triu(A,1)'
 
     // Print title
-    std::cout << "\n--- Matrix: " << M << "-by-" << N
+    std::cout << "--- Matrix: " << M << "-by-" << N
               << ", nnz: " << A.nnz()
               << " (is_sym: " << (double) is_sym
               << ": nnz " << (is_sym ? C.nnz() : 0)
@@ -139,8 +138,9 @@ static void print_resid(
 )
 {
     resid = A * x - b;
-    double norm_resid = norm(resid, INFINITY);
-    double norm_denom = A.norm() * norm(x, INFINITY) + norm(b, INFINITY);
+    constexpr double inf = std::numeric_limits<double>::infinity();
+    double norm_resid = norm(resid, inf);
+    double norm_denom = A.norm() * norm(x, inf) + norm(b, inf);
     std::cout << "residual: " << std::format("{:8.2e}", norm_resid / norm_denom);
 }
 
@@ -187,7 +187,7 @@ int main(void)
     }
 
     // Solve linear system using LU
-    std::array<AMDOrder, 4> all_orders = {
+    const std::array<AMDOrder, 4> all_orders = {
         AMDOrder::Natural,
         AMDOrder::APlusAT,
         AMDOrder::ATANoDenseRows,
@@ -198,6 +198,8 @@ int main(void)
         if (order == AMDOrder::Natural && M > 1000) {
             continue;
         }
+        // FIXME residual large for AMDOrder::ATANoDenseRows!
+        // Also residuals for APlusAT and ATA are exactly 0?
         std::cout << "LU   " << order;
         auto t = tic();
         prob.x = lu_solve(prob.C, prob.b, order, tol);
@@ -222,6 +224,8 @@ int main(void)
         print_resid(prob.C, prob.x, prob.b, prob.resid);
         std::cout << std::endl;
     }
+
+    std::cout << std::endl;  // extra newline for readability
 
     return EXIT_SUCCESS;
 }

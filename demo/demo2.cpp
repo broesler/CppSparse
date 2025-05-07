@@ -13,7 +13,9 @@
 #include <chrono>
 #include <iomanip>    // format
 #include <iostream>
+#include <limits>
 #include <vector>
+#include <thread>    // sleep_for
 
 #include "csparse.h"
 // #include "demo.h"
@@ -102,11 +104,11 @@ static Problem get_problem(std::istream& in, double tol)
     CSCMatrix C = is_sym ? make_sym(A) : A;  // C = A + triu(A,1)'
 
     // Print title
-    std::cout << "--- Matrix: " << M << "-by-" << N
+    std::cout << "\n--- Matrix: " << M << "-by-" << N
               << ", nnz: " << A.nnz()
               << " (is_sym: " << (double) is_sym
               << ": nnz " << (is_sym ? C.nnz() : 0)
-              << "), norm: " << std::setprecision(8) << C.norm()
+              << "), norm: " << std::format("{:8.2e}", C.norm())
               << std::endl;
 
     if (nz1 != nz2) {
@@ -124,6 +126,22 @@ static Problem get_problem(std::istream& in, double tol)
     }
 
     return {A, C, is_sym, {}, b, {}};
+}
+
+
+// Compute residual:
+//      norm(A*x - b, inf) / (norm(A, 1) * norm(x, inf) + norm(b, inf))
+static void print_resid(
+    const CSCMatrix& A,
+    const std::vector<double>& x,
+    const std::vector<double>& b,
+    std::vector<double>& resid
+)
+{
+    resid = A * x - b;
+    double norm_resid = norm(resid, INFINITY);
+    double norm_denom = A.norm() * norm(x, INFINITY) + norm(b, INFINITY);
+    std::cout << "residual: " << std::format("{:8.2e}", norm_resid / norm_denom);
 }
 
 
@@ -159,9 +177,8 @@ int main(void)
         std::cout << "QR   " << order;
         auto t = tic();
         prob.x = qr_solve(prob.C, prob.b, order);
-        std::cout << std::format("time: {:8.2f} ", toc(t));
-        // TODO write this function
-        // print_residuals(prob.C, prob.x, prob.b, prob.resid);
+        std::cout << std::format("time: {:.2e} ", toc(t));
+        print_resid(prob.C, prob.x, prob.b, prob.resid);
         std::cout << std::endl;
     }
 
@@ -184,8 +201,8 @@ int main(void)
         std::cout << "LU   " << order;
         auto t = tic();
         prob.x = lu_solve(prob.C, prob.b, order, tol);
-        std::cout << std::format("time: {:8.2f} ", toc(t));
-        // print_residuals(prob.C, prob.x, prob.b, prob.resid);
+        std::cout << std::format("time: {:.2e} ", toc(t));
+        print_resid(prob.C, prob.x, prob.b, prob.resid);
         std::cout << std::endl;
     }
 
@@ -201,8 +218,8 @@ int main(void)
         std::cout << "Cholesky   " << order;
         auto t = tic();
         prob.x = chol_solve(prob.C, prob.b, order);
-        std::cout << std::format("time: {:8.2f} ", toc(t));
-        // print_residuals(prob.C, prob.x, prob.b, prob.resid);
+        std::cout << std::format("time: {:.2e} ", toc(t));
+        print_resid(prob.C, prob.x, prob.b, prob.resid);
         std::cout << std::endl;
     }
 

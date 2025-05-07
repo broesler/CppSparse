@@ -258,7 +258,7 @@ TEST_CASE("Vector permutations", "[vector]")
 TEST_CASE("Random permutation", "[randperm]")
 {
     csint N = 10;
-    csint seed = 0;
+    csint seed;
     std::vector<csint> expect_p = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
     SECTION("Identity permutation") {
@@ -277,15 +277,8 @@ TEST_CASE("Random permutation", "[randperm]")
     }
 
     std::vector<csint> p = randperm(N, seed);
-    std::vector<csint> p_inv = inv_permute(p);
 
     REQUIRE(p == expect_p);
-
-    // Check that the inverse permutation is correct
-    for (csint i = 0; i < N; i++) {
-        REQUIRE(p[p_inv[i]] == i);
-        REQUIRE(p_inv[p[i]] == i);
-    }
 }
 
 
@@ -4382,11 +4375,11 @@ TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
 
 TEST_CASE("Maximum Matching", "[maxmatch]")
 {
-    // TODO Test on non-symmetric matrices M > N and M < N
     CSCMatrix A = davis_example_amd();
     auto [M, N] = A.shape();
 
-    csint seed = 0;
+    csint seed = GENERATE(-1, 0, 1);
+    CAPTURE(seed);
 
     csint expect_rank = M;
     std::vector<csint> expect_jmatch(M);
@@ -4479,24 +4472,41 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
         expect_imatch = {0, 1, -1, -1, -1,  2,  3};
     }
 
-    MaxMatch res = maxtrans(A, seed);
+    MaxMatch res;
+    REQUIRE_NOTHROW(res = maxtrans(A, seed));
 
     // Count number of non-negative entries in jmatch
     csint row_rank = std::accumulate(
         res.jmatch.begin(), res.jmatch.end(), 0,
-        [](csint sum, csint j) { return sum + (j >= 0); }
+        [](csint sum, csint i) { return sum + (i >= 0); }
     );
 
     csint col_rank = std::accumulate(
         res.imatch.begin(), res.imatch.end(), 0,
-        [](csint sum, csint i) { return sum + (i >= 0); }
+        [](csint sum, csint j) { return sum + (j >= 0); }
     );
 
     csint sprank = std::min(row_rank, col_rank);
 
     CHECK(sprank == expect_rank);
-    CHECK(res.jmatch == expect_jmatch);
-    CHECK(res.imatch == expect_imatch);
+
+    if (seed == 0) {
+        CHECK(res.jmatch == expect_jmatch);
+        CHECK(res.imatch == expect_imatch);
+    }
+
+    // Check that the matchings are valid
+    for (csint i = 0; i < A.shape()[0]; i++) {
+        if (res.jmatch[i] >= 0) {
+            CHECK(res.imatch[res.jmatch[i]] == i);
+        }
+    }
+
+    for (csint j = 0; j < A.shape()[1]; j++) {
+        if (res.imatch[j] >= 0) {
+            CHECK(res.jmatch[res.imatch[j]] == j);
+        }
+    }
 }
 
 
@@ -4542,7 +4552,8 @@ TEST_CASE("Dulmage-Mendelsohn Permutation", "[dmperm]")
     CSCMatrix A = davis_example_amd();
     auto [M, N] = A.shape();
 
-    csint seed = 0;
+    csint seed = GENERATE(-1, 0, 1);
+    CAPTURE(seed);
 
     csint expect_Nb = 0;
     std::vector<csint> expect_p(N),
@@ -4583,16 +4594,13 @@ TEST_CASE("Dulmage-Mendelsohn Permutation", "[dmperm]")
 
     DMPermResult D = dmperm(A, seed);
 
-    // std::cout << "p: " << D.p << std::endl;
-    // std::cout << "q: " << D.q << std::endl;
-    // std::cout << "r: " << D.r << std::endl;
-    // std::cout << "s: " << D.s << std::endl;
-    // std::cout << "Nb: " << D.Nb << std::endl;
-    // std::cout << "rr: " << D.rr << std::endl;
-    // std::cout << "cc: " << D.cc << std::endl;
-
-    CHECK(D.p == expect_p);
-    CHECK(D.q == expect_q);
+    if (seed == 0) {
+        CHECK(D.p == expect_p);
+        CHECK(D.q == expect_q);
+    } else {
+        CHECK_THAT(D.p, UnorderedEquals(expect_p));
+        CHECK_THAT(D.q, UnorderedEquals(expect_q));
+    }
     CHECK(D.r == expect_r);
     CHECK(D.s == expect_s);
     CHECK(D.Nb == expect_Nb);

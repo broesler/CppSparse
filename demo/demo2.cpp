@@ -82,10 +82,12 @@ struct Problem
     std::vector<double> x,      // /< solution
                         b,      // /< rhs
                         resid;  // /< residuals
+
+    static Problem fromstream(std::istream& in, double tol);
 };
 
 
-static Problem get_problem(std::istream& in, double tol)
+Problem Problem::fromstream(std::istream& in, double tol)
 {
     COOMatrix T(in);              // read the matrix
     CSCMatrix A = T.tocsc();      // convert to CSC format
@@ -103,12 +105,15 @@ static Problem get_problem(std::istream& in, double tol)
     CSCMatrix C = is_sym ? make_sym(A) : A;  // C = A + triu(A,1)'
 
     // Print title
-    std::cout << "--- Matrix: " << M << "-by-" << N
-              << ", nnz: " << A.nnz()
-              << " (is_sym: " << (double) is_sym
-              << ": nnz " << (is_sym ? C.nnz() : 0)
-              << "), norm: " << std::format("{:8.2e}", C.norm())
-              << std::endl;
+    std::cout << std::format(
+        "--- Matrix: {}-by-{}, nnz: {} (sym: {}: nnz: {}), norm: {:8.2e}\n",
+        M,
+        N,
+        A.nnz(),
+        is_sym,
+        is_sym ? C.nnz() : 0,
+        C.norm()
+    );
 
     if (nz1 != nz2) {
         std::cout << "zero entries dropped: " << nz1 - nz2 << std::endl;
@@ -124,7 +129,7 @@ static Problem get_problem(std::istream& in, double tol)
         b[i] = 1.0 + (double) i / M;
     }
 
-    return {A, C, is_sym, {}, b, {}};
+    return {std::move(A), std::move(C), is_sym, {}, std::move(b), {}};
 }
 
 
@@ -142,6 +147,7 @@ static void print_resid(
     double norm_resid = norm(resid, inf);
     double norm_denom = A.norm() * norm(x, inf) + norm(b, inf);
     std::cout << "residual: " << std::format("{:8.2e}", norm_resid / norm_denom);
+    std::cout << std::endl;
 }
 
 
@@ -150,7 +156,7 @@ static void print_resid(
 // -----------------------------------------------------------------------------
 int main(void)
 {
-    Problem prob = get_problem(std::cin, 1e-14);
+    Problem prob = Problem::fromstream(std::cin, 1e-14);
 
     auto [M, N] = prob.A.shape();
     double tol = prob.is_sym ? 0.001 : 1.0;  // partial pivoting tolerance
@@ -179,7 +185,6 @@ int main(void)
         prob.x = qr_solve(prob.C, prob.b, order);
         std::cout << std::format("time: {:.2e} ", toc(t));
         print_resid(prob.C, prob.x, prob.b, prob.resid);
-        std::cout << std::endl;
     }
 
     if (M != N || sprank < N) {
@@ -198,14 +203,11 @@ int main(void)
         if (order == AMDOrder::Natural && M > 1000) {
             continue;
         }
-        // FIXME residual large for AMDOrder::ATANoDenseRows!
-        // Also residuals for APlusAT and ATA are exactly 0?
         std::cout << "LU   " << order;
         auto t = tic();
         prob.x = lu_solve(prob.C, prob.b, order, tol);
         std::cout << std::format("time: {:.2e} ", toc(t));
         print_resid(prob.C, prob.x, prob.b, prob.resid);
-        std::cout << std::endl;
     }
 
     if (!prob.is_sym) {
@@ -222,10 +224,9 @@ int main(void)
         prob.x = chol_solve(prob.C, prob.b, order);
         std::cout << std::format("time: {:.2e} ", toc(t));
         print_resid(prob.C, prob.x, prob.b, prob.resid);
-        std::cout << std::endl;
     }
 
-    std::cout << std::endl;  // extra newline for readability
+    std::cout << "\n" << std::endl;  // extra newline for readability
 
     return EXIT_SUCCESS;
 }

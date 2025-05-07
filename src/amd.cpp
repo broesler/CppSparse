@@ -824,8 +824,9 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
     auto [jmatch, imatch] = maxtrans(A, seed);  // maximum matching
 
     // --- Coarse Decomposition ------------------------------------------------
-    std::vector<csint> wi(M, -1),  // unmark all row and columns for bfs
-                       wj(N, -1);
+    // CSparse uses wi = D.r and wj = D.s as workspace
+    std::vector<csint> wi(M + 6, -1),  // unmark all row and columns for bfs
+                       wj(N + 6, -1);
 
     bfs(A, N, wi, wj, D.q, imatch, jmatch, 1);  // find C1, R1 from C0
     bfs(A, M, wj, wi, D.p, jmatch, imatch, 3);  // find C3, R3 from R0

@@ -61,10 +61,11 @@ SymbolicLU slu(const CSCMatrix& A, AMDOrder order)
 {
     auto [M, N] = A.shape();
     SymbolicLU S;             // allocate result
-    std::vector<csint> q(N);  // column permutation vector
+    std::vector<csint> q;     // column permutation vector
 
     // Determine column ordering of A
     if (order == AMDOrder::Natural) {
+        q.resize(N);
         std::iota(q.begin(), q.end(), 0);  // identity permutation
     } else {
         q = amd(A, order);  // order = ATANoDenseRows for LU

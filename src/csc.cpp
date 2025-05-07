@@ -175,7 +175,9 @@ bool CSCMatrix::has_canonical_format() const { return has_canonical_format_; }
 // Exercise 2.13
 bool CSCMatrix::is_symmetric() const
 {
-    assert(M_ == N_);
+    if (M_ != N_) {
+        return false;
+    }
 
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {

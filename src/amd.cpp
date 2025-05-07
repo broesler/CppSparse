@@ -88,25 +88,31 @@ CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense)
             C = A + AT;
             break;
         case AMDOrder::ATANoDenseRows: {
-            // Drop dense columns from AT
+            // Drop dense columns from AT (i.e., rows from A)
             csint q = 0;
+
             for (csint j = 0; j < M; j++) {
                 csint p = AT.p_[j];  // column j of AT starts here
                 AT.p_[j] = q;        // new column j starts here
+
                 if (AT.p_[j+1] - p > dense) {
                     continue;        // skip dense col j
                 }
+
                 // Copy non-dense entries
                 for (; p < AT.p_[j+1]; p++) {
                     AT.i_[q++] = AT.i_[p];
                 }
             }
-            AT.p_[M] = q;     // finalize AT
+
+            AT.p_[M] = q;   // finalize AT
+            AT.realloc(q);  // resize AT to remove dense rows
+
             C = AT * AT.transpose(values);  // C = A^T * A, without dense rows
             break;
         }
         case AMDOrder::ATA:
-            C = A.transpose(values) * A;
+            C = AT * A;
             break;
         default:
             throw std::runtime_error("Invalid AMD order specified!");
@@ -133,7 +139,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
     auto [M, N] = A.shape();
 
     // --- Construct C matrix --------------------------------------------------
-    // Fine dense threshold
+    // Find dense threshold
     csint dense = std::max(16.0, 10.0 * std::sqrt(static_cast<double>(N)));
     dense = std::min(N - 2, dense);
 

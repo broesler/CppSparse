@@ -58,6 +58,14 @@ demos: $(DEMO_EXEC)
 .PHONY: run_demos
 run_demos: $(DEMO_EXEC)  # ensure demos are built before running
 	- ./demo1 < ./data/t1
+	- ./demo2 < ./data/t1
+	- ./demo2 < ./data/ash219
+	- ./demo2 < ./data/bcsstk01
+	- ./demo2 < ./data/fs_183_1
+	- ./demo2 < ./data/mbeacxc
+	- ./demo2 < ./data/west0067
+	- ./demo2 < ./data/lp_afiro
+	- ./demo2 < ./data/bcsstk16
 
 # -----------------------------------------------------------------------------
 #         Compile and Link

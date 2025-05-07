@@ -605,6 +605,8 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
     const CSCMatrix C = (m2 < n2) ? A.transpose(false) : A;
     std::tie(M, N) = C.shape();
 
+    // FIXME these lines might not do the same thing as the original, because
+    // the *sizes* of the vectors are different!
     // If we transposed, we need to swap the imatch and jmatch vectors
     std::vector<csint>& jmatch = (m2 < n2) ? jimatch.imatch : jimatch.jmatch;
     std::vector<csint>& imatch = (m2 < n2) ? jimatch.jmatch : jimatch.imatch;
@@ -621,6 +623,7 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
     // randperm can help with worst-case behavioe O(|A|N), see Davis, p 118.
     std::vector<csint> q = randperm(N, seed);  // random permutation of columns
 
+    // augment the path, starting at column q[k]
     for (csint k = 0; k < N; k++) {
         augment(q[k], C, jmatch, cheap, w, js, is, ps);
     }
@@ -740,6 +743,8 @@ void bfs(
             }
 
             wi[i] = mark;          // i in set R1 (C3 if transpose)
+            // FIXME this line breaks for M > N (2nd bfs call in dmperm)
+            // i > jmatch.size();
             csint j2 = jmatch[i];  // transverse alternating path to j2
 
             if (wj[j2] >= 0) {
@@ -829,6 +834,7 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
                        wj(N + 6, -1);
 
     bfs(A, N, wi, wj, D.q, imatch, jmatch, 1);  // find C1, R1 from C0
+    // FIXME this line breaks for M > N (./demo2 < data/ash219)
     bfs(A, M, wj, wi, D.p, jmatch, imatch, 3);  // find C3, R3 from R0
 
     unmatched(N, wj, D.q, D.cc, 0);  // unmatched set C0

@@ -59,6 +59,17 @@ struct DMPermResult {
 };
 
 
+/** Build the adjacency matrix C for use in AMD ordering.
+ *
+ * @param A  the matrix to reorder
+ * @param order  the ordering method to use
+ * @param dense  the threshold for "dense" rows
+ *
+ * @return the symmetric adjacency matrix C
+ */
+CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense);
+
+
 /** Compute the approximate minimum degree ordering of a matrix.
  *
  * This function computes the approximate minimum degree ordering of a matrix

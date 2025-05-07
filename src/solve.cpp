@@ -800,7 +800,8 @@ std::vector<double> qr_solve(
 std::vector<double> lu_solve(
     const CSCMatrix& A,
     const std::vector<double>& b,
-    AMDOrder order
+    AMDOrder order,
+    double tol
 )
 {
     if (A.shape()[0] != b.size()) {
@@ -808,7 +809,7 @@ std::vector<double> lu_solve(
     }
 
     SymbolicLU S = slu(A, order);
-    LUResult res = lu(A, S);
+    LUResult res = lu(A, S, tol);
 
     return res.solve(b);
 }
@@ -818,7 +819,8 @@ std::vector<double> lu_solve(
 std::vector<double> lu_tsolve(
     const CSCMatrix& A,
     const std::vector<double>& b,
-    AMDOrder order
+    AMDOrder order,
+    double tol
 )
 {
     if (A.shape()[1] != b.size()) {
@@ -827,7 +829,7 @@ std::vector<double> lu_tsolve(
 
     // Compute the numeric factorization
     SymbolicLU S = slu(A, order);
-    LUResult res = lu(A, S);
+    LUResult res = lu(A, S, tol);
 
     return res.tsolve(b);
 }

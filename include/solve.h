@@ -416,13 +416,17 @@ std::vector<double> qr_solve(
  *
  * @param A  a square matrix
  * @param b  a dense vector
+ * @param order  the fill-reducing ordering of the matrix to compute
+ * #param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
+ *        used. If `tol` is less than 1.0, diagonal pivoting is used. 
  *
  * @return x  the solution vector
  */
 std::vector<double> lu_solve(
     const CSCMatrix& A,
     const std::vector<double>& b,
-    AMDOrder order=AMDOrder::Natural
+    AMDOrder order=AMDOrder::Natural,
+    double tol=1.0
 );
 
 
@@ -432,13 +436,17 @@ std::vector<double> lu_solve(
  *
  * @param A  a square matrix
  * @param b  a dense vector
+ * @param order  the fill-reducing ordering of the matrix to compute
+ * #param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
+ *        used. If `tol` is less than 1.0, diagonal pivoting is used. 
  *
  * @return x  the solution vector
  */
 std::vector<double> lu_tsolve(
     const CSCMatrix& A,
     const std::vector<double>& b,
-    AMDOrder order=AMDOrder::Natural
+    AMDOrder order=AMDOrder::Natural,
+    double tol=1.0
 );
 
 

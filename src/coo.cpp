@@ -9,6 +9,8 @@
 
 #include <algorithm>  // std::max_element
 #include <cassert>
+#include <iostream>
+#include <fstream>
 #include <format>
 #include <random>
 #include <string>
@@ -79,10 +81,30 @@ COOMatrix::COOMatrix(const CSCMatrix& A)
 }
 
 
-COOMatrix::COOMatrix(std::istream& fp)
+COOMatrix COOMatrix::from_file(const std::string& filename)
+{
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open file: " + filename);
+    }
+
+    try {
+        return from_stream(file);
+    } catch (const std::runtime_error& e) {
+        throw std::runtime_error(
+            "Error reading file: " + filename + "\n" + e.what()
+        );
+    }
+}
+
+
+COOMatrix COOMatrix::from_stream(std::istream& fp)
 {
     csint i, j;
     double v;
+
+    COOMatrix A;
 
     while (fp) {
         std::string line;
@@ -92,9 +114,11 @@ COOMatrix::COOMatrix(std::istream& fp)
             if (!(ss >> i >> j >> v))
                 throw std::runtime_error("File is not in (i, j, v) format!");
             else
-                assign(i, j, v);
+                A.assign(i, j, v);
         }
     }
+
+    return A;
 }
 
 

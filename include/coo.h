@@ -84,16 +84,6 @@ class COOMatrix
          */
         COOMatrix(const Shape& shape, csint nzmax=0);
 
-        /** Read a COOMatrix matrix from a file.
-         *
-         * The file is expected to be in "triplet format" `(i, j, v)`, where `(i, j)`
-         * are the index coordinates, and `v` is the value to be assigned.
-         *
-         * @param fp    a reference to the file stream.
-         * @throws std::runtime_error if file format is not in triplet format
-         */
-        COOMatrix(std::istream& fp);                 // from file
-
         /** Convert a CSCMatrix to a COOMatrix, like Matlab's `find`.
          *
          * @see CSCMatrix::tocoo(), cs_find (Davis, Exercise 2.2)
@@ -102,6 +92,34 @@ class COOMatrix
          * @return C the equivalent matrix in triplet form.
          */
         COOMatrix(const CSCMatrix& A);               // Exercise 2.2, Matlab's find
+
+        /** Read a COOMatrix matrix from a file.
+         *
+         * The file is expected to be in "triplet format" `(i, j, v)`, where
+         * `(i, j)` are the index coordinates, and `v` is the value to be
+         * assigned.
+         *
+         * @param filename  the filename as a string
+         *
+         * @return A  a new COOMatrix object
+         *
+         * @throws std::runtime_error if file is not in triplet format
+         */
+        static COOMatrix from_file(const std::string& filename);
+
+        /** Read a COOMatrix matrix from a file stream
+         *
+         * The input is expected to be in "triplet format" `(i, j, v)`, where
+         * `(i, j)` are the index coordinates, and `v` is the value to be
+         * assigned.
+         *
+         * @param fp  a reference to the file stream.
+         *
+         * @return A  a new COOMatrix object
+         *
+         * @throws std::runtime_error if file is not in triplet format
+         */
+        static COOMatrix from_stream(std::istream& fp);
 
         /** Create a random sparse matrix.
          *

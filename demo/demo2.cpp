@@ -83,23 +83,23 @@ struct Problem
                         b,      // /< rhs
                         resid;  // /< residuals
 
-    static Problem fromstream(std::istream& in, double tol);
+    static Problem from_stream(std::istream& in, double tol);
 };
 
 
-Problem Problem::fromstream(std::istream& in, double tol)
+Problem Problem::from_stream(std::istream& in, double tol)
 {
-    COOMatrix T(in);              // read the matrix
-    CSCMatrix A = T.tocsc();      // convert to CSC format
-    A.sum_duplicates();           // sum up duplicates
-    csint is_sym = A.is_triangular();  // determine if A is symmetric
+    COOMatrix T = COOMatrix::from_stream(in);  // read the matrix
+    CSCMatrix A = T.tocsc();                   // convert to CSC format
+    A.sum_duplicates();                        // sum up duplicates
+    csint is_sym = A.is_triangular();          // determine if A is symmetric
     auto [M, N] = A.shape();
     csint nz1 = A.nnz();
-    A.dropzeros();                // drop zero entries
+    A.dropzeros();                             // drop zero entries
     csint nz2 = A.nnz();
 
     if (tol > 0) {
-        A.droptol(tol);           // drop tiny entries (just to test)
+        A.droptol(tol);  // drop tiny entries (just to test)
     }
 
     CSCMatrix C = is_sym ? make_sym(A) : A;  // C = A + triu(A,1)'
@@ -156,7 +156,7 @@ static void print_resid(
 // -----------------------------------------------------------------------------
 int main(void)
 {
-    Problem prob = Problem::fromstream(std::cin, 1e-14);
+    Problem prob = Problem::from_stream(std::cin, 1e-14);
 
     auto [M, N] = prob.A.shape();
     double tol = prob.is_sym ? 0.001 : 1.0;  // partial pivoting tolerance

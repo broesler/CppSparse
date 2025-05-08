@@ -153,8 +153,7 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
     }
 
     SECTION("Read from a file") {
-        std::ifstream fp("./data/t1");
-        COOMatrix F {fp};  // TODO refactor to use a static fromfile function
+        COOMatrix F = COOMatrix::from_file("./data/t1");
 
         REQUIRE(A.row() == F.row());
         REQUIRE(A.column() == F.column());

@@ -17,7 +17,7 @@ using namespace cs;
 
 int main(void) {
     // Load a matrix from stdin
-    COOMatrix T(std::cin);
+    COOMatrix T = COOMatrix::from_stream(std::cin);
     std::cout << "T:\n" << T << "\n";
 
     // Convert to CSCMatrix

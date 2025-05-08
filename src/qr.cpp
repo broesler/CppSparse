@@ -193,12 +193,16 @@ SymbolicQR sqr(const CSCMatrix& A, AMDOrder order, bool use_postorder)
         N = M;
     }
 
-    const CSCMatrix Ac = C;  // copy original (sliced) matrix for postordering
+    CSCMatrix Ac;
+    if (use_postorder) {
+        Ac = C;  // copy original (sliced) matrix for postordering
+    }
 
-    SymbolicQR S;             // allocate result
-    std::vector<csint> q(N);  // column permutation vector
+    SymbolicQR S;          // allocate result
+    std::vector<csint> q;  // column permutation vector
 
     if (order == AMDOrder::Natural) {
+        q.resize(N);
         std::iota(q.begin(), q.end(), 0);  // identity permutation
     } else {
         q = amd(C, order);                 // order = ATA for QR

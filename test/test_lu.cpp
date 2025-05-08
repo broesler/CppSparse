@@ -11,7 +11,7 @@
 #include <catch2/matchers/catch_matchers_all.hpp>
 #include <catch2/generators/catch_generators.hpp>
 
-#include <cmath>
+#include <cmath>     // log2
 #include <iostream>  // cerr
 #include <numeric>   // iota
 #include <sstream>

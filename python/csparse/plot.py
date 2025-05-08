@@ -1,0 +1,222 @@
+#!/usr/bin/env python3
+# =============================================================================
+#     File: plot.py
+#  Created: 2025-05-07 19:44
+#   Author: Bernie Roesler
+#
+"""
+Functions for plotting sparse matrices.
+"""
+# =============================================================================
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+from matplotlib.ticker import MaxNLocator
+from scipy.sparse import issparse
+
+
+def cspy(A, marker='s', markersize=10, cmap='viridis', aspect='equal',
+         ax=None, colorbar=True, **kwargs):
+    """Visualize a sparse or dense matrix with colored markers.
+
+    This function is similar to `matplotlib.pyplot.spy`, but it colors the
+    markers based on the value of the non-zero elements in the matrix.
+    It can handle both dense NumPy arrays and SciPy sparse matrices.
+
+    Parameters
+    ----------
+    A : array_like
+        The 2D matrix to visualize. Can be a NumPy array, SciPy sparse
+        matrix, or any object convertible to a 2D NumPy array.
+    marker : str, optional
+        The marker style to use for non-zero elements, by default 's' (square).
+        See `matplotlib.pyplot.scatter` documentation for valid marker styles.
+    markersize : int or float, optional
+        The size of the markers, by default 10.
+    cmap : str or matplotlib.colors.Colormap, optional
+        The colormap to use for coloring the markers, by default 'viridis'.
+    aspect : {'equal', 'auto'} or float, optional
+        Controls the aspect ratio of the plot.
+        - 'equal': Ensures square cells (default).
+        - 'auto': Adjusts the aspect to fill the figure.
+        - float: A specific aspect ratio.
+    ax : matplotlib.axes.Axes, optional
+        An existing Axes object to plot on. If None (default), the current axes
+        are used.
+    colorbar : bool, optional
+        Whether to display a colorbar, by default True.
+    **kwargs
+        Additional keyword arguments passed directly to
+        `matplotlib.pyplot.scatter`.
+
+    Returns
+    -------
+    ax : matplotlib.axes.Axes
+        The Axes object used for plotting.
+
+    See Also
+    --------
+    matplotlib.pyplot.spy : Plot the sparsity pattern of a 2D array.
+    matplotlib.pyplot.scatter : A scatter plot of y vs. x with varying marker
+        size and/or color.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> data = np.array([[1, 0, 2], [0, -3, 0], [4, 0, 0]])
+    >>> scatter, ax = cspy(data, markersize=50)
+    >>> plt.show()
+
+    >>> from scipy.sparse import csr_array
+    >>> sparse_data = csr_array(data)
+    >>> scatter, ax = cspy(sparse_data, cmap='coolwarm')
+    >>> plt.show()
+    """
+    if ax is None:
+        ax = plt.gca()  # get current Axes if not provided
+
+    fig = ax.figure
+
+    if issparse(A):
+        A_coo = A.tocoo()
+        rows, cols, values = A_coo.row, A_coo.col, A_coo.data
+    else:
+        try:
+            A_np = np.asarray(A)
+            if A_np.ndim != 2:
+                raise ValueError("Input matrix must be 2-dimensional.")
+            rows, cols = np.nonzero(A_np)
+            values = A_np[rows, cols]
+        except Exception as e:
+            raise TypeError(
+                "Input matrix must be a NumPy array, SciPy sparse matrix, "
+                f"or convertible to a 2D NumPy array. Error: {e}"
+            )
+
+    M, N = A.shape
+
+    # Set plot limits and aspect ratio
+    # Ensure limits are appropriate even for single row/column matrices
+    ax.set_xlim(-0.5, N - 0.5 if N > 0 else 0.5)
+    ax.set_ylim(M - 0.5 if M > 0 else 0.5, -0.5)  # inverted y-axis like spy
+    ax.set_aspect(aspect)
+
+    ax.xaxis.tick_top()  # match spy's x-axis orientation
+    # ax.spines['bottom'].set_visible(False)
+    ax.spines['right'].set_visible(True)
+    ax.spines['top'].set_visible(True)
+
+    # Use MaxNLocator to ensure integer ticks on both axes
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+
+    if len(values) == 0:
+        ax.set_xlabel(f"{A.shape}, nnz = 0, density = 0")
+        return ax
+
+    ax.set_xlabel((f"{A.shape}, nnz = {len(values)}, "
+                   f"density = {len(values) / (M * N):.2%}"))
+
+    # Create the scatter plot
+    scatter = ax.scatter(
+        cols, rows, c=values, cmap=cmap, marker=marker, s=markersize, **kwargs
+    )
+
+    # Add a colorbar
+    if colorbar:
+        fig.colorbar(scatter, ax=ax)
+
+    return ax
+
+
+if __name__ == '__main__':
+    # --- Example Usage ---
+    plt.close('all')
+
+    # # 1. Dense NumPy array
+    dense_matrix = np.array([
+        [1.5, 0, 0, 2.1],
+        [0, -3.3, 0, 0],
+        [0, 0, 0, 0],
+        [4.7, 0, 5.0, -0.5]
+    ])
+    fig1, ax1 = plt.subplots(figsize=(6, 5))
+    cspy(dense_matrix, markersize=80, cmap='coolwarm', ax=ax1)
+    ax1.set_title("Dense Matrix")
+    plt.show()
+
+    # 2. SciPy sparse matrix (if SciPy is installed)
+    from scipy.sparse import csr_array
+    sparse_matrix_data = np.array([10, 20, -30, 40, 50, 60, -70, 80, 5, -15])
+    row_ind = np.array([0, 0, 1, 2, 3, 3, 4, 4, 0, 1])
+    col_ind = np.array([0, 2, 1, 3, 0, 3, 1, 2, 3, 3])
+    # Ensure shape is large enough for all indices
+    shape = (max(row_ind) + 1, max(col_ind) + 1)
+    sparse_matrix = csr_array(
+        (sparse_matrix_data, (row_ind, col_ind)),
+        shape=shape
+    )
+
+    fig2, ax2 = plt.subplots(figsize=(6, 5))
+    cspy(sparse_matrix, marker='o', markersize=70, cmap='plasma',
+         vmin=-100, vmax=100, ax=ax2)
+    ax2.set_title("Sparse Matrix")
+    plt.show()
+
+    # Example with a different sparse format (COO)
+    from scipy.sparse import coo_array
+    row = np.array([0, 3, 1, 0, 5, 5, 2])
+    col = np.array([0, 3, 1, 2, 0, 2, 2])
+    data = np.array([1, 2.5, 3.1, 4.9, -1.2, -5.5, 0.5])
+    coo_m = coo_array((data, (row, col)), shape=(6, 4))
+    fig3, ax3 = plt.subplots(figsize=(6, 5))
+    cspy(coo_m, marker='+', markersize=90, cmap='viridis', ax=ax3)
+    ax3.set_title("COO Sparse Matrix")
+    plt.show()
+
+    # 3. Matrix with all zeros
+    zero_matrix = np.zeros((5, 5))
+    fig4, ax4 = plt.subplots(figsize=(5, 4))
+    cspy(zero_matrix, ax=ax4)
+    ax4.set_title("Zero Matrix")
+    plt.show()
+
+    # 4. Empty matrix
+    empty_matrix = np.array([[]])  # or np.empty((0,5)) or np.empty((5,0))
+    fig5, ax5 = plt.subplots(figsize=(5, 4))
+    cspy(empty_matrix, ax=ax5)
+    ax5.set_title("Empty Matrix")
+    plt.show()
+
+    # 5. Larger random matrix (more sparse-like)
+    np.random.seed(42)
+    large_random_matrix = np.random.randn(25, 35)
+    large_random_matrix[np.abs(large_random_matrix) < 0.8] = 0
+    fig6, ax6 = plt.subplots(figsize=(8, 6))
+    cspy(large_random_matrix, markersize=15, cmap='magma', ax=ax6)
+    ax6.set_title("Larger Random Matrix")
+    plt.show()
+
+    # 6. Matrix with only positive values and custom normalization
+    positive_matrix = np.abs(dense_matrix) + 1  # ensure all positive
+    fig7, ax7 = plt.subplots(figsize=(6, 5))
+    # Example of using vmin/vmax for color normalization
+    cspy(positive_matrix, markersize=80, cmap='Reds',
+         vmin=0, vmax=np.max(positive_matrix)+2, ax=ax7)
+    ax7.set_title("Positive Values Matrix with vmin/vmax")
+    plt.show()
+
+    # 7. Using an existing Axes object
+    fig8, (ax_spy, ax_cspy) = plt.subplots(1, 2, figsize=(12, 5))
+    # Standard spy plot
+    ax_spy.spy(dense_matrix, marker='s', markersize=10)
+    ax_spy.set_title("pyplot.spy")
+    # Our cspy plot on the second axes
+    cspy(dense_matrix, markersize=80, cmap='coolwarm', ax=ax_cspy)
+    ax_cspy.set_title("cspy")
+    plt.show()
+
+# =============================================================================
+# =============================================================================

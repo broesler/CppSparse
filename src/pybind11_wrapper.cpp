@@ -215,8 +215,7 @@ PYBIND11_MODULE(csparse, m) {
             const cs::Shape>()
         )
         .def(py::init<const cs::Shape&, cs::csint>())
-        // TODO how to handle a file pointer -> overload with std::string
-        // .def(py::init<std::istream&>())
+        .def_static("from_file", &cs::COOMatrix::from_file, py::arg("filename"))
         .def_static("random",
             &cs::COOMatrix::random,
             py::arg("M"),

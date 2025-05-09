@@ -195,14 +195,15 @@ COOMatrix& COOMatrix::assign(csint i, csint j, double v)
 
 // Exercise 2.5
 COOMatrix& COOMatrix::assign(
-    std::vector<csint> rows,
-    std::vector<csint> cols,
-    std::vector<double> vals
-    )
+    const std::vector<csint>& rows,
+    const std::vector<csint>& cols,
+    const std::vector<double>& C
+)
 {
     assert(rows.size() == cols.size());
     csint N = rows.size();
-    assert(vals.size() == (N * N));
+    // FIXME this assertion is not correct for a non-square matrix C
+    // assert(C.size() == (N * N));
 
     // Track maximum indices
     csint max_row_idx = 0, 
@@ -218,7 +219,7 @@ COOMatrix& COOMatrix::assign(
             // Assign the indices and value
             i_.push_back(row);
             j_.push_back(col);
-            v_.push_back(vals[i + j*N]);  // column-major order
+            v_.push_back(C[i + j*N]);  // column-major order
         }
     }
 
@@ -383,19 +384,6 @@ void COOMatrix::write_elems_(std::stringstream& ss, csint start, csint end) cons
             ss << std::endl;
         }
     }
-}
-
-
-void COOMatrix::print(std::ostream& os, bool verbose, csint threshold) const
-{
-    os << to_string(verbose, threshold) << std::endl;
-}
-
-
-std::ostream& operator<<(std::ostream& os, const COOMatrix& A)
-{
-    A.print(os, true);  // verbose printing assumed
-    return os;
 }
 
 

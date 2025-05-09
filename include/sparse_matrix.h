@@ -11,6 +11,7 @@
 #define _CSPARSE_SPARSE_MATRIX_H_
 
 #include <iostream>
+#include <memory>    // unique_ptr
 #include <vector>
 
 #include "types.h"
@@ -26,12 +27,6 @@ public:
     virtual csint nnz() const = 0;    // number of non-zeros
     virtual csint nzmax() const = 0;  // maximum number of non-zeros
     virtual Shape shape() const = 0;  // the dimensions of the matrix
-
-    /// Transpose the matrix as a copy.
-    ///
-    /// @return new COOMatrix object with transposed rows and columns.
-    virtual SparseMatrix transpose() const = 0;
-    virtual SparseMatrix T() const = 0;
 
     /// Assign a value to a specific element in the matrix.
     /// 

@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "types.h"
+#include "sparse_matrix.h"
 
 
 namespace cs {
@@ -137,9 +138,9 @@ class COOMatrix : public SparseMatrix
         //----------------------------------------------------------------------
         //        Setters and Getters
         //----------------------------------------------------------------------
-        csint nnz() const override;    // number of non-zeros
-        csint nzmax() const override;  // maximum number of non-zeros
-        Shape shape() const override;  // the dimensions of the matrix
+        virtual csint nnz() const override;    // number of non-zeros
+        virtual csint nzmax() const override;  // maximum number of non-zeros
+        virtual Shape shape() const override;  // the dimensions of the matrix
 
         const std::vector<csint>& row() const;     // indices and data
         const std::vector<csint>& column() const;
@@ -162,23 +163,23 @@ class COOMatrix : public SparseMatrix
          *
          * @see cs_entry Davis p 12.
          */
-        COOMatrix& assign(csint i, csint j, double v) override;
+        virtual COOMatrix& assign(csint i, csint j, double v) override;
 
         /** Assign a dense submatrix to vectors of indices.
          *
          * See: Davis, Exercise 2.5.
          *
-         * @param i, j  vectors of integer indices of length `N`.
-         * @param v     dense submatrix of size `N`-by-`N`, in column-major order.
+         * @param i, j  vectors of integer indices
+         * @param v     dense submatrix of size `M`-by-`N`, in column-major order.
          *
          * @return A    a reference to itself for method chaining.
          *
          * @see cs_entry Davis p 12.
          */
-        COOMatrix& assign(
-            std::vector<csint> i,
-            std::vector<csint> j,
-            std::vector<double> v
+        virtual COOMatrix& assign(
+            const std::vector<csint>& i,
+            const std::vector<csint>& j,
+            const std::vector<double>& C
         ) override;
 
         //----------------------------------------------------------------------
@@ -207,7 +208,7 @@ class COOMatrix : public SparseMatrix
          *
          * @return a copy of the matrix as a dense array.
          */
-        std::vector<double> to_dense_vector(const char order='F') const override;
+        virtual std::vector<double> to_dense_vector(const char order='F') const override;
 
         //----------------------------------------------------------------------
         //        Math Operations
@@ -218,8 +219,8 @@ class COOMatrix : public SparseMatrix
          *
          * @return new COOMatrix object with transposed rows and columns.
          */
-        COOMatrix transpose() const override;
-        COOMatrix T() const override;
+        COOMatrix transpose() const;
+        COOMatrix T() const;
 
         /** Multiply a COOMatrix by a dense vector.
          *
@@ -229,7 +230,7 @@ class COOMatrix : public SparseMatrix
          *
          * @return y  the result of the matrix-vector multiplication.
          */
-        std::vector<double> dot(const std::vector<double>& x) const override;
+        virtual std::vector<double> dot(const std::vector<double>& x) const override;
 
         //----------------------------------------------------------------------
         //        Other
@@ -240,7 +241,7 @@ class COOMatrix : public SparseMatrix
          * @param threshold   if `nnz > threshold`, print only the first and last
          *        3 entries in the matrix. Otherwise, print all entries.
          */
-        std::string to_string(
+        virtual std::string to_string(
             bool verbose=false,
             csint threshold=1000
         ) const override;

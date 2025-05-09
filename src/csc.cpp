@@ -1744,11 +1744,37 @@ std::string CSCMatrix::to_string(bool verbose, csint threshold) const
 
 void CSCMatrix::write_elems_(std::stringstream& ss, csint start, csint end) const
 {
+    // Determine whether to use scientific notation
+    double abs_max = 0.0;
+    for (const auto& val : v_) {
+        if (std::isfinite(val)) {
+            abs_max = std::max(abs_max, std::fabs(val));
+        }
+    }
+
+    bool use_scientific = (abs_max < 1e-4 || abs_max > 1e4);
+    // Leading space aligns for "-" signs
+    const std::string fmt = use_scientific ? " .4e" : " .4g";
+
+    // Compute index width from maximum index
+    int row_width = std::to_string(M_ - 1).size();
+    int col_width = std::to_string(N_ - 1).size();
+
+    const std::string format_string = "({0:>{1}d}, {2:>{3}d}): {4:" + fmt + "}";
+
     csint n = 0;  // number of elements printed
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j + 1]; p++) {
             if ((n >= start) && (n < end)) {
-                ss << std::format("({}, {}): {}", i_[p], j, v_[p]);
+                ss << std::vformat(
+                    format_string,
+                    std::make_format_args(
+                        i_[p], row_width,
+                        j, col_width,
+                        v_[p]
+                    )
+                );
+
                 if (n < end - 1) {
                     ss << std::endl;
                 }

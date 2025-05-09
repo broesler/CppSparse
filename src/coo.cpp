@@ -7,8 +7,9 @@
  *
  *============================================================================*/
 
-#include <algorithm>  // std::max_element
+#include <algorithm>  // max_element
 #include <cassert>
+#include <cmath>      // abs
 #include <iostream>
 #include <fstream>
 #include <format>
@@ -350,8 +351,34 @@ std::string COOMatrix::to_string(bool verbose, csint threshold) const
 
 void COOMatrix::write_elems_(std::stringstream& ss, csint start, csint end) const
 {
+    // Determine whether to use scientific notation
+    double abs_max = 0.0;
+    for (const auto& val : v_) {
+        if (std::isfinite(val)) {
+            abs_max = std::max(abs_max, std::fabs(val));
+        }
+    }
+
+    bool use_scientific = (abs_max < 1e-4 || abs_max > 1e4);
+    // Leading space aligns for "-" signs
+    const std::string fmt = use_scientific ? " .4e" : " .4g";
+
+    // Compute index width from maximum index
+    int row_width = std::to_string(M_ - 1).size();
+    int col_width = std::to_string(N_ - 1).size();
+
+    const std::string format_string = "({0:>{1}d}, {2:>{3}d}): {4:" + fmt + "}";
+
     for (csint k = start; k < end; k++) {
-        ss << std::format("({}, {}): {}", i_[k], j_[k], v_[k]);
+        ss << std::vformat(
+            format_string,
+            std::make_format_args(
+                i_[k], row_width,
+                j_[k], col_width,
+                v_[k]
+            )
+        );
+
         if (k < end - 1) {
             ss << std::endl;
         }

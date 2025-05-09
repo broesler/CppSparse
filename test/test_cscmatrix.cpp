@@ -59,16 +59,16 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
             std::string expect =
                 "<Compressed Sparse Column matrix\n"
                 "        with 10 stored elements and shape (4, 4)>\n"
-                "(1, 0): 3.1\n"
-                "(3, 0): 3.5\n"
-                "(0, 0): 4.5\n"
-                "(1, 1): 2.9\n"
-                "(3, 1): 0.4\n"
-                "(2, 1): 1.7\n"
-                "(2, 2): 3\n"
-                "(0, 2): 3.2\n"
-                "(3, 3): 1\n"
-                "(1, 3): 0.9\n";
+                "(1, 0):  3.1\n"
+                "(3, 0):  3.5\n"
+                "(0, 0):  4.5\n"
+                "(1, 1):  2.9\n"
+                "(3, 1):  0.4\n"
+                "(2, 1):  1.7\n"
+                "(2, 2):  3\n"
+                "(0, 2):  3.2\n"
+                "(3, 3):  1\n"
+                "(1, 3):  0.9\n";
 
             SECTION("Print from function") {
                 C.print(s, true);

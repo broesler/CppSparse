@@ -36,17 +36,6 @@ private:
     bool has_sorted_indices_ = false;
     bool has_canonical_format_ = false;
 
-    /** Make the format string for printing one element of the matrix.
-     *
-     * The element will be printed as: "(i, u): v" where `i` is the row index,
-     * `u` is the column index, and `v` is the value of the element. This
-     * function sets the format specifiers for `std::format` depending on the
-     * values of the entire matrix, so that the output is consistent.
-     *
-     * @return a string describing the format of a single element.
-     */
-    std::string make_format_string_() const;
-
 protected:
     /** Return the format description of the matrix. */
     virtual std::string_view get_format_desc_() const override
@@ -67,19 +56,19 @@ public:
     friend class TestCSCMatrix;  // dummy class for testing
 
     /** 
-        * @typedef KeepFunc
-        * @brief A boolean function pointer type that acts on an element of
-        * a matrix.
-        *
-        * This type is used by the function `CSCMatrix::fkeep`. If `fk` returns
-        * `true` for `A(i, j)`, that element will be kept in the matrix.
-        *
-        * @param i, j  the row and column indices of the element
-        * @param Aij  the value of the element `A(i, j)`
-        *
-        * @return keep  a boolean that is true if the element `A(i, j)` should
-        *         be kept in the matrix.
-        */
+     * @typedef KeepFunc
+     * @brief A boolean function pointer type that acts on an element of
+     * a matrix.
+     *
+     * This type is used by the function `CSCMatrix::fkeep`. If `fk` returns
+     * `true` for `A(i, j)`, that element will be kept in the matrix.
+     *
+     * @param i, j  the row and column indices of the element
+     * @param Aij  the value of the element `A(i, j)`
+     *
+     * @return keep  a boolean that is true if the element `A(i, j)` should
+     *         be kept in the matrix.
+     */
     using KeepFunc = std::function<bool(csint i, csint j, double Aij)>;
 
     //--------------------------------------------------------------------------
@@ -92,23 +81,23 @@ public:
     virtual ~CSCMatrix() = default;
 
     /** Construct a CSCMatrix from arrays of values and coordinates.
-        *
-        * The entries are *not* sorted in any order, and duplicates are allowed. Any
-        * duplicates will be summed.
-        *
-        * The matrix shape `(M, N)` will be inferred from the maximum indices given.
-        *
-        * @param data the values of the entries in the matrix. This vector may
-        *        be empty to create a symbolic matrix.
-        * @param indices row indices of each element. The length of this array
-        *        must be equal to the length of `data`, if `data` is not empty.
-        * @param indptr array indices of the start of each column in `indices`.
-        *        The first `indptr` element is always 0, and the last element
-        *        is always `nnz()`, which is the length of `indices`.
-        * @param shape the dimensions of the matrix
-        *
-        * @return a new CSCMatrix object
-        */
+     *
+     * The entries are *not* sorted in any order, and duplicates are allowed. Any
+     * duplicates will be summed.
+     *
+     * The matrix shape `(M, N)` will be inferred from the maximum indices given.
+     *
+     * @param data the values of the entries in the matrix. This vector may
+     *        be empty to create a symbolic matrix.
+     * @param indices row indices of each element. The length of this array
+     *        must be equal to the length of `data`, if `data` is not empty.
+     * @param indptr array indices of the start of each column in `indices`.
+     *        The first `indptr` element is always 0, and the last element
+     *        is always `nnz()`, which is the length of `indices`.
+     * @param shape the dimensions of the matrix
+     *
+     * @return a new CSCMatrix object
+     */
     CSCMatrix(
         const std::vector<double>& data,
         const std::vector<csint>& indices,
@@ -117,38 +106,38 @@ public:
     );
 
     /** Allocate a CSCMatrix for a given shape and number of non-zeros.
-        *
-        * @param shape  the dimensions of the matrix
-        * @param nzmax integer capacity of space to reserve for non-zeros
-        * @param values if `true`, allocate space for the values array
-        */
+     *
+     * @param shape  the dimensions of the matrix
+     * @param nzmax integer capacity of space to reserve for non-zeros
+     * @param values if `true`, allocate space for the values array
+     */
     CSCMatrix(const Shape& shape, csint nzmax=0, bool values=true);
 
     /** Convert a coordinate format matrix to a compressed sparse column matrix in
-        * canonical format.
-        *
-        * The columns are guaranteed to be sorted, no duplicates are allowed, and no
-        * numerically zero entries are allowed.
-        *
-        * This function takes O(M + N + nnz) time.
-        *
-        * See: Davis, Exercises 2.2, 2.9.
-        *
-        * @return a copy of the `COOMatrix` in canonical CSC format.
-        */
+     * canonical format.
+     *
+     * The columns are guaranteed to be sorted, no duplicates are allowed, and no
+     * numerically zero entries are allowed.
+     *
+     * This function takes O(M + N + nnz) time.
+     *
+     * See: Davis, Exercises 2.2, 2.9.
+     *
+     * @return a copy of the `COOMatrix` in canonical CSC format.
+     */
     explicit CSCMatrix(const COOMatrix& A);  // Exercise 2.2
 
     /** Create a sparse copy of a dense matrix in column-major fomr.
-        *
-        * See: Davis, Exercise 2.16.
-        *
-        * @param A  a dense matrix in column-major form
-        * @param shape  the dimensions of the matrix
-        * @param order  the order of the dense matrix, either 'F'
-        *        (column-major) or 'C' (row-major).
-        *
-        * @return C a compressed sparse column version of the matrix
-        */
+     *
+     * See: Davis, Exercise 2.16.
+     *
+     * @param A  a dense matrix in column-major form
+     * @param shape  the dimensions of the matrix
+     * @param order  the order of the dense matrix, either 'F'
+     *        (column-major) or 'C' (row-major).
+     *
+     * @return C a compressed sparse column version of the matrix
+     */
     CSCMatrix(
         const std::vector<double>& A,
         const Shape& shape,
@@ -156,11 +145,11 @@ public:
     );
 
     /** Reallocate a CSCMatrix to a new number of non-zeros.
-        *
-        * @param A      matrix to be resized
-        * @param nzmax  maximum number of non-zeros. If `nzmax <= A.nzmax()`,
-        *        then `nzmax` will be set to `A.nnz()`.
-        */
+     *
+     * @param A      matrix to be resized
+     * @param nzmax  maximum number of non-zeros. If `nzmax <= A.nzmax()`,
+     *        then `nzmax` will be set to `A.nnz()`.
+     */
     virtual void realloc(csint nzmax=0);
 
     // --------------------------------------------------------------------------
@@ -172,98 +161,98 @@ public:
 
     const std::vector<csint>& indices() const;
     const std::vector<csint>& indptr() const;
-    const std::vector<double>& data() const;
+    virtual const std::vector<double>& data() const override;
 
     /** Convert a CSCMatrix to canonical format in-place.
-        *
-        * The columns are guaranteed to be sorted, no duplicates are allowed, and no
-        * numerically zero entries are allowed.
-        *
-        * This function takes O(M + N + nnz) time.
-        *
-        * See: Davis, Exercise 2.9.
-        *
-        * @return a reference to itself for method chaining.
-        */
+     *
+     * The columns are guaranteed to be sorted, no duplicates are allowed, and no
+     * numerically zero entries are allowed.
+     *
+     * This function takes O(M + N + nnz) time.
+     *
+     * See: Davis, Exercise 2.9.
+     *
+     * @return a reference to itself for method chaining.
+     */
     CSCMatrix& to_canonical();
 
     bool has_sorted_indices() const;
     bool has_canonical_format() const;
 
     /** Returns true if `A(i, j) == A(i, j)` for all `i, j`.
-    *
-    * See: Davis, Exercise 2.13.
-    *
-    * @return true if the matrix is symmetric.
-    */
+     *
+     * See: Davis, Exercise 2.13.
+     *
+     * @return true if the matrix is symmetric.
+     */
     bool is_symmetric() const;
 
     /** Return -1 if lower triangular, 1 if upper triangular, 0 otherwise.
-        *
-        * See: Davis, Exercise 2.13.
-        *
-        * @return -1 if square and lower triangular, 1 if square and upper
-        *         triangular, 0 otherwise.
-        */
+     *
+     * See: Davis, Exercise 2.13.
+     *
+     * @return -1 if square and lower triangular, 1 if square and upper
+     *         triangular, 0 otherwise.
+     */
     csint is_triangular() const;
 
     /** Check if the columns have sorted indices by iteration.
-        *
-        * This function actually iterates through the columns and checks if the
-        * indices are sorted, as opposed to just checking the property
-        * `has_sorted_indices_`. This is a brute-force method, and is only
-        * intended for internal testing purposes.
-        *
-        * @return true if the columns are sorted, false otherwise.
-        */
+     *
+     * This function actually iterates through the columns and checks if the
+     * indices are sorted, as opposed to just checking the property
+     * `has_sorted_indices_`. This is a brute-force method, and is only
+     * intended for internal testing purposes.
+     *
+     * @return true if the columns are sorted, false otherwise.
+     */
     bool _test_sorted() const;
 
     /** Return the value of the requested element.
-        *
-        * This function takes O(log M) time if the columns are sorted, and O(M) time
-        * if they are not.
-        *
-        * @param i, j the row and column indices of the element to access.
-        *
-        * @return the value of the element at `(i, j)`.
-        */
+     *
+     * This function takes O(log M) time if the columns are sorted, and O(M) time
+     * if they are not.
+     *
+     * @param i, j the row and column indices of the element to access.
+     *
+     * @return the value of the element at `(i, j)`.
+     */
     const double operator()(csint i, csint j) const;
 
     /** Return a reference to the value of the requested element for use in
-        * assignment, e.g. `A(i, j) = 56.0`.
-        *
-        * This function takes O(log M) time if the columns are sorted, and O(M)
-        * time if they are not.
-        *
-        * @param i, j the row and column indices of the element to access.
-        *
-        * @return a reference to the value of the element at `(i, j)`.
-        */
+     * assignment, e.g. `A(i, j) = 56.0`.
+     *
+     * This function takes O(log M) time if the columns are sorted, and O(M)
+     * time if they are not.
+     *
+     * @param i, j the row and column indices of the element to access.
+     *
+     * @return a reference to the value of the element at `(i, j)`.
+     */
     double& operator()(csint i, csint j);
 
     /** Assign a value to a specific element in the matrix.
-        *
-        * This function takes O(log M) time if the columns are sorted, and O(M) time
-        * if they are not.
-        *
-        * See: Davis, Exercise 2.25 assign by index.
-        *
-        * @param i, j the row and column indices of the element to access.
-        * @param v the value to be assigned.
-        *
-        * @return a reference to itself for method chaining.
-        */
+     *
+     * This function takes O(log M) time if the columns are sorted, and O(M) time
+     * if they are not.
+     *
+     * See: Davis, Exercise 2.25 assign by index.
+     *
+     * @param i, j the row and column indices of the element to access.
+     * @param v the value to be assigned.
+     *
+     * @return a reference to itself for method chaining.
+     */
     virtual CSCMatrix& assign(csint i, csint j, double v) override;
 
     /** Assign a dense matrix to the CSCMatrix at the specified locations.
-        *
-        * See: Davis, Exercise 2.25.
-        *
-        * @param rows, cols the row and column indices of the elements to access.
-        * @param C the dense matrix to be assigned.
-        *
-        * @return a reference to itself for method chaining.
-        */
+     *
+     * See: Davis, Exercise 2.25.
+     *
+     * @param rows, cols the row and column indices of the elements to access.
+     * @param C the dense matrix to be assigned.
+     *
+     * @return a reference to itself for method chaining.
+     */
     virtual CSCMatrix& assign(
         const std::vector<csint>& i,
         const std::vector<csint>& j,
@@ -271,14 +260,14 @@ public:
     ) override;
 
     /** Assign a sparse matrix to the CSCMatrix at the specified locations.
-        *
-        * See: Davis, Exercise 2.25.
-        *
-        * @param rows, cols the row and column indices of the elements to access.
-        * @param C the sparse matrix to be assigned.
-        *
-        * @return a reference to itself for method chaining.
-        */
+     *
+     * See: Davis, Exercise 2.25.
+     *
+     * @param rows, cols the row and column indices of the elements to access.
+     * @param C the sparse matrix to be assigned.
+     *
+     * @return a reference to itself for method chaining.
+     */
     CSCMatrix& assign(
         const std::vector<csint>& rows,
         const std::vector<csint>& cols,
@@ -286,44 +275,44 @@ public:
     );
 
     /** Insert a single element at a specified location.
-        *
-        * This function is a helper for assign and operator().
-        *
-        * @param i, j the row and column indices of the element to access.
-        * @param v the value to be assigned.
-        * @param p the pointer to the column in the matrix.
-        *
-        * @return a reference to the inserted value.
-        */
+     *
+     * This function is a helper for assign and operator().
+     *
+     * @param i, j the row and column indices of the element to access.
+     * @param v the value to be assigned.
+     * @param p the pointer to the column in the matrix.
+     *
+     * @return a reference to the inserted value.
+     */
     double& insert(csint i, csint j, double v, csint p);
 
     //--------------------------------------------------------------------------
     //        Format Conversions
     //--------------------------------------------------------------------------
     /** Convert a compressed sparse column matrix to a coordinate (triplet) format
-        * matrix.
-        *
-        * See: Davis, Exercise 2.2, Matlab `find`.
-        *
-        * @return a copy of the `CSCMatrix` in COO (triplet) format.
-        */
+     * matrix.
+     *
+     * See: Davis, Exercise 2.2, Matlab `find`.
+     *
+     * @return a copy of the `CSCMatrix` in COO (triplet) format.
+     */
     COOMatrix tocoo() const;
 
     /** Convert a CSCMatrix to a dense column-major array.
-        *
-        * See: Davis, Exercise 2.16 (inverse)
-        *
-        * @param order the order of the array, either 'F' for Fortran (column-major)
-        *       or 'C' for C (row-major).
-        *
-        * @return a copy of the matrix as a dense column-major array.
-        */
+     *
+     * See: Davis, Exercise 2.16 (inverse)
+     *
+     * @param order the order of the array, either 'F' for Fortran (column-major)
+     *       or 'C' for C (row-major).
+     *
+     * @return a copy of the matrix as a dense column-major array.
+     */
     virtual std::vector<double> to_dense_vector(const char order='F') const override;
 
     /** Convert a CSCMatrix to a double if it is a 1x1 matrix.
-        *
-        * @return the value of the matrix if it is a 1x1 matrix.
-        */
+     *
+     * @return the value of the matrix if it is a 1x1 matrix.
+     */
     operator const double() const {
         assert((M_ == 1) && (N_ == 1));
         return v_[0];
@@ -347,106 +336,106 @@ public:
     CSCMatrix T() const;  // transpose a copy (alias)
 
     /** Sort rows and columns in a copy via two transposes.
-        *
-        * See: Davis, Exercise 2.7.
-        *
-        * @return C  a copy of the matrix with sorted columns.
-        */
+     *
+     * See: Davis, Exercise 2.7.
+     *
+     * @return C  a copy of the matrix with sorted columns.
+     */
     CSCMatrix tsort() const;
 
     /** Sort rows and columns in place using std::sort.
-        *
-        * See: Davis, Exercise 2.8.
-        *
-        * This function takes
-        *   - O(3*M) extra space ==
-        *       2 workspaces for row indices and values + vector of sorted indices
-        *   - O(N * M log M + nnz) time ==
-        *       sort a length M vector for each of N columns
-        *
-        * @return a reference to the object for method chaining
-        */
+     *
+     * See: Davis, Exercise 2.8.
+     *
+     * This function takes
+     *   - O(3*M) extra space ==
+     *       2 workspaces for row indices and values + vector of sorted indices
+     *   - O(N * M log M + nnz) time ==
+     *       sort a length M vector for each of N columns
+     *
+     * @return a reference to the object for method chaining
+     */
     CSCMatrix& qsort();
 
     /** Sort rows and columns in place two transposes, but more efficiently than
-        * calling `transpose` twice.
-        *
-        * See: Davis, Exercise 2.11.
-        *
-        * This function takes O(M) extra space and O(M * N + nnz) time.
-        *
-        * @return A  a reference to the matrix, now with sorted columns.
-        */
+     * calling `transpose` twice.
+     *
+     * See: Davis, Exercise 2.11.
+     *
+     * This function takes O(M) extra space and O(M * N + nnz) time.
+     *
+     * @return A  a reference to the matrix, now with sorted columns.
+     */
     CSCMatrix& sort();
 
     /** Sum duplicate entries in place.
-        *
-        * This function takes
-        *   - O(N) extra space for the workspace
-        *   - O(nnz) time
-        *
-        * @return a reference to the object for method chaining
-        */
+     *
+     * This function takes
+     *   - O(N) extra space for the workspace
+     *   - O(nnz) time
+     *
+     * @return a reference to the object for method chaining
+     */
     CSCMatrix& sum_duplicates();
 
     /** Keep matrix entries for which `fkeep` returns true, remove others.
-    *
-    * @param fk  a boolean function that acts on each element. If `fk`
-    *        returns `true`, that element will be kept in the matrix. 
-    *
-    * @return a reference to the object for method chaining.
-    */
+     *
+     * @param fk  a boolean function that acts on each element. If `fk`
+     *        returns `true`, that element will be kept in the matrix. 
+     *
+     * @return a reference to the object for method chaining.
+     */
     CSCMatrix& fkeep(KeepFunc fk);
 
     // Overload for copies
     /** Keep matrix entries for which `fkeep` returns true, remove others.
-    *
-    * @param fk  a boolean function that acts on each element. If `fk`
-    *        returns `true`, that element will be kept in the matrix. 
-    *
-    * @return a copy of the matrix with entries removed.
-    */
+     *
+     * @param fk  a boolean function that acts on each element. If `fk`
+     *        returns `true`, that element will be kept in the matrix. 
+     *
+     * @return a copy of the matrix with entries removed.
+     */
     CSCMatrix fkeep(KeepFunc fk) const;
 
     /** Drop any exactly zero entries from the matrix.
-        *
-        * This function takes O(nnz) time.
-        *
-        * @return a reference to the object for method chaining
-        */
+     *
+     * This function takes O(nnz) time.
+     *
+     * @return a reference to the object for method chaining
+     */
     CSCMatrix& dropzeros();
 
     /** Drop any entries within `tol` of zero.
-        *
-        * This function takes O(nnz) time.
-        *
-        * @param tol the tolerance against which to compare the absolute value of the
-        *        matrix entries.
-        *
-        * @return a reference to the object for method chaining
-        */
+     *
+     * This function takes O(nnz) time.
+     *
+     * @param tol the tolerance against which to compare the absolute value of the
+     *        matrix entries.
+     *
+     * @return a reference to the object for method chaining
+     */
     CSCMatrix& droptol(double tol=1e-15);
 
     /** Keep any entries within the specified band, in-place.
-        *
-        * See: Davis, Exercise 2.15.
-        *
-        * @param kl, ku  the lower and upper diagonals within which to keep entries.
-        *        The main diagonal is 0, with sub-diagonals < 0, and
-        *        super-diagonals > 0.
-        *
-        * @return a reference to the matrix with entries removed.
-        */
+     *
+     * See: Davis, Exercise 2.15.
+     *
+     * @param kl, ku  the lower and upper diagonals within which to keep entries.
+     *        The main diagonal is 0, with sub-diagonals < 0, and
+     *        super-diagonals > 0.
+     *
+     * @return a reference to the matrix with entries removed.
+     */
     CSCMatrix& band(csint kl, csint ku);
 
     /** Keep any entries within the specified band.
-    *
-    * @param kl, ku  the lower and upper diagonals within which to keep entries.
-    *        The main diagonal is 0, with sub-diagonals < 0, and
-    *        super-diagonals > 0.
-    *
-    * @return a copy of the matrix with entries removed.
-    */
+     *
+     * @param kl, ku  the lower and upper diagonals within which to keep entries.
+     *        The main diagonal is 0, with sub-diagonals < 0, and
+     *        super-diagonals > 0.
+     *
+     * @return a copy of the matrix with entries removed.
+     */
     CSCMatrix band(csint kl, csint ku) const;
 
     //--------------------------------------------------------------------------
@@ -507,15 +496,15 @@ public:
     );
 
     /** Scale the rows and columns of a matrix by \f$ A = RAC \f$, where *R* and *C*
-        * are diagonal matrices.
-        *
-        * See: Davis, Exercise 2.4.
-        *
-        * @param r, c  vectors of length M and N, respectively, representing the
-        * diagonals of R and C, where A is size M-by-N.
-        *
-        * @return RAC the scaled matrix
-        */
+     * are diagonal matrices.
+     *
+     * See: Davis, Exercise 2.4.
+     *
+     * @param r, c  vectors of length M and N, respectively, representing the
+     * diagonals of R and C, where A is size M-by-N.
+     *
+     * @return RAC the scaled matrix
+     */
     CSCMatrix scale(const std::vector<double>& r, const std::vector<double> c) const;
 
     /** Matrix-vector right-multiply (see cs_multiply) */
@@ -525,41 +514,41 @@ public:
     CSCMatrix dot(const double c) const;
 
     /** Matrix-matrix multiplication
-        *
-        * @note This function may *not* return a matrix with sorted columns!
-        *
-        * @param A, B  the CSC-format matrices to multiply.
-        *        A is size M x K, B is size K x N.
-        *
-        * @return C    a CSC-format matrix of size M x N.
-        *         C.nnz() <= A.nnz() + B.nnz().
-        */
+     *
+     * @note This function may *not* return a matrix with sorted columns!
+     *
+     * @param A, B  the CSC-format matrices to multiply.
+     *        A is size M x K, B is size K x N.
+     *
+     * @return C    a CSC-format matrix of size M x N.
+     *         C.nnz() <= A.nnz() + B.nnz().
+     */
     CSCMatrix dot(const CSCMatrix& B) const;
 
     /** Matrix-matrix multiplication with two passes
-        *
-        * See: Davis, Exercise 2.20.
-        *
-        * @note This function may *not* return a matrix with sorted columns!
-        *
-        * @param A, B  the CSC-format matrices to multiply.
-        *        A is size M x K, B is size K x N.
-        *
-        * @return C    a CSC-format matrix of size M x N.
-        *         C.nnz() <= A.nnz() + B.nnz().
-        */
+     *
+     * See: Davis, Exercise 2.20.
+     *
+     * @note This function may *not* return a matrix with sorted columns!
+     *
+     * @param A, B  the CSC-format matrices to multiply.
+     *        A is size M x K, B is size K x N.
+     *
+     * @return C    a CSC-format matrix of size M x N.
+     *         C.nnz() <= A.nnz() + B.nnz().
+     */
     CSCMatrix dot_2x(const CSCMatrix& B) const;  // Exercise 2.20
 
     /** Multiply two sparse column vectors \f$ c = x^T y \f$.
-        *
-        * See: Davis, Exercise 2.18, `cs_dot`.
-        *
-        * @param x, y two column vectors stored as a CSCMatrix. The number of columns
-        *        in each argument must be 1.
-        *
-        * @return c  the dot product `x.T() * y`, but computed more efficiently than
-        *         the complete matrix dot product.
-        */
+     *
+     * See: Davis, Exercise 2.18, `cs_dot`.
+     *
+     * @param x, y two column vectors stored as a CSCMatrix. The number of columns
+     *        in each argument must be 1.
+     *
+     * @return c  the dot product `x.T() * y`, but computed more efficiently than
+     *         the complete matrix dot product.
+     */
     double vecdot(const CSCMatrix& y) const;
 
     /** Matrix-matrix add and subtract */
@@ -567,14 +556,14 @@ public:
     CSCMatrix subtract(const CSCMatrix& B) const;
 
     /** Add two matrices (and optionally scale them) `C = alpha * A + beta * B`.
-        *
-        * @note This function may *not* return a matrix with sorted columns!
-        *
-        * @param A, B  the CSC matrices
-        * @param alpha, beta  scalar multipliers
-        *
-        * @return out a CSC matrix
-        */
+     *
+     * @note This function may *not* return a matrix with sorted columns!
+     *
+     * @param A, B  the CSC matrices
+     * @param alpha, beta  scalar multipliers
+     *
+     * @return out a CSC matrix
+     */
     friend CSCMatrix add_scaled(
         const CSCMatrix& A,
         const CSCMatrix& B,
@@ -583,15 +572,15 @@ public:
     );
 
     /** Add two sparse column vectors \f$ z = x + y \f$.
-        *
-        * See: Davis, Exercise 2.21
-        *
-        * @param x, y two column vectors stored as a CSCMatrix. The number of columns
-        *        in each argument must be 1.
-        *
-        * @return z  the sum of the two vectors, but computed more efficiently than
-        *         the complete matrix addition.
-        */
+     *
+     * See: Davis, Exercise 2.21
+     *
+     * @param x, y two column vectors stored as a CSCMatrix. The number of columns
+     *        in each argument must be 1.
+     *
+     * @return z  the sum of the two vectors, but computed more efficiently than
+     *         the complete matrix addition.
+     */
     friend std::vector<csint> saxpy(
         const CSCMatrix& a,
         const CSCMatrix& b,
@@ -600,25 +589,25 @@ public:
     );
 
     /** Compute `x += beta * A(:, j)`.
-        *
-        * This function also updates `w`, sets the sparsity pattern in `C._i`,
-        * and returns updated `nz`. The values corresponding to `C._i` are
-        * accumulated in `x`, and then gathered in the calling function, so
-        * that we can account for any duplicate entries.
-        *
-        * @param j     column index of `A`
-        * @param beta  scalar value by which to multiply `A`
-        * @param[in,out] w, x  workspace vectors of row indices and values, respectively
-        * @param mark  separator index for `w`. All `w[i] < mark`are row indices that
-        *              are not yet in `Cj`.
-        * @param[in,out] C    CSC matrix where output non-zero pattern is stored
-        * @param[in,out] nz   current number of non-zeros in `C`.
-        * @param fs    first call to scatter. Default is false to skip the
-        *        optimization.
-        * @param values if true, copy values from the original matrix,
-        *
-        * @return nz  updated number of non-zeros in `C`.
-        */
+     *
+     * This function also updates `w`, sets the sparsity pattern in `C._i`,
+     * and returns updated `nz`. The values corresponding to `C._i` are
+     * accumulated in `x`, and then gathered in the calling function, so
+     * that we can account for any duplicate entries.
+     *
+     * @param j     column index of `A`
+     * @param beta  scalar value by which to multiply `A`
+     * @param[in,out] w, x  workspace vectors of row indices and values, respectively
+     * @param mark  separator index for `w`. All `w[i] < mark`are row indices that
+     *              are not yet in `Cj`.
+     * @param[in,out] C    CSC matrix where output non-zero pattern is stored
+     * @param[in,out] nz   current number of non-zeros in `C`.
+     * @param fs    first call to scatter. Default is false to skip the
+     *        optimization.
+     * @param values if true, copy values from the original matrix,
+     *
+     * @return nz  updated number of non-zeros in `C`.
+     */
     csint scatter(
         csint j,
         double beta,
@@ -634,17 +623,17 @@ public:
     //        Permutations
     //--------------------------------------------------------------------------
     /** Permute a matrix \f$ C = PAQ \f$.
-        *
-        * @note In Matlab, this call is `C = A(p, q)`.
-        *
-        * @param p_inv, q  *inverse* row and (non-inverse) column permutation
-        *        vectors. `p_inv` is length `M` and `q` is length `N`,
-        *        where `A` is `M`-by-`N`.
-        * @param values  if true, copy values from the original matrix,
-        *        otherwise, only the structure is copied.
-        *
-        * @return C  permuted matrix
-        */
+     *
+     * @note In Matlab, this call is `C = A(p, q)`.
+     *
+     * @param p_inv, q  *inverse* row and (non-inverse) column permutation
+     *        vectors. `p_inv` is length `M` and `q` is length `N`,
+     *        where `A` is `M`-by-`N`.
+     * @param values  if true, copy values from the original matrix,
+     *        otherwise, only the structure is copied.
+     *
+     * @return C  permuted matrix
+     */
     CSCMatrix permute(
         const std::vector<csint>& p_inv,
         const std::vector<csint>& q,
@@ -652,30 +641,30 @@ public:
     ) const;
 
     /** Permute a symmetric matrix with only the upper triangular part stored.
-        *
-        * @param p_inv  *inverse* permutation vector. Both rows and columns are
-        *        permuted with this vector to retain symmetry.
-        * @param values  if true, copy values from the original matrix,
-        *        otherwise, only the structure is copied.
-        *
-        * @return C  permuted matrix
-        */
+     *
+     * @param p_inv  *inverse* permutation vector. Both rows and columns are
+     *        permuted with this vector to retain symmetry.
+     * @param values  if true, copy values from the original matrix,
+     *        otherwise, only the structure is copied.
+     *
+     * @return C  permuted matrix
+     */
     CSCMatrix symperm(const std::vector<csint>& p_inv, bool values=true) const;
 
     /** Permute and transpose a matrix \f$ C = PA^TQ \f$.
-        *
-        * See: Davis, Exercise 2.26.
-        *
-        * @note In Matlab, this call is `C = A(p, q)'`.
-        *
-        * @param p_inv, q_inv  *inverse* row and column permutation vectors.
-        *        `p_inv` is length `M` and `q` is length `N`,
-        *        where `A` is `M`-by-`N`.
-        * @param values  if true, copy values from the original matrix,
-        *        otherwise, only the structure is copied.
-        *
-        * @return C  permuted and transposed matrix
-        */
+     *
+     * See: Davis, Exercise 2.26.
+     *
+     * @note In Matlab, this call is `C = A(p, q)'`.
+     *
+     * @param p_inv, q_inv  *inverse* row and column permutation vectors.
+     *        `p_inv` is length `M` and `q` is length `N`,
+     *        where `A` is `M`-by-`N`.
+     * @param values  if true, copy values from the original matrix,
+     *        otherwise, only the structure is copied.
+     *
+     * @return C  permuted and transposed matrix
+     */
     CSCMatrix permute_transpose(
         const std::vector<csint>& p_inv,
         const std::vector<csint>& q_inv,
@@ -683,92 +672,92 @@ public:
     ) const;
 
     /** Permute the rows of a matrix.
-        *
-        * @note In Matlab, this call is `C = A(p, :)`.
-        *
-        * @param p_inv  *inverse* row permutation vector. `p_inv` is length `M`.
-        * @param values if true, copy values from the original matrix,
-        *        otherwise, only the structure is copied.
-        *
-        * @return C  permuted matrix
-        */
+     *
+     * @note In Matlab, this call is `C = A(p, :)`.
+     *
+     * @param p_inv  *inverse* row permutation vector. `p_inv` is length `M`.
+     * @param values if true, copy values from the original matrix,
+     *        otherwise, only the structure is copied.
+     *
+     * @return C  permuted matrix
+     */
     CSCMatrix permute_rows(const std::vector<csint>& p_inv, bool values=true) const;
 
     /** Permute the columns of a matrix.
-        *
-        * @note In Matlab, this call is `C = A(:, q)`.
-        *
-        * @param q  column permutation vector. `q` is length `N`.
-        * @param values if true, copy values from the original matrix,
-        *        otherwise, only the structure is copied.
-        *
-        * @return C  permuted matrix
-        */
+     *
+     * @note In Matlab, this call is `C = A(:, q)`.
+     *
+     * @param q  column permutation vector. `q` is length `N`.
+     * @param values if true, copy values from the original matrix,
+     *        otherwise, only the structure is copied.
+     *
+     * @return C  permuted matrix
+     */
     CSCMatrix permute_cols(const std::vector<csint>& q, bool values=true) const;
 
     /** Compute the 1-norm of the matrix (maximum column sum).
-        *
-        * The 1-norm is defined as \f$ \|A\|_1 = \max_j \sum_{i=1}^{m} |a_{ij}| \f$.
-        */
+     *
+     * The 1-norm is defined as \f$ \|A\|_1 = \max_j \sum_{i=1}^{m} |a_{ij}| \f$.
+     */
     double norm() const;
 
     /** Compute the Frobenius norm of the matrix.
-        *
-        * The Frobenius norm is defined as
-        * $$
-        *      \|A\|_F = 
-        *      \( \sum_{i=1}^{m} \sum_{j=1}^{n} |a_{ij}|^2 \)^{\frac{1}{2}}
-        * $$.
-        */
+     *
+     * The Frobenius norm is defined as
+     * $$
+     *      \|A\|_F = 
+     *      \( \sum_{i=1}^{m} \sum_{j=1}^{n} |a_{ij}|^2 \)^{\frac{1}{2}}
+     * $$.
+     */
     double fronorm() const;
 
     /** Check a matrix for valid compressed sparse column format.
-        *
-        * See: Davis, Exercise 2.12 "cs_ok"
-        *
-        * @param sorted  if true, check if columns are sorted.
-        * @param values  if true, check if values exist and are all non-zero.
-        *
-        * @return true if matrix is valid compressed sparse column format.
-        */
+     *
+     * See: Davis, Exercise 2.12 "cs_ok"
+     *
+     * @param sorted  if true, check if columns are sorted.
+     * @param values  if true, check if values exist and are all non-zero.
+     *
+     * @return true if matrix is valid compressed sparse column format.
+     */
     bool is_valid(const bool sorted=true, const bool values=true) const;
 
     /** Concatenate two matrices horizontally.
-        *
-        * See: Davis, Exercise 2.22 `cs_hcat`.
-        *
-        * @note This function may *not* return a matrix with sorted columns!
-        *
-        * @param A, B  the CSC matrices to concatenate. They must have the same number
-        *        of rows.
-        *
-        * @return C  the concatenated matrix.
-        */
+     *
+     * See: Davis, Exercise 2.22 `cs_hcat`.
+     *
+     * @note This function may *not* return a matrix with sorted columns!
+     *
+     * @param A, B  the CSC matrices to concatenate. They must have the same number
+     *        of rows.
+     *
+     * @return C  the concatenated matrix.
+     */
     friend CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B);
 
     /** Concatenate two matrices vertically.
-        *
-        * See: Davis, Exercise 2.22 `cs_hcat`.
-        *
-        * @note This function may *not* return a matrix with sorted columns!
-        *
-        * @param A, B  the CSC matrices to concatenate. They must have the same number
-        *        of columns.
-        *
-        * @return C  the concatenated matrix.
-        */
+     *
+     * See: Davis, Exercise 2.22 `cs_hcat`.
+     *
+     * @note This function may *not* return a matrix with sorted columns!
+     *
+     * @param A, B  the CSC matrices to concatenate. They must have the same number
+     *        of columns.
+     *
+     * @return C  the concatenated matrix.
+     */
     friend CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B);
 
     /** Slice a matrix by row and column with contiguous indices.
-        *
-        * See: Davis, Exercise 2.23.
-        *
-        * @param i_start, i_end  the row indices to keep, where `i ∈ [i_start, i_end)`.
-        * @param j_start, j_end  the column indices to keep, where `j ∈ [j_start,
-        *        j_end)`.
-        *
-        * @return C  the submatrix A(i_start:i_end, j_start:j_end).
-        */
+     *
+     * See: Davis, Exercise 2.23.
+     *
+     * @param i_start, i_end  the row indices to keep, where `i ∈ [i_start, i_end)`.
+     * @param j_start, j_end  the column indices to keep, where `j ∈ [j_start,
+     *        j_end)`.
+     *
+     * @return C  the submatrix A(i_start:i_end, j_start:j_end).
+     */
     CSCMatrix slice(
         const csint i_start,
         const csint i_end,
@@ -777,50 +766,50 @@ public:
     ) const;
 
     /** Select a submatrix by arbitrary row and column indices.
-        *
-        * See: Davis, Exercise 2.24.
-        *
-        * This function takes O(|rows| + |cols|) + O(log M) time if the columns are
-        * sorted, and + O(M) time if they are not.
-        *
-        * @param i, j vectors of the row and column indices to keep. The indices need
-        *        not be consecutive, or sorted. Duplicates are allowed.
-        *
-        * @return C  the submatrix of A of dimension `length(i)`-by-`length(j)`.
-        */
+     *
+     * See: Davis, Exercise 2.24.
+     *
+     * This function takes O(|rows| + |cols|) + O(log M) time if the columns are
+     * sorted, and + O(M) time if they are not.
+     *
+     * @param i, j vectors of the row and column indices to keep. The indices need
+     *        not be consecutive, or sorted. Duplicates are allowed.
+     *
+     * @return C  the submatrix of A of dimension `length(i)`-by-`length(j)`.
+     */
     CSCMatrix index(
         const std::vector<csint>& rows,
         const std::vector<csint>& cols
     ) const;
 
     /** Add empty rows to the top of the matrix.
-    *
-    * See: Davis, Exercise 2.29.
-    *
-    * @param k  the number of rows to add
-    *
-    * @return  a reference to the modified matrix
-    */
+     *
+     * See: Davis, Exercise 2.29.
+     *
+     * @param k  the number of rows to add
+     *
+     * @return  a reference to the modified matrix
+     */
     CSCMatrix& add_empty_top(const csint k);
 
     /** Add empty rows to the bottom of the matrix.
-        *
-        * See: Davis, Exercise 2.29.
-        *
-        * @param k  the number of rows to add
-        *
-    * @return  a reference to the modified matrix
-        */
+     *
+     * See: Davis, Exercise 2.29.
+     *
+     * @param k  the number of rows to add
+     *
+     * @return  a reference to the modified matrix
+     */
     CSCMatrix& add_empty_bottom(const csint k);
 
     /** Add empty columns to the left of the matrix.
-        *
-        * See: Davis, Exercise 2.29.
-        *
-        * @param k  the number of columns to add
-        *
-    * @return  a reference to the modified matrix
-        */
+     *
+     * See: Davis, Exercise 2.29.
+     *
+     * @param k  the number of columns to add
+     *
+     * @return  a reference to the modified matrix
+     */
     CSCMatrix& add_empty_left(const csint k);
 
     /** Add empty columns to the right of the matrix.
@@ -834,15 +823,15 @@ public:
     CSCMatrix& add_empty_right(const csint k);
 
     /** Sum the rows of a matrix.
-        *
-        * @return out  a vector of length `M` containing the sum of each row.
-        */
+     *
+     * @return out  a vector of length `M` containing the sum of each row.
+     */
     std::vector<double> sum_rows() const;
 
     /** Sum the columns of a matrix.
-        *
-        * @return out  a vector of length `N` containing the sum of each column.
-        */
+     *
+     * @return out  a vector of length `N` containing the sum of each column.
+     */
     std::vector<double> sum_cols() const;
 
     // double sum() const;
@@ -1138,15 +1127,15 @@ std::vector<double> gaxpy_col(
 
 
 /** Matrix multiply `Y = AX + Y` for row-major dense matrices `X` and `Y`.
-*
-* See: Davis, Exercise 2.27(b).
-*
+ *
+ * See: Davis, Exercise 2.27(b).
+ *
  * @param A  a CSC matrix
-* @param X  a dense multiplying matrix in row-major order
-* @param[in,out] Y  a dense adding matrix which will be used for the output
-*
-* @return Y a copy of the updated matrix
-*/
+ * @param X  a dense multiplying matrix in row-major order
+ * @param[in,out] Y  a dense adding matrix which will be used for the output
+ *
+ * @return Y a copy of the updated matrix
+ */
 std::vector<double> gaxpy_row(
     const CSCMatrix& A,
     const std::vector<double>& X,

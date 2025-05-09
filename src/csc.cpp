@@ -1707,24 +1707,6 @@ std::vector<double> CSCMatrix::sum_cols() const
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/
-std::string CSCMatrix::make_format_string_() const
-{
-    // Determine whether to use scientific notation
-    double abs_max = 0.0;
-    for (const auto& val : v_) {
-        if (std::isfinite(val)) {
-            abs_max = std::max(abs_max, std::fabs(val));
-        }
-    }
-
-    bool use_scientific = (abs_max < 1e-4 || abs_max > 1e4);
-    // Leading space aligns for "-" signs
-    const std::string fmt = use_scientific ? " .4e" : " .4g";
-
-    return "({0:>{1}d}, {2:>{3}d}): {4:" + fmt + "}";
-}
-
-
 void CSCMatrix::write_elems_(std::stringstream& ss, csint start, csint end) const
 {
     const std::string format_string = make_format_string_();

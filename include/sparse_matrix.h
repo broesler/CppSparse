@@ -23,6 +23,17 @@ protected:
     /** Return the format description of the matrix. */
     virtual std::string_view get_format_desc_() const = 0;
 
+    /** Make the format string for printing one element of the matrix.
+     *
+     * The element will be printed as: "(i, u): v" where `i` is the row index,
+     * `u` is the column index, and `v` is the value of the element. This
+     * function sets the format specifiers for `std::format` depending on the
+     * values of the entire matrix, so that the output is consistent.
+     *
+     * @return a string describing the format of a single element.
+     */
+    virtual std::string make_format_string_() const;
+
     /** Print elements of the matrix between `start` and `end`.
      *
      * @param ss          the output string stream
@@ -38,6 +49,8 @@ public:
     virtual csint nnz() const = 0;    // number of non-zeros
     virtual csint nzmax() const = 0;  // maximum number of non-zeros
     virtual Shape shape() const = 0;  // the dimensions of the matrix
+
+    virtual const std::vector<double>& data() const = 0;  // numerical values
 
     /// Assign a value to a specific element in the matrix.
     /// 

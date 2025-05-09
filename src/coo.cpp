@@ -319,23 +319,11 @@ std::vector<double> COOMatrix::dot(const std::vector<double>& x) const
  *----------------------------------------------------------------------------*/
 void COOMatrix::write_elems_(std::stringstream& ss, csint start, csint end) const
 {
-    // Determine whether to use scientific notation
-    double abs_max = 0.0;
-    for (const auto& val : v_) {
-        if (std::isfinite(val)) {
-            abs_max = std::max(abs_max, std::fabs(val));
-        }
-    }
-
-    bool use_scientific = (abs_max < 1e-4 || abs_max > 1e4);
-    // Leading space aligns for "-" signs
-    const std::string fmt = use_scientific ? " .4e" : " .4g";
-
     // Compute index width from maximum index
     int row_width = std::to_string(M_ - 1).size();
     int col_width = std::to_string(N_ - 1).size();
 
-    const std::string format_string = "({0:>{1}d}, {2:>{3}d}): {4:" + fmt + "}";
+    const std::string format_string = make_format_string_();
 
     for (csint k = start; k < end; k++) {
         ss << std::vformat(

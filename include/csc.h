@@ -117,7 +117,7 @@ class CSCMatrix
          *
          * @return a copy of the `COOMatrix` in canonical CSC format.
          */
-        CSCMatrix(const COOMatrix& A);  // Exercise 2.2
+        explicit CSCMatrix(const COOMatrix& A);  // Exercise 2.2
 
         /** Create a sparse copy of a dense matrix in column-major fomr.
          *

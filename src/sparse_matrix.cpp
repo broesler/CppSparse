@@ -19,13 +19,6 @@ namespace cs {
 SparseMatrix::~SparseMatrix() = default;
 
 
-std::ostream& operator<<(std::ostream& os, const SparseMatrix& A)
-{
-    A.print(os, true);  // verbose printing assumed
-    return os;
-}
-
-
 }  // namespace cs
 
 

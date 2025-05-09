@@ -115,6 +115,14 @@ public:
 };  // class SparseMatrix
 
 
+// inline since it's defined in the header
+inline std::ostream& operator<<(std::ostream& os, const SparseMatrix& A)
+{
+    A.print(os, true);  // verbose printing assumed
+    return os;
+}
+
+
 }  // namespace cs
 
 #endif  // _CSPARSE_SPARSE_MATRIX_H_

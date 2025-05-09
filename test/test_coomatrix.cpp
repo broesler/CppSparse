@@ -69,19 +69,18 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
 
     SECTION("Printing") {
         std::stringstream s;
+        std::string expect;
 
         SECTION("Print short") {
-            std::string expect =
+            expect =
                 "<COOrdinate Sparse matrix\n"
                 "        with 10 stored elements and shape (4, 4)>\n";
 
             A.print(s);  // default verbose=false
-
-            REQUIRE(s.str() == expect);
         }
 
         SECTION("Print verbose") {
-            std::string expect =
+            expect =
                 "<COOrdinate Sparse matrix\n"
                 "        with 10 stored elements and shape (4, 4)>\n"
                 "(2, 2):  3\n"
@@ -97,14 +96,14 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
 
             SECTION("Print from function") {
                 A.print(s, true);
-                REQUIRE(s.str() == expect);
             }
 
             SECTION("Print from operator<< overload") {
                 s << A;
-                REQUIRE(s.str() == expect);
             }
         }
+
+        REQUIRE(s.str() == expect);
 
         // Clear the stringstream to prevent memory leaks
         s.str("");

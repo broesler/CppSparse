@@ -48,7 +48,7 @@ info :
 # -----------------------------------------------------------------------------
 #        Make options 
 # -----------------------------------------------------------------------------
-test: OPT += -I$(BREW)/include -I$(TEST_DIR)
+test: OPT += -I$(TEST_DIR) -I$(BREW)/include
 test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
 # test: CFLAGS += -O3
 test: test_csparse

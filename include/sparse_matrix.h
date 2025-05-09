@@ -11,7 +11,6 @@
 #define _CSPARSE_SPARSE_MATRIX_H_
 
 #include <iostream>
-#include <memory>    // unique_ptr
 #include <vector>
 
 #include "types.h"
@@ -22,7 +21,7 @@ namespace cs {
 class SparseMatrix {
 public:
     /// Virtual destructor: essential for base classes when using polymorphism.
-    virtual ~SparseMatrix() = default;
+    virtual ~SparseMatrix();
 
     virtual csint nnz() const = 0;    // number of non-zeros
     virtual csint nzmax() const = 0;  // maximum number of non-zeros
@@ -41,7 +40,7 @@ public:
     /// @return a reference to itself for method chaining.
     virtual SparseMatrix& assign(csint i, csint j, double v) = 0;
 
-    /// Assign a dense matrix to the CSCMatrix at the specified locations.
+    /// Assign a dense matrix to the SparseMatrix at the specified locations.
     /// 
     /// See: Davis, Excercises 2.5, and Exercise 2.25.
     /// 
@@ -71,6 +70,16 @@ public:
     // -------------------------------------------------------------------------
     //         Printing
     // -------------------------------------------------------------------------
+    ///  Convert the matrix to a string.
+    /// 
+    /// @param verbose     if True, print all non-zeros and their coordinates
+    /// @param threshold   if `nnz > threshold`, print only the first and last
+    ///        3 entries in the matrix. Otherwise, print all entries.
+    virtual std::string to_string(
+        bool verbose=false,
+        csint threshold=1000
+    ) const = 0;
+
     ///  Print the matrix in dense format.
     /// 
     /// @param precision  the number of decimal places to print.
@@ -88,16 +97,6 @@ public:
         print_dense_vec(to_dense_vector('F'), M, N, 'F', precision, suppress, os);
     }
 
-    ///  Convert the matrix to a string.
-    /// 
-    /// @param verbose     if True, print all non-zeros and their coordinates
-    /// @param threshold   if `nnz > threshold`, print only the first and last
-    ///        3 entries in the matrix. Otherwise, print all entries.
-    virtual std::string to_string(
-        bool verbose=false,
-        csint threshold=1000
-    ) const;
-
     ///  Print the matrix.
     /// 
     /// @param os          the output stream, defaults to std::cout
@@ -114,14 +113,6 @@ public:
         os << to_string(verbose, threshold) << std::endl;
     }
 };  // class SparseMatrix
-
-
-// inline since it's defined in the header
-inline std::ostream& operator<<(std::ostream& os, const SparseMatrix& A)
-{
-    A.print(os, true);  // verbose printing assumed
-    return os;
-}
 
 
 }  // namespace cs

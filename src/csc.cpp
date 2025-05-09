@@ -1708,12 +1708,6 @@ std::vector<double> CSCMatrix::sum_cols() const
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/
-void CSCMatrix::print_dense(int precision, bool suppress, std::ostream& os) const
-{
-    print_dense_vec(to_dense_vector('F'), M_, N_, 'F', precision, suppress, os);
-}
-
-
 std::string CSCMatrix::to_string(bool verbose, csint threshold) const
 {
     csint nnz_ = nnz();
@@ -1782,19 +1776,6 @@ void CSCMatrix::write_elems_(std::stringstream& ss, csint start, csint end) cons
             n++;
         }
     }
-}
-
-
-void CSCMatrix::print(std::ostream& os, bool verbose, csint threshold) const
-{
-    os << to_string(verbose, threshold) << std::endl;
-}
-
-
-std::ostream& operator<<(std::ostream& os, const CSCMatrix& A)
-{
-    A.print(os, true);  // verbose printing assumed
-    return os;
 }
 
 

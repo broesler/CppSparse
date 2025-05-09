@@ -20,10 +20,11 @@
 #include <vector>
 
 #include "types.h"
+#include "sparse_matrix.h"
 
 namespace cs {
 
-class CSCMatrix
+class CSCMatrix : public SparseMatrix
 {
     // Private members
     static constexpr std::string_view format_desc_ = "Compressed Sparse Column";
@@ -147,9 +148,9 @@ class CSCMatrix
         // ----------------------------------------------------------------------
         //          Accessors
         // ----------------------------------------------------------------------
-        csint nnz() const;    // number of non-zeros
-        csint nzmax() const;  // maximum number of non-zeros
-        Shape shape() const;  // the dimensions of the matrix
+        virtual csint nnz() const override;    // number of non-zeros
+        virtual csint nzmax() const override;  // maximum number of non-zeros
+        virtual Shape shape() const override;  // the dimensions of the matrix
 
         const std::vector<csint>& indices() const;
         const std::vector<csint>& indptr() const;
@@ -234,7 +235,7 @@ class CSCMatrix
          *
          * @return a reference to itself for method chaining.
          */
-        CSCMatrix& assign(csint i, csint j, double v);
+        virtual CSCMatrix& assign(csint i, csint j, double v) override;
 
         /** Assign a dense matrix to the CSCMatrix at the specified locations.
          *
@@ -245,11 +246,11 @@ class CSCMatrix
          *
          * @return a reference to itself for method chaining.
          */
-        CSCMatrix& assign(
+        virtual CSCMatrix& assign(
             const std::vector<csint>& i,
             const std::vector<csint>& j,
             const std::vector<double>& C  // dense column-major
-        );
+        ) override;
 
         /** Assign a sparse matrix to the CSCMatrix at the specified locations.
          *
@@ -299,7 +300,7 @@ class CSCMatrix
          *
          * @return a copy of the matrix as a dense column-major array.
          */
-        std::vector<double> to_dense_vector(const char order='F') const;
+        virtual std::vector<double> to_dense_vector(const char order='F') const override;
 
         /** Convert a CSCMatrix to a double if it is a 1x1 matrix.
          *
@@ -500,7 +501,7 @@ class CSCMatrix
         CSCMatrix scale(const std::vector<double>& r, const std::vector<double> c) const;
 
         /** Matrix-vector right-multiply (see cs_multiply) */
-        std::vector<double> dot(const std::vector<double>& x) const;
+        virtual std::vector<double> dot(const std::vector<double>& x) const override;
 
         /** Scale a matrix by a scalar */
         CSCMatrix dot(const double c) const;
@@ -1040,43 +1041,16 @@ class CSCMatrix
         //----------------------------------------------------------------------
         //        Printing
         //----------------------------------------------------------------------
-        /** Print the matrix in dense format.
-         *
-         * @param precision  the number of decimal places to print.
-         * @param suppress  if true, small values will be printed as "0".
-         * @param os  a reference to the output stream.
-         *
-         * @return os  a reference to the output stream.
-         */
-        void print_dense(
-	        int precision=4,
-	        bool suppress=true,
-            std::ostream& os=std::cout
-        ) const;
-
         /** Convert the matrix to a string.
          *
          * @param verbose     if True, print all non-zeros and their coordinates
          * @param threshold   if `nnz > threshold`, print only the first and last
          *        3 entries in the matrix. Otherwise, print all entries.
          */
-        std::string to_string(
+        virtual std::string to_string(
             bool verbose=false,
             csint threshold=1000
-        ) const;
-
-        /** Print the matrix.
-         *
-         * @param os          the output stream, defaults to std::cout
-         * @param verbose     if True, print all non-zeros and their coordinates
-         * @param threshold   if `nz > threshold`, print only the first and last
-         *        3 entries in the matrix. Otherwise, print all entries.
-         */
-        void print(
-            std::ostream& os=std::cout,
-            bool verbose=false,
-            csint threshold=1000
-        ) const;
+        ) const override;
 
 };  // class CSCMatrix
 
@@ -1091,8 +1065,6 @@ std::vector<double> operator*(const CSCMatrix& A, const std::vector<double>& B);
 CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B);
 CSCMatrix operator*(const CSCMatrix& A, const double c);
 CSCMatrix operator*(const double c, const CSCMatrix& A);
-
-std::ostream& operator<<(std::ostream& os, const CSCMatrix& A);
 
 
 /** Matrix-vector multiply `y = Ax + y`.

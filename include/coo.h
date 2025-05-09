@@ -22,7 +22,7 @@
 
 namespace cs {
 
-class COOMatrix
+class COOMatrix : public SparseMatrix
 {
     // Private members
     static constexpr std::string_view format_desc_ = "COOrdinate Sparse";
@@ -137,9 +137,9 @@ class COOMatrix
         //----------------------------------------------------------------------
         //        Setters and Getters
         //----------------------------------------------------------------------
-        csint nnz() const;    // number of non-zeros
-        csint nzmax() const;  // maximum number of non-zeros
-        Shape shape() const;  // the dimensions of the matrix
+        csint nnz() const override;    // number of non-zeros
+        csint nzmax() const override;  // maximum number of non-zeros
+        Shape shape() const override;  // the dimensions of the matrix
 
         const std::vector<csint>& row() const;     // indices and data
         const std::vector<csint>& column() const;
@@ -162,7 +162,7 @@ class COOMatrix
          *
          * @see cs_entry Davis p 12.
          */
-        COOMatrix& assign(csint i, csint j, double v);
+        COOMatrix& assign(csint i, csint j, double v) override;
 
         /** Assign a dense submatrix to vectors of indices.
          *
@@ -179,7 +179,7 @@ class COOMatrix
             std::vector<csint> i,
             std::vector<csint> j,
             std::vector<double> v
-        );
+        ) override;
 
         //----------------------------------------------------------------------
         //        Format Conversions
@@ -207,7 +207,7 @@ class COOMatrix
          *
          * @return a copy of the matrix as a dense array.
          */
-        std::vector<double> to_dense_vector(const char order='F') const;
+        std::vector<double> to_dense_vector(const char order='F') const override;
 
         //----------------------------------------------------------------------
         //        Math Operations
@@ -218,8 +218,8 @@ class COOMatrix
          *
          * @return new COOMatrix object with transposed rows and columns.
          */
-        COOMatrix transpose() const;  // transpose a copy, Exercise 2.6
-        COOMatrix T() const;
+        COOMatrix transpose() const override;
+        COOMatrix T() const override;
 
         /** Multiply a COOMatrix by a dense vector.
          *
@@ -229,7 +229,7 @@ class COOMatrix
          *
          * @return y  the result of the matrix-vector multiplication.
          */
-        std::vector<double> dot(const std::vector<double>& x) const;
+        std::vector<double> dot(const std::vector<double>& x) const override;
 
         //----------------------------------------------------------------------
         //        Other
@@ -243,20 +243,7 @@ class COOMatrix
         std::string to_string(
             bool verbose=false,
             csint threshold=1000
-        ) const;
-
-        /** Print the matrix.
-         *
-         * @param os          the output stream, defaults to std::cout
-         * @param verbose     if True, print all non-zeros and their coordinates
-         * @param threshold   if `nnz > threshold`, print only the first and last
-         *        3 entries in the matrix. Otherwise, print all entries.
-         */
-        void print(
-            std::ostream& os=std::cout,
-            bool verbose=false,
-            csint threshold=1000
-        ) const;
+        ) const override;
 
 };  // class COOMatrix
 
@@ -264,8 +251,6 @@ class COOMatrix
 //------------------------------------------------------------------------------
 //        Operator Overloads
 //------------------------------------------------------------------------------
-std::ostream& operator<<(std::ostream& os, const COOMatrix& A);
-
 // Exercise 2.10
 std::vector<double> operator*(const COOMatrix& A, const std::vector<double>& x);
 

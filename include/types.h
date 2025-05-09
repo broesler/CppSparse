@@ -37,6 +37,7 @@ struct MaxMatch;
 struct SCCResult;
 struct DMPermResult;
 
+class SparseMatrix;
 class COOMatrix;
 class CSCMatrix;
 class TestCSCMatrix;

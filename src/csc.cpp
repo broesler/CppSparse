@@ -16,6 +16,7 @@
 #include <numeric>     // iota
 #include <optional>    // optional
 #include <ranges>      // views::reverse
+#include <stdexcept>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -337,9 +338,11 @@ CSCMatrix& CSCMatrix::assign(
     const std::vector<csint>& rows,
     const std::vector<csint>& cols,
     const std::vector<double>& C
-    )
+)
 {
-    assert(C.size() == rows.size() * cols.size());
+    if (C.size() != rows.size() * cols.size()) {
+        throw std::invalid_argument("Input matrix must be of size M x N.");
+    }
 
     for (csint i = 0; i < rows.size(); i++) {
         for (csint j = 0; j < cols.size(); j++) {
@@ -355,7 +358,7 @@ CSCMatrix& CSCMatrix::assign(
     const std::vector<csint>& rows,
     const std::vector<csint>& cols,
     const CSCMatrix& C
-    )
+)
 {
     assert(C.M_ == rows.size());
     assert(C.N_ == cols.size());

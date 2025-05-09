@@ -14,6 +14,7 @@
 #include <fstream>
 #include <format>
 #include <random>
+#include <stdexcept>
 #include <string>
 #include <sstream>
 #include <unordered_set>
@@ -200,10 +201,15 @@ COOMatrix& COOMatrix::assign(
     const std::vector<double>& C
 )
 {
-    assert(rows.size() == cols.size());
+    if (rows.size() != cols.size()) {
+        throw std::invalid_argument("Index vectors must be the same size.");
+    }
+
     csint N = rows.size();
-    // FIXME this assertion is not correct for a non-square matrix C
-    // assert(C.size() == (N * N));
+    
+    if (C.size() != N * N) {
+        throw std::invalid_argument("Input matrix must be of size N x N.");
+    }
 
     // Track maximum indices
     csint max_row_idx = 0, 

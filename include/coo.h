@@ -33,13 +33,20 @@ private:
     csint M_ = 0;            // number of rows
     csint N_ = 0;            // number of columns
 
+protected:
+    /** Return the format description of the matrix. */
+    virtual std::string_view get_format_desc_() const override
+    {
+        return format_desc_;
+    }
+
     /** Print elements of the matrix between `start` and `end`.
      *
      * @param ss          the output string stream
      * @param start, end  print the all elements where `p ∈ [start, end]`,
      *        counting column-wise.
      */
-    void write_elems_(std::stringstream& ss, csint start, csint end) const;
+    virtual void write_elems_(std::stringstream& ss, csint start, csint end) const override;
 
 public:
     friend class CSCMatrix;
@@ -231,20 +238,6 @@ public:
         * @return y  the result of the matrix-vector multiplication.
         */
     virtual std::vector<double> dot(const std::vector<double>& x) const override;
-
-    //--------------------------------------------------------------------------
-    //        Other
-    //--------------------------------------------------------------------------
-    /** Convert the matrix to a string.
-        *
-        * @param verbose     if True, print all non-zeros and their coordinates
-        * @param threshold   if `nnz > threshold`, print only the first and last
-        *        3 entries in the matrix. Otherwise, print all entries.
-        */
-    virtual std::string to_string(
-        bool verbose=false,
-        csint threshold=1000
-    ) const override;
 
 };  // class COOMatrix
 

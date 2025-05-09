@@ -19,6 +19,18 @@
 namespace cs {
 
 class SparseMatrix {
+protected:
+    /** Return the format description of the matrix. */
+    virtual std::string_view get_format_desc_() const = 0;
+
+    /** Print elements of the matrix between `start` and `end`.
+     *
+     * @param ss          the output string stream
+     * @param start, end  print the all elements where `p ∈ [start, end]`,
+     *        counting column-wise.
+     */
+    virtual void write_elems_(std::stringstream& ss, csint start, csint end) const = 0;
+
 public:
     /// Virtual destructor: essential for base classes when using polymorphism.
     virtual ~SparseMatrix();
@@ -78,7 +90,7 @@ public:
     virtual std::string to_string(
         bool verbose=false,
         csint threshold=1000
-    ) const = 0;
+    ) const;
 
     ///  Print the matrix in dense format.
     /// 

@@ -1707,35 +1707,7 @@ std::vector<double> CSCMatrix::sum_cols() const
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/
-std::string CSCMatrix::to_string(bool verbose, csint threshold) const
-{
-    csint nnz_ = nnz();
-    std::stringstream ss;
-
-    ss << std::format(
-        "<{} matrix\n"
-        "        with {} stored elements and shape ({}, {})>",
-        format_desc_, nnz_, M_, N_);
-
-    if (verbose) {
-        ss << std::endl;
-        if (nnz_ < threshold) {
-            // Print all elements
-            write_elems_(ss, 0, nnz_);
-        } else {
-            // Print just the first and last Nelems non-zero elements
-            int Nelems = 3;
-            write_elems_(ss, 0, Nelems);
-            ss << "..." << std::endl;
-            write_elems_(ss, nnz_ - Nelems, nnz_);
-        }
-    }
-
-    return ss.str();
-}
-
-
-void CSCMatrix::write_elems_(std::stringstream& ss, csint start, csint end) const
+std::string CSCMatrix::make_format_string_() const
 {
     // Determine whether to use scientific notation
     double abs_max = 0.0;
@@ -1749,11 +1721,17 @@ void CSCMatrix::write_elems_(std::stringstream& ss, csint start, csint end) cons
     // Leading space aligns for "-" signs
     const std::string fmt = use_scientific ? " .4e" : " .4g";
 
+    return "({0:>{1}d}, {2:>{3}d}): {4:" + fmt + "}";
+}
+
+
+void CSCMatrix::write_elems_(std::stringstream& ss, csint start, csint end) const
+{
+    const std::string format_string = make_format_string_();
+
     // Compute index width from maximum index
     int row_width = std::to_string(M_ - 1).size();
     int col_width = std::to_string(N_ - 1).size();
-
-    const std::string format_string = "({0:>{1}d}, {2:>{3}d}): {4:" + fmt + "}";
 
     csint n = 0;  // number of elements printed
     for (csint j = 0; j < N_; j++) {

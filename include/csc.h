@@ -36,13 +36,31 @@ private:
     bool has_sorted_indices_ = false;
     bool has_canonical_format_ = false;
 
+    /** Make the format string for printing one element of the matrix.
+     *
+     * The element will be printed as: "(i, u): v" where `i` is the row index,
+     * `u` is the column index, and `v` is the value of the element. This
+     * function sets the format specifiers for `std::format` depending on the
+     * values of the entire matrix, so that the output is consistent.
+     *
+     * @return a string describing the format of a single element.
+     */
+    std::string make_format_string_() const;
+
+protected:
+    /** Return the format description of the matrix. */
+    virtual std::string_view get_format_desc_() const override
+    {
+        return format_desc_;
+    }
+
     /** Print elements of the matrix between `start` and `end`.
      *
      * @param ss          the output string stream
      * @param start, end  print the all elements where `p ∈ [start, end]`, counting
      *        column-wise.
      */
-    void write_elems_(std::stringstream& ss, csint start, csint end) const;
+    virtual void write_elems_(std::stringstream& ss, csint start, csint end) const override;
 
 public:
     friend class COOMatrix;
@@ -1037,20 +1055,6 @@ public:
         const std::vector<csint>& jmatch,
         csint mark
     );
-
-    //--------------------------------------------------------------------------
-    //        Printing
-    //--------------------------------------------------------------------------
-    /** Convert the matrix to a string.
-        *
-        * @param verbose     if True, print all non-zeros and their coordinates
-        * @param threshold   if `nnz > threshold`, print only the first and last
-        *        3 entries in the matrix. Otherwise, print all entries.
-        */
-    virtual std::string to_string(
-        bool verbose=false,
-        csint threshold=1000
-    ) const override;
 
 };  // class CSCMatrix
 

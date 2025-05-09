@@ -765,10 +765,9 @@ std::vector<double> qr_solve(
         SymbolicQR S = sqr(A, order);
         QRResult res = qr(A, S);
 
-        // b permutation is done by apply_qtleft
-        // const std::vector<double> Pb = ipvec(S.p_inv, b);  // permute b
+        // R y = Q^T P b
         const std::vector<double> QTPb = apply_qtleft(res.V, res.beta, res.p_inv, b);
-        const std::vector<double> qx = usolve(res.R, QTPb);
+        const std::vector<double> qx = usolve(res.R, QTPb);  // y = R \ Q^T P b
         x = ipvec(res.q, qx);  // x = q^T q x
     } else {
         CSCMatrix AT = A.transpose();
@@ -776,17 +775,9 @@ std::vector<double> qr_solve(
         SymbolicQR S = sqr(AT, order);
         QRResult res = qr(AT, S);
 
-        const std::vector<double> qb = pvec(S.q, b);          // permute b
-        const std::vector<double> QTPx = utsolve(res.R, qb);  // y = R^T \ qb
-        // TODO create this function
-        // const std::vector<double> Px = apply_qleft(res.V, res.beta, res.p_inv, QTPx);
-        std::vector<double> Px = QTPx;
-        // Px is size M, but happly expects size S.m2 (== N > M)
-        Px.insert(Px.end(), N - M, 0.0);  // pad with zeros
-        for (csint k = M - 1; k >= 0; k--) {
-            Px = happly(res.V, k, res.beta[k], Px);
-        }
-        x = pvec(res.p_inv, Px);  // x = P^T P x
+        const std::vector<double> qb = pvec(S.q, b);          // b = b[q]
+        const std::vector<double> QTPx = utsolve(res.R, qb);  // y = R^T \ b[q]
+        x = apply_qleft(res.V, res.beta, res.p_inv, QTPx);    // x = P^T Q (Q^T P x)
     }
 
     return x;

@@ -480,24 +480,30 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 }
 
 
-// FIXME
-// std::vector<double> apply_qright(
-//     const CSCMatrix& V,
-//     const std::vector<double>& beta,
-//     const std::vector<csint>& p_inv,
-//     const std::vector<double>& y
-// )
-// {
-//     auto [M2, N] = V.shape();
+std::vector<double> apply_qleft(
+    const CSCMatrix& V,
+    const std::vector<double>& beta,
+    const std::vector<csint>& p_inv,
+    const std::vector<double>& y
+)
+{
+    auto [M2, N] = V.shape();
 
-//     std::vector<double> x = pvec(p_inv, y);  // x = Py
+    std::vector<double> Px = y;
 
-//     for (csint j = N - 1; j >= 0; j++) {
-//         x = happly(V, j, beta[j], x);
-//     }
+    // Px is size N, but happly expects size M2
+    if (M2 > N) {
+        Px.insert(Px.end(), M2 - N, 0.0);  // pad with zeros
+    }
 
-//     return x;
-// }
+    for (csint j = N - 1; j >= 0; j--) {
+        Px = happly(V, j, beta[j], Px);
+    }
+
+    std::vector<double> x = pvec(p_inv, Px);
+
+    return x;
+}
 
 
 std::vector<double> apply_qtleft(

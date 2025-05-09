@@ -4,6 +4,9 @@ leak:cs::CATCH2_INTERNAL_TEST_34
 # Suppress the 16-byte direct leak associated with test_ch2.cpp:28 (SECTION)
 leak:cs::CATCH2_INTERNAL_TEST_0
 
+# Suppress the 16-byte direct leak associated with test_solve.cpp:66 (SECTION)
+leak:cs::CATCH2_INTERNAL_TEST_4
+
 # Suppress common leaks seen in macOS system libraries
 leak:_fetchInitializingClassList
 leak:_xpc_collect_images

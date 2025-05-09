@@ -115,6 +115,16 @@ public:
 };  // class SparseMatrix
 
 
+// Exercise 2.10
+inline std::vector<double> operator*(
+    const SparseMatrix& A,
+    const std::vector<double>& x
+)
+{
+    return A.dot(x); 
+}
+
+
 // inline since it's defined in the header
 inline std::ostream& operator<<(std::ostream& os, const SparseMatrix& A)
 {

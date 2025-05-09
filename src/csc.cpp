@@ -1125,7 +1125,6 @@ double CSCMatrix::vecdot(const CSCMatrix& y) const
 }
 
 
-std::vector<double> operator*(const CSCMatrix& A, const std::vector<double>& x) { return A.dot(x); }
 CSCMatrix operator*(const CSCMatrix& A, const double c) { return A.dot(c); }
 CSCMatrix operator*(const double c, const CSCMatrix& A) { return A.dot(c); }
 CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B) { return A.dot(B); }

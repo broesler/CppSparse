@@ -53,9 +53,13 @@ test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
 # test: CFLAGS += -O3
 test: test_csparse
 
+
 debug: CFLAGS += -DDEBUG -glldb #-Og
-debug: CFLAGS += -fno-inline -fsanitize=address
+debug: CFLAGS += -fno-inline -fsanitize=address -fno-omit-frame-pointer
 debug: test demos
+
+run_debug: debug
+	LSAN_OPTIONS="suppressions=$(abspath suppressions.sup)" ./test_csparse
 
 .PHONY: demos
 demos: $(DEMO_EXEC)

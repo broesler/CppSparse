@@ -22,9 +22,6 @@ using Catch::Matchers::AllTrue;
 namespace cs {
 
 
-// TODO write a test function that takes A, and a solve function, creates expect
-// and b, and runs the test
-
 TEST_CASE("Cholesky Solution", "[cholsol]")
 {
     CSCMatrix A = davis_example_chol();
@@ -34,6 +31,7 @@ TEST_CASE("Cholesky Solution", "[cholsol]")
         AMDOrder::Natural,
         AMDOrder::APlusAT
     );
+    CAPTURE(order);
 
     // Create RHS for Ax = b
     std::vector<double> expect(N);
@@ -58,6 +56,7 @@ TEST_CASE("QR Solution", "[qrsol]")
         AMDOrder::Natural,
         AMDOrder::ATA
     );
+    CAPTURE(order);
 
     std::vector<double> expect(N);
     std::iota(expect.begin(), expect.end(), 1);
@@ -103,7 +102,8 @@ TEST_CASE("QR Solution", "[qrsol]")
         x = qr_solve(A, b);  // (M - k, N)
 
         // Actual expect (python and MATLAB)
-        const std::vector<double> min_norm_x = {3.2222222222222143,
+        const std::vector<double> min_norm_x = {
+            3.2222222222222143,
             3.1111111111111125,
             3.                ,
             4.000000000000004 ,
@@ -128,6 +128,7 @@ TEST_CASE("LU Solution", "[lusol]") {
         AMDOrder::ATANoDenseRows,
         AMDOrder::ATA
     );
+    CAPTURE(order);
 
     // Create RHS for Ax = b
     std::vector<double> expect(N);
@@ -135,6 +136,7 @@ TEST_CASE("LU Solution", "[lusol]") {
 
     const std::vector<double> b = A * expect;
 
+    // TODO test with different pivot tolerance
     // Solve Ax = b
     std::vector<double> x = lu_solve(A, b, order);
 

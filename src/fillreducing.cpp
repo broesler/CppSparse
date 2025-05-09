@@ -1,5 +1,5 @@
 /*==============================================================================
- *     File: amd.cpp
+ *     File: fillreducing.cpp
  *  Created: 2025-04-18 08:53
  *   Author: Bernie Roesler
  *
@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "types.h"
-#include "amd.h"
+#include "fillreducing.h"
 #include "csc.h"
 #include "cholesky.h"  // tdfs
 #include "solve.h"     // dfs

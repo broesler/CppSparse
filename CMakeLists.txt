@@ -18,7 +18,7 @@ set(BASENAMES
 	sparse_matrix
 	coo
 	csc
-	amd
+	fillreducing
 	cholesky
 	lu
 	qr

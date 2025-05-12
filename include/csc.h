@@ -263,12 +263,6 @@ public:
             return *this;
         }
 
-        // Move assignment operator: `A(i, j) = std::move(B(i, j));`
-        ItemProxy& operator=(ItemProxy&& other) {
-            A_.set_item_(i_, j_, other.A_.get_item_(i_, j_));
-            return *this;
-        }
-
         // Comparison operator: `A(i, j) == B(i, j);`
         bool operator==(const ItemProxy& other) const {
             return A_.get_item_(i_, j_) == other.A_.get_item_(i_, j_);

@@ -57,7 +57,7 @@ TEST_CASE("COOMatrix Constructors", "[COOMatrix][constructor]")
         CHECK(A.nzmax() >= 10);
         CHECK(A.shape() == Shape{4, 4});
         CHECK(A.row() == i);
-        CHECK(A.column() == j);
+        CHECK(A.col() == j);
         CHECK(A.data() == v);
     }
 }
@@ -144,10 +144,10 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
         COOMatrix A_T = A.transpose();
         COOMatrix A_TT = A.T();
 
-        REQUIRE(A_T.row() == A.column());
-        REQUIRE(A_T.column() == A.row());
+        REQUIRE(A_T.row() == A.col());
+        REQUIRE(A_T.col() == A.row());
         REQUIRE(A_T.row() == A_TT.row());
-        REQUIRE(A_T.column() == A_TT.column());
+        REQUIRE(A_T.col() == A_TT.col());
         REQUIRE(&A != &A_T);
     }
 
@@ -155,7 +155,7 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
         COOMatrix F = COOMatrix::from_file("./data/t1");
 
         REQUIRE(A.row() == F.row());
-        REQUIRE(A.column() == F.column());
+        REQUIRE(A.col() == F.col());
         REQUIRE(A.data() == F.data());
     }
 

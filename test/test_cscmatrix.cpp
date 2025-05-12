@@ -245,7 +245,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
             REQUIRE(B.nzmax() >= 10);
             REQUIRE(B.shape() == Shape{4, 4});
             REQUIRE(B.row() == expect_i);
-            REQUIRE(B.column() == expect_j);
+            REQUIRE(B.col() == expect_j);
             REQUIRE(B.data() == expect_v);
         };
 

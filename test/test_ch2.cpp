@@ -264,7 +264,7 @@ TEST_CASE("Exercise 2.15: Band function", "[ex2.15][band]")
 
         CHECK(Ab.nnz() == N);
         CHECK(Ab.row() == expect_rows);
-        CHECK(Ab.column() == expect_cols);
+        CHECK(Ab.col() == expect_cols);
         REQUIRE(Ab.data() == expect_data);
     }
 
@@ -282,7 +282,7 @@ TEST_CASE("Exercise 2.15: Band function", "[ex2.15][band]")
 
         CHECK(Ab.nnz() == 27);
         CHECK(Ab.row() == expect_rows);
-        CHECK(Ab.column() == expect_cols);
+        CHECK(Ab.col() == expect_cols);
         REQUIRE(Ab.data() == expect_data);
     }
 }

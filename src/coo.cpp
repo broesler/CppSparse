@@ -171,7 +171,7 @@ Shape COOMatrix::shape() const
 }
 
 const std::vector<csint>& COOMatrix::row() const { return i_; }
-const std::vector<csint>& COOMatrix::column() const { return j_; }
+const std::vector<csint>& COOMatrix::col() const { return j_; }
 const std::vector<double>& COOMatrix::data() const { return v_; }
 
 

@@ -150,7 +150,7 @@ public:
     virtual Shape shape() const override;  // the dimensions of the matrix
 
     const std::vector<csint>& row() const;     // indices and data
-    const std::vector<csint>& column() const;
+    const std::vector<csint>& col() const;
     virtual const std::vector<double>& data() const override;
 
     /** Assign a value to a pair of indices.

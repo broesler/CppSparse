@@ -266,12 +266,22 @@ double CSCMatrix::get_item_(csint i, csint j) const
         throw std::out_of_range("Index out of bounds.");
     }
 
-    if (has_canonical_format_) {
+    if (has_sorted_indices_) {
         auto [found, k] = binary_search(i, j);
 
         // Check that we actually found the index t == i
         if (found) {
-            return v_[k];
+            if (has_canonical_format_) {
+                return v_[k];
+            } else {
+                // Sum duplicate entries
+                double out = 0.0;
+                // k points to the first entry
+                for (csint p = k; p < i_.size() && i_[p] == i; p++) {
+                    out += v_[p];
+                }
+                return out;
+            }
         } else {
             return 0.0;
         }
@@ -300,12 +310,19 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
         throw std::out_of_range("Index out of bounds.");
     }
 
-    if (has_canonical_format_) {
+    if (has_sorted_indices_) {
         auto [found, k] = binary_search(i, j);
 
         // Check that we actually found the index t == i
         if (found) {
             v_[k] = v;  // update the value
+
+            if (!has_canonical_format_) {
+                // Duplicates exist, so zero them out
+                for (csint p = k + 1; p < i_.size() && i_[p] == i; p++) {
+                    v_[p] = 0.0;
+                }
+            }
         } else {
             // Value does not exist, so insert it
             insert(i, j, v, k);
@@ -322,8 +339,7 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
                     k = p;  // store the index of the element
                     found = true;
                 } else {
-                    v_[k] += v_[p];  // accumulate duplicates here
-                    v_[p] = 0;       // zero out duplicates
+                    v_[p] = 0;  // zero out duplicates
                 }
             }
         }

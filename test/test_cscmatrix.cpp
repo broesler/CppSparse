@@ -307,6 +307,9 @@ TEST_CASE("Indexing", "[CSCMatrix][operator()]")
     // std::vector<csint> indices_expect = {  0,   1,   3,   1,   2,   3,   0,   2,   1,   3};
     // std::vector<double> data_expect   = {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0};
 
+    bool is_canonical = GENERATE(true, false);
+    CAPTURE(is_canonical);
+
     bool is_sorted = GENERATE(true, false);
     CAPTURE(is_sorted);
 
@@ -322,7 +325,12 @@ TEST_CASE("Indexing", "[CSCMatrix][operator()]")
         dense_column_major[3 + 1 * M] = 56.4;  // expected value
     }
 
-    CSCMatrix C = is_sorted ? A.tocsc() : A.compress();
+    SECTION("With multiple duplicates") {
+        A.insert(3, 1, 56.0).insert(3, 1, 2.0).insert(3, 1, 7.2);
+        dense_column_major[3 + 1 * M] = (0.4 + 56.0 + 2.0 + 7.2);
+    }
+
+    CSCMatrix C = is_canonical ? A.tocsc() : (is_sorted ? A.compress().sort() : A.compress());
 
     if (is_const) {
         // Create a const reference to force use of the const version
@@ -919,6 +927,7 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
     {
         csint nnz = A.nnz();
 
+        // TODO also test A(i, j) = v syntax for operator()
         A.assign(i, j, v);
 
         if (is_existing) {
@@ -926,6 +935,7 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
         } else {
             CHECK(A.nnz() == nnz + 1);
         }
+        CAPTURE(i, j, v, A.has_sorted_indices(), A.has_canonical_format());
         REQUIRE(A(i, j) == v);
     };
 
@@ -965,6 +975,17 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
                         .insert(3, 1,  7.3)
                         .insert(3, 1,  0.2)
                         .compress();  // don't remove duplicates
+
+        SECTION("Not sorted") {
+            CHECK_FALSE(A.has_sorted_indices());
+            CHECK_FALSE(A.has_canonical_format());
+        }
+
+        SECTION("Sorted") {
+            A.sort();  // sort in-place
+            CHECK(A.has_sorted_indices());
+            CHECK_FALSE(A.has_canonical_format());  // still has dups
+        }
 
         REQUIRE(A.nnz() == 13);  // 10 + 3 duplicates
         REQUIRE(A(3, 1) == (0.4 + 56 + 7.3 + 0.2));  // A(3, 1) == 0.4 

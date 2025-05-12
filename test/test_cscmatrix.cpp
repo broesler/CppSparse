@@ -918,25 +918,58 @@ TEST_CASE("Exercise 2.24: Non-contiguous indexing", "[ex2.24][index]")
 TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
 {
     auto test_assignment = [](
-        CSCMatrix& A,
+        CSCMatrix& A_in,
         const csint i,
         const csint j,
         const double v,
         const bool is_existing
     )
     {
-        csint nnz = A.nnz();
+        // Test both ways of assigning to a single element
+        enum AssignmentMethod { AssignMethod, OperatorMethod };
+        std::vector<AssignmentMethod> methods_to_test = { AssignMethod, OperatorMethod };
 
-        // TODO also test A(i, j) = v syntax for operator()
-        A.assign(i, j, v);
+        for (const auto& method : methods_to_test) {
+            const std::string method_name = method == AssignMethod ? "assign()" : "operator=()";
 
-        if (is_existing) {
-            CHECK(A.nnz() == nnz);
-        } else {
-            CHECK(A.nnz() == nnz + 1);
+            CSCMatrix A = A_in;  // Copy the original matrix for each test
+
+            // NOTE that by running this dynamic section, we cannot perform any
+            // tests *after* test_assignment is called, because the
+            // assignment changes are made on a local copy of the matrix.
+            DYNAMIC_SECTION("Testing method: " << method_name) {
+                csint nnz = A.nnz();
+                double original_value = A(i, j); // Capture original value before assignment
+
+                if (method == AssignMethod) {
+                    A.assign(i, j, v);
+                } else {
+                    A(i, j) = v;
+                }
+
+                if (is_existing) {
+                    CHECK(A.nnz() == nnz);
+                } else {
+                    CHECK(A.nnz() == nnz + 1);
+                }
+
+                CAPTURE(
+                    i, j, v,
+                    "Method tested: ", method_name,
+                    "Original value: ", original_value,
+                    A.has_sorted_indices(),
+                    A.has_canonical_format()
+                );
+
+                // The actual test that we set the value correctly
+                REQUIRE(A(i, j) == v);
+
+                // set_item_ should turn off this flag if the value is 0.0
+                if (v == 0.0) {
+                    REQUIRE_FALSE(A.has_canonical_format());
+                }
+            }
         }
-        CAPTURE(i, j, v, A.has_sorted_indices(), A.has_canonical_format());
-        REQUIRE(A(i, j) == v);
     };
 
     SECTION("Canonical format") {
@@ -966,7 +999,6 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
     SECTION("Assign an explicit zero value") {
         CSCMatrix A = davis_example_small().tocsc();
         test_assignment(A, 2, 1, 0.0, true);
-        REQUIRE_FALSE(A.has_canonical_format());
     }
 
     SECTION("Assign to an item that has duplicate entries.") {
@@ -990,9 +1022,6 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
         REQUIRE(A.nnz() == 13);  // 10 + 3 duplicates
         REQUIRE(A(3, 1) == (0.4 + 56 + 7.3 + 0.2));  // A(3, 1) == 0.4 
         test_assignment(A, 3, 1, 99.0, true);
-
-        A.dropzeros();
-        REQUIRE(A.nnz() == 10);  // remove zero-ed duplicates
     }
 
     SECTION("Multiple assignment") {

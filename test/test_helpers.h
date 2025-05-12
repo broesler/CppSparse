@@ -49,8 +49,11 @@ void check_sparse_eq_dense(
     // Check all elements
     for (csint i = 0; i < M; i++) {
         for (csint j = 0; j < N; j++) {
-            // TODO capture the indices and values
-            CHECK_THAT(A(i, j), WithinAbs(expect[i + j * M], tol));
+            // Capture the values for comparison on failure
+            double sparse_val = A(i, j);
+            double dense_val = expect[i + j * M];
+            CAPTURE(i, j, sparse_val, dense_val);
+            CHECK_THAT(sparse_val, WithinAbs(dense_val, tol));
         }
     }
 }
@@ -60,11 +63,11 @@ void check_sparse_eq_dense(
  *
  * @note This function expects the matrices to be in canonical form.
  *
- * @param C       the matrix to test
+ * @param A       the matrix to test
  * @param expect  the expected matrix
  */
 void compare_canonical(
-    const CSCMatrix& C,
+    const CSCMatrix& A,
 	const CSCMatrix& expect,
 	bool values=true,
 	double tol=1e-14
@@ -75,11 +78,11 @@ void compare_canonical(
  *
  * @note This function does not require the matrices to be in canonical form.
  *
- * @param C       the matrix to test
+ * @param A       the matrix to test
  * @param expect  the expected matrix
  */
 void compare_noncanonical(
-    const CSCMatrix& C,
+    const CSCMatrix& A,
 	const CSCMatrix& expect,
     bool values=true,
 	double tol=1e-14
@@ -93,11 +96,11 @@ void compare_noncanonical(
  * If both matrices are in canonical form, then the canonical comparison is
  * used, which is faster.
  *
- * @param C       the matrix to test
+ * @param A       the matrix to test
  * @param expect  the expected matrix
  */
 void compare_matrices(
-    const CSCMatrix& C,
+    const CSCMatrix& A,
 	const CSCMatrix& expect,
 	bool values=true,
 	double tol=1e-14

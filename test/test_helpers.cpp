@@ -24,37 +24,37 @@ namespace cs {
 
 
 void compare_canonical(
-    const CSCMatrix& C,
+    const CSCMatrix& A,
 	const CSCMatrix& expect,
 	bool values,
 	double tol
 )
 {
-    REQUIRE(C.has_canonical_format());
+    REQUIRE(A.has_canonical_format());
     REQUIRE(expect.has_canonical_format());
-    CHECK(C.nnz() == expect.nnz());
-    CHECK(C.shape() == expect.shape());
-    CHECK(C.indptr() == expect.indptr());
-    CHECK(C.indices() == expect.indices());
+    CHECK(A.nnz() == expect.nnz());
+    CHECK(A.shape() == expect.shape());
+    CHECK(A.indptr() == expect.indptr());
+    CHECK(A.indices() == expect.indices());
     if (values) {
-        for (csint p = 0; p < C.nnz(); p++) {
-            REQUIRE_THAT(C.data()[p], WithinAbs(expect.data()[p], tol));
+        for (csint p = 0; p < A.nnz(); p++) {
+            CHECK_THAT(A.data()[p], WithinAbs(expect.data()[p], tol));
         }
     }
 }
 
 
 void compare_noncanonical(
-    const CSCMatrix& C,
+    const CSCMatrix& A,
 	const CSCMatrix& expect,
     bool values,
 	double tol
 )
 {
-    REQUIRE(C.nnz() == expect.nnz());
-    REQUIRE(C.shape() == expect.shape());
+    REQUIRE(A.nnz() == expect.nnz());
+    REQUIRE(A.shape() == expect.shape());
 
-    auto [M, N] = C.shape();
+    auto [M, N] = A.shape();
 
     if (values) {
         // Need to check all elements of the matrix because operator() combines
@@ -62,7 +62,11 @@ void compare_noncanonical(
         // matrix does not combine those duplicates.
         for (csint i = 0; i < M; i++) {
             for (csint j = 0; j < N; j++) {
-                REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
+                // Capture the values for comparison on failure
+                double A_val = A(i, j);
+                double expect_val = expect(i, j);
+                CAPTURE(i, j, A_val, expect_val);
+                REQUIRE_THAT(A_val, WithinAbs(expect_val, tol));
             }
         }
     }

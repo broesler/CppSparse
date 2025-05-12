@@ -9,6 +9,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_all.hpp>
+#include <catch2/generators/catch_generators.hpp>
 
 #include <sstream>
 #include <string>
@@ -287,48 +288,29 @@ TEST_CASE("Indexing", "[CSCMatrix][operator()]")
         0.0, 0.9, 0.0, 1.0
     };
 
-    // std::vector<csint> indptr_expect  = {0, 3, 6, 8, 10};
+    bool is_sorted = GENERATE(true, false);
+    CAPTURE(is_sorted);
 
-    // Canonical format
-    // std::vector<csint> indices_expect = {  0,   1,   3,   1,   2,   3,   0,   2,   1,   3};
-    // std::vector<double> data_expect   = {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0};
+    bool is_const = GENERATE(true, false);
+    CAPTURE(is_const);
 
-    // Non-canonical format
-    // std::vector<csint> indices_expect = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
-    // std::vector<double> data_expect   = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
-
-    // TODO non-const
-    // TODO check all elements of the matrix for each case, just need to update
-    // the duplicate entries in the dense matrix for comparison.
-
-    SECTION("Sorted, without duplicates") {
-        const CSCMatrix C = A.tocsc();  // canonical
-
-        for (csint i = 0; i < M; i++) {
-            for (csint j = 0; j < N; j++) {
-                CHECK(C(i, j) == dense_column_major[i + j * M]);
-            }
-        }
+    SECTION("Without duplicates") {
+        // do nothing
     }
 
-    SECTION("Unsorted, without duplicates (const)") {
-        const CSCMatrix C = A.compress();  // non-canonical
-
-        for (csint i = 0; i < M; i++) {
-            for (csint j = 0; j < N; j++) {
-                CHECK(C(i, j) == dense_column_major[i + j * M]);
-            }
-        }
+    SECTION("With a duplicate") {
+        A.insert(3, 1, 56.0);
+        dense_column_major[3 + 1 * M] = 56.4;  // expected value
     }
 
-    SECTION("Sorted, with a duplicate") {
-        const CSCMatrix C = A.insert(3, 1, 56.0).tocsc();  // canonical
-        REQUIRE_THAT(C(3, 1), WithinAbs(56.4, tol));
-    }
+    CSCMatrix C = is_sorted ? A.tocsc() : A.compress();
 
-    SECTION("Unsorted, with a duplicate (const)") {
-        const CSCMatrix C = A.insert(3, 1, 56.0).compress();  // non-canonical
-        REQUIRE_THAT(C(3, 1), WithinAbs(56.4, tol));
+    if (is_const) {
+        // Create a const reference to force use of the const version
+        const CSCMatrix& const_C = C;
+        check_sparse_eq_dense(const_C, dense_column_major, C.shape(), tol);
+    } else {
+        check_sparse_eq_dense(C, dense_column_major, C.shape(), tol);
     }
 }
 

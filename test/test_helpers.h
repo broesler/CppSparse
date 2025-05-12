@@ -22,6 +22,21 @@ namespace cs {
 constexpr double tol = 1e-14;
 
 
+/** Check that a sparse matrix is equal to a dense matrix.
+ *
+ * @param A       a sparse matrix
+ * @param expect  the expected dense matrix in column-major format
+ * @param shape   shape of the expected matrix
+ * @param tol     tolerance for comparison
+ */
+void check_sparse_eq_dense(
+    const CSCMatrix& A,
+    const std::vector<double>& expect,
+    Shape shape,
+    double tol=1e-14
+);
+
+
 /** Compare two matrices for equality.
  *
  * @note This function expects the matrices to be in canonical form.

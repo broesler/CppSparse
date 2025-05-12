@@ -233,59 +233,6 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
         double expect = 8.638286867197685;  // computed in MATLAB and numpy
         REQUIRE_THAT(C.fronorm(), WithinAbs(expect, tol));
     }
-
-    SECTION("Exercise 2.2: Conversion to COOMatrix") {
-        auto convert_test = [](const COOMatrix& B) {
-            // Columns are sorted, but not rows
-            std::vector<csint>  expect_i = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
-            std::vector<csint>  expect_j = {  0,   0,   0,   1,   1,   1,   2,   2,   3,   3};
-            std::vector<double> expect_v = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
-
-            REQUIRE(B.nnz() == 10);
-            REQUIRE(B.nzmax() >= 10);
-            REQUIRE(B.shape() == Shape{4, 4});
-            REQUIRE(B.row() == expect_i);
-            REQUIRE(B.col() == expect_j);
-            REQUIRE(B.data() == expect_v);
-        };
-
-        SECTION("As constructor") {
-            COOMatrix B {C};  // via constructor
-            convert_test(B);
-        }
-
-        SECTION("As function") {
-            COOMatrix B = C.tocoo();  // via member function
-            convert_test(B);
-        }
-    }
-
-    // (inverse)
-    SECTION("Exercise 2.16: Conversion to dense array in column-major format") {
-        // Column-major order
-        std::vector<double> expect = {
-            4.5, 3.1, 0.0, 3.5,
-            0.0, 2.9, 1.7, 0.4,
-            3.2, 0.0, 3.0, 0.0,
-            0.0, 0.9, 0.0, 1.0
-        };
-
-        REQUIRE(A.tocsc().to_dense_vector() == expect);  // canonical form
-        REQUIRE(C.to_dense_vector() == expect);          // non-canonical form
-    }
-
-    SECTION("Exercise 2.16: Conversion to dense array in row-major format") {
-        // Row-major order
-        std::vector<double> expect = {
-            4.5, 0.0, 3.2, 0.0,
-            3.1, 2.9, 0.0, 0.9,
-            0.0, 1.7, 3.0, 0.0,
-            3.5, 0.4, 0.0, 1.0
-        };
-
-        REQUIRE(A.tocsc().to_dense_vector('C') == expect);  // canonical form
-        REQUIRE(C.to_dense_vector('C') == expect);          // non-canonical form
-    }
 }
 
 
@@ -347,6 +294,35 @@ TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
                 REQUIRE(C(indices[p], j) == data[p]);
             }
         }
+    }
+}
+
+
+TEST_CASE("Exercise 2.2: Conversion to COOMatrix") {
+    CSCMatrix C = davis_example_small().compress();  // non-canonical
+
+    auto convert_test = [](const COOMatrix& A) {
+        // Columns are sorted, but not rows
+        std::vector<csint>  expect_i = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
+        std::vector<csint>  expect_j = {  0,   0,   0,   1,   1,   1,   2,   2,   3,   3};
+        std::vector<double> expect_v = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
+
+        REQUIRE(A.nnz() == 10);
+        REQUIRE(A.nzmax() >= 10);
+        REQUIRE(A.shape() == Shape{4, 4});
+        REQUIRE(A.row() == expect_i);
+        REQUIRE(A.col() == expect_j);
+        REQUIRE(A.data() == expect_v);
+    };
+
+    SECTION("As constructor") {
+        COOMatrix A {C};  // via constructor
+        convert_test(A);
+    }
+
+    SECTION("As function") {
+        COOMatrix A = C.tocoo();  // via member function
+        convert_test(A);
     }
 }
 
@@ -620,30 +596,43 @@ TEST_CASE("Exercise 2.15: Band function", "[ex2.15][band]")
 }
 
 
-TEST_CASE("Exercise 2.16: CSC from dense", "[ex2.16][fromdense]")
+TEST_CASE("Exercise 2.16: CSC to/from dense", "[ex2.16][fromdense][todense]")
 {
-    CSCMatrix expect_A = davis_example_small().tocsc();
+    COOMatrix A = davis_example_small();
+    CSCMatrix C = A.compress();  // non-canonical
 
-    SECTION("Column-major") {
-        std::vector<double> dense_mat = {
-            4.5, 3.1, 0.0, 3.5,
-            0.0, 2.9, 1.7, 0.4,
-            3.2, 0.0, 3.0, 0.0,
-            0.0, 0.9, 0.0, 1.0
-        };
-        CSCMatrix A {dense_mat, {4, 4}, 'F'};
-        compare_matrices(A, expect_A);
+    std::vector<double> dense_column_major = {
+        4.5, 3.1, 0.0, 3.5,
+        0.0, 2.9, 1.7, 0.4,
+        3.2, 0.0, 3.0, 0.0,
+        0.0, 0.9, 0.0, 1.0
+    };
+
+    std::vector<double> dense_row_major = {
+        4.5, 0.0, 3.2, 0.0,
+        3.1, 2.9, 0.0, 0.9,
+        0.0, 1.7, 3.0, 0.0,
+        3.5, 0.4, 0.0, 1.0
+    };
+
+    SECTION("From Dense Column-major") {
+        CSCMatrix B {dense_column_major, {4, 4}, 'F'};
+        compare_matrices(B, C);
     }
 
-    SECTION("Row-major") {
-        std::vector<double> dense_mat = {
-            4.5, 0.0, 3.2, 0.0,
-            3.1, 2.9, 0.0, 0.9,
-            0.0, 1.7, 3.0, 0.0,
-            3.5, 0.4, 0.0, 1.0
-        };
-        CSCMatrix A {dense_mat, {4, 4}, 'C'};
-        compare_matrices(A, expect_A);
+    SECTION("From Dense Row-major") {
+        CSCMatrix B {dense_row_major, {4, 4}, 'C'};
+        compare_matrices(B, C);
+    }
+
+    SECTION("To Dense Column-major") {
+        REQUIRE(A.tocsc().to_dense_vector() == dense_column_major);  // canonical form
+        REQUIRE(C.to_dense_vector() == dense_column_major);          // non-canonical form
+    }
+
+    SECTION("To Dense Row-major") {
+        REQUIRE(A.tocsc().to_dense_vector('C') == dense_row_major);  // canonical form
+        REQUIRE(C.to_dense_vector('C') == dense_row_major);          // non-canonical form
     }
 }
 

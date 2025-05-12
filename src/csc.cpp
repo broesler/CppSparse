@@ -237,11 +237,11 @@ bool CSCMatrix::_test_sorted() const
 }
 
 
-const double CSCMatrix::operator()(csint i, csint j) const
+double CSCMatrix::get_item_(csint i, csint j) const
 {
-    // Assert indices are in-bounds
-    assert(i >= 0 && i < M_);
-    assert(j >= 0 && j < N_);
+    if (i < 0 || i > M_ || j < 0 || j > N_) {
+        throw std::out_of_range("Index out of bounds.");
+    }
 
     if (has_canonical_format_) {
         // Binary search for t <= i
@@ -274,11 +274,11 @@ const double CSCMatrix::operator()(csint i, csint j) const
 }
 
 
-double& CSCMatrix::operator()(const csint i, const csint j)
+void CSCMatrix::set_item_(csint i, csint j, double v)
 {
-    // Assert indices are in-bounds
-    assert(i >= 0 && i < M_);
-    assert(j >= 0 && j < N_);
+    if (i < 0 || i > M_ || j < 0 || j > N_) {
+        throw std::out_of_range("Index out of bounds.");
+    }
 
     if (has_canonical_format_) {
         // Binary search for t <= i
@@ -290,11 +290,12 @@ double& CSCMatrix::operator()(const csint i, const csint j)
         auto k = std::distance(i_.begin(), t);
 
         // Check that we actually found the index t == i
+        // TODO refactor this if statement after the search.
         if (t != end && *t == i) {
-            return v_[k];
+            v_[k] = v;  // update the value
         } else {
-            // Value does not exist, so add a place-holder here.
-            return this->insert(i, j, 0.0, k);
+            // Value does not exist, so insert it
+            insert(i, j, v, k);
         }
 
     } else {
@@ -315,11 +316,11 @@ double& CSCMatrix::operator()(const csint i, const csint j)
         }
 
         if (found) {
-            return v_[k];
+            v_[k] = v;
         } else {
             // Columns are not sorted, so we can just insert the element at the
             // beginning of the column.
-            return this->insert(i, j, 0.0, p_[j]);
+            insert(i, j, v, p_[j]);
         }
     }
 }
@@ -328,7 +329,7 @@ double& CSCMatrix::operator()(const csint i, const csint j)
 // Exercise 2.25
 CSCMatrix& CSCMatrix::assign(csint i, csint j, double v)
 {
-    (*this)(i, j) = v;
+    set_item_(i, j, v);
     return *this;
 }
 
@@ -346,7 +347,7 @@ CSCMatrix& CSCMatrix::assign(
 
     for (csint i = 0; i < rows.size(); i++) {
         for (csint j = 0; j < cols.size(); j++) {
-            (*this)(rows[i], cols[j]) = C[i + j * rows.size()];
+            set_item_(rows[i], cols[j], C[i + j * rows.size()]);
         }
     }
 

@@ -36,6 +36,10 @@ private:
     bool has_sorted_indices_ = false;
     bool has_canonical_format_ = false;
 
+    // Helpers to get/set element values
+    double get_item_(csint i, csint j) const;
+    void set_item_(csint i, csint j, double v);
+
 protected:
     /** Return the format description of the matrix. */
     virtual std::string_view get_format_desc_() const override
@@ -207,6 +211,79 @@ public:
      */
     bool _test_sorted() const;
 
+    // -------------------------------------------------------------------------
+    //          Item Assignment
+    // -------------------------------------------------------------------------
+    // Create a proxy class for the matrix item that allows for assignment or
+    // lookup on a non-const matrix.
+    class ItemProxy {
+    private:
+        CSCMatrix& A_;
+        csint i_;
+        csint j_;
+
+        // Allow CSCMatrix to create proxies
+        friend class CSCMatrix;
+
+        // Constructor is private so only CSCMatrix can create it.
+        ItemProxy(CSCMatrix& A, csint i, csint j) : A_(A), i_(i), j_(j) {}
+
+    public:
+        // Type conversion: `double v = A(i, j);`
+        operator double() const {
+            return A_.get_item_(i_, j_);
+        }
+
+        // Assignment operator: `A(i, j) = v;`
+        // Returning a reference to the object allows for method chaining
+        // and assignment like `A(i, j) = A(k, l) = v;`
+        ItemProxy& operator=(double v) {
+            A_.set_item_(i_, j_, v);
+            return *this;
+        }
+
+        // Copy assignment operator: `A(i, j) = B(i, j);`
+        ItemProxy& operator=(const ItemProxy& other) {
+            A_.set_item_(i_, j_, other.A_.get_item_(i_, j_));
+            return *this;
+        }
+
+        // Move assignment operator: `A(i, j) = std::move(B(i, j));`
+        ItemProxy& operator=(ItemProxy&& other) {
+            A_.set_item_(i_, j_, other.A_.get_item_(i_, j_));
+            return *this;
+        }
+
+        // Comparison operator: `A(i, j) == B(i, j);`
+        bool operator==(const ItemProxy& other) const {
+            return A_.get_item_(i_, j_) == other.A_.get_item_(i_, j_);
+        }
+
+        // Comparison operator: `A(i, j) != B(i, j);`
+        bool operator!=(const ItemProxy& other) const {
+            return A_.get_item_(i_, j_) != other.A_.get_item_(i_, j_);
+        }
+
+        // Less than operator: `A(i, j) < B(i, j);`
+        bool operator<(const ItemProxy& other) const {
+            return A_.get_item_(i_, j_) < other.A_.get_item_(i_, j_);
+        }
+
+        // Compound assignment operator: `A(i, j) += v;`
+        ItemProxy& operator+=(double v) {
+            A_.set_item_(i_, j_, A_.get_item_(i_, j_) + v);
+            return *this;
+        }
+
+        // Compound assignment operator: `A(i, j) *= v;`
+        ItemProxy& operator*=(double v) {
+            A_.set_item_(i_, j_, A_.get_item_(i_, j_) * v);
+            return *this;
+        }
+
+        // TODO define all binary and compound operators
+    };
+
     /** Return the value of the requested element.
      *
      * This function takes O(log M) time if the columns are sorted, and O(M) time
@@ -216,19 +293,27 @@ public:
      *
      * @return the value of the element at `(i, j)`.
      */
-    const double operator()(csint i, csint j) const;
+    double operator()(csint i, csint j) const {
+        return get_item_(i, j);
+    }
 
-    /** Return a reference to the value of the requested element for use in
+    /** Return a proxy item for the value of the requested element for use in
      * assignment, e.g. `A(i, j) = 56.0`.
+     *
+     * The proxy item allows for either item lookup via `double v = A(i, j)`, or
+     * item assignment `A(i, j) = v` on a non-const matrix, in a way that only
+     * changes the matrix on item assignment.
      *
      * This function takes O(log M) time if the columns are sorted, and O(M)
      * time if they are not.
      *
      * @param i, j the row and column indices of the element to access.
      *
-     * @return a reference to the value of the element at `(i, j)`.
+     * @return a proxy reference to the value of the element at `(i, j)`.
      */
-    double& operator()(csint i, csint j);
+    ItemProxy operator()(csint i, csint j) {
+        return ItemProxy(*this, i, j);
+    }
 
     /** Assign a value to a specific element in the matrix.
      *

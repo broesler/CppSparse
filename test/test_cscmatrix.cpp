@@ -86,30 +86,6 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
         s.clear();
     }
 
-    SECTION("Indexing: unsorted, without duplicates") {
-        std::vector<csint> indptr = C.indptr();
-        std::vector<csint> indices = C.indices();
-        std::vector<double> data = C.data();
-        csint N = C.shape()[1];
-
-        for (csint j = 0; j < N; j++) {
-            for (csint p = indptr[j]; p < indptr[j+1]; p++) {
-                REQUIRE(C(indices[p], j) == data[p]);
-            }
-        }
-
-    }
-
-    SECTION("Indexing: unsorted, with a duplicate") {
-        const CSCMatrix C = A.insert(3, 3, 56.0).compress();
-
-        // NOTE "double& operator()" function is being called when we are
-        // trying to compare the value. Not sure why.
-        // A: The non-const version is called when C is non-const. If C is
-        // const, then the const version is called.
-        REQUIRE_THAT(C(3, 3), WithinAbs(57.0, tol));
-    }
-
     // The transpose -> use indexing to test A(i, j) == A(j, i)
     SECTION("Transpose") {
         // lambda to test on M == N, M < N, M > N
@@ -294,6 +270,65 @@ TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
                 REQUIRE(C(indices[p], j) == data[p]);
             }
         }
+    }
+}
+
+
+TEST_CASE("Indexing", "[CSCMatrix][operator()]")
+{
+    COOMatrix A = davis_example_small();  // non-canonical
+    auto [M, N] = A.shape();
+
+    // Define the expected matrix
+    std::vector<double> dense_column_major = {
+        4.5, 3.1, 0.0, 3.5,
+        0.0, 2.9, 1.7, 0.4,
+        3.2, 0.0, 3.0, 0.0,
+        0.0, 0.9, 0.0, 1.0
+    };
+
+    // std::vector<csint> indptr_expect  = {0, 3, 6, 8, 10};
+
+    // Canonical format
+    // std::vector<csint> indices_expect = {  0,   1,   3,   1,   2,   3,   0,   2,   1,   3};
+    // std::vector<double> data_expect   = {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0};
+
+    // Non-canonical format
+    // std::vector<csint> indices_expect = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
+    // std::vector<double> data_expect   = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
+
+    // TODO non-const
+    // TODO check all elements of the matrix for each case, just need to update
+    // the duplicate entries in the dense matrix for comparison.
+
+    SECTION("Sorted, without duplicates") {
+        const CSCMatrix C = A.tocsc();  // canonical
+
+        for (csint i = 0; i < M; i++) {
+            for (csint j = 0; j < N; j++) {
+                CHECK(C(i, j) == dense_column_major[i + j * M]);
+            }
+        }
+    }
+
+    SECTION("Unsorted, without duplicates (const)") {
+        const CSCMatrix C = A.compress();  // non-canonical
+
+        for (csint i = 0; i < M; i++) {
+            for (csint j = 0; j < N; j++) {
+                CHECK(C(i, j) == dense_column_major[i + j * M]);
+            }
+        }
+    }
+
+    SECTION("Sorted, with a duplicate") {
+        const CSCMatrix C = A.insert(3, 1, 56.0).tocsc();  // canonical
+        REQUIRE_THAT(C(3, 1), WithinAbs(56.4, tol));
+    }
+
+    SECTION("Unsorted, with a duplicate (const)") {
+        const CSCMatrix C = A.insert(3, 1, 56.0).compress();  // non-canonical
+        REQUIRE_THAT(C(3, 1), WithinAbs(56.4, tol));
     }
 }
 

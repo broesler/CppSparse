@@ -237,6 +237,29 @@ bool CSCMatrix::_test_sorted() const
 }
 
 
+const std::tuple<const bool, const csint> CSCMatrix::binary_search(csint i, csint j) const
+{
+    // Binary search for t <= i
+    auto start = i_.begin() + p_[j];
+    auto end = i_.begin() + p_[j+1];
+
+    auto t = std::lower_bound(start, end, i);
+
+    auto k = std::distance(i_.begin(), t);
+
+    bool found;
+
+    // Check that we actually found the index t == i
+    if (t != end && *t == i) {
+        found = true;
+    } else {
+        found = false;
+    }
+
+    return {found, k};
+}
+
+
 double CSCMatrix::get_item_(csint i, csint j) const
 {
     if (i < 0 || i > M_ || j < 0 || j > N_) {
@@ -244,15 +267,11 @@ double CSCMatrix::get_item_(csint i, csint j) const
     }
 
     if (has_canonical_format_) {
-        // Binary search for t <= i
-        auto start = i_.begin() + p_[j];
-        auto end = i_.begin() + p_[j+1];
-
-        auto t = std::lower_bound(start, end, i);
+        auto [found, k] = binary_search(i, j);
 
         // Check that we actually found the index t == i
-        if (t != end && *t == i) {
-            return v_[std::distance(i_.begin(), t)];
+        if (found) {
+            return v_[k];
         } else {
             return 0.0;
         }
@@ -274,6 +293,7 @@ double CSCMatrix::get_item_(csint i, csint j) const
 }
 
 
+
 void CSCMatrix::set_item_(csint i, csint j, double v)
 {
     if (i < 0 || i > M_ || j < 0 || j > N_) {
@@ -281,17 +301,10 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
     }
 
     if (has_canonical_format_) {
-        // Binary search for t <= i
-        auto start = i_.begin() + p_[j];
-        auto end = i_.begin() + p_[j+1];
-
-        auto t = std::lower_bound(start, end, i);
-
-        auto k = std::distance(i_.begin(), t);
+        auto [found, k] = binary_search(i, j);
 
         // Check that we actually found the index t == i
-        // TODO refactor this if statement after the search.
-        if (t != end && *t == i) {
+        if (found) {
             v_[k] = v;  // update the value
         } else {
             // Value does not exist, so insert it
@@ -299,7 +312,7 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
         }
 
     } else {
-        // Linear search for the element
+        // Linear search for the element (+ duplicates)
         csint k;
         bool found = false;
 
@@ -322,6 +335,10 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
             // beginning of the column.
             insert(i, j, v, p_[j]);
         }
+    }
+
+    if (v == 0.0) {
+        has_canonical_format_ = false;  // explicit zero
     }
 }
 

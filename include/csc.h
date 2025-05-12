@@ -36,8 +36,23 @@ private:
     bool has_sorted_indices_ = false;
     bool has_canonical_format_ = false;
 
-    // Helpers to get/set element values
+    /** Search a sorted column for the item at index (i, j).
+     *
+     * This function is used by get/set_item_ to find the index of the item when
+     * the matrix has canonical format with sorted row indices and no
+     * duplicates.
+     */
+    const std::tuple<const bool, const csint> binary_search(csint i, csint j) const;
+
+    /** Return the value of A(i, j). */
     double get_item_(csint i, csint j) const;
+
+    /** Set the value of A(i, j).
+     *
+     * This function replaces the existing value at A(i, j), i.e.,
+     * any duplicate entries with the same row and column indices will be
+     * set to 0, but not removed.
+     */
     void set_item_(csint i, csint j, double v);
 
 protected:

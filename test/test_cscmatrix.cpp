@@ -297,6 +297,16 @@ TEST_CASE("Indexing", "[CSCMatrix][operator()]")
     // actually we'd like to check the precise structure of the matrix to ensure
     // that we have found/inserted elements correctly.
 
+    std::vector<csint> indptr_expect = {0, 3, 6, 8, 10};
+
+    // Non-canonical form
+    // std::vector<csint> indices_expect = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
+    // std::vector<double> data_expect   = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
+
+    // Canonical form
+    // std::vector<csint> indices_expect = {  0,   1,   3,   1,   2,   3,   0,   2,   1,   3};
+    // std::vector<double> data_expect   = {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0};
+
     bool is_sorted = GENERATE(true, false);
     CAPTURE(is_sorted);
 
@@ -897,7 +907,6 @@ TEST_CASE("Exercise 2.24: Non-contiguous indexing", "[ex2.24][index]")
 }
 
 
-// indexing for assignment
 TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
 {
     auto test_assignment = [](
@@ -944,6 +953,27 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
         }
     }
 
+    SECTION("Assign an explicit zero value") {
+        CSCMatrix A = davis_example_small().tocsc();
+        test_assignment(A, 2, 1, 0.0, true);
+        REQUIRE_FALSE(A.has_canonical_format());
+    }
+
+    SECTION("Assign to an item that has duplicate entries.") {
+        CSCMatrix A = davis_example_small()
+                        .insert(3, 1, 56.0)
+                        .insert(3, 1,  7.3)
+                        .insert(3, 1,  0.2)
+                        .compress();  // don't remove duplicates
+
+        REQUIRE(A.nnz() == 13);  // 10 + 3 duplicates
+        REQUIRE(A(3, 1) == (0.4 + 56 + 7.3 + 0.2));  // A(3, 1) == 0.4 
+        test_assignment(A, 3, 1, 99.0, true);
+
+        A.dropzeros();
+        REQUIRE(A.nnz() == 10);  // remove zero-ed duplicates
+    }
+
     SECTION("Multiple assignment") {
         CSCMatrix A = davis_example_small().tocsc();
 
@@ -957,7 +987,10 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
 
             for (csint i = 0; i < rows.size(); i++) {
                 for (csint j = 0; j < cols.size(); j++) {
-                    REQUIRE(A(rows[i], cols[j]) == vals[i + j * rows.size()]);
+                    double A_val = A(rows[i], cols[j]);
+                    double expect_val = vals[i + j * rows.size()];
+                    CAPTURE(i, j, A_val, expect_val);
+                    REQUIRE(A_val == expect_val);
                 }
             }
         }
@@ -974,7 +1007,10 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
 
             for (csint i = 0; i < rows.size(); i++) {
                 for (csint j = 0; j < cols.size(); j++) {
-                    REQUIRE(A(rows[i], cols[j]) == C(i, j));
+                    double A_val = A(rows[i], cols[j]);
+                    double expect_val = C(i, j);
+                    CAPTURE(i, j, A_val, expect_val);
+                    REQUIRE(A_val == expect_val);
                 }
             }
         }

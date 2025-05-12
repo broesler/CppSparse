@@ -105,7 +105,7 @@ public:
      *
      * The file is expected to be in "triplet format" `(i, j, v)`, where
      * `(i, j)` are the index coordinates, and `v` is the value to be
-     * assigned.
+     * inserted.
      *
      * @param filename  the filename as a string
      *
@@ -119,7 +119,7 @@ public:
      *
      * The input is expected to be in "triplet format" `(i, j, v)`, where
      * `(i, j)` are the index coordinates, and `v` is the value to be
-     * assigned.
+     * inserted.
      *
      * @param fp  a reference to the file stream.
      *
@@ -153,26 +153,26 @@ public:
     const std::vector<csint>& col() const;
     virtual const std::vector<double>& data() const override;
 
-    /** Assign a value to a pair of indices.
+    /** Insert triplet entry into the matrix.
      *
      * Note that there is no argument checking other than for positive indices.
-     * Assigning to an index that is outside of the dimensions of the matrix will
-     * just increase the size of the matrix accordingly.
+     * Inserting with an index that is outside of the dimensions of the matrix
+     * will just increase the size of the matrix accordingly.
      *
-     * Duplicate entries are also allowed to ease incremental construction of
-     * matrices from files, or, e.g., finite element applications. Duplicates will be
-     * summed upon compression to sparse column/row form.
+     * Duplicate entries are allowed to ease incremental construction of
+     * matrices from files, or, e.g., finite element applications. Duplicates
+     * will be summed upon compression to sparse column/row form.
      *
      * @param i, j  integer indices of the matrix
-     * @param v     the value to be assigned
+     * @param v     the value to be inserted
      *
      * @return A    a reference to itself for method chaining.
      *
      * @see cs_entry Davis p 12.
      */
-    virtual COOMatrix& assign(csint i, csint j, double v) override;
+    COOMatrix& insert(csint i, csint j, double v);
 
-    /** Assign a dense submatrix to vectors of indices.
+    /** Insert a dense submatrix.
      *
      * See: Davis, Exercise 2.5.
      *
@@ -183,11 +183,11 @@ public:
      *
      * @see cs_entry Davis p 12.
      */
-    virtual COOMatrix& assign(
+    COOMatrix& insert(
         const std::vector<csint>& i,
         const std::vector<csint>& j,
         const std::vector<double>& C
-    ) override;
+    );
 
     //--------------------------------------------------------------------------
     //        Format Conversions

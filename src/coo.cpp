@@ -116,7 +116,7 @@ COOMatrix COOMatrix::from_stream(std::istream& fp)
             if (!(ss >> i >> j >> v))
                 throw std::runtime_error("File is not in (i, j, v) format!");
             else
-                A.assign(i, j, v);
+                A.insert(i, j, v);
         }
     }
 
@@ -176,7 +176,7 @@ const std::vector<double>& COOMatrix::data() const { return v_; }
 
 
 // cs_entry
-COOMatrix& COOMatrix::assign(csint i, csint j, double v)
+COOMatrix& COOMatrix::insert(csint i, csint j, double v)
 {
     assert((i >= 0) && (j >= 0));
 
@@ -195,7 +195,7 @@ COOMatrix& COOMatrix::assign(csint i, csint j, double v)
 
 
 // Exercise 2.5
-COOMatrix& COOMatrix::assign(
+COOMatrix& COOMatrix::insert(
     const std::vector<csint>& rows,
     const std::vector<csint>& cols,
     const std::vector<double>& C
@@ -222,7 +222,7 @@ COOMatrix& COOMatrix::assign(
         for (csint j = 0; j < N; j++) {
             csint col = cols[j];  // cache value
             max_col_idx = std::max(max_col_idx, col);
-            // Assign the indices and value
+            // Insert the indices and value
             i_.push_back(row);
             j_.push_back(col);
             v_.push_back(C[i + j*N]);  // column-major order

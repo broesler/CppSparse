@@ -32,15 +32,15 @@ TEST_CASE("Exercise 2.13: is_symmetric.", "[ex2.13]")
 
     SECTION("Non-symmetric matrix with off-diagonals") {
         CSCMatrix A = COOMatrix(v, i, j)
-                       .assign(0, 1, 1.0)
+                       .insert(0, 1, 1.0)
                        .tocsc();
         REQUIRE_FALSE(A.is_symmetric());
     }
 
     SECTION("Symmetric matrix with off-diagonals") {
         CSCMatrix A = COOMatrix(v, i, j)
-                       .assign(0, 1, 1.0)
-                       .assign(1, 0, 1.0)
+                       .insert(0, 1, 1.0)
+                       .insert(1, 0, 1.0)
                        .tocsc();
         REQUIRE(A.is_symmetric());
     }
@@ -408,14 +408,14 @@ TEST_CASE("Exercise 2.12: Validity check", "[ex2.12][is_valid]")
     }
 
     SECTION("Explicit Non-zeros") {
-        A = davis_example_small().assign(0, 1, 0.0).compress();
+        A = davis_example_small().insert(0, 1, 0.0).compress();
 
         REQUIRE_THROWS_WITH(A.is_valid(!SORTED), "Explicit zeros!");
         REQUIRE_THROWS_WITH(A.sort().is_valid(), "Explicit zeros!");
     }
 
     SECTION("Duplicate Entry") {
-        A = davis_example_small().assign(1, 1, 1.0).compress();
+        A = davis_example_small().insert(1, 1, 1.0).compress();
 
         // Un-sorted columns will fail before duplicates are checked
         REQUIRE_THROWS_WITH(A.is_valid(), "Columns not sorted!");

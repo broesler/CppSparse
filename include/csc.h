@@ -242,7 +242,7 @@ public:
      *
      * @return a reference to itself for method chaining.
      */
-    virtual CSCMatrix& assign(csint i, csint j, double v) override;
+    CSCMatrix& assign(csint i, csint j, double v);
 
     /** Assign a dense matrix to the CSCMatrix at the specified locations.
      *
@@ -253,11 +253,11 @@ public:
      *
      * @return a reference to itself for method chaining.
      */
-    virtual CSCMatrix& assign(
+    CSCMatrix& assign(
         const std::vector<csint>& i,
         const std::vector<csint>& j,
         const std::vector<double>& C  // dense column-major
-    ) override;
+    );
 
     /** Assign a sparse matrix to the CSCMatrix at the specified locations.
      *

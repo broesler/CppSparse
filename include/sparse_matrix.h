@@ -52,33 +52,6 @@ public:
 
     virtual const std::vector<double>& data() const = 0;  // numerical values
 
-    /// Assign a value to a specific element in the matrix.
-    /// 
-    /// This function takes O(log M) time if the columns are sorted, and O(M) time
-    /// if they are not.
-    /// 
-    /// See: Davis, Exercise 2.25 assign by index.
-    /// 
-    /// @param i, j the row and column indices of the element to access.
-    /// @param v the value to be assigned.
-    /// 
-    /// @return a reference to itself for method chaining.
-    virtual SparseMatrix& assign(csint i, csint j, double v) = 0;
-
-    /// Assign a dense matrix to the SparseMatrix at the specified locations.
-    /// 
-    /// See: Davis, Excercises 2.5, and Exercise 2.25.
-    /// 
-    /// @param rows, cols the row and column indices of the elements to access.
-    /// @param C the dense matrix to be assigned.
-    /// 
-    /// @return a reference to itself for method chaining.
-    virtual SparseMatrix& assign(
-        const std::vector<csint>& i,
-        const std::vector<csint>& j,
-        const std::vector<double>& C  // dense column-major
-    ) = 0;
-
     /// Matrix-vector right-multiply (see cs_multiply)
     virtual std::vector<double> dot(const std::vector<double>& x) const = 0;
 

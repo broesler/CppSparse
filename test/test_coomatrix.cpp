@@ -110,8 +110,8 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
         s.clear();
     }
 
-    SECTION("Assign an existing element to create a duplicate") {
-        A.assign(3, 3, 56.0);
+    SECTION("Insert an existing element to create a duplicate") {
+        A.insert(3, 3, 56.0);
 
         REQUIRE(A.nnz() == 11);
         REQUIRE(A.nzmax() >= 11);
@@ -119,8 +119,8 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
         // REQUIRE_THAT(A(3, 3), WithinAbs(57.0, tol));
     }
 
-    SECTION("Assign a new element that changes the dimensions") {
-        A.assign(4, 3, 69.0);
+    SECTION("Insert a new element that changes the dimensions") {
+        A.insert(4, 3, 69.0);
 
         REQUIRE(A.nnz() == 11);
         REQUIRE(A.nzmax() >= 11);
@@ -128,12 +128,12 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
         // REQUIRE_THAT(A(4, 3), WithinAbs(69.0, tol));
     }
 
-    SECTION("Exercise 2.5: Assign a dense submatrix") {
+    SECTION("Exercise 2.5: Insert a dense submatrix") {
         std::vector<csint> rows = {2, 3, 4};
         std::vector<csint> cols = {4, 5, 6};
         std::vector<double> vals = {1, 2, 3, 4, 5, 6, 7, 8, 9};
 
-        A.assign(rows, cols, vals);
+        A.insert(rows, cols, vals);
 
         REQUIRE(A.nnz() == 19);
         REQUIRE(A.nzmax() >= 19);

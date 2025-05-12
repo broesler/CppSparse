@@ -76,7 +76,7 @@ CSCMatrix davis_example_qr(float add_diag)
     // Set the diagonal
     if (add_diag) {
         for (csint i = 0; i < 8; i++) {
-            A.assign(i, i, add_diag);  // duplicates will be added
+            A.insert(i, i, add_diag);  // duplicates will be added
         }
     }
 

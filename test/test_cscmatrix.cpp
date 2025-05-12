@@ -101,7 +101,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
     }
 
     SECTION("Indexing: unsorted, with a duplicate") {
-        const CSCMatrix C = A.assign(3, 3, 56.0).compress();
+        const CSCMatrix C = A.insert(3, 3, 56.0).compress();
 
         // NOTE "double& operator()" function is being called when we are
         // trying to compare the value. Not sure why.
@@ -134,11 +134,11 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
         }
 
         SECTION("Non-square matrix M < N") {
-            transpose_test(A.assign(0, 4, 1.6).compress()); // shape = {4, 5}
+            transpose_test(A.insert(0, 4, 1.6).compress()); // shape = {4, 5}
         }
 
         SECTION("Non-square matrix M > N") {
-            transpose_test(A.assign(4, 0, 1.6).compress()); // shape = {5, 4}
+            transpose_test(A.insert(4, 0, 1.6).compress()); // shape = {5, 4}
         }
 
         SECTION("Symbolic Transpose") {
@@ -155,7 +155,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
 
     SECTION("Sort rows/columns") {
         // On non-square matrix M != N
-        C = A.assign(0, 4, 1.6).compress();  // {4, 5}
+        C = A.insert(0, 4, 1.6).compress();  // {4, 5}
 
         auto sort_test = [](const CSCMatrix& Cs) {
             Shape shape_expect = {4, 5};
@@ -190,9 +190,9 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
     }
 
     SECTION("Sum duplicates") {
-        C = A.assign(0, 2, 100.0)
-             .assign(3, 0, 100.0)
-             .assign(2, 1, 100.0)
+        C = A.insert(0, 2, 100.0)
+             .insert(3, 0, 100.0)
+             .insert(2, 1, 100.0)
              .compress()
              .sum_duplicates();
 
@@ -210,11 +210,11 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
     }
 
     SECTION("Dropzeros") {
-        // Assign explicit zeros
+        // Insert explicit zeros
         C = davis_example_small()
-            .assign(0, 1, 0.0)
-            .assign(2, 1, 0.0)
-            .assign(3, 1, 0.0)
+            .insert(0, 1, 0.0)
+            .insert(2, 1, 0.0)
+            .insert(3, 1, 0.0)
             .compress();
 
         REQUIRE(C.nnz() == 13);
@@ -297,12 +297,12 @@ TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
 
     COOMatrix A = (
         davis_example_small()  // unsorted matrix
-        .assign(0, 2, 100.0)   // assign duplicates
-        .assign(3, 0, 100.0)
-        .assign(2, 1, 100.0)
-        .assign(0, 1, 0.0)     // assign zero entries
-        .assign(2, 2, 0.0)
-        .assign(3, 1, 0.0)
+        .insert(0, 2, 100.0)   // insert duplicates
+        .insert(3, 0, 100.0)
+        .insert(2, 1, 100.0)
+        .insert(0, 1, 0.0)     // insert zero entries
+        .insert(2, 2, 0.0)
+        .insert(3, 1, 0.0)
     );
 
     REQUIRE(A.nnz() == 16);

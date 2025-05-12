@@ -208,7 +208,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         COOMatrix w {{L.shape()[0], 1}};
 
         for (csint p = L.indptr()[k]; p < L.indptr()[k + 1]; p++) {
-            w.assign(L.indices()[p], 0, unif(rng));
+            w.insert(L.indices()[p], 0, unif(rng));
         }
 
         CSCMatrix W = w.tocsc();  // for arithmetic operations

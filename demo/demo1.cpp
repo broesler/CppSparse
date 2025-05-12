@@ -31,7 +31,7 @@ int main(void) {
     auto [M, N] = A.shape();
     COOMatrix I({M, M}, M);  // only zeros on the diagonal
     for (csint i = 0; i < M; i++) {
-        I.assign(i, i, 1.0);
+        I.insert(i, i, 1.0);
     }
     CSCMatrix Eye(I);
 

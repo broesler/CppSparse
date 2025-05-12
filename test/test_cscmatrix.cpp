@@ -287,6 +287,10 @@ TEST_CASE("Indexing", "[CSCMatrix][operator()]")
         3.2, 0.0, 3.0, 0.0,
         0.0, 0.9, 0.0, 1.0
     };
+    
+    // NOTE that comparing to the dense matrix is *behavioral* testing. But
+    // actually we'd like to check the precise structure of the matrix to ensure
+    // that we have found/inserted elements correctly.
 
     bool is_sorted = GENERATE(true, false);
     CAPTURE(is_sorted);

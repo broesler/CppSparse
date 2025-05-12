@@ -15,6 +15,8 @@
 
 #include "types.h"
 
+using Catch::Matchers::WithinAbs;
+
 namespace cs {
 
 
@@ -24,17 +26,34 @@ constexpr double tol = 1e-14;
 
 /** Check that a sparse matrix is equal to a dense matrix.
  *
+ * We use a template function so that the function can be used with both
+ * const and non-const matrices.
+ *
  * @param A       a sparse matrix
  * @param expect  the expected dense matrix in column-major format
  * @param shape   shape of the expected matrix
  * @param tol     tolerance for comparison
  */
+template <typename MatrixT>
 void check_sparse_eq_dense(
-    const CSCMatrix& A,
+    MatrixT& A,
     const std::vector<double>& expect,
     Shape shape,
     double tol=1e-14
-);
+)
+{
+    auto [M, N] = shape;
+    REQUIRE(A.shape() == shape);
+    REQUIRE(expect.size() == M * N);
+
+    // Check all elements
+    for (csint i = 0; i < M; i++) {
+        for (csint j = 0; j < N; j++) {
+            // TODO capture the indices and values
+            CHECK_THAT(A(i, j), WithinAbs(expect[i + j * M], tol));
+        }
+    }
+}
 
 
 /** Compare two matrices for equality.

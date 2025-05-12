@@ -23,26 +23,6 @@ using Catch::Matchers::WithinAbs;
 namespace cs {
 
 
-void check_sparse_eq_dense(
-    const CSCMatrix& A,
-    const std::vector<double>& expect,
-    Shape shape,
-    double tol
-)
-{
-    auto [M, N] = shape;
-    REQUIRE(A.shape() == shape);
-    REQUIRE(expect.size() == M * N);
-
-    // Check all elements
-    for (csint i = 0; i < M; i++) {
-        for (csint j = 0; j < N; j++) {
-            CHECK_THAT(A(i, j), WithinAbs(expect[i + j * M], tol));
-        }
-    }
-}
-
-
 void compare_canonical(
     const CSCMatrix& C,
 	const CSCMatrix& expect,

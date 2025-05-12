@@ -101,7 +101,12 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
 
             for (csint i = 0; i < M; i++) {
                 for (csint j = 0; j < N; j++) {
-                    REQUIRE(C(i, j) == C_T(j, i));
+                    double C_val = C(i, j);
+                    double C_T_val = C_T(j, i);
+                    CAPTURE(i, j, C_val, C_T_val);
+                    // Results should be exact since we aren't doing actual
+                    // floating point operations, just copying data.
+                    CHECK(C_val == C_T_val);
                 }
             }
         };

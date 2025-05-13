@@ -297,7 +297,7 @@ TEST_CASE("Indexing", "[CSCMatrix][operator()]")
     // actually we'd like to check the precise structure of the matrix to ensure
     // that we have found/inserted elements correctly.
 
-    std::vector<csint> indptr_expect = {0, 3, 6, 8, 10};
+    // std::vector<csint> indptr_expect = {0, 3, 6, 8, 10};
 
     // Non-canonical form
     // std::vector<csint> indices_expect = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
@@ -339,6 +339,28 @@ TEST_CASE("Indexing", "[CSCMatrix][operator()]")
     } else {
         check_sparse_eq_dense(C, dense_column_major, C.shape(), tol);
     }
+}
+
+
+// TODO test compound assignment operators
+
+TEST_CASE("Item Comparison Operators", "[CSCMatrix][operator==]")
+{
+    CSCMatrix A = davis_example_small().tocsc();
+
+    // vs. double
+    CHECK(A(0, 0) == 4.5);
+    CHECK(A(0, 0) >= 4.0);
+    CHECK(A(0, 0) <= 5.0);
+    CHECK(A(0, 0) > 4.0);
+    CHECK(A(0, 0) < 5.0);
+
+    // vs. ItemProxy (another element)
+    CHECK(A(0, 0) == A(0, 0));
+    CHECK(A(0, 0) >= A(1, 0));
+    CHECK(A(1, 0) <= A(0, 0));
+    CHECK(A(0, 0) > A(1, 0));
+    CHECK(A(1, 0) < A(0, 0));
 }
 
 

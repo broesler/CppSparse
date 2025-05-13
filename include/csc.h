@@ -55,6 +55,18 @@ private:
      */
     void set_item_(csint i, csint j, double v);
 
+    /** Insert a single element at a specified location.
+     *
+     * This function is a helper for set_item_.
+     *
+     * @param i, j the row and column indices of the element to access.
+     * @param v the value to be assigned.
+     * @param p the pointer to the column in the matrix.
+     *
+     * @return a reference to the inserted value.
+     */
+    double& insert_(csint i, csint j, double v, csint p);
+
 protected:
     /** Return the format description of the matrix. */
     virtual std::string_view get_format_desc_() const override
@@ -377,18 +389,6 @@ public:
         const std::vector<csint>& cols,
         const CSCMatrix& C
     );
-
-    /** Insert a single element at a specified location.
-     *
-     * This function is a helper for assign and operator().
-     *
-     * @param i, j the row and column indices of the element to access.
-     * @param v the value to be assigned.
-     * @param p the pointer to the column in the matrix.
-     *
-     * @return a reference to the inserted value.
-     */
-    double& insert(csint i, csint j, double v, csint p);
 
     //--------------------------------------------------------------------------
     //        Format Conversions

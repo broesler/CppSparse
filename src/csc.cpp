@@ -325,7 +325,7 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
             }
         } else {
             // Value does not exist, so insert it
-            insert(i, j, v, k);
+            insert_(i, j, v, k);
         }
 
     } else {
@@ -349,7 +349,7 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
         } else {
             // Columns are not sorted, so we can just insert the element at the
             // beginning of the column.
-            insert(i, j, v, p_[j]);
+            insert_(i, j, v, p_[j]);
         }
     }
 
@@ -408,7 +408,7 @@ CSCMatrix& CSCMatrix::assign(
 }
 
 
-double& CSCMatrix::insert(csint i, csint j, double v, csint p)
+double& CSCMatrix::insert_(csint i, csint j, double v, csint p)
 {
     i_.insert(i_.begin() + p, i);
     v_.insert(v_.begin() + p, v);

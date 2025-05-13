@@ -1012,9 +1012,14 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
             CHECK_FALSE(A.has_canonical_format());  // still has dups
         }
 
-        REQUIRE(A.nnz() == 13);  // 10 + 3 duplicates
-        REQUIRE(A(3, 1) == (0.4 + 56 + 7.3 + 0.2));  // A(3, 1) == 0.4 
-        test_assignment(A, 3, 1, 99.0, true);
+        REQUIRE(A.nnz() == 13);                      // 10 + 3 duplicates
+        REQUIRE(A(3, 1) == (0.4 + 56 + 7.3 + 0.2));  // A(3, 1) == 0.4
+        test_assignment(A, 3, 1, 99.0, true);        // works on a copy
+
+        // Check that the duplicates are removed
+        A(3, 1) = 99.0;
+        A.dropzeros();
+        REQUIRE(A.nnz() == 10);  // 10 - 3 duplicates
     }
 
     SECTION("Multiple assignment") {

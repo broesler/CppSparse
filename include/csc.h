@@ -263,30 +263,40 @@ public:
             return *this;
         }
 
-        // Comparison operator: `A(i, j) == B(i, j);`
-        bool operator==(const ItemProxy& other) const {
-            return A_.get_item_(i_, j_) == other.A_.get_item_(i_, j_);
+        // Comparison operators
+        auto operator<=>(const ItemProxy& other) const {
+            return static_cast<double>(*this) <=> static_cast<double>(other);
         }
 
-        // Comparison operator: `A(i, j) != B(i, j);`
-        bool operator!=(const ItemProxy& other) const {
-            return A_.get_item_(i_, j_) != other.A_.get_item_(i_, j_);
+        auto operator<=>(double v) const {
+            return static_cast<double>(*this) <=> v;
         }
 
-        // Less than operator: `A(i, j) < B(i, j);`
-        bool operator<(const ItemProxy& other) const {
-            return A_.get_item_(i_, j_) < other.A_.get_item_(i_, j_);
-        }
+        // TODO define a private function in CSCMatrix set_with_op_ that takes
+        // a binaryop pointer to '+', etc. and does the operation in-place so we
+        // don't have to search twice for the get/set operations.
 
-        // Compound assignment operator: `A(i, j) += v;`
+        // Compound assignment operators: `A(i, j) += v;` etc.
         ItemProxy& operator+=(double v) {
             A_.set_item_(i_, j_, A_.get_item_(i_, j_) + v);
             return *this;
         }
 
-        // Compound assignment operator: `A(i, j) *= v;`
+        ItemProxy& operator-=(double v) {
+            A_.set_item_(i_, j_, A_.get_item_(i_, j_) - v);
+            return *this;
+        }
+
         ItemProxy& operator*=(double v) {
             A_.set_item_(i_, j_, A_.get_item_(i_, j_) * v);
+            return *this;
+        }
+
+        ItemProxy& operator/=(double v) {
+            if (v == 0.0) {
+                throw std::runtime_error("Division by zero");
+            }
+            A_.set_item_(i_, j_, A_.get_item_(i_, j_) / v);
             return *this;
         }
 

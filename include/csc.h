@@ -41,11 +41,23 @@ private:
      * This function is used by get/set_item_ to find the index of the item when
      * the matrix has canonical format with sorted row indices and no
      * duplicates.
+     *
+     * @param i, j  the row and column indices of the element to access.
+     *
+     * @return  a tuple containing a boolean indicating if the item was found,
+     *          and the index of the item in the `i_` and `v_` arrays.
      */
-    const std::tuple<const bool, const csint> binary_search_(csint i, csint j) const;
+    std::pair<bool, csint> binary_search_(csint i, csint j) const;
 
-    /** Return the value of A(i, j). */
-    double get_item_(csint i, csint j) const;
+    /** Return the value of A(i, j).
+     *
+     * @param i, j  the row and column indices of the element to access.
+     *
+     * @return a tuple containing the value of the element, a boolean indicating
+     *         if the item was found, and the index of the item in the `i_` and
+     *         `v_` arrays.
+     * */
+    std::tuple<double, bool, csint> get_item_(csint i, csint j) const;
 
     /** Set the value of A(i, j).
      *
@@ -54,6 +66,45 @@ private:
      * set to 0, but not removed.
      */
     void set_item_(csint i, csint j, double v);
+
+    /** Set the value of `A(i, j)` with a binary operation like `A(i, j) += v`.
+     *
+     * This function is used by the `ItemProxy` class to define the compound
+     * assignment operators like `+=`, `-=`, etc. without repeating the
+     * search for the item.
+     *
+     * @param i, j  the row and column indices of the element to access.
+     * @param v  the value on which `A(i, j)` will be operated.
+     * @param found  a boolean indicating if the item was found.
+     * @param k  the index of the item in the `i_` and `v_` arrays.
+     * @param op  the binary operation to be performed.
+     */
+    template <typename BinaryOp>
+    void set_item_with_op_(csint i, csint j, double v, bool found, csint k, BinaryOp op)
+    {
+        if (found) {
+            // Update the value
+            v_[k] = op(v_[k], v);
+
+            // Duplicates may exist, so zero them out
+            if (has_sorted_indices_ && !has_canonical_format_) {
+                // Duplicates are in order, so don't need to search entire column
+                for (csint p = k + 1; p < i_.size() && i_[p] == i_[k]; p++) {
+                    v_[p] = 0.0;
+                }
+            } else {
+                // Linear search through entire rest of column
+                for (csint p = k + 1; p < p_[j+1]; p++) {
+                    if (i_[p] == i) {
+                        v_[p] = 0.0;
+                    }
+                }
+            }
+        } else {
+            // Value does not exist, so insert it
+            insert_(i, j, op(0.0, v), k);
+        }
+    }
 
     /** Insert a single element at a specified location.
      *
@@ -255,10 +306,18 @@ public:
         // Constructor is private so only CSCMatrix can create it.
         ItemProxy(CSCMatrix& A, csint i, csint j) : A_(A), i_(i), j_(j) {}
 
+        // Apply a compound assignment operator: `A(i, j) += v`.
+        template <typename BinaryOp>
+        ItemProxy& apply_binary_op_(double other, BinaryOp op) {
+            auto [_, found, k] = A_.get_item_(i_, j_);
+            A_.set_item_with_op_(i_, j_, other, found, k, op);
+            return *this;
+        }
+
     public:
         // Type conversion: `double v = A(i, j);`
         operator double() const {
-            return A_.get_item_(i_, j_);
+            return std::get<0>(A_.get_item_(i_, j_));
         }
 
         // Assignment operator: `A(i, j) = v;`
@@ -271,7 +330,7 @@ public:
 
         // Copy assignment operator: `A(i, j) = B(i, j);`
         ItemProxy& operator=(const ItemProxy& other) {
-            A_.set_item_(i_, j_, other.A_.get_item_(i_, j_));
+            A_.set_item_(i_, j_, std::get<0>(other.A_.get_item_(i_, j_)));
             return *this;
         }
 
@@ -284,35 +343,16 @@ public:
             return static_cast<double>(*this) <=> v;
         }
 
-        // TODO define a private function in CSCMatrix set_with_op_ that takes
-        // a binaryop pointer to '+', etc. and does the operation in-place so we
-        // don't have to search twice for the get/set operations.
-
         // Compound assignment operators: `A(i, j) += v;` etc.
-        ItemProxy& operator+=(double v) {
-            A_.set_item_(i_, j_, A_.get_item_(i_, j_) + v);
-            return *this;
-        }
-
-        ItemProxy& operator-=(double v) {
-            A_.set_item_(i_, j_, A_.get_item_(i_, j_) - v);
-            return *this;
-        }
-
-        ItemProxy& operator*=(double v) {
-            A_.set_item_(i_, j_, A_.get_item_(i_, j_) * v);
-            return *this;
-        }
-
+        ItemProxy& operator+=(double v) { return apply_binary_op_(v, std::plus<double>()); }
+        ItemProxy& operator-=(double v) { return apply_binary_op_(v, std::minus<double>()); }
+        ItemProxy& operator*=(double v) { return apply_binary_op_(v, std::multiplies<double>()); }
         ItemProxy& operator/=(double v) {
             if (v == 0.0) {
                 throw std::runtime_error("Division by zero");
             }
-            A_.set_item_(i_, j_, A_.get_item_(i_, j_) / v);
-            return *this;
+            return apply_binary_op_(v, std::divides<double>());
         }
-
-        // TODO define all binary and compound operators
     };
 
     /** Return the value of the requested element.
@@ -325,7 +365,7 @@ public:
      * @return the value of the element at `(i, j)`.
      */
     double operator()(csint i, csint j) const {
-        return get_item_(i, j);
+        return std::get<0>(get_item_(i, j));
     }
 
     /** Return a proxy item for the value of the requested element for use in

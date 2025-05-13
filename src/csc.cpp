@@ -237,71 +237,64 @@ bool CSCMatrix::_test_sorted() const
 }
 
 
-const std::tuple<const bool, const csint> CSCMatrix::binary_search_(csint i, csint j) const
+std::pair<bool, csint> CSCMatrix::binary_search_(csint i, csint j) const
 {
     // Binary search for t <= i
     auto start = i_.begin() + p_[j];
     auto end = i_.begin() + p_[j+1];
-
     auto t = std::lower_bound(start, end, i);
-
-    auto k = std::distance(i_.begin(), t);
-
-    bool found;
-
     // Check that we actually found the index t == i
-    if (t != end && *t == i) {
-        found = true;
-    } else {
-        found = false;
-    }
-
+    bool found = (t != end && *t == i);
+    csint k = std::distance(i_.begin(), t);
     return {found, k};
 }
 
 
-double CSCMatrix::get_item_(csint i, csint j) const
+std::tuple<double, bool, csint> CSCMatrix::get_item_(csint i, csint j) const
 {
     if (i < 0 || i > M_ || j < 0 || j > N_) {
         throw std::out_of_range("Index out of bounds.");
     }
 
+    double v = 0.0;
+    bool found = false;
+    csint k = -1;
+
     if (has_sorted_indices_) {
-        auto [found, k] = binary_search_(i, j);
+        std::tie(found, k) = binary_search_(i, j);
 
-        // Check that we actually found the index t == i
         if (found) {
+            // Get the value
             if (has_canonical_format_) {
-                return v_[k];
+                v = v_[k];
             } else {
-                // Sum duplicate entries
-                double out = 0.0;
-                // k points to the first entry
+                // Sum duplicate entries, k points to the first entry
                 for (csint p = k; p < i_.size() && i_[p] == i; p++) {
-                    out += v_[p];
+                    v += v_[p];
                 }
-                return out;
             }
-        } else {
-            return 0.0;
         }
-
     } else {
         // NOTE this code assumes that columns are *not* sorted, and that
         // duplicate entries may exist, so it will search through *every*
         // element in a column.
-        double out = 0.0;
-
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             if (i_[p] == i) {
-                out += v_[p];  // sum duplicate entries
+                if (!found) {
+                    found = true;
+                    k = p;  // store the minimum index of the element
+                }
+                v += v_[p];  // sum duplicate entries
             }
         }
-
-        return out;
     }
-}
 
+    if (!found) {
+        k = p_[j];  // insert at the beginning of the column
+    }
+
+    return {v, found, k};
+}
 
 
 void CSCMatrix::set_item_(csint i, csint j, double v)
@@ -318,7 +311,7 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
             v_[k] = v;  // update the value
 
             if (!has_canonical_format_) {
-                // Duplicates exist, so zero them out
+                // Duplicates may exist, so zero them out
                 for (csint p = k + 1; p < i_.size() && i_[p] == i; p++) {
                     v_[p] = 0.0;
                 }
@@ -336,7 +329,7 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             if (i_[p] == i) {
                 if (!found) {
-                    k = p;  // store the index of the element
+                    k = p;  // store the minimum index of the element
                     found = true;
                 } else {
                     v_[p] = 0;  // zero out duplicates

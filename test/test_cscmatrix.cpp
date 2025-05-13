@@ -13,6 +13,7 @@
 
 #include <sstream>
 #include <string>
+#include <stdexcept>  // out_of_range
 #include <vector>
 
 #include "csparse.h"
@@ -342,8 +343,6 @@ TEST_CASE("Indexing", "[CSCMatrix][operator()]")
 }
 
 
-// TODO test compound assignment operators
-
 TEST_CASE("Item Comparison Operators", "[CSCMatrix][operator==]")
 {
     CSCMatrix A = davis_example_small().tocsc();
@@ -361,6 +360,38 @@ TEST_CASE("Item Comparison Operators", "[CSCMatrix][operator==]")
     CHECK(A(1, 0) <= A(0, 0));
     CHECK(A(0, 0) > A(1, 0));
     CHECK(A(1, 0) < A(0, 0));
+}
+
+
+TEST_CASE("Compound Assignment Operators", "[CSCMatrix][operator+=]")
+{
+    CSCMatrix A = davis_example_small().tocsc();
+
+    // A(0, 0) = 4.5;
+
+    SECTION("Plus") {
+        A(0, 0) += 0.5;
+        CHECK_THAT(A(0, 0), WithinAbs(5.0, tol));
+    }
+
+    SECTION("Minus") {
+        A(0, 0) -= 0.5;
+        CHECK_THAT(A(0, 0), WithinAbs(4.0, tol));
+    }
+
+    SECTION("Times") {
+        A(0, 0) *= 2.0;
+        CHECK_THAT(A(0, 0), WithinAbs(9.0, tol));
+    }
+
+    SECTION("Divide") {
+        A(0, 0) /= 2.0;
+        CHECK_THAT(A(0, 0), WithinAbs(2.25, tol));
+    }
+
+    SECTION("Divide by Zero") {
+        REQUIRE_THROWS_WITH(A(0, 0) /= 0.0, "Division by zero");
+    }
 }
 
 

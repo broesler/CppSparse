@@ -42,7 +42,7 @@ private:
      * the matrix has canonical format with sorted row indices and no
      * duplicates.
      */
-    const std::tuple<const bool, const csint> binary_search(csint i, csint j) const;
+    const std::tuple<const bool, const csint> binary_search_(csint i, csint j) const;
 
     /** Return the value of A(i, j). */
     double get_item_(csint i, csint j) const;

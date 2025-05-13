@@ -237,7 +237,7 @@ bool CSCMatrix::_test_sorted() const
 }
 
 
-const std::tuple<const bool, const csint> CSCMatrix::binary_search(csint i, csint j) const
+const std::tuple<const bool, const csint> CSCMatrix::binary_search_(csint i, csint j) const
 {
     // Binary search for t <= i
     auto start = i_.begin() + p_[j];
@@ -267,7 +267,7 @@ double CSCMatrix::get_item_(csint i, csint j) const
     }
 
     if (has_sorted_indices_) {
-        auto [found, k] = binary_search(i, j);
+        auto [found, k] = binary_search_(i, j);
 
         // Check that we actually found the index t == i
         if (found) {
@@ -311,7 +311,7 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
     }
 
     if (has_sorted_indices_) {
-        auto [found, k] = binary_search(i, j);
+        auto [found, k] = binary_search_(i, j);
 
         // Check that we actually found the index t == i
         if (found) {

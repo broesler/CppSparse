@@ -36,6 +36,13 @@ private:
     bool has_sorted_indices_ = false;
     bool has_canonical_format_ = false;
 
+    // Internal struct for get_item_ use
+    struct GetItemResult {
+        double value;
+        bool found;
+        csint index;
+    };
+
     /** Search a sorted column for the item at index (i, j).
      *
      * This function is used by get/set_item_ to find the index of the item when
@@ -57,7 +64,7 @@ private:
      *         if the item was found, and the index of the item in the `i_` and
      *         `v_` arrays.
      * */
-    std::tuple<double, bool, csint> get_item_(csint i, csint j) const;
+    GetItemResult get_item_(csint i, csint j) const;
 
     /** Set the value of A(i, j).
      *
@@ -309,15 +316,15 @@ public:
         // Apply a compound assignment operator: `A(i, j) += v`.
         template <typename BinaryOp>
         ItemProxy& apply_binary_op_(double other, BinaryOp op) {
-            auto [_, found, k] = A_.get_item_(i_, j_);
-            A_.set_item_with_op_(i_, j_, other, found, k, op);
+            GetItemResult res = A_.get_item_(i_, j_);
+            A_.set_item_with_op_(i_, j_, other, res.found, res.index, op);
             return *this;
         }
 
     public:
         // Type conversion: `double v = A(i, j);`
         operator double() const {
-            return std::get<0>(A_.get_item_(i_, j_));
+            return A_.get_item_(i_, j_).value;
         }
 
         // Assignment operator: `A(i, j) = v;`
@@ -330,7 +337,7 @@ public:
 
         // Copy assignment operator: `A(i, j) = B(i, j);`
         ItemProxy& operator=(const ItemProxy& other) {
-            A_.set_item_(i_, j_, std::get<0>(other.A_.get_item_(i_, j_)));
+            A_.set_item_(i_, j_, other.A_.get_item_(i_, j_).value);
             return *this;
         }
 
@@ -365,7 +372,7 @@ public:
      * @return the value of the element at `(i, j)`.
      */
     double operator()(csint i, csint j) const {
-        return std::get<0>(get_item_(i, j));
+        return get_item_(i, j).value;
     }
 
     /** Return a proxy item for the value of the requested element for use in

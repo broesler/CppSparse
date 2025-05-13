@@ -250,7 +250,7 @@ std::pair<bool, csint> CSCMatrix::binary_search_(csint i, csint j) const
 }
 
 
-std::tuple<double, bool, csint> CSCMatrix::get_item_(csint i, csint j) const
+CSCMatrix::GetItemResult CSCMatrix::get_item_(csint i, csint j) const
 {
     if (i < 0 || i > M_ || j < 0 || j > N_) {
         throw std::out_of_range("Index out of bounds.");

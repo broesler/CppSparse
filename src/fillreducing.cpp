@@ -201,7 +201,6 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
     }
 
     // --- Main Loop -----------------------------------------------------------
-
     while (nel < N) {  // while selecting pivots
         // --- Select node of minimum approximate degree -----------------------
         csint mindeg = 0;
@@ -735,22 +734,20 @@ void bfs(
         return;  // no unmatched nodes
     }
 
-    const CSCMatrix C = (mark == 1) ? A : A.transpose(false);
+    const CSCMatrix& C = (mark == 1) ? A : A.transpose(false);
 
     // BFS loop
     while (head < tail) {
         csint j = queue[head++];  // get j from front of queue
 
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
-            csint i = A.i_[p];     // consider row i
+        for (csint p = C.p_[j]; p < C.p_[j+1]; p++) {
+            csint i = C.i_[p];     // consider row i
 
             if (wi[i] >= 0) {
                 continue;          // skip if i is marked
             }
 
             wi[i] = mark;          // i in set R1 (C3 if transpose)
-            // FIXME this line breaks for M > N (2nd bfs call in dmperm)
-            // i > jmatch.size();
             csint j2 = jmatch[i];  // transverse alternating path to j2
 
             if (wj[j2] >= 0) {
@@ -840,7 +837,6 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
                        wj(N + 6, -1);
 
     bfs(A, N, wi, wj, D.q, imatch, jmatch, 1);  // find C1, R1 from C0
-    // FIXME this line breaks for M > N (./demo2 < data/ash219)
     bfs(A, M, wj, wi, D.p, jmatch, imatch, 3);  // find C3, R3 from R0
 
     unmatched(N, wj, D.q, D.cc, 0);  // unmatched set C0

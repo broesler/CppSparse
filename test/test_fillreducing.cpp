@@ -68,7 +68,6 @@ TEST_CASE("Build Graph", "[amd][build_graph]")
         expect_C = A.transpose(values) * A;
     }
 
-
     SECTION("A^T A") {
         order = AMDOrder::ATA;
         expect_C = A.transpose(values) * A;
@@ -115,6 +114,51 @@ TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
 
     std::vector<csint> p = amd(A, order);
     CHECK(p == expect_p);
+}
+
+
+TEST_CASE("AMD ATA bcsstk01 matrix", "[amd_bug][bcsstk01]")
+{
+    SKIP();
+    CSCMatrix A = COOMatrix::from_file("./data/bcsstk01").tocsc();
+    auto [M, N] = A.shape();
+    AMDOrder order = AMDOrder::ATA;
+
+    // Output should be a permutation of the identity permutation
+    std::vector<csint> expect_q(N);
+    std::iota(expect_q.begin(), expect_q.end(), 0);
+
+    // demo: make_sym
+    CSCMatrix AT = A.T();
+    // Drop diagonal entries from AT
+    AT.fkeep([](csint i, csint j, double aij) { return i != j; });
+    const CSCMatrix C = A + AT;
+
+    std::vector<csint> q = amd(C, order);
+    // FIXME for bcsstk01 q includes many 0 entries (not a valid permutation)
+    std::cout << "q:" << q << std::endl;
+
+    REQUIRE_THAT(q, UnorderedEquals(expect_q));
+}
+
+
+TEST_CASE("dmperm ash219 matrix", "[dmperm_bug][ash219]")
+{
+    CSCMatrix A = COOMatrix::from_file("./data/ash219").tocsc();
+    auto [M, N] = A.shape();
+
+    // Output should be a permutation of the identity permutation
+    std::vector<csint> expect_p(M);
+    std::iota(expect_p.begin(), expect_p.end(), 0);
+
+    std::vector<csint> expect_q(N);
+    std::iota(expect_q.begin(), expect_q.end(), 0);
+
+    // TODO test with seed = {-1, 0, 1}
+    DMPermResult D = dmperm(A, 1);  // randomized analysis
+
+    REQUIRE_THAT(D.p, UnorderedEquals(expect_p));
+    REQUIRE_THAT(D.q, UnorderedEquals(expect_q));
 }
 
 

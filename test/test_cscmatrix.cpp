@@ -392,6 +392,30 @@ TEST_CASE("Compound Assignment Operators", "[CSCMatrix][operator+=]")
     SECTION("Divide by Zero") {
         REQUIRE_THROWS_WITH(A(0, 0) /= 0.0, "Division by zero");
     }
+
+    SECTION("Pre-increment") {
+        CHECK_THAT(A(0, 0), WithinAbs(4.5, tol));
+        CHECK_THAT(++A(0, 0), WithinAbs(5.5, tol));  // changed *before* compare
+        CHECK_THAT(A(0, 0), WithinAbs(5.5, tol));
+    }
+
+    SECTION("Post-increment") {
+        CHECK_THAT(A(0, 0), WithinAbs(4.5, tol));
+        CHECK_THAT(A(0, 0)++, WithinAbs(4.5, tol));  // changed *after* compare
+        CHECK_THAT(A(0, 0), WithinAbs(5.5, tol));
+    }
+
+    SECTION("Pre-decrement") {
+        CHECK_THAT(A(0, 0), WithinAbs(4.5, tol));
+        CHECK_THAT(--A(0, 0), WithinAbs(3.5, tol));  // changed *before* compare
+        CHECK_THAT(A(0, 0), WithinAbs(3.5, tol));
+    }
+
+    SECTION("Post-decrement") {
+        CHECK_THAT(A(0, 0), WithinAbs(4.5, tol));
+        CHECK_THAT(A(0, 0)--, WithinAbs(4.5, tol));  // changed *after* compare
+        CHECK_THAT(A(0, 0), WithinAbs(3.5, tol));
+    }
 }
 
 

@@ -362,6 +362,24 @@ public:
             }
             return apply_binary_op_(v, std::divides<double>());
         }
+
+        // Increment/decrement operators
+        // Pre-in/decrement: `++A(i, j);`
+        ItemProxy& operator++() { return apply_binary_op_(1.0, std::plus<double>()); }
+        ItemProxy& operator--() { return apply_binary_op_(1.0, std::minus<double>()); }
+
+        // Post-in/decrement: `A(i, j)++;`
+        double operator++(int) {
+            GetItemResult res = A_.get_item_(i_, j_);
+            A_.set_item_with_op_(i_, j_, 1.0, res.found, res.index, std::plus<double>());
+            return res.value;
+        }
+
+        double operator--(int) {
+            GetItemResult res = A_.get_item_(i_, j_);
+            A_.set_item_with_op_(i_, j_, 1.0, res.found, res.index, std::minus<double>());
+            return res.value;
+        }
     };
 
     /** Return the value of the requested element.

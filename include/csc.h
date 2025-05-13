@@ -26,122 +26,6 @@ namespace cs {
 
 class CSCMatrix : public SparseMatrix
 {
-private:
-    static constexpr std::string_view format_desc_ = "Compressed Sparse Column";
-    std::vector<double> v_;  // numerical values, size nzmax
-    std::vector<csint> i_;   // row indices, size nzmax
-    std::vector<csint> p_;   // column pointers (CSC size N_);
-    csint M_ = 0;            // number of rows
-    csint N_ = 0;            // number of columns
-    bool has_sorted_indices_ = false;
-    bool has_canonical_format_ = false;
-
-    // Internal struct for get_item_ use
-    struct GetItemResult {
-        double value;
-        bool found;
-        csint index;
-    };
-
-    /** Search a sorted column for the item at index (i, j).
-     *
-     * This function is used by get/set_item_ to find the index of the item when
-     * the matrix has canonical format with sorted row indices and no
-     * duplicates.
-     *
-     * @param i, j  the row and column indices of the element to access.
-     *
-     * @return  a tuple containing a boolean indicating if the item was found,
-     *          and the index of the item in the `i_` and `v_` arrays.
-     */
-    std::pair<bool, csint> binary_search_(csint i, csint j) const;
-
-    /** Return the value of A(i, j).
-     *
-     * @param i, j  the row and column indices of the element to access.
-     *
-     * @return a tuple containing the value of the element, a boolean indicating
-     *         if the item was found, and the index of the item in the `i_` and
-     *         `v_` arrays.
-     * */
-    GetItemResult get_item_(csint i, csint j) const;
-
-    /** Set the value of A(i, j).
-     *
-     * This function replaces the existing value at A(i, j), i.e.,
-     * any duplicate entries with the same row and column indices will be
-     * set to 0, but not removed.
-     */
-    void set_item_(csint i, csint j, double v);
-
-    /** Set the value of `A(i, j)` with a binary operation like `A(i, j) += v`.
-     *
-     * This function is used by the `ItemProxy` class to define the compound
-     * assignment operators like `+=`, `-=`, etc. without repeating the
-     * search for the item.
-     *
-     * @param i, j  the row and column indices of the element to access.
-     * @param v  the value on which `A(i, j)` will be operated.
-     * @param found  a boolean indicating if the item was found.
-     * @param k  the index of the item in the `i_` and `v_` arrays.
-     * @param op  the binary operation to be performed.
-     */
-    template <typename BinaryOp>
-    void set_item_with_op_(csint i, csint j, double v, bool found, csint k, BinaryOp op)
-    {
-        if (found) {
-            // Update the value
-            v_[k] = op(v_[k], v);
-
-            // Duplicates may exist, so zero them out
-            if (has_sorted_indices_ && !has_canonical_format_) {
-                // Duplicates are in order, so don't need to search entire column
-                for (csint p = k + 1; p < i_.size() && i_[p] == i; p++) {
-                    v_[p] = 0.0;
-                }
-            } else {
-                // Linear search through entire rest of column
-                for (csint p = k + 1; p < p_[j+1]; p++) {
-                    if (i_[p] == i) {
-                        v_[p] = 0.0;
-                    }
-                }
-            }
-        } else {
-            // Value does not exist, so insert it
-            insert_(i, j, op(0.0, v), k);
-        }
-    }
-
-    /** Insert a single element at a specified location.
-     *
-     * This function is a helper for set_item_.
-     *
-     * @param i, j  the row and column indices of the element to access.
-     * @param v  the value to be assigned.
-     * @param p  the pointer to the column in the matrix.
-     *
-     * @return a reference to the inserted value.
-     */
-    double& insert_(csint i, csint j, double v, csint p);
-
-
-protected:
-    /** Return the format description of the matrix. */
-    virtual std::string_view get_format_desc_() const override
-    {
-        return format_desc_;
-    }
-
-    /** Print elements of the matrix between `start` and `end`.
-     *
-     * @param ss          the output string stream
-     * @param start, end  print the all elements where `p ∈ [start, end]`, counting
-     *        column-wise.
-     */
-    virtual void write_elems_(std::stringstream& ss, csint start, csint end) const override;
-
-
 public:
     friend class COOMatrix;
     friend class TestCSCMatrix;  // dummy class for testing
@@ -1215,6 +1099,123 @@ public:
         const std::vector<csint>& jmatch,
         csint mark
     );
+
+
+protected:
+    /** Return the format description of the matrix. */
+    virtual std::string_view get_format_desc_() const override
+    {
+        return format_desc_;
+    }
+
+    /** Print elements of the matrix between `start` and `end`.
+     *
+     * @param ss          the output string stream
+     * @param start, end  print the all elements where `p ∈ [start, end]`, counting
+     *        column-wise.
+     */
+    virtual void write_elems_(std::stringstream& ss, csint start, csint end) const override;
+
+
+private:
+    static constexpr std::string_view format_desc_ = "Compressed Sparse Column";
+    std::vector<double> v_;  // numerical values, size nzmax
+    std::vector<csint> i_;   // row indices, size nzmax
+    std::vector<csint> p_;   // column pointers (CSC size N_);
+    csint M_ = 0;            // number of rows
+    csint N_ = 0;            // number of columns
+    bool has_sorted_indices_ = false;
+    bool has_canonical_format_ = false;
+
+    // Internal struct for get_item_ use
+    struct GetItemResult {
+        double value;
+        bool found;
+        csint index;
+    };
+
+    /** Search a sorted column for the item at index (i, j).
+     *
+     * This function is used by get/set_item_ to find the index of the item when
+     * the matrix has canonical format with sorted row indices and no
+     * duplicates.
+     *
+     * @param i, j  the row and column indices of the element to access.
+     *
+     * @return  a tuple containing a boolean indicating if the item was found,
+     *          and the index of the item in the `i_` and `v_` arrays.
+     */
+    std::pair<bool, csint> binary_search_(csint i, csint j) const;
+
+    /** Return the value of A(i, j).
+     *
+     * @param i, j  the row and column indices of the element to access.
+     *
+     * @return a tuple containing the value of the element, a boolean indicating
+     *         if the item was found, and the index of the item in the `i_` and
+     *         `v_` arrays.
+     * */
+    GetItemResult get_item_(csint i, csint j) const;
+
+    /** Set the value of A(i, j).
+     *
+     * This function replaces the existing value at A(i, j), i.e.,
+     * any duplicate entries with the same row and column indices will be
+     * set to 0, but not removed.
+     */
+    void set_item_(csint i, csint j, double v);
+
+    /** Set the value of `A(i, j)` with a binary operation like `A(i, j) += v`.
+     *
+     * This function is used by the `ItemProxy` class to define the compound
+     * assignment operators like `+=`, `-=`, etc. without repeating the
+     * search for the item.
+     *
+     * @param i, j  the row and column indices of the element to access.
+     * @param v  the value on which `A(i, j)` will be operated.
+     * @param found  a boolean indicating if the item was found.
+     * @param k  the index of the item in the `i_` and `v_` arrays.
+     * @param op  the binary operation to be performed.
+     */
+    template <typename BinaryOp>
+    void set_item_with_op_(csint i, csint j, double v, bool found, csint k, BinaryOp op)
+    {
+        if (found) {
+            // Update the value
+            v_[k] = op(v_[k], v);
+
+            // Duplicates may exist, so zero them out
+            if (has_sorted_indices_ && !has_canonical_format_) {
+                // Duplicates are in order, so don't need to search entire column
+                for (csint p = k + 1; p < i_.size() && i_[p] == i; p++) {
+                    v_[p] = 0.0;
+                }
+            } else {
+                // Linear search through entire rest of column
+                for (csint p = k + 1; p < p_[j+1]; p++) {
+                    if (i_[p] == i) {
+                        v_[p] = 0.0;
+                    }
+                }
+            }
+        } else {
+            // Value does not exist, so insert it
+            insert_(i, j, op(0.0, v), k);
+        }
+    }
+
+    /** Insert a single element at a specified location.
+     *
+     * This function is a helper for set_item_.
+     *
+     * @param i, j  the row and column indices of the element to access.
+     * @param v  the value to be assigned.
+     * @param p  the pointer to the column in the matrix.
+     *
+     * @return a reference to the inserted value.
+     */
+    double& insert_(csint i, csint j, double v, csint p);
+
 
 };  // class CSCMatrix
 

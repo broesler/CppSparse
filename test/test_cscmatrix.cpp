@@ -930,44 +930,37 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
         std::vector<AssignmentMethod> methods_to_test = { AssignMethod, OperatorMethod };
 
         for (const auto& method : methods_to_test) {
-            const std::string method_name = method == AssignMethod ? "assign()" : "operator=()";
-
             CSCMatrix A = A_in;  // Copy the original matrix for each test
 
-            // NOTE that by running this dynamic section, we cannot perform any
-            // tests *after* test_assignment is called, because the
-            // assignment changes are made on a local copy of the matrix.
-            DYNAMIC_SECTION("Testing method: " << method_name) {
-                csint nnz = A.nnz();
-                double original_value = A(i, j); // Capture original value before assignment
+            csint nnz = A.nnz();
+            double original_value = A(i, j); // Capture original value before assignment
 
-                if (method == AssignMethod) {
-                    A.assign(i, j, v);
-                } else {
-                    A(i, j) = v;
-                }
+            if (method == AssignMethod) {
+                A.assign(i, j, v);
+            } else {
+                A(i, j) = v;
+            }
 
-                if (is_existing) {
-                    CHECK(A.nnz() == nnz);
-                } else {
-                    CHECK(A.nnz() == nnz + 1);
-                }
+            if (is_existing) {
+                CHECK(A.nnz() == nnz);
+            } else {
+                CHECK(A.nnz() == nnz + 1);
+            }
 
-                CAPTURE(
-                    i, j, v,
-                    "Method tested: ", method_name,
-                    "Original value: ", original_value,
-                    A.has_sorted_indices(),
-                    A.has_canonical_format()
-                );
+            CAPTURE(
+                i, j, v,
+                "Method tested: ", method == AssignMethod ? "assign()" : "operator=()",
+                "Original value: ", original_value,
+                A.has_sorted_indices(),
+                A.has_canonical_format()
+            );
 
-                // The actual test that we set the value correctly
-                REQUIRE(A(i, j) == v);
+            // The actual test that we set the value correctly
+            REQUIRE(A(i, j) == v);
 
-                // set_item_ should turn off this flag if the value is 0.0
-                if (v == 0.0) {
-                    REQUIRE_FALSE(A.has_canonical_format());
-                }
+            // set_item_ should turn off this flag if the value is 0.0
+            if (v == 0.0) {
+                REQUIRE_FALSE(A.has_canonical_format());
             }
         }
     };

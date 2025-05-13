@@ -1,8 +1,11 @@
 # Suppress the 256-byte leak associated with test_ch2.cpp:371
 leak:cs::CATCH2_INTERNAL_TEST_34
 
-# Suppress the 16-byte direct leak associated with test_ch2.cpp:28 (SECTION)
-leak:cs::CATCH2_INTERNAL_TEST_0
+# Suppress the 16-byte direct leak associated with test_fillreducting.cpp:43 (SECTION)
+leak:cs::CATCH2_INTERNAL_TEST_1
+
+# Suppress the 16-byte direct leak associated with test_fillreducting.cpp:170 (SECTION)
+leak:cs::CATCH2_INTERNAL_TEST_21
 
 # Suppress the 16-byte direct leak associated with test_solve.cpp:66 (SECTION)
 leak:cs::CATCH2_INTERNAL_TEST_4

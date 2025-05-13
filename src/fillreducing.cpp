@@ -610,8 +610,6 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
     const CSCMatrix C = (m2 < n2) ? A.transpose(false) : A;
     std::tie(M, N) = C.shape();
 
-    // FIXME these lines might not do the same thing as the original, because
-    // the *sizes* of the vectors are different!
     // If we transposed, we need to swap the imatch and jmatch vectors
     std::vector<csint>& jmatch = (m2 < n2) ? jimatch.imatch : jimatch.jmatch;
     std::vector<csint>& imatch = (m2 < n2) ? jimatch.jmatch : jimatch.imatch;

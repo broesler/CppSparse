@@ -116,49 +116,113 @@ TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
     CHECK(p == expect_p);
 }
 
-
-TEST_CASE("AMD ATA bcsstk01 matrix", "[amd_bug][bcsstk01]")
+TEST_CASE("AMD with M < N", "[amd][M < N]")
 {
-    SKIP();
-    CSCMatrix A = COOMatrix::from_file("./data/bcsstk01").tocsc();
-    auto [M, N] = A.shape();
-    AMDOrder order = AMDOrder::ATA;
+    csint M = 7;
+    csint N = 10;
+    const CSCMatrix A = davis_example_amd().slice(0, M, 0, N);
 
-    // Output should be a permutation of the identity permutation
-    std::vector<csint> expect_q(N);
-    std::iota(expect_q.begin(), expect_q.end(), 0);
+    AMDOrder order;
+    std::vector<csint> expect_p;
 
-    // demo: make_sym
-    CSCMatrix AT = A.T();
-    // Drop diagonal entries from AT
-    AT.fkeep([](csint i, csint j, double aij) { return i != j; });
-    const CSCMatrix C = A + AT;
+    SECTION("Natural") {
+        order = AMDOrder::Natural;
+        // ordering should be the same as the original
+        expect_p.resize(N);
+        std::iota(expect_p.begin(), expect_p.end(), 0);
+    }
 
-    std::vector<csint> q = amd(C, order);
-    // FIXME for bcsstk01 q includes many 0 entries (not a valid permutation)
-    std::cout << "q:" << q << std::endl;
+    SECTION("A + A^T") {
+        order = AMDOrder::APlusAT;
+    }
 
-    REQUIRE_THAT(q, UnorderedEquals(expect_q));
+    SECTION("A^T A (no dense)") {
+        order = AMDOrder::ATANoDenseRows;
+        expect_p = {9, 4, 8, 0, 3, 5, 7, 1, 2, 6};
+    }
+
+    SECTION("A^T A") {
+        order = AMDOrder::ATA;
+        expect_p = {9, 4, 8, 0, 3, 5, 7, 1, 2, 6};
+    }
+
+    if (order == AMDOrder::APlusAT) {
+        REQUIRE_THROWS_WITH(
+            amd(A, order),
+            "Matrix must be square for APlusAT!"
+        );
+    } else {
+        std::vector<csint> p = amd(A, order);
+        CHECK(p == expect_p);
+    }
 }
 
 
-TEST_CASE("dmperm ash219 matrix", "[dmperm_bug][ash219]")
+TEST_CASE("AMD with M > N", "[amd][M > N]")
+{
+    csint M = 10;
+    csint N = 7;
+    const CSCMatrix A = davis_example_amd().slice(0, M, 0, N);
+
+    AMDOrder order;
+    std::vector<csint> expect_p;
+
+    SECTION("Natural") {
+        order = AMDOrder::Natural;
+        // ordering should be the same as the original
+        expect_p.resize(N);
+        std::iota(expect_p.begin(), expect_p.end(), 0);
+    }
+
+    SECTION("A + A^T") {
+        order = AMDOrder::APlusAT;
+    }
+
+    SECTION("A^T A (no dense)") {
+        order = AMDOrder::ATANoDenseRows;
+        expect_p = {4, 0, 1, 3, 2, 5, 6};
+    }
+
+    SECTION("A^T A") {
+        order = AMDOrder::ATA;
+        expect_p = {4, 0, 1, 3, 2, 5, 6};
+    }
+
+    if (order == AMDOrder::APlusAT) {
+        REQUIRE_THROWS_WITH(
+            amd(A, order),
+            "Matrix must be square for APlusAT!"
+        );
+    } else {
+        std::vector<csint> p = amd(A, order);
+        CHECK(p == expect_p);
+    }
+}
+
+
+TEST_CASE("AMD bug", "[amd_bug][ash219]")
 {
     CSCMatrix A = COOMatrix::from_file("./data/ash219").tocsc();
     auto [M, N] = A.shape();
 
-    // Output should be a permutation of the identity permutation
-    std::vector<csint> expect_p(M);
-    std::iota(expect_p.begin(), expect_p.end(), 0);
+    // AMDOrder order = AMDOrder::ATA;
+    AMDOrder order = AMDOrder::APlusAT;
+    CAPTURE(order);
 
+    // Output should be a permutation of the identity permutation
     std::vector<csint> expect_q(N);
     std::iota(expect_q.begin(), expect_q.end(), 0);
 
-    // TODO test with seed = {-1, 0, 1}
-    DMPermResult D = dmperm(A, 1);  // randomized analysis
+    // // demo: make_sym
+    // CSCMatrix AT = A.T();
+    // // Drop diagonal entries from AT
+    // AT.fkeep([](csint i, csint j, double aij) { return i != j; });
+    // const CSCMatrix C = A + AT;
 
-    REQUIRE_THAT(D.p, UnorderedEquals(expect_p));
-    REQUIRE_THAT(D.q, UnorderedEquals(expect_q));
+    std::vector<csint> q = amd(A, order);
+    std::cout << "q:" << q << std::endl;
+
+    REQUIRE_THAT(q, UnorderedEquals(expect_q));
 }
 
 

@@ -25,29 +25,6 @@ namespace cs {
 
 class COOMatrix : public SparseMatrix
 {
-private:
-    static constexpr std::string_view format_desc_ = "COOrdinate Sparse";
-    std::vector<double> v_;  // numerical values, size nzmax (auto doubles)
-    std::vector<csint> i_;   // row indices, size nzmax
-    std::vector<csint> j_;   // column indices, size nzmax
-    csint M_ = 0;            // number of rows
-    csint N_ = 0;            // number of columns
-
-protected:
-    /** Return the format description of the matrix. */
-    virtual std::string_view get_format_desc_() const override
-    {
-        return format_desc_;
-    }
-
-    /** Print elements of the matrix between `start` and `end`.
-     *
-     * @param ss          the output string stream
-     * @param start, end  print the all elements where `p ∈ [start, end]`,
-     *        counting column-wise.
-     */
-    virtual void write_elems_(std::stringstream& ss, csint start, csint end) const override;
-
 public:
     friend class CSCMatrix;
 
@@ -238,6 +215,32 @@ public:
      * @return y  the result of the matrix-vector multiplication.
      */
     virtual std::vector<double> dot(const std::vector<double>& x) const override;
+
+
+protected:
+    /** Return the format description of the matrix. */
+    virtual std::string_view get_format_desc_() const override
+    {
+        return format_desc_;
+    }
+
+    /** Print elements of the matrix between `start` and `end`.
+     *
+     * @param ss          the output string stream
+     * @param start, end  print the all elements where `p ∈ [start, end]`,
+     *        counting column-wise.
+     */
+    virtual void write_elems_(std::stringstream& ss, csint start, csint end) const override;
+
+
+private:
+    static constexpr std::string_view format_desc_ = "COOrdinate Sparse";
+    std::vector<double> v_;  // numerical values, size nzmax (auto doubles)
+    std::vector<csint> i_;   // row indices, size nzmax
+    std::vector<csint> j_;   // column indices, size nzmax
+    csint M_ = 0;            // number of rows
+    csint N_ = 0;            // number of columns
+
 
 };  // class COOMatrix
 

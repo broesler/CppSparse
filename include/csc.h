@@ -96,7 +96,7 @@ private:
             // Duplicates may exist, so zero them out
             if (has_sorted_indices_ && !has_canonical_format_) {
                 // Duplicates are in order, so don't need to search entire column
-                for (csint p = k + 1; p < i_.size() && i_[p] == i_[k]; p++) {
+                for (csint p = k + 1; p < i_.size() && i_[p] == i; p++) {
                     v_[p] = 0.0;
                 }
             } else {
@@ -117,13 +117,14 @@ private:
      *
      * This function is a helper for set_item_.
      *
-     * @param i, j the row and column indices of the element to access.
-     * @param v the value to be assigned.
-     * @param p the pointer to the column in the matrix.
+     * @param i, j  the row and column indices of the element to access.
+     * @param v  the value to be assigned.
+     * @param p  the pointer to the column in the matrix.
      *
      * @return a reference to the inserted value.
      */
     double& insert_(csint i, csint j, double v, csint p);
+
 
 protected:
     /** Return the format description of the matrix. */
@@ -139,6 +140,7 @@ protected:
      *        column-wise.
      */
     virtual void write_elems_(std::stringstream& ss, csint start, csint end) const override;
+
 
 public:
     friend class COOMatrix;

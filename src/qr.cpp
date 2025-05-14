@@ -515,7 +515,14 @@ std::vector<double> apply_qtleft(
 {
     auto [M2, N] = V.shape();
 
-    std::vector<double> x = ipvec(p_inv, y);  // x = Py
+    std::vector<double> x = y;
+
+    csint M = x.size();
+    if (M2 > M) {
+        x.insert(x.end(), M2 - M, 0.0);  // pad with zeros
+    }
+
+    x = ipvec(p_inv, x);  // x = Py
 
     for (csint j = 0; j < N; j++) {
         x = happly(V, j, beta[j], x);

@@ -80,14 +80,13 @@ Householder house(std::span<const double> x)
 }
 
 
-std::vector<double> happly(
+std::vector<double>& happly(
     const CSCMatrix& V,
 	csint j,
 	double beta,
-	const std::vector<double>& x
+	std::vector<double>& x
 )
 {
-    std::vector<double> Hx(x);  // copy x into Hx
     double tau = 0.0;
 
     // tau = v^T x
@@ -99,10 +98,10 @@ std::vector<double> happly(
 
     // Hx = x - v*tau
     for (csint p = V.p_[j]; p < V.p_[j+1]; p++) {
-        Hx[V.i_[p]] -= V.v_[p] * tau;
+        x[V.i_[p]] -= V.v_[p] * tau;
     }
 
-    return Hx;
+    return x;
 }
 
 

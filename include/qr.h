@@ -94,15 +94,16 @@ Householder house(std::span<const double> x);
  * @param V  a CSCMatrix with a single column containing the Householder vector
  * @param j  the column index of the Householder vector in `V`
  * @param beta  the scaling factor
- * @param x  the dense vector to which to apply the reflection
+ * @param[in,out] x  the dense vector to which to apply the reflection. This
+ *        vector will be overwritten with the result.
  *
  * @return Hx  the result of applying the Householder reflection to `x`
  */
-std::vector<double> happly(
+std::vector<double>& happly(
     const CSCMatrix& V,
 	csint j,
 	double beta,
-	const std::vector<double>& x
+	std::vector<double>& x
 );
 
 

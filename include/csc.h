@@ -1031,11 +1031,11 @@ public:
     //--------------------------------------------------------------------------
     //        QR Decomposition
     //--------------------------------------------------------------------------
-    friend std::vector<double> happly(
+    friend std::vector<double>& happly(
         const CSCMatrix& V,
         csint j,
         double beta,
-        const std::vector<double>& x
+        std::vector<double>& x
     );
 
     friend std::vector<csint> find_leftmost(const CSCMatrix& A);

@@ -865,7 +865,7 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
     if (D.rr[2] - D.rr[1] < M) {
         C.fkeep(
             [D](csint i, csint j, double v) {
-                return i >= D.rr[1] || i < D.rr[2];  // true if row i is in R2
+                return i >= D.rr[1] && i < D.rr[2];  // true if row i is in R2
             }
         );
 

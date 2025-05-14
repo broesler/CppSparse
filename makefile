@@ -53,7 +53,7 @@ test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
 # test: CFLAGS += -O3
 test: test_csparse
 
-debug: CFLAGS += -DDEBUG -glldb #-Og
+debug: CFLAGS += -DDEBUG -glldb -O0 # no optimization
 debug: CFLAGS += -fno-inline -fsanitize=address -fno-omit-frame-pointer
 debug: test demos
 
@@ -63,6 +63,10 @@ run_debug: debug
 .PHONY: demos
 demos: CFLAGS += -O3 -DNDEBUG  # optimize and disable asserts
 demos: $(DEMO_EXEC)
+
+.PHONY: profile
+profile: CFLAGS += -O2 -g  # optimize and add debug symbols
+profile: $(DEMO_EXEC)
 
 .PHONY: run_demos
 run_demos: demos

@@ -205,8 +205,7 @@ TEST_CASE("AMD bug", "[amd_bug][ash219]")
     CSCMatrix A = COOMatrix::from_file("./data/ash219").tocsc();
     auto [M, N] = A.shape();
 
-    // AMDOrder order = AMDOrder::ATA;
-    AMDOrder order = AMDOrder::APlusAT;
+    AMDOrder order = AMDOrder::ATA;
     CAPTURE(order);
 
     // Output should be a permutation of the identity permutation

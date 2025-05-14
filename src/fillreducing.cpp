@@ -201,9 +201,10 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
     }
 
     // --- Main Loop -----------------------------------------------------------
+    csint mindeg = 0;  // track minimum degree over all iterations
+
     while (nel < N) {  // while selecting pivots
         // --- Select node of minimum approximate degree -----------------------
-        csint mindeg = 0;
         csint k = -1;
         while (mindeg < N) {
             k = head[mindeg];
@@ -447,8 +448,8 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
             nv[i] = nvi;                     // restore nv[i]
             csint d = degree[i] + dk - nvi;  // compute external degree(i)
             d = std::min(d, N - nel - nvi);
-            if (head[i] != -1) {
-                last[head[i]] = i;
+            if (head[d] != -1) {
+                last[head[d]] = i;
             }
             next[i] = head[d];               // put i back in degree list
             last[i] = -1;

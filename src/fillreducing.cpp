@@ -160,14 +160,14 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
 
     len[N] = 0;
 
-    std::vector<csint> head(N + 1, -1),   // head of the degree list
-                       next(N + 1, -1),   // next node in the degree list
-                       last(N + 1, -1),   // previous node in the degree list
-                       hhead(N + 1, -1),  // head of the hash list
-                       nv(N + 1, 1),      // node i is just 1 node
-                       w(N + 1, 1),       // node i is alive
-                       elen(N + 1),       // Ek of node i is empty
-                       degree {len};      // degree of node i
+    std::vector<csint> head(N+1, -1),   // head of the degree list
+                       next(N+1, -1),   // next node in the degree list
+                       last(N+1, -1),   // previous node in the degree list
+                       hhead(N+1, -1),  // head of the hash list
+                       nv(N+1, 1),      // node i is just 1 node
+                       w(N+1, 1),       // node i is alive
+                       elen(N+1),       // Ek of node i is empty
+                       degree {len};    // degree of node i
 
     csint lemax = 0;
     csint mark = wclear(0, 0, w, N);  // clear w

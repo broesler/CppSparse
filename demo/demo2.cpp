@@ -83,13 +83,12 @@ struct Problem
                         b,      // /< rhs
                         resid;  // /< residuals
 
-    static Problem from_stream(std::istream& in, double tol);
+    static Problem from_matrix(const COOMatrix& T, double tol);
 };
 
 
-Problem Problem::from_stream(std::istream& in, double tol)
+Problem Problem::from_matrix(const COOMatrix& T, double tol)
 {
-    COOMatrix T = COOMatrix::from_stream(in);  // read the matrix
     CSCMatrix A = T.tocsc();                   // convert to CSC format
     A.sum_duplicates();                        // sum up duplicates
     csint is_sym = A.is_triangular();          // determine if A is symmetric
@@ -154,9 +153,22 @@ static void print_resid(
 // -----------------------------------------------------------------------------
 //         Run the test
 // -----------------------------------------------------------------------------
-int main(void)
+int main(int argc, char* argv[])
 {
-    Problem prob = Problem::from_stream(std::cin, 1e-14);
+    COOMatrix T;
+
+    if (argc > 1) {
+        // Read the filename as a string from the argument
+        T = COOMatrix::from_file(argv[1]);
+    } else if (argc == 1) {
+        // Read from stdin
+        T = COOMatrix::from_stream(std::cin);
+    } else {
+        std::cerr << "Usage: demo2 [filename] or demo2 < [filename]" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    Problem prob = Problem::from_matrix(T, 1e-14);
 
     auto [M, N] = prob.A.shape();
     double tol = prob.is_sym ? 0.001 : 1.0;  // partial pivoting tolerance

@@ -53,7 +53,6 @@ test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
 # test: CFLAGS += -O3
 test: test_csparse
 
-
 debug: CFLAGS += -DDEBUG -glldb #-Og
 debug: CFLAGS += -fno-inline -fsanitize=address -fno-omit-frame-pointer
 debug: test demos
@@ -62,12 +61,14 @@ run_debug: debug
 	LSAN_OPTIONS="suppressions=$(abspath suppressions.sup)" ./test_csparse
 
 .PHONY: demos
+demos: CFLAGS += -O3 -DNDEBUG  # optimize and disable asserts
 demos: $(DEMO_EXEC)
 
 .PHONY: run_demos
+run_demos: demos
 run_demos: $(DEMO_EXEC)  # ensure demos are built before running
 	- ./demo1 < ./data/t1
-	- ./demo2 < ./data/t1
+	- ./demo2 './data/t1'  # make sure reading from filename works
 	- ./demo2 < ./data/ash219
 	- ./demo2 < ./data/bcsstk01
 	- ./demo2 < ./data/fs_183_1

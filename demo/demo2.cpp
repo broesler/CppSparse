@@ -146,7 +146,7 @@ static void print_resid(
     constexpr double inf = std::numeric_limits<double>::infinity();
     double norm_resid = norm(resid, inf);
     double norm_denom = A.norm() * norm(x, inf) + norm(b, inf);
-    std::cout << "residual: " << std::format("{:8.2e}", norm_resid / norm_denom);
+    std::cout << "residual: " << std::format("{: 8.2e}", norm_resid / norm_denom);
     std::cout << std::endl;
 }
 
@@ -180,7 +180,7 @@ int main(void)
         if (order == AMDOrder::Natural && M > 1000) {
             continue;
         }
-        std::cout << "QR   " << order;
+        std::cout << "QR    " << order;
         auto t = tic();
         prob.x = qr_solve(prob.C, prob.b, order);
         std::cout << std::format("time: {:.2e} ", toc(t));
@@ -188,6 +188,7 @@ int main(void)
     }
 
     if (M != N || sprank < N) {
+        std::cout << std::endl;
         return EXIT_SUCCESS;  // return if rect. or singular
     }
 
@@ -203,7 +204,7 @@ int main(void)
         if (order == AMDOrder::Natural && M > 1000) {
             continue;
         }
-        std::cout << "LU   " << order;
+        std::cout << "LU    " << order;
         auto t = tic();
         prob.x = lu_solve(prob.C, prob.b, order, tol);
         std::cout << std::format("time: {:.2e} ", toc(t));
@@ -211,6 +212,7 @@ int main(void)
     }
 
     if (!prob.is_sym) {
+        std::cout << std::endl;
         return EXIT_SUCCESS;
     }
 
@@ -219,14 +221,14 @@ int main(void)
         if (order == AMDOrder::Natural && M > 1000) {
             continue;
         }
-        std::cout << "Cholesky   " << order;
+        std::cout << "Chol  " << order;
         auto t = tic();
         prob.x = chol_solve(prob.C, prob.b, order);
         std::cout << std::format("time: {:.2e} ", toc(t));
         print_resid(prob.C, prob.x, prob.b, prob.resid);
     }
 
-    std::cout << "\n" << std::endl;  // extra newline for readability
+    std::cout << std::endl;  // extra newline for readability
 
     return EXIT_SUCCESS;
 }

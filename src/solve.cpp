@@ -501,13 +501,14 @@ SparseSolution spsolve(
         // j maps to col J of G
         csint J = p_inv_ref.has_value() ? p_inv_ref.value().get()[j] : j;
         if (J < 0) {
-            continue;                                // x(j) is not in the pattern of G
+            continue;  // x(j) is not in the pattern of G
         }
-        x[j] /= A.v_[lo ? A.p_[J] : A.p_[J+1] - 1];  // x(j) /= G(j, j)
+        double& xj = x[j];                           // cache reference to value
+        xj /= A.v_[lo ? A.p_[J] : A.p_[J+1] - 1];    // x(j) /= G(j, j)
         csint p = lo ? A.p_[J] + 1 : A.p_[J];        // lo: L(j,j) 1st entry
         csint q = lo ? A.p_[J+1]   : A.p_[J+1] - 1;  // up: U(j,j) last entry
         for (; p < q; p++) {
-            x[A.i_[p]] -= A.v_[p] * x[j];            // x[i] -= G(i, j) * x[j]
+            x[A.i_[p]] -= A.v_[p] * xj;              // x[i] -= G(i, j) * x[j]
         }
     }
 

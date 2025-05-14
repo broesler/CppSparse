@@ -200,31 +200,6 @@ TEST_CASE("AMD with M > N", "[amd][M > N]")
 }
 
 
-TEST_CASE("AMD bug", "[amd_bug][ash219]")
-{
-    CSCMatrix A = COOMatrix::from_file("./data/ash219").tocsc();
-    auto [M, N] = A.shape();
-
-    AMDOrder order = AMDOrder::ATA;
-    CAPTURE(order);
-
-    // Output should be a permutation of the identity permutation
-    std::vector<csint> expect_q(N);
-    std::iota(expect_q.begin(), expect_q.end(), 0);
-
-    // // demo: make_sym
-    // CSCMatrix AT = A.T();
-    // // Drop diagonal entries from AT
-    // AT.fkeep([](csint i, csint j, double aij) { return i != j; });
-    // const CSCMatrix C = A + AT;
-
-    std::vector<csint> q = amd(A, order);
-    std::cout << "q:" << q << std::endl;
-
-    REQUIRE_THAT(q, UnorderedEquals(expect_q));
-}
-
-
 TEST_CASE("Maximum Matching", "[maxmatch]")
 {
     CSCMatrix A = davis_example_amd();

@@ -1258,7 +1258,7 @@ csint CSCMatrix::scatter(
     csint j,
     double beta,
     std::vector<csint>& w,
-    std::optional<std::reference_wrapper<std::vector<double>>> x_ref,
+    OptVectorRef<double> x_ref,
     csint mark,
     CSCMatrix& C,
     csint nz,

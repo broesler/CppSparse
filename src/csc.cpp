@@ -1760,7 +1760,7 @@ void CSCMatrix::write_elems_(std::stringstream& ss, csint start, csint end) cons
                 );
 
                 if (n < end - 1) {
-                    ss << std::endl;
+                    ss << "\n";
                 }
             }
             n++;

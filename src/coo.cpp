@@ -342,7 +342,7 @@ void COOMatrix::write_elems_(std::stringstream& ss, csint start, csint end) cons
         );
 
         if (k < end - 1) {
-            ss << std::endl;
+            ss << "\n";
         }
     }
 }

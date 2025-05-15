@@ -75,7 +75,7 @@ public:
     ///        3 entries in the matrix. Otherwise, print all entries.
     virtual std::string to_string(
         bool verbose=false,
-        csint threshold=1000
+        csint threshold=100
     ) const;
 
     ///  Print the matrix in dense format.
@@ -105,7 +105,7 @@ public:
     virtual void print(
         std::ostream& os=std::cout,
         bool verbose=false,
-        csint threshold=1000
+        csint threshold=100
     ) const
     {
         os << to_string(verbose, threshold) << std::endl;

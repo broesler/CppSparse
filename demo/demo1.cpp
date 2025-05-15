@@ -15,9 +15,21 @@
 using namespace cs;
 
 
-int main(void) {
-    // Load a matrix from stdin
-    COOMatrix T = COOMatrix::from_stream(std::cin);
+int main(int argc, char *argv[]) {
+    COOMatrix T;
+
+    // Load a matrix from either a filename or stdin
+    if (argc > 2) {
+        std::cerr << "Usage: " << argv[0] << " [filename]\n";
+        return EXIT_FAILURE;
+    } else if (argc == 2) {
+        T = COOMatrix::from_file(argv[1]);
+    } else {
+        std::cerr << "Usage: " << argv[0] << " [filename]\n";
+        std::cerr << "Reading from stdin...\n";
+        T = COOMatrix::from_stream(std::cin);
+    }
+
     std::cout << "T:\n" << T << "\n";
 
     // Convert to CSCMatrix

@@ -41,7 +41,7 @@ std::string SparseMatrix::to_string(bool verbose, csint threshold) const
             // Print just the first and last Nelems non-zero elements
             int Nelems = 3;
             write_elems_(ss, 0, Nelems);
-            ss << "..." << std::endl;
+            ss << "\n...\n";
             write_elems_(ss, nnz_ - Nelems, nnz_);
         }
     }

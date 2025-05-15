@@ -524,13 +524,17 @@ std::vector<csint> reach(
 )
 {
     std::vector<char> marked(A.N_, false);
-    std::vector<csint> xi;  // do not initialize for dfs call!
+    std::vector<csint> xi,      // do not initialize for dfs call!
+                       pstack,  // pause and recursion stacks
+                       rstack;
     xi.reserve(A.N_);
+    pstack.reserve(A.N_);
+    rstack.reserve(A.N_);
 
     for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
         csint j = B.i_[p];  // consider nonzero B(j, k)
         if (!marked[j]) {
-            xi = dfs(A, j, marked, xi, p_inv_ref);
+            xi = dfs(A, j, marked, xi, pstack, rstack, p_inv_ref);
         }
     }
 
@@ -544,14 +548,18 @@ std::vector<csint>& dfs(
     csint j,
     std::vector<char>& marked,
     std::vector<csint>& xi,
+    std::vector<csint>& pstack,
+    std::vector<csint>& rstack,
     OptionalVectorRef<csint> p_inv_ref
 )
 {
-    std::vector<csint> rstack, pstack;  // recursion and pause stacks
-    rstack.reserve(A.N_);
-    pstack.reserve(A.N_);
+    // Ensure the stacks are reserved and cleared
+    if (pstack.capacity() < A.N_) { pstack.reserve(A.N_); }
+    if (rstack.capacity() < A.N_) { rstack.reserve(A.N_); }
+    pstack.clear();
+    rstack.clear();
 
-    rstack.push_back(j);       // initialize the recursion stack
+    rstack.push_back(j);  // initialize the recursion stack
 
     bool done = false;  // true if no unvisited neighbors
 

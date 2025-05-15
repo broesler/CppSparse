@@ -939,6 +939,8 @@ public:
         csint j,
         std::vector<char>& marked,
         std::vector<csint>& xi,
+        std::vector<csint>& pstack,
+        std::vector<csint>& rstack,
         OptionalVectorRef<csint> p_inv_ref
     );
 

@@ -657,13 +657,15 @@ SCCResult scc(const CSCMatrix& A)
     const CSCMatrix AT = A.transpose(false);  // symbolic transpose
 
     std::vector<char> marked(N, false);  // mark visited nodes
-    std::vector<csint> xi;
+    std::vector<csint> xi, pstack, rstack;  // stacks for DFS
     xi.reserve(N);
+    pstack.reserve(N);
+    rstack.reserve(N);
 
     // ----- DFS through all of A
     for (csint i = 0; i < N; i++) {
         if (!marked[i]) {
-            xi = dfs(A, i, marked, xi);
+            xi = dfs(A, i, marked, xi, pstack, rstack);
         }
     }
 
@@ -674,7 +676,7 @@ SCCResult scc(const CSCMatrix& A)
     for (const auto& i : std::views::reverse(xi)) {
         if (!marked[i]) {
             D.r.push_back(N - D.p.size());  // node i is the start of a block
-            D.p = dfs(AT, i, marked, D.p);
+            D.p = dfs(AT, i, marked, D.p, pstack, rstack);
         }
     }
 

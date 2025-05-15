@@ -99,10 +99,14 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
         std::vector<csint> expect = {13, 12, 11, 8, 3};  // reversed in stack
 
         std::vector<char> marked(N, false);
-        std::vector<csint> xi;  // do not initialize!
+        std::vector<csint> xi,      // do not initialize!
+                           pstack,  // pause and recursion stacks
+                           rstack;
         xi.reserve(N);
+        pstack.reserve(N);
+        rstack.reserve(N);
 
-        xi = dfs(L, j, marked, xi);
+        xi = dfs(L, j, marked, xi, pstack, rstack);
 
         REQUIRE(xi == expect);
     }

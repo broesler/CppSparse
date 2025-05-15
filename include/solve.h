@@ -282,10 +282,12 @@ std::vector<csint> reach(
  *
  * @param A  a sparse matrix
  * @param j  the starting node
- * @param marked  a boolean vector of length `N_` that marks visited nodes
+ * @param marked  a boolean vector of length `N` that marks visited nodes
  * @param[in,out] xi  the row indices of the non-zero entries in `x`. This
  *       vector is used as a stack to store the output. It should not be
  *       initialized, other than by a previous call to `dfs`.
+ * @param pstack  memory for the pause stack, reserved to length `N`.
+ * @param rstack  memory for the recursion stack, reserved to length `N`.
  * #param p_inv  the inverse permutation vector of the matrix `A`. If not given,
  *        A is taken in natural order.
  *
@@ -296,6 +298,8 @@ std::vector<csint>& dfs(
     csint j,
     std::vector<char>& marked,
     std::vector<csint>& xi,
+    std::vector<csint>& pstack,
+    std::vector<csint>& rstack,
     OptionalVectorRef<csint> p_inv_ref=std::nullopt
 );
 

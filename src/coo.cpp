@@ -32,24 +32,46 @@ COOMatrix::COOMatrix() {};
 
 
 COOMatrix::COOMatrix(
-    const std::vector<double>& v,
-    const std::vector<csint>& i,
-    const std::vector<csint>& j,
+    const std::vector<double>& vals,
+    const std::vector<csint>& rows,
+    const std::vector<csint>& cols,
     const Shape shape
-)
-    : v_(v),
-      i_(i),
-      j_(j),
-      M_(shape[0] ? shape[0] : *std::max_element(i_.begin(), i_.end()) + 1),
-      N_(shape[1] ? shape[1] : *std::max_element(j_.begin(), j_.end()) + 1)
+) : v_(vals),
+    i_(rows),
+    j_(cols),
+    M_(shape[0] ? shape[0] : *std::max_element(i_.begin(), i_.end()) + 1),
+    N_(shape[1] ? shape[1] : *std::max_element(j_.begin(), j_.end()) + 1)
 {
     // Check that all vectors are the same size
     assert(i_.size() == j_.size());
+
     // Allow v_ to be empty for symbolic computation
     if (!v_.empty()) {
         assert(v_.size() == i_.size());
     }
+
     assert(M_ > 0 && N_ > 0);
+
+    // Check for any i or j out of bounds
+    if (shape[0]) {  // shape was given as input, not inferred
+        assert(M_ == shape[0]);
+        csint max_i = *std::max_element(i_.begin(), i_.end());
+        if (max_i >= M_) {
+            throw std::runtime_error(
+                std::format("Row index out of bounds: {} >= {}", max_i, M_)
+            );
+        }
+    }
+
+    if (shape[1]) {
+        assert(N_ == shape[1]);
+        csint max_j = *std::max_element(j_.begin(), j_.end());
+        if (max_j >= N_) {
+            throw std::runtime_error(
+                std::format("Column index out of bounds: {} >= {}", max_j, N_)
+            );
+        }
+    }
 }
 
 

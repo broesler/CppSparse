@@ -90,6 +90,8 @@ run_demos: $(DEMO_EXEC)  # ensure demos are built before running
 	- ./demo2 './data/west0067'
 	- ./demo2 './data/lp_afiro'
 	- ./demo2 './data/bcsstk16'
+	- ./demo3 './data/bcsstk01'
+	- ./demo3 './data/bcsstk16'
 
 
 # -----------------------------------------------------------------------------

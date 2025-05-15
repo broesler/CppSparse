@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
     PTx = ltsolve(L, y);          // P^T x = L^T \ y
     prob.x = pvec(S.p_inv, PTx);  // x = P P^T x
 
-    std::cout << std::format("rechol:  time: {:8.2e} (incl solve) ", toc(t));
+    std::cout << std::format("rechol:   time: {:8.2e} (incl solve) ", toc(t));
     print_resid(E, prob.x, prob.b, prob.resid);
 
     // Downdate: L @ L.T - W @ W.T

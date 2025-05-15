@@ -253,7 +253,7 @@ SparseSolution spsolve(
     const CSCMatrix& A,
     const CSCMatrix& B,
     csint k,
-    OptVectorRef<csint> p_inv_ref=std::nullopt,
+    OptionalVectorRef<csint> p_inv_ref=std::nullopt,
     bool lo=true
 );
 
@@ -274,7 +274,7 @@ std::vector<csint> reach(
     const CSCMatrix& A,
     const CSCMatrix& B,
     csint k,
-    OptVectorRef<csint> p_inv_ref=std::nullopt
+    OptionalVectorRef<csint> p_inv_ref=std::nullopt
 );
 
 
@@ -296,7 +296,7 @@ std::vector<csint>& dfs(
     csint j,
     std::vector<char>& marked,
     std::vector<csint>& xi,
-    OptVectorRef<csint> p_inv_ref=std::nullopt
+    OptionalVectorRef<csint> p_inv_ref=std::nullopt
 );
 
 

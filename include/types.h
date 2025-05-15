@@ -16,7 +16,7 @@ using csint = std::int64_t;
 using Shape = std::array<csint, 2>;
 
 template <typename T>
-using OptVectorRef = std::optional<std::reference_wrapper<std::vector<T>>>;
+using OptionalVectorRef = std::optional<std::reference_wrapper<std::vector<T>>>;
 
 // Need full enum class definition for default arguments
 enum class AMDOrder

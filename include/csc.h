@@ -667,7 +667,7 @@ public:
         csint j,
         double beta,
         std::vector<csint>& w,
-        OptVectorRef<double> x_ref,
+        OptionalVectorRef<double> x_ref,
         csint mark,
         CSCMatrix& C,
         csint nz,
@@ -923,7 +923,7 @@ public:
         const CSCMatrix& A,
         const CSCMatrix& B,
         csint k,
-        OptVectorRef<csint> p_inv_ref,
+        OptionalVectorRef<csint> p_inv_ref,
         bool lo
     );
 
@@ -931,7 +931,7 @@ public:
         const CSCMatrix& A,
         const CSCMatrix& B,
         csint k,
-        OptVectorRef<csint> p_inv_ref
+        OptionalVectorRef<csint> p_inv_ref
     );
 
     friend std::vector<csint>& dfs(
@@ -939,7 +939,7 @@ public:
         csint j,
         std::vector<char>& marked,
         std::vector<csint>& xi,
-        OptVectorRef<csint> p_inv_ref
+        OptionalVectorRef<csint> p_inv_ref
     );
 
     //--------------------------------------------------------------------------

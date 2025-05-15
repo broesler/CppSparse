@@ -10,3 +10,4 @@ test_csparse
 test_printing
 demo1
 demo2
+*.trace/

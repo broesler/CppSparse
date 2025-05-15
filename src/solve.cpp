@@ -483,7 +483,7 @@ SparseSolution spsolve(
     const CSCMatrix& A, 
     const CSCMatrix& B,
     csint k,
-    OptVectorRef<csint> p_inv_ref,
+    OptionalVectorRef<csint> p_inv_ref,
     bool lo
 )
 {
@@ -520,7 +520,7 @@ std::vector<csint> reach(
     const CSCMatrix& A,
     const CSCMatrix& B,
     csint k,
-    OptVectorRef<csint> p_inv_ref
+    OptionalVectorRef<csint> p_inv_ref
 )
 {
     std::vector<char> marked(A.N_, false);
@@ -544,7 +544,7 @@ std::vector<csint>& dfs(
     csint j,
     std::vector<char>& marked,
     std::vector<csint>& xi,
-    OptVectorRef<csint> p_inv_ref
+    OptionalVectorRef<csint> p_inv_ref
 )
 {
     std::vector<csint> rstack, pstack;  // recursion and pause stacks

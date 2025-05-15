@@ -512,7 +512,7 @@ SparseSolution spsolve(
         }
     }
 
-    return {xi, x};
+    return {std::move(xi), std::move(x)};
 }
 
 
@@ -539,7 +539,8 @@ std::vector<csint> reach(
     }
 
     // xi is returned from dfs in reverse order, since it is a stack
-    return std::vector<csint>(xi.rbegin(), xi.rend());
+    std::reverse(xi.begin(), xi.end());
+    return xi;
 }
 
 
@@ -635,10 +636,10 @@ std::vector<csint> topological_order(
 
     if (forward) {
         // Reverse the order of the stack to get the topological order
-        return std::vector<csint>(xi.rbegin(), xi.rend());
-    } else {
-        return xi;
+        std::reverse(xi.begin(), xi.end());
     }
+
+    return xi;
 }
 
 

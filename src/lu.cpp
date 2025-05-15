@@ -380,7 +380,7 @@ LUResult lu(
     L.realloc();  // trim excess storage
     U.realloc();
 
-    return {L, U, p_inv, q};
+    return {std::move(L), std::move(U), std::move(p_inv), std::move(q)};
 }
 
 

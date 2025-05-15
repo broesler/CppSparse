@@ -102,8 +102,11 @@ output = [ 4, 3, 2, 1, 7, 6, 5]
 
 We can see that our output is in reverse order of the array `s[top:N-1]` in the CSparse
 implementation, so we return a reversed vector to get the topological order.
+Reversing in-place is more efficient than copying the output to a new vector, so
+we can use:
 
 ```cpp
-return std::vector(output.rbegin(), output.rend());
+std::reverse(output.begin(), output.end());
+return output;
 ```
 

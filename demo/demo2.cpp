@@ -128,7 +128,7 @@ Problem Problem::from_matrix(const COOMatrix& T, double tol)
         b[i] = 1.0 + (double) i / M;
     }
 
-    return {std::move(A), std::move(C), is_sym, {}, std::move(b), {}};
+    return {A, C, is_sym, {}, b, {}};
 }
 
 

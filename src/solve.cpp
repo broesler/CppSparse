@@ -512,7 +512,7 @@ SparseSolution spsolve(
         }
     }
 
-    return {std::move(xi), std::move(x)};
+    return {xi, x};
 }
 
 

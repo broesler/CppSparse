@@ -523,7 +523,7 @@ std::vector<csint> reach(
     OptVectorRef<csint> p_inv_ref
 )
 {
-    std::vector<bool> marked(A.N_, false);
+    std::vector<char> marked(A.N_, false);
     std::vector<csint> xi;  // do not initialize for dfs call!
     xi.reserve(A.N_);
 
@@ -542,7 +542,7 @@ std::vector<csint> reach(
 std::vector<csint>& dfs(
     const CSCMatrix& A, 
     csint j,
-    std::vector<bool>& marked,
+    std::vector<char>& marked,
     std::vector<csint>& xi,
     OptVectorRef<csint> p_inv_ref
 )

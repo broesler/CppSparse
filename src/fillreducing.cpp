@@ -656,7 +656,7 @@ SCCResult scc(const CSCMatrix& A)
 
     const CSCMatrix AT = A.transpose(false);  // symbolic transpose
 
-    std::vector<bool> marked(N, false);  // mark visited nodes
+    std::vector<char> marked(N, false);  // mark visited nodes
     std::vector<csint> xi;
     xi.reserve(N);
 

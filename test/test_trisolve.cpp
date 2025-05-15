@@ -98,7 +98,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
         B.assign(j, 0, 1.0);
         std::vector<csint> expect = {13, 12, 11, 8, 3};  // reversed in stack
 
-        std::vector<bool> marked(N, false);
+        std::vector<char> marked(N, false);
         std::vector<csint> xi;  // do not initialize!
         xi.reserve(N);
 

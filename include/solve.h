@@ -294,7 +294,7 @@ std::vector<csint> reach(
 std::vector<csint>& dfs(
     const CSCMatrix& A,
     csint j,
-    std::vector<bool>& marked,
+    std::vector<char>& marked,
     std::vector<csint>& xi,
     OptVectorRef<csint> p_inv_ref=std::nullopt
 );

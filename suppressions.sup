@@ -14,3 +14,4 @@ leak:cs::CATCH2_INTERNAL_TEST_4
 leak:_fetchInitializingClassList
 leak:_xpc_collect_images
 leak:libSystem_initializer
+leak:__dtoa  # occurs in formatting floats for output

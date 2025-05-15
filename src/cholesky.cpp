@@ -76,7 +76,7 @@ std::vector<csint> ereach(
     const std::vector<csint>& parent
 )
 {
-    std::vector<bool> marked(A.N_, false);  // workspace
+    std::vector<char> marked(A.M_, false);  // workspace
     std::vector<csint> s, xi;  // internal dfs stack, output stack
     s.reserve(A.N_);
     xi.reserve(A.N_);
@@ -113,7 +113,7 @@ std::vector<csint> ereach_post(
 {
     assert(A.has_sorted_indices_);
 
-    std::vector<bool> marked(A.N_, false);  // workspace
+    std::vector<char> marked(A.M_, false);  // workspace
     std::vector<csint> xi;  // internal dfs stack, output stack
     xi.reserve(A.N_);
 
@@ -142,7 +142,7 @@ std::vector<csint> ereach_queue(
     const std::vector<csint>& parent
 )
 {
-    std::vector<bool> marked(A.N_, false);  // workspace
+    std::vector<char> marked(A.M_, false);  // workspace
     std::vector<csint> s;  // internal dfs stack, output stack
     s.reserve(A.N_);
 

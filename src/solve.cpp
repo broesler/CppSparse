@@ -523,7 +523,7 @@ std::vector<csint> reach(
     OptionalVectorRef<csint> p_inv_ref
 )
 {
-    std::vector<char> marked(A.N_, false);
+    std::vector<char> marked(A.M_, false);
     std::vector<csint> xi,      // do not initialize for dfs call!
                        pstack,  // pause and recursion stacks
                        rstack;

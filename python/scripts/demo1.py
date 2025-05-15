@@ -64,7 +64,7 @@ csparse.cspy(AT, ax=ax)
 
 # Multiply A @ A.T
 C = A @ AT
-Cc = Ac.dot(ATc)
+Cc = Ac @ ATc  # == Ac.dot(ATc)
 
 print(f"C difference: {spla.norm(C - csparse.to_scipy_sparse(Cc), ord=1)}")
 

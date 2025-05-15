@@ -356,7 +356,7 @@ PYBIND11_MODULE(csparse, m) {
         .def("dot", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
         // .def("__matmul__", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
         // .def("__matmul__", py::overload_cast<const std::vector<double>&>(&cs::CSCMatrix::dot, py::const_))
-        // .def("__matmul__", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
+        .def("__matmul__", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
         //
         .def("add", &cs::CSCMatrix::add)
         .def("__add__", &cs::CSCMatrix::add)

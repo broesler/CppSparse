@@ -212,7 +212,11 @@ PYBIND11_MODULE(csparse, m) {
             const std::vector<double>&,
             const std::vector<cs::csint>&,
             const std::vector<cs::csint>&,
-            const cs::Shape>()
+            const cs::Shape>(),
+            py::arg("data"),
+            py::arg("rows"),
+            py::arg("columns"),
+            py::arg("shape")=cs::Shape{0, 0}
         )
         .def(py::init<const cs::Shape&, cs::csint>())
         .def_static("from_file", &cs::COOMatrix::from_file, py::arg("filename"))
@@ -234,16 +238,16 @@ PYBIND11_MODULE(csparse, m) {
         )
         //
         .def_property_readonly("row", &cs::COOMatrix::row)
-        .def_property_readonly("column", &cs::COOMatrix::column)
+        .def_property_readonly("col", &cs::COOMatrix::col)
         .def_property_readonly("data", &cs::COOMatrix::data)
         //
-        .def("assign", py::overload_cast
-                        <cs::csint, cs::csint, double>(&cs::COOMatrix::assign))
+        .def("insert", py::overload_cast
+                        <cs::csint, cs::csint, double>(&cs::COOMatrix::insert))
         .def("__setitem__",
             [](cs::COOMatrix& A, py::tuple t, double v) {
                 cs::csint i = t[0].cast<cs::csint>();
                 cs::csint j = t[1].cast<cs::csint>();
-                A.assign(i, j, v);
+                A.insert(i, j, v);
             }
         )
         //
@@ -256,7 +260,7 @@ PYBIND11_MODULE(csparse, m) {
         .def_property_readonly("T", &cs::COOMatrix::T)
         //
         .def("dot", &cs::COOMatrix::dot)
-        .def("__mul__", &cs::COOMatrix::dot)
+        .def("__matmul__", &cs::COOMatrix::dot)
         //
         .def("__repr__", [](const cs::COOMatrix& A) {
             return A.to_string(false);  // don't print all elements
@@ -347,12 +351,12 @@ PYBIND11_MODULE(csparse, m) {
         //
         .def("scale", &cs::CSCMatrix::scale)
         //
-        .def("dot", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
-        .def("dot", py::overload_cast<const std::vector<double>&>(&cs::CSCMatrix::dot, py::const_))
+        // .def("dot", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
+        // .def("dot", py::overload_cast<const std::vector<double>&>(&cs::CSCMatrix::dot, py::const_))
         .def("dot", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
-        .def("__matmul__", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
-        .def("__matmul__", py::overload_cast<const std::vector<double>&>(&cs::CSCMatrix::dot, py::const_))
-        .def("__matmul__", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
+        // .def("__matmul__", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
+        // .def("__matmul__", py::overload_cast<const std::vector<double>&>(&cs::CSCMatrix::dot, py::const_))
+        // .def("__matmul__", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
         //
         .def("add", &cs::CSCMatrix::add)
         .def("__add__", &cs::CSCMatrix::add)

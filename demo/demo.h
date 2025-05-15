@@ -40,7 +40,7 @@ struct Problem
      *
      * @return  A Problem object containing the matrix and other data.
      */
-    static Problem from_matrix(const COOMatrix& T, double tol);
+    static Problem from_matrix(const COOMatrix& T, double tol=0);
 };
 
 

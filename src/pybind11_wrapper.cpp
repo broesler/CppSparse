@@ -307,10 +307,12 @@ PYBIND11_MODULE(csparse, m) {
         .def_property_readonly("data", &cs::CSCMatrix::data)
         //
         .def("dropzeros", &cs::CSCMatrix::dropzeros)
+        .def("droptol", &cs::CSCMatrix::droptol, py::arg("tol")=1e-15)
         .def("to_canonical", &cs::CSCMatrix::to_canonical)
         .def_property_readonly("has_sorted_indices", &cs::CSCMatrix::has_sorted_indices)
         .def_property_readonly("has_canonical_format", &cs::CSCMatrix::has_canonical_format)
         .def_property_readonly("is_symmetric", &cs::CSCMatrix::is_symmetric)
+        .def_property_readonly("is_triangular", &cs::CSCMatrix::is_triangular)
         //
         .def("__call__", py::overload_cast<cs::csint, cs::csint>(&cs::CSCMatrix::operator(), py::const_))
         .def("__getitem__",

@@ -13,7 +13,6 @@ Uses both C++Sparse function and Python functions and compares the results.
 
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.linalg as la
 import sys
 
 from pathlib import Path

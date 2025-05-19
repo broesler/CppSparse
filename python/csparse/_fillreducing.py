@@ -15,8 +15,8 @@ import numpy as np
 from scipy import sparse
 from scipy.sparse import linalg as spla
 
-from .csparse import CSCMatrix, amd, dmperm, lu_solve, qr_solve
-from .utils import to_scipy_sparse
+from .csparse import CSCMatrix, amd, dmperm, lu_solve, qr_solve, scc
+from .utils import to_scipy_sparse, from_any
 
 
 def fiedler(A):
@@ -257,6 +257,96 @@ def dm_solve(A, b):
 
     return x
 
+
+def scc_perm(A):
+    """Compute the strongly connected components of a directed graph.
+
+    The function finds a permutation such that `A[p][:, q]` is block upper
+    triangular (if `A` is square). In this case, `r=s`, `p=q`, and the `k`th
+    diagonal block is given by `A(t, t)`, where `t = r[k]:r[k]+1`. The diagonal
+    of `A` is ignored. Each block is one strognly connected component of `A`.
+
+    Parameters
+    ----------
+    A : (M, N) sparse matrix
+        The adjacency matrix of the directed graph.
+
+    Returns
+    -------
+    p : (M,) ndarray of int
+        The row permutation vector.
+    q : (N,) ndarray of int
+        The column permutation vector.
+    r : ndarray of int
+        The row indices of the diagonal blocks.
+    s : ndarray of int
+        The column indices of the diagonal blocks.
+    """
+    M, N = A.shape
+
+    if M == N:
+        res = scc(from_any(A))
+        p = q = res.p
+        r = s = res.r
+    else:
+        # Find the connected components of [I A; A.T 0]
+        S = spaugment(A)
+        res = scc(from_any(S))
+        p_sym = res.p
+        r_sym = res.r
+        p = p_sym[p_sym < M]
+        q = p_sym[p_sym >= M] - M
+        Nb = len(r_sym) - 1
+        r = np.zeros(Nb + 1, dtype=int)
+        s = np.zeros(Nb + 1, dtype=int)
+        k_row = 0
+        k_col = 0
+
+        for k in range(Nb):
+            # Find the rows and columns in the kth component
+            r[k] = k_row
+            s[k] = k_col
+            k_sym = p_sym[r_sym[k]:r_sym[k+1]]
+            k_row += len(k_sym < M)
+            k_col += len(k_sym >= M)
+
+        r[Nb] = M + 1
+        s[Nb] = N + 1
+
+    return p, q, r, s
+
+
+def spaugment(A):
+    r"""Build the sparse augmented matrix of a directed graph.
+
+    The augmented matrix is defined as:
+
+    .. math::
+        A_{aug} =
+        \begin{bmatrix}
+              I & A \\
+            A^T & 0
+        \end{bmatrix}
+
+    Parameters
+    ----------
+    A : (M, N) array_like
+        Matrix of N vectors in M dimensions.
+
+    Returns
+    -------
+    result : (M+N, M+N) ndarray
+        The augmented matrix.
+    """
+    M, N = A.shape
+
+    I_M = sparse.eye_array(M)
+
+    return sparse.block_array(
+        [[I_M, A],
+         [A.T, None]],
+        format=A.format
+    )
 
 # =============================================================================
 # =============================================================================

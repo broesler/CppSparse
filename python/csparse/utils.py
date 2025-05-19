@@ -233,5 +233,22 @@ def from_scipy_sparse(A, format='csc'):
         raise ValueError(f"Invalid format '{format}'")
 
 
+def from_any(A):
+    """Create a csparse matrix from any array-like input type."""
+    if sparse.issparse(A):
+        Ac = from_scipy_sparse(A)
+    elif isinstance(A, CSCMatrix):
+        Ac = A
+    elif isinstance(A, COOMatrix):
+        Ac = A.tocsc()
+    else:
+        try:
+            Ac = from_ndarray(np.asarray(A))
+        except ValueError:
+            raise TypeError("Input must be a SciPy sparse matrix, NumPy array, "
+                            "or a csparse matrix.")
+
+    return Ac
+
 # =============================================================================
 # =============================================================================

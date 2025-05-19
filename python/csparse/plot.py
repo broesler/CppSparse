@@ -16,8 +16,9 @@ import numpy as np
 from matplotlib.ticker import MaxNLocator
 from scipy.sparse import issparse
 
-from csparse.csparse import COOMatrix, CSCMatrix, dmperm, scc
-from csparse.utils import from_ndarray, from_scipy_sparse
+from csparse.csparse import COOMatrix, CSCMatrix, dmperm
+from csparse._fillreducing import scc_perm
+from csparse.utils import from_any
 
 
 def cspy(A, cmap='viridis', colorbar=True, ax=None, **kwargs):
@@ -150,17 +151,7 @@ def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
         ax = plt.gca()
 
     # Compute the Dulmage-Mendelsohn (DM) ordering
-    if issparse(A):
-        Ac = from_scipy_sparse(A)
-    elif isinstance(A, np.ndarray):
-        Ac = from_ndarray(A)
-    elif isinstance(A, CSCMatrix):
-        Ac = A
-    elif isinstance(A, COOMatrix):
-        Ac = A.tocsc()
-    else:
-        raise TypeError("Input must be a SciPy sparse matrix, NumPy array, "
-                        "or a csparse matrix.")
+    Ac = from_any(A)
 
     res = dmperm(Ac, seed=seed)
     p, q, r, s, rr, cc, Nb = res.p, res.q, res.r, res.s, res.rr, res.cc, res.Nb
@@ -227,25 +218,11 @@ def ccspy(A, colored=True, seed=0, ax=None, **kwargs):
     if ax is None:
         ax = plt.gca()
 
-    # TODO make this a util functio Ac = csparse.csc_matrix(A)
-    if issparse(A):
-        Ac = from_scipy_sparse(A)
-    elif isinstance(A, np.ndarray):
-        Ac = from_ndarray(A)
-    elif isinstance(A, CSCMatrix):
-        Ac = A
-    elif isinstance(A, COOMatrix):
-        Ac = A.tocsc()
-    else:
-        raise TypeError("Input must be a SciPy sparse matrix, NumPy array, "
-                        "or a csparse matrix.")
-
-    # TODO write python version to allow for M != N (see cs_scc2)
     # Find the strongly connected components
-    res = scc(Ac)
-    S = A[res.p][:, res.p]
+    p, q, r, s = scc_perm(A)
+    S = A[p][:, q]
 
-    Nb = res.r.size - 1
+    Nb = r.size - 1
 
     if colored:
         cspy(S, ax=ax, **kwargs)
@@ -255,7 +232,7 @@ def ccspy(A, colored=True, seed=0, ax=None, **kwargs):
     M, N = A.shape
     ax.set_title(f"{M}-by-{N}, strongly connected components: {Nb:d}")
 
-    drawboxes(Nb, res.r, res.r, ax=ax)
+    drawboxes(Nb, r, s, ax=ax)
 
     return ax
 

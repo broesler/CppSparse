@@ -506,6 +506,8 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("use_postorder")=false
     );
 
+    m.def("chol_update_", &cs::chol_update);
+
     // ---------- QR decomposition
     // Define the python qr function here, and call the C++ sqr function.
     m.def("qr",
@@ -561,6 +563,8 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     m.def("lsolve", &cs::lsolve);
     m.def("usolve", &cs::usolve);
+    m.def("ltsolve", &cs::ltsolve);
+    m.def("utsolve", &cs::utsolve);
     m.def("lsolve_opt", &cs::lsolve_opt);
     m.def("usolve_opt", &cs::usolve_opt);
 

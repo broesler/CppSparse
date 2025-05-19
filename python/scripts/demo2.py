@@ -14,123 +14,14 @@ column orderings.
 
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.linalg as la
 import time
 
 from pathlib import Path
 from scipy import sparse
-from scipy.sparse import linalg as spla
 
 import csparse
 
-
-def is_triangular(A):
-    """Check if a sparse matrix is triangular.
-
-    Parameters
-    ----------
-    A : (M, N) array_like
-        The sparse matrix to check.
-
-    Returns
-    -------
-    result : int
-        - -1 if `A` is square and lower triangular
-        - 1 if `A` is square and upper triangular
-        - 0 otherwise.
-    """
-    M, N = A.shape
-    is_upper = False
-    is_lower = False
-
-    if M == N:
-        is_upper = sparse.tril(A, -1).nnz == 0
-        is_lower = sparse.triu(A, 1).nnz == 0
-
-    return 1 if is_upper else -1 if is_lower else 0
-
-
-# TODO create pybind11 interface for csparse/demo/get_problem
-def get_problem(filename, tol=0.0):
-    """Read a matrix from a file and drop entries with values less than `tol`.
-
-    Parameters
-    ----------
-    filename : str or Path
-        The name of the file containing the matrix in triplet format.
-    tol : float, optional
-        The absolute tolerance for dropping small entries. Default is 0.0 (no
-        entries dropped).
-
-    Returns
-    -------
-    C : (M, N) CSCMatrix
-        If the matrix `A` defined in the file is symmetric and stored as
-        a triangular matrix, `C = A + A.T`, otherwise, `C = A`.
-    is_sym : int
-        - -1 if `C` is square and lower triangular
-        - 1 if `C` is square and upper triangular
-        - 0 otherwise.
-    """
-    # Read the matrix from the file
-    data = np.genfromtxt(
-        filename,
-        dtype=[
-            ('rows', np.int32),
-            ('cols', np.int32),
-            ('vals', np.float64)
-        ]
-    )
-
-    # Build the matrix
-    # A = csparse.COOMatrix(data['vals'], data['rows'], data['cols']).tocsc()
-    A = sparse.coo_array((data['vals'], (data['rows'], data['cols']))).tocsc()
-
-    M, N = A.shape
-    nnz = A.nnz
-
-    if tol > 0:
-        A.data[np.abs(A.data) < tol] = 0
-        A.eliminate_zeros()
-        # A = A.droptol(tol)  # drop small entries
-
-    # Check if the matrix is symmetric
-    is_sym = is_triangular(A)
-    # is_sym = A.is_triangular()
-
-    if is_sym:
-        C = A + (A.T - A.diagonal() * sparse.eye_array(M))
-    else:
-        C = A
-
-    print(f"--- Matrix: {M}-by-{N}, nnz: {A.nnz} "
-          f"(sym: {is_sym}, nnz: {abs(is_sym) * C.nnz}), "
-          f"norm: {spla.norm(C, 1):.4g}")
-
-    if nnz != A.nnz:
-        print(f"tiny entries dropped: {nnz - A.nnz}")
-
-    return C, is_sym
-
-
-def print_resid(A, x, b):
-    """Print the norm of the residual of the linear system `Ax = b`.
-
-    Parameters
-    ----------
-    A : (M, N) array_like
-        The matrix `A`.
-    x : (N,) array_like
-        The solution vector `x`.
-    b : (M,) array_like
-        The right-hand side vector `b`.
-    """
-    r = A @ x - b
-    resid = (
-        la.norm(r, np.inf) /
-        (spla.norm(A, 1) * la.norm(x, np.inf) + la.norm(b, np.inf))
-    )
-    print(f"resid: {resid:.2e}")
+from demo import get_problem, print_resid
 
 
 def demo2(C, is_sym, name='', axs=None):
@@ -163,7 +54,7 @@ def demo2(C, is_sym, name='', axs=None):
 
     # Plot the matrix
     _, cb = csparse.cspy(C, ax=axs[0], norm='log')
-    axs[0].set_title('cspy')
+    axs[0].set_title('C')
 
     # Compute the Dulmage-Mendelsohn (DM) ordering
     M, N = C.shape
@@ -293,14 +184,14 @@ def demo2(C, is_sym, name='', axs=None):
 matrix_path = Path('../../data/')
 
 matrix_names = [
-    # 't1',
-    # 'fs_183_1',
-    # 'west0067',
-    # 'lp_afiro',
+    't1',
+    'fs_183_1',
+    'west0067',
+    'lp_afiro',
     'ash219',
-    # 'mbeacxc',
-    # 'bcsstk01',
-    # 'bcsstk16'
+    'mbeacxc',
+    'bcsstk01',
+    'bcsstk16'
 ]
 
 

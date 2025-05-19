@@ -15,11 +15,8 @@ import numpy as np
 from matplotlib.ticker import MaxNLocator
 from scipy.sparse import issparse
 
-# TODO increase pixel size for small matrices to fill the figure
-# -> use imshow instead?
 
-def cspy(A, marker='s', markersize=10, cmap='viridis', ax=None,
-         colorbar=True, **kwargs):
+def cspy(A, cmap='viridis', colorbar=True, ax=None, **kwargs):
     """Visualize a sparse or dense matrix with colored markers.
 
     This function is similar to `matplotlib.pyplot.spy`, but it colors the
@@ -31,21 +28,16 @@ def cspy(A, marker='s', markersize=10, cmap='viridis', ax=None,
     A : array_like
         The 2D matrix to visualize. Can be a NumPy array, SciPy sparse
         matrix, or any object convertible to a 2D NumPy array.
-    marker : str, optional
-        The marker style to use for non-zero elements, by default 's' (square).
-        See `matplotlib.pyplot.scatter` documentation for valid marker styles.
-    markersize : int or float, optional
-        The size of the markers, by default 10.
     cmap : str or matplotlib.colors.Colormap, optional
         The colormap to use for coloring the markers, by default 'viridis'.
+    colorbar : bool, optional
+        Whether to display a colorbar, by default True.
     ax : matplotlib.axes.Axes, optional
         An existing Axes object to plot on. If None (default), the current axes
         are used.
-    colorbar : bool, optional
-        Whether to display a colorbar, by default True.
-    **kwargs
+    **kwargs?
         Additional keyword arguments passed directly to
-        `matplotlib.pyplot.scatter`.
+        `matplotlib.pyplot.imshow`.
 
     Returns
     -------
@@ -55,20 +47,20 @@ def cspy(A, marker='s', markersize=10, cmap='viridis', ax=None,
     See Also
     --------
     matplotlib.pyplot.spy : Plot the sparsity pattern of a 2D array.
-    matplotlib.pyplot.scatter : A scatter plot of y vs. x with varying marker
-        size and/or color.
+    matplotlib.pyplot.imshow : Display data as an image, i.e., on a 2D regular
+        raster.
 
     Examples
     --------
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> data = np.array([[1, 0, 2], [0, -3, 0], [4, 0, 0]])
-    >>> scatter, ax = cspy(data, markersize=50)
+    >>> ax = cspy(data, markersize=50)
     >>> plt.show()
 
     >>> from scipy.sparse import csr_array
     >>> sparse_data = csr_array(data)
-    >>> scatter, ax = cspy(sparse_data, cmap='coolwarm')
+    >>> ax = cspy(sparse_data, cmap='coolwarm')
     >>> plt.show()
     """
     if ax is None:
@@ -77,10 +69,10 @@ def cspy(A, marker='s', markersize=10, cmap='viridis', ax=None,
     fig = ax.figure
 
     if issparse(A):
-        dense_matrix = A.toarray()
+        dense_matrix = A.toarray().astype(np.float64)
     else:
         try:
-            dense_matrix = np.asarray(A)
+            dense_matrix = np.asarray(A, dtype=np.float64)
         except Exception as e:
             raise TypeError(
                 "Input matrix must be a NumPy array, SciPy sparse matrix, "
@@ -128,6 +120,9 @@ def cspy(A, marker='s', markersize=10, cmap='viridis', ax=None,
     return ax
 
 
+# def dmspy(A, ax=None, **kwargs):
+
+
 if __name__ == '__main__':
     # --- Example Usage ---
     plt.close('all')
@@ -140,7 +135,7 @@ if __name__ == '__main__':
         [4.7, 0, 5.0, -0.5]
     ])
     fig1, ax1 = plt.subplots(figsize=(6, 5))
-    cspy(dense_matrix, markersize=80, cmap='coolwarm', ax=ax1)
+    cspy(dense_matrix, cmap='coolwarm', ax=ax1)
     ax1.set_title("Dense Matrix")
     plt.show()
 
@@ -157,7 +152,7 @@ if __name__ == '__main__':
     )
 
     fig2, ax2 = plt.subplots(figsize=(6, 5))
-    cspy(sparse_matrix, marker='o', markersize=70, cmap='plasma',
+    cspy(sparse_matrix, cmap='plasma',
          vmin=-100, vmax=100, ax=ax2)
     ax2.set_title("Sparse Matrix")
     plt.show()
@@ -169,7 +164,7 @@ if __name__ == '__main__':
     data = np.array([1, 2.5, 3.1, 4.9, -1.2, -5.5, 0.5])
     coo_m = coo_array((data, (row, col)), shape=(6, 4))
     fig3, ax3 = plt.subplots(figsize=(6, 5))
-    cspy(coo_m, marker='+', markersize=90, cmap='viridis', ax=ax3)
+    cspy(coo_m, cmap='viridis', ax=ax3)
     ax3.set_title("COO Sparse Matrix")
     plt.show()
 
@@ -192,7 +187,7 @@ if __name__ == '__main__':
     large_random_matrix = np.random.randn(25, 35)
     large_random_matrix[np.abs(large_random_matrix) < 0.8] = 0
     fig6, ax6 = plt.subplots(figsize=(8, 6))
-    cspy(large_random_matrix, markersize=15, cmap='magma', ax=ax6)
+    cspy(large_random_matrix, cmap='magma', ax=ax6)
     ax6.set_title("Larger Random Matrix")
     plt.show()
 
@@ -200,7 +195,7 @@ if __name__ == '__main__':
     positive_matrix = np.abs(dense_matrix) + 1  # ensure all positive
     fig7, ax7 = plt.subplots(figsize=(6, 5))
     # Example of using vmin/vmax for color normalization
-    cspy(positive_matrix, markersize=80, cmap='Reds',
+    cspy(positive_matrix, cmap='Reds',
          vmin=0, vmax=np.max(positive_matrix)+2, ax=ax7)
     ax7.set_title("Positive Values Matrix with vmin/vmax")
     plt.show()
@@ -208,10 +203,10 @@ if __name__ == '__main__':
     # 7. Using an existing Axes object
     fig8, (ax_spy, ax_cspy) = plt.subplots(1, 2, figsize=(12, 5))
     # Standard spy plot
-    ax_spy.spy(dense_matrix, marker='s', markersize=10)
+    ax_spy.spy(dense_matrix)
     ax_spy.set_title("pyplot.spy")
     # Our cspy plot on the second axes
-    cspy(dense_matrix, markersize=80, cmap='coolwarm', ax=ax_cspy)
+    cspy(dense_matrix, cmap='coolwarm', ax=ax_cspy)
     ax_cspy.set_title("cspy")
     plt.show()
 

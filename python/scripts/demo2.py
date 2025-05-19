@@ -105,7 +105,7 @@ def get_problem(filename, tol=0.0):
 
     print(f"--- Matrix: {M}-by-{N}, nnz: {A.nnz} "
           f"(sym: {is_sym}, nnz: {abs(is_sym) * C.nnz}), "
-          f"norm: {spla.norm(C, 1)}")
+          f"norm: {spla.norm(C, 1):.4g}")
 
     if nnz != A.nnz:
         print(f"tiny entries dropped: {nnz - A.nnz}")
@@ -126,8 +126,10 @@ def print_resid(A, x, b):
         The right-hand side vector `b`.
     """
     r = A @ x - b
-    resid = (la.norm(r, np.inf) / (spla.norm(A, 1) * la.norm(x, np.inf))
-             + la.norm(b, np.inf))
+    resid = (
+        la.norm(r, np.inf) /
+        (spla.norm(A, 1) * la.norm(x, np.inf) + la.norm(b, np.inf))
+    )
     print(f"resid: {resid:.2e}")
 
 
@@ -194,6 +196,14 @@ def demo2(C, is_sym, name='', axs=None):
 
     ax = axs[3]
 
+    pad = dict(
+        Natural=' ' * 8,
+        APlusAT=' ' * 8,
+        ATANoDenseRows=' ',
+        ATA=' ' * 12
+    )
+        
+
     if M == N:
         if is_sym:
             try:
@@ -234,11 +244,11 @@ def demo2(C, is_sym, name='', axs=None):
         if order == 'Natural' and M > 1000:
             continue
 
-        print(f"QR    ({order})", end='')
+        print(f"QR    ({order})", end=pad[order])
         tic = time.perf_counter()
         x = csparse.qr_solve(Cc, b, order=order)
         t = time.perf_counter() - tic
-        print(f"time {t:8.2f} s ", end='')
+        print(f"time {t:.2e} s ", end='')
         print_resid(C, x, b)
 
     if M != N:
@@ -246,11 +256,11 @@ def demo2(C, is_sym, name='', axs=None):
 
     # LU Decomposition
     for order in ['Natural', 'APlusAT', 'ATANoDenseRows', 'ATA']:
-        print(f"LU    ({order})", end='')
+        print(f"LU    ({order})", end=pad[order])
         tic = time.perf_counter()
         x = csparse.lu_solve(Cc, b, order=order)
         t = time.perf_counter() - tic
-        print(f"time {t:8.2f} s ", end='')
+        print(f"time {t:.2e} s ", end='')
         print_resid(C, x, b)
 
     if not is_sym:
@@ -258,11 +268,11 @@ def demo2(C, is_sym, name='', axs=None):
 
     # Cholesky Decomposition
     for order in ['Natural', 'APlusAT']:
-        print(f"Cholesky ({order})", end='')
+        print(f"Chol  ({order})", end=pad[order])
         tic = time.perf_counter()
         x = csparse.chol_solve(Cc, b, order=order)
         t = time.perf_counter() - tic
-        print(f"time {t:8.2f} s ", end='')
+        print(f"time {t:.2e} s ", end='')
         print_resid(C, x, b)
 
     return axs
@@ -290,6 +300,7 @@ for i, m in enumerate(matrix_names):
     fig, axs = plt.subplots(num=i, nrows=2, ncols=2, clear=True)
     fig.set_size_inches((8, 8), forward=True)
     demo2(C, is_sym, m, axs=axs)
+    print()  # extra newline on output for clarity
     plt.show()
 
 

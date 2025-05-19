@@ -151,15 +151,18 @@ def demo3(C, is_sym, name='', axs=None):
     print_resid(E, x, b)
 
     # Downdate
-    t = time.perf_counter() - tic
+    tic = time.perf_counter()
     Ldownc = csparse.chol_update_(Lupc, False, wc, parent)
-    t1 = time.perf_counter() - t
+    t1 = time.perf_counter() - tic
 
+    print(f"downdate: time: {t1:.2e} s")
+
+    tic = time.perf_counter()
     x = b.copy()  # TODO permutation vector b[p]
     x = csparse.lsolve(Ldownc, x)
     x = csparse.ltsolve(Ldownc, x)
     # TODO x[p] = x
-    t = time.perf_counter() - t1
+    t = time.perf_counter() - tic
 
     print(f"downdate: time: {t1 + t:.2e} s (incl solve) ", end='')
     print_resid(C, x, b)
@@ -174,7 +177,7 @@ matrix_path = Path('../../data/')
 
 matrix_names = [
     'bcsstk01',
-    # 'bcsstk16'
+    'bcsstk16'
 ]
 
 

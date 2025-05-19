@@ -203,6 +203,18 @@ PYBIND11_MODULE(csparse, m) {
             return array_to_numpy(res.rr);
         });
 
+    // Bind the SCCResult struct
+    py::class_<cs::SCCResult>(m, "SCCResult")
+        .def_property_readonly("p", [](const cs::SCCResult& res) {
+            return vector_to_numpy(res.p);
+        })
+        .def_property_readonly("r", [](const cs::SCCResult& res) {
+            return vector_to_numpy(res.r);
+        })
+        .def_property_readonly("Nb", [](const cs::SCCResult& res) {
+            return res.Nb;
+        });
+
     //--------------------------------------------------------------------------
     //        COOMatrix class
     //--------------------------------------------------------------------------
@@ -542,6 +554,7 @@ PYBIND11_MODULE(csparse, m) {
     );
 
     m.def("dmperm", &cs::dmperm, py::arg("A"), py::arg("seed")=0);
+    m.def("scc", &cs::scc, py::arg("A"));
 
     //--------------------------------------------------------------------------
     //      Solve functions

@@ -16,7 +16,7 @@ import numpy as np
 from matplotlib.ticker import MaxNLocator
 from scipy.sparse import issparse
 
-from csparse.csparse import COOMatrix, CSCMatrix, dmperm
+from csparse.csparse import COOMatrix, CSCMatrix, dmperm, scc
 from csparse.utils import from_ndarray, from_scipy_sparse
 
 
@@ -185,6 +185,104 @@ def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
     )
 
     # Draw boxes around the blocks
+    drawboxes(Nb, r, s, ax=ax)
+    # Draw boxes around the singletons
+    M, N = A.shape
+
+    # Box around entire matrix
+    # drawbox(0, M, 0, N, ec='C4', fc='none', lw=2, ax=ax)
+
+    # TODO label the boxes
+    drawbox(rr[0], rr[1], cc[0], cc[1], ec='C0', fc='none', lw=2, ax=ax)
+    drawbox(rr[0], rr[1], cc[1], cc[2], ec='C1', fc='none', lw=2, ax=ax)
+    drawbox(rr[1], rr[2], cc[2], cc[3],  ec='k', fc='none', lw=2, ax=ax)
+    drawbox(rr[2], rr[3], cc[3], cc[4], ec='C2', fc='none', lw=2, ax=ax)
+    drawbox(rr[3], rr[4], cc[3], cc[4], ec='C4', fc='none', lw=2, ax=ax)
+
+    return ax
+
+
+def ccspy(A, colored=True, seed=0, ax=None, **kwargs):
+    """Plot the connected components of a sparse matrix.
+
+    Parameters
+    ----------
+    A : (M, N) array_like
+        Matrix of M vectors in N dimensions.
+    colored : bool, optional
+        If True, color the points based on their values, by default True.
+    seed : int, optional
+        Random seed passed to `csparse.dmperm`, by default 0.
+    ax : matplotlib.axes.Axes, optional
+        Axes object to plot on. If `None`, the current axes are used.
+    **kwargs
+        Additional keyword arguments passed to `matplotlib.pyplot.spy`, or
+        `csparse.cspy` (depending on `colored`).
+
+    Returns
+    -------
+    ax : matplotlib.axes.Axes
+        The Axes object used for plotting.
+    """
+    if ax is None:
+        ax = plt.gca()
+
+    # TODO make this a util functio Ac = csparse.csc_matrix(A)
+    if issparse(A):
+        Ac = from_scipy_sparse(A)
+    elif isinstance(A, np.ndarray):
+        Ac = from_ndarray(A)
+    elif isinstance(A, CSCMatrix):
+        Ac = A
+    elif isinstance(A, COOMatrix):
+        Ac = A.tocsc()
+    else:
+        raise TypeError("Input must be a SciPy sparse matrix, NumPy array, "
+                        "or a csparse matrix.")
+
+    # TODO write python version to allow for M != N (see cs_scc2)
+    # Find the strongly connected components
+    res = scc(Ac)
+    S = A[res.p][:, res.p]
+
+    Nb = res.r.size - 1
+
+    if colored:
+        cspy(S, ax=ax, **kwargs)
+    else:
+        ax.spy(S, **kwargs)
+
+    M, N = A.shape
+    ax.set_title(f"{M}-by-{N}, strongly connected components: {Nb:d}")
+
+    drawboxes(Nb, res.r, res.r, ax=ax)
+
+    return ax
+
+
+def drawboxes(Nb, r, s, ax=None, **kwargs):
+    """Draw boxes around the blocks of a matrix.
+
+    Parameters
+    ----------
+    Nb : int
+        Number of blocks.
+    r, s : (M,) array_like
+        Row and column indices of the blocks, typically a result of the
+        `dmperm` function.
+    ax : matplotlib.axes.Axes, optional
+    **kwargs : dict
+        Additional keyword arguments passed to `matplotlib.patches.Rectangle`.
+
+    Returns
+    -------
+    ax : (M, N) ndarray
+        Matrix of M vectors in N dimensions
+    """
+    # Default styling
+    opts = dict(ec='C3', fc='none', lw=2)
+    opts.update(kwargs)
+
     if Nb > 1:
         r1 = r[:Nb]
         r2 = r[1:Nb+1]
@@ -203,24 +301,9 @@ def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
                 (c1[k] - 0.5, r1[k] - 0.5),  # shift center to corner of pixel
                 width=c2[k] - c1[k],
                 height=r2[k] - r1[k],
-                ec='C3', fc='none', lw=2
+                **opts
             )
             ax.add_patch(rect)
-
-    # Draw boxes around the singletons
-    M, N = A.shape
-
-    # Box around entire matrix
-    # drawbox(0, M, 0, N, ec='C4', fc='none', lw=2, ax=ax)
-
-    # TODO label the boxes
-    drawbox(rr[0], rr[1], cc[0], cc[1], ec='C0', fc='none', lw=2, ax=ax)
-    drawbox(rr[0], rr[1], cc[1], cc[2], ec='C1', fc='none', lw=2, ax=ax)
-    drawbox(rr[1], rr[2], cc[2], cc[3],  ec='k', fc='none', lw=2, ax=ax)
-    drawbox(rr[2], rr[3], cc[3], cc[4], ec='C2', fc='none', lw=2, ax=ax)
-    drawbox(rr[3], rr[4], cc[3], cc[4], ec='C4', fc='none', lw=2, ax=ax)
-
-    return ax
 
 
 def drawbox(r1, r2, c1, c2, ax=None, **kwargs):
@@ -232,14 +315,14 @@ def drawbox(r1, r2, c1, c2, ax=None, **kwargs):
         ax = plt.gca()
 
     opts = dict(edgecolor='k', facecolor='none', lw=2)
-    kwargs.update(opts)
+    opts.update(kwargs)
 
     # Draw a rectangle
     rect = patches.Rectangle(
         (c1 - 0.5, r1 - 0.5),  # shift center to corner of pixel
         width=c2 - c1,
         height=r2 - r1,
-        **kwargs
+        **opts
     )
     ax.add_patch(rect)
 

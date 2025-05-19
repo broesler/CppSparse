@@ -74,7 +74,7 @@ def get_problem(filename, tol=0.0):
     """
     # Read the matrix from the file
     data = np.genfromtxt(
-        filename, 
+        filename,
         dtype=[
             ('rows', np.int32),
             ('cols', np.int32),
@@ -152,7 +152,6 @@ def demo2(C, is_sym, name='', axs=None):
     """
     if axs is None:
         fig, axs = plt.subplots(nrows=2, ncols=2, clear=True)
-        fig.set_size_inches((8, 8), forward=True)
     else:
         axs = np.asarray(axs).flatten()
 
@@ -162,6 +161,7 @@ def demo2(C, is_sym, name='', axs=None):
     fig = axs[0].figure
     fig.suptitle(name)
 
+    # TODO plot a single right-outside colorbar?
     # Plot the matrix
     csparse.cspy(C, ax=axs[0])
     axs[0].set_title('cspy')
@@ -171,25 +171,29 @@ def demo2(C, is_sym, name='', axs=None):
     res = csparse.dmperm(csparse.from_scipy_sparse(C))
     r, s, rr = res.r, res.s, res.rr
 
-    # TODO Plot the DM ordering
-    # csparse.ccspy(C, ax=axs[1])  # connected components
-    # csparse.dmspy(C, ax=axs[2])  # DM ordering highlighted
+    try:
+        csparse.ccspy(C, ax=axs[1])  # connected components
+    except RuntimeError as e:
+        pass  # non-square matrix
+
+    csparse.dmspy(C, ax=axs[2])  # DM ordering highlighted
 
     sprank = rr[3]
     Nb = r.size - 1
     Ns = np.sum((r[1:Nb+1] == r[:Nb] + 1) & (s[1:Nb+1] == s[:Nb] + 1))
     print(f"blocks: {Nb}, singletons: {Ns}, structural rank: {sprank}")
 
-    # FIXME all matrices show singular?
-    # if sprank != sparse.csgraph.structural_rank(C):
-    #     print("Structural rank mismatch")
+    if sprank != sparse.csgraph.structural_rank(C):
+        print("Structural rank mismatch")
 
     if sprank < min(M, N):
-        print(f"Matrix is structurally singular ({sprank=})! Exiting.")
+        print(f"Matrix is structurally singular ({sprank=:d})! Exiting.")
         return axs
 
-    # Code that is unique to the python demo (not in C++ demo)
-    # Compute and plot the appropriate decomposition of the matrix
+    # -------------------------------------------------------------------------
+    #         Compute and plot a decomposition of the matrix
+    # -------------------------------------------------------------------------
+    # Code is unique to the python demo (not in C++ demo)
 
     # TODO update pybind11 interface to accept scipy.sparse.csc_array
     Cc = csparse.from_scipy_sparse(C)
@@ -202,13 +206,12 @@ def demo2(C, is_sym, name='', axs=None):
         ATANoDenseRows=' ',
         ATA=' ' * 12
     )
-        
 
     if M == N:
         if is_sym:
             try:
                 # Cholesky
-                # TODO return permutation vector
+                # TODO return permutation vector from S.p_inv
                 # L, p = csparse.cholesky(C)
                 L = csparse.to_scipy_sparse(csparse.cholesky(Cc))
                 csparse.cspy(L + sparse.triu(L.T, 1), ax=ax)
@@ -236,6 +239,9 @@ def demo2(C, is_sym, name='', axs=None):
         csparse.cspy(V + R, ax=ax)
         ax.set_title('V + R')
 
+    # -------------------------------------------------------------------------
+    #        Solve the linear system
+    # -------------------------------------------------------------------------
     # Continue with C++ demo
     b = np.ones(M) + np.arange(M) / M
 
@@ -298,7 +304,6 @@ matrix_names = [
 for i, m in enumerate(matrix_names):
     C, is_sym = get_problem(matrix_path / m, tol=0.0)
     fig, axs = plt.subplots(num=i, nrows=2, ncols=2, clear=True)
-    fig.set_size_inches((8, 8), forward=True)
     demo2(C, is_sym, m, axs=axs)
     print()  # extra newline on output for clarity
     plt.show()

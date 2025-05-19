@@ -9,11 +9,15 @@ Functions for plotting sparse matrices.
 """
 # =============================================================================
 
+import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 
 from matplotlib.ticker import MaxNLocator
 from scipy.sparse import issparse
+
+from csparse.csparse import COOMatrix, CSCMatrix, dmperm
+from csparse.utils import from_ndarray, from_scipy_sparse
 
 
 def cspy(A, cmap='viridis', colorbar=True, ax=None, **kwargs):
@@ -90,8 +94,8 @@ def cspy(A, cmap='viridis', colorbar=True, ax=None, **kwargs):
 
     # Set plot limits and aspect ratio
     # Ensure limits are appropriate even for single row/column matrices
-    ax.set_xlim(-0.5, N - 0.5 if N > 0 else 0.5)
-    ax.set_ylim(M - 0.5 if M > 0 else 0.5, -0.5)  # inverted y-axis like spy
+    ax.set_xlim(-0.75, N - 0.25 if N > 0 else 0.75)
+    ax.set_ylim(M - 0.25 if M > 0 else 0.75, -0.75)  # inverted y-axis like spy
 
     ax.xaxis.tick_top()  # match spy's x-axis orientation
     # ax.spines['bottom'].set_visible(False)
@@ -120,7 +124,124 @@ def cspy(A, cmap='viridis', colorbar=True, ax=None, **kwargs):
     return ax
 
 
-# def dmspy(A, ax=None, **kwargs):
+def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
+    """Plot the Dulmage-Mendelsohn (DM) ordering of a sparse matrix.
+
+    Parameters
+    ----------
+    A : (M, N) array_like
+        Matrix of M vectors in N dimensions.
+    colored : bool, optional
+        If True, color the points based on their values, by default True.
+    seed : int, optional
+        Random seed passed to `csparse.dmperm`, by default 0.
+    ax : matplotlib.axes.Axes, optional
+        Axes object to plot on. If `None`, the current axes are used.
+    **kwargs
+        Additional keyword arguments passed to `matplotlib.pyplot.spy`, or
+        `csparse.cspy` (depending on `colored`).
+
+    Returns
+    -------
+    ax : matplotlib.axes.Axes
+        The Axes object used for plotting.
+    """
+    if ax is None:
+        ax = plt.gca()
+
+    # Compute the Dulmage-Mendelsohn (DM) ordering
+    if issparse(A):
+        Ac = from_scipy_sparse(A)
+    elif isinstance(A, np.ndarray):
+        Ac = from_ndarray(A)
+    elif isinstance(A, CSCMatrix):
+        Ac = A
+    elif isinstance(A, COOMatrix):
+        Ac = A.tocsc()
+    else:
+        raise TypeError("Input must be a SciPy sparse matrix, NumPy array, "
+                        "or a csparse matrix.")
+
+    res = dmperm(Ac, seed=seed)
+    p, q, r, s, rr, cc, Nb = res.p, res.q, res.r, res.s, res.rr, res.cc, res.Nb
+
+    # Plot the result
+    S = A[p][:, q]
+
+    if colored:
+        cspy(S, ax=ax, **kwargs)
+    else:
+        ax.spy(S, **kwargs)
+
+    # Set the title
+    M, N = A.shape
+    sprank = rr[3]
+    m = np.nonzero(np.diff(rr))[0].size
+    n = np.nonzero(np.diff(cc))[0].size
+
+    ax.set_title(
+        f"{M}-by-{N}, sprank: {sprank:d},\n"
+        f"fine blocks: {Nb}, coarse blocks: {m, n}"
+    )
+
+    # Draw boxes around the blocks
+    if Nb > 1:
+        r1 = r[:Nb]
+        r2 = r[1:Nb+1]
+        c1 = s[:Nb]
+        c2 = s[1:Nb+1]
+
+        kk = np.nonzero(
+            (np.diff(c1) > 0) |
+            (np.diff(c2) > 0) |
+            (np.diff(r1) > 0) |
+            (np.diff(r2) > 0)
+        )[0]
+
+        for k in kk:
+            rect = patches.Rectangle(
+                (c1[k] - 0.5, r1[k] - 0.5),  # shift center to corner of pixel
+                width=c2[k] - c1[k],
+                height=r2[k] - r1[k],
+                ec='C3', fc='none', lw=2
+            )
+            ax.add_patch(rect)
+
+    # Draw boxes around the singletons
+    M, N = A.shape
+
+    # Box around entire matrix
+    # drawbox(0, M, 0, N, ec='C4', fc='none', lw=2, ax=ax)
+
+    # TODO label the boxes
+    drawbox(rr[0], rr[1], cc[0], cc[1], ec='C0', fc='none', lw=2, ax=ax)
+    drawbox(rr[0], rr[1], cc[1], cc[2], ec='C1', fc='none', lw=2, ax=ax)
+    drawbox(rr[1], rr[2], cc[2], cc[3],  ec='k', fc='none', lw=2, ax=ax)
+    drawbox(rr[2], rr[3], cc[3], cc[4], ec='C2', fc='none', lw=2, ax=ax)
+    drawbox(rr[3], rr[4], cc[3], cc[4], ec='C4', fc='none', lw=2, ax=ax)
+
+    return ax
+
+
+def drawbox(r1, r2, c1, c2, ax=None, **kwargs):
+    """Draw a box on the given axes."""
+    if c2 < c1 or r2 < r1:
+        return
+
+    if ax is None:
+        ax = plt.gca()
+
+    opts = dict(edgecolor='k', facecolor='none', lw=2)
+    kwargs.update(opts)
+
+    # Draw a rectangle
+    rect = patches.Rectangle(
+        (c1 - 0.5, r1 - 0.5),  # shift center to corner of pixel
+        width=c2 - c1,
+        height=r2 - r1,
+        **kwargs
+    )
+    ax.add_patch(rect)
 
 
 if __name__ == '__main__':

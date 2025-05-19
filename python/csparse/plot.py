@@ -15,9 +15,11 @@ import numpy as np
 from matplotlib.ticker import MaxNLocator
 from scipy.sparse import issparse
 
+# TODO increase pixel size for small matrices to fill the figure
+# -> use imshow instead?
 
-def cspy(A, marker='s', markersize=10, cmap='viridis', aspect='equal',
-         ax=None, colorbar=True, **kwargs):
+def cspy(A, marker='s', markersize=10, cmap='viridis', ax=None,
+         colorbar=True, **kwargs):
     """Visualize a sparse or dense matrix with colored markers.
 
     This function is similar to `matplotlib.pyplot.spy`, but it colors the
@@ -36,11 +38,6 @@ def cspy(A, marker='s', markersize=10, cmap='viridis', aspect='equal',
         The size of the markers, by default 10.
     cmap : str or matplotlib.colors.Colormap, optional
         The colormap to use for coloring the markers, by default 'viridis'.
-    aspect : {'equal', 'auto'} or float, optional
-        Controls the aspect ratio of the plot.
-        - 'equal': Ensures square cells (default).
-        - 'auto': Adjusts the aspect to fill the figure.
-        - float: A specific aspect ratio.
     ax : matplotlib.axes.Axes, optional
         An existing Axes object to plot on. If None (default), the current axes
         are used.
@@ -80,28 +77,29 @@ def cspy(A, marker='s', markersize=10, cmap='viridis', aspect='equal',
     fig = ax.figure
 
     if issparse(A):
-        A_coo = A.tocoo()
-        rows, cols, values = A_coo.row, A_coo.col, A_coo.data
+        dense_matrix = A.toarray()
     else:
         try:
-            A_np = np.asarray(A)
-            if A_np.ndim != 2:
-                raise ValueError("Input matrix must be 2-dimensional.")
-            rows, cols = np.nonzero(A_np)
-            values = A_np[rows, cols]
+            dense_matrix = np.asarray(A)
         except Exception as e:
             raise TypeError(
                 "Input matrix must be a NumPy array, SciPy sparse matrix, "
                 f"or convertible to a 2D NumPy array. Error: {e}"
             )
 
+    if dense_matrix.ndim != 2:
+        raise ValueError("Input matrix must be 2-dimensional.")
+
     M, N = A.shape
+    nnz = np.count_nonzero(dense_matrix)
+
+    # Set zeros to NaN
+    dense_matrix[dense_matrix == 0] = np.nan
 
     # Set plot limits and aspect ratio
     # Ensure limits are appropriate even for single row/column matrices
     ax.set_xlim(-0.5, N - 0.5 if N > 0 else 0.5)
     ax.set_ylim(M - 0.5 if M > 0 else 0.5, -0.5)  # inverted y-axis like spy
-    ax.set_aspect(aspect)
 
     ax.xaxis.tick_top()  # match spy's x-axis orientation
     # ax.spines['bottom'].set_visible(False)
@@ -112,21 +110,20 @@ def cspy(A, marker='s', markersize=10, cmap='viridis', aspect='equal',
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
 
-    if len(values) == 0:
+    if nnz == 0:
         ax.set_xlabel(f"{A.shape}, nnz = 0, density = 0")
         return ax
 
-    ax.set_xlabel((f"{A.shape}, nnz = {len(values)}, "
-                   f"density = {len(values) / (M * N):.2%}"))
+    ax.set_xlabel((f"{A.shape}, nnz = {nnz}, "
+                   f"density = {nnz / (M * N):.2%}"))
 
-    # Create the scatter plot
-    scatter = ax.scatter(
-        cols, rows, c=values, cmap=cmap, marker=marker, s=markersize, **kwargs
-    )
+    # Convert to a dense matrix and use imshow
+    im = ax.imshow(dense_matrix, cmap=cmap, origin='upper', aspect='equal',
+                   **kwargs)
 
     # Add a colorbar
     if colorbar:
-        fig.colorbar(scatter, ax=ax)
+        fig.colorbar(im, ax=ax)
 
     return ax
 

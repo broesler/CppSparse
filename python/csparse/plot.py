@@ -16,7 +16,7 @@ import numpy as np
 from matplotlib.ticker import MaxNLocator
 from scipy.sparse import issparse
 
-from csparse.csparse import COOMatrix, CSCMatrix, dmperm
+from csparse.csparse import dmperm
 from csparse._fillreducing import scc_perm
 from csparse.utils import from_any
 
@@ -48,6 +48,8 @@ def cspy(A, cmap='viridis', colorbar=True, ax=None, **kwargs):
     -------
     ax : matplotlib.axes.Axes
         The Axes object used for plotting.
+    cb : matplotlib.colorbar.Colorbar
+        The colorbar object.
 
     See Also
     --------
@@ -120,9 +122,11 @@ def cspy(A, cmap='viridis', colorbar=True, ax=None, **kwargs):
 
     # Add a colorbar
     if colorbar:
-        fig.colorbar(im, ax=ax)
+        cb = fig.colorbar(im, ax=ax)
+    else:
+        cb = None
 
-    return ax
+    return ax, cb
 
 
 def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
@@ -146,6 +150,8 @@ def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
     -------
     ax : matplotlib.axes.Axes
         The Axes object used for plotting.
+    cb : matplotlib.colorbar.Colorbar
+        The colorbar object, if `colored` is True. Otherwise, None.
     """
     if ax is None:
         ax = plt.gca()
@@ -160,9 +166,10 @@ def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
     S = A[p][:, q]
 
     if colored:
-        cspy(S, ax=ax, **kwargs)
+        ax, cb = cspy(S, ax=ax, **kwargs)
     else:
         ax.spy(S, **kwargs)
+        cb = None
 
     # Set the title
     M, N = A.shape
@@ -190,7 +197,7 @@ def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
     drawbox(rr[2], rr[3], cc[3], cc[4], ec='C2', fc='none', lw=2, ax=ax)
     drawbox(rr[3], rr[4], cc[3], cc[4], ec='C4', fc='none', lw=2, ax=ax)
 
-    return ax
+    return ax, cb
 
 
 def ccspy(A, colored=True, seed=0, ax=None, **kwargs):
@@ -214,6 +221,8 @@ def ccspy(A, colored=True, seed=0, ax=None, **kwargs):
     -------
     ax : matplotlib.axes.Axes
         The Axes object used for plotting.
+    cb : matplotlib.colorbar.Colorbar
+        The colorbar object, if `colored` is True. Otherwise, None.
     """
     if ax is None:
         ax = plt.gca()
@@ -225,16 +234,17 @@ def ccspy(A, colored=True, seed=0, ax=None, **kwargs):
     Nb = r.size - 1
 
     if colored:
-        cspy(S, ax=ax, **kwargs)
+        ax, cb = cspy(S, ax=ax, **kwargs)
     else:
         ax.spy(S, **kwargs)
+        cb = None
 
     M, N = A.shape
     ax.set_title(f"{M}-by-{N}, strongly connected components: {Nb:d}")
 
     drawboxes(Nb, r, s, ax=ax)
 
-    return ax
+    return ax, cb
 
 
 def drawboxes(Nb, r, s, ax=None, **kwargs):

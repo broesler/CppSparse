@@ -161,9 +161,8 @@ def demo2(C, is_sym, name='', axs=None):
     fig = axs[0].figure
     fig.suptitle(name)
 
-    # TODO plot a single right-outside colorbar?
     # Plot the matrix
-    csparse.cspy(C, ax=axs[0])
+    _, cb = csparse.cspy(C, ax=axs[0], norm='log')
     axs[0].set_title('cspy')
 
     # Compute the Dulmage-Mendelsohn (DM) ordering
@@ -171,12 +170,12 @@ def demo2(C, is_sym, name='', axs=None):
     res = csparse.dmperm(csparse.from_scipy_sparse(C))
     r, s, rr = res.r, res.s, res.rr
 
-    try:
-        csparse.ccspy(C, ax=axs[1])  # connected components
-    except RuntimeError as e:
-        pass  # non-square matrix
+    csparse.ccspy(C, ax=axs[1], colorbar=False, norm='log')
+    csparse.dmspy(C, ax=axs[2], colorbar=False, norm='log')
 
-    csparse.dmspy(C, ax=axs[2])  # DM ordering highlighted
+    # Move the colorbar to the right, outside the subplots
+    cb.remove()
+    fig.colorbar(cb.mappable, ax=axs, location='right', shrink=0.8)
 
     sprank = rr[3]
     Nb = r.size - 1
@@ -188,6 +187,7 @@ def demo2(C, is_sym, name='', axs=None):
 
     if sprank < min(M, N):
         print(f"Matrix is structurally singular ({sprank=:d})! Exiting.")
+        axs[3].set_visible(False)
         return axs
 
     # -------------------------------------------------------------------------
@@ -214,19 +214,22 @@ def demo2(C, is_sym, name='', axs=None):
                 # TODO return permutation vector from S.p_inv
                 # L, p = csparse.cholesky(C)
                 L = csparse.to_scipy_sparse(csparse.cholesky(Cc))
-                csparse.cspy(L + sparse.triu(L.T, 1), ax=ax)
+                csparse.cspy(L + sparse.triu(L.T, 1),
+                             colorbar=False, norm='log', ax=ax)
                 ax.set_title('L + L.T')
             except Exception:
                 # LU
                 lu_res = csparse.lu(Cc)
                 L, U = lu_res.L, lu_res.U
-                csparse.cspy(L + U - sparse.eye_array(M), ax=ax)
+                csparse.cspy(L + U - sparse.eye_array(M),
+                             colorbar=False, norm='log', ax=ax)
                 ax.set_title('L + U')
         else:
             # LU
             lu_res = csparse.lu(Cc)
             L, U = lu_res.L, lu_res.U
-            csparse.cspy(L + U - sparse.eye_array(M), ax=ax)
+            csparse.cspy(L + U - sparse.eye_array(M),
+                         colorbar=False, norm='log', ax=ax)
             ax.set_title('L + U')
     else:
         # QR
@@ -236,7 +239,7 @@ def demo2(C, is_sym, name='', axs=None):
             res = csparse.qr(Cc)
 
         V, R = res.V, res.R
-        csparse.cspy(V + R, ax=ax)
+        csparse.cspy(V + R, colorbar=False, norm='log', ax=ax)
         ax.set_title('V + R')
 
     # -------------------------------------------------------------------------
@@ -290,14 +293,14 @@ def demo2(C, is_sym, name='', axs=None):
 matrix_path = Path('../../data/')
 
 matrix_names = [
-    't1',
-    'fs_183_1',
-    'west0067',
-    'lp_afiro',
+    # 't1',
+    # 'fs_183_1',
+    # 'west0067',
+    # 'lp_afiro',
     'ash219',
-    'mbeacxc',
-    'bcsstk01',
-    'bcsstk16'
+    # 'mbeacxc',
+    # 'bcsstk01',
+    # 'bcsstk16'
 ]
 
 

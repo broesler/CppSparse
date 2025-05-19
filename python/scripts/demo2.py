@@ -102,9 +102,8 @@ def demo2(C, is_sym, name='', axs=None):
         if is_sym:
             try:
                 # Cholesky
-                # TODO return permutation vector from S.p_inv
-                # L, p = csparse.cholesky(C)
-                L = csparse.to_scipy_sparse(csparse.cholesky(Cc))
+                Lc, p = csparse.cholesky(Cc)
+                L = csparse.to_scipy_sparse(Lc)
                 csparse.cspy(L + sparse.triu(L.T, 1),
                              colorbar=False, norm='log', ax=ax)
                 ax.set_title('L + L.T')

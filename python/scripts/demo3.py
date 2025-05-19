@@ -73,7 +73,7 @@ def demo3(C, is_sym, name='', axs=None):
     b = np.ones(M) + np.arange(M) / M
 
     tic = time.perf_counter()
-    Lc = csparse.chol(Cc, order)
+    Lc, p = csparse.chol(Cc, order)
     t = time.perf_counter() - tic
     print(f"chol  time: {t:.2e} s")
 
@@ -83,10 +83,11 @@ def demo3(C, is_sym, name='', axs=None):
 
     # Solve the linear system
     tic = time.perf_counter()
-    x = b.copy()  # TODO permutation vector b[p]
+    x = b[p]
     x = csparse.lsolve(Lc, x)
     x = csparse.ltsolve(Lc, x)
-    # TODO x[p] = x
+    x = np.r_[x]
+    x[p] = x
     t = time.perf_counter() - tic
     print(f"solve time: {t:.2e} s")
 
@@ -105,7 +106,7 @@ def demo3(C, is_sym, name='', axs=None):
     w = L[k, k] * sparse.coo_array((vals, (rows, cols)), shape=(M, 1))
     wc = csparse.from_scipy_sparse(w)
 
-    parent = csparse.etree(Cc)  # TODO permutation
+    parent = csparse.etree(csparse.from_scipy_sparse(C[p][:, p]))
 
     tic = time.perf_counter()
     Lupc = csparse.chol_update_(Lc, True, wc, parent)
@@ -123,10 +124,11 @@ def demo3(C, is_sym, name='', axs=None):
 
     # Solve the linear system
     tic = time.perf_counter()
-    x = b.copy()  # TODO permutation vector b[p]
+    x = b[p]
     x = csparse.lsolve(Lupc, x)
     x = csparse.ltsolve(Lupc, x)
-    # TODO x[p] = x
+    x = np.r_[x]
+    x[p] = x
     t = time.perf_counter() - tic
 
     # Compute the residuals
@@ -140,11 +142,12 @@ def demo3(C, is_sym, name='', axs=None):
     print_resid(E, x, b)
 
     tic = time.perf_counter()
-    Lc = csparse.chol(Ec, order)
-    x = b.copy()  # TODO permutation vector b[p]
+    Lc, p2 = csparse.chol(Ec, order)
+    x = b[p2]
     x = csparse.lsolve(Lc, x)
     x = csparse.ltsolve(Lc, x)
-    # TODO x[p] = x
+    x = np.r_[x]
+    x[p2] = x
     t = time.perf_counter() - tic
 
     print(f"rechol:   time: {t:.2e} s (incl solve) ", end='')
@@ -158,10 +161,11 @@ def demo3(C, is_sym, name='', axs=None):
     print(f"downdate: time: {t1:.2e} s")
 
     tic = time.perf_counter()
-    x = b.copy()  # TODO permutation vector b[p]
+    x = b[p]
     x = csparse.lsolve(Ldownc, x)
     x = csparse.ltsolve(Ldownc, x)
-    # TODO x[p] = x
+    x = np.r_[x]
+    x[p] = x
     t = time.perf_counter() - tic
 
     print(f"downdate: time: {t1 + t:.2e} s (incl solve) ", end='')

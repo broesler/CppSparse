@@ -448,7 +448,10 @@ PYBIND11_MODULE(csparse, m) {
         ) {
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
-            return cs::chol(A, S);
+            return py::make_tuple(
+                cs::chol(A, S),
+                vector_to_numpy(cs::inv_permute(S.p_inv))
+            );
         },
         py::arg("A"),
         py::arg("order")="Natural",

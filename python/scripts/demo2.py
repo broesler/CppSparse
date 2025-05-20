@@ -102,22 +102,22 @@ def demo2(C, is_sym, name='', axs=None):
         if is_sym:
             try:
                 # Cholesky
-                Lc, p = csparse.cholesky(Cc)
+                Lc, p = csparse.chol(Cc)
                 L = csparse.to_scipy_sparse(Lc)
                 csparse.cspy(L + sparse.triu(L.T, 1),
                              colorbar=False, norm='log', ax=ax)
                 ax.set_title('L + L.T')
             except Exception:
                 # LU
-                lu_res = csparse.lu(Cc)
-                L, U = lu_res.L, lu_res.U
+                res = csparse.lu(Cc)
+                L, U = res.L, res.U
                 csparse.cspy(L + U - sparse.eye_array(M),
                              colorbar=False, norm='log', ax=ax)
                 ax.set_title('L + U')
         else:
             # LU
-            lu_res = csparse.lu(Cc)
-            L, U = lu_res.L, lu_res.U
+            res = csparse.lu(Cc)
+            L, U = res.L, res.U
             csparse.cspy(L + U - sparse.eye_array(M),
                          colorbar=False, norm='log', ax=ax)
             ax.set_title('L + U')

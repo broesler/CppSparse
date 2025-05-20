@@ -162,6 +162,20 @@ PYBIND11_MODULE(csparse, m) {
         })
         .def_property_readonly("q", [](const cs::QRResult& qr) {
             return vector_to_numpy(qr.q);
+        })
+        // Add the __iter__ method to make it unpackable
+        .def("__iter__", [&m](const cs::QRResult& qr) {
+            // This is a generator function in C++ that yields the elements.
+            // The order here determines the unpacking order in Python.
+            // Define a local variable because make_iterator needs an lvalue.
+            py::object result = py::make_tuple(
+                csc_matrix_to_scipy_csc(qr.V, m),
+                vector_to_numpy(qr.beta),
+                csc_matrix_to_scipy_csc(qr.R, m),
+                vector_to_numpy(qr.p_inv),
+                vector_to_numpy(qr.q)
+            );
+            return py::make_iterator(result);
         });
 
     // Bind the LUResult struct
@@ -177,6 +191,15 @@ PYBIND11_MODULE(csparse, m) {
         })
         .def_property_readonly("q", [](const cs::LUResult& lu) {
             return vector_to_numpy(lu.q);
+        })
+        .def("__iter__", [&m](const cs::LUResult& lu) {
+            py::object result = py::make_tuple(
+                csc_matrix_to_scipy_csc(lu.L, m),
+                csc_matrix_to_scipy_csc(lu.U, m),
+                vector_to_numpy(lu.p_inv),
+                vector_to_numpy(lu.q)
+            );
+            return py::make_iterator(result);
         });
 
     // Bind the DMPermResult struct
@@ -193,14 +216,26 @@ PYBIND11_MODULE(csparse, m) {
         .def_property_readonly("s", [](const cs::DMPermResult& res) {
             return vector_to_numpy(res.s);
         })
-        .def_property_readonly("Nb", [](const cs::DMPermResult& res) {
-            return res.Nb;
-        })
         .def_property_readonly("cc", [](const cs::DMPermResult& res) {
             return array_to_numpy(res.cc);
         })
         .def_property_readonly("rr", [](const cs::DMPermResult& res) {
             return array_to_numpy(res.rr);
+        })
+        .def_property_readonly("Nb", [](const cs::DMPermResult& res) {
+            return res.Nb;
+        })
+        .def("__iter__", [](const cs::DMPermResult& res) {
+            py::object result = py::make_tuple(
+                vector_to_numpy(res.p),
+                vector_to_numpy(res.q),
+                vector_to_numpy(res.r),
+                vector_to_numpy(res.s),
+                array_to_numpy(res.cc),
+                array_to_numpy(res.rr),
+                res.Nb
+            );
+            return py::make_iterator(result);
         });
 
     // Bind the SCCResult struct
@@ -213,7 +248,15 @@ PYBIND11_MODULE(csparse, m) {
         })
         .def_property_readonly("Nb", [](const cs::SCCResult& res) {
             return res.Nb;
-        });
+        })
+        .def("__iter__", [](const cs::SCCResult& res) {
+            py::object result = py::make_tuple(
+                vector_to_numpy(res.p),
+                vector_to_numpy(res.r),
+                res.Nb
+            );
+            return py::make_iterator(result);
+        });  // keep the tuple as long as the iterator
 
     //--------------------------------------------------------------------------
     //        COOMatrix class
@@ -448,6 +491,7 @@ PYBIND11_MODULE(csparse, m) {
         ) {
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
+            // TODO make CholResult struct with named members?
             return py::make_tuple(
                 cs::chol(A, S),
                 vector_to_numpy(cs::inv_permute(S.p_inv))

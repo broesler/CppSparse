@@ -120,8 +120,8 @@ def node_from_edge_sep(A, a, b):
     """
     Ap = A[a][:, b]  # permute the matrix
     # dmperm requires a CSCMatrix
-    res = dmperm(CSCMatrix(Ap.data, Ap.indices, Ap.indptr, Ap.shape))
-    p, q, s, cc, rr = res.p, res.q, res.s, res.cc, res.rr
+    Ac = CSCMatrix(Ap.data, Ap.indices, Ap.indptr, Ap.shape)
+    p, q, s, cc, rr, _ = dmperm(Ac)
     s = np.r_[a[p[:rr[1]]], b[q[cc[2]:cc[4]]]]
     w = np.ones(A.shape[1]).astype(bool)
     w[s] = False
@@ -227,8 +227,8 @@ def dm_solve(A, b):
     elif not isinstance(A, sparse.csc_array):
         A = sparse.csc_array(A)
 
-    res = dmperm(CSCMatrix(A.data, A.indices, A.indptr, A.shape))
-    p, q, cc, rr = res.p, res.q, res.cc, res.rr
+    Ac = CSCMatrix(A.data, A.indices, A.indptr, A.shape)
+    p, q, _, _, cc, rr, _ = dmperm(Ac)
 
     # Permute the matrix and the right-hand side
     C = A[p][:, q]
@@ -285,18 +285,15 @@ def scc_perm(A):
     M, N = A.shape
 
     if M == N:
-        res = scc(from_any(A))
-        p = q = res.p
-        r = s = res.r
+        p, r, Nb = scc(from_any(A))
+        q = p
+        s = r
     else:
         # Find the connected components of [I A; A.T 0]
         S = spaugment(A)
-        res = scc(from_any(S))
-        p_sym = res.p
-        r_sym = res.r
+        p_sym, r_sym, Nb = scc(from_any(S))
         p = p_sym[p_sym < M]
         q = p_sym[p_sym >= M] - M
-        Nb = len(r_sym) - 1
         r = np.zeros(Nb + 1, dtype=int)
         s = np.zeros(Nb + 1, dtype=int)
         k_row = 0

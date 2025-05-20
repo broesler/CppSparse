@@ -42,9 +42,9 @@ inline py::array_t<T> array_to_numpy(const std::array<T, N>& arr)
 };
 
 
-/** Convert a matrix to a NumPy array.
+/** Convert a dense matrix to a NumPy array.
  *
- * @param self  the matrix to convert
+ * @param self  the dense matrix to convert
  * @param order the order of the NumPy array ('C' or 'F')
  *
  * @return a NumPy array with the same data as the matrix
@@ -54,10 +54,10 @@ auto matrix_to_ndarray(const T& self, const char order)
 {
     // Get the matrix in dense column-major order
     std::vector<double> v = self.to_dense_vector('C');
-    auto [N_rows, N_cols] = self.shape();
+    auto [M, N] = self.shape();
 
     // Create a NumPy array with specified dimensions
-    py::array_t<double> result({N_rows, N_cols});
+    py::array_t<double> result({M, N});
 
     // Get a pointer to the underlying data of the NumPy array.
     auto buffer_info = result.request();
@@ -67,13 +67,13 @@ auto matrix_to_ndarray(const T& self, const char order)
     std::vector<ssize_t> strides;
     if (order == 'C') { // C-style (row-major)
         strides = {
-            static_cast<ssize_t>(N_cols * sizeof(double)),
+            static_cast<ssize_t>(N * sizeof(double)),
             sizeof(double)
         };
     } else if (order == 'F') { // Fortran-style (column-major)
         strides = {
             sizeof(double),
-            static_cast<ssize_t>(N_rows * sizeof(double))
+            static_cast<ssize_t>(M * sizeof(double))
         };
     } else {
         throw std::runtime_error("Invalid order specified. Use 'C' or 'F'.");

@@ -10,6 +10,11 @@ cmake_minimum_required(VERSION 3.31)  # Or higher
 
 project(CSparsePythonBindings)
 
+# Ensure C++20 standard
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)  # Use strict standard compliance
+
 find_package(pybind11 REQUIRED) # Find pybind11
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
@@ -41,14 +46,23 @@ pybind11_add_module(csparse_module src/pybind11_wrapper.cpp)
 
 target_link_libraries(csparse_module PRIVATE csc_lib)
 
-# Ensure C++20 standard -- doesn't work?
-# set(CMAKE_CXX_STANDARD 20)
-# set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# set(CMAKE_CXX_EXTENSIONS OFF)  # Use strict standard compliance
+# Add flags for Debug build type
+# if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+#     # Default debug flags (like -g and -O0 from CMAKE_CXX_FLAGS_DEBUG)
+#     # We want to enable sanitizers for Debug builds
+#     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+#         message(STATUS "Enabling AddressSanitizer for Debug build.")
+#         # Add sanitizer flags
+#         set(ASAN_FLAGS "-fsanitize=address -fno-omit-frame-pointer -O1 -g")
+#         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${ASAN_FLAGS}")
+#         set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} ${ASAN_FLAGS}")
+#         set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${ASAN_FLAGS}")
+#     endif()
+# endif()
 
 # Explicit compiler options for both the library and the Python module
-target_compile_options(csc_lib PRIVATE --std=c++20 -Wall -pedantic)
-target_compile_options(csparse_module PRIVATE --std=c++20 -Wall -pedantic)
+target_compile_options(csc_lib PRIVATE -Wall -pedantic)
+target_compile_options(csparse_module PRIVATE -Wall -pedantic)
 
 # Build the Python module in the build directory
 set_target_properties(

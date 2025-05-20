@@ -79,7 +79,7 @@ def cspy(A, cmap='viridis', colorbar=True, ax=None, **kwargs):
         dense_matrix = A.toarray().astype(np.float64)
     else:
         try:
-            dense_matrix = np.asarray(A, dtype=np.float64)
+            dense_matrix = np.array(A, dtype=np.float64)
         except Exception as e:
             raise TypeError(
                 "Input matrix must be a NumPy array, SciPy sparse matrix, "
@@ -89,7 +89,7 @@ def cspy(A, cmap='viridis', colorbar=True, ax=None, **kwargs):
     if dense_matrix.ndim != 2:
         raise ValueError("Input matrix must be 2-dimensional.")
 
-    M, N = A.shape
+    M, N = dense_matrix.shape
     nnz = np.count_nonzero(dense_matrix)
 
     # Set zeros to NaN
@@ -122,7 +122,7 @@ def cspy(A, cmap='viridis', colorbar=True, ax=None, **kwargs):
 
     # Add a colorbar
     if colorbar:
-        cb = fig.colorbar(im, ax=ax)
+        cb = fig.colorbar(im, ax=ax, shrink=0.8)
     else:
         cb = None
 

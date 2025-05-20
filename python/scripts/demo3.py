@@ -66,8 +66,9 @@ def demo3(C, is_sym, name='', axs=None):
     if M != N or not is_sym:
         raise ValueError("Matrix must be square and symmetric")
 
-    order = 'Natural'
-    print('chol then update/downdate ({order})')
+    # cs_chol_mex.c uses A+A' ordering when nargout == 2
+    order = 'APlusAT'
+    print(f"chol then update/downdate ({order})")
 
     Cc = csparse.from_scipy_sparse(C)
     b = np.ones(M) + np.arange(M) / M
@@ -132,9 +133,8 @@ def demo3(C, is_sym, name='', axs=None):
     t = time.perf_counter() - tic
 
     # Compute the residuals
-    # wp = sparse.csc_array(shape=(M, 1))
-    # wp[p] = w  # TODO permutation vector
-    wp = w.copy()
+    wp = sparse.dok_array((M, 1))
+    wp[p] = w
     E = C + wp * wp.T
     Ec = csparse.from_scipy_sparse(E)
 

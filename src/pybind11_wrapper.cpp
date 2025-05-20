@@ -7,13 +7,44 @@
  *
  *============================================================================*/
 
+#include <array>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+#include <vector>
 
 #include "csparse.h"
 
 namespace py = pybind11;
+
+// --- Custom Type Caster for std::vector<T> to py::array_t<T> ---
+// This caster will only apply to return values (output)
+
+namespace pybind11 { namespace detail {
+    template <typename T>
+    struct type_caster<std::vector<T>> : public type_caster_base<std::vector<T>> {
+        using base = type_caster_base<std::vector<T>>;
+        using base::value;
+
+        static constexpr auto name = _("numpy.ndarray");
+
+        // C++ (std::vector<T>) to Python (py::array_t<T>)
+        // This is the "output" conversion (when a C++ function returns std::vector)
+        static handle cast(
+            const std::vector<T>& src,
+            return_value_policy policy,
+            handle parent
+        ) {
+            py::array_t<T> arr(src.size(), src.data());
+            return arr.release();
+        }
+
+        // Python (py::array_t<T> or list) to C++ (std::vector<T>)
+        bool load(handle src, bool convert) {
+            return base::load(src, convert);
+        }
+    };
+}} // namespace pybind11::detail
 
 
 /** Convert a vector to a NumPy array.
@@ -559,8 +590,8 @@ PYBIND11_MODULE(csparse, m) {
             // TODO make CholResult struct with named members?
             cs::CSCMatrix L = cs::chol(A, S);
             return py::make_tuple(
-                csc_matrix_to_scipy_csc(L, m),
-                vector_to_numpy(cs::inv_permute(S.p_inv))
+                csc_matrix_to_scipy_csc(L),
+                cs::inv_permute(S.p_inv)
             );
         },
         py::arg("A"),

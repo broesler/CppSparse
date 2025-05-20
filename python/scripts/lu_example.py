@@ -106,9 +106,9 @@ allclose(Ld[pd] @ Ud, A)
 
 # C++Sparse
 try:
-    L, U, p_inv, q = csparse.lu(Ac, order='Natural')
+    L, U, p, q = csparse.lu(Ac, order='Natural')
 
-    allclose((L[p_inv] @ U).toarray(), A)
+    allclose((L @ U).toarray(), A[p])
     # np.testing.assert_allclose(p, pd)  # not necessarily identical!
 
 except Exception as e:
@@ -124,7 +124,7 @@ try:
     lu = spla.splu(As, permc_spec='NATURAL')  # no column reordering
     p_, L_, U_ = lu.perm_r, lu.L, lu.U
 
-    np.testing.assert_allclose(p_, p_inv)  # not necessarily identical!
+    np.testing.assert_allclose(p_, csparse.inv_permute(p))  # not always true!
     allclose((L_[p_] @ U_).toarray(), As.toarray())
     allclose(Ld, L_.toarray())
     allclose(Ud, U_.toarray())

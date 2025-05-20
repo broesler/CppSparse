@@ -47,8 +47,7 @@ def test_lu_interface(order):
     A = Ac.toarray()
 
     # Test the LU decomposition with the default order
-    L, U, p_inv, q = csparse.lu(Ac, order=order)
-    p = csparse.inv_permute(p_inv)
+    L, U, p, q = csparse.lu(Ac, order=order)
 
     np.testing.assert_allclose((L @ U).toarray(), A[p][:, q], atol=ATOL)
 

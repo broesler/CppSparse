@@ -48,14 +48,14 @@ PYBIND11_MODULE(csparse, m) {
         .def_property_readonly("V", [](const cs::QRResult& qr) { return qr.V; })
         .def_property_readonly("beta", [](const cs::QRResult& qr) { return qr.beta; })
         .def_property_readonly("R", [](const cs::QRResult& qr) { return qr.R; })
-        .def_property_readonly("p_inv", [](const cs::QRResult& qr) { return qr.p_inv; })
+        .def_property_readonly("p", [](const cs::QRResult& qr) { return cs::inv_permute(qr.p_inv); })
         .def_property_readonly("q", [](const cs::QRResult& qr) { return qr.q; })
         // Add the __iter__ method to make it unpackable
         .def("__iter__", [](const cs::QRResult& qr) {
             // This is a generator function in C++ that yields the elements.
             // The order here determines the unpacking order in Python.
             // Define a local variable because make_iterator needs an lvalue.
-            py::object result = py::make_tuple(qr.V, qr.beta, qr.R, qr.p_inv, qr.q);
+            py::object result = py::make_tuple(qr.V, qr.beta, qr.R, cs::inv_permute(qr.p_inv), qr.q);
             return py::make_iterator(result);
         });
 
@@ -63,10 +63,10 @@ PYBIND11_MODULE(csparse, m) {
     py::class_<cs::LUResult>(m, "LUResult")
         .def_property_readonly("L", [](const cs::LUResult& lu) { return lu.L; })
         .def_property_readonly("U", [](const cs::LUResult& lu) { return lu.U; })
-        .def_property_readonly("p_inv", [](const cs::LUResult& lu) { return lu.p_inv; })
+        .def_property_readonly("p", [](const cs::LUResult& lu) { return cs::inv_permute(lu.p_inv); })
         .def_property_readonly("q", [](const cs::LUResult& lu) { return lu.q; })
         .def("__iter__", [](const cs::LUResult& lu) {
-            py::object result = py::make_tuple(lu.L, lu.U, lu.p_inv, lu.q);
+            py::object result = py::make_tuple(lu.L, lu.U, cs::inv_permute(lu.p_inv), lu.q);
             return py::make_iterator(result);
         });
 

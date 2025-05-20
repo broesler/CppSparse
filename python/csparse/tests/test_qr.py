@@ -89,7 +89,7 @@ def test_csparse_qr(shape_cat, case_name, A, order):
     M, N = A.shape
 
     # ---------- Compute csparse QR
-    V, beta, R, p_inv, q = csparse.qr(A, order)
+    V, beta, R, p, q = csparse.qr(A, order)
 
     if order == 'Natural':
         np.testing.assert_allclose(q, np.arange(N))
@@ -98,7 +98,7 @@ def test_csparse_qr(shape_cat, case_name, A, order):
     V = V.toarray()
     R = R.toarray()
 
-    p = csparse.inv_permute(p_inv)
+    p_inv = csparse.inv_permute(p)
     Q = csparse.apply_qright(V, beta, p)
     Ql = csparse.apply_qtleft(V, beta, p).T
 

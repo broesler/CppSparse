@@ -25,7 +25,7 @@ atol = 1e-12
 A = csparse.davis_example_qr()
 
 # ---------- Davis 4x4 example
-# A = csparse.davis_small_example()
+# A = csparse.davis_small_example(format='csc')
 
 N = A.shape[0]
 
@@ -39,14 +39,13 @@ A_dense = A.toarray()
 # ---------- Compute using Householder reflections
 order = 'ATA'  # 'Natural' or 'ATA'
 
-V, beta, R, p_inv, q = csparse.qr(A, order=order)
+V, beta, R, p, q = csparse.qr(A, order=order)
 
 # Convert for easier debugging
 V = V.toarray()
 R = R.toarray()
 
 # Get the actual Q matrix, don't forget the row permutation!
-p = csparse.inv_permute(p_inv)
 Q = csparse.apply_qright(V, beta, p)
 
 
@@ -61,6 +60,8 @@ Apq = A_dense[p][:, q]
 Q_, R_ = la.qr(Apq)
 V_ = np.tril(Qraw, -1) + np.eye(N)
 Qr_ = csparse.apply_qright(V_, tau, p)
+
+p_inv = csparse.inv_permute(p)
 
 # Now we get the same Householder vectors and weights
 np.testing.assert_allclose(V, V_, atol=atol)
@@ -92,14 +93,12 @@ Ar_dense = Ar.toarray()
 print("Ar = ")
 print(Ar_dense)
 
-Vr, beta_r, Rr, p_inv, q  = csparse.qr(Ar, order=order)
+Vr, beta_r, Rr, pr, q = csparse.qr(Ar, order=order)
 
 Vr = Vr.toarray()
 Rr = Rr.toarray()
 
 # Get the actual Q matrix
-pr = csparse.inv_permute(p_inv)
-
 Qr = csparse.apply_qright(Vr, beta_r, pr)  # (M, M)
 Qrt = csparse.apply_qtleft(Vr, beta_r, pr).T  # (M, M)
 
@@ -117,6 +116,8 @@ print("Rr_ = ")
 print(Rr_)
 
 # Qr_r = csparse.apply_qright(Vr_, tau_r)
+
+p_inv = csparse.inv_permute(pr)
 
 np.testing.assert_allclose(Qr, Qr_[p_inv], atol=atol)
 np.testing.assert_allclose(Rr, Rr_, atol=atol)

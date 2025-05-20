@@ -17,19 +17,15 @@
 
 namespace py = pybind11;
 
-// --- Custom Type Caster for std::vector<T> to py::array_t<T> ---
-// This caster will only apply to return values (output)
 
+// --- Custom Type Caster for std::vector<T> <-> py::array_t<T> ---
 namespace pybind11 { namespace detail {
     template <typename T>
-    struct type_caster<std::vector<T>> : public type_caster_base<std::vector<T>> {
-        using base = type_caster_base<std::vector<T>>;
-        using base::value;
-
-        static constexpr auto name = _("numpy.ndarray");
+    struct type_caster<std::vector<T>> {
+        PYBIND11_TYPE_CASTER(std::vector<T>, _("Sequence[Union[int, float]]"));
 
         // C++ (std::vector<T>) to Python (py::array_t<T>)
-        // This is the "output" conversion (when a C++ function returns std::vector)
+        // Output conversion (when a C++ function returns std::vector)
         static handle cast(
             const std::vector<T>& src,
             return_value_policy policy,
@@ -40,8 +36,51 @@ namespace pybind11 { namespace detail {
         }
 
         // Python (py::array_t<T> or list) to C++ (std::vector<T>)
+        // Input conversion (when a C++ function takes std::vector)
         bool load(handle src, bool convert) {
-            return base::load(src, convert);
+            // --- Try to load as a NumPy array ---
+            if (py::isinstance<py::array>(src)) {
+                try {
+                    // Directly cast to py::array_t<T>
+                    py::array_t<T> arr = src.cast<py::array_t<T>>();
+                    py::buffer_info buf_info = arr.request();
+
+                    // Basic validation: ensure it's a 1D array of the correct element format
+                    if (buf_info.ndim != 1) {
+                        std::cerr << "Error: Input NumPy array has incorrect dimensions." << std::endl;
+                        return false;
+                    }
+
+                    // Assign data directly to the value vector
+                    value.assign(static_cast<const T*>(buf_info.ptr),
+                                 static_cast<const T*>(buf_info.ptr) + buf_info.shape[0]);
+                    return true;
+                } catch (const py::cast_error& e) {
+                    std::cerr << "  Failed to cast NumPy array to py::array_t<long long>: " << e.what() << std::endl;
+                    return false;
+                }
+            }
+
+            // --- if not a NumPy array, try loading as a Python list ---
+            if (py::isinstance<py::list>(src)) {
+                try {
+                    // Iterate through the list and cast each element individually
+                    // This explicitly ensures each element is cast to long long
+                    py::list py_list = src.cast<py::list>();
+                    value.clear();
+                    value.reserve(py::len(py_list)); // Pre-allocate
+                    for (auto item : py_list) {
+                        value.push_back(item.cast<T>()); // Cast each item to long long
+                    }
+                    return true;
+                } catch (const py::cast_error& e) {
+                    std::cerr << "  Failed to cast Python list elements to long long: " << e.what() << std::endl;
+                    // Fall through to default failure message if individual cast fails
+                }
+            }
+
+            std::cerr << "  Failed to load from either NumPy array or list for std::vector<long long>." << std::endl;
+            return false;
         }
     };
 }} // namespace pybind11::detail

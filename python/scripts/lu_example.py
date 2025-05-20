@@ -23,7 +23,7 @@ def allclose(a, b, atol=1e-15):
 
 
 # Define the example matrix from Davis, Figure 4.2, p. 39
-Ac = csparse.davis_example_qr()
+Ac = csparse.davis_example_qr().todok()  # efficient updates
 
 M, N = Ac.shape
 
@@ -33,9 +33,8 @@ for i in range(M):
     Ac[i, i] += 10
 
 # ---------- Permute the matrix rows arbitrarily
-# p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
-# p_inv = csparse.inv_permute(p)
-# Ac = Ac.permute_rows(p_inv)
+p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
+Ac = Ac[p]
 
 # ---------- Create a numerically rank-deficient matrix
 # for i in range(N):
@@ -65,12 +64,14 @@ for i in range(M):
 
 # ----- M < N
 # Ac = Ac.slice(0, M - r, 0, N)  # (M-r, N)
+# Ac = Ac[:M - r, :]  # (M-r, N)
 
 # L -> (6, 6) == (M-r, M-r)
 # U -> (6, 8) == (M-r, N)
 
 # ----- M > N
 # Ac = Ac.slice(0, M, 0, N - r)  # (M, N-r)
+# Ac = Ac[:, :N - r]
 
 # L -> (8, 8) == (M, M)
 # U -> (8, 6) == (M, N-x)
@@ -105,8 +106,7 @@ allclose(Ld[pd] @ Ud, A)
 
 # C++Sparse
 try:
-    lu_res = csparse.lu(Ac)
-    p_inv, L, U = lu_res.p_inv, lu_res.L, lu_res.U
+    L, U, p_inv, q = csparse.lu(Ac, order='Natural')
 
     allclose((L[p_inv] @ U).toarray(), A)
     # np.testing.assert_allclose(p, pd)  # not necessarily identical!

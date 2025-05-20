@@ -83,13 +83,9 @@ Qr_ = csparse.apply_qright(V_, tau)
 np.testing.assert_allclose(Q_, Qr_, atol=1e-9)
 
 # ---------- Get the CSparse QR decomposition
-Ac = csparse.from_ndarray(Aq)
-S = csparse.sqr(Ac)
-res = csparse.qr(Ac, S)
+V, beta, R, p_inv, _ = csparse.qr(sparse.csc_array(Aq))
 
-V, beta, R, p_inv = res.V, res.beta, res.R, res.p_inv
 V = V.toarray()
-beta = np.r_[beta]
 R = R.toarray()
 p = csparse.inv_permute(p_inv)
 

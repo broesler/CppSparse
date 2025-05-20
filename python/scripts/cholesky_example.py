@@ -10,6 +10,7 @@ csparse.
 """
 # =============================================================================
 
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.linalg as la
 
@@ -20,6 +21,8 @@ import csparse
 # Define the example matrix from Davis, Figure 4.2, p. 39
 Ac = csparse.davis_example_chol()
 A = Ac.toarray()  # scipy Cholesky is only implemented for dense matrices
+
+M, N = A.shape
 
 # R = la.cholesky(A, lower=True)
 R = csparse.chol_up(A, lower=True)
@@ -43,16 +46,33 @@ L_ATA = la.cholesky(ATA, lower=True)
 nnz_cols = np.diff(sparse.csc_matrix(L_ATA).indptr)
 
 # Compute the Cholesky factor using csparse C++ algorithms
-L = csparse.chol(Ac)
-Ls = csparse.symbolic_cholesky(Ac)
-Ll = csparse.leftchol(Ac)
-Lr = csparse.rechol(Ac)
+order = 'APlusAT'
+L, p = csparse.chol(Ac, order=order)
+Ls = csparse.symbolic_cholesky(Ac, order=order)
+Ll = csparse.leftchol(Ac, order=order)
+Lr = csparse.rechol(Ac, order=order)
 
 np.testing.assert_allclose(L.indptr, Ls.indptr)
 np.testing.assert_allclose(L.indices, Ls.indices)
 np.testing.assert_allclose(L.toarray(), Ll.toarray())
 np.testing.assert_allclose(Ll.toarray(), Lr.toarray())
 
+np.testing.assert_allclose((L @ L.T).toarray(), A[p][:, p], atol=1e-14)
+
+# Try to solve Ax = b to test numpy array of float input
+b = np.ones(M) + np.arange(M) / M
+x = csparse.lsolve(sparse.csc_array(R), b)
+
+# Plot the matrix and Cholesky factor
+fig, axs = plt.subplots(num=1, nrows=1, ncols=2, clear=True)
+fig.set_size_inches((10, 5), forward=True)
+ax = axs[0]
+csparse.cspy(A, ax=ax)
+
+ax = axs[1]
+csparse.cspy(L + L.T - sparse.eye_array(N), ax=ax)
+
+plt.show()
 
 # =============================================================================
 # =============================================================================

@@ -85,12 +85,11 @@ def generate_test_matrices():
 @pytest.mark.parametrize("shape_cat, case_name, A", generate_test_matrices())
 def test_csparse_qr(shape_cat, case_name, A, order):
     """Test QR decomposition with various matrices using parametrization."""
-    Ac = csparse.from_scipy_sparse(A, format='csc')
     A_dense = A.toarray()
     M, N = A.shape
 
     # ---------- Compute csparse QR
-    V, beta, R, p_inv, q = csparse.qr(Ac, order)
+    V, beta, R, p_inv, q = csparse.qr(A, order)
 
     if order == 'Natural':
         np.testing.assert_allclose(q, np.arange(N))

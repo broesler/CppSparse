@@ -58,7 +58,7 @@ def demo2(C, is_sym, name='', axs=None):
 
     # Compute the Dulmage-Mendelsohn (DM) ordering
     M, N = C.shape
-    res = csparse.dmperm(csparse.from_scipy_sparse(C))
+    res = csparse.dmperm(C)
     r, s, rr = res.r, res.s, res.rr
 
     csparse.ccspy(C, ax=axs[1], colorbar=False, norm='log')
@@ -86,9 +86,6 @@ def demo2(C, is_sym, name='', axs=None):
     # -------------------------------------------------------------------------
     # Code is unique to the python demo (not in C++ demo)
 
-    # TODO update pybind11 interface to accept scipy.sparse.csc_array
-    Cc = csparse.from_scipy_sparse(C)
-
     ax = axs[3]
 
     pad = dict(
@@ -102,20 +99,20 @@ def demo2(C, is_sym, name='', axs=None):
         if is_sym:
             try:
                 # Cholesky
-                L, p = csparse.chol(C)
+                L, p = csparse.chol(C, order='APlusAT')
                 csparse.cspy(L + sparse.triu(L.T, 1),
                              colorbar=False, norm='log', ax=ax)
                 ax.set_title('L + L.T')
             except Exception:
                 # LU
-                res = csparse.lu(Cc)
+                res = csparse.lu(C, tol=0.001, order='APlusAT')
                 L, U = res.L, res.U
                 csparse.cspy(L + U - sparse.eye_array(M),
                              colorbar=False, norm='log', ax=ax)
                 ax.set_title('L + U')
         else:
             # LU
-            res = csparse.lu(Cc)
+            res = csparse.lu(C, order='ATANoDenseRows')
             L, U = res.L, res.U
             csparse.cspy(L + U - sparse.eye_array(M),
                          colorbar=False, norm='log', ax=ax)
@@ -123,9 +120,9 @@ def demo2(C, is_sym, name='', axs=None):
     else:
         # QR
         if M < N:
-            res = csparse.qr(Cc.T)
+            res = csparse.qr(C.T, order='ATA')
         else:
-            res = csparse.qr(Cc)
+            res = csparse.qr(C, order='ATA')
 
         V, R = res.V, res.R
         csparse.cspy(V + R, colorbar=False, norm='log', ax=ax)
@@ -144,7 +141,7 @@ def demo2(C, is_sym, name='', axs=None):
 
         print(f"QR    ({order})", end=pad[order])
         tic = time.perf_counter()
-        x = csparse.qr_solve(Cc, b, order=order)
+        x = csparse.qr_solve(C, b, order=order)
         t = time.perf_counter() - tic
         print(f"time {t:.2e} s ", end='')
         print_resid(C, x, b)
@@ -156,7 +153,7 @@ def demo2(C, is_sym, name='', axs=None):
     for order in ['Natural', 'APlusAT', 'ATANoDenseRows', 'ATA']:
         print(f"LU    ({order})", end=pad[order])
         tic = time.perf_counter()
-        x = csparse.lu_solve(Cc, b, order=order)
+        x = csparse.lu_solve(C, b, order=order)
         t = time.perf_counter() - tic
         print(f"time {t:.2e} s ", end='')
         print_resid(C, x, b)
@@ -168,7 +165,7 @@ def demo2(C, is_sym, name='', axs=None):
     for order in ['Natural', 'APlusAT']:
         print(f"Chol  ({order})", end=pad[order])
         tic = time.perf_counter()
-        x = csparse.chol_solve(Cc, b, order=order)
+        x = csparse.chol_solve(C, b, order=order)
         t = time.perf_counter() - tic
         print(f"time {t:.2e} s ", end='')
         print_resid(C, x, b)
@@ -182,12 +179,12 @@ def demo2(C, is_sym, name='', axs=None):
 matrix_path = Path('../../data/')
 
 matrix_names = [
-    # 't1',
-    # 'fs_183_1',
-    # 'west0067',
-    # 'lp_afiro',
-    # 'ash219',
-    # 'mbeacxc',
+    't1',
+    'fs_183_1',
+    'west0067',
+    'lp_afiro',
+    'ash219',
+    'mbeacxc',
     'bcsstk01',
     # 'bcsstk16'
 ]

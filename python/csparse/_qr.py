@@ -16,7 +16,6 @@ from scipy import sparse
 from scipy import linalg as la
 
 from .csparse import CSCMatrix, etree
-from .utils import from_scipy_sparse, to_scipy_sparse
 
 
 # -----------------------------------------------------------------------------
@@ -54,9 +53,6 @@ def apply_qright(V, beta, p=None, Y=None):
     cs_qright : The CSparse implementation of this function.
     apply_qtleft : Apply Householder vectors on the left as :math:`Q^T Y`.
     """
-    if isinstance(V, CSCMatrix):
-        V = to_scipy_sparse(V)
-
     if Y is None:
         Y = sparse.eye_array(V.shape[0]).tocsc()
 
@@ -98,9 +94,6 @@ def apply_qtleft(V, beta, p=None, Y=None):
     cs_qleft : The CSparse implementation of this function.
     apply_qright : Apply Householder vectors on the right as :math:`Y Q`.
     """
-    if isinstance(V, CSCMatrix):
-        V = to_scipy_sparse(V)
-
     if Y is None:
         Y = sparse.eye_array(V.shape[0]).tocsc()
 
@@ -326,7 +319,7 @@ def qr_givens(A):
     M, N = A.shape
     R = np.copy(A)
     # Get the elimination tree of A^T A
-    parent = etree(from_scipy_sparse(sparse.csc_array(R)), True)
+    parent = etree(sparse.csc_array(R), True)
 
     for i in range(1, M):
         nnz_idx = np.where(R[i, :])[0]

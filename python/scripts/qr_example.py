@@ -22,13 +22,12 @@ atol = 1e-12
 
 
 # ---------- Matrix from Davis Figure 5.1, p 74.
-A = csparse.davis_example_qr(format='csc')
+A = csparse.davis_example_qr()
 
 # ---------- Davis 4x4 example
-# A = csparse.davis_small_example(format='csc')
+# A = csparse.davis_small_example()
 
 N = A.shape[0]
-Ac = csparse.from_scipy_sparse(A, format='csc')
 
 A_dense = A.toarray()
 # print("A = ")
@@ -39,9 +38,8 @@ A_dense = A.toarray()
 # -----------------------------------------------------------------------------
 # ---------- Compute using Householder reflections
 order = 'ATA'  # 'Natural' or 'ATA'
-QRres = csparse.qr(Ac, order=order)
 
-V, beta, R, p_inv, q = QRres.V, QRres.beta, QRres.R, QRres.p_inv, QRres.q
+V, beta, R, p_inv, q = csparse.qr(A, order=order)
 
 # Convert for easier debugging
 V = V.toarray()
@@ -94,10 +92,8 @@ Ar_dense = Ar.toarray()
 print("Ar = ")
 print(Ar_dense)
 
-Arc = csparse.from_scipy_sparse(Ar)
-QRr_res = csparse.qr(Arc, order=order)
+Vr, beta_r, Rr, p_inv, q  = csparse.qr(Ar, order=order)
 
-Vr, beta_r, Rr, p_inv, q = QRr_res.V, QRr_res.beta, QRr_res.R, QRr_res.p_inv, QRr_res.q
 Vr = Vr.toarray()
 Rr = Rr.toarray()
 

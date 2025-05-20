@@ -18,7 +18,7 @@ from scipy.sparse import linalg as spla
 
 import csparse
 
-A = csparse.davis_example_amd('csc')
+A = csparse.davis_example_amd()
 
 print("A:")
 print(A.toarray())

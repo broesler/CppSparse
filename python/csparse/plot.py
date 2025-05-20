@@ -18,7 +18,6 @@ from scipy.sparse import issparse
 
 from csparse.csparse import dmperm
 from csparse._fillreducing import scc_perm
-from csparse.utils import from_any
 
 
 def cspy(A, cmap='viridis', colorbar=True, ax=None, **kwargs):
@@ -157,10 +156,7 @@ def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
         ax = plt.gca()
 
     # Compute the Dulmage-Mendelsohn (DM) ordering
-    Ac = from_any(A)
-
-    res = dmperm(Ac, seed=seed)
-    p, q, r, s, rr, cc, Nb = res.p, res.q, res.r, res.s, res.rr, res.cc, res.Nb
+    p, q, r, s, rr, cc, Nb = dmperm(A, seed=seed)
 
     # Plot the result
     S = A[p][:, q]

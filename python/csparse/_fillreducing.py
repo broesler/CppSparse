@@ -15,8 +15,7 @@ import numpy as np
 from scipy import sparse
 from scipy.sparse import linalg as spla
 
-from .csparse import CSCMatrix, amd, dmperm, lu_solve, qr_solve, scc
-from .utils import to_scipy_sparse, from_any
+from .csparse import amd, dmperm, lu_solve, qr_solve, scc
 
 
 def fiedler(A):
@@ -118,10 +117,7 @@ def node_from_edge_sep(A, a, b):
     a_s, b_s : ndarray of int
         The sets `a` and `b` with `s` removed.
     """
-    Ap = A[a][:, b]  # permute the matrix
-    # dmperm requires a CSCMatrix
-    Ac = CSCMatrix(Ap.data, Ap.indices, Ap.indptr, Ap.shape)
-    p, q, s, cc, rr, _ = dmperm(Ac)
+    p, q, r, s, cc, rr, _ = dmperm(A[a][:, b])
     s = np.r_[a[p[:rr[1]]], b[q[cc[2]:cc[4]]]]
     w = np.ones(A.shape[1]).astype(bool)
     w[s] = False
@@ -182,9 +178,7 @@ def nested_dissection(A):
     if N == 1:
         return np.array([0])
     elif N < 500:
-        # amd requires a CSCMatrix
-        Ac = CSCMatrix(A.data, A.indices, A.indptr, A.shape)
-        return amd(Ac, order='APlusAT')
+        return amd(A, order='APlusAT')
     else:
         # Compute the node separator
         s, a, b = node_separator(A)
@@ -221,14 +215,7 @@ def dm_solve(A, b):
     """
     M, N = A.shape
 
-    # dmperm requires a CSCMatrix
-    if isinstance(A, CSCMatrix):
-        A = to_scipy_sparse(A)
-    elif not isinstance(A, sparse.csc_array):
-        A = sparse.csc_array(A)
-
-    Ac = CSCMatrix(A.data, A.indices, A.indptr, A.shape)
-    p, q, _, _, cc, rr, _ = dmperm(Ac)
+    p, q, _, _, cc, rr, _ = dmperm(A)
 
     # Permute the matrix and the right-hand side
     C = A[p][:, q]
@@ -238,20 +225,17 @@ def dm_solve(A, b):
     # Solve the system
     if rr[2] <= M and rr[3] <= N:
         Cp = C[rr[2]:, rr[3]:]
-        Cpc = CSCMatrix(Cp.data, Cp.indices, Cp.indptr, Cp.shape)
-        x[cc[3]:] = qr_solve(Cpc, b[rr[2]:], order='ATA')
+        x[cc[3]:] = qr_solve(Cp, b[rr[2]:], order='ATA')
         b[:rr[2]] -= C[:rr[2], cc[3]:] @ x[cc[3]:]
 
     if rr[1] < rr[2] and cc[2] < cc[3]:
         Cp = C[rr[1]:rr[2], cc[2]:cc[3]]
-        Cpc = CSCMatrix(Cp.data, Cp.indices, Cp.indptr, Cp.shape)
-        x[cc[2]:cc[3]] = lu_solve(Cpc, b[rr[1]:rr[2]], order='ATANoDenseRows')
+        x[cc[2]:cc[3]] = lu_solve(Cp, b[rr[1]:rr[2]], order='ATANoDenseRows')
         b[:rr[1]] -= C[:rr[1], cc[2]:cc[3]] @ x[cc[2]:cc[3]]
 
     if rr[1] > 0 and cc[2] > 0:
         Cp = C[:rr[1], :cc[2]]
-        Cpc = CSCMatrix(Cp.data, Cp.indices, Cp.indptr, Cp.shape)
-        x[:cc[2]] = qr_solve(Cpc, b[:rr[1]], order='ATA')
+        x[:cc[2]] = qr_solve(Cp, b[:rr[1]], order='ATA')
 
     x[q] = x  # inverse permute the solution
 
@@ -285,13 +269,13 @@ def scc_perm(A):
     M, N = A.shape
 
     if M == N:
-        p, r, Nb = scc(from_any(A))
+        p, r, Nb = scc(A)
         q = p
         s = r
     else:
         # Find the connected components of [I A; A.T 0]
         S = spaugment(A)
-        p_sym, r_sym, Nb = scc(from_any(S))
+        p_sym, r_sym, Nb = scc(S)
         p = p_sym[p_sym < M]
         q = p_sym[p_sym >= M] - M
         r = np.zeros(Nb + 1, dtype=int)

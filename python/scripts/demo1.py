@@ -33,17 +33,21 @@ filename = Path(sys.argv[1])
 # filename = Path('../../data/t1')
 
 # Load the matrix from the file
-data = np.genfromtxt(filename, delimiter=' ', dtype=[
-    ('rows', np.int32),
-    ('cols', np.int32),
-    ('vals', np.float64)
-])
+data = np.genfromtxt(
+    filename,
+    delimiter=' ',
+    dtype=[
+        ('rows', int),
+        ('cols', int),
+        ('vals', float)
+    ]
+)
 
 # Build the matrix two ways
 A = sparse.coo_array((data['vals'], (data['rows'], data['cols']))).tocsc()
 Ac = csparse.COOMatrix(data['vals'], data['rows'], data['cols']).tocsc()
 
-print(f"A difference: {spla.norm(A - csparse.to_scipy_sparse(Ac), ord=1)}")
+print(f"A  difference: {spla.norm(A - Ac, ord=1)}")
 
 # Plot the matrix
 fig, axs = plt.subplots(num=1, nrows=2, ncols=2, clear=True)
@@ -55,7 +59,7 @@ csparse.cspy(A, ax=ax)
 AT = A.T
 ATc = Ac.transpose()
 
-print(f"AT difference: {spla.norm(AT - csparse.to_scipy_sparse(ATc), ord=1)}")
+print(f"AT difference: {spla.norm(AT - ATc, ord=1)}")
 
 ax = axs[0, 1]
 ax.set_title(r'$A^T$')
@@ -65,7 +69,7 @@ csparse.cspy(AT, ax=ax)
 C = A @ AT
 Cc = Ac @ ATc  # == Ac.dot(ATc)
 
-print(f"C difference: {spla.norm(C - csparse.to_scipy_sparse(Cc), ord=1)}")
+print(f"C  difference: {spla.norm(C - Cc, ord=1)}")
 
 ax = axs[1, 0]
 ax.set_title(r'$C = A A^T$')
@@ -75,9 +79,9 @@ N = A.shape[1]
 I = sparse.eye_array(N)
 cnorm = spla.norm(C, ord=1)
 D = C + I * cnorm
-Dc = Cc + csparse.from_scipy_sparse(I * cnorm)
+Dc = Cc + I * cnorm
 
-print(f"D difference: {spla.norm(D - csparse.to_scipy_sparse(Dc), ord=1)}")
+print(f"D  difference: {spla.norm(D - Dc, ord=1)}")
 
 ax = axs[1, 1]
 ax.set_title(r'$D = C + |C| I$')

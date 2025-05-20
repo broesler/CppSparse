@@ -70,24 +70,21 @@ def demo3(C, is_sym, name='', axs=None):
     order = 'APlusAT'
     print(f"chol then update/downdate ({order})")
 
-    Cc = csparse.from_scipy_sparse(C)
     b = np.ones(M) + np.arange(M) / M
 
     tic = time.perf_counter()
-    Lc, p = csparse.chol(Cc, order)
+    L, p = csparse.chol(C, order)
     t = time.perf_counter() - tic
     print(f"chol  time: {t:.2e} s")
 
-    L = csparse.to_scipy_sparse(Lc)
     axs[1].set_title('L')
     csparse.cspy(L, ax=axs[1], colorbar=False, norm='log')
 
     # Solve the linear system
     tic = time.perf_counter()
     x = b[p]
-    x = csparse.lsolve(Lc, x)
-    x = csparse.ltsolve(Lc, x)
-    x = np.r_[x]
+    x = csparse.lsolve(L, x)
+    x = csparse.ltsolve(L, x)
     x[p] = x
     t = time.perf_counter() - tic
     print(f"solve time: {t:.2e} s")
@@ -105,16 +102,13 @@ def demo3(C, is_sym, name='', axs=None):
     vals = rng.random(Lk.data.size)
 
     w = L[k, k] * sparse.coo_array((vals, (rows, cols)), shape=(M, 1))
-    wc = csparse.from_scipy_sparse(w)
 
-    parent = csparse.etree(csparse.from_scipy_sparse(C[p][:, p]))
+    parent = csparse.etree(C[p][:, p])
 
     tic = time.perf_counter()
-    Lupc = csparse.chol_update_(Lc, True, wc, parent)
+    Lup = csparse.chol_update_(L, True, w, parent)
     t1 = time.perf_counter() - tic
     print(f"update:   time: {t1:.2e} s")
-
-    Lup = csparse.to_scipy_sparse(Lupc)
 
     # Plot the updated matrix and the difference from the original
     csparse.cspy(Lup, ax=axs[2], colorbar=False, norm='log')
@@ -126,9 +120,8 @@ def demo3(C, is_sym, name='', axs=None):
     # Solve the linear system
     tic = time.perf_counter()
     x = b[p]
-    x = csparse.lsolve(Lupc, x)
-    x = csparse.ltsolve(Lupc, x)
-    x = np.r_[x]
+    x = csparse.lsolve(Lup, x)
+    x = csparse.ltsolve(Lup, x)
     x[p] = x
     t = time.perf_counter() - tic
 
@@ -136,17 +129,15 @@ def demo3(C, is_sym, name='', axs=None):
     wp = sparse.dok_array((M, 1))
     wp[p] = w
     E = C + wp * wp.T
-    Ec = csparse.from_scipy_sparse(E)
 
     print(f"update:   time: {t1 + t:.2e} s (incl solve) ", end='')
     print_resid(E, x, b)
 
     tic = time.perf_counter()
-    Lc, p2 = csparse.chol(Ec, order)
+    L2, p2 = csparse.chol(E, order)
     x = b[p2]
-    x = csparse.lsolve(Lc, x)
-    x = csparse.ltsolve(Lc, x)
-    x = np.r_[x]
+    x = csparse.lsolve(L2, x)
+    x = csparse.ltsolve(L2, x)
     x[p2] = x
     t = time.perf_counter() - tic
 
@@ -155,16 +146,15 @@ def demo3(C, is_sym, name='', axs=None):
 
     # Downdate
     tic = time.perf_counter()
-    Ldownc = csparse.chol_update_(Lupc, False, wc, parent)
+    Ldown = csparse.chol_update_(Lup, False, w, parent)
     t1 = time.perf_counter() - tic
 
     print(f"downdate: time: {t1:.2e} s")
 
     tic = time.perf_counter()
     x = b[p]
-    x = csparse.lsolve(Ldownc, x)
-    x = csparse.ltsolve(Ldownc, x)
-    x = np.r_[x]
+    x = csparse.lsolve(Ldown, x)
+    x = csparse.ltsolve(Ldown, x)
     x[p] = x
     t = time.perf_counter() - tic
 

@@ -29,14 +29,14 @@ TEST_MATRICES = [
         sparse.diags([np.ones(N-1), np.arange(1, N+1)], [-1, 0]).tocsc()),
     ("Laplacian (Symmetric Banded)",
         sparse.diags([1, -2, 1], [-1, 0, 1]).tocsc()),
-    ("Davis 8x8", csparse.davis_example_qr(format='csc')),
-    ("Davis 4x4", csparse.davis_example_small(format='csc')),
+    ("Davis 8x8", csparse.davis_example_qr()),
+    ("Davis 4x4", csparse.davis_example_small()),
     # See: Strang Linear Algebra p 203.
     ("Strang 3x3", sparse.csc_array(
         np.array([[1, 1, 2], [0, 0, 1], [1, 0, 0]], dtype=float)
     )),
-    ("Davis 8x5 (M > N)", csparse.davis_example_qr(format='csc')[:, :5]),
-    ("Davis 5x8 (M < N)", csparse.davis_example_qr(format='csc')[:5, :])
+    ("Davis 8x5 (M > N)", csparse.davis_example_qr()[:, :5]),
+    ("Davis 5x8 (M < N)", csparse.davis_example_qr()[:5, :])
 ]
 
 

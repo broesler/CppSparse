@@ -37,7 +37,7 @@ LU_FUNCS = LU_NOPIVOT_FUNCS + LU_PIVOT_FUNCS
 @pytest.fixture
 def A():
     """Define a dense, square matrix."""
-    return csparse.davis_example_qr(format='ndarray')
+    return csparse.davis_example_qr().toarray()
 
 
 @pytest.mark.parametrize("order", ['Natural', 'ATANoDenseRows', 'ATA'])

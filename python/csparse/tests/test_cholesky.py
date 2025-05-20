@@ -20,9 +20,9 @@ ATOL = 1e-15  # testing tolerance
 
 
 @pytest.fixture
-def A_matrix():
-    """Define a symmetric, positive definite matrix."""
-    return csparse.davis_example_chol(format='ndarray')
+def A():
+    """Define a dense, symmetric, positive definite matrix."""
+    return csparse.davis_example_chol().toarray()
 
 
 PYTHON_CHOL_FUNCS = [
@@ -52,10 +52,8 @@ def test_cholesky_interface(order, use_postorder):
 
 
 @pytest.mark.parametrize("chol_func", PYTHON_CHOL_FUNCS)
-def test_python_cholesky(A_matrix, chol_func):
+def test_python_cholesky(A, chol_func):
     """Test the Cholesky decomposition algorithms."""
-    A = A_matrix
-
     # Compute the Cholesky factor
     L_ = la.cholesky(A, lower=True)
 
@@ -71,13 +69,12 @@ def test_python_cholesky(A_matrix, chol_func):
     np.testing.assert_allclose(L @ L.T, A, atol=ATOL)
 
 
-def test_python_cholesky_update(A_matrix):
+def test_python_cholesky_update(A):
     """Test the Cholesky update and downdate algorithms.
 
     .. note:: These tests only cover the python implementations of the
     update/downdate functions, not the C++ cs::chol_update function.
     """
-    A = A_matrix
     N = A.shape[0]
 
     L = la.cholesky(A, lower=True)

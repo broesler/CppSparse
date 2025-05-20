@@ -408,11 +408,11 @@ PYBIND11_MODULE(csparse, m) {
         //
         .def("scale", &cs::CSCMatrix::scale)
         //
-        // .def("dot", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
-        // .def("dot", py::overload_cast<const std::vector<double>&>(&cs::CSCMatrix::dot, py::const_))
+        .def("dot", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
+        .def("dot", py::overload_cast<const std::vector<double>&>(&cs::CSCMatrix::dot, py::const_))
         .def("dot", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
-        // .def("__matmul__", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
-        // .def("__matmul__", py::overload_cast<const std::vector<double>&>(&cs::CSCMatrix::dot, py::const_))
+        .def("__matmul__", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
+        .def("__matmul__", py::overload_cast<const std::vector<double>&>(&cs::CSCMatrix::dot, py::const_))
         .def("__matmul__", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
         //
         .def("add", &cs::CSCMatrix::add)

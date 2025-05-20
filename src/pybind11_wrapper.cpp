@@ -212,16 +212,16 @@ PYBIND11_MODULE(csparse, m) {
             return csc_matrix_to_scipy_csc(qr.V);
         })
         .def_property_readonly("beta", [](const cs::QRResult& qr) {
-            return vector_to_numpy(qr.beta);
+            return qr.beta;
         })
         .def_property_readonly("R", [](const cs::QRResult& qr) {
             return csc_matrix_to_scipy_csc(qr.R);
         })
         .def_property_readonly("p_inv", [](const cs::QRResult& qr) {
-            return vector_to_numpy(qr.p_inv);
+            return qr.p_inv;
         })
         .def_property_readonly("q", [](const cs::QRResult& qr) {
-            return vector_to_numpy(qr.q);
+            return qr.q;
         })
         // Add the __iter__ method to make it unpackable
         .def("__iter__", [](const cs::QRResult& qr) {
@@ -230,10 +230,10 @@ PYBIND11_MODULE(csparse, m) {
             // Define a local variable because make_iterator needs an lvalue.
             py::object result = py::make_tuple(
                 csc_matrix_to_scipy_csc(qr.V),
-                vector_to_numpy(qr.beta),
+                qr.beta,
                 csc_matrix_to_scipy_csc(qr.R),
-                vector_to_numpy(qr.p_inv),
-                vector_to_numpy(qr.q)
+                qr.p_inv,
+                qr.q
             );
             return py::make_iterator(result);
         });
@@ -247,17 +247,17 @@ PYBIND11_MODULE(csparse, m) {
             return csc_matrix_to_scipy_csc(lu.U);
         })
         .def_property_readonly("p_inv", [](const cs::LUResult& lu) {
-            return vector_to_numpy(lu.p_inv);
+            return lu.p_inv;
         })
         .def_property_readonly("q", [](const cs::LUResult& lu) {
-            return vector_to_numpy(lu.q);
+            return lu.q;
         })
         .def("__iter__", [](const cs::LUResult& lu) {
             py::object result = py::make_tuple(
                 csc_matrix_to_scipy_csc(lu.L),
                 csc_matrix_to_scipy_csc(lu.U),
-                vector_to_numpy(lu.p_inv),
-                vector_to_numpy(lu.q)
+                lu.p_inv,
+                lu.q
             );
             return py::make_iterator(result);
         });
@@ -265,16 +265,16 @@ PYBIND11_MODULE(csparse, m) {
     // Bind the DMPermResult struct
     py::class_<cs::DMPermResult>(m, "DMPermResult")
         .def_property_readonly("p", [](const cs::DMPermResult& res) {
-            return vector_to_numpy(res.p);
+            return res.p;
         })
         .def_property_readonly("q", [](const cs::DMPermResult& res) {
-            return vector_to_numpy(res.q);
+            return res.q;
         })
         .def_property_readonly("r", [](const cs::DMPermResult& res) {
-            return vector_to_numpy(res.r);
+            return res.r;
         })
         .def_property_readonly("s", [](const cs::DMPermResult& res) {
-            return vector_to_numpy(res.s);
+            return res.s;
         })
         .def_property_readonly("cc", [](const cs::DMPermResult& res) {
             return array_to_numpy(res.cc);
@@ -287,10 +287,10 @@ PYBIND11_MODULE(csparse, m) {
         })
         .def("__iter__", [](const cs::DMPermResult& res) {
             py::object result = py::make_tuple(
-                vector_to_numpy(res.p),
-                vector_to_numpy(res.q),
-                vector_to_numpy(res.r),
-                vector_to_numpy(res.s),
+                res.p,
+                res.q,
+                res.r,
+                res.s,
                 array_to_numpy(res.cc),
                 array_to_numpy(res.rr),
                 res.Nb
@@ -301,18 +301,18 @@ PYBIND11_MODULE(csparse, m) {
     // Bind the SCCResult struct
     py::class_<cs::SCCResult>(m, "SCCResult")
         .def_property_readonly("p", [](const cs::SCCResult& res) {
-            return vector_to_numpy(res.p);
+            return res.p;
         })
         .def_property_readonly("r", [](const cs::SCCResult& res) {
-            return vector_to_numpy(res.r);
+            return res.r;
         })
         .def_property_readonly("Nb", [](const cs::SCCResult& res) {
             return res.Nb;
         })
         .def("__iter__", [](const cs::SCCResult& res) {
             py::object result = py::make_tuple(
-                vector_to_numpy(res.p),
-                vector_to_numpy(res.r),
+                res.p,
+                res.r,
                 res.Nb
             );
             return py::make_iterator(result);

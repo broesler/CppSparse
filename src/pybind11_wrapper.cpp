@@ -8,9 +8,13 @@
  *============================================================================*/
 
 #include <array>
+#include <iostream>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+#include <stdexcept>
+#include <string>
+#include <typeinfo>
 #include <vector>
 
 #include "csparse.h"
@@ -38,25 +42,60 @@ namespace pybind11 { namespace detail {
         // Python (py::array_t<T> or list) to C++ (std::vector<T>)
         // Input conversion (when a C++ function takes std::vector)
         bool load(handle src, bool convert) {
+#ifdef DEBUG
+            std::cout << "DEBUG: std::vector<" << typeid(T).name() << "> caster: Attempting to load Python object." << std::endl;
+            std::cout << "DEBUG:   Source type: " << py::str(src.get_type()).cast<std::string>() << std::endl;
+#endif
+
             // --- Try to load as a NumPy array ---
             if (py::isinstance<py::array>(src)) {
+#ifdef DEBUG
+                std::cout << "DEBUG:   Source is a NumPy array." << std::endl;
+#endif
                 try {
-                    // Directly cast to py::array_t<T>
-                    py::array_t<T> arr = src.cast<py::array_t<T>>();
+                    auto arr = src.cast<py::array_t<T, py::array::c_style | py::array::forcecast>>();
                     py::buffer_info buf_info = arr.request();
 
-                    // Basic validation: ensure it's a 1D array of the correct element format
+#ifdef DEBUG
+                    // Debug prints for verification
+                    std::cout << "DEBUG:     NumPy array dtype format (requested): '" << buf_info.format << "'" << std::endl;
+                    std::cout << "DEBUG:     NumPy array itemsize (requested): " << buf_info.itemsize << " bytes" << std::endl;
+                    std::cout << "DEBUG:     NumPy array strides[0] (requested): " << buf_info.strides[0] << " bytes" << std::endl;
+                    std::cout << "DEBUG:     NumPy array ndim (requested): " << buf_info.ndim << std::endl;
+                    std::cout << "DEBUG:     NumPy array shape[0] (requested): " << buf_info.shape[0] << std::endl;
+                    std::cout << "DEBUG:     sizeof(T) for C++ type: " << sizeof(T) << " bytes" << std::endl;
+#endif
+
                     if (buf_info.ndim != 1) {
-                        std::cerr << "Error: Input NumPy array has incorrect dimensions." << std::endl;
+                        std::cerr << "  NumPy array is not 1D." << std::endl;
                         return false;
                     }
 
-                    // Assign data directly to the value vector
-                    value.assign(static_cast<const T*>(buf_info.ptr),
-                                 static_cast<const T*>(buf_info.ptr) + buf_info.shape[0]);
+                    if (buf_info.itemsize != sizeof(T)) {
+                        std::cerr << "  Internal itemsize mismatch "
+                            << "(should be " << sizeof(T) 
+                            << " , but is " << buf_info.itemsize << ")."
+                            << std::endl;
+                        return false;
+                    }
+
+                    // Assign data directly into the buffer
+                    value.assign(static_cast<T*>(buf_info.ptr),
+                                 static_cast<T*>(buf_info.ptr) + buf_info.shape[0]);
+
+#ifdef DEBUG
+                    std::cout << "DEBUG:   Successfully loaded from Numpy array using py::cast<std::vector<T>>()." << std::endl;
+#endif
                     return true;
-                } catch (const py::cast_error& e) {
-                    std::cerr << "  Failed to cast NumPy array to py::array_t<long long>: " << e.what() << std::endl;
+
+                } catch (const py::error_already_set& e) {
+                    std::cerr << "  Failed to request NumPy buffer for type "
+                        << typeid(T).name() << ": " << e.what() << std::endl;
+                    PyErr_Print();  // print Python traceback
+                    return false;
+                } catch (const std::exception& e) {
+                    std::cerr << "  Failed to cast NumPy array to std::vector<" 
+                        << typeid(T).name() << ">: " << e.what() << std::endl;
                     return false;
                 }
             }
@@ -74,14 +113,16 @@ namespace pybind11 { namespace detail {
                     }
                     return true;
                 } catch (const py::cast_error& e) {
-                    std::cerr << "  Failed to cast Python list elements to long long: " << e.what() << std::endl;
+                    std::cerr << "  Failed to cast Python list elements to "
+                        << typeid(T).name() << ": " << e.what() << std::endl;
                     // Fall through to default failure message if individual cast fails
                 }
             }
 
-            std::cerr << "  Failed to load from either NumPy array or list for std::vector<long long>." << std::endl;
+            std::cerr << "  Failed to load from either NumPy array or list for "
+                "std::vector<" << typeid(T).name() << ">." << std::endl;
             return false;
-        }
+        }  // load
     };
 
 
@@ -742,7 +783,16 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("order")="Natural"  // CSparse default is "ATANoDenseRows"
     );
 
-
+    // Define a dummy function that increments an array of doubles by 1
+    m.def("increment_array",
+        [](const std::vector<double>& arr) {
+            std::vector<double> result(arr.size());
+            for (size_t i = 0; i < arr.size(); ++i) {
+                result[i] = arr[i] + 1.0;
+            }
+            return result;
+        }
+    );
 }
 
 /*==============================================================================

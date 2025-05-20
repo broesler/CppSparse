@@ -83,20 +83,85 @@ namespace pybind11 { namespace detail {
             return false;
         }
     };
+
+
+    // --- Custom Type Caster for cs::CSCMatrix ---
+    template <> // Specialization for cs::CSCMatrix
+    struct type_caster<cs::CSCMatrix> {
+        // PYBIND11_TYPE_CASTER macro to define the `value` member and other internals
+        PYBIND11_TYPE_CASTER(cs::CSCMatrix, _("scipy.sparse.csc_array"));
+
+        // C++ to Python conversion (cast method)
+        static handle cast(
+            const cs::CSCMatrix& src,
+            return_value_policy policy,
+            handle parent
+        ) {
+            py::module_ sparse = py::module_::import("scipy.sparse");
+
+            auto data_array = py::cast(src.data());
+            auto indices_array = py::cast(src.indices());
+            auto indptr_array = py::cast(src.indptr());
+
+            // Create the SciPy CSC matrix
+            py::object scipy_csc_array = sparse.attr("csc_array")(
+                py::make_tuple(data_array, indices_array, indptr_array),
+                py::arg("shape") = src.shape()
+            );
+
+            return scipy_csc_array.release();
+        }
+
+        // Python to C++ conversion (load method)
+        bool load(handle src, bool convert) {
+            py::object A;
+
+            // Check if it's already a csc_array, or convertible to one
+            if (py::hasattr(src, "tocsc")) {
+                A = src.attr("tocsc")(); // Convert to CSC if not already
+            } else {
+                std::cerr << "Error: Input object is not convertible to a SciPy CSC matrix (missing .tocsc() method)." << std::endl;
+                return false;
+            }
+
+            // Verify it has the expected attributes
+            if (!py::hasattr(A, "data") ||
+                !py::hasattr(A, "indices") ||
+                !py::hasattr(A, "indptr") ||
+                !py::hasattr(A, "shape"))
+            {
+                std::cerr << "Error: Converted object is not a valid SciPy CSC matrix (missing data, indices, indptr, or shape)." << std::endl;
+                return false;
+            }
+
+            try {
+                // Cast SciPy attributes to py::array_t and then to std::vector
+                // Our std::vector type caster will handle the numpy.ndarray -> std::vector conversion automatically.
+                std::vector<double> data_vec = A.attr("data").cast<std::vector<double>>();
+                std::vector<cs::csint> indices_vec = A.attr("indices").cast<std::vector<cs::csint>>();
+                std::vector<cs::csint> indptr_vec = A.attr("indptr").cast<std::vector<cs::csint>>();
+
+                // Get shape
+                auto shape_tuple = A.attr("shape").cast<std::tuple<cs::csint, cs::csint>>();
+                std::array<cs::csint, 2> c_shape_arr = {std::get<0>(shape_tuple), std::get<1>(shape_tuple)};
+
+                // Construct the C++ CSCMatrix using the loaded data
+                // The 'value' member is the target CSCMatrix object
+                value = cs::CSCMatrix(data_vec, indices_vec, indptr_vec, c_shape_arr);
+                return true;
+
+            } catch (const py::cast_error& e) {
+                std::cerr << "Error during SciPy CSC to C++ CSCMatrix conversion: " << e.what() << std::endl;
+                return false;
+
+            } catch (const py::error_already_set& e) { // Catch Python errors (e.g., if scipy.sparse not installed)
+                std::cerr << "Python error during SciPy CSC to C++ CSCMatrix conversion: " << e.what() << std::endl;
+                PyErr_Print(); // Print Python traceback
+                return false;
+            }
+        }
+    };
 }} // namespace pybind11::detail
-
-
-/** Convert a vector to a NumPy array.
- *
- * @param self  the vector to convert
- *
- * @return a NumPy array with the same data as the vector
- */
-template <typename T>
-inline py::array_t<T> vector_to_numpy(const std::vector<T>& vec)
-{
-    return py::array_t<T>(vec.size(), vec.data());
-};
 
 
 /** Convert an array to a NumPy array.
@@ -160,69 +225,6 @@ auto matrix_to_ndarray(const T& self, const char order)
 };
 
 
-/** Convert a CSCMatrix to a SciPy CSC matrix.
- *
- * @param matrix  the CSCMatrix to convert
- *
- * @return a SciPy CSC matrix
- */
-py::object csc_matrix_to_scipy_csc(const cs::CSCMatrix& A) {
-    py::module_ sparse = py::module_::import("scipy.sparse");
-
-    // Convert indptr, indices, and data to NumPy arrays
-    auto indptr_array = vector_to_numpy(A.indptr());
-    auto indices_array = vector_to_numpy(A.indices());
-    auto data_array = vector_to_numpy(A.data());
-
-    // Create the SciPy CSC A
-    auto [M, N] = A.shape();
-
-    return sparse.attr("csc_array")(
-        py::make_tuple(data_array, indices_array, indptr_array),
-        py::arg("shape")=py::make_tuple(M, N)
-    );
-}
-
-
-/** Convert a Scipy sparse matrix to a CSCMatrix.
- *
- * @param matrix  the SciPy sparse matrix to convert
- *
- * @return a CSCMatrix
- */
-cs::CSCMatrix scipy_sparse_to_csparse(const py::object& obj)
-{
-    // Check that we have a scipy sparse matrix
-    if (!py::hasattr(obj, "tocsc")) {
-        throw py::type_error("Input is not convertible to a SciPy CSC matrix.");
-    }
-
-    const py::object A = obj.attr("tocsc")();
-
-    if (!py::hasattr(A, "data") ||
-        !py::hasattr(A, "indices") ||
-        !py::hasattr(A, "indptr")) {
-        throw py::type_error("Input is not a SciPy CSC matrix.");
-    }
-
-    // Get the data, indices, and indptr from the SciPy CSC matrix
-    auto data = A.attr("data").cast<py::array_t<double>>();
-    auto indices = A.attr("indices").cast<py::array_t<cs::csint>>();
-    auto indptr = A.attr("indptr").cast<py::array_t<cs::csint>>();
-
-    // Convert to std::vector
-    std::vector<double> data_vec(data.data(), data.data() + data.size());
-    std::vector<cs::csint> indices_vec(indices.data(), indices.data() + indices.size());
-    std::vector<cs::csint> indptr_vec(indptr.data(), indptr.data() + indptr.size());
-
-    // Get the shape of the A
-    auto shape = A.attr("shape").cast<std::tuple<cs::csint, cs::csint>>();
-    cs::Shape A_shape = {std::get<0>(shape), std::get<1>(shape)};
-
-    return cs::CSCMatrix(data_vec, indices_vec, indptr_vec, A_shape);
-}
-
-
 /** Convert a string to an AMDOrder enum.
  *
  * @param order  the string to convert
@@ -247,83 +249,40 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     // Bind the QRResult struct
     py::class_<cs::QRResult>(m, "QRResult")
-        .def_property_readonly("V", [](const cs::QRResult& qr) {
-            return csc_matrix_to_scipy_csc(qr.V);
-        })
-        .def_property_readonly("beta", [](const cs::QRResult& qr) {
-            return qr.beta;
-        })
-        .def_property_readonly("R", [](const cs::QRResult& qr) {
-            return csc_matrix_to_scipy_csc(qr.R);
-        })
-        .def_property_readonly("p_inv", [](const cs::QRResult& qr) {
-            return qr.p_inv;
-        })
-        .def_property_readonly("q", [](const cs::QRResult& qr) {
-            return qr.q;
-        })
+        .def_property_readonly("V", [](const cs::QRResult& qr) { return qr.V; })
+        .def_property_readonly("beta", [](const cs::QRResult& qr) { return qr.beta; })
+        .def_property_readonly("R", [](const cs::QRResult& qr) { return qr.R; })
+        .def_property_readonly("p_inv", [](const cs::QRResult& qr) { return qr.p_inv; })
+        .def_property_readonly("q", [](const cs::QRResult& qr) { return qr.q; })
         // Add the __iter__ method to make it unpackable
         .def("__iter__", [](const cs::QRResult& qr) {
             // This is a generator function in C++ that yields the elements.
             // The order here determines the unpacking order in Python.
             // Define a local variable because make_iterator needs an lvalue.
-            py::object result = py::make_tuple(
-                csc_matrix_to_scipy_csc(qr.V),
-                qr.beta,
-                csc_matrix_to_scipy_csc(qr.R),
-                qr.p_inv,
-                qr.q
-            );
+            py::object result = py::make_tuple(qr.V, qr.beta, qr.R, qr.p_inv, qr.q);
             return py::make_iterator(result);
         });
 
     // Bind the LUResult struct
     py::class_<cs::LUResult>(m, "LUResult")
-        .def_property_readonly("L", [](const cs::LUResult& lu) {
-            return csc_matrix_to_scipy_csc(lu.L);
-        })
-        .def_property_readonly("U", [](const cs::LUResult& lu) {
-            return csc_matrix_to_scipy_csc(lu.U);
-        })
-        .def_property_readonly("p_inv", [](const cs::LUResult& lu) {
-            return lu.p_inv;
-        })
-        .def_property_readonly("q", [](const cs::LUResult& lu) {
-            return lu.q;
-        })
+        .def_property_readonly("L", [](const cs::LUResult& lu) { return lu.L; })
+        .def_property_readonly("U", [](const cs::LUResult& lu) { return lu.U; })
+        .def_property_readonly("p_inv", [](const cs::LUResult& lu) { return lu.p_inv; })
+        .def_property_readonly("q", [](const cs::LUResult& lu) { return lu.q; })
         .def("__iter__", [](const cs::LUResult& lu) {
-            py::object result = py::make_tuple(
-                csc_matrix_to_scipy_csc(lu.L),
-                csc_matrix_to_scipy_csc(lu.U),
-                lu.p_inv,
-                lu.q
-            );
+            py::object result = py::make_tuple(lu.L, lu.U, lu.p_inv, lu.q);
             return py::make_iterator(result);
         });
 
     // Bind the DMPermResult struct
     py::class_<cs::DMPermResult>(m, "DMPermResult")
-        .def_property_readonly("p", [](const cs::DMPermResult& res) {
-            return res.p;
-        })
-        .def_property_readonly("q", [](const cs::DMPermResult& res) {
-            return res.q;
-        })
-        .def_property_readonly("r", [](const cs::DMPermResult& res) {
-            return res.r;
-        })
-        .def_property_readonly("s", [](const cs::DMPermResult& res) {
-            return res.s;
-        })
-        .def_property_readonly("cc", [](const cs::DMPermResult& res) {
-            return array_to_numpy(res.cc);
-        })
-        .def_property_readonly("rr", [](const cs::DMPermResult& res) {
-            return array_to_numpy(res.rr);
-        })
-        .def_property_readonly("Nb", [](const cs::DMPermResult& res) {
-            return res.Nb;
-        })
+        .def_property_readonly("p", [](const cs::DMPermResult& res) { return res.p; })
+        .def_property_readonly("q", [](const cs::DMPermResult& res) { return res.q; })
+        .def_property_readonly("r", [](const cs::DMPermResult& res) { return res.r; })
+        .def_property_readonly("s", [](const cs::DMPermResult& res) { return res.s; })
+        .def_property_readonly("cc", [](const cs::DMPermResult& res) { return array_to_numpy(res.cc); })
+        .def_property_readonly("rr", [](const cs::DMPermResult& res) { return array_to_numpy(res.rr); })
+        .def_property_readonly("Nb", [](const cs::DMPermResult& res) { return res.Nb; })
         .def("__iter__", [](const cs::DMPermResult& res) {
             py::object result = py::make_tuple(
                 res.p,
@@ -339,23 +298,13 @@ PYBIND11_MODULE(csparse, m) {
 
     // Bind the SCCResult struct
     py::class_<cs::SCCResult>(m, "SCCResult")
-        .def_property_readonly("p", [](const cs::SCCResult& res) {
-            return res.p;
-        })
-        .def_property_readonly("r", [](const cs::SCCResult& res) {
-            return res.r;
-        })
-        .def_property_readonly("Nb", [](const cs::SCCResult& res) {
-            return res.Nb;
-        })
+        .def_property_readonly("p", [](const cs::SCCResult& res) { return res.p; })
+        .def_property_readonly("r", [](const cs::SCCResult& res) { return res.r; })
+        .def_property_readonly("Nb", [](const cs::SCCResult& res) { return res.Nb; })
         .def("__iter__", [](const cs::SCCResult& res) {
-            py::object result = py::make_tuple(
-                res.p,
-                res.r,
-                res.Nb
-            );
+            py::object result = py::make_tuple(res.p, res.r, res.Nb);
             return py::make_iterator(result);
-        });  // keep the tuple as long as the iterator
+        });
 
     //--------------------------------------------------------------------------
     //        COOMatrix class
@@ -591,10 +540,10 @@ PYBIND11_MODULE(csparse, m) {
     // -------------------------------------------------------------------------
     //         Example Matrices
     // -------------------------------------------------------------------------
-    m.def("_davis_example_small", &cs::davis_example_small);
-    m.def("_davis_example_chol", &cs::davis_example_chol);
-    m.def("_davis_example_qr", &cs::davis_example_qr, py::arg("add_diag")=0.0);
-    m.def("_davis_example_amd", &cs::davis_example_amd);
+    m.def("davis_example_small", &cs::davis_example_small);
+    m.def("davis_example_chol", &cs::davis_example_chol);
+    m.def("davis_example_qr", &cs::davis_example_qr, py::arg("add_diag")=0.0);
+    m.def("davis_example_amd", &cs::davis_example_amd);
 
     // -------------------------------------------------------------------------
     //         General Functions
@@ -623,19 +572,15 @@ PYBIND11_MODULE(csparse, m) {
 
     m.def("chol",
         [] (
-            const py::object& A_scipy,
+            const cs::CSCMatrix& A,
             const std::string& order="Natural",
             bool use_postorder=false
         ) {
-            cs::CSCMatrix A = scipy_sparse_to_csparse(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
             // TODO make CholResult struct with named members?
             cs::CSCMatrix L = cs::chol(A, S);
-            return py::make_tuple(
-                csc_matrix_to_scipy_csc(L),
-                cs::inv_permute(S.p_inv)
-            );
+            return py::make_tuple(L, cs::inv_permute(S.p_inv));
         },
         py::arg("A"),
         py::arg("order")="Natural",
@@ -716,11 +661,10 @@ PYBIND11_MODULE(csparse, m) {
     // Define the python lu function here, and call the C++ slu function.
     m.def("lu",
         [](
-            const py::object& A_scipy,
+            const cs::CSCMatrix& A,
             const std::string& order="Natural",
             double tol=1.0
         ) {
-            cs::CSCMatrix A = scipy_sparse_to_csparse(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicLU S = cs::slu(A, order_enum);
             return cs::lu(A, S, tol);

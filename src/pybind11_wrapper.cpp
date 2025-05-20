@@ -116,14 +116,27 @@ py::object csc_matrix_to_scipy_csc(const cs::CSCMatrix& A, py::module_& m) {
 }
 
 
-/** Convert a Scipy CSC matrix to a CSCMatrix.
+/** Convert a Scipy sparse matrix to a CSCMatrix.
  *
- * @param matrix  the SciPy CSC matrix to convert
+ * @param matrix  the SciPy sparse matrix to convert
  *
  * @return a CSCMatrix
  */
-cs::CSCMatrix scipy_csc_to_csparse(const py::object& A)
+cs::CSCMatrix scipy_sparse_to_csparse(const py::object& obj)
 {
+    // Check that we have a scipy sparse matrix
+    if (!py::hasattr(obj, "tocsc")) {
+        throw py::type_error("Input is not convertible to a SciPy CSC matrix.");
+    }
+
+    const py::object A = obj.attr("tocsc")();
+
+    if (!py::hasattr(A, "data") ||
+        !py::hasattr(A, "indices") ||
+        !py::hasattr(A, "indptr")) {
+        throw py::type_error("Input is not a SciPy CSC matrix.");
+    }
+
     // Get the data, indices, and indptr from the SciPy CSC matrix
     auto data = A.attr("data").cast<py::array_t<double>>();
     auto indices = A.attr("indices").cast<py::array_t<cs::csint>>();
@@ -542,8 +555,7 @@ PYBIND11_MODULE(csparse, m) {
             const std::string& order="Natural",
             bool use_postorder=false
         ) {
-            // Convert the SciPy CSC matrix to a CSparse CSCMatrix
-            cs::CSCMatrix A = scipy_csc_to_csparse(A_scipy);
+            cs::CSCMatrix A = scipy_sparse_to_csparse(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
             // TODO make CholResult struct with named members?
@@ -632,10 +644,11 @@ PYBIND11_MODULE(csparse, m) {
     // Define the python lu function here, and call the C++ slu function.
     m.def("lu",
         [](
-            const cs::CSCMatrix& A,
+            const py::object& A_scipy,
             const std::string& order="Natural",
             double tol=1.0
         ) {
+            cs::CSCMatrix A = scipy_sparse_to_csparse(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicLU S = cs::slu(A, order_enum);
             return cs::lu(A, S, tol);

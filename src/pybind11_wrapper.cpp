@@ -343,6 +343,34 @@ PYBIND11_MODULE(csparse, m) {
             py::arg("threshold")=1000
         );
 
+    // -------------------------------------------------------------------------
+    //         ItemProxy Class
+    // -------------------------------------------------------------------------
+    py::class_<cs::CSCMatrix::ItemProxy>(m, "ItemProxy")
+        .def("__float__", [](const cs::CSCMatrix::ItemProxy& self) {
+                return static_cast<double>(self);
+        })
+        .def("__iadd__",
+            [](cs::CSCMatrix::ItemProxy& self, double v) {
+                return self += v;
+            }, py::is_operator()
+        )
+        .def("__isub__",
+            [](cs::CSCMatrix::ItemProxy& self, double v) {
+                return self -= v;
+            }, py::is_operator()
+        )
+        .def("__imul__",
+            [](cs::CSCMatrix::ItemProxy& self, double v) {
+                return self *= v;
+            }, py::is_operator()
+        )
+        .def("__idiv__",
+            [](cs::CSCMatrix::ItemProxy& self, double v) {
+                return self /= v;
+            }, py::is_operator()
+        );
+
     //--------------------------------------------------------------------------
     //        CSCMatrix class
     //--------------------------------------------------------------------------
@@ -389,10 +417,24 @@ PYBIND11_MODULE(csparse, m) {
         //
         .def("__call__", py::overload_cast<cs::csint, cs::csint>(&cs::CSCMatrix::operator(), py::const_))
         .def("__getitem__",
-            [](cs::CSCMatrix& A, py::tuple t) {
+            [](cs::CSCMatrix& self, py::tuple t) -> cs::CSCMatrix::ItemProxy {
+                if (t.size() != 2) {
+                    throw py::index_error("Index must be a tuple of length 2.");
+                }
                 cs::csint i = t[0].cast<cs::csint>();
                 cs::csint j = t[1].cast<cs::csint>();
-                return A(i, j);
+                return self(i, j);
+            },
+            py::return_value_policy::reference_internal  // keep proxy alive
+        )
+        .def("__setitem__",
+            [](cs::CSCMatrix& self, py::tuple t, double v) {
+                if (t.size() != 2) {
+                    throw py::index_error("Index must be a tuple of length 2.");
+                }
+                cs::csint i = t[0].cast<cs::csint>();
+                cs::csint j = t[1].cast<cs::csint>();
+                self(i, j) = v;
             }
         )
         //
@@ -406,13 +448,6 @@ PYBIND11_MODULE(csparse, m) {
                         const std::vector<cs::csint>&,
                         const std::vector<cs::csint>&,
                         const cs::CSCMatrix&>(&cs::CSCMatrix::assign))
-        .def("__setitem__",
-            [](cs::CSCMatrix& A, py::tuple t, double v) {
-                cs::csint i = t[0].cast<cs::csint>();
-                cs::csint j = t[1].cast<cs::csint>();
-                A.assign(i, j, v);
-            }
-        )
         //
         .def("tocoo", &cs::CSCMatrix::tocoo)
         .def("to_dense_vector", &cs::CSCMatrix::to_dense_vector, py::arg("order")='F')

@@ -96,9 +96,7 @@ auto matrix_to_ndarray(const T& self, const char order)
  *
  * @return a SciPy CSC matrix
  */
-// TODO why do we need to pass the module here?
-py::object csc_matrix_to_scipy_csc(const cs::CSCMatrix& A, py::module_& m) {
-    py::module_ np = py::module_::import("numpy");
+py::object csc_matrix_to_scipy_csc(const cs::CSCMatrix& A) {
     py::module_ sparse = py::module_::import("scipy.sparse");
 
     // Convert indptr, indices, and data to NumPy arrays
@@ -179,14 +177,14 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     // Bind the QRResult struct
     py::class_<cs::QRResult>(m, "QRResult")
-        .def_property_readonly("V", [&m](const cs::QRResult& qr) {
-            return csc_matrix_to_scipy_csc(qr.V, m);
+        .def_property_readonly("V", [](const cs::QRResult& qr) {
+            return csc_matrix_to_scipy_csc(qr.V);
         })
         .def_property_readonly("beta", [](const cs::QRResult& qr) {
             return vector_to_numpy(qr.beta);
         })
-        .def_property_readonly("R", [&m](const cs::QRResult& qr) {
-            return csc_matrix_to_scipy_csc(qr.R, m);
+        .def_property_readonly("R", [](const cs::QRResult& qr) {
+            return csc_matrix_to_scipy_csc(qr.R);
         })
         .def_property_readonly("p_inv", [](const cs::QRResult& qr) {
             return vector_to_numpy(qr.p_inv);
@@ -195,14 +193,14 @@ PYBIND11_MODULE(csparse, m) {
             return vector_to_numpy(qr.q);
         })
         // Add the __iter__ method to make it unpackable
-        .def("__iter__", [&m](const cs::QRResult& qr) {
+        .def("__iter__", [](const cs::QRResult& qr) {
             // This is a generator function in C++ that yields the elements.
             // The order here determines the unpacking order in Python.
             // Define a local variable because make_iterator needs an lvalue.
             py::object result = py::make_tuple(
-                csc_matrix_to_scipy_csc(qr.V, m),
+                csc_matrix_to_scipy_csc(qr.V),
                 vector_to_numpy(qr.beta),
-                csc_matrix_to_scipy_csc(qr.R, m),
+                csc_matrix_to_scipy_csc(qr.R),
                 vector_to_numpy(qr.p_inv),
                 vector_to_numpy(qr.q)
             );
@@ -211,11 +209,11 @@ PYBIND11_MODULE(csparse, m) {
 
     // Bind the LUResult struct
     py::class_<cs::LUResult>(m, "LUResult")
-        .def_property_readonly("L", [&m](const cs::LUResult& lu) {
-            return csc_matrix_to_scipy_csc(lu.L, m);
+        .def_property_readonly("L", [](const cs::LUResult& lu) {
+            return csc_matrix_to_scipy_csc(lu.L);
         })
-        .def_property_readonly("U", [&m](const cs::LUResult& lu) {
-            return csc_matrix_to_scipy_csc(lu.U, m);
+        .def_property_readonly("U", [](const cs::LUResult& lu) {
+            return csc_matrix_to_scipy_csc(lu.U);
         })
         .def_property_readonly("p_inv", [](const cs::LUResult& lu) {
             return vector_to_numpy(lu.p_inv);
@@ -223,10 +221,10 @@ PYBIND11_MODULE(csparse, m) {
         .def_property_readonly("q", [](const cs::LUResult& lu) {
             return vector_to_numpy(lu.q);
         })
-        .def("__iter__", [&m](const cs::LUResult& lu) {
+        .def("__iter__", [](const cs::LUResult& lu) {
             py::object result = py::make_tuple(
-                csc_matrix_to_scipy_csc(lu.L, m),
-                csc_matrix_to_scipy_csc(lu.U, m),
+                csc_matrix_to_scipy_csc(lu.L),
+                csc_matrix_to_scipy_csc(lu.U),
                 vector_to_numpy(lu.p_inv),
                 vector_to_numpy(lu.q)
             );
@@ -550,7 +548,7 @@ PYBIND11_MODULE(csparse, m) {
     m.def("post", &cs::post);
 
     m.def("chol",
-        [&m] (
+        [] (
             const py::object& A_scipy,
             const std::string& order="Natural",
             bool use_postorder=false

@@ -105,6 +105,7 @@ auto matrix_to_ndarray(const T& self, const char order)
  *
  * @return a SciPy CSC matrix
  */
+// TODO why do we need to pass the module here?
 py::object csc_matrix_to_scipy_csc(const cs::CSCMatrix& A, py::module_& m) {
     py::module_ np = py::module_::import("numpy");
     py::module_ sparse = py::module_::import("scipy.sparse");
@@ -121,6 +122,32 @@ py::object csc_matrix_to_scipy_csc(const cs::CSCMatrix& A, py::module_& m) {
         py::make_tuple(data_array, indices_array, indptr_array),
         py::arg("shape")=py::make_tuple(M, N)
     );
+}
+
+
+/** Convert a Scipy CSC matrix to a CSCMatrix.
+ *
+ * @param matrix  the SciPy CSC matrix to convert
+ *
+ * @return a CSCMatrix
+ */
+cs::CSCMatrix scipy_csc_to_csparse(const py::object& A)
+{
+    // Get the data, indices, and indptr from the SciPy CSC matrix
+    auto data = A.attr("data").cast<py::array_t<double>>();
+    auto indices = A.attr("indices").cast<py::array_t<cs::csint>>();
+    auto indptr = A.attr("indptr").cast<py::array_t<cs::csint>>();
+
+    // Convert to std::vector
+    std::vector<double> data_vec(data.data(), data.data() + data.size());
+    std::vector<cs::csint> indices_vec(indices.data(), indices.data() + indices.size());
+    std::vector<cs::csint> indptr_vec(indptr.data(), indptr.data() + indptr.size());
+
+    // Get the shape of the A
+    auto shape = A.attr("shape").cast<std::tuple<cs::csint, cs::csint>>();
+    cs::Shape A_shape = {std::get<0>(shape), std::get<1>(shape)};
+
+    return cs::CSCMatrix(data_vec, indices_vec, indptr_vec, A_shape);
 }
 
 
@@ -484,16 +511,19 @@ PYBIND11_MODULE(csparse, m) {
     m.def("post", &cs::post);
 
     m.def("chol",
-        [] (
-            const cs::CSCMatrix& A,
+        [&m] (
+            const py::object& A_scipy,
             const std::string& order="Natural",
             bool use_postorder=false
         ) {
+            // Convert the SciPy CSC matrix to a CSparse CSCMatrix
+            cs::CSCMatrix A = scipy_csc_to_csparse(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
             // TODO make CholResult struct with named members?
+            cs::CSCMatrix L = cs::chol(A, S);
             return py::make_tuple(
-                cs::chol(A, S),
+                csc_matrix_to_scipy_csc(L, m),
                 vector_to_numpy(cs::inv_permute(S.p_inv))
             );
         },

@@ -102,8 +102,7 @@ def demo2(C, is_sym, name='', axs=None):
         if is_sym:
             try:
                 # Cholesky
-                Lc, p = csparse.chol(Cc)
-                L = csparse.to_scipy_sparse(Lc)
+                L, p = csparse.chol(C)
                 csparse.cspy(L + sparse.triu(L.T, 1),
                              colorbar=False, norm='log', ax=ax)
                 ax.set_title('L + L.T')
@@ -183,14 +182,14 @@ def demo2(C, is_sym, name='', axs=None):
 matrix_path = Path('../../data/')
 
 matrix_names = [
-    't1',
-    'fs_183_1',
-    'west0067',
-    'lp_afiro',
-    'ash219',
-    'mbeacxc',
+    # 't1',
+    # 'fs_183_1',
+    # 'west0067',
+    # 'lp_afiro',
+    # 'ash219',
+    # 'mbeacxc',
     'bcsstk01',
-    'bcsstk16'
+    # 'bcsstk16'
 ]
 
 

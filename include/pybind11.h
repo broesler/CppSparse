@@ -26,10 +26,12 @@ namespace py = pybind11;
 
 
 namespace pybind11::detail {
-    // --- Custom Type Caster for std::vector<T> <-> py::array_t<T> ---
+    // -------------------------------------------------------------------------
+    //         Custom Type Caster for std::vector<T> <=> py::array_t<T>
+    // -------------------------------------------------------------------------
     template <typename T>
     struct type_caster<std::vector<T>> {
-        // PYBIND11_TYPE_CASTER macro to define the `value` member and internals
+        // macro to define the `value` member and internals
         PYBIND11_TYPE_CASTER(std::vector<T>, _("Sequence[Union[int, float]]"));
 
         // C++ (std::vector<T>) to Python (py::array_t<T>)
@@ -109,11 +111,13 @@ namespace pybind11::detail {
     };
 
 
-    // --- Custom Type Caster for cs::CSCMatrix ---
-    template <> // Specialization for cs::CSCMatrix
+    // -------------------------------------------------------------------------
+    //         Custom Type Caster for scipy.sparse.sparray <=> cs::CSCMatrix
+    // -------------------------------------------------------------------------
+    template <>  // specialization for cs::CSCMatrix
     struct type_caster<cs::CSCMatrix> {
-        // PYBIND11_TYPE_CASTER macro to define the `value` member and internals
-        PYBIND11_TYPE_CASTER(cs::CSCMatrix, _("scipy.sparse.csc_array"));
+        // macro to define the `value` member and internals
+        PYBIND11_TYPE_CASTER(cs::CSCMatrix, _("scipy.sparse.sparray"));
 
         // C++ to Python conversion (cast method)
         static handle cast(
@@ -142,9 +146,11 @@ namespace pybind11::detail {
 
             // Check if it's already a csc_array, or convertible to one
             if (py::hasattr(src, "tocsc")) {
+                std::cerr << "  Convering to csc." << std::endl;
                 A = src.attr("tocsc")(); // Convert to CSC if not already
             } else {
-                std::cerr << "Error: Input object is not convertible to a SciPy CSC matrix (missing .tocsc() method)." << std::endl;
+                std::cerr << "Error: Input object is not convertible to a "
+                    "SciPy CSC matrix (missing .tocsc() method)." << std::endl;
                 return false;
             }
 
@@ -154,7 +160,9 @@ namespace pybind11::detail {
                 !py::hasattr(A, "indptr") ||
                 !py::hasattr(A, "shape"))
             {
-                std::cerr << "Error: Converted object is not a valid SciPy CSC matrix (missing data, indices, indptr, or shape)." << std::endl;
+                std::cerr << "Error: Converted object is not a valid SciPy CSC "
+                    "matrix (missing data, indices, indptr, or shape)." 
+                    << std::endl;
                 return false;
             }
 
@@ -175,16 +183,18 @@ namespace pybind11::detail {
                 return true;
 
             } catch (const py::cast_error& e) {
-                std::cerr << "Error during SciPy CSC to C++ CSCMatrix conversion: " << e.what() << std::endl;
+                std::cerr << "Error in SciPy CSC to C++ CSCMatrix cast: "
+                    << e.what() << std::endl;
                 return false;
 
-            } catch (const py::error_already_set& e) { // Catch Python errors (e.g., if scipy.sparse not installed)
-                std::cerr << "Python error during SciPy CSC to C++ CSCMatrix conversion: " << e.what() << std::endl;
-                PyErr_Print(); // Print Python traceback
+            } catch (const py::error_already_set& e) {
+                std::cerr << "Python error in SciPy CSC to C++ CSCMatrix cast: "
+                    << e.what() << std::endl;
+                PyErr_Print();  // print Python traceback
                 return false;
             }
-        }
-    };
+        }  // load
+    };  // type_caster<cs::CSCMatrix>
 }  // namespace pybind11::detail
 
 

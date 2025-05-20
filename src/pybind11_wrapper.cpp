@@ -23,13 +23,9 @@ namespace py = pybind11;
  * @return a NumPy array with the same data as the vector
  */
 template <typename T>
-auto vector_to_numpy(const std::vector<T>& vec)
+inline py::array_t<T> vector_to_numpy(const std::vector<T>& vec)
 {
-    auto result = py::array_t<T>(vec.size());
-    py::buffer_info buf = result.request();
-    T* ptr = static_cast<T*>(buf.ptr);
-    std::memcpy(ptr, vec.data(), vec.size() * sizeof(T));
-    return result;
+    return py::array_t<T>(vec.size(), vec.data());
 };
 
 
@@ -40,15 +36,10 @@ auto vector_to_numpy(const std::vector<T>& vec)
  * @return a NumPy array with the same data as the array
  */
 template <typename T, std::size_t N>
-auto array_to_numpy(const std::array<T, N>& arr)
+inline py::array_t<T> array_to_numpy(const std::array<T, N>& arr)
 {
-    auto result = py::array_t<T>(N);
-    py::buffer_info buf = result.request();
-    T* ptr = static_cast<T*>(buf.ptr);
-    std::memcpy(ptr, arr.data(), N * sizeof(T));
-    return result;
+    return py::array_t<T>(arr.size(), arr.data());
 };
-
 
 
 /** Convert a matrix to a NumPy array.

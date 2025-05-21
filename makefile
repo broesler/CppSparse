@@ -9,6 +9,7 @@
 # Set the compiler options
 CC = clang++
 CFLAGS = -Wall -pedantic -std=c++20
+JOBS = 8
 
 BREW = /opt/homebrew
 
@@ -59,20 +60,38 @@ info :
 # -----------------------------------------------------------------------------
 #        Make options 
 # -----------------------------------------------------------------------------
+all: test demos python
+
 test: OPT += -I$(TEST_DIR) -I$(BREW)/include
 test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
-# test: CFLAGS += -O3
+test: CFLAGS += -O2
 test: test_csparse
 
-debug: CFLAGS += -DDEBUG -glldb -O0 # no optimization
+debug: CFLAGS += -DDEBUG -glldb -O0  # no optimization
 debug: CFLAGS += -fno-inline -fsanitize=address -fno-omit-frame-pointer
 debug: test demos
 
 run_debug: debug
 	LSAN_OPTIONS="suppressions=$(abspath suppressions.sup)" ./test_csparse
 
+.PHONY: python
+python:
+	( cd build && \
+	  cmake -DCMAKE_BUILD_TYPE=Release .. && \
+	  cmake --build . --config Release -j${JOBS} && \
+	  cmake --install . \
+	)
+
+.PHONY: python_debug
+python_debug:
+	( cd build && \
+	  cmake -DCMAKE_BUILD_TYPE=Debug .. && \
+	  cmake --build . --config Debug -j${JOBS} && \
+	  cmake --install . \
+	)
+
 .PHONY: demos
-demos: CFLAGS += -O3 -DNDEBUG  # optimize and disable asserts
+demos: CFLAGS += -O2 -DNDEBUG  # optimize and disable asserts
 demos: $(DEMO_EXEC)
 
 .PHONY: profile
@@ -80,7 +99,7 @@ profile: CFLAGS += -O2 -g  # optimize and add debug symbols
 profile: $(DEMO_EXEC)
 
 .PHONY: run_demos
-run_demos: CFLAGS += -O3 -DNDEBUG  # optimize and disable asserts
+run_demos: CFLAGS += -O2 -DNDEBUG  # optimize and disable asserts
 run_demos: demos
 run_demos: $(DEMO_EXEC)  # ensure demos are built before running
 	- ./demo1 './data/t1'
@@ -125,6 +144,7 @@ clean:
 	rm -rf *.dSYM/
 	rm -f test_csparse
 	rm -f $(DEMO_EXEC)
+	rm -rf build/*
 
 #==============================================================================
 #==============================================================================

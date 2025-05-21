@@ -40,15 +40,17 @@ def test_cholesky_interface(order, use_postorder):
     """Test the Cholesky decomposition python interface."""
     A = csparse.davis_example_chol()
 
-    L, _ = csparse.chol(A, order, use_postorder)
-    Ls = csparse.symbolic_cholesky(A, order, use_postorder)
-    Ll = csparse.leftchol(A, order, use_postorder)
-    Lr = csparse.rechol(A, order, use_postorder)
+    L, p = csparse.chol(A, order, use_postorder)
+    Ls, _ = csparse.symbolic_cholesky(A, order, use_postorder)
+    Ll, _ = csparse.leftchol(A, order, use_postorder)
+    Lr, _ = csparse.rechol(A, order, use_postorder)
 
     np.testing.assert_allclose(L.indptr, Ls.indptr)
     np.testing.assert_allclose(L.indices, Ls.indices)
     np.testing.assert_allclose(L.toarray(), Ll.toarray())
     np.testing.assert_allclose(Ll.toarray(), Lr.toarray())
+
+    np.testing.assert_allclose((L @ L.T).toarray(), A[p][:, p].toarray(), atol=ATOL)
 
 
 @pytest.mark.parametrize("chol_func", PYTHON_CHOL_FUNCS)

@@ -391,7 +391,6 @@ PYBIND11_MODULE(csparse, m) {
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
-            // TODO make CholResult struct with named members?
             cs::CSCMatrix L = cs::chol(A, S);
             return py::make_tuple(scipy_from_csc(L), cs::inv_permute(S.p_inv));
         },
@@ -413,7 +412,8 @@ PYBIND11_MODULE(csparse, m) {
             // cs::CSCMatrix L = cs::symbolic_cholesky(A, S);
             // std::fill(L.v_.begin(), L.v_.end(), 1.0);
             // return L;
-            return cs::symbolic_cholesky(A, S);;
+            cs::CSCMatrix L = cs::symbolic_cholesky(A, S);;
+            return py::make_tuple(scipy_from_csc(L), cs::inv_permute(S.p_inv));
         },
         py::arg("A"),
         py::arg("order")="Natural",
@@ -430,7 +430,8 @@ PYBIND11_MODULE(csparse, m) {
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
             cs::CSCMatrix L = cs::symbolic_cholesky(A, S);
-            return cs::leftchol(A, S, L);
+            L = cs::leftchol(A, S, L);
+            return py::make_tuple(scipy_from_csc(L), cs::inv_permute(S.p_inv));
         },
         py::arg("A"),
         py::arg("order")="Natural",
@@ -447,7 +448,8 @@ PYBIND11_MODULE(csparse, m) {
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
             cs::CSCMatrix L = cs::symbolic_cholesky(A, S);
-            return cs::rechol(A, S, L);
+            L = cs::rechol(A, S, L);
+            return py::make_tuple(scipy_from_csc(L), cs::inv_permute(S.p_inv));
         },
         py::arg("A"),
         py::arg("order")="Natural",

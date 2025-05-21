@@ -151,7 +151,7 @@ inline py::array_t<T> array_to_numpy(const std::array<T, N>& arr)
  * @return a NumPy array with the same data as the matrix
  */
 template <typename T>
-auto matrix_to_ndarray(const T& self, const char order)
+auto sparse_to_ndarray(const T& self, const char order)
 {
     // Get the matrix in dense column-major order
     std::vector<double> v = self.to_dense_vector('C');

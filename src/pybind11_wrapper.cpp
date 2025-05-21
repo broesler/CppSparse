@@ -148,7 +148,7 @@ PYBIND11_MODULE(csparse, m) {
         .def("compress", &cs::COOMatrix::compress)
         .def("tocsc", &cs::COOMatrix::tocsc)
         .def("to_dense_vector", &cs::COOMatrix::to_dense_vector, py::arg("order")='F')
-        .def("toarray", &matrix_to_ndarray<cs::COOMatrix>, py::arg("order")='C')
+        .def("toarray", &sparse_to_ndarray<cs::COOMatrix>, py::arg("order")='C')
         //
         .def("transpose", &cs::COOMatrix::transpose)
         .def_property_readonly("T", &cs::COOMatrix::T)
@@ -276,7 +276,7 @@ PYBIND11_MODULE(csparse, m) {
         //
         .def("tocoo", &cs::CSCMatrix::tocoo)
         .def("to_dense_vector", &cs::CSCMatrix::to_dense_vector, py::arg("order")='F')
-        .def("toarray", &matrix_to_ndarray<cs::CSCMatrix>, py::arg("order")='C')
+        .def("toarray", &sparse_to_ndarray<cs::CSCMatrix>, py::arg("order")='C')
         //
         .def("transpose", &cs::CSCMatrix::transpose, py::arg("values")=true)
         .def_property_readonly("T", &cs::CSCMatrix::T)

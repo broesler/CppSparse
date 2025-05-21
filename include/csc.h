@@ -1120,7 +1120,7 @@ protected:
 
 
 private:
-    static constexpr std::string_view format_desc_ = "Compressed Sparse Column";
+    static constexpr std::string_view format_desc_ = "C++Sparse Compressed Sparse Column";
     std::vector<double> v_;  // numerical values, size nzmax
     std::vector<csint> i_;   // row indices, size nzmax
     std::vector<csint> p_;   // column pointers (CSC size N_);

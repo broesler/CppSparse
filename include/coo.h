@@ -234,7 +234,7 @@ protected:
 
 
 private:
-    static constexpr std::string_view format_desc_ = "COOrdinate Sparse";
+    static constexpr std::string_view format_desc_ = "C++Sparse COOrdinate Sparse";
     std::vector<double> v_;  // numerical values, size nzmax (auto doubles)
     std::vector<csint> i_;   // row indices, size nzmax
     std::vector<csint> j_;   // column indices, size nzmax

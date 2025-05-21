@@ -22,10 +22,12 @@ INCL := $(wildcard $(INCL_DIR)/*.h) \
 		$(wildcard $(TEST_DIR)/*.h) \
 		$(wildcard $(DEMO_DIR)/*.h)
 
+INCL := $(filter-out $(wildcard $(INCL_DIR)/pybind11*.h), $(INCL))
+
 # NOTE: all executables go in top-level dir, object files in source dir
 # Source files, object files, and executables
 SRC := $(wildcard $(SRC_DIR)/*.cpp)
-SRC := $(filter-out $(SRC_DIR)/pybind11_wrapper.cpp, $(SRC))
+SRC := $(filter-out $(wildcard $(SRC_DIR)/pybind11*.cpp), $(SRC))
 OBJ := $(SRC:%.cpp=%.o)
 
 # Test source files

@@ -47,7 +47,7 @@ data = np.genfromtxt(
 A = sparse.coo_array((data['vals'], (data['rows'], data['cols']))).tocsc()
 Ac = csparse.COOMatrix(data['vals'], data['rows'], data['cols']).tocsc()
 
-print(f"A  difference: {spla.norm(A - Ac, ord=1)}")
+print(f"A  difference: {spla.norm(A - Ac.toscipy(), ord=1)}")
 
 # Plot the matrix
 fig, axs = plt.subplots(num=1, nrows=2, ncols=2, clear=True)
@@ -59,7 +59,7 @@ csparse.cspy(A, ax=ax)
 AT = A.T
 ATc = Ac.transpose()
 
-print(f"AT difference: {spla.norm(AT - ATc, ord=1)}")
+print(f"AT difference: {spla.norm(AT - ATc.toscipy(), ord=1)}")
 
 ax = axs[0, 1]
 ax.set_title(r'$A^T$')
@@ -69,7 +69,7 @@ csparse.cspy(AT, ax=ax)
 C = A @ AT
 Cc = Ac @ ATc  # == Ac.dot(ATc)
 
-print(f"C  difference: {spla.norm(C - Cc, ord=1)}")
+print(f"C  difference: {spla.norm(C - Cc.toscipy(), ord=1)}")
 
 ax = axs[1, 0]
 ax.set_title(r'$C = A A^T$')
@@ -79,9 +79,9 @@ N = A.shape[1]
 I = sparse.eye_array(N)
 cnorm = spla.norm(C, ord=1)
 D = C + I * cnorm
-Dc = Cc + I * cnorm
+Dc = Cc + csparse.csc_from_scipy(I * cnorm)
 
-print(f"D  difference: {spla.norm(D - Dc, ord=1)}")
+print(f"D  difference: {spla.norm(D - Dc.toscipy(), ord=1)}")
 
 ax = axs[1, 1]
 ax.set_title(r'$D = C + |C| I$')

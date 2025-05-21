@@ -135,8 +135,7 @@ PYBIND11_MODULE(csparse, m) {
         .def_property_readonly("row", &cs::COOMatrix::row)
         .def_property_readonly("col", &cs::COOMatrix::col)
         //
-        .def("insert", py::overload_cast
-                        <cs::csint, cs::csint, double>(&cs::COOMatrix::insert))
+        .def("insert", py::overload_cast<cs::csint, cs::csint, double>(&cs::COOMatrix::insert))
         .def("__setitem__",
             [](cs::COOMatrix& A, py::tuple t, double v) {
                 cs::csint i = t[0].cast<cs::csint>();
@@ -147,6 +146,11 @@ PYBIND11_MODULE(csparse, m) {
         //
         .def("compress", &cs::COOMatrix::compress)
         .def("tocsc", &cs::COOMatrix::tocsc)
+        .def("toscipy",
+            [](const cs::COOMatrix& self) {
+                return scipy_from_coo(self);
+            }
+        )
         .def("to_dense_vector", &cs::COOMatrix::to_dense_vector, py::arg("order")='F')
         .def("toarray", &sparse_to_ndarray<cs::COOMatrix>, py::arg("order")='C')
         //
@@ -231,10 +235,12 @@ PYBIND11_MODULE(csparse, m) {
         .def("dropzeros", &cs::CSCMatrix::dropzeros)
         .def("droptol", &cs::CSCMatrix::droptol, py::arg("tol")=1e-15)
         .def("to_canonical", &cs::CSCMatrix::to_canonical)
-        // Define tocsc method so that "conversion" still works
-        // .def("tocsc", [](const cs::CSCMatrix& A) {
-        //     return A;  // already in CSC format
-        // })
+        .def("toscipy",
+            [](const cs::CSCMatrix& self) {
+                return scipy_from_csc(self);
+            }
+        )
+        //
         .def_property_readonly("has_sorted_indices", &cs::CSCMatrix::has_sorted_indices)
         .def_property_readonly("has_canonical_format", &cs::CSCMatrix::has_canonical_format)
         .def_property_readonly("is_symmetric", &cs::CSCMatrix::is_symmetric)

@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-#include "pybind11.h"
+#include "pybind11_conversion.h"
 #include "csparse.h"
 
 namespace py = pybind11;
@@ -45,9 +45,9 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     // Bind the QRResult struct
     py::class_<cs::QRResult>(m, "QRResult")
-        .def_property_readonly("V", [](const cs::QRResult& qr) { return qr.V; })
+        .def_property_readonly("V", [](const cs::QRResult& qr) { return scipy_from_csc(qr.V); })
         .def_property_readonly("beta", [](const cs::QRResult& qr) { return qr.beta; })
-        .def_property_readonly("R", [](const cs::QRResult& qr) { return qr.R; })
+        .def_property_readonly("R", [](const cs::QRResult& qr) { return scipy_from_csc(qr.R); })
         .def_property_readonly("p", [](const cs::QRResult& qr) { return cs::inv_permute(qr.p_inv); })
         .def_property_readonly("q", [](const cs::QRResult& qr) { return qr.q; })
         // Add the __iter__ method to make it unpackable
@@ -55,18 +55,29 @@ PYBIND11_MODULE(csparse, m) {
             // This is a generator function in C++ that yields the elements.
             // The order here determines the unpacking order in Python.
             // Define a local variable because make_iterator needs an lvalue.
-            py::object result = py::make_tuple(qr.V, qr.beta, qr.R, cs::inv_permute(qr.p_inv), qr.q);
+            py::object result = py::make_tuple(
+                scipy_from_csc(qr.V),
+		        qr.beta,
+		        scipy_from_csc(qr.R),
+		        cs::inv_permute(qr.p_inv),
+		        qr.q
+            );
             return py::make_iterator(result);
         });
 
     // Bind the LUResult struct
     py::class_<cs::LUResult>(m, "LUResult")
-        .def_property_readonly("L", [](const cs::LUResult& lu) { return lu.L; })
-        .def_property_readonly("U", [](const cs::LUResult& lu) { return lu.U; })
+        .def_property_readonly("L", [](const cs::LUResult& lu) { return scipy_from_csc(lu.L); })
+        .def_property_readonly("U", [](const cs::LUResult& lu) { return scipy_from_csc(lu.U); })
         .def_property_readonly("p", [](const cs::LUResult& lu) { return cs::inv_permute(lu.p_inv); })
         .def_property_readonly("q", [](const cs::LUResult& lu) { return lu.q; })
         .def("__iter__", [](const cs::LUResult& lu) {
-            py::object result = py::make_tuple(lu.L, lu.U, cs::inv_permute(lu.p_inv), lu.q);
+            py::object result = py::make_tuple(
+                scipy_from_csc(lu.L),
+                scipy_from_csc(lu.U),
+                cs::inv_permute(lu.p_inv),
+                lu.q
+            );
             return py::make_iterator(result);
         });
 
@@ -113,8 +124,8 @@ PYBIND11_MODULE(csparse, m) {
             const std::vector<cs::csint>&,
             const cs::Shape>(),
             py::arg("data"),
-            py::arg("rows"),
-            py::arg("columns"),
+            py::arg("row"),
+            py::arg("col"),
             py::arg("shape")=cs::Shape{0, 0}
         )
         .def(py::init<const cs::Shape&, cs::csint>())
@@ -136,9 +147,9 @@ PYBIND11_MODULE(csparse, m) {
             }
         )
         //
+        .def_property_readonly("data", &cs::COOMatrix::data)
         .def_property_readonly("row", &cs::COOMatrix::row)
         .def_property_readonly("col", &cs::COOMatrix::col)
-        .def_property_readonly("data", &cs::COOMatrix::data)
         //
         .def("insert", py::overload_cast
                         <cs::csint, cs::csint, double>(&cs::COOMatrix::insert))
@@ -237,9 +248,9 @@ PYBIND11_MODULE(csparse, m) {
         .def("droptol", &cs::CSCMatrix::droptol, py::arg("tol")=1e-15)
         .def("to_canonical", &cs::CSCMatrix::to_canonical)
         // Define tocsc method so that "conversion" still works
-        .def("tocsc", [](const cs::CSCMatrix& A) {
-            return A;  // already in CSC format
-        })
+        // .def("tocsc", [](const cs::CSCMatrix& A) {
+        //     return A;  // already in CSC format
+        // })
         .def_property_readonly("has_sorted_indices", &cs::CSCMatrix::has_sorted_indices)
         .def_property_readonly("has_canonical_format", &cs::CSCMatrix::has_canonical_format)
         .def_property_readonly("is_symmetric", &cs::CSCMatrix::is_symmetric)
@@ -336,14 +347,20 @@ PYBIND11_MODULE(csparse, m) {
     // -------------------------------------------------------------------------
     //         Example Matrices
     // -------------------------------------------------------------------------
-    m.def("davis_example_small", &cs::davis_example_small);
-    m.def("davis_example_chol", &cs::davis_example_chol);
-    m.def("davis_example_qr", &cs::davis_example_qr, py::arg("add_diag")=0.0);
-    m.def("davis_example_amd", &cs::davis_example_amd);
+    m.def("davis_example_small", []() { return scipy_from_coo(cs::davis_example_small()); });
+    m.def("davis_example_chol", []() { return scipy_from_csc(cs::davis_example_chol()); });
+    m.def("davis_example_qr",
+        [](double add_diag=0.0) {
+            return scipy_from_csc(cs::davis_example_qr(add_diag));
+        },
+        py::arg("add_diag")=0.0
+    );
+    m.def("davis_example_amd", []() { return scipy_from_csc(cs::davis_example_amd()); });
 
     // -------------------------------------------------------------------------
     //         General Functions
     // -------------------------------------------------------------------------
+    // TODO write lambdas for all of these to convert the input to CSCMatrix
     m.def("gaxpy", &cs::gaxpy);
     m.def("gaxpy_row", &cs::gaxpy_row);
     m.def("gaxpy_col", &cs::gaxpy_col);
@@ -368,10 +385,11 @@ PYBIND11_MODULE(csparse, m) {
 
     m.def("chol",
         [] (
-            const cs::CSCMatrix& A,
+            const py::object& A_scipy,
             const std::string& order="Natural",
             bool use_postorder=false
         ) {
+            cs::CSCMatrix A = csc_from_scipy(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
             // TODO make CholResult struct with named members?
@@ -385,10 +403,11 @@ PYBIND11_MODULE(csparse, m) {
 
     m.def("symbolic_cholesky",
         [](
-            const cs::CSCMatrix& A,
+            const py::object& A_scipy,
             const std::string& order="Natural",
             bool use_postorder=false
         ) {
+            cs::CSCMatrix A = csc_from_scipy(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
             // TODO Fill the values with 1.0 for the symbolic factorization?
@@ -404,10 +423,11 @@ PYBIND11_MODULE(csparse, m) {
 
     m.def("leftchol",
         [] (
-            const cs::CSCMatrix& A,
+            const py::object& A_scipy,
             const std::string& order="Natural",
             bool use_postorder=false
         ) {
+            cs::CSCMatrix A = csc_from_scipy(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
             cs::CSCMatrix L = cs::symbolic_cholesky(A, S);
@@ -420,10 +440,11 @@ PYBIND11_MODULE(csparse, m) {
 
     m.def("rechol",
         [] (
-            const cs::CSCMatrix& A,
+            const py::object& A_scipy,
             const std::string& order="Natural",
             bool use_postorder=false
         ) {
+            cs::CSCMatrix A = csc_from_scipy(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
             cs::CSCMatrix L = cs::symbolic_cholesky(A, S);
@@ -440,10 +461,11 @@ PYBIND11_MODULE(csparse, m) {
     // Define the python qr function here, and call the C++ sqr function.
     m.def("qr",
         [](
-            const cs::CSCMatrix& A,
+            const py::object& A_scipy,
             const std::string& order="Natural",
             bool use_postorder=false
         ) {
+            cs::CSCMatrix A = csc_from_scipy(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicQR S = cs::sqr(A, order_enum, use_postorder);
             return cs::qr(A, S);
@@ -457,10 +479,11 @@ PYBIND11_MODULE(csparse, m) {
     // Define the python lu function here, and call the C++ slu function.
     m.def("lu",
         [](
-            const cs::CSCMatrix& A,
+            const py::object& A_scipy,
             const std::string& order="Natural",
             double tol=1.0
         ) {
+            cs::CSCMatrix A = csc_from_scipy(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             cs::SymbolicLU S = cs::slu(A, order_enum);
             return cs::lu(A, S, tol);
@@ -473,9 +496,10 @@ PYBIND11_MODULE(csparse, m) {
     // ---------- Fill-reducing orderings
     m.def("amd",
         [](
-            const cs::CSCMatrix& A,
+            const py::object& A_scipy,
             const std::string& order="Natural"
         ) {
+            cs::CSCMatrix A = csc_from_scipy(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             return cs::amd(A, order_enum);
         },
@@ -489,6 +513,7 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     //      Solve functions
     //--------------------------------------------------------------------------
+    // TODO write lambdas for all of these to convert the input to CSCMatrix
     m.def("lsolve", &cs::lsolve);
     m.def("usolve", &cs::usolve);
     m.def("ltsolve", &cs::ltsolve);
@@ -498,10 +523,11 @@ PYBIND11_MODULE(csparse, m) {
 
     m.def("chol_solve",
         [](
-            const cs::CSCMatrix& A,
+            const py::object& A_scipy,
             const std::vector<double>& b,
             const std::string& order
         ) {
+            cs::CSCMatrix A = csc_from_scipy(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             return cs::chol_solve(A, b, order_enum);
         },
@@ -512,10 +538,11 @@ PYBIND11_MODULE(csparse, m) {
 
     m.def("qr_solve",
         [](
-            const cs::CSCMatrix& A,
+            const py::object& A_scipy,
             const std::vector<double>& b,
             const std::string& order
         ) {
+            cs::CSCMatrix A = csc_from_scipy(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             return cs::qr_solve(A, b, order_enum);
         },
@@ -526,27 +553,17 @@ PYBIND11_MODULE(csparse, m) {
 
     m.def("lu_solve",
         [](
-            const cs::CSCMatrix& A,
+            const py::object& A_scipy,
             const std::vector<double>& b,
             const std::string& order
         ) {
+            cs::CSCMatrix A = csc_from_scipy(A_scipy);
             cs::AMDOrder order_enum = string_to_amdorder(order);
             return cs::lu_solve(A, b, order_enum);
         },
         py::arg("A"),
         py::arg("b"),
         py::arg("order")="Natural"  // CSparse default is "ATANoDenseRows"
-    );
-
-    // Define a dummy function that increments an array of doubles by 1
-    m.def("increment_array",
-        [](const std::vector<double>& arr) {
-            std::vector<double> result(arr.size());
-            for (size_t i = 0; i < arr.size(); ++i) {
-                result[i] = arr[i] + 1.0;
-            }
-            return result;
-        }
     );
 }
 

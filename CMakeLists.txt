@@ -15,7 +15,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)  # Use strict standard compliance
 
-find_package(pybind11 REQUIRED) # Find pybind11
+find_package(pybind11 REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
 set(BASENAMES
@@ -29,6 +29,7 @@ set(BASENAMES
 	qr
 	solve
 	example_matrices
+    pybind11_conversion
 )
 
 set(SOURCES "")
@@ -39,12 +40,29 @@ foreach(BASENAME ${BASENAMES})
     list(APPEND HEADERS "include/${BASENAME}.h")
 endforeach()
 
-add_library(csc_lib ${SOURCES} ${HEADERS})
-target_include_directories(csc_lib PUBLIC include)
+message(STATUS "PYBIND11_INCLUDE_DIRS: ${PYBIND11_INCLUDE_DIRS}")
+
+add_library(csc_lib ${SOURCES})
+target_include_directories(
+    csc_lib
+    PUBLIC
+    include
+    /Users/bernardroesler/miniconda3/envs/dev311/lib/python3.11/site-packages/pybind11/include
+    ${PYBIND11_INCLUDE_DIRS}
+    ${Python3_INCLUDE_DIRS}
+)
 
 pybind11_add_module(csparse_module src/pybind11_wrapper.cpp)
 
-target_link_libraries(csparse_module PRIVATE csc_lib)
+target_link_libraries(csparse_module PRIVATE csc_lib ${PYBIND11_LIBRARIES})
+target_include_directories(
+    csparse_module 
+    PRIVATE
+    include
+    ${PYBIND11_INCLUDE_DIRS}
+    /Users/bernardroesler/miniconda3/envs/dev311/lib/python3.11/site-packages/pybind11/include
+    ${Python3_INCLUDE_DIRS}
+)
 
 # Add flags for Debug build type
 # if(CMAKE_BUILD_TYPE STREQUAL "Debug")

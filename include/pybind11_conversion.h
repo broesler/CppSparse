@@ -1,0 +1,208 @@
+//==============================================================================
+//     File: pybind11_conversion.h
+//  Created: 2025-05-20 16:26
+//   Author: Bernie Roesler
+//
+//  Description: Header file for pybind11 wrapper.
+//
+//==============================================================================
+
+#ifndef _CSPARSE_PYBIND11_H_
+#define _CSPARSE_PYBIND11_H_
+
+#include <array>
+#include <iostream>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/numpy.h>
+#include <stdexcept>
+#include <string>
+#include <typeinfo>
+#include <vector>
+
+#include "csparse.h"
+
+namespace py = pybind11;
+
+
+namespace pybind11::detail {
+// -----------------------------------------------------------------------------
+//         Custom Type Caster for std::vector<T> <=> py::array_t<T>
+// -----------------------------------------------------------------------------
+template <typename T>
+struct type_caster<std::vector<T>> {
+    // macro to define the `value` member and internals
+    PYBIND11_TYPE_CASTER(std::vector<T>, _("Sequence[Union[int, float]]"));
+
+    // C++ (std::vector<T>) to Python (py::array_t<T>)
+    // Output conversion (when a C++ function returns std::vector)
+    static handle cast(
+        const std::vector<T>& src,
+        return_value_policy policy,
+        handle parent
+    ) {
+        py::array_t<T> arr(src.size(), src.data());
+        return arr.release();
+    }
+
+    // Python (py::array_t<T> or list) to C++ (std::vector<T>)
+    // Input conversion (when a C++ function takes std::vector)
+    bool load(handle src, bool convert) {
+        // --- Try to load as a NumPy array ---
+        if (py::isinstance<py::array>(src)) {
+            try {
+                // Cast to a C-style array
+                auto arr = src.cast<py::array_t<T, py::array::c_style | py::array::forcecast>>();
+                py::buffer_info buf_info = arr.request();
+
+                if (buf_info.ndim != 1) {
+                    std::cerr << "  NumPy array is not 1D." << std::endl;
+                    return false;
+                }
+
+                if (buf_info.itemsize != sizeof(T)) {
+                    std::cerr << "  Internal itemsize mismatch "
+                        << "(should be " << sizeof(T)
+                        << " , but is " << buf_info.itemsize << ")."
+                        << std::endl;
+                    return false;
+                }
+
+                // Assign data directly into the buffer
+                value.assign(static_cast<T*>(buf_info.ptr),
+                                static_cast<T*>(buf_info.ptr) + buf_info.shape[0]);
+
+                return true;
+
+            } catch (const py::error_already_set& e) {
+                std::cerr << "  Failed to request NumPy buffer for type "
+                    << typeid(T).name() << ": " << e.what() << std::endl;
+                PyErr_Print();  // print Python traceback
+                return false;
+            } catch (const std::exception& e) {
+                std::cerr << "  Failed to cast NumPy array to std::vector<"
+                    << typeid(T).name() << ">: " << e.what() << std::endl;
+                return false;
+            }
+        }
+
+        // --- if not a NumPy array, try loading as a Python list ---
+        if (py::isinstance<py::list>(src)) {
+            try {
+                // Iterate through the list and cast each item individually
+                py::list py_list = src.cast<py::list>();
+                value.clear();
+                value.reserve(py::len(py_list));
+                for (auto item : py_list) {
+                    value.push_back(item.cast<T>());
+                }
+                return true;
+            } catch (const py::cast_error& e) {
+                std::cerr << "  Failed to cast Python list elements to "
+                    << typeid(T).name() << ": " << e.what() << std::endl;
+                // Fall through to failure message if individual cast fails
+            }
+        }
+
+        std::cerr << "  Failed to load from either NumPy array or list for "
+            "std::vector<" << typeid(T).name() << ">." << std::endl;
+        return false;
+    }  // load
+};
+
+
+}  // namespace pybind11::detail
+
+
+/** Convert an array to a NumPy array.
+ *
+ * @param self  the array to convert
+ *
+ * @return a NumPy array with the same data as the array
+ */
+template <typename T, std::size_t N>
+inline py::array_t<T> array_to_numpy(const std::array<T, N>& arr)
+{
+    return py::array_t<T>(arr.size(), arr.data());
+};
+
+
+/** Convert a dense matrix to a NumPy array.
+ *
+ * @param self  the dense matrix to convert
+ * @param order the order of the NumPy array ('C' or 'F')
+ *
+ * @return a NumPy array with the same data as the matrix
+ */
+template <typename T>
+auto matrix_to_ndarray(const T& self, const char order)
+{
+    // Get the matrix in dense column-major order
+    std::vector<double> v = self.to_dense_vector('C');
+    auto [M, N] = self.shape();
+
+    // Create a NumPy array with specified dimensions
+    py::array_t<double> result({M, N});
+
+    // Get a pointer to the underlying data of the NumPy array.
+    auto buffer_info = result.request();
+    double* ptr = static_cast<double*>(buffer_info.ptr);
+
+    // Calculate strides based on order
+    std::vector<ssize_t> strides;
+    if (order == 'C') { // C-style (row-major)
+        strides = {
+            static_cast<ssize_t>(N * sizeof(double)),
+            sizeof(double)
+        };
+    } else if (order == 'F') { // Fortran-style (column-major)
+        strides = {
+            sizeof(double),
+            static_cast<ssize_t>(M * sizeof(double))
+        };
+    } else {
+        throw std::runtime_error("Invalid order specified. Use 'C' or 'F'.");
+    }
+
+    // Assign strides to the buffer info. This is crucial!
+    buffer_info.strides = strides;
+
+    // Copy the data from the vector to the NumPy array.  This is the most
+    // straightforward way.
+    std::copy(v.begin(), v.end(), ptr);
+
+    return result;
+};
+
+
+/** Convert a COOMatrix to a scipy.sparse.coo_array
+ *
+ * @param A  the COOMatrix to convert
+ *
+ * @return a scipy.sparse.coo_array with the same data as the COOMatrix
+ */
+py::object scipy_from_coo(const cs::COOMatrix& A);
+
+
+/** Convert a CSCMatrix to a scipy.sparse.csc_array
+ *
+ * @param A  the CSCMatrix to convert
+ *
+ * @return a scipy.sparse.csc_array with the same data as the CSCMatrix
+ */
+py::object scipy_from_csc(const cs::CSCMatrix& A);
+
+
+/** Convert a scipy.sparse.sparray to a CSCMatrix.
+ *
+ * @param A  the scipy.sparse.sparray to convert
+ *
+ * @return a CSCMatrix with the same data as the scipy.sparse.sparray
+ */
+cs::CSCMatrix csc_from_scipy(const py::object& obj);
+
+
+#endif  // _CSPARSE_PYBIND11_H_
+
+//==============================================================================
+//==============================================================================

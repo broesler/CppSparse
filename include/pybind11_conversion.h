@@ -19,6 +19,7 @@
 #include <string>
 #include <typeinfo>
 #include <vector>
+#include <utility>  // forward
 
 #include "csparse.h"
 
@@ -216,6 +217,84 @@ py::object scipy_from_csc(const cs::CSCMatrix& A);
  * @return a CSCMatrix with the same data as the scipy.sparse.sparray
  */
 cs::CSCMatrix csc_from_scipy(const py::object& obj);
+
+
+/** Wrap a function to convert a scipy.sparse.sparray on input. 
+ *
+ * This function takes a function that operates on a CSCMatrix as the first
+ * argument, and a variable number of other arguments. It converts the first
+ * argument from a python object to a CSCMatrix, and forwards the rest of the
+ * arguments to the function.
+ *
+ * @param f  the function to wrap
+ *
+ * @return a lambda function that takes a `scipy.sparse.sparray` and 
+ *         forwards the rest of the arguments to the wrapped function.
+ */
+template <typename... Args>
+auto wrap_vector_func(
+    std::vector<double> (*func)(const cs::CSCMatrix& A, Args...)
+)
+{
+    return [func](const py::object& A_scipy, Args... args) {
+        cs::CSCMatrix A = csc_from_scipy(A_scipy);
+        std::vector<double> x = func(A, std::forward<Args>(args)...);
+        return py::cast(x);
+    };
+}
+
+
+/** Wrap a function to convert a scipy.sparse.sparray on input. 
+ *
+ * This function takes a function that operates on a CSCMatrix as the first
+ * argument, and a variable number of other arguments. It converts the first
+ * argument from a python object to a CSCMatrix, and forwards the rest of the
+ * arguments to the function.
+ *
+ * @param f  the function to wrap
+ *
+ * @return a lambda function that takes a `scipy.sparse.sparray` and 
+ *         forwards the rest of the arguments to the wrapped function.
+ */
+template <typename Func>
+auto wrap_gaxpy_mat(Func&& f)
+{
+    return [f = std::forward<Func>(f)](
+        const py::object& A_scipy,
+        const std::vector<double>& X,
+        const std::vector<double>& Y
+    ) {
+        cs::CSCMatrix A = csc_from_scipy(A_scipy);
+        // TODO X and Y are dense matrices! Accept numpy matrices
+        std::vector<double> Z = f(A, X, Y);
+        return py::cast(Z);  // TODO Z is actually a dense matrix!
+    };
+}
+
+
+/** Wrap a solve function that takes a matrix, vector, and order. */
+template <typename... Args>
+auto wrap_solve(
+    std::vector<double> (*f)(
+        const cs::CSCMatrix& A,
+        const std::vector<double>& b,
+        cs::AMDOrder order,
+        Args...
+    )
+)
+{
+    return [f](
+        const py::object& A_scipy,
+        const std::vector<double>& b,
+        const std::string& order,
+        Args... args
+    ) {
+        cs::CSCMatrix A = csc_from_scipy(A_scipy);
+        cs::AMDOrder order_enum = string_to_amdorder(order);
+        std::vector<double> x = f(A, b, order_enum, std::forward<Args>(args)...);
+        return py::cast(x);
+    };
+}
 
 
 #endif  // _CSPARSE_PYBIND11_H_

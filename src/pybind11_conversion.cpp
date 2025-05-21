@@ -105,25 +105,5 @@ cs::CSCMatrix csc_from_scipy(const py::object& obj)
 }
 
 
-py::object wrap_coo_func(const auto& cpp_func)
-{
-    auto wrapped = [cpp_func]() {
-        cs::COOMatrix A = cpp_func();
-        return scipy_from_coo(A);
-    };
-    return py::cpp_function(wrapped);
-}
-
-
-py::object wrap_csc_func(const auto& cpp_func)
-{
-    auto wrapped = [cpp_func]() {
-        cs::CSCMatrix A = cpp_func();
-        return scipy_from_csc(A);
-    };
-    return py::cpp_function(wrapped);
-}
-
-
 /*==============================================================================
  *============================================================================*/

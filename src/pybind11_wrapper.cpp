@@ -344,27 +344,36 @@ PYBIND11_MODULE(csparse, m) {
     // -------------------------------------------------------------------------
     //         General Functions
     // -------------------------------------------------------------------------
-    // TODO write lambdas for all of these to convert the input to CSCMatrix
-    m.def("gaxpy", &cs::gaxpy);
-    m.def("gaxpy_row", &cs::gaxpy_row);
-    m.def("gaxpy_col", &cs::gaxpy_col);
-    m.def("gaxpy_block", &cs::gaxpy_block);
-    m.def("gatxpy", &cs::gatxpy);
-    m.def("gatxpy_row", &cs::gatxpy_row);
-    m.def("gatxpy_col", &cs::gatxpy_col);
-    m.def("gatxpy_block", &cs::gatxpy_block);
-    m.def("sym_gaxpy", &cs::sym_gaxpy);
+    m.def("gaxpy",         wrap_vector_func(&cs::gaxpy));
+    m.def("gatxpy",        wrap_vector_func(&cs::gatxpy));
+    m.def("sym_gaxpy",     wrap_vector_func(&cs::sym_gaxpy));
+    m.def("gaxpy_row",     wrap_gaxpy_mat(&cs::gaxpy_row));
+    m.def("gaxpy_col",     wrap_gaxpy_mat(&cs::gaxpy_col));
+    m.def("gaxpy_block",   wrap_gaxpy_mat(&cs::gaxpy_block));
+    m.def("gatxpy_row",    wrap_gaxpy_mat(&cs::gatxpy_row));
+    m.def("gatxpy_col",    wrap_gaxpy_mat(&cs::gatxpy_col));
+    m.def("gatxpy_block",  wrap_gaxpy_mat(&cs::gatxpy_block));
 
     //--------------------------------------------------------------------------
     //        Utility Functions
     //--------------------------------------------------------------------------
     m.def("inv_permute", &cs::inv_permute);
+    m.def("scipy_from_coo", &scipy_from_coo);
+    m.def("scipy_from_csc", &scipy_from_csc);
+    m.def("csc_from_scipy", &csc_from_scipy);
 
     //--------------------------------------------------------------------------
     //        Decomposition Functions
     //--------------------------------------------------------------------------
     // ---------- Cholesky decomposition
-    m.def("etree", &cs::etree, py::arg("A"), py::arg("ata")=false);
+    m.def("etree", 
+        [] (const py::object& A_scipy, bool ata=false) {
+            cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            return cs::etree(A, ata);
+        },
+        py::arg("A"), 
+        py::arg("ata")=false
+    );
     m.def("post", &cs::post);
 
     m.def("chol",
@@ -378,7 +387,7 @@ PYBIND11_MODULE(csparse, m) {
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
             // TODO make CholResult struct with named members?
             cs::CSCMatrix L = cs::chol(A, S);
-            return py::make_tuple(L, cs::inv_permute(S.p_inv));
+            return py::make_tuple(scipy_from_csc(L), cs::inv_permute(S.p_inv));
         },
         py::arg("A"),
         py::arg("order")="Natural",
@@ -439,7 +448,17 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("use_postorder")=false
     );
 
-    m.def("chol_update_", &cs::chol_update);
+    m.def("chol_update_",
+        [] (const py::object& L_scipy,
+            bool update,
+            const py::object& C_scipy,
+            const std::vector<cs::csint>& parent
+        ) {
+            cs::CSCMatrix L = csc_from_scipy(L_scipy);
+            cs::CSCMatrix C = csc_from_scipy(C_scipy);
+            return scipy_from_csc(cs::chol_update(L, update, C, parent));
+        }
+    );
 
     // ---------- QR decomposition
     // Define the python qr function here, and call the C++ sqr function.
@@ -491,63 +510,53 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("order")="APlusAT"
     );
 
-    m.def("dmperm", &cs::dmperm, py::arg("A"), py::arg("seed")=0);
-    m.def("scc", &cs::scc, py::arg("A"));
+    m.def("dmperm", 
+        [] (const py::object& A_scipy, double seed=0) {
+            cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            return cs::dmperm(A, seed);
+        },
+        py::arg("A"),
+        py::arg("seed")=0
+    );
+
+    m.def("scc", 
+        [] (const py::object& A_scipy) {
+            cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            return cs::scc(A);
+        },
+        py::arg("A")
+    );
 
     //--------------------------------------------------------------------------
     //      Solve functions
     //--------------------------------------------------------------------------
-    // TODO write lambdas for all of these to convert the input to CSCMatrix
-    m.def("lsolve", &cs::lsolve);
-    m.def("usolve", &cs::usolve);
-    m.def("ltsolve", &cs::ltsolve);
-    m.def("utsolve", &cs::utsolve);
-    m.def("lsolve_opt", &cs::lsolve_opt);
-    m.def("usolve_opt", &cs::usolve_opt);
+    m.def("lsolve", wrap_vector_func(&cs::lsolve));
+    m.def("usolve", wrap_vector_func(&cs::usolve));
+    m.def("ltsolve", wrap_vector_func(&cs::ltsolve));
+    m.def("utsolve", wrap_vector_func(&cs::utsolve));
+    m.def("lsolve_opt", wrap_vector_func(&cs::lsolve_opt));
+    m.def("usolve_opt", wrap_vector_func(&cs::usolve_opt));
 
     m.def("chol_solve",
-        [](
-            const py::object& A_scipy,
-            const std::vector<double>& b,
-            const std::string& order
-        ) {
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = string_to_amdorder(order);
-            return cs::chol_solve(A, b, order_enum);
-        },
+        wrap_solve(&cs::chol_solve),
         py::arg("A"),
         py::arg("b"),
         py::arg("order")="Natural"  // CSparse default is "ATANoDenseRows"
     );
 
     m.def("qr_solve",
-        [](
-            const py::object& A_scipy,
-            const std::vector<double>& b,
-            const std::string& order
-        ) {
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = string_to_amdorder(order);
-            return cs::qr_solve(A, b, order_enum);
-        },
+        wrap_solve(&cs::qr_solve),
         py::arg("A"),
         py::arg("b"),
         py::arg("order")="Natural"  // CSparse default is "ATA"
     );
 
     m.def("lu_solve",
-        [](
-            const py::object& A_scipy,
-            const std::vector<double>& b,
-            const std::string& order
-        ) {
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = string_to_amdorder(order);
-            return cs::lu_solve(A, b, order_enum);
-        },
+        wrap_solve(&cs::lu_solve),
         py::arg("A"),
         py::arg("b"),
-        py::arg("order")="Natural"  // CSparse default is "ATANoDenseRows"
+        py::arg("order")="Natural",  // CSparse default is "ATANoDenseRows"
+        py::arg("tol")=1.0
     );
 }
 

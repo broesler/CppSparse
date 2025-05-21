@@ -49,7 +49,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
 
         SECTION("Print short") {
             std::string expect =
-                "<Compressed Sparse Column matrix\n"
+                "<C++Sparse Compressed Sparse Column matrix\n"
                 "        with 10 stored elements and shape (4, 4)>\n";
 
             C.print(s);  // default verbose=false
@@ -59,7 +59,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
 
         SECTION("Print verbose") {
             std::string expect =
-                "<Compressed Sparse Column matrix\n"
+                "<C++Sparse Compressed Sparse Column matrix\n"
                 "        with 10 stored elements and shape (4, 4)>\n"
                 "(1, 0):  3.1\n"
                 "(3, 0):  3.5\n"

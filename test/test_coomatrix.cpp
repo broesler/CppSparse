@@ -73,7 +73,7 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
 
         SECTION("Print short") {
             expect =
-                "<COOrdinate Sparse matrix\n"
+                "<C++Sparse COOrdinate Sparse matrix\n"
                 "        with 10 stored elements and shape (4, 4)>\n";
 
             A.print(s);  // default verbose=false
@@ -81,7 +81,7 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
 
         SECTION("Print verbose") {
             expect =
-                "<COOrdinate Sparse matrix\n"
+                "<C++Sparse COOrdinate Sparse matrix\n"
                 "        with 10 stored elements and shape (4, 4)>\n"
                 "(2, 2):  3\n"
                 "(1, 0):  3.1\n"

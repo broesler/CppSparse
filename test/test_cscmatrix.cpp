@@ -281,6 +281,26 @@ TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
 }
 
 
+TEST_CASE("Insertion", "[CSCMatrix][operator()][insert]")
+{
+    // Create an empty column vector and fill it with values
+    csint N = 10;
+    CSCMatrix C({N, 1});
+
+    CHECK(C.nnz() == 0);
+    CHECK(C.shape() == Shape{N, 1});
+
+    // Insert values into the matrix
+    for (csint i = 0; i < N; i++) {
+        C(i, 0) = static_cast<double>(i);
+    }
+
+    CHECK(C.nnz() == N);
+    CHECK(C.shape() == Shape{N, 1});
+    CHECK(C._test_sorted());  // elements added at end of column
+}
+
+
 TEST_CASE("Indexing", "[CSCMatrix][operator()]")
 {
     COOMatrix A = davis_example_small();  // non-canonical

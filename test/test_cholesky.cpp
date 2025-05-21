@@ -431,7 +431,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
             // A.print_dense();
 
             // L is lower triangular with the same sparsity pattern as A
-            const CSCMatrix A_tril = std::as_const(A).band(-N, 0);
+            const CSCMatrix A_tril = std::as_const(A).band(-N, 0).to_canonical();
 
             csint fill_in = 6;  // shown in book example
             CHECK(L._test_sorted());

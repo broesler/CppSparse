@@ -340,9 +340,8 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
         if (found) {
             v_[k] = v;
         } else {
-            // Columns are not sorted, so we can just insert the element at the
-            // beginning of the column.
-            insert_(i, j, v, p_[j]);
+            // Columns are not sorted, so insert item at the end of the column.
+            insert_(i, j, v, p_[j+1]);
         }
     }
 

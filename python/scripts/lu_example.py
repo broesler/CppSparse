@@ -23,7 +23,8 @@ def allclose(a, b, atol=1e-15):
 
 
 # Define the example matrix from Davis, Figure 4.2, p. 39
-Ac = csparse.davis_example_qr().todok()  # efficient updates
+A = csparse.davis_example_qr()  # scipy.sparse.csc_array
+Ac = csparse.CSCMatrix(A.data, A.indices, A.indptr, A.shape)
 
 M, N = Ac.shape
 
@@ -33,27 +34,34 @@ for i in range(M):
     Ac[i, i] += 10
 
 # ---------- Permute the matrix rows arbitrarily
-p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
-Ac = Ac[p]
+# p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
+# p_inv = csparse.inv_permute(p)  # [3, 1, 4, 7, 6, 0, 5, 2]
+# Ac = Ac.permute_rows(p_inv)
 
 # ---------- Create a numerically rank-deficient matrix
 # for i in range(N):
-#     # Numerical rank deficiency (linearly dependent rows/columns)
-#     # Ac[i, 3] = 2 * Ac[i, 5]  # 2 linearly dependent column WORKS
-#     # Ac[i, 2] = 2 * Ac[i, 4]  # 2 *sets* of linearly dependent columns WORKS
+    # Numerical rank deficiency (linearly dependent rows/columns)
+    # Ac[i, 3] = 2 * Ac[i, 5]  # 2 linearly dependent column WORKS
+    # Ac[i, 2] = 2 * Ac[i, 4]  # 2 *sets* of linearly dependent columns WORKS
 
-#     # Ac[3, i] = 2 * Ac[4, i]  # 2 linearly dependent rows WORKS
-#     # Ac[2, i] = 2 * Ac[5, i]  # 2 *sets* of linearly dependent rows WORKS
+    # Ac[3, i] = 2 * Ac[4, i]  # 2 linearly dependent rows WORKS
+    # Ac[2, i] = 2 * Ac[5, i]  # 2 *sets* of linearly dependent rows WORKS
 
-#     # Numerical rank deficiency (zero rows/columns)
-#     # Ac[3, i] = 0.0  # zero row WORKS
+    # Numerical rank deficiency (zero rows/columns)
+    # Ac[3, i] = 0.0  # zero row WORKS
 
-#     for j in [2, 3, 5]:
-#         Ac[j, i] = 0.0  # multiple zero rows WORKS (but not for scipy.sparse)
+    # for j in [2, 3, 5]:
+    #     Ac[j, i] = 0.0  # multiple zero rows WORKS (but not for scipy.sparse)
 
-#     # Ac[i, 3] = 0.0  # WORKS single zero column
-#     # for j in [2, 3, 5]:
-#     #     Ac[i, j] = 0.0  # multiple zero columns WORKS
+    # FIXME csparse gets the wrong permutation when we premute Ac first
+    #   p = array([3, 1, 4, 0, 6, 0, 5, 7])
+    # should be:  [3, 1, 4, 7, 6, 0, 5, 2]
+    # Multiple zeros!       X           X
+    # Ac[i, 3] = 0.0  # WORKS single zero column
+
+    # FIXME also wrong when we permute Ac first
+    # for j in [2, 3, 5]:
+    #     Ac[i, j] = 0.0  # multiple zero columns WORKS
 
 
 # ---------- Structural rank deficiency: remove zero rows and columns
@@ -80,13 +88,13 @@ Ac = Ac[p]
 # -----------------------------------------------------------------------------
 #         Run the tests
 # -----------------------------------------------------------------------------
-rank = np.linalg.matrix_rank(Ac.toarray())
-# print("Size of A:", Ac.shape)
-# print("Rank of A:", rank)
-
 # Convert to dense and sparse formats
 A = Ac.toarray()
 As = sparse.csc_matrix(A)
+
+rank = np.linalg.matrix_rank(A)
+# print("Size of A:", Ac.shape)
+# print("Rank of A:", rank)
 
 # print("A:")
 # print(A)
@@ -106,7 +114,7 @@ allclose(Ld[pd] @ Ud, A)
 
 # C++Sparse
 try:
-    L, U, p, q = csparse.lu(Ac, order='Natural')
+    L, U, p, q = csparse.lu(As, order='Natural')
 
     allclose((L @ U).toarray(), A[p])
     # np.testing.assert_allclose(p, pd)  # not necessarily identical!

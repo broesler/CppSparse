@@ -25,6 +25,22 @@
 namespace py = pybind11;
 
 
+/** Convert a string to an AMDOrder enum.
+ *
+ * @param order  the string to convert
+ *
+ * @return the AMDOrder enum
+ */
+inline cs::AMDOrder string_to_amdorder(const std::string& order)
+{
+    if (order == "Natural") { return cs::AMDOrder::Natural; }
+    if (order == "APlusAT") { return cs::AMDOrder::APlusAT; }
+    if (order == "ATANoDenseRows") { return cs::AMDOrder::ATANoDenseRows; }
+    if (order == "ATA") { return cs::AMDOrder::ATA; }
+    throw std::runtime_error("Invalid AMDOrder specified.");
+}
+
+
 namespace pybind11::detail {
 // -----------------------------------------------------------------------------
 //         Custom Type Caster for std::vector<T> <=> py::array_t<T>

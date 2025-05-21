@@ -99,7 +99,7 @@ def demo2(C, is_sym, name='', axs=None):
         if is_sym:
             try:
                 # Cholesky
-                L, p = csparse.chol(C, order='APlusAT')
+                L, p, _ = csparse.chol(C, order='APlusAT')
                 csparse.cspy(L + sparse.triu(L.T, 1),
                              colorbar=False, norm='log', ax=ax)
                 ax.set_title('L + L.T')

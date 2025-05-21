@@ -73,7 +73,7 @@ def demo3(C, is_sym, name='', axs=None):
     b = np.ones(M) + np.arange(M) / M
 
     tic = time.perf_counter()
-    L, p = csparse.chol(C, order)
+    L, p, parent = csparse.chol(C, order)
     t = time.perf_counter() - tic
     print(f"chol  time: {t:.2e} s")
 
@@ -102,8 +102,6 @@ def demo3(C, is_sym, name='', axs=None):
     vals = rng.random(Lk.data.size)
 
     w = L[k, k] * sparse.coo_array((vals, (rows, cols)), shape=(M, 1))
-
-    parent = csparse.etree(C[p][:, p])
 
     tic = time.perf_counter()
     Lup = csparse.chol_update_(L, True, w, parent)
@@ -134,7 +132,7 @@ def demo3(C, is_sym, name='', axs=None):
     print_resid(E, x, b)
 
     tic = time.perf_counter()
-    L2, p2 = csparse.chol(E, order)
+    L2, p2, _ = csparse.chol(E, order)
     x = b[p2]
     x = csparse.lsolve(L2, x)
     x = csparse.ltsolve(L2, x)

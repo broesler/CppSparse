@@ -502,7 +502,7 @@ SymbolicChol schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 }
 
 
-CSCMatrix symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S)
+CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S)
 {
     auto [M, N] = A.shape();
     CSCMatrix L({M, N}, S.lnz);        // allocate result
@@ -528,11 +528,11 @@ CSCMatrix symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S)
     L.has_sorted_indices_ = true;
     L.has_canonical_format_ = true;
 
-    return L;
+    return {L, S.p_inv, S.parent};
 }
 
 
-CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S)
+CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
 {
     auto [M, N] = A.shape();
     CSCMatrix L({M, N}, S.lnz);  // allocate result
@@ -600,7 +600,7 @@ CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S)
     L.has_sorted_indices_ = true;
     L.has_canonical_format_ = true;
 
-    return L;
+    return {L, S.p_inv, S.parent};
 }
 
 
@@ -837,7 +837,7 @@ CholCounts chol_etree_counts(const CSCMatrix& A)
 
 
 // Exercise 4.13
-CSCMatrix ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
+CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
 {
     auto [M, N] = A.shape();
 
@@ -919,12 +919,12 @@ CSCMatrix ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
     L.has_sorted_indices_ = true;
     L.has_canonical_format_ = true;
 
-    return L;
+    return {L, S.p_inv};
 }
 
 
 // Exercise 4.13
-CSCMatrix icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
+CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
 {
     auto [M, N] = A.shape();
 
@@ -1033,7 +1033,7 @@ CSCMatrix icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
     L.has_sorted_indices_ = true;
     L.has_canonical_format_ = true;
 
-    return L;
+    return {L, S.p_inv};
 }
 
 

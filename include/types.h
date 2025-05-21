@@ -29,6 +29,7 @@ enum class AMDOrder
 
 // Forward declarations
 struct CholCounts;
+struct CholResult;
 struct TriPerm;
 struct SparseSolution;
 struct SymbolicChol;

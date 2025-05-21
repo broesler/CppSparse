@@ -743,7 +743,7 @@ std::vector<double> chol_solve(
     }
 
     SymbolicChol S = schol(A, order);
-    CSCMatrix L = chol(A, S);
+    CholResult res = chol(A, S);
 
     // TODO use chol_lsolve for more efficient solution?
     // std::vector<double> y = chol_lsolve(L, Pb, S.parent).x;
@@ -751,10 +751,10 @@ std::vector<double> chol_solve(
 
     // TODO overwrite x each time? Need to change [i]pvec to take
     // a workspace vector
-    const std::vector<double> Pb = ipvec(S.p_inv, b);  // permute b
-    const std::vector<double> y = lsolve(L, Pb);       // y = L \ b
-    const std::vector<double> PTx = ltsolve(L, y);     // P^T x = L^T \ y
-    std::vector<double> x = pvec(S.p_inv, PTx);        // x = P P^T x
+    const std::vector<double> Pb = ipvec(res.p_inv, b);  // permute b
+    const std::vector<double> y = lsolve(res.L, Pb);     // y = L \ b
+    const std::vector<double> PTx = ltsolve(res.L, y);   // P^T x = L^T \ y
+    std::vector<double> x = pvec(res.p_inv, PTx);        // x = P P^T x
 
     return x;
 }

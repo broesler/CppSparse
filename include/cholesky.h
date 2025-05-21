@@ -13,6 +13,8 @@
 #include <vector>
 
 #include "types.h"
+#include "csc.h"
+
 
 namespace cs {
 
@@ -49,6 +51,15 @@ struct SymbolicChol
                        cp;      ///< column pointers
 
     csint lnz;  ///< # entries in L
+};
+
+
+/** CholResult Cholesky decomposition return struct (see cs_chol aka csc) */
+struct CholResult
+{
+    CSCMatrix L;                ///< Cholesky factor
+    std::vector<csint> p_inv,   ///< fill-reducing permutation (symmetric)
+                       parent;  ///< the elimination tree (for chol_update)
 };
 
 
@@ -303,15 +314,16 @@ SymbolicChol schol(
  * @param A the matrix to factorize
  * @param S the SymbolicChol factorization of `A`, from `cs::schol()`
  *
- * @return L  a CSCMatrix with the sparsity pattern of the Cholesky
- *         factor of A, and the values vector zeroed out.
+ * @return a struct containing a CSCMatrix with the sparsity pattern of the
+ *         Cholesky factor of A, and the values vector zeroed out, and the
+ *         fill-reducing permutation.
  *
  * @see cs_schol
  * @see cs_chol
  * @see cs::schol()
  * @see cs::chol()
  */
-CSCMatrix symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S);
+CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S);
 
 
 /** Compute the up-looking Cholesky factorization of a sparse matrix.
@@ -324,7 +336,7 @@ CSCMatrix symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S);
  *
  * @return the numeric Cholesky factorization of `A`
  */
-CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S);
+CholResult chol(const CSCMatrix& A, const SymbolicChol& S);
 
 
 /** Compute the left-looking Cholesky factorization of a sparse matrix, given
@@ -339,7 +351,8 @@ CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S);
  * @param[in, out] L  the symbolic Cholesky factor of `A` from
  *        `cs::symbolic_cholesky()`. This matrix is modified in place.
  *
- * @return the numeric Cholesky factorization of `A`
+ * @return a struct containing the numeric Cholesky factorization of `A`, and
+ *         the fill-reducing permutation
  *
  * @see 'python/cholesky.py::chol_left_amp()'
  */
@@ -358,7 +371,8 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
  * @param[in, out] L  the symbolic Cholesky factor of `A` from
  *        `cs::symbolic_cholesky()`. This matrix is modified in place.
  *
- * @return the numeric Cholesky factorization of `A`
+ * @return a struct containing the numeric Cholesky factorization of `A`, and
+ *         the fill-reducing permutation
  *
  * @see 'python/cholesky.py::chol_left_amp()'
  */
@@ -372,7 +386,8 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
  * @param C  the update vector, as the first column in a CSCMatrix
  * @param parent  the elimination tree of A
  *
- * @return L  the updated Cholesky factor of A
+ * @return a struct containing the updated Cholesky factor of A, and the
+ *         fill-reducing permutation
  */
 CSCMatrix& chol_update(
     CSCMatrix& L,
@@ -412,7 +427,8 @@ CholCounts chol_etree_counts(const CSCMatrix& A);
  * @param A  the matrix to factorize. Only the upper triangle is used.
  * @param S  the SymbolicChol factorization of `A` from `cs::schol()`
  *
- * @return L  the incomplete Cholesky factor of `A`
+ * @return a struct containing the the incomplete Cholesky factor of `A`, and the
+ *         fill-reducing permutation
  *
  * @throws std::runtime_error if `A` is not square or positive definite.
  *
@@ -420,7 +436,7 @@ CholCounts chol_etree_counts(const CSCMatrix& A);
  * @see cs::leftchol()
  * @see cs::ilu()
  */
-CSCMatrix ichol_nofill(const CSCMatrix& A, const SymbolicChol& S);
+CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S);
 
 
 /** Compute the incomplete Cholesky factorization with drop tolerance.
@@ -434,7 +450,8 @@ CSCMatrix ichol_nofill(const CSCMatrix& A, const SymbolicChol& S);
  * @param drop_tol  the drop tolerance for the factorization. Any element that
  *        is smaller than `drop_tol` will not be included in `L`.
  *
- * @return L  the incomplete Cholesky factor of `A`
+ * @return a struct containing the incomplete Cholesky factor of `A`, and the
+ *         fill-reducing permutation
  *
  * @throws std::runtime_error if `A` is not square or positive definite.
  *
@@ -442,7 +459,7 @@ CSCMatrix ichol_nofill(const CSCMatrix& A, const SymbolicChol& S);
  * @see cs::leftchol()
  * @see cs::ilu()
  */
-CSCMatrix icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol=0);
+CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol=0);
 
 
 }  // namespace cs

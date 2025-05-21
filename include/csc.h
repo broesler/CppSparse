@@ -990,14 +990,14 @@ public:
     friend std::vector<csint> chol_rowcounts(const CSCMatrix& A);
     friend std::vector<csint> chol_colcounts(const CSCMatrix& A, bool ata);
 
-    friend CSCMatrix symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S);
+    friend CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S);
 
-    friend CSCMatrix chol(const CSCMatrix& A, const SymbolicChol& S);
+    friend CholResult chol(const CSCMatrix& A, const SymbolicChol& S);
     friend CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
     friend CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
 
-    friend CSCMatrix ichol_nofill(const CSCMatrix& A, const SymbolicChol& S);
-    friend CSCMatrix icholt(
+    friend CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S);
+    friend CholResult icholt(
         const CSCMatrix& A,
         const SymbolicChol& S,
         double drop_tol

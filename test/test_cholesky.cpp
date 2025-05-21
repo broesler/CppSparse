@@ -182,7 +182,8 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         CHECK(S.p_inv == expect_p_inv);
 
         // Now compute the numeric factorization
-        CSCMatrix L = chol(A, S);
+        CholResult res = chol(A, S);
+        CSCMatrix L = res.L;
 
         CHECK(L.has_sorted_indices());
         CHECK(L._test_sorted());
@@ -191,14 +192,15 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
 
         // Permute the input matrix to match LL^T = P^T A P
-        CSCMatrix PAPT = A.permute(S.p_inv, inv_permute(S.p_inv)).to_canonical();
+        CSCMatrix PAPT = A.permute(res.p_inv, inv_permute(res.p_inv)).to_canonical();
 
         compare_matrices(LLT, PAPT);
     }
 
     SECTION("Update Cholesky") {
         SymbolicChol S = schol(A, AMDOrder::Natural);
-        CSCMatrix L = chol(A, S);
+        CholResult res = chol(A, S);
+        CSCMatrix L = res.L;
 
         // Create a random vector with the sparsity of a column of L
         csint k = 3;  // arbitrary column index
@@ -217,7 +219,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         CSCMatrix A_up = (A + W * W.T()).to_canonical();
 
         // Update the factorization in-place
-        CSCMatrix L_up = chol_update(L.to_canonical(), true, W, S.parent);
+        CSCMatrix L_up = chol_update(L.to_canonical(), true, W, res.parent);
 
         CSCMatrix LLT_up = (L_up * L_up.T()).droptol().to_canonical();
         CHECK(LLT_up.nnz() == A_up.nnz());
@@ -250,7 +252,8 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
 
         // Compute the numeric factorization
         SymbolicChol S = schol(A, order);
-        CSCMatrix L = chol(A, S);
+        CholResult res = chol(A, S);
+        CSCMatrix& L = res.L;
 
         // Create RHS for Lx = b
         std::vector<double> expect(N);
@@ -266,7 +269,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         CSCMatrix b {b_vals, {N, 1}};
 
         // Solve Lx = b
-        auto [xi, x] = chol_lsolve(L, b, S.parent);
+        auto [xi, x] = chol_lsolve(L, b, res.parent);
 
         CHECK_THAT(is_close(x, expect, tol), AllTrue());
 
@@ -290,7 +293,8 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
 
         // Compute the numeric factorization
         SymbolicChol S = schol(A, order);
-        CSCMatrix L = chol(A, S);
+        CholResult res = chol(A, S);
+        CSCMatrix& L = res.L;
 
         // Create RHS for Lx = b
         std::vector<double> expect(N);
@@ -306,7 +310,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         CSCMatrix b {b_vals, {N, 1}};
 
         // Solve Lx = b
-        auto [xi, x] = chol_ltsolve(L, b, S.parent);
+        auto [xi, x] = chol_ltsolve(L, b, res.parent);
 
         CHECK_THAT(is_close(x, expect, tol), AllTrue());
 
@@ -335,11 +339,12 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         }
 
         SymbolicChol S = schol(A, order, use_postorder);
-        CSCMatrix L = chol(A, S);
+        CholResult res = chol(A, S);
+        CSCMatrix& L = res.L;
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
 
         // The factorization will be postordered!
-        CSCMatrix PAPT = A.permute(S.p_inv, inv_permute(S.p_inv)).to_canonical();
+        CSCMatrix PAPT = A.permute(res.p_inv, inv_permute(res.p_inv)).to_canonical();
 
         compare_matrices(LLT, PAPT);
     }
@@ -356,8 +361,8 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         }
 
         SymbolicChol S = schol(A, order);
-        CSCMatrix L = chol(A, S);  // numeric factorization
-        CSCMatrix Ls = symbolic_cholesky(A, S);
+        CSCMatrix L = chol(A, S).L;  // numeric factorization
+        CSCMatrix Ls = symbolic_cholesky(A, S).L;
 
         CHECK(Ls.nnz() == L.nnz());
         CHECK(Ls.shape() == L.shape());
@@ -378,13 +383,14 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         }
 
         SymbolicChol S = schol(A, order);
-        CSCMatrix L = symbolic_cholesky(A, S);
+        CholResult res = symbolic_cholesky(A, S);
+        CSCMatrix& L = res.L;
 
         // Compute the numeric factorization using the non-zero pattern
         L = leftchol(A, S, L);
 
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
-        CSCMatrix PAPT = A.permute(S.p_inv, inv_permute(S.p_inv)).to_canonical();
+        CSCMatrix PAPT = A.permute(res.p_inv, inv_permute(res.p_inv)).to_canonical();
 
         compare_matrices(LLT, PAPT);
     }
@@ -401,13 +407,14 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         }
 
         SymbolicChol S = schol(A, order);
-        CSCMatrix L = symbolic_cholesky(A, S);
+        CholResult res = symbolic_cholesky(A, S);
+        CSCMatrix& L = res.L;
 
         // Compute the numeric factorization using the non-zero pattern
         L = rechol(A, S, L);
 
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
-        CSCMatrix PAPT = A.permute(S.p_inv, inv_permute(S.p_inv)).to_canonical();
+        CSCMatrix PAPT = A.permute(res.p_inv, inv_permute(res.p_inv)).to_canonical();
 
         compare_matrices(LLT, PAPT);
     }
@@ -417,10 +424,10 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
 
         SECTION("IC0: No Fill") {
             // Compute the incomplete Cholesky factorization with no fill-in.
-            const CSCMatrix L = ichol_nofill(A, S);
+            const CSCMatrix L = ichol_nofill(A, S).L;
 
             // Compute the complete Cholesky factorization for comparison
-            const CSCMatrix Lf = chol(A, schol(A));
+            const CSCMatrix Lf = chol(A, schol(A)).L;
 
             // std::cout << "Lf:" << std::endl;
             // Lf.print_dense();
@@ -472,14 +479,14 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
             SECTION("Full Cholesky (drop_tol = 0)") {
                 // Should match full decomposition
                 double drop_tol = 0.0;
-                const CSCMatrix L = icholt(A, S, drop_tol);
-                const CSCMatrix Lf = chol(A, S);
+                const CSCMatrix L = icholt(A, S, drop_tol).L;
+                const CSCMatrix Lf = chol(A, S).L;
                 compare_matrices(L, Lf);
             }
 
             SECTION("Drop all non-diagonal entries (drop_tol = inf)") {
                 double drop_tol = 1.0;
-                const CSCMatrix L = icholt(A, S, drop_tol);
+                const CSCMatrix L = icholt(A, S, drop_tol).L;
                 const CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
                 CHECK(L.nnz() == N);
                 for (csint k = 0; k < N; k++) {
@@ -490,10 +497,10 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
             SECTION("Arbitrary Tolerance") {
                 // Compute the incomplete Cholesky factorization with a threshold
                 double drop_tol = 0.005;
-                const CSCMatrix L = icholt(A, S, drop_tol);
+                const CSCMatrix L = icholt(A, S, drop_tol).L;
 
                 // Compute the complete Cholesky factorization for comparison
-                const CSCMatrix Lf = chol(A, S);
+                const CSCMatrix Lf = chol(A, S).L;
                 const CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
 
                 // std::cout << "Lf:" << std::endl;

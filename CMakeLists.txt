@@ -15,7 +15,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)  # Use strict standard compliance
 
-find_package(pybind11 REQUIRED)
+find_package(pybind11 CONFIG REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
 set(BASENAMES
@@ -29,7 +29,6 @@ set(BASENAMES
 	qr
 	solve
 	example_matrices
-    pybind11_conversion
 )
 
 set(SOURCES "")
@@ -40,43 +39,15 @@ foreach(BASENAME ${BASENAMES})
     list(APPEND HEADERS "include/${BASENAME}.h")
 endforeach()
 
-message(STATUS "PYBIND11_INCLUDE_DIRS: ${PYBIND11_INCLUDE_DIRS}")
+add_library(csc_lib ${SOURCES} ${HEADERS})
+target_include_directories(csc_lib PUBLIC include)
 
-add_library(csc_lib ${SOURCES})
-target_include_directories(
-    csc_lib
-    PUBLIC
-    include
-    /Users/bernardroesler/miniconda3/envs/dev311/lib/python3.11/site-packages/pybind11/include
-    ${PYBIND11_INCLUDE_DIRS}
-    ${Python3_INCLUDE_DIRS}
-)
+# Add the python module itself
+file(GLOB PYBIND11_SRC src/pybind11*.cpp)
 
-pybind11_add_module(csparse_module src/pybind11_wrapper.cpp)
-
-target_link_libraries(csparse_module PRIVATE csc_lib ${PYBIND11_LIBRARIES})
-target_include_directories(
-    csparse_module 
-    PRIVATE
-    include
-    ${PYBIND11_INCLUDE_DIRS}
-    /Users/bernardroesler/miniconda3/envs/dev311/lib/python3.11/site-packages/pybind11/include
-    ${Python3_INCLUDE_DIRS}
-)
-
-# Add flags for Debug build type
-# if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-#     # Default debug flags (like -g and -O0 from CMAKE_CXX_FLAGS_DEBUG)
-#     # We want to enable sanitizers for Debug builds
-#     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-#         message(STATUS "Enabling AddressSanitizer for Debug build.")
-#         # Add sanitizer flags
-#         set(ASAN_FLAGS "-fsanitize=address -fno-omit-frame-pointer -O1 -g")
-#         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${ASAN_FLAGS}")
-#         set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} ${ASAN_FLAGS}")
-#         set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${ASAN_FLAGS}")
-#     endif()
-# endif()
+pybind11_add_module(csparse_module ${PYBIND11_SRC})
+target_include_directories(csparse_module PRIVATE include)
+target_link_libraries(csparse_module PRIVATE csc_lib)
 
 # Explicit compiler options for both the library and the Python module
 target_compile_options(csc_lib PRIVATE -Wall -pedantic)

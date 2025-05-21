@@ -117,12 +117,10 @@ struct type_caster<std::vector<T>> {
             } catch (const py::cast_error& e) {
                 std::cerr << "  Failed to cast Python list elements to "
                     << typeid(T).name() << ": " << e.what() << std::endl;
-                // Fall through to failure message if individual cast fails
+                return false;
             }
         }
 
-        std::cerr << "  Failed to load from either NumPy array or list for "
-            "std::vector<" << typeid(T).name() << ">." << std::endl;
         return false;
     }  // load
 };

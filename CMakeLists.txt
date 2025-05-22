@@ -44,9 +44,10 @@ target_include_directories(csc_lib PUBLIC include)
 
 # Add the python module itself
 file(GLOB PYBIND11_SRC src/pybind11*.cpp)
+list(APPEND PYBIND11_SRC demo/demo.cpp)
 
 pybind11_add_module(csparse_module ${PYBIND11_SRC})
-target_include_directories(csparse_module PRIVATE include)
+target_include_directories(csparse_module PRIVATE include demo)
 target_link_libraries(csparse_module PRIVATE csc_lib)
 
 # Explicit compiler options for both the library and the Python module

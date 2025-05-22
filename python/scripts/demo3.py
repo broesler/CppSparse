@@ -20,20 +20,16 @@ from scipy import sparse
 
 import csparse
 
-from demo import get_problem, print_resid
+from demo import print_resid
 
 
-def demo3(C, is_sym, name='', axs=None):
+def demo3(prob, name='', axs=None):
     """Perform Cholesky up/downdate on a sparse matrix.
 
     Parameters
     ----------
-    C : (M, N) scipy.sparse.sparray
-        The matrix to solve.
-    is_sym : int
-        - -1 if `C` is square and lower triangular
-        - 1 if `C` is square and upper triangular
-        - 0 otherwise.
+    prob : csparse.Problem
+        The problem to solve, containing the matrix C and its properties.
     name : str, optional
         The name of the matrix.
     axs : (4,) array_like of matplotlib.axes.Axes, optional
@@ -46,6 +42,8 @@ def demo3(C, is_sym, name='', axs=None):
 
     if axs.size < 4:
         raise ValueError("`axs` must have at least 4 axes")
+
+    C, is_sym, b = prob.C, prob.is_sym, prob.b
 
     fig = axs[0].figure
     fig.suptitle(name)
@@ -69,8 +67,6 @@ def demo3(C, is_sym, name='', axs=None):
     # cs_chol_mex.c uses A+A' ordering when nargout == 2
     order = 'APlusAT'
     print(f"chol then update/downdate ({order})")
-
-    b = np.ones(M) + np.arange(M) / M
 
     tic = time.perf_counter()
     L, p, parent = csparse.chol(C, order)
@@ -174,9 +170,10 @@ matrix_names = [
 
 
 for i, m in enumerate(matrix_names):
-    C, is_sym = get_problem(matrix_path / m, droptol=1e-14)
+    T = csparse.COOMatrix.from_file(str(matrix_path / m))
+    prob = csparse.Problem.from_matrix(T, droptol=1e-14)
     fig, axs = plt.subplots(num=i, nrows=2, ncols=2, clear=True)
-    demo3(C, is_sym, m, axs=axs)
+    demo3(prob, m, axs=axs)
     print()  # extra newline on output for clarity
     plt.show()
 

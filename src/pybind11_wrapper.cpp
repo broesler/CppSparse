@@ -17,16 +17,31 @@
 
 #include "pybind11_conversion.h"
 #include "csparse.h"
+#include "demo.h"
 
 namespace py = pybind11;
 
 
 PYBIND11_MODULE(csparse, m) {
-    m.doc() = "CSparse module for sparse matrix operations.";
+    m.doc() = "C++Sparse module for sparse matrix operations.";
 
     //--------------------------------------------------------------------------
-    //        Enums and Structs
+    //        Structs
     //--------------------------------------------------------------------------
+    py::class_<cs::Problem>(m, "Problem")
+        .def(py::init<>())
+        .def_property_readonly("A", [](const cs::Problem& p) { return scipy_from_csc(p.A); })
+        .def_property_readonly("C", [](const cs::Problem& p) { return scipy_from_csc(p.C); })
+        .def_property_readonly("is_sym", [](const cs::Problem& p) { return p.is_sym; })
+        .def_property_readonly("b", [](const cs::Problem& p) { return p.b; })
+        .def_readwrite("x", &cs::Problem::x)
+        .def_readwrite("resid", &cs::Problem::resid)
+        .def_static("from_matrix",
+            &cs::Problem::from_matrix,
+            py::arg("T"),
+            py::arg("droptol")=0
+        );
+
     py::class_<cs::CholResult>(m, "CholResult")
         .def_property_readonly("L", [](const cs::CholResult& res) { return scipy_from_csc(res.L); })
         .def_property_readonly("p", [](const cs::CholResult& res) { return cs::inv_permute(res.p_inv); })
@@ -39,6 +54,7 @@ PYBIND11_MODULE(csparse, m) {
             );
             return py::make_iterator(result);
         });
+
     // Bind the QRResult struct
     py::class_<cs::QRResult>(m, "QRResult")
         .def_property_readonly("V", [](const cs::QRResult& qr) { return scipy_from_csc(qr.V); })

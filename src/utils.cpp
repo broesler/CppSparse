@@ -137,10 +137,10 @@ double norm(std::span<const double> x, const double ord)
 
     if (ord == std::numeric_limits<double>::infinity()) {
         // infinity norm
-        return *std::max_element(
+        return std::fabs(*std::max_element(
             x.begin(), x.end(),
             [](double a, double b) { return std::fabs(a) < std::fabs(b); }
-        );
+        ));
     } else if (ord == 0) {
         // for (const auto& val : x) {
         //     res += (val != 0);

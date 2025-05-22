@@ -117,7 +117,7 @@ TEST_CASE("Argsort", "[vector][argsort]")
 
 TEST_CASE("Vector norms", "[vector][norm]")
 {
-    std::vector<double> v = {3, 4};
+    std::vector<double> v = {3, -4};
 
     SECTION("L0 norm") {
         REQUIRE(norm(v, 0) == 2);

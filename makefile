@@ -64,12 +64,16 @@ all: test demos python
 
 test: OPT += -I$(TEST_DIR) -I$(BREW)/include
 test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
-test: CFLAGS += -O2
+test: CFLAGS := $(CFLAGS) -O2  # Use := to override, then append global
 test: test_csparse
 
-debug: CFLAGS += -DDEBUG -glldb -O0  # no optimization
+test_debug: OPT += -I$(TEST_DIR) -I$(BREW)/include
+test_debug: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
+test_debug: test_csparse
+
+debug: CFLAGS := $(CFLAGS) -DDEBUG -glldb -O0  # no optimization
 debug: CFLAGS += -fno-inline -fsanitize=address -fno-omit-frame-pointer
-debug: test demos
+debug: test_debug demos_debug
 
 run_debug: debug
 	LSAN_OPTIONS="suppressions=$(abspath suppressions.sup)" ./test_csparse
@@ -91,15 +95,18 @@ python_debug:
 	)
 
 .PHONY: demos
-demos: CFLAGS += -O2 -DNDEBUG  # optimize and disable asserts
+demos: CFLAGS := $(CFLAGS) -O2 -DNDEBUG  # optimize and disable asserts
 demos: $(DEMO_EXEC)
 
+.PHONY: demos_debug
+demos_debug: $(DEMO_EXEC)
+
 .PHONY: profile
-profile: CFLAGS += -O2 -g  # optimize and add debug symbols
+profile: CFLAGS := $(CFLAGS) -O2 -g  # optimize and add debug symbols
 profile: $(DEMO_EXEC)
 
 .PHONY: run_demos
-run_demos: CFLAGS += -O2 -DNDEBUG  # optimize and disable asserts
+run_demos: CFLAGS := $(CFLAGS) -O2 -DNDEBUG  # optimize and disable asserts
 run_demos: demos
 run_demos: $(DEMO_EXEC)  # ensure demos are built before running
 	- ./demo1 './data/t1'

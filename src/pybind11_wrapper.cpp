@@ -32,10 +32,10 @@ PYBIND11_MODULE(csparse, m) {
         .def(py::init<>())
         .def_property_readonly("A", [](const cs::Problem& p) { return scipy_from_csc(p.A); })
         .def_property_readonly("C", [](const cs::Problem& p) { return scipy_from_csc(p.C); })
-        .def_property_readonly("is_sym", [](const cs::Problem& p) { return p.is_sym; })
-        .def_property_readonly("b", [](const cs::Problem& p) { return p.b; })
-        .def_readwrite("x", &cs::Problem::x)
-        .def_readwrite("resid", &cs::Problem::resid)
+        .def_readonly("is_sym", &cs::Problem::is_sym)
+        .def_readonly("b", &cs::Problem::b)
+        // .def_readwrite("x", &cs::Problem::x)
+        // .def_readwrite("resid", &cs::Problem::resid)
         .def_static("from_matrix",
             &cs::Problem::from_matrix,
             py::arg("T"),
@@ -45,7 +45,7 @@ PYBIND11_MODULE(csparse, m) {
     py::class_<cs::CholResult>(m, "CholResult")
         .def_property_readonly("L", [](const cs::CholResult& res) { return scipy_from_csc(res.L); })
         .def_property_readonly("p", [](const cs::CholResult& res) { return cs::inv_permute(res.p_inv); })
-        .def_property_readonly("parent", [](const cs::CholResult& res) { return res.parent; })
+        .def_readonly("parent", &cs::CholResult::parent)
         .def("__iter__", [](const cs::CholResult& res) {
             py::object result = py::make_tuple(
                 scipy_from_csc(res.L),
@@ -58,15 +58,12 @@ PYBIND11_MODULE(csparse, m) {
     // Bind the QRResult struct
     py::class_<cs::QRResult>(m, "QRResult")
         .def_property_readonly("V", [](const cs::QRResult& qr) { return scipy_from_csc(qr.V); })
-        .def_property_readonly("beta", [](const cs::QRResult& qr) { return qr.beta; })
+        .def_readonly("beta", &cs::QRResult::beta)
         .def_property_readonly("R", [](const cs::QRResult& qr) { return scipy_from_csc(qr.R); })
         .def_property_readonly("p", [](const cs::QRResult& qr) { return cs::inv_permute(qr.p_inv); })
-        .def_property_readonly("q", [](const cs::QRResult& qr) { return qr.q; })
+        .def_readonly("q", &cs::QRResult::q)
         // Add the __iter__ method to make it unpackable
         .def("__iter__", [](const cs::QRResult& qr) {
-            // This is a generator function in C++ that yields the elements.
-            // The order here determines the unpacking order in Python.
-            // Define a local variable because make_iterator needs an lvalue.
             py::object result = py::make_tuple(
                 scipy_from_csc(qr.V),
 		        qr.beta,
@@ -82,7 +79,7 @@ PYBIND11_MODULE(csparse, m) {
         .def_property_readonly("L", [](const cs::LUResult& lu) { return scipy_from_csc(lu.L); })
         .def_property_readonly("U", [](const cs::LUResult& lu) { return scipy_from_csc(lu.U); })
         .def_property_readonly("p", [](const cs::LUResult& lu) { return cs::inv_permute(lu.p_inv); })
-        .def_property_readonly("q", [](const cs::LUResult& lu) { return lu.q; })
+        .def_readonly("q", &cs::LUResult::q)
         .def("__iter__", [](const cs::LUResult& lu) {
             py::object result = py::make_tuple(
                 scipy_from_csc(lu.L),
@@ -95,13 +92,13 @@ PYBIND11_MODULE(csparse, m) {
 
     // Bind the DMPermResult struct
     py::class_<cs::DMPermResult>(m, "DMPermResult")
-        .def_property_readonly("p", [](const cs::DMPermResult& res) { return res.p; })
-        .def_property_readonly("q", [](const cs::DMPermResult& res) { return res.q; })
-        .def_property_readonly("r", [](const cs::DMPermResult& res) { return res.r; })
-        .def_property_readonly("s", [](const cs::DMPermResult& res) { return res.s; })
+        .def_readonly("p", &cs::DMPermResult::p)
+        .def_readonly("q", &cs::DMPermResult::q)
+        .def_readonly("r", &cs::DMPermResult::r)
+        .def_readonly("s", &cs::DMPermResult::s)
         .def_property_readonly("cc", [](const cs::DMPermResult& res) { return array_to_numpy(res.cc); })
         .def_property_readonly("rr", [](const cs::DMPermResult& res) { return array_to_numpy(res.rr); })
-        .def_property_readonly("Nb", [](const cs::DMPermResult& res) { return res.Nb; })
+        .def_readonly("Nb", &cs::DMPermResult::Nb)
         .def("__iter__", [](const cs::DMPermResult& res) {
             py::object result = py::make_tuple(
                 res.p,
@@ -117,9 +114,9 @@ PYBIND11_MODULE(csparse, m) {
 
     // Bind the SCCResult struct
     py::class_<cs::SCCResult>(m, "SCCResult")
-        .def_property_readonly("p", [](const cs::SCCResult& res) { return res.p; })
-        .def_property_readonly("r", [](const cs::SCCResult& res) { return res.r; })
-        .def_property_readonly("Nb", [](const cs::SCCResult& res) { return res.Nb; })
+        .def_readonly("p", &cs::SCCResult::p)
+        .def_readonly("r", &cs::SCCResult::r)
+        .def_readonly("Nb", &cs::SCCResult::Nb)
         .def("__iter__", [](const cs::SCCResult& res) {
             py::object result = py::make_tuple(res.p, res.r, res.Nb);
             return py::make_iterator(result);
@@ -412,12 +409,12 @@ PYBIND11_MODULE(csparse, m) {
     //        Decomposition Functions
     //--------------------------------------------------------------------------
     // ---------- Cholesky decomposition
-    m.def("etree", 
+    m.def("etree",
         [] (const py::object& A_scipy, bool ata=false) {
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
             return cs::etree(A, ata);
         },
-        py::arg("A"), 
+        py::arg("A"),
         py::arg("ata")=false
     );
     m.def("post", &cs::post);
@@ -556,7 +553,7 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("order")="APlusAT"
     );
 
-    m.def("dmperm", 
+    m.def("dmperm",
         [] (const py::object& A_scipy, double seed=0) {
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
             return cs::dmperm(A, seed);
@@ -565,7 +562,7 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("seed")=0
     );
 
-    m.def("scc", 
+    m.def("scc",
         [] (const py::object& A_scipy) {
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
             return cs::scc(A);

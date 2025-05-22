@@ -108,7 +108,7 @@ Problem Problem::from_matrix(const COOMatrix& T, double droptol)
         b[i] = 1.0 + (double) i / M;
     }
 
-    return {A, C, is_sym, {}, b, {}};
+    return {A, C, is_sym, b, {}, {}};
 }
 
 

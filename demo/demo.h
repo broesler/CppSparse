@@ -26,12 +26,12 @@ namespace cs {
 /** Data structure to an Ax = b problem. */
 struct Problem
 {
-    CSCMatrix A,                ///< original matrix
-              C;                ///< symmetric version of original matrix
-    csint is_sym;               ///< -1 if lower, 1 if upper, 0 otherwise
-    std::vector<double> x,      ///< solution
-                        b,      ///< rhs
-                        resid;  ///< residuals
+    const CSCMatrix A,            ///< original matrix
+                    C;            ///< symmetric version of original matrix
+    const csint is_sym;           ///< -1 if lower, 1 if upper, 0 otherwise
+    const std::vector<double> b;  ///< rhs
+    std::vector<double> x,        ///< solution
+                        resid;    ///< residuals
 
     /** Construct a Problem from an input matrix.
      *

@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
         prob.x = qr_solve(prob.C, prob.b, order);
         std::cout << std::format("time: {:.2e} ", toc(t));
         double resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
-        std::cout << std::format("residual: {: 8.2e}", resid) << std::endl;
+        std::cout << std::format("residual: {:8.2e}", resid) << std::endl;
     }
 
     if (M != N || sprank < N) {
@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
         prob.x = lu_solve(prob.C, prob.b, order, tol);
         std::cout << std::format("time: {:.2e} ", toc(t));
         double resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
-        std::cout << std::format("residual: {: 8.2e}", resid) << std::endl;
+        std::cout << std::format("residual: {:8.2e}", resid) << std::endl;
     }
 
     if (!prob.is_sym) {
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
         prob.x = chol_solve(prob.C, prob.b, order);
         std::cout << std::format("time: {:.2e} ", toc(t));
         double resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
-        std::cout << std::format("residual: {: 8.2e}", resid) << std::endl;
+        std::cout << std::format("residual: {:8.2e}", resid) << std::endl;
     }
 
     std::cout << std::endl;  // extra newline for readability

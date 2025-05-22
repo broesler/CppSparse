@@ -67,7 +67,7 @@ CSCMatrix make_sym(const CSCMatrix& A)
 
 
 // Get a problem from the input stream
-Problem Problem::from_matrix(const COOMatrix& T, double tol)
+Problem Problem::from_matrix(const COOMatrix& T, double droptol)
 {
     CSCMatrix A = T.tocsc();                   // convert to CSC format
     A.sum_duplicates();                        // sum up duplicates
@@ -77,8 +77,8 @@ Problem Problem::from_matrix(const COOMatrix& T, double tol)
     A.dropzeros();                             // drop zero entries
     csint nz2 = A.nnz();
 
-    if (tol > 0) {
-        A.droptol(tol);  // drop tiny entries (just to test)
+    if (droptol > 0) {
+        A.droptol(droptol);  // drop tiny entries (just to test)
     }
 
     CSCMatrix C = is_sym ? make_sym(A) : A;  // C = A + triu(A,1)'

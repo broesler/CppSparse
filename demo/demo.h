@@ -26,21 +26,21 @@ namespace cs {
 /** Data structure to an Ax = b problem. */
 struct Problem
 {
-    CSCMatrix A,                // /< original matrix
-              C;                // /< symmetric version of original matrix
-    csint is_sym;               // /< -1 if lower, 1 if upper, 0 otherwise
-    std::vector<double> x,      // /< solution
-                        b,      // /< rhs
-                        resid;  // /< residuals
+    CSCMatrix A,                ///< original matrix
+              C;                ///< symmetric version of original matrix
+    csint is_sym;               ///< -1 if lower, 1 if upper, 0 otherwise
+    std::vector<double> x,      ///< solution
+                        b,      ///< rhs
+                        resid;  ///< residuals
 
     /** Construct a Problem from an input matrix.
      *
      * @param T  The input matrix in COO format.
-     * @param tol  The tolerance for dropping small entries.
+     * @param droptol  The tolerance for dropping small entries.
      *
      * @return  A Problem object containing the matrix and other data.
      */
-    static Problem from_matrix(const COOMatrix& T, double tol=0);
+    static Problem from_matrix(const COOMatrix& T, double droptol=0);
 };
 
 

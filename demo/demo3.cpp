@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 
     // Numeric Cholesky
     t = tic();
-    CSCMatrix L = chol(prob.C, S);
+    CSCMatrix L = chol(prob.C, S).L;
     std::cout << std::format("numeric  chol time: {:8.2e}\n", toc(t));
 
     // Solve Ax = b part by part
@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
     t = tic();
 
     // Factor and solve
-    L = chol(E, S);
+    L = chol(E, S).L;
     Pb = ipvec(S.p_inv, prob.b);  // P*b
     y = lsolve(L, Pb);            // y = L \ Pb
     PTx = ltsolve(L, y);          // P^T x = L^T \ y

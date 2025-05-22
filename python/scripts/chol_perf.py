@@ -58,15 +58,14 @@ rng = np.random.default_rng(SEED)
 for N in Ns:
     if LAPLACE:
         # Use a non-random matrix like a 2D Laplacian
-        lap = LaplacianNd((N, N)).tosparse().tocsc()
-        A = csparse.CSCMatrix(lap.data, lap.indices, lap.indptr, lap.shape)
+        A = LaplacianNd((N, N)).tosparse().tocsc().astype(float)
     else:
         # Create a random matrix
-        A = csparse.COOMatrix.random(N, N, density, SEED).tocsc()
+        A = csparse.COOMatrix.random(N, N, density, SEED).tocsc().toscipy()
 
     # Ensure all diagonals are non-zero so that L is non-singular
     for i in range(A.shape[0]):
-        A[i, i] = N
+        A[i, i] = N * N
 
     # Make sure the matrix is symmetric, positive definite
     A = A + A.T
@@ -89,7 +88,7 @@ for N in Ns:
               f"({N_repeats} runs, {N_samples} loops each)")
 
     # Compute fill-in
-    L = csparse.chol(A)
+    L = csparse.chol(A).L
     fill_in.append((L.nnz - A.nnz) / A.nnz)
 
 

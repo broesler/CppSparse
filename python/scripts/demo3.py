@@ -174,7 +174,7 @@ matrix_names = [
 
 
 for i, m in enumerate(matrix_names):
-    C, is_sym = get_problem(matrix_path / m, tol=0.0)
+    C, is_sym = get_problem(matrix_path / m, droptol=1e-14)
     fig, axs = plt.subplots(num=i, nrows=2, ncols=2, clear=True)
     demo3(C, is_sym, m, axs=axs)
     print()  # extra newline on output for clarity

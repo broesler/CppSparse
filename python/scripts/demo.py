@@ -15,6 +15,8 @@ import scipy.linalg as la
 from scipy import sparse
 from scipy.sparse import linalg as spla
 
+import csparse
+
 
 def is_triangular(A):
     """Check if a sparse matrix is triangular.
@@ -43,14 +45,14 @@ def is_triangular(A):
 
 
 # TODO create pybind11 interface for csparse/demo/get_problem
-def get_problem(filename, tol=0.0):
-    """Read a matrix from a file and drop entries with values less than `tol`.
+def get_problem(filename, droptol=0.0):
+    """Read a matrix from a file and drop entries with values less than `droptol`.
 
     Parameters
     ----------
     filename : str or Path
         The name of the file containing the matrix in triplet format.
-    tol : float, optional
+    droptol : float, optional
         The absolute tolerance for dropping small entries. Default is 0.0 (no
         entries dropped).
 
@@ -65,30 +67,17 @@ def get_problem(filename, tol=0.0):
         - 0 otherwise.
     """
     # Read the matrix from the file
-    data = np.genfromtxt(
-        filename,
-        dtype=[
-            ('rows', np.int32),
-            ('cols', np.int32),
-            ('vals', np.float64)
-        ]
-    )
-
-    # Build the matrix
-    # A = csparse.COOMatrix(data['vals'], data['rows'], data['cols']).tocsc()
-    A = sparse.coo_array((data['vals'], (data['rows'], data['cols']))).tocsc()
+    A = csparse.COOMatrix.from_file(str(filename)).tocsc().toscipy()
 
     M, N = A.shape
     nnz = A.nnz
 
-    if tol > 0:
-        A.data[np.abs(A.data) < tol] = 0
+    if droptol > 0:
+        A.data[np.abs(A.data) < droptol] = 0
         A.eliminate_zeros()
-        # A = A.droptol(tol)  # drop small entries
 
     # Check if the matrix is symmetric
     is_sym = is_triangular(A)
-    # is_sym = A.is_triangular()
 
     if is_sym:
         C = A + (A.T - A.diagonal() * sparse.eye_array(M))

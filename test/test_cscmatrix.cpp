@@ -528,9 +528,9 @@ TEST_CASE("Matrix permutation", "[permute]")
 
         CSCMatrix C = A.permute(inv_permute(p), q);
 
-        compare_matrices(C, A);
-        compare_matrices(A.permute_rows(p), A);
-        compare_matrices(A.permute_cols(q), A);
+        check_sparse_allclose(C, A);
+        check_sparse_allclose(A.permute_rows(p), A);
+        check_sparse_allclose(A.permute_cols(q), A);
     }
 
     SECTION("Row permutation") {
@@ -546,8 +546,8 @@ TEST_CASE("Matrix permutation", "[permute]")
 
         CSCMatrix C = A.permute(inv_permute(p), q);
 
-        compare_matrices(C, expect);
-        compare_matrices(A.permute_rows(inv_permute(p)), expect);
+        check_sparse_allclose(C, expect);
+        check_sparse_allclose(A.permute_rows(inv_permute(p)), expect);
     }
 
     SECTION("Column permutation") {
@@ -563,8 +563,8 @@ TEST_CASE("Matrix permutation", "[permute]")
 
         CSCMatrix C = A.permute(inv_permute(p), q);
 
-        compare_matrices(C, expect);
-        compare_matrices(A.permute_cols(q), expect);
+        check_sparse_allclose(C, expect);
+        check_sparse_allclose(A.permute_cols(q), expect);
     }
 
     SECTION("Both row and column permutation") {
@@ -581,16 +581,16 @@ TEST_CASE("Matrix permutation", "[permute]")
         std::vector<csint> p_inv = inv_permute(p);
         CSCMatrix C = A.permute(p_inv, q);
 
-        compare_matrices(C, expect);
-        compare_matrices(A.permute_rows(p_inv).permute_cols(q), expect);
+        check_sparse_allclose(C, expect);
+        check_sparse_allclose(A.permute_rows(p_inv).permute_cols(q), expect);
 
         SECTION("Symbolic permutation") {
             CSCMatrix Cs = A.permute(inv_permute(p), q, false);  // no values
             CSCMatrix Cs2 = A.permute_rows(p_inv, false).permute_cols(q, false);
             CHECK(Cs.data().empty());
             CHECK(Cs2.data().empty());
-            compare_matrices(Cs, expect, false);
-            compare_matrices(Cs2, expect, false);
+            check_sparse_allclose(Cs, expect, false);
+            check_sparse_allclose(Cs2, expect, false);
         }
     }
 
@@ -613,12 +613,12 @@ TEST_CASE("Matrix permutation", "[permute]")
 
         CSCMatrix C = A.symperm(inv_permute(p));
 
-        compare_matrices(C, expect);
+        check_sparse_allclose(C, expect);
 
         SECTION("Symbolic permutation") {
             CSCMatrix Cs = A.symperm(inv_permute(p), false);  // no values
             CHECK(Cs.data().empty());
-            compare_matrices(Cs, expect, false);
+            check_sparse_allclose(Cs, expect, false);
         }
     }
 }
@@ -635,7 +635,7 @@ TEST_CASE("Exercise 2.26: permuted transpose", "[ex2.26][permute_transpose]")
         CSCMatrix expect = A.T();
         CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
-        compare_matrices(C, expect);
+        check_sparse_allclose(C, expect);
     }
 
     SECTION("Row-permuted transpose") {
@@ -651,7 +651,7 @@ TEST_CASE("Exercise 2.26: permuted transpose", "[ex2.26][permute_transpose]")
 
         CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
-        compare_matrices(C, expect);
+        check_sparse_allclose(C, expect);
     }
 
     SECTION("Column-permuted transpose") {
@@ -667,7 +667,7 @@ TEST_CASE("Exercise 2.26: permuted transpose", "[ex2.26][permute_transpose]")
 
         CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
-        compare_matrices(C, expect);
+        check_sparse_allclose(C, expect);
     }
 
     SECTION("Permuted transpose") {
@@ -683,12 +683,12 @@ TEST_CASE("Exercise 2.26: permuted transpose", "[ex2.26][permute_transpose]")
 
         CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
-        compare_matrices(C, expect);
+        check_sparse_allclose(C, expect);
 
         SECTION("Symbolic permutation") {
             CSCMatrix Cs = A.permute_transpose(inv_permute(p), inv_permute(q), false);
             CHECK(Cs.data().empty());
-            compare_matrices(Cs, expect, false);
+            check_sparse_allclose(Cs, expect, false);
         }
     }
 }
@@ -758,12 +758,12 @@ TEST_CASE("Exercise 2.16: CSC to/from dense", "[ex2.16][fromdense][todense]")
 
     SECTION("From Dense Column-major") {
         CSCMatrix B {dense_column_major, {4, 4}, 'F'};
-        compare_matrices(B, C);
+        check_sparse_allclose(B, C);
     }
 
     SECTION("From Dense Row-major") {
         CSCMatrix B {dense_row_major, {4, 4}, 'C'};
-        compare_matrices(B, C);
+        check_sparse_allclose(B, C);
     }
 
     SECTION("To Dense Column-major") {
@@ -900,7 +900,7 @@ TEST_CASE("Exercise 2.22: Concatentation", "[ex2.22][hstack][vstack]")
         ).tocsc();
 
         CSCMatrix C = hstack(E, A);
-        compare_matrices(C, expect);
+        check_sparse_allclose(C, expect);
     }
 
     SECTION("Vertical concatenation") {
@@ -911,7 +911,7 @@ TEST_CASE("Exercise 2.22: Concatentation", "[ex2.22][hstack][vstack]")
         ).tocsc();
 
         CSCMatrix C = vstack(E, A);
-        compare_matrices(C, expect);
+        check_sparse_allclose(C, expect);
     }
 }
 
@@ -930,7 +930,7 @@ TEST_CASE("Exercise 2.23: Slicing", "[ex2.23][slice]")
         ).tocsc();
 
         CSCMatrix C = A.slice(1, 3, 0, A.shape()[1]);
-        compare_matrices(C, expect);
+        check_sparse_allclose(C, expect);
     }
 
     SECTION("Column slicing") {
@@ -941,7 +941,7 @@ TEST_CASE("Exercise 2.23: Slicing", "[ex2.23][slice]")
         ).tocsc();
 
         CSCMatrix C = A.slice(0, A.shape()[0], 1, 3);
-        compare_matrices(C, expect);
+        check_sparse_allclose(C, expect);
     }
 
     SECTION("Row and column slicing") {
@@ -952,19 +952,19 @@ TEST_CASE("Exercise 2.23: Slicing", "[ex2.23][slice]")
         ).tocsc();
 
         CSCMatrix C = A.slice(1, 3, 1, 4);
-        compare_matrices(C, expect);
+        check_sparse_allclose(C, expect);
     }
 
     SECTION("Empty row") {
         CSCMatrix expect {{M, 0}, 0};
         CSCMatrix C = A.slice(0, M, 0, 0);
-        compare_matrices(C, expect);
+        check_sparse_allclose(C, expect);
     }
 
     SECTION("Empty column") {
         CSCMatrix expect {{0, N}, 0};
         CSCMatrix C = A.slice(0, 0, 0, N);
-        compare_matrices(C, expect);
+        check_sparse_allclose(C, expect);
     }
 }
 
@@ -983,7 +983,7 @@ TEST_CASE("Exercise 2.24: Non-contiguous indexing", "[ex2.24][index]")
             std::vector<csint>  {  0,   2,   2}
         ).tocsc();
 
-        compare_matrices(C, expect);
+        check_sparse_allclose(C, expect);
     }
 
     SECTION("Indexing with duplicate rows") {
@@ -995,7 +995,7 @@ TEST_CASE("Exercise 2.24: Non-contiguous indexing", "[ex2.24][index]")
             std::vector<csint>  {  0,   0,   0,   1,   1,   2,   2}
         ).tocsc();
 
-        compare_matrices(C, expect);
+        check_sparse_allclose(C, expect);
     }
 
     SECTION("Indexing with duplicate columns") {
@@ -1007,7 +1007,7 @@ TEST_CASE("Exercise 2.24: Non-contiguous indexing", "[ex2.24][index]")
             std::vector<csint>  {  0,   2,   2,   3}
         ).tocsc();
 
-        compare_matrices(C, expect);
+        check_sparse_allclose(C, expect);
     }
 }
 

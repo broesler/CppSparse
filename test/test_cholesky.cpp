@@ -194,7 +194,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         // Permute the input matrix to match LL^T = P^T A P
         CSCMatrix PAPT = A.permute(res.p_inv, inv_permute(res.p_inv)).to_canonical();
 
-        compare_matrices(LLT, PAPT);
+        check_sparse_allclose(LLT, PAPT);
     }
 
     SECTION("Update Cholesky") {
@@ -224,7 +224,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         CSCMatrix LLT_up = (L_up * L_up.T()).droptol().to_canonical();
         CHECK(LLT_up.nnz() == A_up.nnz());
 
-        compare_matrices(LLT_up, A_up);
+        check_sparse_allclose(LLT_up, A_up);
     }
 
     SECTION("Exercise 4.1: etree and counts from ereach") {
@@ -346,7 +346,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         // The factorization will be postordered!
         CSCMatrix PAPT = A.permute(res.p_inv, inv_permute(res.p_inv)).to_canonical();
 
-        compare_matrices(LLT, PAPT);
+        check_sparse_allclose(LLT, PAPT);
     }
 
     SECTION("Exercise 4.10: Symbolic Cholesky") {
@@ -392,7 +392,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
         CSCMatrix PAPT = A.permute(res.p_inv, inv_permute(res.p_inv)).to_canonical();
 
-        compare_matrices(LLT, PAPT);
+        check_sparse_allclose(LLT, PAPT);
     }
 
     SECTION("Exercise 4.12: Up-looking Cholesky with Pattern") {
@@ -416,7 +416,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
         CSCMatrix PAPT = A.permute(res.p_inv, inv_permute(res.p_inv)).to_canonical();
 
-        compare_matrices(LLT, PAPT);
+        check_sparse_allclose(LLT, PAPT);
     }
 
     SECTION("Exercise 4.13: Incomplete Cholesky") {
@@ -481,7 +481,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
                 double drop_tol = 0.0;
                 const CSCMatrix L = icholt(A, S, drop_tol).L;
                 const CSCMatrix Lf = chol(A, S).L;
-                compare_matrices(L, Lf);
+                check_sparse_allclose(L, Lf);
             }
 
             SECTION("Drop all non-diagonal entries (drop_tol = inf)") {

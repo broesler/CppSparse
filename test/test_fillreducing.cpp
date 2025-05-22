@@ -79,7 +79,7 @@ TEST_CASE("Build Graph", "[amd][build_graph]")
     const CSCMatrix C = build_graph(A, order, dense);
 
     CHECK(C.data().empty());
-    compare_matrices(C, expect_C, values);
+    check_sparse_allclose(C, expect_C, values);
 }
 
 

@@ -66,7 +66,7 @@ void check_sparse_eq_dense(
  * @param A       the matrix to test
  * @param expect  the expected matrix
  */
-void compare_canonical(
+void check_canonical_allclose(
     const CSCMatrix& A,
 	const CSCMatrix& expect,
 	bool values=true,
@@ -81,7 +81,7 @@ void compare_canonical(
  * @param A       the matrix to test
  * @param expect  the expected matrix
  */
-void compare_noncanonical(
+void check_noncanonical_allclose(
     const CSCMatrix& A,
 	const CSCMatrix& expect,
     bool values=true,
@@ -99,7 +99,7 @@ void compare_noncanonical(
  * @param A       the matrix to test
  * @param expect  the expected matrix
  */
-void compare_matrices(
+void check_sparse_allclose(
     const CSCMatrix& A,
 	const CSCMatrix& expect,
 	bool values=true,

@@ -23,7 +23,7 @@ using Catch::Matchers::WithinAbs;
 namespace cs {
 
 
-void compare_canonical(
+void check_canonical_allclose(
     const CSCMatrix& A,
 	const CSCMatrix& expect,
 	bool values,
@@ -38,13 +38,14 @@ void compare_canonical(
     CHECK(A.indices() == expect.indices());
     if (values) {
         for (csint p = 0; p < A.nnz(); p++) {
+            CAPTURE(p);
             CHECK_THAT(A.data()[p], WithinAbs(expect.data()[p], tol));
         }
     }
 }
 
 
-void compare_noncanonical(
+void check_noncanonical_allclose(
     const CSCMatrix& A,
 	const CSCMatrix& expect,
     bool values,
@@ -73,7 +74,7 @@ void compare_noncanonical(
 }
 
 
-void compare_matrices(
+void check_sparse_allclose(
     const CSCMatrix& C,
 	const CSCMatrix& expect,
 	bool values,
@@ -81,9 +82,9 @@ void compare_matrices(
 )
 {
     if (C.has_canonical_format() && expect.has_canonical_format()) {
-        compare_canonical(C, expect, values, tol);
+        check_canonical_allclose(C, expect, values, tol);
     } else {
-        compare_noncanonical(C, expect, values, tol);
+        check_noncanonical_allclose(C, expect, values, tol);
     }
 }
 

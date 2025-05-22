@@ -178,9 +178,9 @@ TEST_CASE("QR factorization of the Identity Matrix", "[qr][identity]")
 
         QRResult res = qr(I, S);
 
-        compare_matrices(res.V, I);
+        check_sparse_allclose(res.V, I);
         CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
-        compare_matrices(res.R, I);
+        check_sparse_allclose(res.R, I);
     }
 }
 
@@ -255,7 +255,7 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][n
         CSCMatrix QR = (Q * res.R).droptol().to_canonical();
         CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
-        compare_matrices(QR, Aq);
+        check_sparse_allclose(QR, Aq);
     }
 
     SECTION("Exercise 5.1: Symbolic factorization") {
@@ -280,7 +280,7 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][n
         CSCMatrix QR = (Q * res.R).droptol().to_canonical();
         CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
-        compare_matrices(QR, Aq);
+        check_sparse_allclose(QR, Aq);
     }
 
     SECTION("Exercise 5.5: Use post-ordering") {
@@ -295,7 +295,7 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][n
         CSCMatrix QR = (Q * res.R).droptol().to_canonical();
         CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
-        compare_matrices(QR, Aq);
+        check_sparse_allclose(QR, Aq);
     }
 }
 
@@ -371,7 +371,7 @@ TEST_CASE("Square, rank-deficient A", "[qr][rank-deficient][numeric]")
     CSCMatrix QR = (Q * res.R).slice(0, M, 0, N).droptol(tol).to_canonical();
     CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
-    compare_matrices(QR, Aq);
+    check_sparse_allclose(QR, Aq);
 }
 
 
@@ -455,7 +455,7 @@ TEST_CASE("Numeric QR factorization of overdetermined matrix M > N", "[qr][M > N
         CSCMatrix QR = (Q * res.R).droptol().to_canonical();
         CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
-        compare_matrices(QR, Aq);
+        check_sparse_allclose(QR, Aq);
     }
 
     SECTION("Exercise 5.1: Symbolic factorization") {
@@ -480,7 +480,7 @@ TEST_CASE("Numeric QR factorization of overdetermined matrix M > N", "[qr][M > N
         CSCMatrix QR = (Q * res.R).droptol().to_canonical();
         CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
-        compare_matrices(QR, Aq);
+        check_sparse_allclose(QR, Aq);
     }
 }
 
@@ -575,7 +575,7 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
         CSCMatrix QR = (Q * res.R).slice(0, M, 0, N).droptol(tol).to_canonical();
         CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
-        compare_matrices(QR, Aq);
+        check_sparse_allclose(QR, Aq);
     }
 
     SECTION("Exercise 5.1: Symbolic factorization") {
@@ -614,7 +614,7 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
         CSCMatrix QR = (Q * res.R).slice(0, M, 0, N).droptol(tol).to_canonical();
         CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
-        compare_matrices(QR, Aq);
+        check_sparse_allclose(QR, Aq);
     }
 }
 

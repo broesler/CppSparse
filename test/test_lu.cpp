@@ -34,7 +34,7 @@ LUResult lu_test(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural)
     LUResult res = lu(A, S);
     CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
     CSCMatrix PAQ = A.permute(res.p_inv, res.q).to_canonical();
-    compare_matrices(LU, PAQ);
+    check_sparse_allclose(LU, PAQ);
     return res;
 }
 
@@ -272,7 +272,7 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3][lu_colpiv]")
 
         CHECK(res.p_inv == expect_p_inv);
         CHECK(res.q == expect_q);
-        compare_matrices(LU, PAQ);
+        check_sparse_allclose(LU, PAQ);
     };
 
     SECTION("No Column Pivoting") {
@@ -398,8 +398,8 @@ TEST_CASE("Exercise 6.4: relu", "[ex6.4][relu]")
 
     CHECK(res.q == expect_q);
     CHECK(res.p_inv == expect_p);
-    compare_matrices(B, PBp);  // LU should match the un-permuted B
-    compare_matrices(LU, B.to_canonical());
+    check_sparse_allclose(B, PBp);  // LU should match the un-permuted B
+    check_sparse_allclose(LU, B.to_canonical());
 }
 
 
@@ -524,7 +524,7 @@ TEST_CASE("Exercise 6.7: Crout's method LU Factorization", "[ex6.7][crout]")
         CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
         CSCMatrix PA = A.permute_rows(res.p_inv).to_canonical();
 
-        compare_matrices(LU, PA);
+        check_sparse_allclose(LU, PA);
     }
 }
 
@@ -689,9 +689,9 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13][ilu]")
             LUResult ires = ilutp(Ap, S, drop_tol);
             CSCMatrix iLU = (ires.L * ires.U).droptol().to_canonical();
 
-            compare_matrices(res.L, ires.L);
-            compare_matrices(res.U, ires.U);
-            compare_matrices(iLU, A);
+            check_sparse_allclose(res.L, ires.L);
+            check_sparse_allclose(res.U, ires.U);
+            check_sparse_allclose(iLU, A);
         }
 
         SECTION("Drop all non-digonal entries (tolerance = inf)") {

@@ -128,8 +128,8 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
 
         CSCMatrix expect = A;
 
-        compare_matrices(CSCMatrix(gaxpy_col(A, I, Z), {4, 4}), expect);
-        compare_matrices(CSCMatrix(gatxpy_col(A.T(), I, Z), {4, 4}), expect);
+        check_sparse_allclose(CSCMatrix(gaxpy_col(A, I, Z), {4, 4}), expect);
+        check_sparse_allclose(CSCMatrix(gatxpy_col(A.T(), I, Z), {4, 4}), expect);
     }
 
     SECTION("Arbitrary square matrix in column-major format") {
@@ -304,7 +304,7 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
             REQUIRE(M == A.shape()[0]);
             REQUIRE(N == B.shape()[1]);
 
-            compare_matrices(C, expect);
+            check_sparse_allclose(C, expect);
         }
 
         SECTION("M > N") {
@@ -314,7 +314,7 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
             REQUIRE(M == A.shape()[0]);
             REQUIRE(N == B.shape()[1]);
 
-            compare_matrices(CT, expect.T());
+            check_sparse_allclose(CT, expect.T());
         }
     }
 
@@ -343,7 +343,7 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
 
         REQUIRE(M == A.shape()[0]);
         REQUIRE(N == B.shape()[1]);
-        compare_matrices(C, expect, false);
+        check_sparse_allclose(C, expect, false);
     }
 }
 
@@ -483,9 +483,9 @@ TEST_CASE("Matrix-matrix addition.", "[math][add_scaled]")
         // Add method
         CSCMatrix Cm = (0.1 * A).add(9.0 * B);
 
-        compare_matrices(C, expect);
-        compare_matrices(Cf, expect);
-        compare_matrices(Cm, expect);
+        check_sparse_allclose(C, expect);
+        check_sparse_allclose(Cf, expect);
+        check_sparse_allclose(Cm, expect);
     }
 
     SECTION("Subtraction") {
@@ -500,8 +500,8 @@ TEST_CASE("Matrix-matrix addition.", "[math][add_scaled]")
         // Operator overloading
         CSCMatrix C = A - B;
 
-        compare_matrices(C, expect);
-        compare_matrices(Cf, expect);
+        check_sparse_allclose(C, expect);
+        check_sparse_allclose(Cf, expect);
     }
 
     SECTION("Symbolic Addition") {
@@ -510,7 +510,7 @@ TEST_CASE("Matrix-matrix addition.", "[math][add_scaled]")
 
         CSCMatrix Cs = add_scaled(As, B, 1.0, 1.0);
 
-        compare_matrices(Cs, expect, false);  // don't compare values
+        check_sparse_allclose(Cs, expect, false);  // don't compare values
     }
 }
 

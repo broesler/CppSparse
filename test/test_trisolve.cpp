@@ -269,8 +269,8 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
 
         CHECK(p_inv == expect_p);
         CHECK(q_inv == expect_q);
-        compare_matrices(L, PLQ.permute(inv_permute(p_inv), q_inv));
-        compare_matrices(PLQ, L.permute(p_inv, inv_permute(q_inv)));
+        check_sparse_allclose(L, PLQ.permute(inv_permute(p_inv), q_inv));
+        check_sparse_allclose(PLQ, L.permute(p_inv, inv_permute(q_inv)));
     }
 
     SECTION("Find permutation vectors of permuted U") {
@@ -284,8 +284,8 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
 
         CHECK(p_inv == expect_p);
         CHECK(q_inv == expect_q);
-        compare_matrices(U, PUQ.permute(inv_permute(p_inv), q_inv));
-        compare_matrices(PUQ, U.permute(p_inv, inv_permute(q_inv)));
+        check_sparse_allclose(U, PUQ.permute(inv_permute(p_inv), q_inv));
+        check_sparse_allclose(PUQ, U.permute(p_inv, inv_permute(q_inv)));
     }
 
     SECTION("Permuted P L x = b, with unknown P") {

@@ -29,8 +29,8 @@ filestem = 'gaxpy_perf_py'
 # -----------------------------------------------------------------------------
 #         Create the data
 # -----------------------------------------------------------------------------
-Ns = np.r_[10, 100, 500]
-# Ns = np.r_[10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
+# Ns = np.r_[10, 100, 500]
+Ns = np.r_[10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
 
 density = 0.1  # density of the matrices
 
@@ -61,7 +61,7 @@ for kind in ['regular', 'transpose']:
         # Create a large, random, sparse matrix with different dimensions
         M = int(0.9 * N)
         K = int(0.8 * N)
-        A = csparse.COOMatrix.random(M, N, density, SEED).tocsc()
+        A = csparse.COOMatrix.random(M, N, density, SEED).tocsc().toscipy()
 
         if kind == 'transpose':
             A = A.T
@@ -133,7 +133,7 @@ plt.show()
 
 
 if SAVE_FIG:
-    fig_fullpath = Path(f"../plots/{filestem}_d{int(100*density):02d}.png")
+    fig_fullpath = Path(f"../../plots/{filestem}_d{int(100*density):02d}.png")
     try:
         fig.savefig(fig_fullpath)
         print(f"Saved figure to {fig_fullpath}.")

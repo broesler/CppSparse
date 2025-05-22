@@ -25,7 +25,7 @@ import csparse
 #      [3.5, 0.4, 0. , 1. ]]
 # )
 
-A = csparse.davis_example_small()
+A = csparse.davis_example_small().tocsc()
 
 # NOTE 
 #   * numpy returns an array for lists or slices, and a np.float for scalars.

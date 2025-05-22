@@ -15,7 +15,7 @@ from scipy import linalg as la, sparse
 import csparse
 
 # Matrix from Davis Figure 5.1, p 74.
-A = csparse.davis_example_qr(format='csc')
+A = csparse.davis_example_qr()
 
 # Compute A^T A
 ATA = A.T @ A

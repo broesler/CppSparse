@@ -16,7 +16,7 @@ import timeit
 from tqdm import tqdm
 from scipy import sparse
 
-SAVE_FIGS = True
+SAVE_FIGS = False
 
 # Ms = np.r_[10, 20, 50, 100]
 Ms = np.r_[10, 20, 50, 100, 200, 500, 1000]

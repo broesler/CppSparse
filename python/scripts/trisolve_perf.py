@@ -16,8 +16,9 @@ import timeit
 from collections import defaultdict
 from functools import partial
 from pathlib import Path
+from scipy import sparse
 
-import csparse as cs
+import csparse
 
 
 SAVE_FIG = True
@@ -29,7 +30,7 @@ filestem = 'trisolve_perf_py'
 # -----------------------------------------------------------------------------
 #         Create the data
 # -----------------------------------------------------------------------------
-trisolve_funcs = [cs.lsolve, cs.usolve, cs.lsolve_opt, cs.usolve_opt]
+trisolve_funcs = [csparse.lsolve, csparse.usolve, csparse.lsolve_opt, csparse.usolve_opt]
 
 N = 1000  # size of the square matrix
 
@@ -48,19 +49,19 @@ for density in densities:
     print(f"---------- Density = {density:6.2g} ----------")
 
     # Create a random matrix
-    A = cs.COOMatrix.random(N, N, density, SEED).tocsc()
+    A = csparse.COOMatrix.random(N, N, density, SEED).toscipy().todok()
 
     # Ensure all diagonals are non-zero so that L is non-singular
     for i in range(N):
         A[i, i] = 1.0
 
     # Take the lower and upper triangular
-    L = A.band(-N, 0)
-    U = L.T()
+    L = sparse.tril(A)
+    U = L.T
 
     # Create a dense column vector that is the sum of the rows of L
-    bL = np.r_[L.sum_rows()]
-    bU = np.r_[U.sum_rows()]
+    bL = np.r_[L.sum(axis=1)]
+    bU = np.r_[U.sum(axis=1)]
 
     # Create sparse RHS vectors by removing random elements
     idx_zero = rng.choice(N, int((1 - density) * N), replace=False)
@@ -139,7 +140,7 @@ ax.set_ylabel('Relative Difference between Original and Optimized')
 plt.show()
 
 if SAVE_FIG:
-    fig_fullpath = Path(f"../plots/{filestem}_N{N}.png")
+    fig_fullpath = Path(f"../../plots/{filestem}_N{N}.png")
     try:
         fig.savefig(fig_fullpath)
         print(f"Saved figure to {fig_fullpath}.")

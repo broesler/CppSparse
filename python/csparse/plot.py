@@ -20,7 +20,7 @@ from csparse.csparse import dmperm
 from csparse._fillreducing import scc_perm
 
 
-def cspy(A, cmap='viridis', colorbar=True, ax=None, **kwargs):
+def cspy(A, cmap='viridis_r', colorbar=True, ax=None, **kwargs):
     """Visualize a sparse or dense matrix with colored markers.
 
     This function is similar to `matplotlib.pyplot.spy`, but it colors the
@@ -33,7 +33,7 @@ def cspy(A, cmap='viridis', colorbar=True, ax=None, **kwargs):
         The 2D matrix to visualize. Can be a NumPy array, SciPy sparse
         matrix, or any object convertible to a 2D NumPy array.
     cmap : str or matplotlib.colors.Colormap, optional
-        The colormap to use for coloring the markers, by default 'viridis'.
+        The colormap to use for coloring the markers, by default 'viridis_r'.
     colorbar : bool, optional
         Whether to display a colorbar, by default True.
     ax : matplotlib.axes.Axes, optional

@@ -83,11 +83,10 @@ Qr_ = csparse.apply_qright(V_, tau)
 np.testing.assert_allclose(Q_, Qr_, atol=1e-9)
 
 # ---------- Get the CSparse QR decomposition
-V, beta, R, p_inv, _ = csparse.qr(sparse.csc_array(Aq))
+V, beta, R, p, _ = csparse.qr(sparse.csc_array(Aq))
 
 V = V.toarray()
 R = R.toarray()
-p = csparse.inv_permute(p_inv)
 
 Q = csparse.apply_qright(V, beta, p)
 
@@ -172,7 +171,7 @@ fig.set_size_inches(6.4, 3.8, forward=True)
 fig.suptitle(f"Natural vs. {permc_spec} Ordering")
 
 for ax, M, title in zip(axs.flat, [A, Aq], ['A', 'A[:, q]']):
-    ax.spy(M, markersize=1)
+    csparse.cspy(M, norm='log', ax=ax)
     ax.set_title(title)
     ax.set_xlabel(f"nnz = {M.nnz}")
 
@@ -185,7 +184,7 @@ fig.set_size_inches(6.4, 3.8, forward=True)
 fig.suptitle(f"SciPy with {permc_spec} Ordering")
 
 for ax, M, title in zip(axs.flat, [Q_, V_ + R_], ['Q', 'V + R']):
-    ax.spy(M, markersize=1)
+    csparse.cspy(M, norm='log', ax=ax)
     ax.set_title(title)
     ax.set_xlabel(f"nnz = {M.nnz}")
 
@@ -199,7 +198,7 @@ fig.set_size_inches(6.4, 3.8, forward=True)
 fig.suptitle(f"csparse with {permc_spec} Ordering")
 
 for ax, M, title in zip(axs.flat, [Q, V + R], ['Q', 'V + R']):
-    ax.spy(M, markersize=1)
+    csparse.cspy(M, norm='log', ax=ax)
     ax.set_title(title)
     ax.set_xlabel(f"nnz = {M.nnz}")
 

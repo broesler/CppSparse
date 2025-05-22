@@ -395,6 +395,18 @@ PYBIND11_MODULE(csparse, m) {
     m.def("scipy_from_coo", &scipy_from_coo);
     m.def("scipy_from_csc", &scipy_from_csc);
     m.def("csc_from_scipy", &csc_from_scipy);
+    // m.def("coo_from_scipy", &coo_from_scipy);  // TODO
+    m.def("residual_norm",
+        [](const py::object& A_scipy,
+           const std::vector<double>& x,
+           const std::vector<double>& b
+        ) {
+            std::vector<double> resid;
+            cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            return cs::residual_norm(A, x, b, resid);
+        },
+        py::arg("A"), py::arg("x"), py::arg("b")
+    );
 
     //--------------------------------------------------------------------------
     //        Decomposition Functions

@@ -67,7 +67,8 @@ int main(int argc, char* argv[])
 
     std::cout << std::format("solve    chol time: {:8.2e}\n", toc(t));
     std::cout << "original: ";
-    print_resid(prob.C, prob.x, prob.b, prob.resid);
+    double resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
+    std::cout << std::format("residual: {: 8.2e}", resid) << std::endl;
 
     // Construct W: W has the pattern of L[k:, k],
     // but with random values on [0, 1), scaled by the diagonal entry L[k, k]
@@ -114,7 +115,8 @@ int main(int argc, char* argv[])
     CSCMatrix PTW = W.permute_rows(inv_permute(S.p_inv));
     CSCMatrix E = prob.C + PTW * PTW.T();
 
-    print_resid(E, prob.x, prob.b, prob.resid);
+    resid = residual_norm(E, prob.x, prob.b, prob.resid);
+    std::cout << std::format("residual: {: 8.2e}", resid) << std::endl;
 
     // Compute with rechol
     t = tic();
@@ -127,7 +129,8 @@ int main(int argc, char* argv[])
     prob.x = pvec(S.p_inv, PTx);  // x = P P^T x
 
     std::cout << std::format("rechol:   time: {:8.2e} (incl solve) ", toc(t));
-    print_resid(E, prob.x, prob.b, prob.resid);
+    resid = residual_norm(E, prob.x, prob.b, prob.resid);
+    std::cout << std::format("residual: {: 8.2e}", resid) << std::endl;
 
     // Downdate: L @ L.T - W @ W.T
     t = tic();
@@ -145,7 +148,8 @@ int main(int argc, char* argv[])
     prob.x = pvec(S.p_inv, PTx);  // x = P P^T x
 
     std::cout << std::format("downdate: time: {:8.2e} (incl solve ", toc(t) + t1);
-    print_resid(prob.C, prob.x, prob.b, prob.resid);
+    resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
+    std::cout << std::format("residual: {: 8.2e}", resid) << std::endl;
 
     return EXIT_SUCCESS;
 }

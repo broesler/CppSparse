@@ -21,8 +21,6 @@ from scipy import sparse
 
 import csparse
 
-from demo import print_resid
-
 
 def demo2(problem, name='', axs=None):
     """Solve a linear system using Cholesky, LU, and QR decompositions with
@@ -142,7 +140,8 @@ def demo2(problem, name='', axs=None):
         x = csparse.qr_solve(C, b, order=order)
         t = time.perf_counter() - tic
         print(f"time {t:.2e} s ", end='')
-        print_resid(C, x, b)
+        resid = csparse.residual_norm(C, x, b)
+        print(f"residual: {resid:.2e} ")
 
     if M != N:
         return
@@ -154,7 +153,8 @@ def demo2(problem, name='', axs=None):
         x = csparse.lu_solve(C, b, order=order)
         t = time.perf_counter() - tic
         print(f"time {t:.2e} s ", end='')
-        print_resid(C, x, b)
+        resid = csparse.residual_norm(C, x, b)
+        print(f"residual: {resid:.2e} ")
 
     if not is_sym:
         return
@@ -166,7 +166,8 @@ def demo2(problem, name='', axs=None):
         x = csparse.chol_solve(C, b, order=order)
         t = time.perf_counter() - tic
         print(f"time {t:.2e} s ", end='')
-        print_resid(C, x, b)
+        resid = csparse.residual_norm(C, x, b)
+        print(f"residual: {resid:.2e} ")
 
     return axs
 

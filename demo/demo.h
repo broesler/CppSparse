@@ -66,17 +66,19 @@ double toc(TimePoint start_time);
 CSCMatrix make_sym(const CSCMatrix& A);
 
 
-/** Compute and print the norm of the residuals of the solution to `Ax = b`.
+/** Compute the norm of the residuals of the solution to `Ax = b`.
  *
- * This function computes and prints the following:
+ * This function computes the following:
  *      `norm(A*x - b, inf) / (norm(A, 1) * norm(x, inf) + norm(b, inf))`.
  *
  * @param A  The coefficient matrix
  * @param x  The solution vector
  * @param b  The right-hand side vector
  * @param[out] resid  A reference to the (empty) residual vector.
+ *
+ * @return  The relative norm of the residuals.
  */
-void print_resid(
+double residual_norm(
     const CSCMatrix& A,
     const std::vector<double>& x,
     const std::vector<double>& b,

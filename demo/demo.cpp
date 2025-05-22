@@ -112,7 +112,7 @@ Problem Problem::from_matrix(const COOMatrix& T, double droptol)
 }
 
 
-void print_resid(
+double residual_norm(
     const CSCMatrix& A,
     const std::vector<double>& x,
     const std::vector<double>& b,
@@ -123,8 +123,7 @@ void print_resid(
     constexpr double inf = std::numeric_limits<double>::infinity();
     double norm_resid = norm(resid, inf);
     double norm_denom = A.norm() * norm(x, inf) + norm(b, inf);
-    std::cout << "residual: " << std::format("{: 8.2e}", norm_resid / norm_denom);
-    std::cout << std::endl;
+    return norm_resid / norm_denom;
 }
 
 

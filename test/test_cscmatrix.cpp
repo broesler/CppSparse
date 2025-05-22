@@ -189,7 +189,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
 
         REQUIRE(C.nnz() == 6);
         REQUIRE(C.shape() == Shape{4, 4});
-        REQUIRE_THAT(C.data() >= 2.0, AllTrue());
+        check_all_greater_equal(C.data(), 2.0);
     }
 
     SECTION("Dropzeros") {
@@ -205,7 +205,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
         C.dropzeros();
 
         REQUIRE(C.nnz() == 10);
-        REQUIRE_THAT(C.data() != 0.0, AllTrue());
+        check_all_not_equal(C.data(), 0.0);
     }
 
     SECTION("1-norm") {
@@ -247,7 +247,7 @@ TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
     REQUIRE_THAT(C(2, 1), WithinAbs(101.7, tol));
 
     // No non-zeros
-    REQUIRE_THAT(C.data() != 0.0, AllTrue());
+    check_all_not_equal(C.data(), 0.0);
 
     // Sorted entries
     REQUIRE(C.indptr() == indptr_expect);

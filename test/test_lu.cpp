@@ -730,8 +730,8 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13][ilu]")
             CHECK(ires.L.nnz() == res.L.nnz() - expect_L_drops);
             CHECK(ires.U.nnz() == res.U.nnz() - expect_U_drops);
             // NOTE only true to absolute tolerance
-            CHECK_THAT(ires.L.data() >= drop_tol, AllTrue());
-            CHECK_THAT(ires.U.data() >= drop_tol, AllTrue());
+            check_all_greater_equal(ires.L.data(), drop_tol);
+            check_all_greater_equal(ires.U.data(), drop_tol);
             REQUIRE((iLU - A).fronorm() / A.fronorm() < drop_tol);
         }
     }

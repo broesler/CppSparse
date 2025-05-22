@@ -107,26 +107,39 @@ void check_sparse_allclose(
 );
 
 
-/** Return a boolean vector comparing each individual element.
+/** Check that all elements of a vector compare to a double.
  *
- * @param vec   a vector of doubles
- * @param c     the value against which to compare
- * @param comp  the comparison function for elements of the vector and scalar
- *
- * @return out  a vector whose elements are vec[i] <=> c.
+ * @param vec  a vector of doubles
+ * @param c    the double to compare to
  */
-std::vector<bool> compare_vec(
-    const std::vector<double>& vec,
-    const double c,
-    std::function<bool(double, double)> comp
-);
+template <typename T, typename Compare>
+void check_all_compare(
+    const std::vector<T>& vec,
+    const T& c,
+    Compare comp
+)
+{
+    for (size_t i = 0; i < vec.size(); i++) {
+        CAPTURE(i, vec[i], c);
+        CHECK(comp(vec[i], c));
+    }
+}
 
 
-/** Create the comparison operators by passing the single comparison function to
- * our vector comparison function.
+/** Check that all elements of a vector are greater than or equal to a double.
+ *
+ * @param vec  a vector of doubles
+ * @param c    the double to compare to
  */
-std::vector<bool> operator>=(const std::vector<double>& vec, const double c);
-std::vector<bool> operator!=(const std::vector<double>& vec, const double c);
+void check_all_greater_equal(const std::vector<double>& vec, const double c);
+
+
+/** Check that all elements of a vector are not equal to a double.
+ *
+ * @param vec  a vector of doubles
+ * @param c    the double to compare to
+ */
+void check_all_not_equal(const std::vector<double>& vec, const double c);
 
 
 /** Check that all elements of two vectors are within a given tolerance.

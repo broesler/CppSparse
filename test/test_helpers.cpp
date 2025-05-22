@@ -89,59 +89,15 @@ void check_sparse_allclose(
 }
 
 
-// TODO figure out how to use the "spaceship" operator<=> to define all
-// of the comparisons in one fell swoop?
-// A: May only work if we define a wrapper class on std::vector and define the
-//    operator within the class vs. scalars.
-
-/** Return a boolean vector comparing each individual element.
- *
- * @param vec   a vector of doubles.
- * @param c     the value against which to compare
- * @return out  a vector whose elements are vec[i] <=> c.
- */
-// std::vector<bool> operator<=>(const std::vector<double>& vec, const double c)
-// {
-//     std::vector<bool> out(vec.size());
-
-//     for (auto const& v : vec) {
-//         if (v < c) {
-//             out.push_back(std::strong_ordering::less);
-//         } else if (v > c) {
-//             out.push_back(std::strong_ordering::greater);
-//         } else {
-//             out.push_back(std::strong_ordering::equal);
-//         }
-//     }
-
-//     return out;
-// }
-
-
-std::vector<bool> compare_vec(
-    const std::vector<double>& vec,
-    const double c,
-    std::function<bool(double, double)> comp
-)
+void check_all_greater_equal(const std::vector<double>& vec, const double c)
 {
-    std::vector<bool> out;
-    out.reserve(vec.size());
-    for (const auto& v : vec) {
-        out.push_back(comp(v, c));
-    }
-    return out;
+    return check_all_compare(vec, c, std::greater_equal<double>());
 }
 
 
-std::vector<bool> operator>=(const std::vector<double>& vec, const double c)
+void check_all_not_equal(const std::vector<double>& vec, const double c)
 {
-    return compare_vec(vec, c, std::greater_equal<double>());
-}
-
-
-std::vector<bool> operator!=(const std::vector<double>& vec, const double c)
-{
-    return compare_vec(vec, c, std::not_equal_to<double>());
+    return check_all_compare(vec, c, std::not_equal_to<double>());
 }
 
 

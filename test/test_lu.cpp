@@ -186,8 +186,8 @@ TEST_CASE("Solve Ax = b with LU", "[lu_solve]")
     LUResult res = lu(Ap, S);
     x_ov = res.solve(bp);
 
-    CHECK_THAT(is_close(x, x_ov, tol), AllTrue());
-    REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    check_vectors_allclose(x, x_ov, tol);
+    check_vectors_allclose(x, expect, tol);
 }
 
 
@@ -239,8 +239,8 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU", "[ex6.1][lu_tsolve]")
         x_ov = pvec(p_inv, x_ov);
     }
 
-    REQUIRE_THAT(is_close(x, x_ov, tol), AllTrue());
-    REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    check_vectors_allclose(x, x_ov, tol);
+    check_vectors_allclose(x, expect, tol);
 }
 
 

@@ -43,7 +43,7 @@ TEST_CASE("Cholesky Solution", "[cholsol]")
     std::vector<double> x = chol_solve(A, b, order);
 
     // Check that Ax = b
-    REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    check_vectors_allclose(x, expect, tol);
 }
 
 
@@ -71,7 +71,7 @@ TEST_CASE("QR Solution", "[qrsol]")
         x = qr_solve(A, b, order);
 
         // Check that Ax = b
-        REQUIRE_THAT(is_close(x, expect, 1e-13), AllTrue());
+        check_vectors_allclose(x, expect, 1e-13);
     }
 
     SECTION("Over-determined") {
@@ -88,7 +88,7 @@ TEST_CASE("QR Solution", "[qrsol]")
         x = qr_solve(A, b);
 
         // Check that Ax = b
-        REQUIRE_THAT(is_close(x, expect, 1e-13), AllTrue());
+        check_vectors_allclose(x, expect, 1e-13);
     }
 
     SECTION("Under-determined") {
@@ -114,7 +114,7 @@ TEST_CASE("QR Solution", "[qrsol]")
         };
 
         // Check that Ax = b
-        REQUIRE_THAT(is_close(x, min_norm_x, tol), AllTrue());
+        check_vectors_allclose(x, min_norm_x, tol);
     }
 }
 
@@ -141,7 +141,7 @@ TEST_CASE("LU Solution", "[lusol]") {
     std::vector<double> x = lu_solve(A, b, order);
 
     // Check that Ax = b
-    REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+    check_vectors_allclose(x, expect, tol);
 }
 
 

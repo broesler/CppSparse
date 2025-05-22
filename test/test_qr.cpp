@@ -36,7 +36,7 @@ TEST_CASE("Householder Reflection", "[house]")
 
         Householder H = house(x);
 
-        CHECK_THAT(is_close(H.v, expect_v, tol), AllTrue());
+        check_vectors_allclose(H.v, expect_v, tol);
         CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
 
@@ -44,7 +44,7 @@ TEST_CASE("Householder Reflection", "[house]")
         CSCMatrix V = COOMatrix(H.v, {0, 1, 2}, {0, 0, 0}).tocsc();
         std::vector<double> Hx = happly(V, 0, H.beta, x);
 
-        REQUIRE_THAT(is_close(Hx, x, tol), AllTrue());
+        check_vectors_allclose(Hx, x, tol);
     }
 
     SECTION("Negative unit x") {
@@ -56,7 +56,7 @@ TEST_CASE("Householder Reflection", "[house]")
 
         Householder H = house(x);
 
-        CHECK_THAT(is_close(H.v, expect_v, tol), AllTrue());
+        check_vectors_allclose(H.v, expect_v, tol);
         CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
 
@@ -64,7 +64,7 @@ TEST_CASE("Householder Reflection", "[house]")
         CSCMatrix V = COOMatrix(H.v, {0, 1, 2}, {0, 0, 0}).tocsc();
         std::vector<double> Hx = happly(V, 0, H.beta, x);
 
-        REQUIRE_THAT(is_close(Hx, x, tol), AllTrue());
+        check_vectors_allclose(Hx, x, tol);
     }
 
     SECTION("Arbitrary x, x[0] > 0") {
@@ -103,7 +103,7 @@ TEST_CASE("Householder Reflection", "[house]")
 
         Householder H = house(x);
 
-        CHECK_THAT(is_close(H.v, expect_v, tol), AllTrue());
+        check_vectors_allclose(H.v, expect_v, tol);
         CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
 
@@ -116,7 +116,7 @@ TEST_CASE("Householder Reflection", "[house]")
         CSCMatrix V = COOMatrix(H.v, {0, 1}, {0, 0}).tocsc();
         std::vector<double> Hx = happly(V, 0, H.beta, x);
 
-        REQUIRE_THAT(is_close(Hx, expect, tol), AllTrue());
+        check_vectors_allclose(Hx, expect, tol);
     }
 
     SECTION("Arbitrary x, x[0] < 0") {
@@ -129,7 +129,7 @@ TEST_CASE("Householder Reflection", "[house]")
 
         Householder H = house(x);
 
-        CHECK_THAT(is_close(H.v, expect_v, tol), AllTrue());
+        check_vectors_allclose(H.v, expect_v, tol);
         CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
 
@@ -139,7 +139,7 @@ TEST_CASE("Householder Reflection", "[house]")
         CSCMatrix V = COOMatrix(H.v, {0, 1}, {0, 0}).tocsc();
         std::vector<double> Hx = happly(V, 0, H.beta, x);
 
-        REQUIRE_THAT(is_close(Hx, expect, tol), AllTrue());
+        check_vectors_allclose(Hx, expect, tol);
     }
 }
 
@@ -179,7 +179,7 @@ TEST_CASE("QR factorization of the Identity Matrix", "[qr][identity]")
         QRResult res = qr(I, S);
 
         check_sparse_allclose(res.V, I);
-        CHECK_THAT(is_close(res.beta, expect_beta, tol), AllTrue());
+        check_vectors_allclose(res.beta, expect_beta, tol);
         check_sparse_allclose(res.R, I);
     }
 }

@@ -129,15 +129,13 @@ std::vector<bool> operator>=(const std::vector<double>& vec, const double c);
 std::vector<bool> operator!=(const std::vector<double>& vec, const double c);
 
 
-/** Return a boolean vector comparing each individual element.
+/** Check that all elements of two vectors are within a given tolerance.
  *
  * @param a     a vector of doubles
  * @param b     a vector of doubles
  * @param tol   the tolerance for comparison
- *
- * @return out  a vector whose elements are |a[i] - b[i]| < tol.
  */
-std::vector<bool> is_close(
+void check_vectors_allclose(
     const std::vector<double>& a,
     const std::vector<double>& b,
     const double tol=1e-14

@@ -40,7 +40,7 @@ TEST_CASE("Triangular solve with dense RHS", "[trisolve_dense]")
         const std::vector<double> x = lsolve(L, b);
 
         REQUIRE(x.size() == expect.size());
-        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+        check_vectors_allclose(x, expect, tol);
     }
 
     SECTION("Backsolve L.T x = b") {
@@ -48,7 +48,7 @@ TEST_CASE("Triangular solve with dense RHS", "[trisolve_dense]")
         const std::vector<double> x = ltsolve(L, b);
 
         REQUIRE(x.size() == expect.size());
-        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+        check_vectors_allclose(x, expect, tol);
     }
 
     SECTION("Backsolve U x = b") {
@@ -56,7 +56,7 @@ TEST_CASE("Triangular solve with dense RHS", "[trisolve_dense]")
         const std::vector<double> x = usolve(U, b);
 
         REQUIRE(x.size() == expect.size());
-        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+        check_vectors_allclose(x, expect, tol);
     }
 
     SECTION("Forward solve U.T x = b") {
@@ -64,7 +64,7 @@ TEST_CASE("Triangular solve with dense RHS", "[trisolve_dense]")
         const std::vector<double> x = utsolve(U, b);
 
         REQUIRE(x.size() == expect.size());
-        REQUIRE_THAT(is_close(x, expect, tol), AllTrue());
+        check_vectors_allclose(x, expect, tol);
     }
 }
 
@@ -296,12 +296,12 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
 
         // Solve Lx = b
         const std::vector<double> x = lsolve(L, b);
-        CHECK_THAT(is_close(x, expect, tol), AllTrue());
+        check_vectors_allclose(x, expect, tol);
 
         // Solve PLx = b
         const std::vector<double> xp = lsolve_rows(PL, b);
 
-        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
+        check_vectors_allclose(xp, expect, tol);
     }
 
     SECTION("Permuted L Q x = b, with unknown Q") {
@@ -313,7 +313,7 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
         // Solve L Q.T x = b
         const std::vector<double> xp = lsolve_cols(LQ, b);
 
-        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
+        check_vectors_allclose(xp, expect, tol);
     }
 
     SECTION("Permuted P U x = b, with unknown P") {
@@ -324,11 +324,11 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
 
         // Solve Ux = b (un-permuted)
         const std::vector<double> x = usolve(U, b);
-        CHECK_THAT(is_close(x, expect, tol), AllTrue());
+        check_vectors_allclose(x, expect, tol);
 
         // Solve PUx = b
         const std::vector<double> xp = usolve_rows(PU, b);
-        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
+        check_vectors_allclose(xp, expect, tol);
     }
 
     SECTION("Permuted U Q x = b, with unknown Q") {
@@ -340,7 +340,7 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
         // Solve U Q.T x = b
         const std::vector<double> xp = usolve_cols(UQ, b);
 
-        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
+        check_vectors_allclose(xp, expect, tol);
     }
 
     SECTION("Permuted P L Q x = b, with unknown P and Q") {
@@ -351,7 +351,7 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
 
         // Solve P L Q x = b
         const std::vector<double> xt = tri_solve_perm(PLQ, b);
-        REQUIRE_THAT(is_close(xt, expect, tol), AllTrue());
+        check_vectors_allclose(xt, expect, tol);
     }
 
     SECTION("Permuted P U Q x = b, with unknown P and Q") {
@@ -362,7 +362,7 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
 
         // Solve P U Q x = b
         std::vector<double> xp = tri_solve_perm(PUQ, b, true);
-        REQUIRE_THAT(is_close(xp, expect, tol), AllTrue());
+        check_vectors_allclose(xp, expect, tol);
     }
 }
 

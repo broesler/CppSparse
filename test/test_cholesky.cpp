@@ -271,13 +271,13 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         // Solve Lx = b
         auto [xi, x] = chol_lsolve(L, b, res.parent);
 
-        CHECK_THAT(is_close(x, expect, tol), AllTrue());
+        check_vectors_allclose(x, expect, tol);
 
         // Solve Lx = b, inferring parent from L
         auto [xi_s, x_s] = chol_lsolve(L, b);
 
         CHECK(xi == xi_s);
-        REQUIRE_THAT(is_close(x_s, expect, tol), AllTrue());
+        check_vectors_allclose(x_s, expect, tol);
     }
 
     SECTION("Exercise 4.4: Solve L^T x = b") {
@@ -312,13 +312,13 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         // Solve Lx = b
         auto [xi, x] = chol_ltsolve(L, b, res.parent);
 
-        CHECK_THAT(is_close(x, expect, tol), AllTrue());
+        check_vectors_allclose(x, expect, tol);
 
         // Solve Lx = b, inferring parent from L
         auto [xi_s, x_s] = chol_ltsolve(L, b);
 
         CHECK(xi == xi_s);
-        REQUIRE_THAT(is_close(x_s, expect, tol), AllTrue());
+        check_vectors_allclose(x_s, expect, tol);
     }
 
     SECTION("Exercise 4.6: etree height") {

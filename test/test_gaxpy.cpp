@@ -33,12 +33,12 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
         )
     {
         std::vector<double> zero(y.size());
-        REQUIRE_THAT(is_close(gaxpy(A, x, zero),   expect_Ax,   tol), AllTrue());
-        REQUIRE_THAT(is_close(gaxpy(A, x, y),      expect_Axpy, tol), AllTrue());
-        REQUIRE_THAT(is_close(gatxpy(A.T(), x, y), expect_Axpy, tol), AllTrue());
-        REQUIRE_THAT(is_close(A.dot(x),            expect_Ax,   tol), AllTrue());
-        REQUIRE_THAT(is_close((A * x),             expect_Ax,   tol), AllTrue());
-        REQUIRE_THAT(is_close((A * x + y),         expect_Axpy, tol), AllTrue());
+        check_vectors_allclose(gaxpy(A, x, zero),   expect_Ax,   tol);
+        check_vectors_allclose(gaxpy(A, x, y),      expect_Axpy, tol);
+        check_vectors_allclose(gatxpy(A.T(), x, y), expect_Axpy, tol);
+        check_vectors_allclose(A.dot(x),            expect_Ax,   tol);
+        check_vectors_allclose((A * x),             expect_Ax,   tol);
+        check_vectors_allclose((A * x + y),         expect_Axpy, tol);
     };
 
     SECTION("A non-square matrix.") {
@@ -73,7 +73,7 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
         std::vector<double> expect_Axpy = {10, 10, 10};
 
         multiply_test(A, x, y, expect_Ax, expect_Axpy);
-        REQUIRE_THAT(is_close(sym_gaxpy(A, x, y),  expect_Axpy, tol), AllTrue());
+        check_vectors_allclose(sym_gaxpy(A, x, y),  expect_Axpy, tol);
     }
 
     SECTION("An arbitrary non-symmetric matrix.") {
@@ -90,8 +90,8 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
         multiply_test(A, x, y, expect_Ax, expect_Axpy);
 
         // COOMatrix
-        REQUIRE_THAT(is_close(Ac.dot(x), expect_Ax, tol), AllTrue());
-        REQUIRE_THAT(is_close((Ac * x),  expect_Ax, tol), AllTrue());
+        check_vectors_allclose(Ac.dot(x), expect_Ax, tol);
+        check_vectors_allclose((Ac * x),  expect_Ax, tol);
     }
 
     SECTION("An arbitrary symmetric matrix.") {
@@ -107,7 +107,7 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
         // A @ x + y
         std::vector<double> expect_Axpy = {25.7, 15.0, 13.4,  8.5};
 
-        REQUIRE_THAT(is_close(sym_gaxpy(A, x, y), expect_Axpy, tol), AllTrue());
+        check_vectors_allclose(sym_gaxpy(A, x, y), expect_Axpy, tol);
     }
 }
 
@@ -148,10 +148,10 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
         std::vector<double> CT_col = gatxpy_col(A, A_dense, A_dense);
         std::vector<double> CT_block = gatxpy_block(A, A_dense, A_dense);
 
-        REQUIRE_THAT(is_close(C_col, expect, tol), AllTrue());
-        REQUIRE_THAT(is_close(C_block, expect, tol), AllTrue());
-        REQUIRE_THAT(is_close(CT_col, expect, tol), AllTrue());
-        REQUIRE_THAT(is_close(CT_block, expect, tol), AllTrue());
+        check_vectors_allclose(C_col, expect, tol);
+        check_vectors_allclose(C_block, expect, tol);
+        check_vectors_allclose(CT_col, expect, tol);
+        check_vectors_allclose(CT_block, expect, tol);
     }
 
     SECTION("Arbitrary square matrix in row-major format") {
@@ -168,8 +168,8 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
         std::vector<double> C = gaxpy_row(A.T(), A_dense, A_dense);
         std::vector<double> CT = gatxpy_row(A, A_dense, A_dense);
 
-        REQUIRE_THAT(is_close(C, expect, tol), AllTrue());
-        REQUIRE_THAT(is_close(CT, expect, tol), AllTrue());
+        check_vectors_allclose(C, expect, tol);
+        check_vectors_allclose(CT, expect, tol);
     }
 
     SECTION("Non-square matrix in column-major format.") {
@@ -185,14 +185,10 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
              0.0 ,  3.51,  1.53,  1.36
         };
 
-        REQUIRE_THAT(is_close(gaxpy_col(Ab, Ac_dense, A_dense), expect, tol),
-                     AllTrue());
-        REQUIRE_THAT(is_close(gaxpy_block(Ab, Ac_dense, A_dense), expect, tol),
-                     AllTrue());
-        REQUIRE_THAT(is_close(gatxpy_col(Ab.T(), Ac_dense, A_dense), expect, tol),
-                     AllTrue());
-        REQUIRE_THAT(is_close(gatxpy_block(Ab.T(), Ac_dense, A_dense), expect, tol),
-                     AllTrue());
+        check_vectors_allclose(gaxpy_col(Ab, Ac_dense, A_dense), expect, tol);
+        check_vectors_allclose(gaxpy_block(Ab, Ac_dense, A_dense), expect, tol);
+        check_vectors_allclose(gatxpy_col(Ab.T(), Ac_dense, A_dense), expect, tol);
+        check_vectors_allclose(gatxpy_block(Ab.T(), Ac_dense, A_dense), expect, tol);
     }
 
     SECTION("Non-square matrix in row-major format.") {
@@ -208,10 +204,8 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
             20.49,  1.56, 11.2 ,  1.36
         };
 
-        REQUIRE_THAT(is_close(gaxpy_row(Ab, Ac_dense, A_dense), expect, tol),
-                     AllTrue());
-        REQUIRE_THAT(is_close(gatxpy_row(Ab.T(), Ac_dense, A_dense), expect, tol),
-                     AllTrue());
+        check_vectors_allclose(gaxpy_row(Ab, Ac_dense, A_dense), expect, tol);
+        check_vectors_allclose(gatxpy_row(Ab.T(), Ac_dense, A_dense), expect, tol);
     }
 }
 

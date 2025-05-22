@@ -145,20 +145,17 @@ std::vector<bool> operator!=(const std::vector<double>& vec, const double c)
 }
 
 
-std::vector<bool> is_close(
+void check_vectors_allclose(
     const std::vector<double>& a,
     const std::vector<double>& b,
     const double tol
 )
 {
-    assert(a.size() == b.size());
-
-    std::vector<bool> out(a.size());
+    REQUIRE(a.size() == b.size());
     for (int i = 0; i < a.size(); i++) {
-        out[i] = (std::fabs(a[i] - b[i]) < tol);
+        CAPTURE(i, a[i], b[i]);
+        CHECK_THAT(a[i], WithinAbs(b[i], tol));
     }
-
-    return out;
 }
 
 }  // namespace cs

@@ -30,13 +30,8 @@ namespace cs {
 
 
 /** Define a helper function to test LU decomposition */
-LUResult lu_test(
-    const CSCMatrix& A,
-    AMDOrder order=AMDOrder::Natural,
-    std::string label=""
-)
+LUResult lu_test(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural)
 {
-    INFO(label);
     SymbolicLU S = slu(A, order);
     LUResult res = lu(A, S);
     CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
@@ -170,8 +165,8 @@ TEST_CASE("Solve Ax = b with LU", "[lu_solve]")
     CSCMatrix Ap;
     std::vector<double> bp;
 
-    std::vector<double> x; 
-    std::vector<double> x_ov; 
+    std::vector<double> x;
+    std::vector<double> x_ov;
 
     SECTION("Natural Order") {
         Ap = A;
@@ -221,8 +216,8 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU", "[ex6.1][lu_tsolve]")
     AMDOrder order = AMDOrder::Natural;
     CSCMatrix Ap;
 
-    std::vector<double> x; 
-    std::vector<double> x_ov; 
+    std::vector<double> x;
+    std::vector<double> x_ov;
     std::vector<csint> p_inv;
 
     SECTION("Natural Order") {
@@ -307,7 +302,7 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3][lu_colpiv]")
             for (csint i = 0; i < M; i++) {
                 A(i, k) = 0.0;
             }
-            A = A.dropzeros();
+            A.dropzeros();
 
             expect_q = {0, 1, 2, 4, 5, 6, 7, 3};
         }
@@ -319,7 +314,7 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3][lu_colpiv]")
                     A(i, k) = 0.0;
                 }
             }
-            A = A.dropzeros();
+            A.dropzeros();
 
             expect_q = {0, 1, 4, 6, 7, 2, 3, 5};
         }
@@ -421,121 +416,137 @@ TEST_CASE("Exercise 6.4: relu", "[ex6.4][relu]")
 }
 
 
-TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5][lu_singular]")
-{
+// Exercise 6.5: LU for square, singular matrices
+void run_lu_singular_test(
+    std::function<void(CSCMatrix&, csint, csint)> matrix_modifier
+) {
     CSCMatrix A = davis_example_qr(10).to_canonical();
     auto [M, N] = A.shape();
 
-    std::string section_label = "default";
-    // TODO test permuted rows! (should all pass?)
+    AMDOrder order = GENERATE(
+        AMDOrder::Natural,
+        AMDOrder::APlusAT,
+        AMDOrder::ATANoDenseRows
+    );
+    bool permute_rows = GENERATE(true, false);
+    bool structural = GENERATE(true, false);
+    CAPTURE(order, permute_rows, structural);
 
-    CSCMatrix B = A;  // create a copy to edit
-
-    SECTION("Single pair of linearly dependent columns") {
-        section_label = "Single pair of linearly dependent columns";
-        // Create a singular matrix by setting column 3 = 2 * column 5
-        for (csint i = 0; i < M; i++) {
-            B(i, 3) = 2 * B(i, 5);
-        }
-
-        SECTION("Structural") {
-            section_label = "Single pair of linearly dependent columns: structural";
-            B = B.dropzeros();
-        }
+    if (permute_rows) {
+        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        A = A.permute_rows(inv_permute(p));
     }
 
-    SECTION("Two pairs of linearly dependent columns") {
-        section_label = "Two pairs of linearly dependent columns";
-        for (csint i = 0; i < M; i++) {
-            B(i, 3) = 2 * B(i, 5);
-            B(i, 2) = 3 * B(i, 4);
-        }
+    // Do the actual modification to make the matrix singular
+    matrix_modifier(A, M, N);
 
-        SECTION("Structural") {
-            section_label = "Two pairs of linearly dependent columns: structural";
-            B = B.dropzeros();
-        }
+    if (structural) {
+        A.dropzeros();
     }
 
-    SECTION("Single pair of linearly dependent rows") {
-        section_label = "Single pair of linearly dependent rows";
-        // Create a singular matrix by setting row 3 = 2 * row 5
-        for (csint j = 0; j < N; j++) {
-            B(3, j) = 2 * B(5, j);
-        }
-        
-        SECTION("Structural") {
-            section_label = "Single pair of linearly dependent rows: structural";
-            B = B.dropzeros();
-        }
-    }
+    lu_test(A, order);
+}
 
-    SECTION("Two pairs of linearly dependent rows") {
-        section_label = "Two pairs of linearly dependent rows";
-        for (csint j = 0; j < N; j++) {
-            B(3, j) = 2 * B(5, j);
-            B(2, j) = 3 * B(4, j);
-        }
-        
-        SECTION("Structural") {
-            section_label = "Two pairs of linearly dependent rows: structural";
-            B.dropzeros();
-        }
-    }
 
-    SECTION("Single zero column") {
-        section_label = "Single zero column";
-        for (csint i = 0; i < M; i++) {
-            B(i, 3) = 0.0;
-        }
-
-        SECTION("Structural") {
-            section_label = "Single zero column: structural";
-            B = B.dropzeros();
-        }
-    }
-
-    SECTION("Multiple zero columns") {
-        section_label = "Multiple zero columns";
-        for (csint i = 0; i < M; i++) {
-            for (const auto& j : {2, 3, 4}) {
-                B(i, j) = 0.0;
+TEST_CASE("Exercise 6.5: LU with Single pair of linearly dependent columns", "[ex6.5][lu_singular]")
+{
+    run_lu_singular_test(
+        [](CSCMatrix& A, csint M, csint N) {
+            for (csint i = 0; i < M; i++) {
+                A(i, 3) = 2 * A(i, 5);
             }
         }
+    );
+}
 
-        SECTION("Structural") {
-            section_label = "Multiple zero columns: structural";
-            B = B.dropzeros();
+
+TEST_CASE("Exercise 6.5: LU with Two pairs of linearly dependent columns", "[ex6.5][lu_singular]")
+{
+    run_lu_singular_test(
+        [](CSCMatrix& A, csint M, csint N) {
+            for (csint i = 0; i < M; i++) {
+                A(i, 3) = 2 * A(i, 5);
+                A(i, 2) = 3 * A(i, 4);
+            }
         }
-    }
+    );
+}
 
-    SECTION("Single zero row") {
-        section_label = "Single zero row";
-        for (csint j = 0; j < N; j++) {
-            B(3, j) = 0.0;
-        }
 
-        SECTION("Structural") {
-            section_label = "Single zero row: structural";
-            B = B.dropzeros();
-        }
-    }
-
-    SECTION("Multiple zero rows") {
-        section_label = "Multiple zero rows";
-        for (const auto& i : {2, 3, 4}) {
+TEST_CASE("Exercise 6.5: LU with Single pair of linearly dependent rows", "[ex6.5][lu_singular]")
+{
+    run_lu_singular_test(
+        [](CSCMatrix& A, csint M, csint N) {
             for (csint j = 0; j < N; j++) {
-                B(i, j) = 0.0;
+                A(3, j) = 2 * A(5, j);
             }
         }
+    );
+}
 
-        SECTION("Structural") {
-            section_label = "Multiple zero rows: structural";
-            B = B.dropzeros();
+
+TEST_CASE("Exercise 6.5: LU with Two pairs of linearly dependent rows", "[ex6.5][lu_singular]")
+{
+    run_lu_singular_test(
+        [](CSCMatrix& A, csint M, csint N) {
+            for (csint j = 0; j < N; j++) {
+                A(3, j) = 2 * A(5, j);
+                A(2, j) = 3 * A(4, j);
+            }
         }
-    }
+    );
+}
 
-    lu_test(B, AMDOrder::Natural, section_label);
+
+TEST_CASE("Exercise 6.5: LU with Single zero column", "[ex6.5][lu_singular]")
+{
+    run_lu_singular_test(
+        [](CSCMatrix& A, csint M, csint N) {
+            for (csint i = 0; i < M; i++) {
+                A(i, 3) = 0.0;
+            }
+        }
+    );
+}
+
+
+TEST_CASE("Exercise 6.5: LU with Multiple zero columns", "[ex6.5][lu_singular]")
+{
+    run_lu_singular_test(
+        [](CSCMatrix& A, csint M, csint N) {
+            for (csint i = 0; i < M; i++) {
+                for (const auto& j : {2, 3, 5}) {
+                    A(i, j) = 0.0;
+                }
+            }
+        }
+    );
+}
+
+
+TEST_CASE("Exercise 6.5: LU with Single zero row", "[ex6.5][lu_singular]")
+{
+    run_lu_singular_test(
+        [](CSCMatrix& A, csint M, csint N) {
+            for (csint j = 0; j < N; j++) {
+                A(3, j) = 0.0;
+            }
+        }
+    );
+}
+
+
+TEST_CASE("Exercise 6.5: LU with Multiple zero rows", "[ex6.5][lu_singular]")
+{
+    run_lu_singular_test(
+        [](CSCMatrix& A, csint M, csint N) {
+            for (const auto& i : {2, 3, 5}) {
+                for (csint j = 0; j < N; j++) {
+                    A(i, j) = 0.0;
+                }
+            }
+        }
+    );
 }
 
 
@@ -543,7 +554,7 @@ TEST_CASE("Exercise 6.6: LU Factorization of Rectangular Matrices", "[ex6.6][lu]
 {
     CSCMatrix A = davis_example_qr(10).to_canonical();
     auto [M, N] = A.shape();
-    
+
     // TODO test permuted version (works in numpy)
 
     csint r = 3;  // number of rows or columns to remove
@@ -592,8 +603,8 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
         std::vector<csint> realloc_attempts_;  // log realloc attempts
 
     public:
-        LowMemoryMatrix(Shape shape, csint fail_thresh) 
-            : CSCMatrix(shape), fail_thresh_(fail_thresh) 
+        LowMemoryMatrix(Shape shape, csint fail_thresh)
+            : CSCMatrix(shape), fail_thresh_(fail_thresh)
         {
             for (csint i = 0; i < shape[0]; i++) {
                 assign(i, i, 1.0);
@@ -650,7 +661,7 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
     // requests:  [300, 202, 153, 128, 116, 110, 107, 105]
 
     SECTION("Test without failure: Single Request") {
-        thresh = 1000;  // min_request < max_request < threshold 
+        thresh = 1000;  // min_request < max_request < threshold
         LowMemoryMatrix L {Shape {N, N}, thresh};
 
         csint original_nzmax = L.nzmax();

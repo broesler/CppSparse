@@ -12,7 +12,8 @@ Unit tests for the csparse.lu*() functions.
 import pytest
 import numpy as np
 
-from scipy import linalg as la
+from scipy import linalg as la, sparse
+from scipy.sparse import linalg as spla
 
 import csparse
 
@@ -93,6 +94,58 @@ def test_pivoting_LU(A, lu_func):
         A = A_in[p]
 
         lu_helper(A, lu_func)
+
+
+def test_1norm_estimate(A):
+    """Test the 1-norm and condition number estimates."""
+    # Notes are for csparse.davis_example_qr(10)
+    As = sparse.csc_matrix(A)
+
+    normd = la.norm(A, 1)
+    norms = spla.norm(As, 1)
+    norm_est = spla.onenormest(A)
+
+    np.testing.assert_allclose(normd, norms, atol=ATOL)
+    np.testing.assert_allclose(normd, norm_est, atol=ATOL)
+
+    # Condition number == ||A||_1 * ||A^-1||_1
+    condd = np.linalg.cond(A, 1)
+
+    Ainv = la.inv(A)
+    Asinv = spla.inv(As)
+
+    normd_inv = la.norm(Ainv, 1)
+    norms_inv = spla.norm(Asinv, 1)
+    norm_est_inv = spla.onenormest(Ainv)
+
+    # Test out condition number estimate
+    # CSparse version:
+    #
+    # >> [L, U, P, Q] = lu(A);
+    # >> norm1est(L, U, P, Q)  % CSparse 1-norm estimate
+    # ans = 0.1153750055167834
+
+    # >> cond1est(A)  % CSparse 1-norm condition number estimate
+    # ans = 2.422875115852452
+
+    # >> condest(A)  % built-in 1-norm condition number estimate
+    # ans = 2.422875115852452
+
+    # C++Sparse version:
+    normc_inv = csparse.norm1est_inv(As)  # == 0.11537500551678347
+
+    np.testing.assert_allclose(normd_inv, norms_inv, atol=ATOL)
+    np.testing.assert_allclose(normd_inv, norm_est_inv, atol=ATOL)
+    np.testing.assert_allclose(normd_inv, normc_inv, atol=ATOL)
+
+    κc = csparse.cond1est(As)          # == 2.422875115852453
+
+    np.testing.assert_allclose(condd, κc, atol=ATOL)
+
+    print("---------- 1-norm estimate:")
+    print("    normd:", normd)
+    print("normd_inv:", normd_inv)
+    print("    condd:", condd)
 
 
 # =============================================================================

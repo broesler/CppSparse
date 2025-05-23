@@ -465,8 +465,12 @@ TEST_CASE("Exercise 6.5: LU with Two pairs of linearly dependent columns", "[ex6
     run_lu_singular_test(
         [](CSCMatrix& A, csint M, csint N) {
             for (csint i = 0; i < M; i++) {
-                A(i, 3) = 2 * A(i, 5);
-                A(i, 2) = 3 * A(i, 4);
+                // These two sets create a zero row:
+                // A(i, 3) = 2 * A(i, 5);
+                // A(i, 2) = 3 * A(i, 4);
+                // These two sets *do not* create a zero row (separate test)
+                A(i, 2) = 2 * A(i, 6);
+                A(i, 4) = 3 * A(i, 5);
             }
         }
     );

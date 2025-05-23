@@ -220,6 +220,47 @@ void lu_realloc(CSCMatrix& R, csint k, bool lower)
 }
 
 
+/** Assign missing values in the permutation vector.
+ *
+ * This function is used to assign missing values in the permutation vector
+ * `p_inv` to valid indices. The missing values are indicated by "-1" entries
+ * in the vector.
+ *
+ * @param p_inv  the permutation vector
+ */
+static void make_valid_permutation(std::vector<csint>& p_inv)
+{
+    csint M = p_inv.size();
+
+    std::vector<char> marked(M, false);  // char faster for random access
+    for (csint i : p_inv) {
+        if (i >= 0) {
+            marked[i] = true;
+        }
+    }
+
+    // Find all missing values
+    std::vector<csint> missing;
+    for (csint i = 0; i < M; i++) {
+        if (!marked[i]) {
+            missing.push_back(i);
+        }
+    }
+
+    // Assign them to "empty" locations in reverse to preserve order
+    csint idx = 0;
+    for (csint& i : p_inv) {
+        if (i < 0) {
+            if (idx < missing.size()) {
+                i = missing[idx++];
+            } else {
+                throw std::runtime_error("More missing rows than values!");
+            }
+        }
+    }
+}
+
+
 LUResult lu(
     const CSCMatrix& A,
 	const SymbolicLU& S,
@@ -303,7 +344,6 @@ LUResult lu(
 
         // Exercise 6.5: modify to allow singular matrices
         if ((ipiv == -1 || a <= 0) && !is_singular) {
-            // throw std::runtime_error("Matrix is singular!");  // original
             is_singular = true;
         }
 
@@ -336,9 +376,9 @@ LUResult lu(
                 continue;
             }
 
-            p_inv[ipiv] = k;      // ipiv is the kth pivot row
         }
 
+        p_inv[ipiv] = k;   // ipiv is the kth pivot row
         L.i_[lnz] = ipiv;  // first entry in L[:, k] is L(k, k) = 1
         L.v_[lnz++] = 1;
 
@@ -361,9 +401,16 @@ LUResult lu(
     U.p_[N] = unz;
 
     // Exercise 6.5: modify to allow singular matrices
+    if (is_singular) {
+        // There will be remaining "-1" entries corresponding to empty rows:
+        //     p_inv: [0, 1, -1, 7, 2, 3, 6, 4] -> needs a 5
+        // Assign the remaining entries for a valid permutation.
+        make_valid_permutation(p_inv);
+    }
+
     // Exercise 6.6: modify to allow rectangular matrices
     // Assign indices to all missing rows that were pivoted to the end
-    if (is_singular || M > N) {
+    if (M > N) {
         csint idx = M - 1;
         for (auto& i : p_inv | std::views::reverse) {
             if (i < 0) {

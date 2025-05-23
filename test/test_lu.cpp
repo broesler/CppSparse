@@ -23,16 +23,34 @@
 using Catch::Matchers::AllTrue;
 using Catch::Matchers::WithinAbs;
 using Catch::Matchers::RangeEquals;
+using Catch::Matchers::UnorderedEquals;
+
 
 namespace cs {
 
 
 /** Define a helper function to test LU decomposition */
-LUResult lu_test(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural)
+LUResult lu_test(
+    const CSCMatrix& A,
+    AMDOrder order=AMDOrder::Natural,
+    std::string label=""
+)
 {
+    INFO(label);
     SymbolicLU S = slu(A, order);
     LUResult res = lu(A, S);
     CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+
+    // Test that permutations are valid
+    auto [M, N] = A.shape();
+    std::vector<csint> row_perm(M);
+    std::vector<csint> col_perm(N);
+    std::iota(row_perm.begin(), row_perm.end(), 0);
+    std::iota(col_perm.begin(), col_perm.end(), 0);
+
+    CHECK_THAT(res.p_inv, UnorderedEquals(row_perm));
+    CHECK_THAT(res.q,     UnorderedEquals(col_perm));
+
     CSCMatrix PAQ = A.permute(res.p_inv, res.q).to_canonical();
     check_sparse_allclose(LU, PAQ);
     return res;
@@ -408,47 +426,77 @@ TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5][lu_singular
     CSCMatrix A = davis_example_qr(10).to_canonical();
     auto [M, N] = A.shape();
 
+    std::string section_label = "default";
+    // TODO test permuted rows! (should all pass?)
+
     CSCMatrix B = A;  // create a copy to edit
 
     SECTION("Single pair of linearly dependent columns") {
+        section_label = "Single pair of linearly dependent columns";
         // Create a singular matrix by setting column 3 = 2 * column 5
         for (csint i = 0; i < M; i++) {
             B(i, 3) = 2 * B(i, 5);
         }
+
+        SECTION("Structural") {
+            section_label = "Single pair of linearly dependent columns: structural";
+            B = B.dropzeros();
+        }
     }
 
     SECTION("Two pairs of linearly dependent columns") {
+        section_label = "Two pairs of linearly dependent columns";
         for (csint i = 0; i < M; i++) {
             B(i, 3) = 2 * B(i, 5);
             B(i, 2) = 3 * B(i, 4);
         }
+
+        SECTION("Structural") {
+            section_label = "Two pairs of linearly dependent columns: structural";
+            B = B.dropzeros();
+        }
     }
 
     SECTION("Single pair of linearly dependent rows") {
+        section_label = "Single pair of linearly dependent rows";
         // Create a singular matrix by setting row 3 = 2 * row 5
         for (csint j = 0; j < N; j++) {
             B(3, j) = 2 * B(5, j);
         }
+        
+        SECTION("Structural") {
+            section_label = "Single pair of linearly dependent rows: structural";
+            B = B.dropzeros();
+        }
     }
 
     SECTION("Two pairs of linearly dependent rows") {
+        section_label = "Two pairs of linearly dependent rows";
         for (csint j = 0; j < N; j++) {
             B(3, j) = 2 * B(5, j);
             B(2, j) = 3 * B(4, j);
         }
+        
+        SECTION("Structural") {
+            section_label = "Two pairs of linearly dependent rows: structural";
+            B.dropzeros();
+        }
     }
 
     SECTION("Single zero column") {
+        section_label = "Single zero column";
         for (csint i = 0; i < M; i++) {
             B(i, 3) = 0.0;
         }
 
         SECTION("Structural") {
+            section_label = "Single zero column: structural";
             B = B.dropzeros();
         }
     }
 
     SECTION("Multiple zero columns") {
+        section_label = "Multiple zero columns";
         for (csint i = 0; i < M; i++) {
             for (const auto& j : {2, 3, 4}) {
                 B(i, j) = 0.0;
@@ -456,21 +504,25 @@ TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5][lu_singular
         }
 
         SECTION("Structural") {
+            section_label = "Multiple zero columns: structural";
             B = B.dropzeros();
         }
     }
 
     SECTION("Single zero row") {
+        section_label = "Single zero row";
         for (csint j = 0; j < N; j++) {
             B(3, j) = 0.0;
         }
 
         SECTION("Structural") {
+            section_label = "Single zero row: structural";
             B = B.dropzeros();
         }
     }
 
     SECTION("Multiple zero rows") {
+        section_label = "Multiple zero rows";
         for (const auto& i : {2, 3, 4}) {
             for (csint j = 0; j < N; j++) {
                 B(i, j) = 0.0;
@@ -478,11 +530,12 @@ TEST_CASE("Exercise 6.5: LU for square, singular matrices", "[ex6.5][lu_singular
         }
 
         SECTION("Structural") {
+            section_label = "Multiple zero rows: structural";
             B = B.dropzeros();
         }
     }
 
-    lu_test(B);
+    lu_test(B, AMDOrder::Natural, section_label);
 }
 
 
@@ -490,6 +543,8 @@ TEST_CASE("Exercise 6.6: LU Factorization of Rectangular Matrices", "[ex6.6][lu]
 {
     CSCMatrix A = davis_example_qr(10).to_canonical();
     auto [M, N] = A.shape();
+    
+    // TODO test permuted version (works in numpy)
 
     csint r = 3;  // number of rows or columns to remove
 

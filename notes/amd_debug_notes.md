@@ -1,4 +1,4 @@
-# FIXME
+# Error in AMD
 for ash219 matrix, ATA ordering,
 cs_amd finds k == 1 when nel == 60, so pk2 - pk1 == 6 here.
 We never get k == 1. When nel == 60, k == 80, and the arrays are
@@ -91,7 +91,7 @@ ln = 2
 pj = 366
 i = C.i_[pj++] = 68
 pj = 367
-last[i] = -1   FIXME
+last[i] = -1   XXX
 next[i] = 75
 
  after nel == 4 in fillreducing.cpp:481
@@ -118,7 +118,7 @@ amd left them as -1 from initialization.
 last[79] should be 75.
 last[82] should be 77.
 
-TODO Put debugging stops at each line where `last` is set. Start at nel == 0.
+Put debugging stops at each line where `last` is set. Start at nel == 0.
 cs_amd will set last[79] = 75, and last[82] = 77, but amd will leave them
 as -1.
 

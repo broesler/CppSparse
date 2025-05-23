@@ -559,8 +559,6 @@ TEST_CASE("Exercise 6.6: LU Factorization of Rectangular Matrices", "[ex6.6][lu]
     CSCMatrix A = davis_example_qr(10).to_canonical();
     auto [M, N] = A.shape();
 
-    // TODO test permuted version (works in numpy)
-
     csint r = 3;  // number of rows or columns to remove
 
     SECTION("M < N") {

@@ -20,7 +20,7 @@ from csparse.csparse import dmperm
 from csparse._fillreducing import scc_perm
 
 
-def cspy(A, cmap='viridis_r', colorbar=True, ax=None, **kwargs):
+def cspy(A, cmap='viridis_r', colorbar=True, ticklabels=False, ax=None, **kwargs):
     """Visualize a sparse or dense matrix with colored markers.
 
     This function is similar to `matplotlib.pyplot.spy`, but it colors the
@@ -36,6 +36,8 @@ def cspy(A, cmap='viridis_r', colorbar=True, ax=None, **kwargs):
         The colormap to use for coloring the markers, by default 'viridis_r'.
     colorbar : bool, optional
         Whether to display a colorbar, by default True.
+    ticklabels : bool, optional
+        If True, display tick labels on the axes, by default False.
     ax : matplotlib.axes.Axes, optional
         An existing Axes object to plot on. If None (default), the current axes
         are used.
@@ -99,20 +101,23 @@ def cspy(A, cmap='viridis_r', colorbar=True, ax=None, **kwargs):
     ax.set_xlim(-0.75, N - 0.25 if N > 0 else 0.75)
     ax.set_ylim(M - 0.25 if M > 0 else 0.75, -0.75)  # inverted y-axis like spy
 
-    ax.xaxis.tick_top()  # match spy's x-axis orientation
     # ax.spines['bottom'].set_visible(False)
     ax.spines['right'].set_visible(True)
     ax.spines['top'].set_visible(True)
 
-    # Use MaxNLocator to ensure integer ticks on both axes
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    if ticklabels:
+        # Use MaxNLocator to ensure integer ticks on both axes
+        ax.xaxis.tick_top()  # match spy's x-axis orientation
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    else:
+        ax.set(xticks=[], yticks=[])
 
     if nnz == 0:
         ax.set_xlabel(f"{A.shape}, nnz = 0, density = 0")
         return ax
 
-    ax.set_xlabel((f"{A.shape}, nnz = {nnz}, "
+    ax.set_xlabel((f"{A.shape}, nnz = {nnz:,d}, "
                    f"density = {nnz / (M * N):.2%}"))
 
     # Convert to a dense matrix and use imshow
@@ -174,7 +179,7 @@ def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
     n = np.nonzero(np.diff(cc))[0].size
 
     ax.set_title(
-        f"{M}-by-{N}, sprank: {sprank:d},\n"
+        f"sprank: {sprank:d},\n"
         f"fine blocks: {Nb}, coarse blocks: {m, n}"
     )
 
@@ -236,7 +241,7 @@ def ccspy(A, colored=True, seed=0, ax=None, **kwargs):
         cb = None
 
     M, N = A.shape
-    ax.set_title(f"{M}-by-{N}, strongly connected components: {Nb:d}")
+    ax.set_title(f"strongly connected components: {Nb:d}")
 
     drawboxes(Nb, r, s, ax=ax)
 

@@ -23,29 +23,30 @@ def allclose(a, b, atol=1e-15):
 
 
 # Define the example matrix from Davis, Figure 4.2, p. 39
-A = csparse.davis_example_qr()  # scipy.sparse.csc_array
+A = csparse.davis_example_qr(10)  # scipy.sparse.csc_array
 Ac = csparse.CSCMatrix(A.data, A.indices, A.indptr, A.shape)
 
 M, N = Ac.shape
 
-# Add a random perturbation to the diagonal to enforce expected pivoting
-for i in range(M):
-    # Ac[i, i] += np.random.rand()
-    Ac[i, i] += 10
-
 # ---------- Permute the matrix rows arbitrarily
-# p = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
-# p_inv = csparse.inv_permute(p)  # [3, 1, 4, 7, 6, 0, 5, 2]
-# Ac = Ac.permute_rows(p_inv)
+p_input = np.r_[5, 1, 7, 0, 2, 6, 4, 3]
+p_input_inv = csparse.inv_permute(p_input)  # [3, 1, 4, 7, 6, 0, 5, 2]
+Ac = Ac.permute_rows(p_input_inv)
 
 # ---------- Create a numerically rank-deficient matrix
 # for i in range(N):
     # Numerical rank deficiency (linearly dependent rows/columns)
-    # Ac[i, 3] = 2 * Ac[i, 5]  # 2 linearly dependent column WORKS
-    # Ac[i, 2] = 2 * Ac[i, 4]  # 2 *sets* of linearly dependent columns WORKS
+    # This set of linearly dependent columns leaves row 3 as a zero row
+    # Ac[i, 3] = 2.0 * Ac[i, 5]  # 2 linearly dependent column WORKS
+    # Ac[i, 2] = 3.0 * Ac[i, 4]  # 2 *sets* of linearly dependent columns
 
-    # Ac[3, i] = 2 * Ac[4, i]  # 2 linearly dependent rows WORKS
-    # Ac[2, i] = 2 * Ac[5, i]  # 2 *sets* of linearly dependent rows WORKS
+    # Two sets of linearly dependent columns, with *NO* zero rows
+    # Ac[i, 2] = 2.0 * Ac[i, 6]  # 2 linearly dependent column WORKS
+    # Ac[i, 4] = 2.0 * Ac[i, 5]  # 2 *sets* of linearly dependent columns
+
+    # Two sets of linearly dependent rows, with *NO* zero columns
+    # Ac[3, i] = 2.0 * Ac[4, i]  # 2 linearly dependent rows WORKS
+    # Ac[2, i] = 2.0 * Ac[5, i]  # 2 *sets* of linearly dependent rows WORKS
 
     # Numerical rank deficiency (zero rows/columns)
     # Ac[3, i] = 0.0  # zero row WORKS
@@ -53,13 +54,8 @@ for i in range(M):
     # for j in [2, 3, 5]:
     #     Ac[j, i] = 0.0  # multiple zero rows WORKS (but not for scipy.sparse)
 
-    # FIXME csparse gets the wrong permutation when we premute Ac first
-    #   p = array([3, 1, 4, 0, 6, 0, 5, 7])
-    # should be:  [3, 1, 4, 7, 6, 0, 5, 2]
-    # Multiple zeros!       X           X
     # Ac[i, 3] = 0.0  # WORKS single zero column
 
-    # FIXME also wrong when we permute Ac first
     # for j in [2, 3, 5]:
     #     Ac[i, j] = 0.0  # multiple zero columns WORKS
 
@@ -71,6 +67,10 @@ for i in range(M):
 # r = 3
 
 # ----- M < N
+# FIXME csparse.lu fails when *permuted* and M < N. L not lower tri!!
+# NOTE not actually tested in C++Sparse. Only unpermuted case is tested.
+# Permuted case should still work, however, since numpy can do it.
+
 # Ac = Ac.slice(0, M - r, 0, N)  # (M-r, N)
 # Ac = Ac[:M - r, :]  # (M-r, N)
 
@@ -89,8 +89,8 @@ for i in range(M):
 #         Run the tests
 # -----------------------------------------------------------------------------
 # Convert to dense and sparse formats
-A = Ac.toarray()
-As = sparse.csc_matrix(A)
+As = csparse.scipy_from_csc(Ac)  # retain non-canonical format
+A = As.toarray()
 
 rank = np.linalg.matrix_rank(A)
 # print("Size of A:", Ac.shape)
@@ -116,7 +116,7 @@ allclose(Ld[pd] @ Ud, A)
 try:
     L, U, p, q = csparse.lu(As, order='Natural')
 
-    allclose((L @ U).toarray(), A[p])
+    allclose((L @ U).toarray(), A[p][:, q])
     # np.testing.assert_allclose(p, pd)  # not necessarily identical!
 
 except Exception as e:
@@ -130,11 +130,11 @@ except Exception as e:
 # Scipy sparse -- fails if singular or non-square
 try:
     lu = spla.splu(As, permc_spec='NATURAL')  # no column reordering
-    p_, L_, U_ = lu.perm_r, lu.L, lu.U
+    p_, L_, U_, q_ = lu.perm_r, lu.L, lu.U, lu.perm_c
 
     np.testing.assert_allclose(p_, csparse.inv_permute(p))  # not always true!
-    allclose((L_[p_] @ U_).toarray(), As.toarray())
-    allclose(Ld, L_.toarray())
+    allclose((L_ @ U_)[p_][:, q_].toarray(), As.toarray())
+    allclose(Ld, L_.toarray())  # not necessarily identical!
     allclose(Ud, U_.toarray())
 
 except Exception as e:
@@ -156,6 +156,7 @@ except Exception as e:
 #    maximum entry in each column.
 # drop_tol = 0.08
 drop_tol = 1.0  # drop everything off-diagonal -> FIXME does nothing?
+# drop_tol = np.inf  # drop everything off-diagonal -> FIXME does nothing?
 # drop_tol = 0.0  # keep everything
 
 # Scipy.sparse
@@ -167,7 +168,7 @@ if drop_tol == 0:
     allclose(L_.toarray(), Ld)
     allclose(U_.toarray(), Ud)
     allclose((L_[p_] @ U_).toarray(), A)
-# elif drop_tol == 1:  # only diagonals
+# elif drop_tol >= 1:  # only diagonals
 #     allclose(L_.toarray(), np.eye(L_.shape[0]))  # FIXME both fail!
 #     allclose(U_.diagonal(), A.diagonal())
 

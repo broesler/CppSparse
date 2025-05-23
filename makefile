@@ -72,7 +72,7 @@ test_debug: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
 test_debug: test_csparse
 
 debug: CFLAGS := $(CFLAGS) -DDEBUG -glldb -O0  # no optimization
-debug: CFLAGS += -fno-inline -fsanitize=address -fno-omit-frame-pointer
+debug: CFLAGS += -fno-inline -fno-omit-frame-pointer #-fsanitize=address 
 debug: test_debug demos_debug
 
 run_debug: debug

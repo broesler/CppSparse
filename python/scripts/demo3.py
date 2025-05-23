@@ -20,8 +20,6 @@ from scipy import sparse
 
 import csparse
 
-from demo import print_resid
-
 
 def demo3(prob, name='', axs=None):
     """Perform Cholesky up/downdate on a sparse matrix.
@@ -86,7 +84,8 @@ def demo3(prob, name='', axs=None):
     print(f"solve time: {t:.2e} s")
 
     print('original: ', end='')
-    print_resid(C, x, b)
+    resid = csparse.residual_norm(C, x, b)
+    print(f"residual: {resid:.2e}")
 
     # Build the random update vector from a column of L
     k = N // 2
@@ -125,7 +124,8 @@ def demo3(prob, name='', axs=None):
     E = C + wp * wp.T
 
     print(f"update:   time: {t1 + t:.2e} s (incl solve) ", end='')
-    print_resid(E, x, b)
+    resid = csparse.residual_norm(E, x, b)
+    print(f"residual: {resid:.2e}")
 
     tic = time.perf_counter()
     L2, p2, _ = csparse.chol(E, order)
@@ -136,7 +136,8 @@ def demo3(prob, name='', axs=None):
     t = time.perf_counter() - tic
 
     print(f"rechol:   time: {t:.2e} s (incl solve) ", end='')
-    print_resid(E, x, b)
+    resid = csparse.residual_norm(E, x, b)
+    print(f"residual: {resid:.2e}")
 
     # Downdate
     tic = time.perf_counter()
@@ -153,7 +154,8 @@ def demo3(prob, name='', axs=None):
     t = time.perf_counter() - tic
 
     print(f"downdate: time: {t1 + t:.2e} s (incl solve) ", end='')
-    print_resid(C, x, b)
+    resid = csparse.residual_norm(C, x, b)
+    print(f"residual: {resid:.2e}")
 
     return axs
 

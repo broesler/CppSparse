@@ -200,25 +200,29 @@ PYBIND11_MODULE(csparse, m) {
         .def("__float__", [](const cs::CSCMatrix::ItemProxy& self) {
                 return static_cast<double>(self);
         })
-        .def("__iadd__",
-            [](cs::CSCMatrix::ItemProxy& self, double v) {
-                return self += v;
+        .def("__mul__", [](const cs::CSCMatrix::ItemProxy& self, double v) {
+                return static_cast<double>(self) * v;
             }, py::is_operator()
+        )
+        .def("__rmul__", [](const cs::CSCMatrix::ItemProxy& self, double v) {
+                return static_cast<double>(self) * v;
+            }, py::is_operator()
+        )
+        .def("__iadd__",
+            [](cs::CSCMatrix::ItemProxy& self, double v) { return self += v; },
+            py::is_operator()
         )
         .def("__isub__",
-            [](cs::CSCMatrix::ItemProxy& self, double v) {
-                return self -= v;
-            }, py::is_operator()
+            [](cs::CSCMatrix::ItemProxy& self, double v) { return self -= v; },
+            py::is_operator()
         )
         .def("__imul__",
-            [](cs::CSCMatrix::ItemProxy& self, double v) {
-                return self *= v;
-            }, py::is_operator()
+            [](cs::CSCMatrix::ItemProxy& self, double v) { return self *= v; },
+            py::is_operator()
         )
         .def("__idiv__",
-            [](cs::CSCMatrix::ItemProxy& self, double v) {
-                return self /= v;
-            }, py::is_operator()
+            [](cs::CSCMatrix::ItemProxy& self, double v) { return self /= v; },
+            py::is_operator()
         );
 
     //--------------------------------------------------------------------------

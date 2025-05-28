@@ -20,7 +20,7 @@ In the C++Sparse directory, run:
 
 ```bash
 cmake -S . -B build  # -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
-cmake --build build
+cmake --build build  # `-j8` for parallel build
 cmake --install build
 cd python
 pip install .
@@ -37,6 +37,12 @@ To run the python unit tests, run:
 
 ```bash
 pytest
+```
+
+To run the C++ demos, run:
+
+```bash
+make run_demos
 ```
 
 ## Usage

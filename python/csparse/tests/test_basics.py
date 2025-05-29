@@ -10,17 +10,15 @@ Test basic COOMatrix and CSCMatrix interface.
 # =============================================================================
 
 import datetime
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import re
 import requests
-import scipy.linalg as la
 import tarfile
 
+from dataclasses import dataclass
 from scipy import sparse
 from scipy.io import loadmat, hb_read, mmread
-from scipy.sparse import linalg as spla
 
 from pathlib import Path
 
@@ -54,6 +52,19 @@ def download_file(url, path):
         raise e
 
 
+@dataclass(frozen=True)
+class MatrixProblem:
+    name:    str = None
+    title:   str = None
+    A:       sparse.sparray = None
+    id:      int = None
+    date:    int = None
+    author:  str = None
+    ed:      str = None
+    kind:    str = None
+    notes:   str = None
+
+
 def parse_header(path):
     r"""Parse the header of a SuiteSparse matrix file.
 
@@ -72,6 +83,11 @@ def parse_header(path):
         % ed: A. Curtis, I. Duff, J. Reid
         % fields: title A name id date author ed kind
         % kind: least squares problem
+        %-------------------------------------------------------------------------------
+        % notes:
+        % Brute force disjoint product matrices in tree algebra on n nodes, Nicolas Thiery
+        % From Jean-Guillaume Dumas' Sparse Integer Matrix Collection,
+        % ...
         %-------------------------------------------------------------------------------
         219 85 438
         1 1
@@ -93,27 +109,27 @@ def parse_header(path):
 
     Returns
     -------
-    MatrixMetadata
-        An object containing the parsed metadata. The fields are:
+    dict
+        A dictionary containing the parsed metadata. The fields are:
 
-        name : str, optional
+        name : str
             The name of the matrix.
-        title : str, optional
+        title : str
             A descriptive title of the matrix.
-        id : int, optional
+        id : int
             The unique identifier of the matrix.
-        date : str, optional
-            The date the matrix was created or last modified.
-        author : str, optional
+        date : int
+            The year the matrix was created or last modified.
+        author : str
             The author of the matrix or the data.
-        ed : str, optional
+        ed : str
             Information about the editors or sources.
-        kind : str, optional
+        kind : str
             The kind of problem from which the matrix arises ('least squares
             problem', 'structural mechanics', etc.)
         notes : str, optional
             Explanatory notes about the matrix.
-    """ 
+    """
     if not Path(path).is_file():
         raise FileNotFoundError(f"File not found: {path}")
 
@@ -233,18 +249,18 @@ if __name__ == "__main__":
         # Read the rest of the CSV into a DataFrame (see 'ssgetpy/csvindex.py`)
         columns = [
             'group',
-		    'name',
-		    'nrows',
-		    'ncols',
-		    'nnz',
-		    'is_real',
-		    'is_logical',
+            'name',
+            'nrows',
+            'ncols',
+            'nnz',
+            'is_real',
+            'is_logical',
             'is_2d3d',
-		    'is_spd',
-		    'pattern_symmmetry',
-		    'numerical_symmetry',
-		    'kind',
-		    'pattern_entries'
+            'is_spd',
+            'pattern_symmmetry',
+            'numerical_symmetry',
+            'kind',
+            'pattern_entries'
         ]
 
         df = pd.read_csv(f, header=None, names=columns)
@@ -298,8 +314,8 @@ if __name__ == "__main__":
     #         Test download process
     # -------------------------------------------------------------------------
     # TODO refactor into a function to loop over all matrices
-    # k = 6  # ash219
-    k = 2137  # JGD_Kocay/Trec4
+    k = 6  # ash219
+    # k = 2137  # JGD_Kocay/Trec4
     url = df.iloc[k]['url']
     local_tar_path = df.iloc[k]['local_tar_path']
 
@@ -323,10 +339,12 @@ if __name__ == "__main__":
 
     if fmt == 'MM':
         A = mmread(matrix_file)
-        problem = parse_header(matrix_file)
+        metadata = parse_header(matrix_file)
+        problem = MatrixProblem(**dict(A=A, **metadata))
     elif fmt == 'RB':
         A = hb_read(matrix_file)
-        problem = parse_header(matrix_file.with_suffix('.txt'))
+        metadata = parse_header(matrix_file.with_suffix('.txt'))
+        problem = MatrixProblem(**dict(A=A, **metadata))
     elif fmt.lower() == 'mat':
         mat = loadmat(matrix_file)
         problem = mat['Problem'][0][0]

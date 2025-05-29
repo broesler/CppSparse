@@ -13,6 +13,7 @@ import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import re
 import requests
 import scipy.linalg as la
 import tarfile
@@ -51,6 +52,124 @@ def download_file(url, path):
     except requests.exceptions.RequestException as e:
         print(f"Error downloading {url}: {e}")
         raise e
+
+
+def parse_header(path):
+    r"""Parse the header of a SuiteSparse matrix file.
+
+    The top of a MatrixMarket file will look like this:
+
+    .. code::
+        %%MatrixMarket matrix coordinate pattern general
+        %-------------------------------------------------------------------------------
+        % UF Sparse Matrix Collection, Tim Davis
+        % http://www.cise.ufl.edu/research/sparse/matrices/HB/ash219
+        % name: HB/ash219
+        % [UNSYMMETRIC OVERDETERMINED PATTERN OF HOLLAND SURVEY. ASHKENAZI,1974]
+        % id: 7
+        % date: 1974
+        % author: V. Askenazi
+        % ed: A. Curtis, I. Duff, J. Reid
+        % fields: title A name id date author ed kind
+        % kind: least squares problem
+        %-------------------------------------------------------------------------------
+        219 85 438
+        1 1
+        2 1
+        3 1
+        ...
+
+    The header of a Rutherford-Boeing metadata file will be the same, but
+    without the first line.
+
+    This function only parses the leading comment lines for the pattern of
+    "key: value", with the exception of the "title" that is in square brackets.
+
+    Parameters
+    ----------
+    path : str or Path
+        Path to the matrix file. It can be a MatrixMarket (.mtx) or
+        Rutherford-Boeing metadata (.txt) file.
+
+    Returns
+    -------
+    MatrixMetadata
+        An object containing the parsed metadata. The fields are:
+
+        name : str, optional
+            The name of the matrix.
+        title : str, optional
+            A descriptive title of the matrix.
+        id : int, optional
+            The unique identifier of the matrix.
+        date : str, optional
+            The date the matrix was created or last modified.
+        author : str, optional
+            The author of the matrix or the data.
+        ed : str, optional
+            Information about the editors or sources.
+        kind : str, optional
+            The kind of problem from which the matrix arises ('least squares
+            problem', 'structural mechanics', etc.)
+        notes : str, optional
+            Explanatory notes about the matrix.
+    """ 
+    if not Path(path).is_file():
+        raise FileNotFoundError(f"File not found: {path}")
+
+    metadata = {}
+
+    # Get the header
+    header_lines = []
+
+    with open(path, 'r') as fp:
+        # Read the header lines until we find a non-comment line
+        for line in fp:
+            if not line.startswith('%'):
+                break
+            header_lines.append(line.strip())
+
+    has_notes = False
+    notes_line = None
+
+    for i, line in enumerate(header_lines):
+        # Parse the header line
+        # Title is the odd one out in square brackets
+        title_match = re.search(r'\[([^\]]+)\]', line)
+        if title_match:
+            metadata['title'] = title_match.group(1).strip()
+            continue
+
+        # Match the other key: value pairs
+        g = re.match(r'^%\s*([^:]+):(.*)', line)
+        if g:
+            key = g.group(1).strip().lower()
+            value = g.group(2).strip()
+
+            if key == 'http' or key == 'fields':
+                continue
+            elif key == 'id' or key == 'date':
+                # Convert id to int and date (year) to int
+                try:
+                    value = int(value)
+                except ValueError:
+                    pass
+            elif key == 'notes':
+                has_notes = True
+                notes_line = i + 1  # Store the line number for notes
+                break
+
+            # Add the data to the output struct
+            metadata[key] = value
+
+    if has_notes:
+        # Read all of the notes into one string
+        notes = '\n'.join([line.split('%', 1)[1].lstrip()
+                           for line in header_lines[notes_line:]
+                           if not line.startswith('%---')])
+        metadata['notes'] = notes
+
+    return metadata
 
 
 if __name__ == "__main__":
@@ -138,7 +257,7 @@ if __name__ == "__main__":
     assert df['name'].equals(df_index['Name']), "Names do not match"
 
     # Create the matrix url
-    fmt = 'mat'  # 'RB' or 'mat' (or 'MAT')
+    fmt = 'MM'  # 'RB' or 'mat' (or 'MAT')
 
     if fmt in ['MM', 'RB']:
         ext = '.tar.gz'
@@ -167,14 +286,11 @@ if __name__ == "__main__":
     mat_ext = '.mtx' if fmt == 'MM' else ('.rb' if fmt == 'RB' else '.mat')
     df['local_filename'] = df.apply(
         lambda x: (
-            (
-                x['local_tar_path'].parent /
-                x['name'] /  # add extra directory for MM and RB
-                x['name']
-            ).with_suffix(mat_ext)
+            # add extra directory for MM and RB tar files
+            (x['local_tar_path'].parent / x['name'] / x['name'])
             if fmt in ['MM', 'RB']
-            else x['local_tar_path'].with_suffix(mat_ext)
-        ),
+            else x['local_tar_path']
+        ).with_suffix(mat_ext),
         axis=1
     )
 
@@ -182,7 +298,8 @@ if __name__ == "__main__":
     #         Test download process
     # -------------------------------------------------------------------------
     # TODO refactor into a function to loop over all matrices
-    k = 6  # ash219
+    # k = 6  # ash219
+    k = 2137  # JGD_Kocay/Trec4
     url = df.iloc[k]['url']
     local_tar_path = df.iloc[k]['local_tar_path']
 
@@ -191,28 +308,29 @@ if __name__ == "__main__":
 
     extract = True
 
-    if extract and fmt in ['MM', 'RB']:
+    # Load the actual matrix
+    matrix_file = df.iloc[k]['local_filename']
+
+    if fmt in ['MM', 'RB'] and extract and not matrix_file.exists():
         with tarfile.open(local_tar_path, 'r:gz') as tar:
             tar.extractall(path=local_tar_path.parent)
             print(f"Extracted {local_tar_path} to {local_tar_path.parent}")
 
-    # Load the actual matrix
-    matrix_file = df.iloc[k]['local_filename']
-
-    # TODO load the "problem" metadata
+    # TODO load the "problem" metadata into a single object
     # It comes pre-loaded for the .mat file, but we'll have to parse the header
     # of the MatrixMarket files, and the associated *.txt file for the
     # Rutherford-Boeing files. Both fortunately have the same format.
 
     if fmt == 'MM':
         A = mmread(matrix_file)
+        problem = parse_header(matrix_file)
     elif fmt == 'RB':
         A = hb_read(matrix_file)
+        problem = parse_header(matrix_file.with_suffix('.txt'))
     elif fmt.lower() == 'mat':
         mat = loadmat(matrix_file)
         problem = mat['Problem'][0][0]
         A = problem['A']
-
 
     # -------------------------------------------------------------------------
     #         Get the list of the 100 smallest SuiteSparse matrices

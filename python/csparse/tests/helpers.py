@@ -15,6 +15,7 @@ import numpy as np
 import re
 import requests
 import warnings
+import tarfile
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -365,7 +366,7 @@ def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
         The group name of the matrix.
     name : str
         The name or a pattern matching the name of the matrix.
-    fmt : str in {'MM', 'RB', 'mat', 'MAT'}, optional
+    fmt : str in {'MM', 'RB', 'mat'}, optional
         The format of the matrix file to return. Defaults to 'mat'.
 
     Returns
@@ -388,21 +389,42 @@ def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
             warnings.warn("If `mat_id` is specified, "
                           "`group` and `name` are ignored.")
 
-        # Select by ID
-        row = index[index['id'] == int(mat_id)]
-        if row.empty:
-            raise ValueError(f"No matrix found with ID '{mat_id}'")
-
+        row = index.set_index('id').loc[mat_id]
     elif group is not None and name is not None:
-        row = index[index['Group'] == group & index['Name'] == name]
-        if row.empty:
-            raise ValueError(f"No matrix found '{group}/{name}'")
+        row = index.set_index(['Group', 'Name']).loc[group, name]
 
-    # Assert we have exactly one row, and convert it to a series
-    if len(row) != 1:
-        raise ValueError(f"Expected exactly one matrix, but found {len(row)}")
+    return get_ss_problem_from_row(row, fmt=fmt)
 
-    row = row.iloc[0]  # Convert to Series
+
+def get_ss_problem_from_row(row, fmt='mat'):
+    """Get a SuiteSparse matrix problem from a DataFrame row.
+
+    This function is useful for iterating over rows in the SuiteSparse index,
+    typically after filtering to a desired subset.
+
+    .. code::
+        for index, row in df.iterrows():
+            problem = get_ss_problem_from_row(row, fmt='mat')
+            A = problem.A
+            # ... operate on the matrix ...
+
+    It skips the checks and re-indexing used by `get_ss_problem`, so it is
+    faster when iterating.
+
+    Parameters
+    ----------
+    row : Series
+        A row from the SuiteSparse index DataFrame containing the matrix.
+    fmt : str in {'MM', 'RB', 'mat'}, optional
+        The format of the matrix file to return. Defaults to 'mat'.
+
+    Returns
+    -------
+    MatrixProblem
+        The matrix problem instance containing the matrix and its metadata.
+    """
+    if fmt not in ['MM', 'RB', 'mat']:
+        raise ValueError("Format must be one of 'MM', 'RB', 'mat'.")
 
     # Get the download path and URL
     has_tar = fmt in ['MM', 'RB']
@@ -437,7 +459,6 @@ def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
         local_tar_path.unlink()
 
     return load_problem(local_matrix_file)
-
 
 
 # =============================================================================

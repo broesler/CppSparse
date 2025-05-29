@@ -196,6 +196,7 @@ class MatrixProblem:
     name:    str = None
     title:   str = None
     A:       sparse.sparray = None
+    b:       np.ndarray = None
     id:      int = None
     date:    int = None
     author:  str = None
@@ -289,7 +290,7 @@ def parse_header(path):
             key = g.group(1).strip().lower()
             value = g.group(2).strip()
 
-            if key == 'http' or key == 'fields':
+            if key.startswith('http') or key == 'fields':
                 continue
             elif key == 'id' or key == 'date':
                 # Convert id to int and date (year) to int
@@ -333,24 +334,45 @@ def load_problem(matrix_path):
 
     if fmt == '.mtx':
         A = mmread(matrix_path)
+        rhs_path = matrix_path.with_stem(matrix_path.stem + '_b')
+        b = mmread(rhs_path) if rhs_path.exists() else None
         metadata = parse_header(matrix_path)
     elif fmt == '.rb':
-        A = hb_read(matrix_path)
+        try:
+            A = hb_read(matrix_path)
+        except ValueError as e:
+            print(f"RB error: {e}")
+            raise NotImplementedError(e)
+
+        # RHS is in MatrixMarket format
+        rhs_path = (
+            matrix_path
+            .with_stem(matrix_path.stem + '_b')
+            .with_suffix('.mtx')
+        )
+        b = mmread(rhs_path) if rhs_path.exists() else None
+
         metadata = parse_header(matrix_path.with_suffix('.txt'))
     elif fmt == '.mat':
-        mat = loadmat(matrix_path)
+        try:
+            mat = loadmat(matrix_path)
+        except NotImplementedError as e:
+            # FIXME scipy.io.loadmat does not support v7.3+ files (only up to
+            # 7.2) Use the HDF5 interface to load these files.
+            raise e
         problem_mat = mat['Problem'][0][0]
         A = problem_mat['A']
+        b = problem_mat['b'] if 'b' in problem_mat.dtype.names else None
         # Metadata is a structured numpy array
         metadata = {k: problem_mat[k].flatten().item()
                     for k in problem_mat.dtype.names
-                    if k not in ['A', 'notes']}
+                    if k not in ['A', 'b', 'notes']}
         if 'notes' in problem_mat.dtype.names:
             metadata['notes'] = '\n'.join(problem_mat['notes'].tolist())
     else:
         raise ValueError(f"Unknown format: {fmt}")
 
-    return MatrixProblem(A=A, **metadata)
+    return MatrixProblem(A=A, b=b, **metadata)
 
 
 def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):

@@ -355,24 +355,35 @@ def load_problem(matrix_path):
         metadata = parse_header(matrix_path.with_suffix('.txt'))
     elif fmt == '.mat':
         try:
-            mat = loadmat(matrix_path)
+            mat = loadmat(
+                matrix_path,
+                squeeze_me=True,
+                spmatrix=False    # return coo_array instead of coo_matrix
+            )
         except NotImplementedError as e:
             # FIXME scipy.io.loadmat does not support v7.3+ files (only up to
             # 7.2) Use the HDF5 interface to load these files.
             raise e
-        problem_mat = mat['Problem'][0][0]
-        A = problem_mat['A']
-        b = problem_mat['b'] if 'b' in problem_mat.dtype.names else None
-        # Metadata is a structured numpy array
-        metadata = {k: problem_mat[k].flatten().item()
-                    for k in problem_mat.dtype.names
-                    if k not in ['A', 'b', 'notes']}
+
+        problem_mat = mat['Problem']
+
+        # problem_mat is a structured numpy array of arrays, so get the
+        # individual items as a dictionary
+        data = {
+            k: problem_mat[k].item()
+            for k in problem_mat.dtype.names
+            if k != 'notes'
+        }
+
+        # notes is a multi-line string (aka 2D character array)
         if 'notes' in problem_mat.dtype.names:
-            metadata['notes'] = '\n'.join(problem_mat['notes'].tolist())
+            data['notes'] = '\n'.join(
+                [x.rstrip() for x in problem_mat['notes'].tolist()]
+            )
     else:
         raise ValueError(f"Unknown format: {fmt}")
 
-    return MatrixProblem(A=A, b=b, **metadata)
+    return MatrixProblem(**data)
 
 
 def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):

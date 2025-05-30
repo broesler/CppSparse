@@ -179,6 +179,9 @@ class MatrixProblem:
         A descriptive title of the matrix.
     A : sparse.sparray
         The sparse matrix in any subclass of `scipy.sparray`.
+    Zeros : sparse.sparray
+        A sparse matrix in any subclass of `scipy.sparray`. This matrix
+        contains data values of "1" representing explicit zero entries in `A`.
     id : int
         The unique identifier of the matrix.
     date : int
@@ -196,6 +199,7 @@ class MatrixProblem:
     name:    str = None
     title:   str = None
     A:       sparse.sparray = None
+    Zeros:   sparse.sparray = None
     b:       np.ndarray = None
     id:      int = None
     date:    int = None

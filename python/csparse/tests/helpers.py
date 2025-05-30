@@ -412,8 +412,11 @@ def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
                           "`group` and `name` are ignored.")
 
         row = index.set_index('id').loc[mat_id]
+        row['id'] = mat_id
     elif group is not None and name is not None:
         row = index.set_index(['Group', 'Name']).loc[group, name]
+        row['Group'] = group
+        row['Name'] = name
 
     return get_ss_problem_from_row(row, fmt=fmt)
 

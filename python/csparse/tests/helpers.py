@@ -10,6 +10,7 @@ Helper functions for the C++Sparse python tests.
 # =============================================================================
 
 # import datetime
+import h5py
 import pandas as pd
 import numpy as np
 import re
@@ -316,6 +317,36 @@ def parse_header(path):
     return metadata
 
 
+def loadhdf5(path):
+    """Load a MATLAB v7.3+ file using the HDF5 interface.
+
+    Parameters
+    ----------
+    path : str or Path
+        The path to the MATLAB file.
+
+    Returns
+    -------
+    result : dict
+        A dictionary containing the loaded data.
+    """
+    data = {}
+
+    with h5py.File(path, 'r') as fp:
+        for k in fp.keys():
+            item = data[k]
+
+            if isinstance(item, h5py.Dataset):
+                data[k] = item[()]  # convert to numpy array
+            elif isinstance(item, h5py.Group):
+                data[k] = {sub_k: sub_item[()]
+                           for sub_k, sub_item in item.items()}
+            else:
+                print(f"Unknown item type for key {k}: {type(item)}")
+
+    return data
+
+
 def load_problem(matrix_path):
     """Load a SuiteSparse matrix problem from a file.
 
@@ -357,6 +388,7 @@ def load_problem(matrix_path):
         try:
             mat = loadmat(matrix_path)
         except NotImplementedError as e:
+<<<<<<< Updated upstream
             # FIXME scipy.io.loadmat does not support v7.3+ files (only up to
             # 7.2) Use the HDF5 interface to load these files.
             raise e
@@ -367,6 +399,39 @@ def load_problem(matrix_path):
         metadata = {k: problem_mat[k].flatten().item()
                     for k in problem_mat.dtype.names
                     if k not in ['A', 'b', 'notes']}
+||||||| Stash base
+            # FIXME scipy.io.loadmat does not support v7.3+ files (only up to
+            # 7.2) Use the HDF5 interface to load these files.
+            raise e
+
+        problem_mat = mat['Problem']
+
+        # problem_mat is a structured numpy array of arrays, so get the
+        # individual items as a dictionary
+        data = {
+            k: problem_mat[k].item()
+            for k in problem_mat.dtype.names
+            if k != 'notes'
+        }
+
+        # notes is a multi-line string (aka 2D character array)
+=======
+            # scipy.io.loadmat does not support v7.3+ files (only up to 7.2)
+            # Use the HDF5 interface to load these files.
+            mat = loadhdf5(matrix_path)
+
+        problem_mat = mat['Problem']
+
+        # problem_mat is a structured numpy array of arrays, so get the
+        # individual items as a dictionary
+        data = {
+            k: problem_mat[k].item()
+            for k in problem_mat.dtype.names
+            if k != 'notes'
+        }
+
+        # notes is a multi-line string (aka 2D character array)
+>>>>>>> Stashed changes
         if 'notes' in problem_mat.dtype.names:
             metadata['notes'] = '\n'.join(problem_mat['notes'].tolist())
     else:
@@ -418,7 +483,7 @@ def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
     return get_ss_problem_from_row(row, fmt=fmt)
 
 
-def get_ss_problem_from_row(row, fmt='mat'):
+def get_path_from_row(row, fmt='mat'):
     """Get a SuiteSparse matrix problem from a DataFrame row.
 
     This function is useful for iterating over rows in the SuiteSparse index,
@@ -480,7 +545,17 @@ def get_ss_problem_from_row(row, fmt='mat'):
         # Remove the tar file after extraction
         local_tar_path.unlink()
 
-    return load_problem(local_matrix_file)
+    return local_matrix_file
+
+
+def get_ss_problem_from_row(row, fmt='mat'):
+    matrix_file = get_path_from_row(row, fmt=fmt)
+    return load_problem(matrix_file)
+
+
+def get_ss_problem_from_file(matrix_file):
+    return load_problem(matrix_file)
+
 
 
 # =============================================================================

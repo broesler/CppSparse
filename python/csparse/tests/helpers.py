@@ -500,6 +500,36 @@ def get_ss_problem_from_row(row, fmt='mat'):
 
     return load_problem(local_matrix_file)
 
+def is_real(A):
+    """Check if a sparse matrix is real-valued.
+
+    Parameters
+    ----------
+    A : sparse.sparray
+        The sparse matrix to check.
+
+    Returns
+    -------
+    bool
+        True if the matrix is real-valued, False otherwise.
+    """
+    return np.issubdtype(A.dtype, np.floating)
+
+
+def is_complex(A):
+    """Check if a sparse matrix is complex-valued.
+
+    Parameters
+    ----------
+    A : sparse.sparray
+        The sparse matrix to check.
+
+    Returns
+    -------
+    bool
+        True if the matrix is complex-valued, False otherwise.
+    """
+    return np.issubdtype(A.dtype, np.complexfloating)
 
 # =============================================================================
 # =============================================================================

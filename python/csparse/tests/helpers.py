@@ -227,21 +227,12 @@ class MatrixProblem:
 
     Attributes
     ----------
+    id : int
+        The unique identifier of the matrix.
     name : str
         The name of the matrix.
     title : str
         A descriptive title of the matrix.
-    A : sparse.sparray
-        The sparse matrix in any subclass of `scipy.sparray`.
-    x : np.ndarray
-        The solution vector or matrix, if available.
-    b : sparse.sparray
-        A right-hand side vector or matrix, if available.
-    Zeros : sparse.sparray
-        A sparse matrix representing the locations of explicit zeros in `A`.
-        The values in `Zeros` are all 1.0 so that sparse operations work.
-    id : int
-        The unique identifier of the matrix.
     date : int
         The year the matrix was created or last modified.
     author : str
@@ -251,29 +242,54 @@ class MatrixProblem:
     kind : str
         The kind of problem from which the matrix arises ('least squares
         problem', 'structural mechanics', etc.)
-    notes : str, optional
-        Explanatory notes about the matrix.
+    A : sparse.sparray
+        The sparse matrix in any subclass of `scipy.sparray`.
+    Zeros : sparse.sparray
+        A sparse matrix representing the locations of explicit zeros in `A`.
+        The values in `Zeros` are all 1.0 so that sparse operations work.
+    x : np.ndarray
+        The solution vector or matrix, if available.
+    b : sparse.sparray
+        A right-hand side vector or matrix, if available.
     aux : dict, optional
         Auxiliary data that may include additional metadata or information
+    notes : str, optional
+        Explanatory notes about the matrix.
     """
+    id:      int = None
     name:    str = None
     title:   str = None
-    A:       sparse.sparray = None
-    x:       np.ndarray = None  # TODO confirm
-    b:       np.ndarray = None
-    Zeros:   sparse.sparray = None
-    id:      int = None
     date:    int = None
     author:  str = None
     ed:      str = None
     kind:    str = None
-    notes:   str = None
+    A:       sparse.sparray = None
+    Zeros:   sparse.sparray = None
+    x:       np.ndarray = None  # TODO confirm
+    b:       np.ndarray = None
     aux:     dict = None
+    notes:   str = None
 
     def __str__(self):
-        items = [f"  {key}: {value}" if key != 'A'
-                 else f"  {key}: {value.__repr__()}"
-                 for key, value in self.__dict__.items()]
+        items = []
+
+        for key, value in self.__dict__.items():
+            if value is None:
+                item_repr = "None"
+                continue
+
+            if key in ['A', 'Zeros']:
+                item_repr = repr(value)
+            elif key in ['x', 'b']:
+                item_repr = f"{value.shape} ndarray of dtype '{value.dtype}'"
+            elif key == 'aux':
+                # TODO recursively format the aux dict
+                item_repr = f"dict with keys {set(value.keys())}"
+            else:
+                item_repr = str(value)
+
+            items.append(f"  {key}: {item_repr}")
+
         return 'Matrix Problem:\n' + ('\n'.join(items))
 
 

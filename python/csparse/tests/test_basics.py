@@ -11,7 +11,7 @@ Test basic COOMatrix and CSCMatrix interface.
 
 import numpy as np
 import h5py
-import mat73
+
 from pymatreader import read_mat
 
 # from .helpers import generate_random_matrices, generate_suitesparse_matrices
@@ -162,81 +162,11 @@ if __name__ == "__main__":
 
     # problem = get_ss_problem_from_file(matrix_file)
 
-    # -------------------------------------------------------------------------
-    #         Load the matrix using mat73
-    # -------------------------------------------------------------------------
-    mat = mat73.loadmat(matrix_file, use_attrdict=True)
-
     # NOTE the h5py file has two keys {'#refs#', 'Problem'}
     # '#refs#' is a special key used by MATLAB to store references, so we don't
     # touch that one.
     # 'Problem' is a group that contains the actual matrix data and metadata,
     # keys: ['notes', 'author', 'date', 'ed', 'id', 'kind', 'name', 'title']
-
-    # mat73 handles everything fine except the multi-line notes field, which is
-    # stored as a column-major 2D uint16 array. mat73 does not transpose it, so
-    # the characters are all jumbled together in a single line.
-    # We will use h5py to read the file and decode the 'notes' field properly.
-
-    with h5py.File(matrix_file, 'r') as fp:
-        for k in fp.keys():
-            print(f"Processing variable: {k}")
-
-            if k == '#refs#':
-                continue
-
-            item = fp[k]
-
-            if isinstance(item, h5py.Dataset):
-                print(f"Found Dataset: {k}")
-                data = item[()]  # convert to numpy array
-                print(f"    shape: {data.shape},\n"
-                      f"    dtype: {data.dtype}")
-
-                # Check if the dataset is 'notes'
-                if (item.dtype == np.uint16
-                    or 'S' in str(item.dtype)
-                    or 'U' in str(item.dtype)
-                   ):
-                    print('Attempting to convert to string...')
-                    decoded_notes = decode_string_data(data)
-                    print(f"    Decoded notes: {decoded_notes}")
-                else:
-                    print("Data is not string-like, skipping conversion.")
-                    if isinstance(data, np.ndarray):
-                        print(f"    {data.flatten()[:10]}")
-                    else:
-                        print(f"    {data}")
-
-            elif isinstance(item, h5py.Group):
-                # TODO need to run this string decoding logic on *every*
-                # dataset in k == 'Problem', except for 'A' and 'b'
-                # TODO would also need to handle any sparse matrix 'A', or
-                # 'Zeros', which has keys 'data', 'ir', and 'jc'.
-                print(f"Found Group: {k} (likely a MATLAB struct)")
-                print("    Group keys:", list(item.keys()))
-                if 'notes' in item:
-                    print("    Found 'notes' field. Inspecting...")
-                    notes_dataset = item['notes']
-                    if isinstance(notes_dataset, h5py.Dataset):
-                        notes_data = notes_dataset[()]
-                        print(f"    'notes' shape: {notes_dataset.shape}")
-                        print(f"    'notes' dtype: {notes_dataset.dtype}")
-                        decoded_notes = decode_string_data(notes_data)
-                        # print(f"    Decoded notes: {decoded_notes}")
-                    else:
-                        print("    'notes' is not a simple dataset, skipping.")
-                else:
-                    print(f"    No 'notes' field found in group {k}.")
-            else:
-                print(f"Unknown item type for key {k}: {type(item)}")
-
-    mat['Problem']['notes'] = decoded_notes
-
-    problem = mat['Problem']
-
-    print('---------- mat73:')
-    print(problem)
 
     # -------------------------------------------------------------------------
     #         Load the matrix using read_mat

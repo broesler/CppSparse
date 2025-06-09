@@ -92,6 +92,59 @@ def get_ss_index():
     df['id'] = df.index + 1
     df = df.loc[:, np.roll(df.columns, 1)]
 
+    # TODO convert data types
+    # [11]>>> df.info()
+    # <class 'pandas.core.frame.DataFrame'>
+    # RangeIndex: 2904 entries, 0 to 2903
+    # Data columns (total 31 columns):
+    # #   Column              Non-Null Count  Dtype
+    # ---  ------              --------------  -----
+    # 0   id                  2904 non-null   int64
+    # 1   Group               2904 non-null   object
+    # 2   Name                2904 non-null   object
+    # 3   nrows               2904 non-null   int32
+    # 4   ncols               2904 non-null   int32
+    # 5   nnz                 2904 non-null   float64
+    # 6   nzero               2904 non-null   int32
+    # 7   pattern_symmetry    2904 non-null   float64
+    # 8   numerical_symmetry  2904 non-null   float64
+    # 9   isBinary            2904 non-null   uint8
+    # 10  isReal              2904 non-null   uint8
+    # 11  nnzdiag             2904 non-null   int32
+    # 12  posdef              2904 non-null   uint8
+    # 13  amd_lnz             2904 non-null   float64
+    # 14  amd_flops           2904 non-null   float64
+    # 15  amd_vnz             2904 non-null   float64
+    # 16  amd_rnz             2904 non-null   float64
+    # 17  nblocks             2904 non-null   int32
+    # 18  sprank              2904 non-null   int32
+    # 19  RBtype              2904 non-null   object
+    # 20  cholcand            2904 non-null   uint8
+    # 21  ncc                 2904 non-null   int32
+    # 22  isND                2904 non-null   uint8
+    # 23  isGraph             2904 non-null   uint8
+    # 24  lowerbandwidth      2904 non-null   int32
+    # 25  upperbandwidth      2904 non-null   int32
+    # 26  rcm_lowerbandwidth  2904 non-null   int32
+    # 27  rcm_upperbandwidth  2904 non-null   int32
+    # 28  xmin                2904 non-null   complex128
+    # 29  xmax                2904 non-null   complex128
+    # 30  nentries            2904 non-null   float64
+    # dtypes: complex128(2), float64(8), int32(11), int64(1), object(3), uint8(6)
+    # memory usage: 504.9+ KB
+    #
+    # uint8 -> bool
+    # int32 -> int
+    # float64 -> float
+    # complex128 -> complex
+    # object -> str
+    #
+    # amd_* -> int
+    # nentries -> int
+
+    # TODO include columns like 'has_b', 'has_notes', etc. for unique fields,
+    # so that we can test various functions with filters.
+
     return df
 
 
@@ -180,9 +233,13 @@ class MatrixProblem:
         A descriptive title of the matrix.
     A : sparse.sparray
         The sparse matrix in any subclass of `scipy.sparray`.
+    x : np.ndarray
+        The solution vector or matrix, if available.
+    b : sparse.sparray
+        A right-hand side vector or matrix, if available.
     Zeros : sparse.sparray
-        A sparse matrix in any subclass of `scipy.sparray`. This matrix
-        contains data values of "1" representing explicit zero entries in `A`.
+        A sparse matrix representing the locations of explicit zeros in `A`.
+        The values in `Zeros` are all 1.0 so that sparse operations work.
     id : int
         The unique identifier of the matrix.
     date : int
@@ -196,18 +253,22 @@ class MatrixProblem:
         problem', 'structural mechanics', etc.)
     notes : str, optional
         Explanatory notes about the matrix.
+    aux : dict, optional
+        Auxiliary data that may include additional metadata or information
     """
     name:    str = None
     title:   str = None
     A:       sparse.sparray = None
-    Zeros:   sparse.sparray = None
+    x:       np.ndarray = None  # TODO confirm
     b:       np.ndarray = None
+    Zeros:   sparse.sparray = None
     id:      int = None
     date:    int = None
     author:  str = None
     ed:      str = None
     kind:    str = None
     notes:   str = None
+    aux:     dict = None
 
     def __str__(self):
         items = [f"  {key}: {value}" if key != 'A'

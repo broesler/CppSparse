@@ -271,26 +271,31 @@ class MatrixProblem:
     notes:   str = None
 
     def __str__(self):
-        items = []
-
-        for key, value in self.__dict__.items():
+        def format_value(value):
+            """Format the value for display."""
             if value is None:
-                item_repr = "None"
-                continue
-
-            if key in ['A', 'Zeros']:
-                item_repr = repr(value)
-            elif key in ['x', 'b']:
-                item_repr = f"{value.shape} ndarray of dtype '{value.dtype}'"
-            elif key == 'aux':
-                # TODO recursively format the aux dict
-                item_repr = f"dict with keys {set(value.keys())}"
+                return "None"
+            elif isinstance(value, sparse.sparray):
+                return repr(value)
+            elif isinstance(value, np.ndarray):
+                return f"{value.shape} ndarray of dtype '{value.dtype}'"
+            elif isinstance(value, dict):
+                # recursively format the aux dict
+                return ('{\n' + ', \n'.join(
+                    f"    {k}: {format_value(v)}" for k, v in value.items()
+                ) + '\n}')
             else:
-                item_repr = str(value)
+                return str(value)
 
-            items.append(f"  {key}: {item_repr}")
+        items = [
+            f"{key}: {format_value(value)}"
+            for key, value in self.__dict__.items()
+        ]
 
-        return 'Matrix Problem:\n' + ('\n'.join(items))
+        return '\n'.join(items)
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__}:\n{self.__str__()}>"
 
 
 def parse_header(path):

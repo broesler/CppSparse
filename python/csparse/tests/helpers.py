@@ -382,6 +382,73 @@ def parse_header(path):
     return metadata
 
 
+def load_matfile_ltv73(matrix_path):
+    """Load a MAT-file with version < 7.3 using the scipy.io.loadmat.
+
+    Parameters
+    ----------
+    matrix_path : str or Path
+        Path to the MATLAB .mat file.
+
+    Returns
+    -------
+    data : dict
+        A dictionary containing the parsed data from the MAT-file.
+    """
+    mat = loadmat(
+        matrix_path,
+        squeeze_me=True,
+        spmatrix=False    # return coo_array instead of coo_matrix
+    )
+
+    # `mat` will be a dictionary-like structure with MATLAB variables
+    problem_mat = mat['Problem']
+
+    # problem_mat is a structured numpy array of arrays, so get the
+    # individual items as a dictionary
+    data = {
+        k: problem_mat[k].item()
+        for k in problem_mat.dtype.names
+        if k not in ['aux', 'notes']
+    }
+
+    # aux is another structured array, so convert it to a dictionary
+    if 'aux' in problem_mat.dtype.names:
+        aux = problem_mat['aux'].item()
+        data['aux'] = {k: aux[k].item() for k in aux.dtype.names}
+
+    # notes is a multi-line string (aka 2D character array)
+    if 'notes' in problem_mat.dtype.names:
+        data['notes'] = '\n'.join(problem_mat['notes'].tolist())
+
+    return data
+
+
+def load_matfile_gev73(matrix_path):
+    """Load a MAT-file with version >= 7.3 using the scipy.io.loadmat.
+
+    Parameters
+    ----------
+    matrix_path : str or Path
+        Path to the MATLAB .mat file.
+
+    Returns
+    -------
+    data : dict
+        A dictionary containing the parsed data from the MAT-file.
+    """
+    # Use the HDF5 interface
+    mat = read_mat(matrix_path)
+
+    data = mat['Problem']
+
+    # notes is a multi-line string (aka 2D character array)
+    if 'notes' in data:
+        data['notes'] = '\n'.join([x.rstrip() for x in data['notes']])
+
+    return data
+
+
 def load_problem(matrix_path):
     """Load a SuiteSparse matrix problem from a file.
 
@@ -427,39 +494,10 @@ def load_problem(matrix_path):
 
     elif fmt == '.mat':
         # NOTE scipy.io.loadmat does not support v7.3+ MAT-files
-        # Use the HDF5 interface to load these files.
         try:
-            # Try to load a < v7.3 MAT-file using the scipy.io.loadmat
-            mat = loadmat(
-                matrix_path,
-                squeeze_me=True,
-                spmatrix=False    # return coo_array instead of coo_matrix
-            )
-
-            # `mat` will be a dictionary-like structure with MATLAB variables
-            problem_mat = mat['Problem']
-
-            # problem_mat is a structured numpy array of arrays, so get the
-            # individual items as a dictionary
-            data = {
-                k: problem_mat[k].item()
-                for k in problem_mat.dtype.names
-                if k != 'notes'
-            }
-
-            # notes is a multi-line string (aka 2D character array)
-            if 'notes' in problem_mat.dtype.names:
-                data['notes'] = '\n'.join(problem_mat['notes'].tolist())
-
+            data = load_matfile_ltv73(matrix_path)
         except NotImplementedError as e:
-            # Use the HDF5 interface
-            mat = read_mat(matrix_path)
-
-            data = mat['Problem']
-
-            # notes is a multi-line string (aka 2D character array)
-            if 'notes' in data:
-                data['notes'] = '\n'.join([x.rstrip() for x in data['notes']])
+            data = load_matfile_gev73(matrix_path)
 
         return MatrixProblem(**data)
 

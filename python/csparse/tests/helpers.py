@@ -10,7 +10,6 @@ Helper functions for the C++Sparse python tests.
 # =============================================================================
 
 # import datetime
-import h5py
 import pandas as pd
 import numpy as np
 import re
@@ -20,6 +19,7 @@ import tarfile
 
 from dataclasses import dataclass
 from pathlib import Path
+from pymatreader import read_mat
 from scipy import sparse
 from scipy.io import loadmat, hb_read, mmread
 
@@ -317,36 +317,6 @@ def parse_header(path):
     return metadata
 
 
-def loadhdf5(path):
-    """Load a MATLAB v7.3+ file using the HDF5 interface.
-
-    Parameters
-    ----------
-    path : str or Path
-        The path to the MATLAB file.
-
-    Returns
-    -------
-    result : dict
-        A dictionary containing the loaded data.
-    """
-    data = {}
-
-    with h5py.File(path, 'r') as fp:
-        for k in fp.keys():
-            item = data[k]
-
-            if isinstance(item, h5py.Dataset):
-                data[k] = item[()]  # convert to numpy array
-            elif isinstance(item, h5py.Group):
-                data[k] = {sub_k: sub_item[()]
-                           for sub_k, sub_item in item.items()}
-            else:
-                print(f"Unknown item type for key {k}: {type(item)}")
-
-    return data
-
-
 def load_problem(matrix_path):
     """Load a SuiteSparse matrix problem from a file.
 
@@ -368,6 +338,9 @@ def load_problem(matrix_path):
         rhs_path = matrix_path.with_stem(matrix_path.stem + '_b')
         b = mmread(rhs_path) if rhs_path.exists() else None
         metadata = parse_header(matrix_path)
+
+        return MatrixProblem(A=A, b=b, **metadata)
+
     elif fmt == '.rb':
         try:
             A = hb_read(matrix_path)
@@ -388,52 +361,17 @@ def load_problem(matrix_path):
         try:
             mat = loadmat(matrix_path)
         except NotImplementedError as e:
-<<<<<<< Updated upstream
-            # FIXME scipy.io.loadmat does not support v7.3+ files (only up to
-            # 7.2) Use the HDF5 interface to load these files.
-            raise e
-        problem_mat = mat['Problem'][0][0]
-        A = problem_mat['A']
-        b = problem_mat['b'] if 'b' in problem_mat.dtype.names else None
-        # Metadata is a structured numpy array
-        metadata = {k: problem_mat[k].flatten().item()
-                    for k in problem_mat.dtype.names
-                    if k not in ['A', 'b', 'notes']}
-||||||| Stash base
-            # FIXME scipy.io.loadmat does not support v7.3+ files (only up to
-            # 7.2) Use the HDF5 interface to load these files.
-            raise e
+            # Use the HDF5 interface
+            mat = read_mat(matrix_path)
 
-        problem_mat = mat['Problem']
+            data = mat['Problem']
 
-        # problem_mat is a structured numpy array of arrays, so get the
-        # individual items as a dictionary
-        data = {
-            k: problem_mat[k].item()
-            for k in problem_mat.dtype.names
-            if k != 'notes'
-        }
+            # notes is a multi-line string (aka 2D character array)
+            if 'notes' in data:
+                data['notes'] = '\n'.join([x.rstrip() for x in data['notes']])
 
-        # notes is a multi-line string (aka 2D character array)
-=======
-            # scipy.io.loadmat does not support v7.3+ files (only up to 7.2)
-            # Use the HDF5 interface to load these files.
-            mat = loadhdf5(matrix_path)
+        return MatrixProblem(**data)
 
-        problem_mat = mat['Problem']
-
-        # problem_mat is a structured numpy array of arrays, so get the
-        # individual items as a dictionary
-        data = {
-            k: problem_mat[k].item()
-            for k in problem_mat.dtype.names
-            if k != 'notes'
-        }
-
-        # notes is a multi-line string (aka 2D character array)
->>>>>>> Stashed changes
-        if 'notes' in problem_mat.dtype.names:
-            metadata['notes'] = '\n'.join(problem_mat['notes'].tolist())
     else:
         raise ValueError(f"Unknown format: {fmt}")
 

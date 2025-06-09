@@ -19,6 +19,7 @@ import tarfile
 
 from dataclasses import dataclass
 from pathlib import Path
+from pymatreader import read_mat
 from scipy import sparse
 from scipy.io import loadmat, hb_read, mmread
 
@@ -341,6 +342,9 @@ def load_problem(matrix_path):
         rhs_path = matrix_path.with_stem(matrix_path.stem + '_b')
         b = mmread(rhs_path) if rhs_path.exists() else None
         metadata = parse_header(matrix_path)
+
+        return MatrixProblem(A=A, b=b, **metadata)
+
     elif fmt == '.rb':
         try:
             A = hb_read(matrix_path)
@@ -357,37 +361,49 @@ def load_problem(matrix_path):
         b = mmread(rhs_path) if rhs_path.exists() else None
 
         metadata = parse_header(matrix_path.with_suffix('.txt'))
+
+        return MatrixProblem(A=A, b=b, **metadata)
+
     elif fmt == '.mat':
+        # NOTE scipy.io.loadmat does not support v7.3+ MAT-files
+        # Use the HDF5 interface to load these files.
         try:
+            # Try to load a < v7.3 MAT-file using the scipy.io.loadmat
             mat = loadmat(
                 matrix_path,
                 squeeze_me=True,
                 spmatrix=False    # return coo_array instead of coo_matrix
             )
+
+            # `mat` will be a dictionary-like structure with MATLAB variables
+            problem_mat = mat['Problem']
+
+            # problem_mat is a structured numpy array of arrays, so get the
+            # individual items as a dictionary
+            data = {
+                k: problem_mat[k].item()
+                for k in problem_mat.dtype.names
+                if k != 'notes'
+            }
+
+            # notes is a multi-line string (aka 2D character array)
+            if 'notes' in problem_mat.dtype.names:
+                data['notes'] = '\n'.join(problem_mat['notes'].tolist())
+
         except NotImplementedError as e:
-            # FIXME scipy.io.loadmat does not support v7.3+ files (only up to
-            # 7.2) Use the HDF5 interface to load these files.
-            raise e
+            # Use the HDF5 interface
+            mat = read_mat(matrix_path)
 
-        problem_mat = mat['Problem']
+            data = mat['Problem']
 
-        # problem_mat is a structured numpy array of arrays, so get the
-        # individual items as a dictionary
-        data = {
-            k: problem_mat[k].item()
-            for k in problem_mat.dtype.names
-            if k != 'notes'
-        }
+            # notes is a multi-line string (aka 2D character array)
+            if 'notes' in data:
+                data['notes'] = '\n'.join([x.rstrip() for x in data['notes']])
 
-        # notes is a multi-line string (aka 2D character array)
-        if 'notes' in problem_mat.dtype.names:
-            data['notes'] = '\n'.join(
-                [x.rstrip() for x in problem_mat['notes'].tolist()]
-            )
+        return MatrixProblem(**data)
+
     else:
         raise ValueError(f"Unknown format: {fmt}")
-
-    return MatrixProblem(**data)
 
 
 def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
@@ -436,7 +452,7 @@ def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
     return get_ss_problem_from_row(row, fmt=fmt)
 
 
-def get_ss_problem_from_row(row, fmt='mat'):
+def get_path_from_row(row, fmt='mat'):
     """Get a SuiteSparse matrix problem from a DataFrame row.
 
     This function is useful for iterating over rows in the SuiteSparse index,
@@ -498,7 +514,17 @@ def get_ss_problem_from_row(row, fmt='mat'):
         # Remove the tar file after extraction
         local_tar_path.unlink()
 
-    return load_problem(local_matrix_file)
+    return local_matrix_file
+
+
+def get_ss_problem_from_row(row, fmt='mat'):
+    matrix_file = get_path_from_row(row, fmt=fmt)
+    return load_problem(matrix_file)
+
+
+def get_ss_problem_from_file(matrix_file):
+    return load_problem(matrix_file)
+
 
 def is_real(A):
     """Check if a sparse matrix is real-valued.

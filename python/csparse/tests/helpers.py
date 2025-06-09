@@ -357,9 +357,35 @@ def load_problem(matrix_path):
         b = mmread(rhs_path) if rhs_path.exists() else None
 
         metadata = parse_header(matrix_path.with_suffix('.txt'))
+
+        return MatrixProblem(A=A, b=b, **metadata)
+
     elif fmt == '.mat':
+        # NOTE scipy.io.loadmat does not support v7.3+ MAT-files
+        # Use the HDF5 interface to load these files.
         try:
-            mat = loadmat(matrix_path)
+            # Try to load a < v7.3 MAT-file using the scipy.io.loadmat
+            mat = loadmat(
+                matrix_path,
+                squeeze_me=True,
+                spmatrix=False    # return coo_array instead of coo_matrix
+            )
+
+            # `mat` will be a dictionary-like structure with MATLAB variables
+            problem_mat = mat['Problem']
+
+            # problem_mat is a structured numpy array of arrays, so get the
+            # individual items as a dictionary
+            data = {
+                k: problem_mat[k].item()
+                for k in problem_mat.dtype.names
+                if k != 'notes'
+            }
+
+            # notes is a multi-line string (aka 2D character array)
+            if 'notes' in problem_mat.dtype.names:
+                data['notes'] = '\n'.join(problem_mat['notes'].tolist())
+
         except NotImplementedError as e:
             # Use the HDF5 interface
             mat = read_mat(matrix_path)
@@ -374,8 +400,6 @@ def load_problem(matrix_path):
 
     else:
         raise ValueError(f"Unknown format: {fmt}")
-
-    return MatrixProblem(A=A, b=b, **metadata)
 
 
 def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):

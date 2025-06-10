@@ -9,6 +9,8 @@ Helper functions for the C++Sparse python tests.
 """
 # =============================================================================
 
+import pytest
+
 # import datetime
 import pandas as pd
 import numpy as np
@@ -22,6 +24,8 @@ from pathlib import Path
 from pymatreader import read_mat
 from scipy import sparse
 from scipy.io import loadmat, hb_read, mmread
+
+import csparse
 
 # TODO refactor into a package
 # Skip ssgetpy and implement my own using pandas.
@@ -265,7 +269,7 @@ class MatrixProblem:
     kind:    str = None
     A:       sparse.sparray = None
     Zeros:   sparse.sparray = None
-    x:       np.ndarray = None  # TODO confirm
+    x:       np.ndarray = None
     b:       np.ndarray = None
     aux:     dict = None
     notes:   str = None
@@ -463,6 +467,8 @@ def load_matfile_gev73(matrix_path):
 
     data = mat['Problem']
 
+    data['id'] = int(data['id'])
+
     # notes is a multi-line string (aka 2D character array)
     if 'notes' in data:
         data['notes'] = '\n'.join([x.rstrip() for x in data['notes']])
@@ -646,6 +652,43 @@ def get_ss_problem_from_file(matrix_file):
     return load_problem(matrix_file)
 
 
+# -----------------------------------------------------------------------------
+#         Matrix Generators
+# -----------------------------------------------------------------------------
+def generate_suitesparse_matrices(N=100):
+    """Generate a list of SuiteSparse matrices."""
+    df = get_ss_index()
+
+    # Get the list of the N smallest SuiteSparse matrices
+    max_dim = df[['nrows', 'ncols']].max(axis=1)
+    tf = df.loc[max_dim.sort_values().head(N).index]
+
+    for idx, row in tf.iterrows():
+        # print('-------------------')
+        try:
+            problem = get_ss_problem_from_row(row, fmt='mat')
+            print(problem)
+        except NotImplementedError:
+            print(f"Skipping matrix {idx} due to: {e}")
+            continue
+
+        A = problem.A
+
+        # Check if A is real
+        if not is_real(A):
+            print(f"Matrix {problem.id} ({problem.name}) is not real.")
+            continue
+
+        Ac = csparse.csc_from_scipy(A)
+
+        yield pytest.param(problem, A, Ac, 
+                           id=f"{problem.id}::{problem.name}",
+                           marks=pytest.mark.suitesparse)
+
+
+# -----------------------------------------------------------------------------
+#         Matrix Type Checking
+# -----------------------------------------------------------------------------
 def is_real(A):
     """Check if a sparse matrix is real-valued.
 

@@ -9,105 +9,54 @@ Test basic COOMatrix and CSCMatrix interface.
 """
 # =============================================================================
 
-import numpy as np
-import h5py
+import pytest
 
-from pymatreader import read_mat
+import numpy as np
+
+from scipy import linalg as la
 from scipy import sparse
 
-# from .helpers import generate_random_matrices, generate_suitesparse_matrices
-from helpers import (get_ss_index, get_ss_problem, get_path_from_row, #is_real,
-    get_ss_problem_from_file, get_ss_problem_from_row)
-# import csparse
+from .helpers import generate_suitesparse_matrices
+
+import csparse
 
 
-if __name__ == "__main__":
-    df = get_ss_index()
-
-    # -------------------------------------------------------------------------
-    #         Test download process
-    # -------------------------------------------------------------------------
-    # mat_id = 6     # arc130 TODO has 'Zeros'
-    # mat_id = 7     # ash219
-    # mat_id = 2137  # JGD_Kocay/Trec4 has 'notes'
-    # mat_id = 449   # Grund/b1_ss  has 'b'
-    # mat_id = 1759  # Meszaros/refine has 'b' as list?
-    # mat_id = 2396  # Newman/dolphins has 'aux' (single item)
-    # mat_id = 1487  # Pajek/GD95_c has 'aux' (list of ['nodename', 'coords'])
-    # NOTE all Pajek matrices seem to be graphs with 'aux' data.
-
-    # Load the actual matrix
-    # problem = get_ss_problem(
-    #     index=df,
-    #     mat_id=mat_id,
-    #     fmt='mat'
-    # )
-
-    # This .mat file is v7.3, which we need h5py to process:
-    # PosixPath('/Users/bernardroesler/.ssgetpy/mat/Mycielski/mycielskian3.mat')
-
-    # # Load the actual matrix
-    # problem = get_ss_problem(
-    #     index=df,
-    #     group='Mycielski',
-    #     name='mycielskian3',
-    #     fmt='mat'
-    # )
-
-    row = df.set_index(['Group', 'Name']).loc['Mycielski', 'mycielskian3']
-    row['Group'] = 'Mycielski'
-    row['Name'] = 'mycielskian3'
-
-    matrix_file = get_path_from_row(row, fmt='mat')
-
-    # problem = get_ss_problem_from_file(matrix_file)
-
-    # NOTE the h5py file has two keys {'#refs#', 'Problem'}
-    # '#refs#' is a special key used by MATLAB to store references, so we don't
-    # touch that one.
-    # 'Problem' is a group that contains the actual matrix data and metadata,
-    # keys: ['notes', 'author', 'date', 'ed', 'id', 'kind', 'name', 'title']
-
-    # -------------------------------------------------------------------------
-    #         Load the matrix using read_mat
-    # -------------------------------------------------------------------------
-    # NOTE read_mat does the best job at decoding the 'notes' field, but it
-    # does not handle the sparse matrix 'A' correctly. It is the cleanest
-    # option in terms of minimum lines of code, but there is a dependency on
-    # pymatreader, which is not a standard library, 
-    mat = read_mat(matrix_file)
-    problem = mat['Problem']
-
-    # Join the notes into a single string
-    problem['notes'] = '\n'.join([x.rstrip() for x in problem['notes']])
-
-    print('---------- read_mat:')
-    print(problem)
+@pytest.mark.parametrize("problem, A, Ac", generate_suitesparse_matrices())
+def test_transpose(problem, A, Ac):
+    """Test the transpose operation on SuiteSparse matrices."""
+    print(f"Testing matrix {problem.id} ({problem.name})")
+    B = A.T
+    C = Ac.transpose()
+    np.testing.assert_allclose(B.toarray(), C.toarray(), atol=1e-15)
 
 
-    # -------------------------------------------------------------------------
-    #         Run the Test
-    # -------------------------------------------------------------------------
-    # Get the list of the 100 smallest SuiteSparse matrices
-    N = 100
-    max_dim = df[['nrows', 'ncols']].max(axis=1)
-    tf = df.loc[max_dim.sort_values().head(N).index]
+@pytest.mark.parametrize("problem, A, Ac", generate_suitesparse_matrices())
+def test_gaxpy(problem, A, Ac):
+    """Test the GAXPY operation on SuiteSparse matrices."""
+    print(f"Testing matrix {problem.id} ({problem.name})")
+    M, N = A.shape
+    rng = np.random.default_rng(problem.id)
+    x = rng.random(N)
+    y = rng.random(M)
+    z = A @ x + y
+    q = csparse.gaxpy(A, x, y)
+    err = la.norm(z - q, ord=1) / la.norm(z, ord=1)
+    assert err < 1e-14
 
-    for idx, row in tf.iterrows():
-        print('-------------------')
-        try:
-            problem = get_ss_problem_from_row(row, fmt='mat')
-            print(problem)
-        except NotImplementedError as e:
-            print(f"Skipping matrix {idx} due to: {e}")
-            continue
 
-        A = problem.A
+@pytest.mark.parametrize("problem, A, Ac", generate_suitesparse_matrices())
+def test_coo_matrix(problem, A, Ac):
+    """Test the COO matrix interface."""
+    A = A.tocoo()
+    rows, cols, values = A.row, A.col, A.data
+    rng = np.random.default_rng(problem.id)
+    p = rng.permutation(len(values))
 
-        # # Check if A is real
-        # if not is_real(A):
-        #     print(f"Matrix {mat_id} ({problem.name}) is not real, skipping.")
-        #     continue
+    # Create a new COO matrix with permuted values, rows, and cols
+    A = sparse.coo_array((values[p], (rows[p], cols[p])), shape=A.shape)
+    Ac = csparse.COOMatrix(values[p], rows[p], cols[p], shape=A.shape)
+    np.testing.assert_allclose(A.toarray(), Ac.toarray(), atol=1e-15)
+
 
 # =============================================================================
 # =============================================================================

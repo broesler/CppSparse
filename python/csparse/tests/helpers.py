@@ -277,12 +277,12 @@ class MatrixProblem:
     def __str__(self):
         def format_value(value):
             """Format the value for display."""
-            if value is None:
-                return "None"
-            elif isinstance(value, sparse.sparray):
+            if isinstance(value, sparse.sparray):
                 return repr(value)
             elif isinstance(value, np.ndarray):
                 return f"{value.shape} ndarray of dtype '{value.dtype}'"
+            elif isinstance(value, list):
+                return f"({len(value)},) list of [{', '.join({type(v).__name__ for v in value})}]"
             elif isinstance(value, dict):
                 # recursively format the aux dict
                 return ('{\n' + ', \n'.join(
@@ -444,7 +444,14 @@ def load_matfile_ltv73(matrix_path):
 
     # notes is a multi-line string (aka 2D character array)
     if 'notes' in problem_mat.dtype.names:
-        data['notes'] = '\n'.join(problem_mat['notes'].tolist())
+        notes = problem_mat['notes'].item()
+        if isinstance(notes, str):
+            data['notes'] = notes.rstrip()
+        elif isinstance(notes, np.ndarray):
+            # notes is an array of strings, join them
+            data['notes'] = '\n'.join([x.rstrip() for x in notes.tolist()])
+        else:
+            raise ValueError(f"Unexpected type for notes: {type(notes)}")
 
     return data
 

@@ -747,7 +747,6 @@ def generate_suitesparse_matrices(N=100):
     tf = df.loc[max_dim.sort_values().head(N).index]
 
     for idx, row in tf.iterrows():
-        # print('-------------------')
         try:
             problem = get_ss_problem_from_row(row, fmt='mat')
             print(problem)
@@ -768,6 +767,31 @@ def generate_suitesparse_matrices(N=100):
                            id=f"{problem.id}::{problem.name}",
                            marks=pytest.mark.suitesparse)
 
+
+def generate_random_matrices(N_trials=100, N_max=10):
+    """Generate a list of random sparse matrices of maximum size N x N."""
+    seed = 565656
+    rng = np.random.default_rng(seed)  # Fixed seed for reproducibility
+    for trial in range(N_trials):
+        # Generate a random sparse matrix
+        M, N = rng.integers(1, N_max, size=2, endpoint=True)
+        nz = rng.integers(1, N_max * N_max, size=1, endpoint=True).item()
+
+        rows = rng.integers(0, M, size=nz)
+        cols = rng.integers(0, N, size=nz)
+        vals = rng.random(nz)
+
+        A = sparse.csc_array((vals, (rows, cols)), shape=(M, N))
+        Ac = csparse.COOMatrix(vals, rows, cols, shape=(M, N)).tocsc()
+
+        print(f"Random matrix {trial + 1} ({seed=}): "
+              f"{A.shape} with {A.nnz} non-zeros")
+
+        yield pytest.param(
+            A, Ac,
+            id=f"random_{trial + 1}",
+            marks=pytest.mark.random
+        )
 
 # -----------------------------------------------------------------------------
 #         Matrix Type Checking

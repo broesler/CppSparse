@@ -21,6 +21,34 @@
 
 namespace py = pybind11;
 
+/** Permute a vector.
+ *
+ * @param p  the permutation vector
+ * @param b_obj  the vector to permute, can be a vector of doubles or integers
+ * @param func_double  function to handle double vectors, e.g. &cs::pvec<double>
+ * @param func_int  function to handle double vectors, e.g. &cs::pvec<csint>
+ * @return  a new vector with the elements of `b_obj` permuted according to `p`
+ */
+template <typename FuncD, typename FuncI>
+py::object dispatch_pvec_ipvec(
+    const std::vector<cs::csint>& p,
+    const py::object& b_obj,
+    FuncD func_double,
+    FuncI func_int
+) {
+    try {
+        std::vector<double> b = b_obj.cast<std::vector<double>>();
+        return py::cast(cs::pvec<double>(p, b));
+    } catch (const py::cast_error&) {
+        try {
+            std::vector<cs::csint> b = b_obj.cast<std::vector<cs::csint>>();
+            return py::cast(cs::pvec<cs::csint>(p, b));
+        } catch (const py::cast_error&) {
+            throw py::type_error("Input must be a vector of doubles or integers.");
+        }
+    }
+}
+
 
 PYBIND11_MODULE(csparse, m) {
     m.doc() = "C++Sparse module for sparse matrix operations.";
@@ -331,6 +359,7 @@ PYBIND11_MODULE(csparse, m) {
         .def("add", &cs::CSCMatrix::add)
         .def("__add__", &cs::CSCMatrix::add)
         //
+        // TODO convert these "p_inv" arguments to "p" for python interface
         .def("permute", &cs::CSCMatrix::permute,
              py::arg("p_inv"), py::arg("q"), py::arg("values")=true)
         .def("symperm", &cs::CSCMatrix::symperm,
@@ -392,6 +421,22 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     //        Utility Functions
     //--------------------------------------------------------------------------
+    m.def("pvec", 
+        [](const std::vector<cs::csint>& p, const py::object& b_obj) {
+            return dispatch_pvec_ipvec(
+                p, b_obj, &cs::pvec<double>, &cs::pvec<cs::csint>
+            );
+        },
+        py::arg("p"), py::arg("b")
+    );
+    m.def("ipvec", 
+        [](const std::vector<cs::csint>& p, const py::object& b_obj) {
+            return dispatch_pvec_ipvec(
+                p, b_obj, &cs::ipvec<double>, &cs::ipvec<cs::csint>
+            );
+        },
+        py::arg("p"), py::arg("b")
+    );
     m.def("inv_permute", &cs::inv_permute);
     m.def("scipy_from_coo", &scipy_from_coo);
     m.def("scipy_from_csc", &scipy_from_csc);

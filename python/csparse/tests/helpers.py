@@ -17,6 +17,7 @@ import numpy as np
 import re
 import requests
 import warnings
+import webbrowser
 import tarfile
 
 from dataclasses import dataclass
@@ -282,7 +283,8 @@ class MatrixProblem:
             elif isinstance(value, np.ndarray):
                 return f"{value.shape} ndarray of dtype '{value.dtype}'"
             elif isinstance(value, list):
-                return f"({len(value)},) list of [{', '.join({type(v).__name__ for v in value})}]"
+                return (f"({len(value)},) list of "
+                        f"[{', '.join({type(v).__name__ for v in value})}]")
             elif isinstance(value, dict):
                 # recursively format the aux dict
                 return ('{\n' + ', \n'.join(
@@ -530,7 +532,7 @@ def load_problem(matrix_path):
         # NOTE scipy.io.loadmat does not support v7.3+ MAT-files
         try:
             data = load_matfile_ltv73(matrix_path)
-        except NotImplementedError as e:
+        except NotImplementedError:
             data = load_matfile_gev73(matrix_path)
 
         return MatrixProblem(**data)
@@ -539,8 +541,8 @@ def load_problem(matrix_path):
         raise ValueError(f"Unknown format: {fmt}")
 
 
-def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
-    """Get a SuiteSparse matrix problem by ID, group, or name.
+def get_ss_row(index=None, mat_id=None, group=None, name=None):
+    """Get a SuiteSparse matrix row by ID, or group and name.
 
     Parameters
     ----------
@@ -567,9 +569,6 @@ def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
         raise ValueError("One of `mat_id` or the pair "
                          "(`group`, `name`) must be specified.")
 
-    if fmt not in ['MM', 'RB', 'mat']:
-        raise ValueError("Format must be one of 'MM', 'RB', 'mat'.")
-
     if mat_id is not None:
         if group is not None or name is not None:
             warnings.warn("If `mat_id` is specified, "
@@ -582,7 +581,7 @@ def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
         row['Group'] = group
         row['Name'] = name
 
-    return get_ss_problem_from_row(row, fmt=fmt)
+    return row
 
 
 def get_path_from_row(row, fmt='mat'):
@@ -650,6 +649,13 @@ def get_path_from_row(row, fmt='mat'):
     return local_matrix_file
 
 
+def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
+    if fmt not in ['MM', 'RB', 'mat']:
+        raise ValueError("Format must be one of 'MM', 'RB', 'mat'.")
+    row = get_ss_row(index=index, mat_id=mat_id, group=group, name=name)
+    return get_ss_problem_from_row(row, fmt=fmt)
+
+
 def get_ss_problem_from_row(row, fmt='mat'):
     matrix_file = get_path_from_row(row, fmt=fmt)
     return load_problem(matrix_file)
@@ -657,6 +663,16 @@ def get_ss_problem_from_row(row, fmt='mat'):
 
 def get_ss_problem_from_file(matrix_file):
     return load_problem(matrix_file)
+
+
+def ssweb(index=None, mat_id=None, group=None, name=None):
+    row = get_ss_row(index=index, mat_id=mat_id, group=group, name=name)
+    web_url = f"{SS_ROOT_URL}/{row['Group']}/{row['Name']}"
+    try:
+        webbrowser.open(web_url, new=0, autoraise=True)
+    except webbrowser.Error as e:
+        print(f"Error opening web page: {e}")
+        raise e
 
 
 # -----------------------------------------------------------------------------
@@ -675,7 +691,7 @@ def generate_suitesparse_matrices(N=100):
         try:
             problem = get_ss_problem_from_row(row, fmt='mat')
             print(problem)
-        except NotImplementedError:
+        except NotImplementedError as e:
             print(f"Skipping matrix {idx} due to: {e}")
             continue
 
@@ -688,7 +704,7 @@ def generate_suitesparse_matrices(N=100):
 
         Ac = csparse.csc_from_scipy(A)
 
-        yield pytest.param(problem, A, Ac, 
+        yield pytest.param(problem, A, Ac,
                            id=f"{problem.id}::{problem.name}",
                            marks=pytest.mark.suitesparse)
 

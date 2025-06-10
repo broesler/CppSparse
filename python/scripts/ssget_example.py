@@ -17,7 +17,7 @@ CSparse/MATLAB/ssget/ssget_example.m
 
 import matplotlib.pyplot as plt
 
-from csparse.tests.helpers import get_ss_index, get_ss_problem
+from csparse.tests.helpers import get_ss_index, get_ss_problem, ssweb
 
 import csparse
 
@@ -47,11 +47,11 @@ for i, row in tf.iterrows():
     csparse.cspy(problem.A, ax=ax)
     ax.set_title(f"{problem.name}\n{problem.title}")
 
-    # TODO
-    # ssweb(problem.id)  # open the web page for the problem
+    # Open the web page for the problem
+    ssweb(mat_id=problem.id)
 
     plt.draw()
-    input("Press Enter to continue... (or Ctrl-C to stop)")
+    input("Press Enter to continue (or Ctrl-C to stop)... ")
 
 
 # =============================================================================

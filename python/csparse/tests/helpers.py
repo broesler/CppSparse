@@ -559,8 +559,8 @@ def get_ss_row(index=None, mat_id=None, group=None, name=None):
 
     Returns
     -------
-    MatrixProblem
-        The matrix problem instance containing the matrix and its metadata.
+    Series
+        The row from the SuiteSparse index DataFrame containing the matrix.
     """
     if index is None:
         index = get_ss_index()
@@ -650,6 +650,26 @@ def get_path_from_row(row, fmt='mat'):
 
 
 def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
+    """Get a SuiteSparse matrix problem by ID, or group and name.
+
+    Parameters
+    ----------
+    index : DataFrame
+        The DataFrame containing the SuiteSparse index.
+    mat_id : int
+        The unique identifier of the matrix.
+    group : str
+        The group name of the matrix.
+    name : str
+        The name or a pattern matching the name of the matrix.
+    fmt : str in {'MM', 'RB', 'mat'}, optional
+        The format of the matrix file to return. Defaults to 'mat'.
+
+    Returns
+    -------
+    MatrixProblem
+        The matrix problem instance containing the matrix and its metadata.
+    """
     if fmt not in ['MM', 'RB', 'mat']:
         raise ValueError("Format must be one of 'MM', 'RB', 'mat'.")
     row = get_ss_row(index=index, mat_id=mat_id, group=group, name=name)
@@ -657,15 +677,55 @@ def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
 
 
 def get_ss_problem_from_row(row, fmt='mat'):
+    """Get a SuiteSparse matrix problem from a DataFrame row.
+
+    Parameters
+    ----------
+    row : Series
+        A row from the SuiteSparse index DataFrame containing the matrix.
+    fmt : str in {'MM', 'RB', 'mat'}, optional
+        The format of the matrix file to download. Defaults to 'mat'.
+
+    Returns
+    -------
+    MatrixProblem
+        The matrix problem instance containing the matrix and its metadata.
+    """
     matrix_file = get_path_from_row(row, fmt=fmt)
     return load_problem(matrix_file)
 
 
 def get_ss_problem_from_file(matrix_file):
+    """Get a SuiteSparse matrix problem from a file path.
+
+    Parameters
+    ----------
+    matrix_file : str or Path
+        The path to the matrix file. It can be a MatrixMarket (.mtx),
+        Rutherford-Boeing (.rb), or MATLAB (.mat) file.
+
+    Returns
+    -------
+    MatrixProblem
+        The matrix problem instance containing the matrix and its metadata.
+    """
     return load_problem(matrix_file)
 
 
 def ssweb(index=None, mat_id=None, group=None, name=None):
+    """Open the SuiteSparse web page for a matrix in the browser.
+
+    Parameters
+    ----------
+    index : DataFrame
+        The DataFrame containing the SuiteSparse index.
+    mat_id : int
+        The unique identifier of the matrix.
+    group : str
+        The group name of the matrix.
+    name : str
+        The name or a pattern matching the name of the matrix.
+    """
     row = get_ss_row(index=index, mat_id=mat_id, group=group, name=name)
     web_url = f"{SS_ROOT_URL}/{row['Group']}/{row['Name']}"
     try:

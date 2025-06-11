@@ -738,7 +738,7 @@ def ssweb(index=None, mat_id=None, group=None, name=None):
 # -----------------------------------------------------------------------------
 #         Matrix Generators
 # -----------------------------------------------------------------------------
-def generate_suitesparse_matrices(N=100):
+def generate_suitesparse_matrices(N=100, real_only=True, square_only=False):
     """Generate a list of SuiteSparse matrices."""
     df = get_ss_index()
 
@@ -749,16 +749,18 @@ def generate_suitesparse_matrices(N=100):
     for idx, row in tf.iterrows():
         try:
             problem = get_ss_problem_from_row(row, fmt='mat')
-            print(problem)
         except NotImplementedError as e:
             print(f"Skipping matrix {idx} due to: {e}")
             continue
 
         A = problem.A
 
-        # Check if A is real
-        if not is_real(A):
+        if real_only and not is_real(A):
             print(f"Matrix {problem.id} ({problem.name}) is not real.")
+            continue
+
+        if square_only and A.shape[0] != A.shape[1]:
+            print(f"Matrix {problem.id} ({problem.name}) is not square.")
             continue
 
         yield pytest.param(

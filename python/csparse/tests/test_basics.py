@@ -13,6 +13,7 @@ import pytest
 
 import numpy as np
 
+from numpy.testing import assert_allclose
 from scipy import linalg as la
 from scipy import sparse
 from scipy.sparse import linalg as sla
@@ -38,7 +39,7 @@ def test_transpose(problem):
     Ac = csparse.csc_from_scipy(A)
     B = A.T
     C = Ac.transpose()
-    np.testing.assert_allclose(B.toarray(), C.toarray(), atol=1e-15)
+    assert_allclose(B.toarray(), C.toarray(), atol=1e-15)
 
 
 @pytest.mark.parametrize("problem", generate_suitesparse_matrices())
@@ -67,7 +68,7 @@ def test_coo_matrix(problem):
     # Create a new COO matrix with permuted values, rows, and cols
     A = sparse.coo_array((values[p], (rows[p], cols[p])), shape=A.shape)
     Ac = csparse.COOMatrix(values[p], rows[p], cols[p], shape=A.shape)
-    np.testing.assert_allclose(A.toarray(), Ac.toarray(), atol=1e-15)
+    assert_allclose(A.toarray(), Ac.toarray(), atol=1e-15)
 
 
 # -----------------------------------------------------------------------------
@@ -102,13 +103,13 @@ def test_vector_permutation(p, x):
     x1 = x[p]
     x2 = csparse.pvec(p, x)
 
-    np.testing.assert_allclose(x1, x2, atol=1e-15)
+    assert_allclose(x1, x2, atol=1e-15)
 
     x1 = np.zeros(M)
     x1[p] = x
     x2 = csparse.ipvec(p, x)
 
-    np.testing.assert_allclose(x1, x2, atol=1e-15)
+    assert_allclose(x1, x2, atol=1e-15)
 
 
 @pytest.mark.parametrize("A, Ac", generate_random_matrices())
@@ -142,7 +143,7 @@ def test_multiply(A, B):
     """Test the multiplication of a matrix with a vector."""
     C = A @ B
     D = csparse.csc_from_scipy(A) @ csparse.csc_from_scipy(B)
-    np.testing.assert_allclose(C.toarray(), D.toarray(), atol=1e-12)
+    assert_allclose(C.toarray(), D.toarray(), atol=1e-12)
 
 # =============================================================================
 # =============================================================================

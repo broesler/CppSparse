@@ -17,7 +17,11 @@ from scipy import linalg as la
 from scipy import sparse
 from scipy.sparse import linalg as sla
 
-from .helpers import generate_suitesparse_matrices, generate_random_matrices
+from .helpers import (
+    generate_suitesparse_matrices,
+    generate_random_matrices,
+    generate_pvec_params
+)
 
 import csparse
 
@@ -87,27 +91,20 @@ def test_matrix_permutation(A, Ac):
     assert err < 1e-13
 
 
-def test_vector_permutation():
+@pytest.mark.parametrize("p, x", generate_pvec_params())
+def test_vector_permutation(p, x):
     """Test vector permutation."""
-    seed = 565656
-    rng = np.random.default_rng(seed)
-    N_max = 10
-    for i in range(100):
-        print(f"Trial {i+1} with seed {seed}")
-        M, N = rng.integers(1, N_max, size=2, endpoint=True)
-        p = rng.permutation(M)
-        x = rng.random(M)
+    M = len(p)
+    x1 = x[p]
+    x2 = csparse.pvec(p, x)
 
-        x1 = x[p]
-        x2 = csparse.pvec(p, x)
+    np.testing.assert_allclose(x1, x2, atol=1e-15)
 
-        np.testing.assert_allclose(x1, x2, atol=1e-15)
+    x1 = np.zeros(M)
+    x1[p] = x
+    x2 = csparse.ipvec(p, x)
 
-        x1 = np.zeros(M)
-        x1[p] = x
-        x2 = csparse.ipvec(p, x)
-
-        np.testing.assert_allclose(x1, x2, atol=1e-15)
+    np.testing.assert_allclose(x1, x2, atol=1e-15)
 
 
 @pytest.mark.parametrize("A, Ac", generate_random_matrices())

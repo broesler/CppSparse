@@ -793,6 +793,22 @@ def generate_random_matrices(N_trials=100, N_max=10):
             marks=pytest.mark.random
         )
 
+
+def generate_pvec_params(seed=565656, N_trials=100, N_max=10):
+    """Generate random permutation vectors and values."""
+    rng = np.random.default_rng(seed)
+    for i in range(N_trials):
+        print(f"Trial {i+1} with seed {seed}")
+        M = rng.integers(1, N_max, endpoint=True)
+        p = rng.permutation(M)
+        x = rng.random(M)
+        yield pytest.param(
+            p, x,
+            id=f"trial_{i+1}",
+            marks=pytest.mark.random
+        )
+
+
 # -----------------------------------------------------------------------------
 #         Matrix Type Checking
 # -----------------------------------------------------------------------------

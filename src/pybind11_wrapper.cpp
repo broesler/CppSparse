@@ -331,15 +331,46 @@ PYBIND11_MODULE(csparse, m) {
         .def("add", &cs::CSCMatrix::add)
         .def("__add__", &cs::CSCMatrix::add)
         //
-        // TODO convert these "p_inv" arguments to "p" for python interface
-        .def("permute", &cs::CSCMatrix::permute,
-             py::arg("p_inv"), py::arg("q"), py::arg("values")=true)
-        .def("symperm", &cs::CSCMatrix::symperm,
-             py::arg("p_inv"), py::arg("values")=true)
-        .def("permute_transpose", &cs::CSCMatrix::permute_transpose,
-             py::arg("p_inv"), py::arg("q"), py::arg("values")=true)
-        .def("permute_rows", &cs::CSCMatrix::permute_rows,
-             py::arg("p_inv"), py::arg("values")=true)
+        // Convert these "p_inv" arguments to "p" for python interface to
+        // match the CSparse MATLAB interface.
+        .def("permute", 
+            [](const cs::CSCMatrix& self,
+               const std::vector<cs::csint> p,
+               const std::vector<cs::csint> q,
+               bool values=true) 
+            {
+                return self.permute(cs::inv_permute(p), q, values);
+            },
+            py::arg("p"), py::arg("q"), py::arg("values")=true
+        )
+        .def("symperm", 
+            [](const cs::CSCMatrix& self,
+               const std::vector<cs::csint> p,
+               bool values=true)
+            {
+                return self.symperm(cs::inv_permute(p), values);
+            },
+            py::arg("p"), py::arg("values")=true
+        )
+        .def("permute_transpose",
+            [](const cs::CSCMatrix& self, 
+               const std::vector<cs::csint> p,
+               const std::vector<cs::csint> q,
+               bool values=true)
+            {
+                return self.permute_transpose(cs::inv_permute(p), q, values);
+            },
+            py::arg("p"), py::arg("q"), py::arg("values")=true
+        )
+        .def("permute_rows", 
+            [](const cs::CSCMatrix& self,
+               const std::vector<cs::csint> p,
+               bool values=true)
+            {
+                return self.permute_rows(cs::inv_permute(p), values);
+            },
+            py::arg("p"), py::arg("values")=true
+        )
         .def("permute_cols", &cs::CSCMatrix::permute_cols,
              py::arg("q"), py::arg("values")=true)
         //

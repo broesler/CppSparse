@@ -82,8 +82,7 @@ def test_matrix_permutation(A, Ac):
     p = rng.permutation(M)
     q = rng.permutation(N)
     C1 = A[p][:, q]
-    p_inv = csparse.inv_permute(p)
-    C2 = Ac.permute(p_inv, q)
+    C2 = Ac.permute(p, q)
     err = sla.norm(C1 - csparse.scipy_from_csc(C2), ord=1)
     assert err < 1e-13
 
@@ -124,8 +123,7 @@ def test_symmetric_matrix_permutation(A, Ac):
     B = B + B.T
 
     C1 = sparse.triu(B[p][:, p])
-    p_inv = csparse.inv_permute(p)
-    C2 = csparse.csc_from_scipy(B).symperm(p_inv)
+    C2 = csparse.csc_from_scipy(B).symperm(p)
     print(C1.toarray())
     print(C2.toarray())
     err = sla.norm(C1 - csparse.scipy_from_csc(C2), ord=1)

@@ -20,6 +20,7 @@ from scipy.sparse import linalg as sla
 from .helpers import (
     generate_suitesparse_matrices,
     generate_random_matrices,
+    generate_random_compatible_matrices,
     generate_pvec_params
 )
 
@@ -129,6 +130,19 @@ def test_symmetric_matrix_permutation(A, Ac):
     err = sla.norm(C1 - C2.toscipy(), ord=1)
     assert err < 1e-14
 
+
+# -----------------------------------------------------------------------------
+#         Test 4
+# -----------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    "A, B",
+    generate_random_compatible_matrices(N_max=100)
+)
+def test_multiply(A, B):
+    """Test the multiplication of a matrix with a vector."""
+    C = A @ B
+    D = csparse.csc_from_scipy(A) @ csparse.csc_from_scipy(B)
+    np.testing.assert_allclose(C.toarray(), D.toarray(), atol=1e-12)
 
 # =============================================================================
 # =============================================================================

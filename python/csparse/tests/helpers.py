@@ -795,6 +795,38 @@ def generate_random_matrices(seed=565656, N_trials=100, N_max=10):
         )
 
 
+def generate_random_compatible_matrices(seed=565656, N_trials=100, N_max=10):
+    """Generate a list of random sparse matrices with compatible shapes."""
+    rng = np.random.default_rng(seed)
+
+    for trial in range(N_trials):
+        # Generate a random sparse matrix
+        M, N, K = rng.integers(1, N_max, size=3, endpoint=True)
+        d = rng.random()  # density ∈ [0, 1]
+
+        A = sparse.random_array(
+            (M, N),
+            density=d,
+            format='csc',
+            random_state=rng,
+            data_sampler=rng.normal
+        )
+
+        B = sparse.random_array(
+            (N, K),
+            density=d,
+            format='csc',
+            random_state=rng,
+            data_sampler=rng.normal
+        )
+
+        yield pytest.param(
+            A, B,
+            id=f"random_{trial + 1}",
+            marks=pytest.mark.random
+        )
+
+
 def generate_pvec_params(seed=565656, N_trials=100, N_max=10):
     """Generate random permutation vectors and values."""
     rng = np.random.default_rng(seed)

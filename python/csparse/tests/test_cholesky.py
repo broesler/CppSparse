@@ -14,8 +14,7 @@ import numpy as np
 
 from numpy.testing import assert_allclose
 from scipy import linalg as la
-from scipy import sparse
-from scipy.sparse import linalg as sla
+from scipy.sparse import csc_array, eye_array, linalg as sla
 
 from .helpers import generate_suitesparse_matrices
 
@@ -126,84 +125,84 @@ def test_python_cholesky_update(A):
 # -----------------------------------------------------------------------------
 #         Test 3
 # -----------------------------------------------------------------------------
-# TODO refactor as a class and separate out tests
-@pytest.mark.parametrize(
-    "problem",
-    generate_suitesparse_matrices(square_only=True)
-)
-def test_trisolve_cholesky(problem):
+_all_ss_problems = list(generate_suitesparse_matrices(square_only=True))
+
+@pytest.mark.parametrize("problem", _all_ss_problems)
+class TestTrisolveCholesky:
     """Test triangular solvers with Cholesky factors."""
-    A = problem.A
-    order = 'APlusAT'
-    M, N = A.shape
+    @pytest.fixture(autouse=True)
+    def setup_problem(self, problem):
+        A = problem.A
+        self.order = 'APlusAT'
+        N = A.shape[1]
 
-    # Make the matrix symmetric positive definite
-    A = A @ A.T + 2 * N * sparse.eye_array(N)
+        # Make the matrix symmetric positive definite
+        self.A = A @ A.T + 2 * N * eye_array(N)
 
-    # Get the Cholesky factorization using scipy (dense matrices only)
-    try:
-        L0 = sparse.csc_array(la.cholesky(A.toarray(), lower=True))
-    except Exception:
-        print(f"Skipping {problem.name} due to Cholesky failure.")
-        return
+        # Get the Cholesky factorization using scipy (dense matrices only)
+        try:
+            self.L0 = csc_array(la.cholesky(self.A.toarray(), lower=True))
+        except Exception:
+            pytest.skip(f"Skipping {problem.name} due to Cholesky failure.")
 
-    # Get the permutation from AMD
-    # TODO symamd? not in python
-    p = csparse.amd(A, order=order)
+        # RHS
+        rng = np.random.default_rng(problem.id)
+        self.b = rng.random(N)
 
-    # RHS
-    rng = np.random.default_rng(problem.id)
-    b = rng.random(N)
+        # Get the permutation from AMD
+        # TODO symamd? not in python
+        p = csparse.amd(self.A, order=self.order)
 
-    # Reorder the matrix
-    C = A[p][:, p]
-    κ = csparse.cond1est(A)
-    print(f"cond1est: {κ:.4e} ({problem.name})")
+        # Reorder the matrix
+        self.C = self.A[p][:, p]
+        self.κ = csparse.cond1est(self.C)
+        print(f"cond1est: {self.κ:.4e} ({problem.name})")
 
-    # Check lsolve
-    x1 = sla.spsolve(L0, b)
-    x2 = csparse.lsolve(L0, b)
-    assert_allclose(x1, x2, atol=1e-12 * κ)
+    def test_lsolve(self):
+        """Test lsolve vs. scipy.linalg.spsolve."""
+        x1 = sla.spsolve(self.L0, self.b)
+        x2 = csparse.lsolve(self.L0, self.b)
+        assert_allclose(x1, x2, atol=1e-12 * self.κ)
 
-    # Check ltsolve
-    x1 = sla.spsolve(L0.T, b)
-    x2 = csparse.ltsolve(L0, b)
-    err = la.norm(x1 - x2, ord=1)
-    assert_allclose(x1, x2, atol=1e-10 * κ)
+    def test_ltsolve(self):
+        """Test ltsolve vs. scipy.linalg.spsolve."""
+        x1 = sla.spsolve(self.L0.T, self.b)
+        x2 = csparse.ltsolve(self.L0, self.b)
+        assert_allclose(x1, x2, atol=1e-10 * self.κ)
 
-    # usolve
-    U = L0.T
+    def test_usolve(self):
+        """Test usolve vs. scipy.linalg.spsolve."""
+        U = self.L0.T
+        x1 = sla.spsolve(U, self.b)
+        x2 = csparse.usolve(U, self.b)
+        assert_allclose(x1, x2, atol=1e-10 * self.κ)
 
-    x1 = sla.spsolve(U, b)
-    x2 = csparse.usolve(U, b)
-    assert_allclose(x1, x2, atol=1e-10 * κ)
+    def test_utsolve(self):  # (not in test3.m)
+        """Test utsolve vs. scipy.linalg.spsolve."""
+        U = self.L0.T
+        x1 = sla.spsolve(U.T, self.b)
+        x2 = csparse.utsolve(U, self.b)
+        assert_allclose(x1, x2, atol=1e-10 * self.κ)
 
-    # utsolve (not in test3.m)
-    x1 = sla.spsolve(U.T, b)
-    x2 = csparse.utsolve(U, b)
-    assert_allclose(x1, x2, atol=1e-10 * κ)
+    def test_csparse_cholesky(self):
+        """Test the C++Sparse Cholesky vs. scipy.linalg.cholesky."""
+        L2 = csparse.chol(self.A).L
+        assert_allclose(self.L0.toarray(), L2.toarray(), atol=1e-8 * self.κ)
 
-    # C++Sparse Cholesky
-    L2 = csparse.chol(A).L
-    assert_allclose(L0.toarray(), L2.toarray(), atol=1e-8 * κ)
+    def test_cholesky_reordered(self):
+        """Test the C++Sparse Cholesky with reordering."""
+        L1 = csc_array(la.cholesky(self.C.toarray(), lower=True))
+        L2 = csparse.chol(self.C).L
+        assert_allclose(L1.toarray(), L2.toarray(), atol=1e-8 * self.κ)
 
-    # Cholesky of re-ordered A
-    L1 = sparse.csc_array(la.cholesky(C.toarray(), lower=True))
-    L2 = csparse.chol(C).L
-    assert_allclose(L1.toarray(), L2.toarray(), atol=1e-8 * κ)
-
-    # Cholesky of A, then reorder
-    res = csparse.chol(A, order=order)
-    L3 = res.L
-    p3 = res.p
-    C3 = A[p3][:, p3]
-    L4 = sparse.csc_array(la.cholesky(C3.toarray(), lower=True))
-    assert_allclose(L3.toarray(), L4.toarray(), atol=1e-8 * κ)
-    
-
-
-
-
+    def test_cholesky_internal_reordering(self):
+        """Test the C++Sparse Cholesky with internal reordering."""
+        res = csparse.chol(self.A, order=self.order)
+        L3 = res.L
+        p3 = res.p
+        C3 = self.A[p3][:, p3]
+        L4 = csc_array(la.cholesky(C3.toarray(), lower=True))
+        assert_allclose(L3.toarray(), L4.toarray(), atol=1e-8 * self.κ)
 
 
 # =============================================================================

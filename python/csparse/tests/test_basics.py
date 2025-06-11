@@ -137,13 +137,51 @@ def test_symmetric_matrix_permutation(A, Ac):
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
     "A, B",
-    generate_random_compatible_matrices(N_max=100)
+    list(generate_random_compatible_matrices(N_max=100, kind='multiply'))
 )
 def test_multiply(A, B):
     """Test the multiplication of a matrix with a vector."""
     C = A @ B
     D = csparse.csc_from_scipy(A) @ csparse.csc_from_scipy(B)
     assert_allclose(C.toarray(), D.toarray(), atol=1e-12)
+
+
+# -----------------------------------------------------------------------------
+#         Test 5
+# -----------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    "A, B",
+    list(generate_random_compatible_matrices(N_max=100, kind='add'))
+)
+class TestAdd:
+    """Test the addition of two matrices."""
+    @pytest.fixture(autouse=True)
+    def setup_method(self, A, B):
+        """Set up the matrices for testing."""
+        self.A = A
+        self.B = B
+        self.Ac = csparse.csc_from_scipy(A)
+        self.Bc = csparse.csc_from_scipy(B)
+
+    def test_add(self):
+        """Test the addition of two matrices."""
+        C = self.A + self.B
+        D = self.Ac + self.Bc
+        assert_allclose(C.toarray(), D.toarray(), atol=1e-12)
+
+    def test_add_scaled(self):
+        """Test the addition of a scaled matrix."""
+        C = np.pi * self.A + self.B
+        D = np.pi * self.Ac + self.Bc
+        assert_allclose(C.toarray(), D.toarray(), atol=1e-12)
+
+    def test_add_both_scaled(self):
+        """Test the addition of a scaled matrix."""
+        C = np.pi * self.A + 3 * self.B
+        D = np.pi * self.Ac + 3 * self.Bc
+        assert_allclose(C.toarray(), D.toarray(), atol=1e-12)
+
+
 
 # =============================================================================
 # =============================================================================

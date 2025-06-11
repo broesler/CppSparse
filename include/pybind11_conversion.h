@@ -313,11 +313,11 @@ py::object dispatch_pvec_ipvec(
 ) {
     try {
         std::vector<double> b = b_obj.cast<std::vector<double>>();
-        return py::cast(cs::pvec<double>(p, b));
+        return py::cast(func_double(p, b));
     } catch (const py::cast_error&) {
         try {
             std::vector<cs::csint> b = b_obj.cast<std::vector<cs::csint>>();
-            return py::cast(cs::pvec<cs::csint>(p, b));
+            return py::cast(func_int(p, b));
         } catch (const py::cast_error&) {
             throw py::type_error("Input must be a vector of doubles or integers.");
         }

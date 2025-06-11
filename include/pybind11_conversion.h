@@ -295,6 +295,36 @@ auto wrap_solve(
 }
 
 
+/** Dispatch the vector permutation functions for appropriate types.
+ *
+ * @param p  the permutation vector
+ * @param b_obj  the vector to permute, can be a vector of doubles or integers
+ * @param func_double  function to handle double vectors, e.g. &cs::pvec<double>
+ * @param func_int  function to handle double vectors, e.g. &cs::pvec<csint>
+ *
+ * @return  a new vector with the elements of `b_obj` permuted according to `p`
+ */
+template <typename FuncD, typename FuncI>
+py::object dispatch_pvec_ipvec(
+    const std::vector<cs::csint>& p,
+    const py::object& b_obj,
+    FuncD func_double,
+    FuncI func_int
+) {
+    try {
+        std::vector<double> b = b_obj.cast<std::vector<double>>();
+        return py::cast(cs::pvec<double>(p, b));
+    } catch (const py::cast_error&) {
+        try {
+            std::vector<cs::csint> b = b_obj.cast<std::vector<cs::csint>>();
+            return py::cast(cs::pvec<cs::csint>(p, b));
+        } catch (const py::cast_error&) {
+            throw py::type_error("Input must be a vector of doubles or integers.");
+        }
+    }
+}
+
+
 #endif  // _CSPARSE_PYBIND11_H_
 
 //==============================================================================

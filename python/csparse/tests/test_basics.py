@@ -68,7 +68,7 @@ def test_coo_matrix(problem, A, Ac):
 @pytest.mark.parametrize("A, Ac", generate_random_matrices())
 def test_coo_construction(A, Ac):
     """Test the construction of a COO matrix."""
-    err = sla.norm(A - csparse.scipy_from_csc(Ac), ord=1) / sla.norm(A, ord=1)
+    err = sla.norm(A - Ac.toscipy(), ord=1) / sla.norm(A, ord=1)
     assert err < 1e-15
     assert A.nnz == Ac.nnz
     assert max(1, Ac.nnz) == max(1, Ac.nzmax)
@@ -83,7 +83,7 @@ def test_matrix_permutation(A, Ac):
     q = rng.permutation(N)
     C1 = A[p][:, q]
     C2 = Ac.permute(p, q)
-    err = sla.norm(C1 - csparse.scipy_from_csc(C2), ord=1)
+    err = sla.norm(C1 - C2.toscipy(), ord=1)
     assert err < 1e-13
 
 
@@ -126,7 +126,7 @@ def test_symmetric_matrix_permutation(A, Ac):
     C2 = csparse.csc_from_scipy(B).symperm(p)
     print(C1.toarray())
     print(C2.toarray())
-    err = sla.norm(C1 - csparse.scipy_from_csc(C2), ord=1)
+    err = sla.norm(C1 - C2.toscipy(), ord=1)
     assert err < 1e-14
 
 

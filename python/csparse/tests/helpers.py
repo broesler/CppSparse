@@ -795,7 +795,9 @@ def generate_random_matrices(seed=565656, N_trials=100, N_max=10):
         )
 
 
-def generate_random_compatible_matrices(seed=565656, N_trials=100, N_max=10):
+def generate_random_compatible_matrices(
+    seed=565656, N_trials=100, N_max=10, kind='multiply'
+):
     """Generate a list of random sparse matrices with compatible shapes."""
     rng = np.random.default_rng(seed)
 
@@ -804,8 +806,14 @@ def generate_random_compatible_matrices(seed=565656, N_trials=100, N_max=10):
         M, N, K = rng.integers(1, N_max, size=3, endpoint=True)
         d = rng.random()  # density ∈ [0, 1]
 
+        if kind == 'multiply':
+            A_shape = (M, N)
+            B_shape = (N, K)
+        elif kind == 'add':
+            A_shape = B_shape = (M, N)
+
         A = sparse.random_array(
-            (M, N),
+            A_shape,
             density=d,
             format='csc',
             random_state=rng,
@@ -813,7 +821,7 @@ def generate_random_compatible_matrices(seed=565656, N_trials=100, N_max=10):
         )
 
         B = sparse.random_array(
-            (N, K),
+            B_shape,
             density=d,
             format='csc',
             random_state=rng,

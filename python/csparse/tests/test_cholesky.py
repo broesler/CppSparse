@@ -9,9 +9,12 @@ Unit tests for the python Cholesky algorithms.
 """
 # =============================================================================
 
-import pytest
+import matplotlib.pyplot as plt
 import numpy as np
+import os
+import pytest
 
+from pathlib import Path
 from numpy.testing import assert_allclose
 from scipy import linalg as la
 from scipy.sparse import csc_array, eye_array, linalg as sla
@@ -127,36 +130,72 @@ def test_python_cholesky_update(A):
 # -----------------------------------------------------------------------------
 _all_ss_problems = list(generate_suitesparse_matrices(square_only=True))
 
-@pytest.mark.parametrize("problem", _all_ss_problems)
+
+@pytest.mark.parametrize("problem", _all_ss_problems, indirect=True)
 class TestTrisolveCholesky:
     """Test triangular solvers with Cholesky factors."""
-    @pytest.fixture(autouse=True)
-    def setup_problem(self, problem):
+    @pytest.fixture(scope='class')
+    def problem(self, request):
+        """Fixture to provide a problem instance."""
+        return request.param
+
+    @pytest.fixture(scope='class', autouse=True)
+    def setup_problem(self, request, problem):
+        """Setup fixture to prepare the problem for testing."""
+        cls = request.cls
+        # Store the problem for later use
+        cls.problem = problem
+
         A = problem.A
-        self.order = 'APlusAT'
+        cls.order = 'APlusAT'
         N = A.shape[1]
 
         # Make the matrix symmetric positive definite
-        self.A = A @ A.T + 2 * N * eye_array(N)
+        cls.A = A @ A.T + 2 * N * eye_array(N)
 
         # Get the Cholesky factorization using scipy (dense matrices only)
         try:
-            self.L0 = csc_array(la.cholesky(self.A.toarray(), lower=True))
+            cls.L0 = csc_array(la.cholesky(cls.A.toarray(), lower=True))
         except Exception:
             pytest.skip(f"Skipping {problem.name} due to Cholesky failure.")
 
         # RHS
         rng = np.random.default_rng(problem.id)
-        self.b = rng.random(N)
+        cls.b = rng.random(N)
 
         # Get the permutation from AMD
         # TODO symamd? not in python
-        p = csparse.amd(self.A, order=self.order)
+        p = csparse.amd(cls.A, order=cls.order)
 
         # Reorder the matrix
-        self.C = self.A[p][:, p]
-        self.κ = csparse.cond1est(self.C)
-        print(f"cond1est: {self.κ:.4e} ({problem.name})")
+        cls.C = cls.A[p][:, p]
+        cls.κ = csparse.cond1est(cls.C)
+        print(f"cond1est: {cls.κ:.4e} ({problem.name})")
+
+        yield  # run the tests
+
+    # persist the figure across tests
+    @pytest.fixture(scope='class', autouse=True)
+    def setup_plot(self, request, setup_problem):
+        """Setup fixture to prepare the plot for testing."""
+        cls = request.cls
+        cls.fig, cls.axs = plt.subplots(num=1, nrows=2, ncols=3, clear=True)
+        cls.fig.suptitle(f"Cholesky Factors for {cls.problem.name}")
+
+        yield  # run the tests
+
+        # Teardown code (save the figure)
+        cls.fig_dir = Path('figures/test_trisolve_cholesky')
+        os.makedirs(cls.fig_dir, exist_ok=True)
+
+        cls.figure_path = (
+            cls.fig_dir /
+            f"{cls.problem.name.replace('/', '_')}.pdf"
+        )
+        print(f"Saving figure to {cls.figure_path}")
+        cls.fig.savefig(cls.figure_path)
+
+        plt.close(cls.fig)
 
     def test_lsolve(self):
         """Test lsolve vs. scipy.linalg.spsolve."""
@@ -187,12 +226,18 @@ class TestTrisolveCholesky:
     def test_csparse_cholesky(self):
         """Test the C++Sparse Cholesky vs. scipy.linalg.cholesky."""
         L2 = csparse.chol(self.A).L
+        self.axs[0, 0].spy(self.L0, markersize=1)
+        self.axs[1, 0].spy(L2, markersize=1)
+        self.axs[0, 0].set_title("chol(A)")
         assert_allclose(self.L0.toarray(), L2.toarray(), atol=1e-8 * self.κ)
 
     def test_cholesky_reordered(self):
         """Test the C++Sparse Cholesky with reordering."""
         L1 = csc_array(la.cholesky(self.C.toarray(), lower=True))
         L2 = csparse.chol(self.C).L
+        self.axs[0, 1].spy(L1, markersize=1)
+        self.axs[1, 1].spy(L2, markersize=1)
+        self.axs[0, 1].set_title("chol(C)")
         assert_allclose(L1.toarray(), L2.toarray(), atol=1e-8 * self.κ)
 
     def test_cholesky_internal_reordering(self):
@@ -202,6 +247,9 @@ class TestTrisolveCholesky:
         p3 = res.p
         C3 = self.A[p3][:, p3]
         L4 = csc_array(la.cholesky(C3.toarray(), lower=True))
+        self.axs[0, 2].spy(L4, markersize=1)
+        self.axs[1, 2].spy(L3, markersize=1)
+        self.axs[0, 2].set_title("chol(A[p][:, p])")
         assert_allclose(L3.toarray(), L4.toarray(), atol=1e-8 * self.κ)
 
 

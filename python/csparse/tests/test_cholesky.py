@@ -19,7 +19,10 @@ from numpy.testing import assert_allclose
 from scipy import linalg as la
 from scipy.sparse import csc_array, eye_array, linalg as sla
 
-from .helpers import generate_suitesparse_matrices
+from .helpers import (
+    generate_suitesparse_matrices,
+    generate_random_cholesky_matrices
+)
 
 import csparse
 
@@ -264,6 +267,42 @@ class TestTrisolveCholesky:
             self.axs[0, 2].set_title("chol(A[p][:, p])")
         assert_allclose(L3.toarray(), L4.toarray(), atol=1e-8 * self.κ)
 
+
+# -----------------------------------------------------------------------------
+#         Test 6
+# -----------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    "L, b",
+    list(generate_random_cholesky_matrices(N_trials=201, N_max=100))
+)
+@pytest.mark.parametrize("lower", [True, False])
+def test_reachability(L, b, lower):
+    """Test the reachability of the Cholesky factor."""
+    # Solve the system
+    if not lower:
+        L = L.T
+
+    x = sla.spsolve(L, b)
+
+    # TODO implement reachr in C++ (see reachr and dfsr on Davis, p 32)
+    # sr = csparse.reachr(L, b)
+    # sz = csparse.reachr(L, b)
+    # assert all(sr == sz)
+
+    s2 = csparse.reach(L, b)
+    # assert all(s2 == sr)
+
+    s = sorted(s2)
+
+    if lower:
+        x3 = csparse.lsolve(L, b).toarray()  # convert to dense for test
+    else:
+        x3 = csparse.usolve(L, b.toarray()) # test with dense input
+
+    xi = np.nonzero(x3)[0]
+    assert all(s == xi)
+
+    assert_allclose(x, np.atleast_1d(x3.squeeze()), atol=1e-8)
 
 # =============================================================================
 # =============================================================================

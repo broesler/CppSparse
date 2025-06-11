@@ -835,6 +835,43 @@ def generate_random_compatible_matrices(
         )
 
 
+def generate_random_cholesky_matrices(seed=565656, N_trials=100, N_max=100):
+    """Generate a list of random, square, lower-triangular matrices."""
+    rng = np.random.default_rng(seed)
+
+    for trial in range(N_trials):
+        # Generate a random sparse matrix
+        N = rng.integers(1, N_max, endpoint=True)
+        d = 0.1 * rng.random()  # density ∈ [0, 0.1]
+
+        A = sparse.random_array(
+            (N, N),
+            density=d,
+            format='csc',
+            random_state=rng,
+            data_sampler=rng.normal
+        )
+
+        # Make it lower triangular
+        D = sparse.diags(rng.random(N), 0, shape=(N, N))
+        L = sparse.tril(A, -1) + D
+
+        # RHS column vector
+        b = sparse.random_array(
+            (N, 1),
+            density=d,
+            format='csc',
+            random_state=rng,
+            data_sampler=rng.normal
+        )
+
+        yield pytest.param(
+            L, b,
+            id=f"random_{trial + 1}",
+            marks=pytest.mark.random
+        )
+
+
 def generate_pvec_params(seed=565656, N_trials=100, N_max=10):
     """Generate random permutation vectors and values."""
     rng = np.random.default_rng(seed)

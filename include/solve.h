@@ -225,10 +225,10 @@ TriPerm find_tri_permutation(const CSCMatrix& A);
 /** Solve a triangular system \f$ Lx = b_k \f$ for column `k` of `B`,
  * where `L` and `B` are sparse.
  *
- * @note If `lo` is non-zero, this function assumes that the diagonal entry of
+ * @note If `lower` is true, this function assumes that the diagonal entry of
  * `L` is always present and is the first entry in each column. Otherwise, the
  * row indices in each column of `L` may appear in any order.
- * If `lo` is zero, the function assumes that the diagonal entry of `U` is
+ * If `lower` is false, the function assumes that the diagonal entry of `U` is
  * always present and is the last entry in each column.
  *
  * @note In the CSparse library, this function is only called within `cs_lu`
@@ -241,9 +241,8 @@ TriPerm find_tri_permutation(const CSCMatrix& A);
  * @param k  the column index of `B` to solve
  * @param p_inv  the inverse permutation vector of the matrix `A`. If not given,
  *        A is taken in natural order.
- * @param lo  the lower bound of the diagonal entries of `G`. If `lo` is
- *        true, the function solves \f$ Lx = b_k`, otherwise it solves
- *        \f$ Ux = b_k \f$.
+ * @param lower  If `lower` is true, the function solves \f$ Lx = b_k`, otherwise it
+ *        solves \f$ Ux = b_k \f$.
  *
  * @return res  a struct containing:
  *         * xi the row indices of the non-zero entries in `x`.
@@ -254,7 +253,7 @@ SparseSolution spsolve(
     const CSCMatrix& B,
     csint k,
     OptionalVectorRef<csint> p_inv_ref=std::nullopt,
-    bool lo=true
+    bool lower=true
 );
 
 

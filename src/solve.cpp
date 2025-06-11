@@ -484,7 +484,7 @@ SparseSolution spsolve(
     const CSCMatrix& B,
     csint k,
     OptionalVectorRef<csint> p_inv_ref,
-    bool lo
+    bool lower
 )
 {
     // Populate xi with the non-zero indices of x
@@ -503,10 +503,10 @@ SparseSolution spsolve(
         if (J < 0) {
             continue;  // x(j) is not in the pattern of G
         }
-        double& xj = x[j];                           // cache reference to value
-        xj /= A.v_[lo ? A.p_[J] : A.p_[J+1] - 1];    // x(j) /= G(j, j)
-        csint p = lo ? A.p_[J] + 1 : A.p_[J];        // lo: L(j,j) 1st entry
-        csint q = lo ? A.p_[J+1]   : A.p_[J+1] - 1;  // up: U(j,j) last entry
+        double& xj = x[j];                              // cache reference to value
+        xj /= A.v_[lower ? A.p_[J] : A.p_[J+1] - 1];    // x(j) /= G(j, j)
+        csint p = lower ? A.p_[J] + 1 : A.p_[J];        // lower: L(j,j) 1st entry
+        csint q = lower ? A.p_[J+1]   : A.p_[J+1] - 1;  // up: U(j,j) last entry
         for (; p < q; p++) {
             x[A.i_[p]] -= A.v_[p] * xj;              // x[i] -= G(i, j) * x[j]
         }

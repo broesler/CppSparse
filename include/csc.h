@@ -924,7 +924,7 @@ public:
         const CSCMatrix& B,
         csint k,
         OptionalVectorRef<csint> p_inv_ref,
-        bool lo
+        bool lower
     );
 
     friend std::vector<csint> reach(

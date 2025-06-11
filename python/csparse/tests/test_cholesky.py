@@ -179,13 +179,22 @@ class TestTrisolveCholesky:
     def setup_plot(self, request, setup_problem):
         """Setup fixture to prepare the plot for testing."""
         cls = request.cls
+
+        if not request.config.getoption('--make-figures'):
+            cls.make_figures = False
+            yield  # skip the setup if not making figures
+            return
+
+        cls.make_figures = True
+
         cls.fig, cls.axs = plt.subplots(num=1, nrows=2, ncols=3, clear=True)
         cls.fig.suptitle(f"Cholesky Factors for {cls.problem.name}")
 
-        yield  # run the tests
+        # Run the tests
+        yield
 
         # Teardown code (save the figure)
-        cls.fig_dir = Path('figures/test_trisolve_cholesky')
+        cls.fig_dir = Path('test_figures/test_trisolve_cholesky')
         os.makedirs(cls.fig_dir, exist_ok=True)
 
         cls.figure_path = (
@@ -226,18 +235,20 @@ class TestTrisolveCholesky:
     def test_csparse_cholesky(self):
         """Test the C++Sparse Cholesky vs. scipy.linalg.cholesky."""
         L2 = csparse.chol(self.A).L
-        self.axs[0, 0].spy(self.L0, markersize=1)
-        self.axs[1, 0].spy(L2, markersize=1)
-        self.axs[0, 0].set_title("chol(A)")
+        if self.make_figures:
+            self.axs[0, 0].spy(self.L0, markersize=1)
+            self.axs[1, 0].spy(L2, markersize=1)
+            self.axs[0, 0].set_title("chol(A)")
         assert_allclose(self.L0.toarray(), L2.toarray(), atol=1e-8 * self.κ)
 
     def test_cholesky_reordered(self):
         """Test the C++Sparse Cholesky with reordering."""
         L1 = csc_array(la.cholesky(self.C.toarray(), lower=True))
         L2 = csparse.chol(self.C).L
-        self.axs[0, 1].spy(L1, markersize=1)
-        self.axs[1, 1].spy(L2, markersize=1)
-        self.axs[0, 1].set_title("chol(C)")
+        if self.make_figures:
+            self.axs[0, 1].spy(L1, markersize=1)
+            self.axs[1, 1].spy(L2, markersize=1)
+            self.axs[0, 1].set_title("chol(C)")
         assert_allclose(L1.toarray(), L2.toarray(), atol=1e-8 * self.κ)
 
     def test_cholesky_internal_reordering(self):
@@ -247,9 +258,10 @@ class TestTrisolveCholesky:
         p3 = res.p
         C3 = self.A[p3][:, p3]
         L4 = csc_array(la.cholesky(C3.toarray(), lower=True))
-        self.axs[0, 2].spy(L4, markersize=1)
-        self.axs[1, 2].spy(L3, markersize=1)
-        self.axs[0, 2].set_title("chol(A[p][:, p])")
+        if self.make_figures:
+            self.axs[0, 2].spy(L4, markersize=1)
+            self.axs[1, 2].spy(L3, markersize=1)
+            self.axs[0, 2].set_title("chol(A[p][:, p])")
         assert_allclose(L3.toarray(), L4.toarray(), atol=1e-8 * self.κ)
 
 

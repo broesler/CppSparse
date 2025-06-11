@@ -768,10 +768,9 @@ def generate_suitesparse_matrices(N=100):
                            marks=pytest.mark.suitesparse)
 
 
-def generate_random_matrices(N_trials=100, N_max=10):
+def generate_random_matrices(seed=565656, N_trials=100, N_max=10):
     """Generate a list of random sparse matrices of maximum size N x N."""
-    seed = 565656
-    rng = np.random.default_rng(seed)  # Fixed seed for reproducibility
+    rng = np.random.default_rng(seed)
     for trial in range(N_trials):
         # Generate a random sparse matrix
         M, N = rng.integers(1, N_max, size=2, endpoint=True)

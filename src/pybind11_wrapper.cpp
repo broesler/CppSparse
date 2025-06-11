@@ -627,12 +627,34 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     //      Solve functions
     //--------------------------------------------------------------------------
-    m.def("lsolve", wrap_vector_func(&cs::lsolve));
-    m.def("usolve", wrap_vector_func(&cs::usolve));
-    m.def("ltsolve", wrap_vector_func(&cs::ltsolve));
-    m.def("utsolve", wrap_vector_func(&cs::utsolve));
-    m.def("lsolve_opt", wrap_vector_func(&cs::lsolve_opt));
-    m.def("usolve_opt", wrap_vector_func(&cs::usolve_opt));
+    m.def("reach", 
+        [](const py::object& A_scipy, const py::object& b_scipy) {
+            const cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            const cs::CSCMatrix b = csc_from_scipy(b_scipy);
+
+            if (b.shape()[1] != 1) {
+                throw std::invalid_argument(
+                    "b must be a column vector (shape (N, 1))."
+                );
+            }
+
+            if (A.shape()[0] != b.shape()[0]) {
+                throw std::invalid_argument(
+                    "Matrix A and vector b must have compatible shapes."
+                );
+            }
+
+            return cs::reach(A, b, 0);
+        },
+        py::arg("A"), py::arg("b")
+    );
+    
+    m.def("lsolve", make_trisolver(&cs::lsolve), py::arg("L"), py::arg("b"));
+    m.def("usolve", make_trisolver(&cs::usolve), py::arg("U"), py::arg("b"));
+    m.def("ltsolve", make_trisolver(&cs::ltsolve), py::arg("L"), py::arg("b"));
+    m.def("utsolve", make_trisolver(&cs::utsolve), py::arg("U"), py::arg("b"));
+    m.def("lsolve_opt", make_trisolver(&cs::lsolve_opt), py::arg("L"), py::arg("b"));
+    m.def("usolve_opt", make_trisolver(&cs::usolve_opt), py::arg("U"), py::arg("b"));
 
     m.def("chol_solve",
         wrap_solve(&cs::chol_solve),

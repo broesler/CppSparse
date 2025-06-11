@@ -231,7 +231,7 @@ cs::CSCMatrix csc_from_scipy(const py::object& obj);
  */
 template <typename... Args>
 auto wrap_vector_func(
-    std::vector<double> (*func)(const cs::CSCMatrix& A, Args...)
+    std::vector<double>(*func)(const cs::CSCMatrix& A, Args...)
 )
 {
     return [func](const py::object& A_scipy, Args... args) {
@@ -322,6 +322,51 @@ py::object dispatch_pvec_ipvec(
             throw py::type_error("Input must be a vector of doubles or integers.");
         }
     }
+}
+
+
+/** Solve a triangular system with the given function. */
+template <typename DenseSolver>
+auto make_trisolver(DenseSolver dense_solver)
+{
+    return [dense_solver](const py::object& A_scipy, const py::object& b_obj) {
+        const cs::CSCMatrix A = csc_from_scipy(A_scipy);
+        py::module_ sparse = py::module_::import("scipy.sparse");
+
+        if (sparse.attr("issparse")(b_obj).cast<bool>()) {
+            const cs::CSCMatrix B = csc_from_scipy(b_obj);
+
+            if (B.shape()[1] != 1) {
+                throw std::invalid_argument(
+                    "b must be a column vector (shape (N, 1))."
+                );
+            }
+
+            cs::SparseSolution sol = cs::spsolve(A, B, 0);
+
+            // Solution is an (N, 1) CSCMatrix
+            cs::csint N = B.shape()[0];
+            cs::COOMatrix x({N, 1}, sol.xi.size());
+
+            for (const auto& i : sol.xi) {
+                x.insert(i, 0, sol.x[i]);
+            }
+
+            return scipy_from_csc(x.tocsc());
+        } else {
+            // Assume b is a dense vector, return a dense vector solution
+            try {
+                py::module_ np = py::module_::import("numpy");
+                // Guarantee array is 1D, or fail
+                std::vector<double> b = np.attr("atleast_1d")(
+                    b_obj.attr("squeeze")()
+                ).cast<std::vector<double>>();
+                return py::cast(dense_solver(A, b));
+            } catch (const py::cast_error&) {
+                throw py::type_error("b must have shape (N,) or (N, 1).");
+            }
+        }
+    };
 }
 
 

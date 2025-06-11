@@ -761,11 +761,11 @@ def generate_suitesparse_matrices(N=100):
             print(f"Matrix {problem.id} ({problem.name}) is not real.")
             continue
 
-        Ac = csparse.csc_from_scipy(A)
-
-        yield pytest.param(problem, A, Ac,
-                           id=f"{problem.id}::{problem.name}",
-                           marks=pytest.mark.suitesparse)
+        yield pytest.param(
+            problem,
+            id=f"{problem.id}::{problem.name}",
+            marks=pytest.mark.suitesparse
+        )
 
 
 def generate_random_matrices(seed=565656, N_trials=100, N_max=10):

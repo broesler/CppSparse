@@ -29,19 +29,22 @@ import csparse
 # -----------------------------------------------------------------------------
 #         Test 1
 # -----------------------------------------------------------------------------
-@pytest.mark.parametrize("problem, A, Ac", generate_suitesparse_matrices())
-def test_transpose(problem, A, Ac):
+@pytest.mark.parametrize("problem", generate_suitesparse_matrices())
+def test_transpose(problem):
     """Test the transpose operation on SuiteSparse matrices."""
     print(f"Testing matrix {problem.id} ({problem.name})")
+    A = problem.A
+    Ac = csparse.csc_from_scipy(A)
     B = A.T
     C = Ac.transpose()
     np.testing.assert_allclose(B.toarray(), C.toarray(), atol=1e-15)
 
 
-@pytest.mark.parametrize("problem, A, Ac", generate_suitesparse_matrices())
-def test_gaxpy(problem, A, Ac):
+@pytest.mark.parametrize("problem", generate_suitesparse_matrices())
+def test_gaxpy(problem):
     """Test the GAXPY operation on SuiteSparse matrices."""
     print(f"Testing matrix {problem.id} ({problem.name})")
+    A = problem.A
     M, N = A.shape
     rng = np.random.default_rng(problem.id)
     x = rng.random(N)
@@ -52,10 +55,10 @@ def test_gaxpy(problem, A, Ac):
     assert err < 1e-14
 
 
-@pytest.mark.parametrize("problem, A, Ac", generate_suitesparse_matrices())
-def test_coo_matrix(problem, A, Ac):
+@pytest.mark.parametrize("problem", generate_suitesparse_matrices())
+def test_coo_matrix(problem):
     """Test the COO matrix interface."""
-    A = A.tocoo()
+    A = problem.A.tocoo()
     rows, cols, values = A.row, A.col, A.data
     rng = np.random.default_rng(problem.id)
     p = rng.permutation(len(values))

@@ -9,11 +9,16 @@ Unit tests for the csparse.lu*() functions.
 """
 # =============================================================================
 
-import pytest
+import matplotlib.pyplot as plt
 import numpy as np
+import os
+import pytest
 
+from pathlib import Path
 from scipy import linalg as la, sparse
 from scipy.sparse import linalg as spla
+
+from .helpers import generate_suitesparse_matrices
 
 import csparse
 
@@ -147,6 +152,91 @@ def test_1norm_estimate(A):
     print("normd_inv:", normd_inv)
     print("    condd:", condd)
 
+
+# -----------------------------------------------------------------------------
+#         Test 7
+# -----------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    "problem",
+    list(generate_suitesparse_matrices(square_only=True))
+)
+class TestLU:
+    """Test class for the LU decomposition on SuiteSparse matrices."""
+    # TODO abstract this fixture to a base class for all tests
+    @pytest.fixture(scope='class', autouse=True)
+    def setup_plot(self, request):
+        """Set up the figure for plotting across tests."""
+        cls = request.cls
+
+        if not request.config.getoption('--make-figures'):
+            cls.make_figures = False
+            yield  # skip the setup if not making figures
+            return
+
+        cls.make_figures = True
+
+        cls.fig, cls.axs = plt.subplots(num=1, nrows=3, ncols=4, clear=True)
+        cls.fig.suptitle(f"LU Factors for {cls.problem.name}")
+
+        # Run the tests
+        yield
+
+        # Teardown code (save the figure)
+        cls.fig_dir = Path('test_figures/test_lu')
+        os.makedirs(cls.fig_dir, exist_ok=True)
+
+        cls.figure_path = (
+            cls.fig_dir /
+            f"{cls.problem.name.replace('/', '_')}.pdf"
+        )
+        print(f"Saving figure to {cls.figure_path}")
+        cls.fig.savefig(cls.figure_path)
+
+        plt.close(cls.fig)
+
+    @pytest.mark.parametrize('kind', ['natural', 'colamd', 'amd'])
+    def test_lu(self, problem, kind):
+        """Test LU decomposition with natural ordering."""
+        A = problem.A
+
+        if kind == 'natural':
+            permc_spec = 'NATURAL'
+            order = 'Natural'
+            tol = 1.0
+            row = 0
+        elif kind == 'colamd':
+            permc_spec = 'COLAMD'
+            order = 'ATANoDenseRows'
+            tol = 1.0
+            row = 1
+        elif kind == 'amd':
+            permc_spec = 'MMD_AT_PLUS_A'
+            order = 'APlusAT'
+            tol = 0.1
+            row = 2
+
+        try:
+            lu = spla.splu(A, permc_spec=permc_spec, diag_pivot_thresh=tol)
+        except RuntimeError as e:
+            pytest.skip(f"scipy.sparse: {e}")
+
+        L_, U_, p_, q_ = lu.L, lu.U, lu.perm_r, lu.perm_c
+
+        # Get the minimum absolute value of the diagonal of U
+        min_diag_U = np.min(np.abs(U_.diagonal()))
+        print(f"{min_diag_U=:.4g}")
+
+        if min_diag_U > 1e-14:
+            L, U, p, q = csparse.lu(A, order=order, tol=tol)
+
+            if self.make_figures:
+                self.axs[row, 0].spy(A, markersize=1)
+                self.axs[row, 1].spy(A[p], markersize=1)
+                self.axs[row, 2].spy(L, markersize=1)
+                self.axs[row, 3].spy(U, markersize=1)
+
+            np.testing.assert_allclose((L_ @ U_)[p_][:, q_].toarray(), A.toarray(), atol=ATOL)
+            np.testing.assert_allclose((L @ U).toarray(), A[p][:, q].toarray(), atol=ATOL)
 
 # =============================================================================
 # =============================================================================

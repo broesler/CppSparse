@@ -74,23 +74,25 @@ def test_coo_matrix(problem):
 # -----------------------------------------------------------------------------
 #         Test 2
 # -----------------------------------------------------------------------------
-@pytest.mark.parametrize("A, Ac", generate_random_matrices())
-def test_coo_construction(A, Ac):
+@pytest.mark.parametrize("A", generate_random_matrices())
+def test_coo_construction(A, request):
     """Test the construction of a COO matrix."""
-    err = sla.norm(A - Ac.toscipy(), ord=1) / sla.norm(A, ord=1)
-    assert err < 1e-15
+    A = A.tocoo()
+    Ac = csparse.COOMatrix(A.data, A.row, A.col, shape=A.shape)
+    assert_allclose(A.toarray(), Ac.toarray(), atol=1e-15)
     assert A.nnz == Ac.nnz
     assert max(1, Ac.nnz) == max(1, Ac.nzmax)
 
 
-@pytest.mark.parametrize("A, Ac", generate_random_matrices())
-def test_matrix_permutation(A, Ac):
+@pytest.mark.parametrize("A", generate_random_matrices())
+def test_matrix_permutation(A):
     """Test matrix permutation."""
     M, N = A.shape
     rng = np.random.default_rng(56)
     p = rng.permutation(M)
     q = rng.permutation(N)
     C1 = A[p][:, q]
+    Ac = csparse.csc_from_scipy(A)
     C2 = Ac.permute(p, q)
     err = sla.norm(C1 - C2.toscipy(), ord=1)
     assert err < 1e-13
@@ -112,8 +114,8 @@ def test_vector_permutation(p, x):
     assert_allclose(x1, x2, atol=1e-15)
 
 
-@pytest.mark.parametrize("A, Ac", generate_random_matrices())
-def test_symmetric_matrix_permutation(A, Ac):
+@pytest.mark.parametrize("A", generate_random_matrices())
+def test_symmetric_matrix_permutation(A):
     """Test symmetric matrix permutation."""
     M, N = A.shape
     rng = np.random.default_rng(56)

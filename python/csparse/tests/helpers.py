@@ -26,8 +26,6 @@ from pymatreader import read_mat
 from scipy import sparse
 from scipy.io import loadmat, hb_read, mmread
 
-import csparse
-
 # TODO refactor into a package
 # Skip ssgetpy and implement my own using pandas.
 
@@ -770,29 +768,25 @@ def generate_suitesparse_matrices(N=100, real_only=True, square_only=False):
         )
 
 
-def generate_random_matrices(seed=565656, N_trials=100, N_max=10):
+def generate_random_matrices(seed=565656, N_trials=100, N_max=10, d_scale=1):
     """Generate a list of random sparse matrices of maximum size N x N."""
     rng = np.random.default_rng(seed)
     for trial in range(N_trials):
         # Generate a random sparse matrix
         M, N = rng.integers(1, N_max, size=2, endpoint=True)
-        nz = rng.integers(1, N_max * N_max, size=1, endpoint=True).item()
+        d = d_scale * rng.random()  # density
 
-        rows = rng.integers(0, M, size=nz)
-        cols = rng.integers(0, N, size=nz)
-        vals = rng.random(nz)
+        A = sparse.random_array(
+            (M, N),
+            density=d,
+            format='csc',
+            random_state=rng
+        )
 
-        A = sparse.csc_array((vals, (rows, cols)), shape=(M, N))
-        Ac = csparse.COOMatrix(vals, rows, cols, shape=(M, N)).tocsc()
-
-        print(f"Random matrix {trial + 1} ({seed=}): "
+        print(f"Random matrix {trial} ({seed=}): "
               f"{A.shape} with {A.nnz} non-zeros")
 
-        yield pytest.param(
-            A, Ac,
-            id=f"random_{trial + 1}",
-            marks=pytest.mark.random
-        )
+        yield pytest.param(A, id=f"random_{trial}", marks=pytest.mark.random)
 
 
 def generate_random_compatible_matrices(
@@ -830,7 +824,7 @@ def generate_random_compatible_matrices(
 
         yield pytest.param(
             A, B,
-            id=f"random_{trial + 1}",
+            id=f"random_{trial}",
             marks=pytest.mark.random
         )
 
@@ -867,7 +861,7 @@ def generate_random_cholesky_matrices(seed=565656, N_trials=100, N_max=100):
 
         yield pytest.param(
             L, b,
-            id=f"random_{trial + 1}",
+            id=f"random_{trial}",
             marks=pytest.mark.random
         )
 

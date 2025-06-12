@@ -9,11 +9,18 @@ Unit tests for the csparse.qr() function.
 """
 # =============================================================================
 
-import pytest
+import matplotlib.pyplot as plt
 import numpy as np
+import os
+import pytest
 
+from pathlib import Path
+from numpy.testing import assert_allclose
 from scipy import sparse
 from scipy import linalg as la
+from scipy.sparse import linalg as spla
+
+from .helpers import generate_suitesparse_matrices
 
 import csparse
 
@@ -92,7 +99,7 @@ def test_csparse_qr(shape_cat, case_name, A, order):
     V, beta, R, p, q = csparse.qr(A, order)
 
     if order == 'Natural':
-        np.testing.assert_allclose(q, np.arange(N))
+        assert_allclose(q, np.arange(N))
 
     # Convert to numpy arrays
     V = V.toarray()
@@ -103,7 +110,7 @@ def test_csparse_qr(shape_cat, case_name, A, order):
     Ql = csparse.apply_qtleft(V, beta, p).T
 
     # Test the apply functions both get the same Q
-    np.testing.assert_allclose(Q, Ql, atol=ATOL)
+    assert_allclose(Q, Ql, atol=ATOL)
 
     # ---------- scipy QR
     # Apply the row permutation to A_dense
@@ -115,19 +122,19 @@ def test_csparse_qr(shape_cat, case_name, A, order):
     Qr_ = csparse.apply_qright(V_, tau, p)
 
     # Now we get the same Householder vectors and weights
-    np.testing.assert_allclose(V, V_, atol=ATOL)
-    np.testing.assert_allclose(beta, tau, atol=ATOL)
-    np.testing.assert_allclose(R, R_, atol=ATOL)
+    assert_allclose(V, V_, atol=ATOL)
+    assert_allclose(beta, tau, atol=ATOL)
+    assert_allclose(R, R_, atol=ATOL)
 
     # Q is the same up to row permutation
-    np.testing.assert_allclose(Q, Qr_, atol=ATOL)
-    np.testing.assert_allclose(Q, Q_[p_inv], atol=ATOL)
-    np.testing.assert_allclose(Q[p], Q_, atol=ATOL)
+    assert_allclose(Q, Qr_, atol=ATOL)
+    assert_allclose(Q, Q_[p_inv], atol=ATOL)
+    assert_allclose(Q[p], Q_, atol=ATOL)
 
     # Reproduce A = QR
-    np.testing.assert_allclose(Q_ @ R_, Apq, atol=ATOL)
-    np.testing.assert_allclose(Q_[p_inv] @ R_, A_dense[:, q], atol=ATOL)
-    np.testing.assert_allclose(Q @ R, A_dense[:, q], atol=ATOL)
+    assert_allclose(Q_ @ R_, Apq, atol=ATOL)
+    assert_allclose(Q_[p_inv] @ R_, A_dense[:, q], atol=ATOL)
+    assert_allclose(Q @ R, A_dense[:, q], atol=ATOL)
 
 
 @pytest.mark.parametrize("shape_cat, case_name, A", generate_test_matrices())
@@ -143,7 +150,7 @@ def test_apply_q(shape_cat, case_name, A):
         Rraw = np.vstack([Rraw, np.zeros((M - N, N))])
 
     # Check that the raw LAPACK output is as expected
-    np.testing.assert_allclose(np.triu(Qraw), Rraw, atol=ATOL)
+    assert_allclose(np.triu(Qraw), Rraw, atol=ATOL)
 
     # Get the Householder reflectors from the raw LAPACK output
     V_ = np.tril(Qraw, -1)[:, :M] + np.eye(M, min(M, N))
@@ -151,14 +158,14 @@ def test_apply_q(shape_cat, case_name, A):
     # Apply them to the identity to get back Q itself
     Q_r = csparse.apply_qright(V_, tau)
     Q_l = csparse.apply_qtleft(V_, tau).T
-    np.testing.assert_allclose(Q_r, Q_l, atol=ATOL)
+    assert_allclose(Q_r, Q_l, atol=ATOL)
 
     # Compare to the scipy output
     Q_, R_ = la.qr(A)
-    np.testing.assert_allclose(Q_r, Q_, atol=ATOL)
+    assert_allclose(Q_r, Q_, atol=ATOL)
 
     # Ensure scipy is self-consistent
-    np.testing.assert_allclose(R_, Rraw, atol=ATOL)
+    assert_allclose(R_, Rraw, atol=ATOL)
 
 
 @pytest.mark.parametrize("shape_cat, case_name, A", generate_test_matrices())
@@ -179,17 +186,132 @@ def test_qrightleft(shape_cat, case_name, A, qr_func):
     (Qraw, tau), Rraw = la.qr(A, mode='raw')
     V = np.tril(Qraw, -1)[:, :M] + np.eye(M, min(M, N))
 
-    np.testing.assert_allclose(V, V, atol=ATOL)
-    np.testing.assert_allclose(beta, tau, atol=ATOL)
+    assert_allclose(V, V, atol=ATOL)
+    assert_allclose(beta, tau, atol=ATOL)
 
     # Compare to scipy's QR
     Q_, R_ = la.qr(A)
-    np.testing.assert_allclose(Q_, Q, atol=ATOL)
-    np.testing.assert_allclose(R_, R, atol=ATOL)
+    assert_allclose(Q_, Q, atol=ATOL)
+    assert_allclose(R_, R, atol=ATOL)
 
     # Reproduce A = QR
-    np.testing.assert_allclose(Q @ R, A, atol=ATOL)
+    assert_allclose(Q @ R, A, atol=ATOL)
 
+
+# -----------------------------------------------------------------------------
+#         Test 9
+# -----------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    "problem",
+    list(generate_suitesparse_matrices()),
+    indirect=True
+)
+class TestQR:
+    """Test class for the QR decomposition on SuiteSparse matrices."""
+    @pytest.fixture(scope='class')
+    def problem(self, request):
+        """Fixture to provide the problem instance."""
+        return request.param
+
+    @pytest.fixture(scope='class', autouse=True)
+    def setup_problem(self, request, problem):
+        """Set up the problem instance for the test class."""
+        cls = request.cls
+        problem = problem
+        print(f"---------- {problem.name}")
+
+        A = problem.A
+
+        if A.shape[0] < A.shape[1]:
+            A = A.T
+
+        M, N = A.shape
+
+        # rank = sparse.csgraph.structural_rank(A)
+
+        A_orig = A.copy()
+
+        q = csparse.amd(A, order='ATA')  # like colamd in MATLAB
+        A = A[:, q]
+        # Use the singular values to compare with R from each decomposition
+        cls.sig = la.svdvals(A.toarray())
+
+        # Compute scipy R factor
+        _, R_ = la.qr(A.toarray())
+
+        # TODO treeplot using csgraph?
+        # [c, h, parent] = symbfact(A, 'col');
+        # only uses `parent` in treeplot.
+
+        # Compute csparse QR
+        V, beta, R, p, q = csparse.qr(A)
+
+        C = A.copy()
+        M2 = V.shape[0]
+        if M2 > M:
+            # Add empty rows
+            C = sparse.vstack([A, sparse.csc_array((M2 - M, N))])
+
+        cls.C = C[p]
+        cls.R = R
+
+        # Make the plot
+        if not request.config.getoption('--make-figures'):
+            yield  # skip the setup if not making figures
+            return
+
+        fig, axs = plt.subplots(num=1, nrows=2, ncols=4, clear=True)
+        fig.suptitle(f"QR Factors for {cls.problem.name}")
+
+        axs[0, 0].spy(A, markersize=1)
+        axs[0, 1].spy(cls.C, markersize=1)
+        # treeplot(parent, ax=axs[0, 2])  # TODO
+        axs[0, 3].spy(A_orig, markersize=1)
+        axs[1, 0].spy(abs(R) > 0, markersize=1)
+        axs[1, 1].spy(R_, markersize=1)
+        axs[1, 2].spy(R, markersize=1)
+        axs[1, 3].spy(V, markersize=1)
+
+        axs[0, 0].set_title('A colamd')
+        axs[0, 1].set_title('A permuted')
+        axs[0, 2].set_title('A treeplot')
+        axs[0, 3].set_title('A original')
+        axs[1, 0].set_title('R abs > 0')
+        axs[1, 1].set_title('R scipy')
+        axs[1, 2].set_title('R csparse')
+        axs[1, 3].set_title('V csparse')
+
+        # Run the tests
+        yield
+
+        # Teardown code (save the figure)
+        fig_dir = Path('test_figures/test_qr')
+        os.makedirs(fig_dir, exist_ok=True)
+
+        figure_path = (
+            fig_dir /
+            f"{problem.name.replace('/', '_')}.pdf"
+        )
+        print(f"Saving figure to {figure_path}")
+        fig.savefig(figure_path)
+
+        plt.close(fig)
+
+    def test_qr(self):
+        """Test the CSparse qr function vs scipy."""
+        s = la.svdvals(self.R)
+        err = la.norm(self.sig - s, ord=1) / self.sig[0]
+        print(f"qr: {err:.2e}")
+        assert err < 1e-12
+
+    @pytest.mark.parametrize('qr_func', [csparse.qr_right, csparse.qr_left])
+    def test_qr(self, qr_func):
+        """Test left-looking QR decomposition."""
+        V, beta, R = qr_func(self.C.toarray())
+        s = la.svdvals(R)
+        err = la.norm(self.sig - s, ord=1) / self.sig[0]
+        print(f"qr_left: {err:.2e}")
+        assert err < 1e-12
 
 # =============================================================================
 # =============================================================================

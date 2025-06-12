@@ -71,7 +71,7 @@ COOMatrix::COOMatrix(
         assert(v_.size() == i_.size());
     }
 
-    assert(M_ > 0 && N_ > 0);
+    assert(M_ >= 0 && N_ >= 0);
 
     // Check for any i or j out of bounds
     if (shape[0] && !i_.empty()) {  // shape was given as input, not inferred

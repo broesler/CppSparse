@@ -159,15 +159,22 @@ def test_1norm_estimate(A):
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
     "problem",
-    list(generate_suitesparse_matrices(square_only=True))
+    list(generate_suitesparse_matrices(square_only=True)),
+    indirect=True  # allow `problem` to be a fixture vs a parameter
 )
 class TestLU:
     """Test class for the LU decomposition on SuiteSparse matrices."""
+    @pytest.fixture(scope='class')
+    def problem(self, request):
+        """Fixture to provide the problem instance."""
+        return request.param
+
     # TODO abstract this fixture to a base class for all tests
     @pytest.fixture(scope='class', autouse=True)
-    def setup_plot(self, request):
+    def setup_plot(self, request, problem):
         """Set up the figure for plotting across tests."""
         cls = request.cls
+        cls.problem = problem
 
         if not request.config.getoption('--make-figures'):
             cls.make_figures = False
@@ -196,9 +203,9 @@ class TestLU:
         plt.close(cls.fig)
 
     @pytest.mark.parametrize('kind', ['natural', 'colamd', 'amd'])
-    def test_lu(self, problem, kind):
+    def test_lu(self, kind):
         """Test LU decomposition with natural ordering."""
-        A = problem.A
+        A = self.problem.A
 
         if kind == 'natural':
             permc_spec = 'NATURAL'
@@ -227,17 +234,26 @@ class TestLU:
         min_diag_U = np.min(np.abs(U_.diagonal()))
         print(f"{min_diag_U=:.4g}")
 
-        if min_diag_U > 1e-14:
-            L, U, p, q = csparse.lu(A, order=order, tol=tol)
+        # if min_diag_U > 1e-14:
+        L, U, p, q = csparse.lu(A, order=order, tol=tol)
 
-            if self.make_figures:
-                self.axs[row, 0].spy(A, markersize=1)
-                self.axs[row, 1].spy(A[p], markersize=1)
-                self.axs[row, 2].spy(L, markersize=1)
-                self.axs[row, 3].spy(U, markersize=1)
+        if self.make_figures:
+            self.axs[row, 0].spy(A, markersize=1)
+            self.axs[row, 1].spy(A[p], markersize=1)
+            self.axs[row, 2].spy(L, markersize=1)
+            self.axs[row, 3].spy(U, markersize=1)
 
-            assert_allclose((L_ @ U_)[p_][:, q_].toarray(), A.toarray(), atol=1e-6)
-            assert_allclose((L @ U).toarray(), A[p][:, q].toarray(), atol=1e-6)
+        assert_allclose(
+            (L_ @ U_)[p_][:, q_].toarray(),
+            A.toarray(),
+            atol=1e-6
+        )
+
+        assert_allclose(
+            (L @ U).toarray(),
+            A[p][:, q].toarray(),
+            atol=1e-6
+        )
 
 # =============================================================================
 # =============================================================================

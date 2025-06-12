@@ -203,6 +203,8 @@ def test_qrightleft(shape_cat, case_name, A, qr_func):
 # -----------------------------------------------------------------------------
 #         Test 9
 # -----------------------------------------------------------------------------
+# TODO don't really need to exercise qr_(left|right) here. We could just remove
+# this whole class and write it as a single test function for csparse.qr().
 @pytest.mark.parametrize(
     "problem",
     list(generate_suitesparse_matrices()),

@@ -157,6 +157,7 @@ def test_1norm_estimate(A):
 # -----------------------------------------------------------------------------
 #         Test 7
 # -----------------------------------------------------------------------------
+# TODO abstract this entire class
 @pytest.mark.parametrize(
     "problem",
     list(generate_suitesparse_matrices(square_only=True)),

@@ -182,6 +182,14 @@ class TestAdd:
         assert_allclose(C.toarray(), D.toarray(), atol=1e-12)
 
 
+# -----------------------------------------------------------------------------
+#         Test 14
+# -----------------------------------------------------------------------------
+# TODO
+# @pytest.mark.parametrize("problem", list(generate_random_matrices(N_max=100)))
+# def test_droptol(problem):
+#     """Test the drop tolerance operation on a random matrix."""
+#     pass
 
 # =============================================================================
 # =============================================================================

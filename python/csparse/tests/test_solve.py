@@ -49,7 +49,7 @@ def test_solve_func(solve_func):
     x = np.array(solve_func(A, b))
     assert x is not None
     assert x.shape == (N,)
-    assert_allclose((A @ x).toarray(), b, atol=ATOL)
+    assert_allclose(A @ x, b, atol=ATOL)
 
 
 # -----------------------------------------------------------------------------

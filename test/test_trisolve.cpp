@@ -98,17 +98,30 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
         B.assign(j, 0, 1.0);
         std::vector<csint> expect = {13, 12, 11, 8, 3};  // reversed in stack
 
-        std::vector<char> marked(N, false);
-        std::vector<csint> xi,      // do not initialize!
-                           pstack,  // pause and recursion stacks
-                           rstack;
-        xi.reserve(N);
-        pstack.reserve(N);
-        rstack.reserve(N);
+        SECTION("Non-recursive") {
+            std::vector<char> marked(N, false);
+            std::vector<csint> xi,      // do not initialize!
+                            pstack,  // pause and recursion stacks
+                            rstack;
+            xi.reserve(N);
+            pstack.reserve(N);
+            rstack.reserve(N);
 
-        xi = dfs(L, j, marked, xi, pstack, rstack);
+            xi = dfs(L, j, marked, xi, pstack, rstack);
 
-        REQUIRE(xi == expect);
+            REQUIRE(xi == expect);
+        }
+
+        SECTION("Recursive") {
+            // Check that the recursive dfs function gives the same result
+            std::vector<char> marked(N, false);
+            std::vector<csint> xi;
+            xi.reserve(N);
+
+            xi = detail::dfs_r(L, j, marked, xi);
+
+            REQUIRE(xi == expect);
+        }
     }
 
     SECTION("Reachability from a single node") {
@@ -116,9 +129,17 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
         B.assign(3, 0, 1.0);
         std::vector<csint> expect = {3, 8, 11, 12, 13};
 
-        std::vector<csint> xi = reach(L, B, 0);
+        SECTION("Non-recursive") {
+            std::vector<csint> xi = reach(L, B, 0);
 
-        REQUIRE(xi == expect);
+            REQUIRE(xi == expect);
+        }
+
+        SECTION("Recursive") {
+            std::vector<csint> xi = detail::reach_r(L, B);
+
+            REQUIRE(xi == expect);
+        }
     }
 
     SECTION("Reachability from multiple nodes") {
@@ -126,9 +147,17 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
         B.assign(3, 0, 1.0).assign(5, 0, 1.0).to_canonical();
         std::vector<csint> expect = {5, 9, 10, 3, 8, 11, 12, 13};
 
-        std::vector<csint> xi = reach(L, B, 0);
+        SECTION("Non-recursive") {
+            std::vector<csint> xi = reach(L, B, 0);
 
-        REQUIRE(xi == expect);
+            REQUIRE(xi == expect);
+        }
+
+        SECTION("Recursive") {
+            std::vector<csint> xi = detail::reach_r(L, B);
+
+            REQUIRE(xi == expect);
+        }
     }
 
     SECTION("spsolve Lx = b with dense RHS") {

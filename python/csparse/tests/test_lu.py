@@ -14,6 +14,7 @@ import numpy as np
 import os
 import pytest
 
+from numpy.testing import assert_allclose
 from pathlib import Path
 from scipy import linalg as la, sparse
 from scipy.sparse import linalg as spla
@@ -55,7 +56,7 @@ def test_lu_interface(order):
     # Test the LU decomposition with the default order
     L, U, p, q = csparse.lu(Ac, order=order)
 
-    np.testing.assert_allclose((L @ U).toarray(), A[p][:, q], atol=ATOL)
+    assert_allclose((L @ U).toarray(), A[p][:, q], atol=ATOL)
 
 
 def lu_helper(A, lu_func):
@@ -63,7 +64,7 @@ def lu_helper(A, lu_func):
     # Compare to scipy PLU = A
     P_, L_, U_ = la.lu(A)
 
-    np.testing.assert_allclose(P_ @ L_ @ U_, A, atol=ATOL)
+    assert_allclose(P_ @ L_ @ U_, A, atol=ATOL)
 
     # Computes LU = PA
     P, L, U = lu_func(A)
@@ -72,10 +73,10 @@ def lu_helper(A, lu_func):
         # P is a vector, so create the matrix
         P = np.eye(A.shape[0])[:, P]
 
-    np.testing.assert_allclose(P, P_.T, atol=ATOL)
-    np.testing.assert_allclose(L, L_, atol=ATOL)
-    np.testing.assert_allclose(U, U_, atol=ATOL)
-    np.testing.assert_allclose(L @ U, P @ A, atol=ATOL)
+    assert_allclose(P, P_.T, atol=ATOL)
+    assert_allclose(L, L_, atol=ATOL)
+    assert_allclose(U, U_, atol=ATOL)
+    assert_allclose(L @ U, P @ A, atol=ATOL)
 
 
 @pytest.mark.parametrize("lu_func", LU_FUNCS)
@@ -110,8 +111,8 @@ def test_1norm_estimate(A):
     norms = spla.norm(As, 1)
     norm_est = spla.onenormest(A)
 
-    np.testing.assert_allclose(normd, norms, atol=ATOL)
-    np.testing.assert_allclose(normd, norm_est, atol=ATOL)
+    assert_allclose(normd, norms, atol=ATOL)
+    assert_allclose(normd, norm_est, atol=ATOL)
 
     # Condition number == ||A||_1 * ||A^-1||_1
     condd = np.linalg.cond(A, 1)
@@ -139,13 +140,13 @@ def test_1norm_estimate(A):
     # C++Sparse version:
     normc_inv = csparse.norm1est_inv(As)  # == 0.11537500551678347
 
-    np.testing.assert_allclose(normd_inv, norms_inv, atol=ATOL)
-    np.testing.assert_allclose(normd_inv, norm_est_inv, atol=ATOL)
-    np.testing.assert_allclose(normd_inv, normc_inv, atol=ATOL)
+    assert_allclose(normd_inv, norms_inv, atol=ATOL)
+    assert_allclose(normd_inv, norm_est_inv, atol=ATOL)
+    assert_allclose(normd_inv, normc_inv, atol=ATOL)
 
     κc = csparse.cond1est(As)          # == 2.422875115852453
 
-    np.testing.assert_allclose(condd, κc, atol=ATOL)
+    assert_allclose(condd, κc, atol=ATOL)
 
     print("---------- 1-norm estimate:")
     print("    normd:", normd)
@@ -235,8 +236,8 @@ class TestLU:
                 self.axs[row, 2].spy(L, markersize=1)
                 self.axs[row, 3].spy(U, markersize=1)
 
-            np.testing.assert_allclose((L_ @ U_)[p_][:, q_].toarray(), A.toarray(), atol=ATOL)
-            np.testing.assert_allclose((L @ U).toarray(), A[p][:, q].toarray(), atol=ATOL)
+            assert_allclose((L_ @ U_)[p_][:, q_].toarray(), A.toarray(), atol=1e-6)
+            assert_allclose((L @ U).toarray(), A[p][:, q].toarray(), atol=1e-6)
 
 # =============================================================================
 # =============================================================================

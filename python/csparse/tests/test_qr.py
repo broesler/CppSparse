@@ -176,7 +176,9 @@ def test_qrightleft(shape_cat, case_name, A, qr_func):
     M, N = A.shape
 
     if qr_func == csparse.qr_right and M < N:
-        pytest.skip(f"Skipping {case_name} ({qr_func.__name__}) because M < N")
+        A = A.T  # transpose to make it M >= N
+
+    M, N = A.shape
 
     # Test our own python QR decomposition
     V, beta, R = qr_func(A)

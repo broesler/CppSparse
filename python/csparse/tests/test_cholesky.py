@@ -17,7 +17,8 @@ import pytest
 from pathlib import Path
 from numpy.testing import assert_allclose
 from scipy import linalg as la
-from scipy.sparse import csc_array, eye_array, linalg as sla
+from scipy import sparse
+from scipy.sparse import linalg as sla
 
 from .helpers import (
     generate_suitesparse_matrices,
@@ -154,11 +155,11 @@ class TestTrisolveCholesky:
         N = A.shape[1]
 
         # Make the matrix symmetric positive definite
-        cls.A = A @ A.T + 2 * N * eye_array(N)
+        cls.A = A @ A.T + 2 * N * sparse.eye_array(N)
 
         # Get the Cholesky factorization using scipy (dense matrices only)
         try:
-            cls.L0 = csc_array(la.cholesky(cls.A.toarray(), lower=True))
+            cls.L0 = sparse.csc_array(la.cholesky(cls.A.toarray(), lower=True))
         except Exception:
             pytest.skip(f"Skipping {problem.name} due to Cholesky failure.")
 
@@ -246,7 +247,7 @@ class TestTrisolveCholesky:
 
     def test_cholesky_reordered(self):
         """Test the C++Sparse Cholesky with reordering."""
-        L1 = csc_array(la.cholesky(self.C.toarray(), lower=True))
+        L1 = sparse.csc_array(la.cholesky(self.C.toarray(), lower=True))
         L2 = csparse.chol(self.C).L
         if self.make_figures:
             self.axs[0, 1].spy(L1, markersize=1)
@@ -260,7 +261,7 @@ class TestTrisolveCholesky:
         L3 = res.L
         p3 = res.p
         C3 = self.A[p3][:, p3]
-        L4 = csc_array(la.cholesky(C3.toarray(), lower=True))
+        L4 = sparse.csc_array(la.cholesky(C3.toarray(), lower=True))
         if self.make_figures:
             self.axs[0, 2].spy(L4, markersize=1)
             self.axs[1, 2].spy(L3, markersize=1)
@@ -276,12 +277,16 @@ class TestTrisolveCholesky:
     list(generate_random_cholesky_matrices(N_trials=201, N_max=100))
 )
 @pytest.mark.parametrize("lower", [True, False])
-def test_reachability(L, b, lower):
+def test_reachability(L, b, lower, request):
     """Test the reachability of the Cholesky factor."""
+    test_id = request.node.callspec.id
+    N = L.shape[0]
+
     # Solve the system
     if not lower:
         L = L.T
 
+    # returns "squeezed" array (N,) even if b is (N, 1)
     x = sla.spsolve(L, b)
 
     sr = csparse.reach_r(L, b)
@@ -291,17 +296,33 @@ def test_reachability(L, b, lower):
     s2 = csparse.reach(L, b)
     assert all(s2 == sr)
 
-    s = sorted(sr)
-
     if lower:
-        x3 = csparse.lsolve(L, b).toarray()  # convert to dense for test
+        xs = csparse.lsolve(L, b)
+        xd = csparse.lsolve(L, b.toarray())  # test with dense input
     else:
-        x3 = csparse.usolve(L, b.toarray())  # test with dense input
+        xs = csparse.usolve(L, b)
+        xd = csparse.usolve(L, b.toarray())  # test with dense input
 
-    xi = np.nonzero(x3)[0]
+    # Plot the results
+    if request.config.getoption('--make-figures'):
+        fig, ax = plt.subplots(num=1, clear=True)
+        ax.spy(sparse.hstack([L, x[:, np.newaxis], xs, b]), markersize=1)
+        ax.set_title(f"Reachability Test {test_id}")
+        # Save the figure for reference
+        fig_dir = Path('test_figures/test_reachability')
+        os.makedirs(fig_dir, exist_ok=True)
+        fig.savefig(fig_dir / f"reachability_{test_id}.pdf")
+
+    xi = np.nonzero(xs)[0]
+    s = np.sort(sr)
     assert all(s == xi)
 
-    assert_allclose(x, np.atleast_1d(x3.squeeze()), atol=1e-8)
+    # Check sparse and dense solutions
+    # Ensure 1D array for comparison
+    assert_allclose(xs.toarray().reshape(-1), xd, atol=1e-8)
+
+    # Check vs. scipy
+    assert_allclose(x, xd, atol=1e-8)  # works for upper
 
 # =============================================================================
 # =============================================================================

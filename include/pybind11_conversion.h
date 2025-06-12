@@ -342,7 +342,18 @@ auto make_trisolver(DenseSolver dense_solver)
                 );
             }
 
-            cs::SparseSolution sol = cs::spsolve(A, B, 0);
+            int is_tri = A.is_triangular();
+
+            if (is_tri == 0) {
+                throw std::invalid_argument(
+                    "Matrix A must be lower or upper triangular."
+                );
+            }
+
+            // If A is lower triangular, is_tri < 0, otherwise is_tri > 0
+            bool lower = (is_tri < 0);
+
+            cs::SparseSolution sol = cs::spsolve(A, B, 0, std::nullopt, lower);
 
             // Solution is an (N, 1) CSCMatrix
             cs::csint N = B.shape()[0];

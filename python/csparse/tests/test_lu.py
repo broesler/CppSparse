@@ -169,12 +169,18 @@ class TestLU:
         """Fixture to provide the problem instance."""
         return request.param
 
-    # TODO abstract this fixture to a base class for all tests
     @pytest.fixture(scope='class', autouse=True)
-    def setup_plot(self, request, problem):
-        """Set up the figure for plotting across tests."""
+    def setup_problem(self, request, problem):
+        """Set up the problem instance for the test class."""
         cls = request.cls
         cls.problem = problem
+        print(f"---------- {cls.problem.name}")
+
+    # TODO abstract this fixture to a base class for all tests
+    @pytest.fixture(scope='class', autouse=True)
+    def setup_plot(self, request, setup_problem):
+        """Set up the problem and figure for plotting across tests."""
+        cls = request.cls
 
         if not request.config.getoption('--make-figures'):
             cls.make_figures = False
@@ -226,7 +232,7 @@ class TestLU:
         try:
             lu = spla.splu(A, permc_spec=permc_spec, diag_pivot_thresh=tol)
         except RuntimeError as e:
-            pytest.skip(f"scipy.sparse: {e}")
+            pytest.skip(f"scipy.sparse: {e}")  # catch singular matrix errors
 
         L_, U_, p_, q_ = lu.L, lu.U, lu.perm_r, lu.perm_c
 

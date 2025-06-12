@@ -132,10 +132,11 @@ def test_python_cholesky_update(A):
 # -----------------------------------------------------------------------------
 #         Test 3
 # -----------------------------------------------------------------------------
-_all_ss_problems = list(generate_suitesparse_matrices(square_only=True))
-
-
-@pytest.mark.parametrize("problem", _all_ss_problems, indirect=True)
+@pytest.mark.parametrize(
+    "problem",
+    list(generate_suitesparse_matrices(square_only=True)),
+    indirect=True
+)
 class TestTrisolveCholesky:
     """Test triangular solvers with Cholesky factors."""
     @pytest.fixture(scope='class')

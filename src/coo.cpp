@@ -38,10 +38,31 @@ COOMatrix::COOMatrix(
     const Shape shape
 ) : v_(vals),
     i_(rows),
-    j_(cols),
-    M_(shape[0] ? shape[0] : *std::max_element(i_.begin(), i_.end()) + 1),
-    N_(shape[1] ? shape[1] : *std::max_element(j_.begin(), j_.end()) + 1)
+    j_(cols)
 {
+    // Initialize M and N
+    if (shape[0] > 0) {
+        M_ = shape[0];
+    } else {
+        if (i_.empty()) {
+            M_ = 0;  // no rows
+        } else {
+            // Infer from the given indices
+            M_ = *std::max_element(i_.begin(), i_.end()) + 1;
+        }
+    }
+
+    if (shape[1] > 0) {
+        N_ = shape[1];
+    } else {
+        if (j_.empty()) {
+            N_ = 0;  // no columns
+        } else {
+            // Infer from the given indices
+            N_ = *std::max_element(j_.begin(), j_.end()) + 1;
+        }
+    }
+
     // Check that all vectors are the same size
     assert(i_.size() == j_.size());
 
@@ -53,7 +74,7 @@ COOMatrix::COOMatrix(
     assert(M_ > 0 && N_ > 0);
 
     // Check for any i or j out of bounds
-    if (shape[0]) {  // shape was given as input, not inferred
+    if (shape[0] && !i_.empty()) {  // shape was given as input, not inferred
         assert(M_ == shape[0]);
         csint max_i = *std::max_element(i_.begin(), i_.end());
         if (max_i >= M_) {
@@ -63,7 +84,7 @@ COOMatrix::COOMatrix(
         }
     }
 
-    if (shape[1]) {
+    if (shape[1] && !j_.empty()) {  // shape was given as input, not inferred
         assert(N_ == shape[1]);
         csint max_j = *std::max_element(j_.begin(), j_.end());
         if (max_j >= N_) {

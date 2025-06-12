@@ -187,11 +187,31 @@ class TestAdd:
 # -----------------------------------------------------------------------------
 #         Test 14
 # -----------------------------------------------------------------------------
-# TODO
-# @pytest.mark.parametrize("problem", list(generate_random_matrices(N_max=100)))
-# def test_droptol(problem):
-#     """Test the drop tolerance operation on a random matrix."""
-#     pass
+@pytest.mark.parametrize(
+    "A", list(generate_random_matrices(N_max=100, d_scale=0.1))
+)
+def test_droptol(A):
+    """Test the drop tolerance operation on a random matrix."""
+    # Shift the values to the range [-1, 1]
+    A = sparse.csc_array((2 * A.data - 1, A.indices, A.indptr), shape=A.shape)
+
+    drop_tol = 0.5 # drop entries with absolute value < 0.5
+
+    B = csparse.csc_from_scipy(A).droptol(drop_tol)
+
+    # About 4x as fast to filter A.data and eliminate zeros than to do the full
+    # multiplication: A * (np.abs(A) > drop_tol).
+    # The csparse method is a further 4x faster
+    A.data[np.abs(A.data) <= drop_tol] = 0
+    A.eliminate_zeros()
+
+    assert all(np.abs(A.data) > drop_tol)
+    assert all(np.abs(B.data) > drop_tol)
+
+    assert_allclose(A.toarray(), B.toarray(), atol=1e-15)
+
+
+    
 
 # =============================================================================
 # =============================================================================

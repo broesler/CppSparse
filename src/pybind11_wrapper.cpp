@@ -649,6 +649,28 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("A"), py::arg("b")
     );
     
+    m.def("reach_r", 
+        [](const py::object& A_scipy, const py::object& b_scipy) {
+            const cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            const cs::CSCMatrix b = csc_from_scipy(b_scipy);
+
+            if (b.shape()[1] != 1) {
+                throw std::invalid_argument(
+                    "b must be a column vector (shape (N, 1))."
+                );
+            }
+
+            if (A.shape()[0] != b.shape()[0]) {
+                throw std::invalid_argument(
+                    "Matrix A and vector b must have compatible shapes."
+                );
+            }
+
+            return cs::detail::reach_r(A, b);
+        },
+        py::arg("A"), py::arg("b")
+    );
+
     m.def("lsolve", make_trisolver(&cs::lsolve), py::arg("L"), py::arg("b"));
     m.def("usolve", make_trisolver(&cs::usolve), py::arg("U"), py::arg("b"));
     m.def("ltsolve", make_trisolver(&cs::ltsolve), py::arg("L"), py::arg("b"));

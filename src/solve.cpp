@@ -599,6 +599,50 @@ std::vector<csint>& dfs(
 }
 
 
+namespace detail {
+
+std::vector<csint> reach_r(const CSCMatrix& A, const CSCMatrix& B)
+{
+    std::vector<char> marked(A.M_, false);
+    std::vector<csint> xi;
+    xi.reserve(A.N_);
+
+    for (csint p = B.p_[0]; p < B.p_[1]; p++) {
+        csint j = B.i_[p];  // consider nonzero B(j, 0)
+        if (!marked[j]) {
+            dfs_r(A, j, marked, xi);
+        }
+    }
+
+    // xi is returned from dfs in reverse order, since it is a stack
+    std::reverse(xi.begin(), xi.end());
+    return xi;
+}
+
+
+std::vector<csint>& dfs_r(
+    const CSCMatrix& A,
+    csint j,
+    std::vector<char>& marked,
+    std::vector<csint>& xi
+)
+{
+    marked[j] = true;  // mark node j as visited
+
+    for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+        csint i = A.i_[p];  // consider neighbor node i
+        if (!marked[i]) {
+            dfs_r(A, i, marked, xi);  // dfs recursively from i
+        }
+    }
+
+    xi.push_back(j);  // push unvisited neighbor onto stack
+
+    return xi;
+}
+
+}  // namespace detail
+
 // -----------------------------------------------------------------------------
 //         Cholesky Factorization Solvers
 // -----------------------------------------------------------------------------

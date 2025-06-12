@@ -257,6 +257,48 @@ SparseSolution spsolve(
 );
 
 
+namespace detail {
+
+/** Compute the reachability indices of a column `k` in a sparse matrix `B`,
+ * given a sparse matrix `A` that defines the graph.
+ *
+ * This function is a recursive version of `cs::reach`. It is not intended to be
+ * used directly, but rather as a demonstration.
+ *
+ * @param A  a sparse system matrix
+ * @param B  a sparse matrix containing the RHS in column 0.
+ *
+ * @return xi  the row indices of the non-zero entries in `x`, in topological
+ *         order of the graph.
+ */
+std::vector<csint> reach_r(const CSCMatrix& A, const CSCMatrix& B);
+
+
+/** Perform depth-first search on the matrix graph.
+ *
+ * This function is a recursive version of `cs::dfs`. It is not intended to be
+ * used directly, but rather as a demonstration.
+ *
+ * @param A  a sparse matrix
+ * @param j  the starting node
+ * @param marked  a boolean vector of length `N` that marks visited nodes
+ * @param[in,out] xi  the row indices of the non-zero entries in `x`. This
+ *       vector is used as a stack to store the output. It should not be
+ *       initialized, other than by a previous call to `dfs`.
+ * @param pstack  memory for the pause stack, reserved to length `N`.
+ *
+ * @return xi  a reference to the row indices of the non-zero entries in `x`.
+ */
+std::vector<csint>& dfs_r(
+    const CSCMatrix& A,
+    csint j,
+    std::vector<char>& marked,
+    std::vector<csint>& xi
+);
+
+}  // namespace detail
+
+
 /** Compute the reachability indices of a column `k` in a sparse matrix `B`,
  * given a sparse matrix `A` that defines the graph.
  *

@@ -944,6 +944,18 @@ public:
         OptionalVectorRef<csint> p_inv_ref
     );
 
+    friend std::vector<csint> detail::reach_r(
+        const CSCMatrix& A,
+        const CSCMatrix& B
+    );
+
+    friend std::vector<csint>& detail::dfs_r(
+        const CSCMatrix& A,
+        csint j,
+        std::vector<char>& marked,
+        std::vector<csint>& xi
+    );
+
     //--------------------------------------------------------------------------
     //        Cholesky Decomposition
     //--------------------------------------------------------------------------

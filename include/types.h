@@ -46,6 +46,20 @@ class COOMatrix;
 class CSCMatrix;
 class TestCSCMatrix;
 
+// Internal functions not exposed in the public API
+namespace detail {
+
+std::vector<csint> reach_r(const CSCMatrix& A, const CSCMatrix& B);
+
+std::vector<csint>& dfs_r(
+    const CSCMatrix& A,
+    csint j,
+    std::vector<char>& marked,
+    std::vector<csint>& xi
+);
+
+}  // namespace detail
+
 }  // namespace cs
 
 #endif  // _CSPARSE_TYPES_H_

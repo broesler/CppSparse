@@ -284,20 +284,19 @@ def test_reachability(L, b, lower):
 
     x = sla.spsolve(L, b)
 
-    # TODO implement reachr in C++ (see reachr and dfsr on Davis, p 32)
-    # sr = csparse.reachr(L, b)
-    # sz = csparse.reachr(L, b)
-    # assert all(sr == sz)
+    sr = csparse.reach_r(L, b)
+    sz = csparse.reach_r(L, b)
+    assert all(sr == sz)
 
     s2 = csparse.reach(L, b)
-    # assert all(s2 == sr)
+    assert all(s2 == sr)
 
-    s = sorted(s2)
+    s = sorted(sr)
 
     if lower:
         x3 = csparse.lsolve(L, b).toarray()  # convert to dense for test
     else:
-        x3 = csparse.usolve(L, b.toarray()) # test with dense input
+        x3 = csparse.usolve(L, b.toarray())  # test with dense input
 
     xi = np.nonzero(x3)[0]
     assert all(s == xi)

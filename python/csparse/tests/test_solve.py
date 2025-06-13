@@ -12,6 +12,7 @@ Unit tests for csparse solve functions.
 import pytest
 import numpy as np
 import scipy.linalg as la
+import warnings
 
 from numpy.testing import assert_allclose
 from scipy import sparse
@@ -184,6 +185,43 @@ def test_qr_solve(request, A):
     print(f"{test_id}: r_={r_:.2e}, r={r:.2e}, rq={rq:.2e}")
     assert_allclose(xq, x_, atol=1e-10)  # always passes
     assert_allclose(x, x_, atol=1e-10)   # fails
+
+
+# -----------------------------------------------------------------------------
+#         Test 18
+# -----------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    'problem', list(generate_suitesparse_matrices(square_only=True))
+)
+def test_iterative_refinement(problem):
+    """Test iterative refinement with a known right-hand side."""
+    A = problem.A
+    M, N = A.shape
+    rng = np.random.default_rng(565656)
+    b = rng.random((M,))
+
+    use_spsolve = True
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", category=spla.MatrixRankWarning)
+
+        try:
+            x = spla.spsolve(A, b)
+        except (spla.MatrixRankWarning, RuntimeError) as e:
+            try:
+                x = spla.lsqr(A, b)[0]
+                use_spsolve = False
+            except:
+                pytest.skip(f"Matrix is singular or not solvable: {e}.")
+
+    # Compute the residual and refine the solution
+    r = b - A @ x
+
+    if use_spsolve:
+        x += spla.spsolve(A, r)
+    else:
+        x += spla.lsqr(A, r)[0]
+
+    print(f"||r|| = {la.norm(r):.2e}, {la.norm(A @ x - b):.2e}")
 
 # =============================================================================
 # =============================================================================

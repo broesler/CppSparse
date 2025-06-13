@@ -287,7 +287,7 @@ auto wrap_solve(
         const std::string& order,
         Args... args
     ) {
-        cs::CSCMatrix A = csc_from_scipy(A_scipy);
+        const cs::CSCMatrix A = csc_from_scipy(A_scipy);
         cs::AMDOrder order_enum = string_to_amdorder(order);
         std::vector<double> x = f(A, b, order_enum, std::forward<Args>(args)...);
         return py::cast(x);

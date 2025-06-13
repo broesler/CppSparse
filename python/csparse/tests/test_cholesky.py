@@ -22,7 +22,8 @@ from scipy.sparse import linalg as sla
 
 from .helpers import (
     generate_suitesparse_matrices,
-    generate_random_cholesky_matrices
+    generate_random_cholesky_matrices,
+    BaseSuiteSparsePlot
 )
 
 import csparse
@@ -137,21 +138,18 @@ def test_python_cholesky_update(A):
     list(generate_suitesparse_matrices(square_only=True)),
     indirect=True
 )
-class TestTrisolveCholesky:
+class TestTrisolveCholesky(BaseSuiteSparsePlot):
     """Test triangular solvers with Cholesky factors."""
-    @pytest.fixture(scope='class')
-    def problem(self, request):
-        """Fixture to provide a problem instance."""
-        return request.param
+    _nrows = 2
+    _ncols = 3
+    _fig_dir = Path('test_trisolve_cholesky')
+    _fig_title_prefix = 'Cholesky Factors for '
 
     @pytest.fixture(scope='class', autouse=True)
-    def setup_problem(self, request, problem):
+    def setup_problem(self, request, base_setup_problem):
         """Setup fixture to prepare the problem for testing."""
         cls = request.cls
-        # Store the problem for later use
-        cls.problem = problem
-
-        A = problem.A
+        A = cls.problem.A
         cls.order = 'APlusAT'
         N = A.shape[1]
 
@@ -162,10 +160,10 @@ class TestTrisolveCholesky:
         try:
             cls.L0 = sparse.csc_array(la.cholesky(cls.A.toarray(), lower=True))
         except Exception:
-            pytest.skip(f"Skipping {problem.name} due to Cholesky failure.")
+            pytest.skip(f"Skipping {cls.problem.name}: Cholesky failure.")
 
         # RHS
-        rng = np.random.default_rng(problem.id)
+        rng = np.random.default_rng(cls.problem.id)
         cls.b = rng.random(N)
 
         # Get the permutation from AMD
@@ -175,41 +173,7 @@ class TestTrisolveCholesky:
         # Reorder the matrix
         cls.C = cls.A[p][:, p]
         cls.κ = csparse.cond1est(cls.C)
-        print(f"cond1est: {cls.κ:.4e} ({problem.name})")
-
-        yield  # run the tests
-
-    # persist the figure across tests
-    @pytest.fixture(scope='class', autouse=True)
-    def setup_plot(self, request, setup_problem):
-        """Setup fixture to prepare the plot for testing."""
-        cls = request.cls
-
-        if not request.config.getoption('--make-figures'):
-            cls.make_figures = False
-            yield  # skip the setup if not making figures
-            return
-
-        cls.make_figures = True
-
-        cls.fig, cls.axs = plt.subplots(num=1, nrows=2, ncols=3, clear=True)
-        cls.fig.suptitle(f"Cholesky Factors for {cls.problem.name}")
-
-        # Run the tests
-        yield
-
-        # Teardown code (save the figure)
-        cls.fig_dir = Path('test_figures/test_trisolve_cholesky')
-        os.makedirs(cls.fig_dir, exist_ok=True)
-
-        cls.figure_path = (
-            cls.fig_dir /
-            f"{cls.problem.name.replace('/', '_')}.pdf"
-        )
-        print(f"Saving figure to {cls.figure_path}")
-        cls.fig.savefig(cls.figure_path)
-
-        plt.close(cls.fig)
+        print(f"cond1est: {cls.κ:.4e} ({cls.problem.name})")
 
     def test_lsolve(self):
         """Test lsolve vs. scipy.linalg.spsolve."""
@@ -281,7 +245,6 @@ class TestTrisolveCholesky:
 def test_reachability(L, b, lower, request):
     """Test the reachability of the Cholesky factor."""
     test_id = request.node.callspec.id
-    N = L.shape[0]
 
     # Solve the system
     if not lower:

@@ -18,7 +18,7 @@ from pathlib import Path
 from scipy import sparse
 
 from .helpers import (
-    BaseSuiteSparseTest,
+    BaseSuiteSparsePlot,
     generate_suitesparse_matrices,
     generate_random_matrices,
     is_valid_permutation
@@ -68,7 +68,6 @@ def test_amd(A, request):
         os.makedirs(fig_dir, exist_ok=True)
 
         test_id = request.node.name
-        assert False
         figure_path = fig_dir / f"{test_id}.pdf"
         print(f"Saving figure to {figure_path}")
         fig.savefig(figure_path)
@@ -81,7 +80,7 @@ def test_amd(A, request):
     list(generate_suitesparse_matrices(N=200)),
     indirect=True
 )
-class TestAMD(BaseSuiteSparseTest):
+class TestAMD(BaseSuiteSparsePlot):
     """Test AMD fill-reducing ordering on SuiteSparse matrices."""
     _nrows = 2
     _ncols = 2

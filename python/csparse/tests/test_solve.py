@@ -17,7 +17,7 @@ from numpy.testing import assert_allclose
 from scipy import sparse
 from scipy.sparse import linalg as spla
 
-from .helpers import generate_suitesparse_matrices
+from .helpers import generate_suitesparse_matrices, BaseSuiteSparseTest
 
 import csparse
 
@@ -60,20 +60,12 @@ def test_solve_func(solve_func):
     list(generate_suitesparse_matrices(square_only=True)),
     indirect=True
 )
-class TestCholLUSolve:
+class TestCholLUSolve(BaseSuiteSparseTest):
     """Test Cholesky and LU solve functions on SuiteSparse matrices."""
-    @pytest.fixture(scope='class')
-    def problem(self, request):
-        """Fixture to provide a SuiteSparse matrix."""
-        return request.param
-
     @pytest.fixture(scope='class', autouse=True)
     def setup_problem(self, request, problem):
         """Setup the problem matrix."""
         cls = request.cls
-        cls.problem = problem
-        print(f"---------- {cls.problem.name}")
-
         A = problem.A
         M, N = A.shape
         is_spd = False

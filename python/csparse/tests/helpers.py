@@ -937,12 +937,8 @@ def is_valid_permutation(p):
 #         Test Classes
 # -----------------------------------------------------------------------------
 class BaseSuiteSparseTest:
-    """An abstract base class for tests that require a plot."""
-    # Default values for parameters
-    _nrows = 1
-    _ncols = 1
-    _fig_dir = Path('test_suitesparse')
-    _fig_title_prefix = ''
+    """An abstract base class for tests."""
+    # TODO type hints?
 
     @pytest.fixture(scope='class')
     def problem(self, request):
@@ -956,6 +952,15 @@ class BaseSuiteSparseTest:
         cls.problem = problem
         print(f"Testing matrix {problem.id} ({problem.name})")
         # Subclasses should override this method to set up the problem
+
+
+class BaseSuiteSparsePlot(BaseSuiteSparseTest):
+    """An abstract base class for tests that require a plot."""
+    # Default values for parameters
+    _nrows = 1
+    _ncols = 1
+    _fig_dir = Path('test_suitesparse')
+    _fig_title_prefix = ''
 
     @pytest.fixture(scope='class', autouse=True)
     def setup_plot(self, request, base_setup_problem):

@@ -9,9 +9,7 @@ Unit tests for the csparse.lu*() functions.
 """
 # =============================================================================
 
-import matplotlib.pyplot as plt
 import numpy as np
-import os
 import pytest
 
 from numpy.testing import assert_allclose
@@ -19,7 +17,7 @@ from pathlib import Path
 from scipy import linalg as la, sparse
 from scipy.sparse import linalg as spla
 
-from .helpers import generate_suitesparse_matrices
+from .helpers import generate_suitesparse_matrices, BaseSuiteSparsePlot
 
 import csparse
 
@@ -157,57 +155,17 @@ def test_1norm_estimate(A):
 # -----------------------------------------------------------------------------
 #         Test 7
 # -----------------------------------------------------------------------------
-# TODO abstract this entire class
 @pytest.mark.parametrize(
     "problem",
     list(generate_suitesparse_matrices(square_only=True)),
     indirect=True  # allow `problem` to be a fixture vs a parameter
 )
-class TestLU:
+class TestLU(BaseSuiteSparsePlot):
     """Test class for the LU decomposition on SuiteSparse matrices."""
-    @pytest.fixture(scope='class')
-    def problem(self, request):
-        """Fixture to provide the problem instance."""
-        return request.param
-
-    @pytest.fixture(scope='class', autouse=True)
-    def setup_problem(self, request, problem):
-        """Set up the problem instance for the test class."""
-        cls = request.cls
-        cls.problem = problem
-        print(f"---------- {cls.problem.name}")
-
-    # TODO abstract this fixture to a base class for all tests
-    @pytest.fixture(scope='class', autouse=True)
-    def setup_plot(self, request, setup_problem):
-        """Set up the problem and figure for plotting across tests."""
-        cls = request.cls
-
-        if not request.config.getoption('--make-figures'):
-            cls.make_figures = False
-            yield  # skip the setup if not making figures
-            return
-
-        cls.make_figures = True
-
-        cls.fig, cls.axs = plt.subplots(num=1, nrows=3, ncols=4, clear=True)
-        cls.fig.suptitle(f"LU Factors for {cls.problem.name}")
-
-        # Run the tests
-        yield
-
-        # Teardown code (save the figure)
-        cls.fig_dir = Path('test_figures/test_lu')
-        os.makedirs(cls.fig_dir, exist_ok=True)
-
-        cls.figure_path = (
-            cls.fig_dir /
-            f"{cls.problem.name.replace('/', '_')}.pdf"
-        )
-        print(f"Saving figure to {cls.figure_path}")
-        cls.fig.savefig(cls.figure_path)
-
-        plt.close(cls.fig)
+    _nrows = 3
+    _ncols = 4
+    _fig_dir = Path('test_lu')
+    _fig_title_prefix = 'LU Factors for '
 
     @pytest.mark.parametrize('kind', ['natural', 'colamd', 'amd'])
     def test_lu(self, kind):

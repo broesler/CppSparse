@@ -768,12 +768,22 @@ def generate_suitesparse_matrices(N=100, real_only=True, square_only=False):
         )
 
 
-def generate_random_matrices(seed=565656, N_trials=100, N_max=10, d_scale=1):
+def generate_random_matrices(
+    seed=565656,
+    N_trials=100,
+    N_max=10,
+    square_only=True,
+    d_scale=1
+):
     """Generate a list of random sparse matrices of maximum size N x N."""
     rng = np.random.default_rng(seed)
     for trial in range(N_trials):
         # Generate a random sparse matrix
-        M, N = rng.integers(1, N_max, size=2, endpoint=True)
+        if square_only:
+            M = N = rng.integers(1, N_max, endpoint=True)
+        else:
+            M, N = rng.integers(1, N_max, size=2, endpoint=True)
+
         d = d_scale * rng.random()  # density
 
         A = sparse.random_array(

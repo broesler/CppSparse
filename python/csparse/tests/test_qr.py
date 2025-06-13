@@ -19,7 +19,7 @@ from numpy.testing import assert_allclose
 from scipy import sparse
 from scipy import linalg as la
 
-from .helpers import generate_suitesparse_matrices
+from .helpers import generate_suitesparse_matrices, generate_random_matrices
 
 import csparse
 
@@ -215,10 +215,19 @@ def test_qrightleft(shape_cat, case_name, A, qr_func):
 # a nice way to check the decomposition without forming the full matrix
 # Q (typically expensive).
 
-@pytest.mark.parametrize("problem", list(generate_suitesparse_matrices()))
+@pytest.mark.parametrize(
+    "problem",
+    list(generate_suitesparse_matrices()) + 
+    list(generate_random_matrices(N_max=100, d_scale=0.1))
+)
 def test_qr(request, problem):
     """Test CSparse QR decomposition."""
-    A = problem.A
+    if isinstance(problem, sparse.sparray):
+        A = problem
+        problem_name = request.node.name
+    else:
+        A = problem.A  # MatrixProblem
+        problem_name = problem.name
 
     if A.shape[0] < A.shape[1]:
         A = A.T
@@ -261,7 +270,7 @@ def test_qr(request, problem):
     # Make the plot
     if request.config.getoption('--make-figures'):
         fig, axs = plt.subplots(num=1, nrows=2, ncols=3, clear=True)
-        fig.suptitle(f"QR Factors for {problem.name}")
+        fig.suptitle(f"QR Factors for {problem_name}")
 
         # Resize for plotting purposes only
         R_.resize((V_.shape[0], N))
@@ -285,7 +294,7 @@ def test_qr(request, problem):
         fig_dir = Path('test_figures/test_qr')
         os.makedirs(fig_dir, exist_ok=True)
 
-        figure_path = fig_dir / f"{problem.name.replace('/', '_')}.pdf"
+        figure_path = fig_dir / f"{problem_name.replace('/', '_')}.pdf"
         print(f"Saving figure to {figure_path}")
         fig.savefig(figure_path)
 

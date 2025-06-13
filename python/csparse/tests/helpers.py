@@ -938,8 +938,6 @@ def is_valid_permutation(p):
 # -----------------------------------------------------------------------------
 class BaseSuiteSparseTest:
     """An abstract base class for tests."""
-    # TODO type hints?
-
     @pytest.fixture(scope='class')
     def problem(self, request):
         """Fixture to provide the problem matrix."""

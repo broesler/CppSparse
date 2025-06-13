@@ -10,9 +10,12 @@
 #ifndef _CSPARSE_TYPES_H_
 #define _CSPARSE_TYPES_H_
 
+#include <cstdint>
+
+
 namespace cs {
 
-using csint = std::int64_t;
+using csint = std::int32_t;
 using Shape = std::array<csint, 2>;
 
 template <typename T>

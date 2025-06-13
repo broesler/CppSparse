@@ -206,12 +206,9 @@ def test_iterative_refinement(problem):
 
         try:
             x = spla.spsolve(A, b)
-        except (spla.MatrixRankWarning, RuntimeError) as e:
-            try:
-                x = spla.lsqr(A, b)[0]
-                use_spsolve = False
-            except:
-                pytest.skip(f"Matrix is singular or not solvable: {e}.")
+        except (spla.MatrixRankWarning, RuntimeError):
+            x = spla.lsqr(A, b)[0]
+            use_spsolve = False
 
     # Compute the residual and refine the solution
     r = b - A @ x

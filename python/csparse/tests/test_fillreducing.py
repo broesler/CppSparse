@@ -18,8 +18,10 @@ from pathlib import Path
 from scipy import sparse
 
 from .helpers import (
+    BaseSuiteSparseTest,
     generate_suitesparse_matrices,
-    generate_random_matrices
+    generate_random_matrices,
+    is_valid_permutation
 )
 
 import csparse
@@ -48,9 +50,7 @@ def test_amd(A, request):
 
     p = csparse.amd(A, order='APlusAT')
 
-    # TODO def is_valid_permutation(p, N)
-    assert np.array_equal(np.sort(p), np.arange(N)), \
-        'Permutation is not a valid reordering.'
+    assert is_valid_permutation(p)
 
     if request.config.getoption('--make-figures'):
         C = A + A.T + sparse.eye_array(N)
@@ -81,21 +81,19 @@ def test_amd(A, request):
     list(generate_suitesparse_matrices(N=200)),
     indirect=True
 )
-class TestAMD:
+class TestAMD(BaseSuiteSparseTest):
     """Test AMD fill-reducing ordering on SuiteSparse matrices."""
-    @pytest.fixture(scope='class')
-    def problem(self, request):
-        """Fixture to provide the problem matrix."""
-        return request.param
+    _nrows = 2
+    _ncols = 2
+    _fig_dir = Path('test_amd_suitesparse')
+    _fig_title_prefix = 'AMD for '
 
     @pytest.fixture(scope='class', autouse=True)
-    def setup_problem(self, request, problem):
+    def setup_problem(self, request, base_setup_problem):
         """Setup method to initialize the problem matrix."""
         cls = request.cls
-        cls.problem = problem
-        print(f"Testing matrix {problem.id} ({problem.name})")
 
-        A = problem.A
+        A = cls.problem.A
         cls.A_orig = A.copy()
 
         M, N = A.shape
@@ -111,43 +109,11 @@ class TestAMD:
         cls.A = A
         print(f"A is shape {A.shape} with {A.nnz} nonzeros.")
 
-    @pytest.fixture(scope='class', autouse=True)
-    def setup_plot(self, request, setup_problem):
-        """Set up the problem and figure for plotting across tests."""
-        cls = request.cls
-
-        if not request.config.getoption('--make-figures'):
-            cls.make_figures = False
-            yield  # skip the setup if not making figures
-            return
-
-        cls.make_figures = True
-
-        cls.fig, cls.axs = plt.subplots(num=1, nrows=2, ncols=2, clear=True)
-        cls.fig.suptitle(f"AMD for {cls.problem.name}")
-
-        # Run the tests
-        yield
-
-        # Teardown code (save the figure)
-        cls.fig_dir = Path('test_figures/test_amd_suitesparse')
-        os.makedirs(cls.fig_dir, exist_ok=True)
-
-        cls.figure_path = (
-            cls.fig_dir /
-            f"{cls.problem.name.replace('/', '_')}.pdf"
-        )
-        print(f"Saving figure to {cls.figure_path}")
-        cls.fig.savefig(cls.figure_path)
-
-        plt.close(cls.fig)
-
     def test_symmetric_amd(self):
         """Test AMD fill-reducing ordering."""
         p = csparse.amd(self.A, order='APlusAT')
 
-        assert np.array_equal(np.sort(p), np.arange(self.N)), \
-            'Permutation is not a valid reordering.'
+        assert is_valid_permutation(p)
 
         if self.make_figures:
             C = self.A + self.A.T + sparse.eye_array(self.N)
@@ -160,10 +126,8 @@ class TestAMD:
     def test_colamd(self):
         """Test COLAMD fill-reducing ordering."""
         p = csparse.amd(self.A_orig, order='ATA')
-        M, N = self.A_orig.shape
 
-        assert np.array_equal(np.sort(p), np.arange(N)), \
-            'Permutation is not a valid reordering.'
+        assert is_valid_permutation(p)
 
         if self.make_figures:
             self.axs[1, 0].spy(self.A_orig, markersize=1)

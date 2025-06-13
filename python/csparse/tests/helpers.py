@@ -12,8 +12,10 @@ Helper functions for the C++Sparse python tests.
 import pytest
 
 # import datetime
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import os
 import re
 import requests
 import warnings
@@ -924,6 +926,72 @@ def is_complex(A):
         True if the matrix is complex-valued, False otherwise.
     """
     return np.issubdtype(A.dtype, np.complexfloating)
+
+
+def is_valid_permutation(p):
+    """Check if a vector is a valid permutation."""
+    return np.array_equal(np.sort(p), np.arange(len(p)))
+
+
+# -----------------------------------------------------------------------------
+#         Test Classes
+# -----------------------------------------------------------------------------
+class BaseSuiteSparseTest:
+    """An abstract base class for tests that require a plot."""
+    # Default values for parameters
+    _nrows = 1
+    _ncols = 1
+    _fig_dir = Path('test_suitesparse')
+    _fig_title_prefix = ''
+
+    @pytest.fixture(scope='class')
+    def problem(self, request):
+        """Fixture to provide the problem matrix."""
+        return request.param
+
+    @pytest.fixture(scope='class', autouse=True)
+    def base_setup_problem(self, request, problem):
+        """Setup method to initialize the problem matrix."""
+        cls = request.cls
+        cls.problem = problem
+        print(f"Testing matrix {problem.id} ({problem.name})")
+        # Subclasses should override this method to set up the problem
+
+    @pytest.fixture(scope='class', autouse=True)
+    def setup_plot(self, request, base_setup_problem):
+        """Set up the problem and figure for plotting across tests."""
+        cls = request.cls
+
+        if not request.config.getoption('--make-figures'):
+            cls.make_figures = False
+            yield  # skip the setup if not making figures
+            return
+
+        cls.fig, cls.axs = plt.subplots(
+            num=1,
+            nrows=cls._nrows,
+            ncols=cls._ncols,
+            clear=True
+        )
+        cls.fig.suptitle(f"{cls._fig_title_prefix}{cls.problem.name}")
+
+        cls.make_figures = True  # flag for tests that require figures
+
+        # Run the tests
+        yield
+
+        # Teardown code (save the figure)
+        cls.fig_dir = Path('test_figures') / cls._fig_dir
+        os.makedirs(cls.fig_dir, exist_ok=True)
+
+        cls.figure_path = (
+            cls.fig_dir /
+            f"{cls.problem.name.replace('/', '_')}.pdf"
+        )
+        print(f"Saving figure to {cls.figure_path}")
+        cls.fig.savefig(cls.figure_path)
+
+        plt.close(cls.fig)
 
 # =============================================================================
 # =============================================================================

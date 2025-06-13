@@ -292,10 +292,7 @@ class TestQR:
         fig_dir = Path('test_figures/test_qr')
         os.makedirs(fig_dir, exist_ok=True)
 
-        figure_path = (
-            fig_dir /
-            f"{problem.name.replace('/', '_')}.pdf"
-        )
+        figure_path = fig_dir / f"{problem.name.replace('/', '_')}.pdf"
         print(f"Saving figure to {figure_path}")
         fig.savefig(figure_path)
 

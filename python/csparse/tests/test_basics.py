@@ -195,7 +195,7 @@ def test_droptol(A):
     # Shift the values to the range [-1, 1]
     A = sparse.csc_array((2 * A.data - 1, A.indices, A.indptr), shape=A.shape)
 
-    drop_tol = 0.5 # drop entries with absolute value < 0.5
+    drop_tol = 0.5  # drop entries with absolute value < 0.5
 
     B = csparse.csc_from_scipy(A).droptol(drop_tol)
 
@@ -210,8 +210,6 @@ def test_droptol(A):
 
     assert_allclose(A.toarray(), B.toarray(), atol=1e-15)
 
-
-    
 
 # =============================================================================
 # =============================================================================

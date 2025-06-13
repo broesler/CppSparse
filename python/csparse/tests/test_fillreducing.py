@@ -22,6 +22,9 @@ from .helpers import generate_random_matrices
 import csparse
 
 
+# -----------------------------------------------------------------------------
+#         Test 15
+# -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
     'A', generate_random_matrices(N_max=200, d_scale=0.05, square_only=True)
 )
@@ -54,7 +57,7 @@ def test_amd(A, request):
         axs[0].set_title('C = A + A.T + I')
         axs[1].set_title('AMD Reordered C')
 
-        fig_dir = Path('test_figures/test_fillreducing')
+        fig_dir = Path('test_figures/test_amd_random')
         os.makedirs(fig_dir, exist_ok=True)
 
         test_id = request.node.name

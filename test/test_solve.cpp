@@ -85,7 +85,7 @@ TEST_CASE("QR Solution", "[qrsol]")
         b = A * expect;
 
         // Solve Ax = b
-        x = qr_solve(A, b);
+        x = qr_solve(A, b, order);
 
         // Check that Ax = b
         check_vectors_allclose(x, expect, 1e-13);
@@ -99,7 +99,7 @@ TEST_CASE("QR Solution", "[qrsol]")
         b = A * expect;
 
         // Solve Ax = b
-        x = qr_solve(A, b);  // (M - k, N)
+        x = qr_solve(A, b, order);  // (M - k, N)
 
         // Actual expect (python and MATLAB)
         const std::vector<double> min_norm_x = {

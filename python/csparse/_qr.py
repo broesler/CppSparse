@@ -97,6 +97,9 @@ def apply_qtleft(V, beta, p=None, Y=None):
     if Y is None:
         Y = sparse.eye_array(V.shape[0]).tocsc()
 
+    if Y.ndim == 1:
+        Y = Y[:, np.newaxis]  # Ensure Y is 2D
+
     M2, N = V.shape
     M, NY = Y.shape
     X = Y.copy()

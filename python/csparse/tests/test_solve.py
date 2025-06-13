@@ -17,7 +17,11 @@ from numpy.testing import assert_allclose
 from scipy import sparse
 from scipy.sparse import linalg as spla
 
-from .helpers import generate_suitesparse_matrices, BaseSuiteSparseTest
+from .helpers import (
+    generate_suitesparse_matrices,
+    generate_random_matrices,
+    BaseSuiteSparseTest
+)
 
 import csparse
 
@@ -107,6 +111,79 @@ class TestCholLUSolve(BaseSuiteSparseTest):
         x_ = spla.spsolve(self.C, self.b)
         x = csparse.lu_solve(self.C, self.b, order=order, tol=tol)
         np.testing.assert_allclose(x, x_, atol=ATOL)
+
+
+# -----------------------------------------------------------------------------
+#         Test 17
+# -----------------------------------------------------------------------------
+@pytest.mark.parametrize('A', list(generate_random_matrices(square_only=True)))
+def test_qr_solve(request, A):
+    """Test QR solve on a random matrix."""
+    test_id = request.node.name
+    order = 'ATA'  # column ordering for QR
+
+    M, N = A.shape
+
+    if M < N:
+        A = A.T
+
+    M, N = A.shape
+
+    rng = np.random.default_rng(565656)
+    b = rng.random((M,))
+
+    # Compute CSparse QR
+    V, beta, R, p, q = csparse.qr(A, order=order)
+
+    V = V.toarray()
+    R = R.toarray()
+
+    Q = csparse.apply_qright(V, beta, p)
+
+    # Add extra rows to match Q
+    A_long = A.copy()
+    A_long.resize((Q.shape[0], N))
+
+    # Solve using scipy QR
+    Aq = A[:, q].toarray()
+    Q_, R_ = la.qr(Aq)
+
+    # Make sure the factorizations worked
+    assert_allclose(Q @ R, A_long[:, q].toarray(), atol=ATOL)
+    assert_allclose(Q_ @ R_, Aq, atol=ATOL)
+
+    # Test the actual problem solution
+    fail_ids = [6, 12, 18, 53, 71, 78, 91, 93]
+    if test_id in [f"test_qr_solve[random_{i}]" for i in fail_ids]:
+        # These tests fail because the last entry in U[-1, -1] is either
+        # exactly 0.0 or extremely small (e.g. ~1e-21), so when we do "x /=
+        # U[-1, -1]" it results is ~1e+20, and blows up the rest of the
+        # solution.
+        #
+        # When we run the same matrix and RHS through cs_qrsol -> same result.
+        #
+        # Neither function supports the least squares solution.
+        pytest.xfail("Matrix is singular, expected failure.")
+
+    x_ = la.lstsq(R_, Q_.T @ b)[0]
+    x_[q] = x_  # inverse permutation
+    r_ = la.norm(A @ x_ - b)
+
+    # Solve using csparse QR
+    x = csparse.qr_solve(A, b, order=order)  # FIXME
+    x[np.isnan(x)] = 0
+    r = la.norm(A @ x - b)
+
+    # Solve using Q matrix created from csparse QR
+    QTPb = csparse.apply_qtleft(V, beta, p, b).reshape(-1)
+    xq = la.lstsq(R, QTPb)[0]
+    xq[q] = xq  # inverse permutation
+    rq = la.norm(A @ xq - b)
+
+    # Check the solution
+    print(f"{test_id}: r_={r_:.2e}, r={r:.2e}, rq={rq:.2e}")
+    assert_allclose(xq, x_, atol=1e-10)  # always passes
+    assert_allclose(x, x_, atol=1e-10)   # fails
 
 # =============================================================================
 # =============================================================================

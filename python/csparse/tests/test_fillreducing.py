@@ -89,7 +89,7 @@ class TestAMD:
         return request.param
 
     @pytest.fixture(scope='class', autouse=True)
-    def setup_class(self, request, problem):
+    def setup_problem(self, request, problem):
         """Setup method to initialize the problem matrix."""
         cls = request.cls
         cls.problem = problem
@@ -111,12 +111,51 @@ class TestAMD:
         cls.A = A
         print(f"A is shape {A.shape} with {A.nnz} nonzeros.")
 
+    @pytest.fixture(scope='class', autouse=True)
+    def setup_plot(self, request, setup_problem):
+        """Set up the problem and figure for plotting across tests."""
+        cls = request.cls
+
+        if not request.config.getoption('--make-figures'):
+            cls.make_figures = False
+            yield  # skip the setup if not making figures
+            return
+
+        cls.make_figures = True
+
+        cls.fig, cls.axs = plt.subplots(num=1, nrows=2, ncols=2, clear=True)
+        cls.fig.suptitle(f"AMD for {cls.problem.name}")
+
+        # Run the tests
+        yield
+
+        # Teardown code (save the figure)
+        cls.fig_dir = Path('test_figures/test_amd_suitesparse')
+        os.makedirs(cls.fig_dir, exist_ok=True)
+
+        cls.figure_path = (
+            cls.fig_dir /
+            f"{cls.problem.name.replace('/', '_')}.pdf"
+        )
+        print(f"Saving figure to {cls.figure_path}")
+        cls.fig.savefig(cls.figure_path)
+
+        plt.close(cls.fig)
+
     def test_symmetric_amd(self):
         """Test AMD fill-reducing ordering."""
         p = csparse.amd(self.A, order='APlusAT')
 
         assert np.array_equal(np.sort(p), np.arange(self.N)), \
             'Permutation is not a valid reordering.'
+
+        if self.make_figures:
+            C = self.A + self.A.T + sparse.eye_array(self.N)
+            self.axs[0, 0].spy(C, markersize=1)
+            self.axs[0, 1].spy(C[p][:, p], markersize=1)
+
+            self.axs[0, 0].set_title('C = A + A.T + I')
+            self.axs[0, 1].set_title('AMD Reordered C')
 
     def test_colamd(self):
         """Test COLAMD fill-reducing ordering."""
@@ -125,6 +164,13 @@ class TestAMD:
 
         assert np.array_equal(np.sort(p), np.arange(N)), \
             'Permutation is not a valid reordering.'
+
+        if self.make_figures:
+            self.axs[1, 0].spy(self.A_orig, markersize=1)
+            self.axs[1, 1].spy(self.A_orig[:, p], markersize=1)
+
+            self.axs[1, 0].set_title('Original A')
+            self.axs[1, 1].set_title('csparse.amd(ATA)')
 
 # =============================================================================
 # =============================================================================

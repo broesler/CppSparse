@@ -18,7 +18,6 @@ from pathlib import Path
 from numpy.testing import assert_allclose
 from scipy import sparse
 from scipy import linalg as la
-from scipy.sparse import linalg as spla
 
 from .helpers import generate_suitesparse_matrices
 
@@ -201,92 +200,86 @@ def test_qrightleft(shape_cat, case_name, A, qr_func):
 
 
 # -----------------------------------------------------------------------------
-#         Test 9
+#         Tests 9, 10, 12
 # -----------------------------------------------------------------------------
-# TODO don't really need to exercise qr_(left|right) here. We could just remove
-# this whole class and write it as a single test function for csparse.qr().
-@pytest.mark.parametrize(
-    "problem",
-    list(generate_suitesparse_matrices()),
-    indirect=True
-)
-class TestQR:
-    """Test class for the QR decomposition on SuiteSparse matrices."""
-    @pytest.fixture(scope='class')
-    def problem(self, request):
-        """Fixture to provide the problem instance."""
-        return request.param
+# Tests 9, 10 and 12 are all quite similar, so combine them into one test.
+# Tests 9, 10, and 12 crash Octave (cs_qr issue).
+# Test 9 tests qr_right and qr_left.
+# Test 9 uses SuiteSparse matrices.
+# Test 10 uses random matrices.
+# Test 12 uses random matrices.
+# Test 12 doesn’t make a plot.
+#
+# Each tests compares the singular values of A with those of R. Since Q is
+# orthogonal, it doesn’t affect the singular values, so this comparison is
+# a nice way to check the decomposition without forming the full matrix
+# Q (typically expensive).
 
-    @pytest.fixture(scope='class', autouse=True)
-    def setup_problem(self, request, problem):
-        """Set up the problem instance for the test class."""
-        cls = request.cls
-        problem = problem
-        print(f"---------- {problem.name}")
+@pytest.mark.parametrize("problem", list(generate_suitesparse_matrices()))
+def test_qr(request, problem):
+    """Test CSparse QR decomposition."""
+    A = problem.A
 
-        A = problem.A
+    if A.shape[0] < A.shape[1]:
+        A = A.T
 
-        if A.shape[0] < A.shape[1]:
-            A = A.T
+    M, N = A.shape
 
-        M, N = A.shape
+    # rank = sparse.csgraph.structural_rank(A)
 
-        # rank = sparse.csgraph.structural_rank(A)
+    A_orig = A.copy()
 
-        A_orig = A.copy()
+    q = csparse.amd(A, order='ATA')  # like colamd in MATLAB
+    A = A[:, q]
+    # Use the singular values to compare with R from each decomposition
+    sig = la.svdvals(A.toarray())
 
-        q = csparse.amd(A, order='ATA')  # like colamd in MATLAB
-        A = A[:, q]
-        # Use the singular values to compare with R from each decomposition
-        cls.sig = la.svdvals(A.toarray())
+    # Compute scipy R factor
+    (Qraw, tau), R_ = la.qr(A.toarray(), mode='raw')
+    V_ = np.tril(Qraw, -1)[:, :M] + np.eye(M, min(M, N))
 
-        # Compute scipy R factor
-        _, R_ = la.qr(A.toarray())
+    # TODO treeplot using csgraph?
+    # [c, h, parent] = symbfact(A, 'col');
+    # only uses `parent` in treeplot.
 
-        # TODO treeplot using csgraph?
-        # [c, h, parent] = symbfact(A, 'col');
-        # only uses `parent` in treeplot.
+    # Compute csparse QR
+    V, beta, R, p, q = csparse.qr(A)
 
-        # Compute csparse QR
-        V, beta, R, p, q = csparse.qr(A)
+    C = A.copy()
+    M2 = V.shape[0]
 
-        C = A.copy()
-        M2 = V.shape[0]
-        if M2 > M:
-            # Add empty rows
-            C = sparse.vstack([A, sparse.csc_array((M2 - M, N))])
+    if M2 > M:
+        # Add empty rows
+        C.resize((M2, N))
 
-        cls.C = C[p]
-        cls.R = R
+    C = C[p]
 
-        # Make the plot
-        if not request.config.getoption('--make-figures'):
-            yield  # skip the setup if not making figures
-            return
+    # Test that the singular values of R and A are the same
+    s = la.svdvals(R.toarray())
+    assert_allclose(sig, s, atol=1e-12)
 
-        fig, axs = plt.subplots(num=1, nrows=2, ncols=4, clear=True)
-        fig.suptitle(f"QR Factors for {cls.problem.name}")
+    # Make the plot
+    if request.config.getoption('--make-figures'):
+        fig, axs = plt.subplots(num=1, nrows=2, ncols=3, clear=True)
+        fig.suptitle(f"QR Factors for {problem.name}")
 
-        axs[0, 0].spy(A, markersize=1)
-        axs[0, 1].spy(cls.C, markersize=1)
+        # Resize for plotting purposes only
+        R_.resize((V_.shape[0], N))
+        R.resize((V.shape[0], N))
+
+        axs[0, 0].spy(A_orig, markersize=1)
+        axs[0, 1].spy(A, markersize=1)
+        axs[0, 2].spy(C, markersize=1)
+        axs[1, 0].spy(V_ + R_, markersize=1)
+        axs[1, 1].spy(V + R, markersize=1)
         # treeplot(parent, ax=axs[0, 2])  # TODO
-        axs[0, 3].spy(A_orig, markersize=1)
-        axs[1, 0].spy(abs(R) > 0, markersize=1)
-        axs[1, 1].spy(R_, markersize=1)
-        axs[1, 2].spy(R, markersize=1)
-        axs[1, 3].spy(V, markersize=1)
 
-        axs[0, 0].set_title('A colamd')
-        axs[0, 1].set_title('A permuted')
-        axs[0, 2].set_title('A treeplot')
-        axs[0, 3].set_title('A original')
-        axs[1, 0].set_title('R abs > 0')
-        axs[1, 1].set_title('R scipy')
-        axs[1, 2].set_title('R csparse')
-        axs[1, 3].set_title('V csparse')
-
-        # Run the tests
-        yield
+        axs[0, 0].set_title('A original')
+        axs[0, 1].set_title('A colamd')
+        axs[0, 2].set_title('A row-permuted')
+        axs[1, 0].set_title('V + R scipy')
+        axs[1, 1].set_title('V + R csparse')
+        axs[1, 2].set_title('A treeplot')
 
         # Teardown code (save the figure)
         fig_dir = Path('test_figures/test_qr')
@@ -297,22 +290,6 @@ class TestQR:
         fig.savefig(figure_path)
 
         plt.close(fig)
-
-    def test_qr(self):
-        """Test the CSparse qr function vs scipy."""
-        s = la.svdvals(self.R)
-        err = la.norm(self.sig - s, ord=1) / self.sig[0]
-        print(f"qr: {err:.2e}")
-        assert err < 1e-12
-
-    @pytest.mark.parametrize('qr_func', [csparse.qr_right, csparse.qr_left])
-    def test_qr(self, qr_func):
-        """Test left-looking QR decomposition."""
-        V, beta, R = qr_func(self.C.toarray())
-        s = la.svdvals(R)
-        err = la.norm(self.sig - s, ord=1) / self.sig[0]
-        print(f"qr_left: {err:.2e}")
-        assert err < 1e-12
 
 # =============================================================================
 # =============================================================================

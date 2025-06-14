@@ -224,26 +224,77 @@ class TestLU(BaseSuiteSparsePlot):
 # -----------------------------------------------------------------------------
 #         Test 22
 # -----------------------------------------------------------------------------
+_N_trials = 200
+
+
 @pytest.mark.parametrize(
     'problem',
-    list(generate_suitesparse_matrices(N=200, square_only=True)),
+    list(generate_suitesparse_matrices(N=_N_trials, square_only=True)),
+    indirect=True
 )
-def test_cond1est(problem):
+class TestCond1est(BaseSuiteSparsePlot):
     """Test the 1-norm condition number estimate."""
-    A = problem.A
+    _nrows = 1
+    _ncols = 2
+    _fig_dir = Path('test_cond1est')
 
-    κ_n = np.linalg.cond(A.toarray(), p=1)
+    # Class variables to track plotting
+    _i = 0
+    _numpy_conds = np.zeros(_N_trials)
+    _csparse_conds = np.zeros(_N_trials)
+    # scipy_conds = np.zeros(_N_trials)
 
-    try:
-        κ_c = csparse.cond1est(A)
-    except RuntimeError as e:
-        pytest.skip(f"csparse: {e}")
+    def test_cond1est(self, request):
+        """Test the condition number estimate and plot it."""
+        A = self.problem.A
 
-    # κ_s = csparse.scipy_cond1est(A)  # FIXME
+        κ_n = np.linalg.cond(A.toarray(), p=1)
 
-    # print(f"numpy:   {κ_n:.4e}, csparse: {κ_c:.4e}, scipy:   {κ_s:.4e}")
-    print(f"numpy:   {κ_n:.4e}, csparse: {κ_c:.4e}")
-    # assert_allclose(κ_c, κ_s)
+        try:
+            κ_c = csparse.cond1est(A)
+        except RuntimeError as e:
+            pytest.skip(f"csparse: {e}")
+
+        # κ_s = csparse.scipy_cond1est(A)  # FIXME
+
+        # print(f"numpy:   {κ_n:.4e}, csparse: {κ_c:.4e}, scipy:   {κ_s:.4e}")
+        print(f"numpy:   {κ_n:.4e}, csparse: {κ_c:.4e}")
+        # assert_allclose(κ_c, κ_s)
+
+        if self.make_figures:
+            self.fig.suptitle('1-Norm Condition Number Estimate')
+
+            cls = request.cls
+            cls._numpy_conds[self._i] = κ_n
+            cls._csparse_conds[self._i] = κ_c
+            # cls._scipy_conds[self._i] = κ_s
+            cls._i += 1
+
+            self.axs[0].clear()
+            self.axs[0].axline((0, 0), slope=1, color='k', linestyle='-.')
+            self.axs[0].scatter(self._numpy_conds, self._csparse_conds,
+                                marker='o', alpha=0.5, c='C3', zorder=3)
+            self.axs[0].set(
+                title='numpy vs csparse',
+                xlabel='numpy cond',
+                ylabel='csparse cond1est',
+                xscale='log',
+                yscale='log',
+                aspect='equal'
+            )
+
+            # TODO
+            # self.axs[1].clear()
+            # self.axs[1].axline((0, 0), slope=1, color='k', linestyle='-.')
+            # self.axs[1].scatter(self._scipy_conds, self._csparse_conds,
+            #                     marker='x', c='C3')
+            # self.axs[1].set(
+            #     title='scipy vs csparse',
+            #     xlabel='scipy cond',
+            #     ylabel='csparse cond1est',
+            #     xscale='log',
+            #     yscale='log',
+            # )
 
 # =============================================================================
 # =============================================================================

@@ -171,7 +171,7 @@ def test_qr_solve(request, A):
     r_ = la.norm(A @ x_ - b)
 
     # Solve using csparse QR
-    x = csparse.qr_solve(A, b, order=order)  # FIXME
+    x = csparse.qr_solve(A, b, order=order)
     x[np.isnan(x)] = 0
     r = la.norm(A @ x - b)
 

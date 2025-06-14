@@ -103,7 +103,7 @@ def test_pivoting_LU(A, lu_func):
 def test_1norm_estimate(A):
     """Test the 1-norm and condition number estimates."""
     # Notes are for csparse.davis_example_qr(10)
-    As = sparse.csc_matrix(A)
+    As = sparse.csc_array(A)
 
     normd = la.norm(A, 1)
     norms = spla.norm(As, 1)
@@ -219,6 +219,31 @@ class TestLU(BaseSuiteSparsePlot):
             A[p][:, q].toarray(),
             atol=1e-6
         )
+
+
+# -----------------------------------------------------------------------------
+#         Test 22
+# -----------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    'problem',
+    list(generate_suitesparse_matrices(N=200, square_only=True)),
+)
+def test_cond1est(problem):
+    """Test the 1-norm condition number estimate."""
+    A = problem.A
+
+    κ_n = np.linalg.cond(A.toarray(), p=1)
+
+    try:
+        κ_c = csparse.cond1est(A)
+    except RuntimeError as e:
+        pytest.skip(f"csparse: {e}")
+
+    # κ_s = csparse.scipy_cond1est(A)  # FIXME
+
+    # print(f"numpy:   {κ_n:.4e}, csparse: {κ_c:.4e}, scipy:   {κ_s:.4e}")
+    print(f"numpy:   {κ_n:.4e}, csparse: {κ_c:.4e}")
+    # assert_allclose(κ_c, κ_s)
 
 # =============================================================================
 # =============================================================================

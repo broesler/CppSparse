@@ -13,6 +13,7 @@ Chapter 7.
 import numpy as np
 
 from scipy import sparse
+from scipy import linalg as la
 from scipy.sparse import linalg as spla
 
 from .csparse import amd, dmperm, lu_solve, qr_solve, scc
@@ -57,8 +58,19 @@ def fiedler(A):
     # see also:
     # L = sparse.csgraph.laplacian(A)
 
+    if L.nnz == 0:
+        raise ValueError(
+            "The Laplacian matrix is empty; the graph may not be connected."
+        )
+
     # Get the eigenvalues and eigenvectors of the Laplacian matrix
-    λ, x = spla.eigsh(L, k=2, which='SA', tol=np.sqrt(np.finfo(float).eps))
+    try:
+        λ, x = spla.eigsh(L, k=2, which='SA', tol=np.sqrt(np.finfo(float).eps))
+    except TypeError:
+        # k must be < N for sparse.linalg.eigsh
+        λ, x = la.eigh(L.toarray())
+        λ = λ[:2]     # take the two smallest eigenvalues
+        x = x[:, :2]  # and their corresponding eigenvectors
 
     # Take the second smallest eigenvalue and its corresponding eigenvector
     d = λ[1]

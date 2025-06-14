@@ -13,7 +13,9 @@ Davis, Chapter 6.
 import numpy as np
 
 from scipy.linalg import solve, norm
-from scipy.sparse.linalg import SuperLU, splu, norm as spnorm
+from scipy.sparse.linalg import (
+    LinearOperator, SuperLU, splu, onenormest, norm as spnorm
+)
 
 from csparse import inv_permute
 
@@ -387,6 +389,51 @@ def norm1est_inv(A):
     else:
         lu = splu(A)
     return _norm1est_inv_lu(lu)
+
+
+def scipy_cond1est(A):
+    """Estimate the 1-norm condition number of a real, square matrix.
+
+    This function uses only scipy functions to compute the condition number, as
+    opposed to cond1est that uses our own algorithm.
+
+    See: Davis, Exercise 6.15.
+
+    Parameters
+    ----------
+    A : (N, N) array_like
+        Matrix of N vectors in N dimensions.
+
+    Returns
+    -------
+    result : float
+        An estimate of the 1-norm condition number of the matrix.
+    """
+    M, N = A.shape
+
+    if M != N:
+        raise ValueError("Input matrix must be square.")
+
+    if A.size == 0:
+        return 0.0
+
+    # Estimate ||A||_1
+    norm_A = onenormest(A)
+
+    # Compute the LU decomposition of A
+    try:
+        lu = splu(A)
+    except RuntimeError as e:
+        if "Factor is exactly singular" in str(e):
+            return np.inf
+        else:
+            raise
+
+    # Estimate ||A^-1||_1 using the LU decomposition
+    A_inv_operator = LinearOperator(shape=A.shape, matvec=lu.solve)
+    norm_A_inv = onenormest(A_inv_operator)  # FIXME? matvec bad?
+
+    return norm_A * norm_A_inv
 
 
 def lu_crout(A):

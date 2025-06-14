@@ -303,7 +303,13 @@ def cond1est(A):
         return 0.0
 
     # Compute the LU decomposition of A
-    lu = splu(A)
+    try:
+        lu = splu(A)
+    except RuntimeError as e:
+        if "Factor is exactly singular" in str(e):
+            return np.inf
+        else:
+            raise
 
     if np.any(lu.U.diagonal() == 0):
         return np.inf

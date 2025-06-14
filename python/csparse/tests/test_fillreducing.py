@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pytest
+import time
 
 from pathlib import Path
 from scipy import sparse
@@ -134,6 +135,61 @@ class TestAMD(BaseSuiteSparsePlot):
 
             self.axs[1, 0].set_title('Original A')
             self.axs[1, 1].set_title('csparse.amd(ATA)')
+
+
+# -----------------------------------------------------------------------------
+#         Test 24
+# -----------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    'problem',
+    list(generate_suitesparse_matrices(N=200, square_only=True)),
+    indirect=True
+)
+class TestFiedler(BaseSuiteSparsePlot):
+    """Test Fiedler's fill-reducing ordering on SuiteSparse matrices."""
+    _nrows = 1
+    _ncols = 3
+    _fig_dir = Path('test_fielder')
+    _fig_title_prefix = 'RCM vs. Fielder for '
+
+    def test_fiedler(self):
+        """Test Fiedler's fill-reducing ordering."""
+        A = self.problem.A
+
+        r_start = time.perf_counter()
+        pr = sparse.csgraph.reverse_cuthill_mckee(A)
+        r_end = time.perf_counter()
+
+        f_start = time.perf_counter()
+
+        try:
+            pf, _, _ = csparse.fiedler(A)
+        except ValueError as e:
+            pytest.skip(f"csparse.fiedler: {e}")
+
+        f_end = time.perf_counter()
+
+        assert is_valid_permutation(pr)
+        assert is_valid_permutation(pf)
+
+        tr = r_end - r_start
+        tf = f_end - f_start
+        rel = tf / max(tr, 1e-6)
+        print(f'time: RCM {tr:.2e}s   Fiedler {tf:.2e}s   ratio {rel:.2e}')
+
+        # TODO evaluate the profile metric
+
+        if self.make_figures:
+            Ab = A.astype(bool)
+            Ab = Ab + Ab.T
+            self.axs[0].spy(Ab, markersize=1)
+            self.axs[1].spy(Ab[pr][:, pr], markersize=1)
+            self.axs[2].spy(Ab[pf][:, pf], markersize=1)
+
+            self.axs[0].set_title('Original A')
+            self.axs[1].set_title('RCM')
+            self.axs[2].set_title('Fiedler')
+
 
 # =============================================================================
 # =============================================================================

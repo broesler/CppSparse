@@ -97,55 +97,68 @@ def get_ss_index():
     df['id'] = df.index + 1
     df = df.loc[:, np.roll(df.columns, 1)]
 
-    # TODO convert data types
-    # [11]>>> df.info()
+    df = df.rename(columns={
+        'Group': 'group',
+        'Name': 'name',
+        'isBinary': 'is_binary',
+        'isReal': 'is_real',
+        'RBtype': 'rb_type',
+        'isND': 'is_nd',
+        'isGraph': 'is_graph'
+    })
+
+    for col in df.columns:
+        if df[col].dtype == np.uint8:
+            df[col] = df[col].astype(bool)
+
+        if col.startswith('amd_'):
+            df[col] = df[col].astype(int)
+
+    df['group'] = df['group'].astype('category')
+    df['rb_type'] = df['rb_type'].astype('category')
+
+    df['nnz'] = df['nnz'].astype(int)
+    df['nentries'] = df['nentries'].astype(int)
+
+    # >>> df.info()
     # <class 'pandas.core.frame.DataFrame'>
     # RangeIndex: 2904 entries, 0 to 2903
     # Data columns (total 31 columns):
-    # #   Column              Non-Null Count  Dtype
+    #  #   Column              Non-Null Count  Dtype
     # ---  ------              --------------  -----
-    # 0   id                  2904 non-null   int64
-    # 1   Group               2904 non-null   object
-    # 2   Name                2904 non-null   object
-    # 3   nrows               2904 non-null   int32
-    # 4   ncols               2904 non-null   int32
-    # 5   nnz                 2904 non-null   float64
-    # 6   nzero               2904 non-null   int32
-    # 7   pattern_symmetry    2904 non-null   float64
-    # 8   numerical_symmetry  2904 non-null   float64
-    # 9   isBinary            2904 non-null   uint8
-    # 10  isReal              2904 non-null   uint8
-    # 11  nnzdiag             2904 non-null   int32
-    # 12  posdef              2904 non-null   uint8
-    # 13  amd_lnz             2904 non-null   float64
-    # 14  amd_flops           2904 non-null   float64
-    # 15  amd_vnz             2904 non-null   float64
-    # 16  amd_rnz             2904 non-null   float64
-    # 17  nblocks             2904 non-null   int32
-    # 18  sprank              2904 non-null   int32
-    # 19  RBtype              2904 non-null   object
-    # 20  cholcand            2904 non-null   uint8
-    # 21  ncc                 2904 non-null   int32
-    # 22  isND                2904 non-null   uint8
-    # 23  isGraph             2904 non-null   uint8
-    # 24  lowerbandwidth      2904 non-null   int32
-    # 25  upperbandwidth      2904 non-null   int32
-    # 26  rcm_lowerbandwidth  2904 non-null   int32
-    # 27  rcm_upperbandwidth  2904 non-null   int32
-    # 28  xmin                2904 non-null   complex128
-    # 29  xmax                2904 non-null   complex128
-    # 30  nentries            2904 non-null   float64
-    # dtypes: complex128(2), float64(8), int32(11), int64(1), object(3), uint8(6)
-    # memory usage: 504.9+ KB
-    #
-    # uint8 -> bool
-    # int32 -> int
-    # float64 -> float
-    # complex128 -> complex
-    # object -> str
-    #
-    # amd_* -> int
-    # nentries -> int
+    #  0   id                  2904 non-null   int64
+    #  1   group               2904 non-null   category
+    #  2   name                2904 non-null   object
+    #  3   nrows               2904 non-null   int32
+    #  4   ncols               2904 non-null   int32
+    #  5   nnz                 2904 non-null   int64
+    #  6   nzero               2904 non-null   int32
+    #  7   pattern_symmetry    2904 non-null   float64
+    #  8   numerical_symmetry  2904 non-null   float64
+    #  9   is_binary           2904 non-null   bool
+    #  10  is_real             2904 non-null   bool
+    #  11  nnzdiag             2904 non-null   int32
+    #  12  posdef              2904 non-null   bool
+    #  13  amd_lnz             2904 non-null   int64
+    #  14  amd_flops           2904 non-null   int64
+    #  15  amd_vnz             2904 non-null   int64
+    #  16  amd_rnz             2904 non-null   int64
+    #  17  nblocks             2904 non-null   int32
+    #  18  sprank              2904 non-null   int32
+    #  19  rb_type             2904 non-null   category
+    #  20  cholcand            2904 non-null   bool
+    #  21  ncc                 2904 non-null   int32
+    #  22  is_nd               2904 non-null   bool
+    #  23  is_graph            2904 non-null   bool
+    #  24  lowerbandwidth      2904 non-null   int32
+    #  25  upperbandwidth      2904 non-null   int32
+    #  26  rcm_lowerbandwidth  2904 non-null   int32
+    #  27  rcm_upperbandwidth  2904 non-null   int32
+    #  28  xmin                2904 non-null   complex128
+    #  29  xmax                2904 non-null   complex128
+    #  30  nentries            2904 non-null   int64
+    # dtypes: bool(6), category(2), complex128(2), float64(2), int32(11), int64(7), object(1)
+    # memory usage: 478.4+ KB
 
     # TODO include columns like 'has_b', 'has_notes', etc. for unique fields,
     # so that we can test various functions with filters.
@@ -223,7 +236,7 @@ def check_index_vs_csv():
     df_csv = get_ss_stats()
 
     # Both give the same results, but df_index has more columns of information
-    assert df_csv['name'].equals(df['Name']), "Names do not match"
+    assert df_csv['name'].equals(df['name']), "Names do not match"
 
 
 @dataclass(frozen=True)
@@ -577,13 +590,15 @@ def get_ss_row(index=None, mat_id=None, group=None, name=None):
         row = index.set_index('id').loc[mat_id]
         row['id'] = mat_id
     elif group is not None and name is not None:
-        row = index.set_index(['Group', 'Name']).loc[group, name]
-        row['Group'] = group
-        row['Name'] = name
+        row = index.set_index(['group', 'name']).loc[group, name]
+        row['group'] = group
+        row['name'] = name
 
     return row
 
 
+# FIXME either re-name this function or refactor it, since "get_path" does not
+# imply actually downloading a file.
 def get_path_from_row(row, fmt='mat'):
     """Get a SuiteSparse matrix problem from a DataFrame row.
 
@@ -617,7 +632,7 @@ def get_path_from_row(row, fmt='mat'):
     # Get the download path and URL
     has_tar = fmt in ['MM', 'RB']
     tar_ext = '.tar.gz' if has_tar else '.mat'
-    path_tail = (Path(fmt) / row['Group'] / row['Name']).with_suffix(tar_ext)
+    path_tail = (Path(fmt) / row['group'] / row['name']).with_suffix(tar_ext)
     url = f"{SS_ROOT_URL}/{path_tail.as_posix()}"
 
     mat_extd = dict(
@@ -630,7 +645,7 @@ def get_path_from_row(row, fmt='mat'):
     local_tar_path = SS_DIR / path_tail
     local_matrix_file = (
         # add extra directory for MM and RB tar files
-        local_tar_path.parent / row['Name'] / row['Name']
+        local_tar_path.parent / row['name'] / row['name']
         if has_tar
         else local_tar_path
     ).with_suffix(mat_ext)
@@ -727,7 +742,7 @@ def ssweb(index=None, mat_id=None, group=None, name=None):
         The name or a pattern matching the name of the matrix.
     """
     row = get_ss_row(index=index, mat_id=mat_id, group=group, name=name)
-    web_url = f"{SS_ROOT_URL}/{row['Group']}/{row['Name']}"
+    web_url = f"{SS_ROOT_URL}/{row['group']}/{row['name']}"
     try:
         webbrowser.open(web_url, new=0, autoraise=True)
     except webbrowser.Error as e:

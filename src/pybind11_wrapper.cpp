@@ -552,9 +552,10 @@ PYBIND11_MODULE(csparse, m) {
             const std::vector<cs::csint>& parent
         ) {
             cs::CSCMatrix L = csc_from_scipy(L_scipy);
-            cs::CSCMatrix C = csc_from_scipy(C_scipy);
+            const cs::CSCMatrix C = csc_from_scipy(C_scipy);
             return scipy_from_csc(cs::chol_update(L, update, C, parent));
-        }
+        },
+        py::arg("L"), py::arg("update"), py::arg("C"), py::arg("parent")
     );
 
     // ---------- QR decomposition

@@ -21,6 +21,7 @@ from scipy import sparse
 from scipy.sparse import linalg as sla
 
 from .helpers import (
+    BaseSuiteSparseTest,
     generate_suitesparse_matrices,
     generate_random_matrices,
     generate_random_cholesky_matrices,
@@ -85,39 +86,60 @@ def test_python_cholesky(A, chol_func):
 
 
 # See also: test20.m
+@pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")
 @pytest.mark.parametrize(
-    'A', generate_random_matrices(N_trials=10, N_max=100, square_only=True)
+    'problem',
+    list(generate_random_matrices(N_trials=10, N_max=100, square_only=True)),
+    indirect=True
 )
-def test_python_cholesky_update(A):
+class TestCholeskyUpdate(BaseSuiteSparseTest):
     """Test the Cholesky update and downdate algorithms.
 
     .. note:: These tests only cover the python implementations of the
     update/downdate functions, not the C++ cs::chol_update function.
     """
-    N = A.shape[0]
+    _seed = 565656
+    _rng = np.random.default_rng(_seed)
 
-    # Make sure the matrix is symmetric positive definite
-    A = (A @ A.T + N * sparse.eye_array(N)).toarray()
+    @pytest.fixture(scope='class', autouse=True)
+    def setup_problem(self, request, base_setup_problem):
+        """Setup fixture to prepare the problem for testing."""
+        cls = request.cls
+        A = cls.problem.A
+        N = A.shape[0]
+        print(f"{N=}")
 
-    # Scipy Cholesky factorization is only for dense matrices
-    L = la.cholesky(A, lower=True)
-    assert_allclose(L @ L.T, A, atol=ATOL)
+        # Make sure the matrix is symmetric positive definite
+        # (Scipy Cholesky factorization is only for dense matrices)
+        cls.A = (A @ A.T + N * sparse.eye_array(N)).toarray()
+        cls.N = N
 
-    seed = 565656
-    rng = np.random.default_rng(seed)
+        cls.L = la.cholesky(cls.A, lower=True)
+        assert_allclose(cls.L @ cls.L.T, cls.A, atol=ATOL)
 
-    # Test multiple random vectors
-    for i in range(10):
-        print(f"Testing update {i} with seed {seed}")  # keep for failures
+    @pytest.fixture(scope='function')
+    def setup_update(self, request, setup_problem):
+        """Generate a new w and updated matrix for each test function call."""
+        cls = request.cls
+
         # Generate random update with same pattern as a random column of L
-        k = rng.integers(0, N)
-        idx = np.nonzero(L[:, k])[0]
-        w = np.zeros((N,))
-        w[idx] = rng.random(idx.size)
+        k = cls._rng.integers(0, cls.N)
+        idx = np.nonzero(cls.L[:, k])[0]
 
+        w = np.zeros((cls.N,))
+        w[idx] = cls._rng.random(idx.size)
         wwT = np.outer(w, w)  # == w[:, np.newaxis] @ w[np.newaxis, :]
 
-        A_up = A + wwT
+        A_up = cls.A + wwT
+
+        return A_up, w
+
+    @pytest.mark.parametrize('trial', range(10))
+    def test_python_chol_update(self, trial, setup_update):
+        """Test the python Cholesky update and downdate."""
+        print(f"Testing python Cholesky {trial=}")
+        A_up, w = setup_update
+        A, L = self.A, self.L
 
         L_up, w_up = csparse.chol_update(L, w)
         assert_allclose(L_up @ L_up.T, A_up, atol=ATOL)
@@ -129,15 +151,34 @@ def test_python_cholesky_update(A):
         assert_allclose(la.solve(L, w), w_upd, atol=ATOL)
 
         # Just downdate back to the original matrix!
-        A_down = A.copy()  # A_down == A_up - wwT == A
+        # A_down = A.copy()  # A_down == A_up - wwT == A
         L_down, w_down = csparse.chol_downdate(L_up, w)
-        assert_allclose(L_down @ L_down.T, A_down, atol=1e-14)
+        assert_allclose(L_down @ L_down.T, A, atol=1e-14)
         assert_allclose(la.solve(L_up, w), w_down, atol=ATOL)
 
         L_downd, w_downd = csparse.chol_updown(L_up, w, update=False)
         assert_allclose(L_down, L_downd, atol=ATOL)
-        assert_allclose(L_downd @ L_downd.T, A_down, atol=1e-14)
+        assert_allclose(L_downd @ L_downd.T, A, atol=1e-14)
         assert_allclose(la.solve(L_up, w), w_downd, atol=ATOL)
+
+    @pytest.mark.parametrize('trial', range(10))
+    def test_cpp_chol_update(self, trial, setup_update):
+        """Test the C++ Cholesky update and downdate."""
+        print(f"Testing C++ Cholesky {trial=}")
+        A_up, w = setup_update
+        L = sparse.csc_array(self.L)
+
+        # Convert w to (N, 1) csc_array
+        w = sparse.csc_array(w[:, np.newaxis])
+
+        parent = csparse.etree(sparse.csc_array(self.A))
+
+        L_up = csparse.chol_update_(L, True, w, parent)
+        assert_allclose((L_up @ L_up.T).toarray(), A_up, atol=ATOL)
+
+        # Just downdate back to the original matrix!
+        L_down = csparse.chol_update_(L_up, False, w, parent)
+        assert_allclose((L_down @ L_down.T).toarray(), self.A, atol=1e-14)
 
 
 # -----------------------------------------------------------------------------

@@ -744,23 +744,20 @@ def generate_suitesparse_matrices(N=100, real_only=True, square_only=False):
 
     # Get the list of the N smallest SuiteSparse matrices
     max_dim = df[['nrows', 'ncols']].max(axis=1)
-    tf = df.loc[max_dim.sort_values().head(N).index]
+    tf = df.loc[max_dim.sort_values().index]
 
-    for idx, row in tf.iterrows():
+    filters = (
+        (tf['is_real'] if real_only else True) &
+        (tf['nrows'] == tf['ncols'] if square_only else True)
+    )
+
+    tf = tf[filters]
+
+    for idx, row in tf.head(N).iterrows():
         try:
             problem = get_ss_problem_from_row(row, fmt='mat')
         except NotImplementedError as e:
             print(f"Skipping matrix {idx} due to: {e}")
-            continue
-
-        A = problem.A
-
-        if real_only and not is_real(A):
-            print(f"Matrix {problem.id} ({problem.name}) is not real.")
-            continue
-
-        if square_only and A.shape[0] != A.shape[1]:
-            print(f"Matrix {problem.id} ({problem.name}) is not square.")
             continue
 
         yield pytest.param(

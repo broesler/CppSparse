@@ -177,7 +177,12 @@ class TestFiedler(BaseSuiteSparsePlot):
         rel = tf / max(tr, 1e-6)
         print(f'time: RCM {tr:.2e}s   Fiedler {tf:.2e}s   ratio {rel:.2e}')
 
-        # TODO evaluate the profile metric
+        # Evaluate the profile metric
+        r_profile = csparse.profile(A[pr][:, pr])
+        f_profile = csparse.profile(A[pf][:, pf])
+        print(f"{A.shape}, "
+              f"RCM profile: {r_profile}, "
+              f"Fiedler profile: {f_profile}")
 
         if self.make_figures:
             Ab = A.astype(bool)

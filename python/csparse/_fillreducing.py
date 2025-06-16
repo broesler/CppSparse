@@ -11,12 +11,113 @@ Chapter 7.
 # =============================================================================
 
 import numpy as np
+import warnings
 
 from scipy import sparse
 from scipy import linalg as la
 from scipy.sparse import linalg as spla
 
 from .csparse import amd, dmperm, lu_solve, qr_solve, scc
+
+
+def profile(A):
+    r"""Compute the profile of a sparse, symmetric matrix.
+
+    The matrix *profile*, also called the *envelope*, is a measure of how close
+    the entries of `A` are to the diagonal. It is defined as:
+
+    .. math::
+        \text{profile}(A) = \sum_{j=0}^{N-1} (j - \min \mathcal{A}_{*j})
+
+    where `N` is the number of columns in `A`.
+
+    This function assumes that `A` is symmetric, and that the diagonal is
+    non-zero.
+
+    Parameters
+    ----------
+    A : (N, N) sparse array
+        A square symmetric matrix, with non-zero diagonal.
+
+    Returns
+    -------
+    result : int
+        The matrix profile of `A`.
+
+    See Also
+    --------
+    bandwidth : Compute the bandwidth of a sparse matrix.
+    scipy.linalg.bandwidth : Compute the upper and lower bandwidths of a dense
+        matrix.
+    """
+    return _profile_bandwidth(A, which='profile')
+
+
+def bandwidth(A):
+    r"""Compute the bandwidth of a sparse, symmetric matrix.
+
+    The matrix *bandwidth* is a measure of how close the entries of `A` are to
+    the diagonal. It is defined as:
+
+    .. math::
+        \text{bandwidth}(A) = \max_j (j - \min \mathcal{A}_{*j})
+
+    where `N` is the number of columns in `A`.
+
+    This function assumes that `A` is symmetric, and that the diagonal is
+    non-zero.
+
+    Parameters
+    ----------
+    A : (N, N) sparse array
+        A square symmetric matrix, with non-zero diagonal.
+
+    Returns
+    -------
+    result : int
+        The bandwidth of `A`.
+
+    See Also
+    --------
+    matrix_profile : Compute the matrix profile of a sparse matrix.
+    scipy.linalg.bandwidth : Compute the upper and lower bandwidths of a dense
+        matrix.
+    """
+    return _profile_bandwidth(A, which='bandwidth')
+
+
+def _profile_bandwidth(A, which='profile'):
+    """Internal function to check input and perform the computation."""
+    if not sparse.issparse(A):
+        raise ValueError("Matrix must be sparse.")
+
+    M, N = A.shape
+
+    if M != N:
+        raise ValueError("Matrix must be square.")
+
+    if (A != A.T).nnz > 0:
+        # raise ValueError("Matrix must be symmetric.")
+        warnings.warn("Matrix is not symmetric; results may be incorrect.",
+                      UserWarning, stacklevel=2)
+
+    # Ensure the diagonal is non-zero so that every column has at least one
+    # entry and A.indptr is well-defined
+    A = sparse.csc_array(A)
+    A.setdiag(1.0)
+    A.sort_indices()
+
+    # Get the minimum row index for each column
+    min_row = A.indices[A.indptr[:-1]]
+
+    diag_dist = np.arange(N) - min_row
+
+    if which == 'profile':
+        return np.sum(diag_dist)
+    elif which == 'bandwidth':
+        return np.max(diag_dist)
+    else:
+        raise ValueError("`which` must be 'profile' or 'bandwidth'.")
 
 
 def fiedler(A):

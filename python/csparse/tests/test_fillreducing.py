@@ -17,6 +17,8 @@ import time
 
 from pathlib import Path
 from scipy import sparse
+from scipy import linalg as la
+from scipy.sparse import linalg as spla
 
 from .helpers import (
     BaseSuiteSparsePlot,
@@ -253,6 +255,71 @@ class TestNestedDissection(BaseSuiteSparsePlot):
             self.axs[0].set_title('Original A')
             self.axs[1].set_title('RCM')
             self.axs[2].set_title('ND')
+
+
+# -----------------------------------------------------------------------------
+#         Test 26
+# -----------------------------------------------------------------------------
+_N_trials = 100
+
+
+@pytest.mark.parametrize(
+    'problem',
+    list(generate_random_matrices(N_trials=_N_trials, d_scale=0.1, N_max=100)),
+    indirect=True
+)
+class TestDMSol(BaseSuiteSparsePlot):
+    """Test dm_solve function on random matrices."""
+    _nrows = _ncols = 1
+    _fig_dir = Path('test_dm_solve')
+
+    _rng = np.random.default_rng(565656)
+
+    # Class variables for plotting
+    _i = 0
+    _scipy_err = np.zeros(_N_trials)
+    _dmsol_err = np.zeros(_N_trials)
+
+    def test_dm_solve(self, request):
+        """Test dm_solve on a random matrix."""
+        cls = request.cls
+        A = self.problem.A
+        b = self._rng.random(A.shape[0])
+
+        # Solve the system
+        x_scipy = spla.lsqr(A, b)[0]
+        x_dmsol = csparse.dm_solve(A, b)
+
+        # Compute the error
+        err_scipy = la.norm(A @ x_scipy - b)
+        err_dmsol = la.norm(A @ x_dmsol - b)
+        rel_err = np.exp(np.log(err_dmsol) - np.log(err_scipy))
+
+        print(
+            f"Trial {self._i}:\n"
+            f"             scipy error: {err_scipy:.4e}\n"
+            f"  csparse.dm_solve error: {err_dmsol:.4e}\n"
+            f"                   ratio: {rel_err:.4e}"
+        )
+
+        eps = np.finfo(float).eps
+        cls._scipy_err[cls._i] = max(err_scipy, eps)
+        cls._dmsol_err[cls._i] = max(err_dmsol, eps)
+        cls._i += 1
+
+        if self.make_figures:
+            self.axs.axline((0, 0), slope=1, color='k', linestyle='-.')
+            self.axs.scatter(self._scipy_err, self._dmsol_err,
+                             marker='o', c='C3', alpha=0.5, zorder=3)
+            self.axs.set(
+                title='scipy vs csparse',
+                xlabel='scipy.sparse.linalg.lsqr error',
+                ylabel='csparse.dm_solve error',
+                xscale='log',
+                yscale='log',
+                aspect='equal'
+            )
+
 
 # =============================================================================
 # =============================================================================

@@ -265,15 +265,15 @@ class TestCond1est(BaseSuiteSparsePlot):
             self.fig.suptitle('1-Norm Condition Number Estimate')
 
             cls = request.cls
-            cls._numpy_conds[self._i] = κ_n
-            cls._csparse_conds[self._i] = κ_c
-            # cls._scipy_conds[self._i] = κ_s
+            cls._numpy_conds[cls._i] = κ_n
+            cls._csparse_conds[cls._i] = κ_c
+            # cls._scipy_conds[cls._i] = κ_s
             cls._i += 1
 
             self.axs[0].clear()
             self.axs[0].axline((0, 0), slope=1, color='k', linestyle='-.')
             self.axs[0].scatter(self._numpy_conds, self._csparse_conds,
-                                marker='o', alpha=0.5, c='C3', zorder=3)
+                                marker='o', c='C3', alpha=0.5, zorder=3)
             self.axs[0].set(
                 title='numpy vs csparse',
                 xlabel='numpy cond',

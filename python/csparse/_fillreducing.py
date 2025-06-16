@@ -336,8 +336,8 @@ def dm_solve(A, b):
     x = np.zeros(N)
 
     # Solve the system
-    if rr[2] <= M and rr[3] <= N:
-        Cp = C[rr[2]:, rr[3]:]
+    if rr[2] < M and rr[3] < N:
+        Cp = C[rr[2]:, cc[3]:]
         x[cc[3]:] = qr_solve(Cp, b[rr[2]:], order='ATA')
         b[:rr[2]] -= C[:rr[2], cc[3]:] @ x[cc[3]:]
 

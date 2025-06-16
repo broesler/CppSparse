@@ -22,6 +22,7 @@ from scipy.sparse import linalg as sla
 
 from .helpers import (
     generate_suitesparse_matrices,
+    generate_random_matrices,
     generate_random_cholesky_matrices,
     BaseSuiteSparsePlot
 )
@@ -83,6 +84,10 @@ def test_python_cholesky(A, chol_func):
     assert_allclose(L @ L.T, A, atol=ATOL)
 
 
+# See also: test20.m
+@pytest.mark.parametrize(
+    'A', generate_random_matrices(N_trials=10, N_max=100, square_only=True)
+)
 def test_python_cholesky_update(A):
     """Test the Cholesky update and downdate algorithms.
 
@@ -91,7 +96,12 @@ def test_python_cholesky_update(A):
     """
     N = A.shape[0]
 
+    # Make sure the matrix is symmetric positive definite
+    A = (A @ A.T + N * sparse.eye_array(N)).toarray()
+
+    # Scipy Cholesky factorization is only for dense matrices
     L = la.cholesky(A, lower=True)
+    assert_allclose(L @ L.T, A, atol=ATOL)
 
     seed = 565656
     rng = np.random.default_rng(seed)
@@ -121,12 +131,12 @@ def test_python_cholesky_update(A):
         # Just downdate back to the original matrix!
         A_down = A.copy()  # A_down == A_up - wwT == A
         L_down, w_down = csparse.chol_downdate(L_up, w)
-        assert_allclose(L_down @ L_down.T, A_down, atol=ATOL)
+        assert_allclose(L_down @ L_down.T, A_down, atol=1e-14)
         assert_allclose(la.solve(L_up, w), w_down, atol=ATOL)
 
         L_downd, w_downd = csparse.chol_updown(L_up, w, update=False)
         assert_allclose(L_down, L_downd, atol=ATOL)
-        assert_allclose(L_downd @ L_downd.T, A_down, atol=ATOL)
+        assert_allclose(L_downd @ L_downd.T, A_down, atol=1e-14)
         assert_allclose(la.solve(L_up, w), w_downd, atol=ATOL)
 
 
@@ -287,6 +297,7 @@ def test_reachability(L, b, lower, request):
 
     # Check vs. scipy
     assert_allclose(x, xd, atol=1e-8)  # works for upper
+
 
 # =============================================================================
 # =============================================================================

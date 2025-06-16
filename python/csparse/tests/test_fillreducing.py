@@ -175,7 +175,7 @@ class TestFiedler(BaseSuiteSparsePlot):
         tr = r_end - r_start
         tf = f_end - f_start
         rel = tf / max(tr, 1e-6)
-        print(f'time: RCM {tr:.2e}s   Fiedler {tf:.2e}s   ratio {rel:.2e}')
+        print(f"time: RCM {tr:.2e}s   Fiedler {tf:.2e}s   ratio {rel:.2e}")
 
         # Evaluate the profile metric
         r_profile = csparse.profile(A[pr][:, pr])
@@ -195,6 +195,64 @@ class TestFiedler(BaseSuiteSparsePlot):
             self.axs[1].set_title('RCM')
             self.axs[2].set_title('Fiedler')
 
+
+# -----------------------------------------------------------------------------
+#         Test 25
+# -----------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    'problem',
+    list(generate_suitesparse_matrices(N=200, square_only=True)),
+    indirect=True
+)
+class TestNestedDissection(BaseSuiteSparsePlot):
+    """Test nested dissection ordering on SuiteSparse matrices."""
+    _nrows = 1
+    _ncols = 3
+    _fig_dir = Path('test_nested_dissection')
+    _fig_title_prefix = 'RCM vs. Nested Dissection for '
+
+    def test_nested_dissection(self):
+        """Test nested dissection fill-reducing ordering."""
+        A = self.problem.A
+
+        r_start = time.perf_counter()
+        pr = sparse.csgraph.reverse_cuthill_mckee(A)
+        r_end = time.perf_counter()
+
+        f_start = time.perf_counter()
+
+        try:
+            pn = csparse.nested_dissection(A)
+        except ValueError as e:
+            pytest.skip(f"csparse.nested_dissection: {e}")
+
+        f_end = time.perf_counter()
+
+        assert is_valid_permutation(pr)
+        assert is_valid_permutation(pn)
+
+        tr = r_end - r_start
+        tn = f_end - f_start
+        rel = tn / max(tr, 1e-6)
+        print(f"time: RCM {tr:.2e}s   ND {tn:.2e}s   ratio {rel:.2e}")
+
+        # Evaluate the profile metric
+        r_profile = csparse.profile(A[pr][:, pr])
+        f_profile = csparse.profile(A[pn][:, pn])
+        print(f"{A.shape}, "
+              f"RCM profile: {r_profile}, "
+              f"ND profile: {f_profile}")
+
+        if self.make_figures:
+            Ab = A.astype(bool)
+            Ab = Ab + Ab.T
+            self.axs[0].spy(Ab, markersize=1)
+            self.axs[1].spy(Ab[pr][:, pr], markersize=1)
+            self.axs[2].spy(Ab[pn][:, pn], markersize=1)
+
+            self.axs[0].set_title('Original A')
+            self.axs[1].set_title('RCM')
+            self.axs[2].set_title('ND')
 
 # =============================================================================
 # =============================================================================

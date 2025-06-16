@@ -959,8 +959,21 @@ class BaseSuiteSparseTest:
     def base_setup_problem(self, request, problem):
         """Setup method to initialize the problem matrix."""
         cls = request.cls
-        cls.problem = problem
-        print(f"Testing matrix {problem.id} ({problem.name})")
+
+        if isinstance(problem, MatrixProblem):
+            cls.problem = problem
+        elif isinstance(problem, sparse.sparray):
+            A = problem
+            cls.problem = MatrixProblem(
+                id=f"{A.shape}, {A.nnz} nnz",
+                name='random',
+                A=A
+            )
+        else:
+            raise TypeError(f"Expected MatrixProblem or sparse.sparray, "
+                            f"got {type(problem)}")
+
+        print(f"Testing matrix {cls.problem.id} ({cls.problem.name})")
         # Subclasses should override this method to set up the problem
 
 

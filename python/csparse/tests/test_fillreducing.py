@@ -271,7 +271,7 @@ _N_trials = 100
     list(generate_random_matrices(N_trials=_N_trials, d_scale=0.1, N_max=100)),
     indirect=True
 )
-class TestDMSol(BaseSuiteSparsePlot):
+class TestDMSolve(BaseSuiteSparsePlot):
     """Test dm_solve function on random matrices."""
     _nrows = _ncols = 1
     _fig_dir = Path('test_dm_solve')

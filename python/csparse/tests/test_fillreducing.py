@@ -21,7 +21,6 @@ from scipy import linalg as la
 from scipy.sparse import linalg as spla
 
 from .helpers import (
-    BaseSuiteSparseTest,
     BaseSuiteSparsePlot,
     generate_suitesparse_matrices,
     generate_random_matrices,
@@ -152,8 +151,13 @@ class TestAMD(BaseSuiteSparsePlot):
     list(generate_random_matrices(N_max=100, d_scale=0.1)),
     indirect=True
 )
-class TestDMPerm(BaseSuiteSparseTest):
+class TestDMPerm(BaseSuiteSparsePlot):
     """Test Dulmage-Mendelsohn permutation."""
+    _nrows = 1
+    _ncols = 3
+    _fig_dir = Path('test_dmperm')
+    _fig_title_prefix = 'Dulmage-Mendelsohn Permutation for '
+
     @pytest.fixture(scope='class', autouse=True)
     def setup_problem(self, request, base_setup_problem):
         """Setup method to initialize the problem matrix."""
@@ -163,7 +167,7 @@ class TestDMPerm(BaseSuiteSparseTest):
 
     def test_dmperm_blocks(self):
         """Test dmperm block structure."""
-        p, q, r, c, cc, rr, _ = csparse.dmperm(self.A, seed=0)  # TODO vary seed
+        p, q, r, c, cc, rr, _ = csparse.dmperm(self.A, seed=0)  # TODO seed
 
         assert is_valid_permutation(p)
         assert is_valid_permutation(q)
@@ -179,6 +183,25 @@ class TestDMPerm(BaseSuiteSparseTest):
             print(f"Block C{i}")
             B = C[rr[i]:rr[i+1], cc[i+1]:cc[i+2]]
             assert np.count_nonzero(B.diagonal()) == B.shape[0]
+
+        if self.make_figures:
+            csparse.cspy(self.A, colorbar=False, ax=self.axs[0])
+            csparse.cspy(C, colorbar=False, ax=self.axs[1])
+
+            for i in range(len(r) - 1):
+                csparse.drawbox(
+                    r[i], r[i+1],
+                    c[i], c[i+1],
+                    edgecolor='C2',
+                    linewidth=2,
+                    ax=self.axs[1],
+                )
+
+            csparse.dmspy(self.A, colorbar=False, ax=self.axs[2])
+
+            self.axs[0].set_title('Original A')
+            self.axs[1].set_title('Dulmage-Mendelsohn')
+            self.axs[2].set_title('dmspy')
 
 
 # TODO see test19.m

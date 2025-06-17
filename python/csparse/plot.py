@@ -63,12 +63,12 @@ def cspy(A, cmap='viridis_r', colorbar=True, ticklabels=False, ax=None, **kwargs
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> data = np.array([[1, 0, 2], [0, -3, 0], [4, 0, 0]])
-    >>> ax = cspy(data, markersize=50)
+    >>> ax, cb = cspy(data, markersize=50)
     >>> plt.show()
 
     >>> from scipy.sparse import csr_array
     >>> sparse_data = csr_array(data)
-    >>> ax = cspy(sparse_data, cmap='coolwarm')
+    >>> ax, cb = cspy(sparse_data, cmap='coolwarm')
     >>> plt.show()
     """
     if ax is None:
@@ -115,7 +115,7 @@ def cspy(A, cmap='viridis_r', colorbar=True, ticklabels=False, ax=None, **kwargs
 
     if nnz == 0:
         ax.set_xlabel(f"{A.shape}, nnz = 0, density = 0")
-        return ax
+        return ax, None
 
     ax.set_xlabel((f"{A.shape}, nnz = {nnz:,d}, "
                    f"density = {nnz / (M * N):.2%}"))

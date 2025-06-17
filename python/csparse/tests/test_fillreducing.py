@@ -21,6 +21,7 @@ from scipy import linalg as la
 from scipy.sparse import linalg as spla
 
 from .helpers import (
+    BaseSuiteSparseTest,
     BaseSuiteSparsePlot,
     generate_suitesparse_matrices,
     generate_random_matrices,
@@ -78,6 +79,9 @@ def test_amd(A, request):
         plt.close(fig)
 
 
+# -----------------------------------------------------------------------------
+#         Test 16
+# -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
     'problem',
     list(generate_suitesparse_matrices(N=200)),
@@ -137,6 +141,57 @@ class TestAMD(BaseSuiteSparsePlot):
 
             self.axs[1, 0].set_title('Original A')
             self.axs[1, 1].set_title('csparse.amd(ATA)')
+
+
+# -----------------------------------------------------------------------------
+#         Test 19
+# -----------------------------------------------------------------------------
+@pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")
+@pytest.mark.parametrize(
+    'problem',
+    list(generate_random_matrices(N_max=100, d_scale=0.1)),
+    indirect=True
+)
+class TestDMPerm(BaseSuiteSparseTest):
+    """Test Dulmage-Mendelsohn permutation."""
+    @pytest.fixture(scope='class', autouse=True)
+    def setup_problem(self, request, base_setup_problem):
+        """Setup method to initialize the problem matrix."""
+        cls = request.cls
+        cls.A = cls.problem.A
+        cls.M, cls.N = cls.A.shape
+
+    def test_dmperm_blocks(self):
+        """Test dmperm block structure."""
+        p, q, r, c, cc, rr, _ = csparse.dmperm(self.A, seed=0)  # TODO vary seed
+
+        assert is_valid_permutation(p)
+        assert is_valid_permutation(q)
+
+        assert rr[4] == self.M
+        assert cc[4] == self.N
+
+        # Permute the matrix into blocks
+        C = self.A[p][:, q]
+
+        # Check each block
+        for i in range(3):
+            print(f"Block C{i}")
+            B = C[rr[i]:rr[i+1], cc[i+1]:cc[i+2]]
+            assert np.count_nonzero(B.diagonal()) == B.shape[0]
+
+
+# TODO see test19.m
+# def test_dmperm_maxtrans(self):
+#     """Compare dmperm and maxtrans outputs."""
+#     dm_res = csparse.dmperm(self.A)
+#     pm = csparse.maxtrans(self.A)
+#     assert np.sum(dm_res.p > 0) == np.sum(pm > 0)
+
+
+# TODO see test19.m
+# def test_scc(A):
+#     pass
 
 
 # -----------------------------------------------------------------------------

@@ -147,6 +147,7 @@ class TestAMD(BaseSuiteSparsePlot):
 #         Test 19
 # -----------------------------------------------------------------------------
 @pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")
+@pytest.mark.parametrize('seed', [-1, 0, 1])
 @pytest.mark.parametrize(
     'problem',
     list(generate_random_matrices(N_max=100, d_scale=0.1)),
@@ -154,22 +155,22 @@ class TestAMD(BaseSuiteSparsePlot):
 )
 class TestMaxTrans(BaseSuiteSparseTest):
     """Compare maxtrans recursive and non-recursive outputs."""
-    def test_maxtrans_sprank(self):
+    def test_maxtrans_sprank(self, seed):
         """Test that the sparse rank is the same for both methods."""
         A = self.problem.A
-        pm = csparse.maxtrans(A).imatch
-        pr = csparse.maxtrans_r(A).imatch
+        pm = csparse.maxtrans(A, seed).imatch
+        pr = csparse.maxtrans_r(A, seed).imatch
         assert np.sum(pm >= 0) == np.sum(pr >= 0)
 
     @pytest.mark.parametrize('maxtrans_func', [
         csparse.maxtrans,
         csparse.maxtrans_r
     ])
-    def test_maxtrans_matching(self, maxtrans_func):
+    def test_maxtrans_matching(self, maxtrans_func, seed):
         """Test that the maximum matchings are valid."""
         A = self.problem.A
         M, N = A.shape
-        jmatch, imatch = maxtrans_func(A)
+        jmatch, imatch = maxtrans_func(A, seed)
 
         for i in range(M):
             if jmatch[i] >= 0:
@@ -181,6 +182,7 @@ class TestMaxTrans(BaseSuiteSparseTest):
 
 
 @pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")
+@pytest.mark.parametrize('seed', [-1, 0, 1])
 @pytest.mark.parametrize(
     'problem',
     list(generate_random_matrices(N_max=100, d_scale=0.1)),
@@ -193,10 +195,10 @@ class TestDMPerm(BaseSuiteSparsePlot):
     _fig_dir = Path('test_dmperm')
     _fig_title_prefix = 'Dulmage-Mendelsohn Permutation for '
 
-    def test_dmperm_blocks(self):
+    def test_dmperm_blocks(self, seed):
         """Test dmperm block structure."""
         A = self.problem.A
-        p, q, r, s, cc, rr = csparse.dmperm(A, seed=0)  # TODO seed
+        p, q, r, s, cc, rr = csparse.dmperm(A, seed)
 
         assert is_valid_permutation(p)
         assert is_valid_permutation(q)
@@ -212,6 +214,9 @@ class TestDMPerm(BaseSuiteSparsePlot):
             print(f"Block C{i}")
             B = C[rr[i]:rr[i+1], cc[i+1]:cc[i+2]]
             assert np.count_nonzero(B.diagonal()) == B.shape[0]
+
+        if seed != 0:
+            self.make_figures = False
 
         if self.make_figures:
             csparse.cspy(A, colorbar=False, ax=self.axs[0])

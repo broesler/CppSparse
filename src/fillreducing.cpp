@@ -690,7 +690,7 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
     std::vector<csint>& jmatch = (m2 < n2) ? jimatch.imatch : jimatch.jmatch;
     std::vector<csint>& imatch = (m2 < n2) ? jimatch.jmatch : jimatch.imatch;
 
-    // Alloate workspaces
+    // Allocate workspaces
     w.resize(N);
     std::fill(w.begin(), w.end(), -1);  // mark all nodes as unvisited
 
@@ -699,7 +699,7 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
                        js(N),        // col indices stack
                        ps(N);        // pause stack for DFS in augment
 
-    // randperm can help with worst-case behavioe O(|A|N), see Davis, p 118.
+    // randperm can help with worst-case behavior O(|A|N), see Davis, p 118.
     std::vector<csint> q = randperm(N, seed);  // random permutation of columns
 
     // augment the path, starting at column q[k]

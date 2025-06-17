@@ -134,9 +134,7 @@ bool augment_r(
  * transversal".
  *
  * @param A  the matrix to reorder
- * @param seed  the seed for the random number generator. If `seed` is 0, no
- *        permutation is applied. If `seed` is -1, the permutation is the
- *        reverse of the identity. Otherwise, a random permutation is generated.
+ * @param seed  unused, but kept for compatibility with `maxtrans`.
  *
  * @return the matching permutation vector
  */

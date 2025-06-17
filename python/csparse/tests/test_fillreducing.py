@@ -263,7 +263,7 @@ class TestNestedDissection(BaseSuiteSparsePlot):
 _N_trials = 100
 
 
-# NOTE pytest internals compare MatrixProblem objects, so we get
+# NOTE pytest internals compare generated sparse matrix objects, so we get
 # a SparseEfficiencyWarning. Ignore it for this test.
 @pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")
 @pytest.mark.parametrize(

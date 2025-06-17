@@ -90,6 +90,15 @@ PYBIND11_MODULE(csparse, m) {
             return py::make_iterator(result);
         });
 
+    // Bind the MaxMatch struct
+    py::class_<cs::MaxMatch>(m, "MaxMatch")
+        .def_readonly("jmatch", &cs::MaxMatch::jmatch)
+        .def_readonly("imatch", &cs::MaxMatch::imatch)
+        .def("__iter__", [](const cs::MaxMatch& res) {
+            py::object result = py::make_tuple(res.jmatch, res.imatch);
+            return py::make_iterator(result);
+        });
+
     // Bind the DMPermResult struct
     py::class_<cs::DMPermResult>(m, "DMPermResult")
         .def_readonly("p", &cs::DMPermResult::p)
@@ -623,8 +632,7 @@ PYBIND11_MODULE(csparse, m) {
     m.def("maxtrans_r",
         [] (const py::object& A_scipy, cs::csint seed=0) {
             const cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            const cs::MaxMatch res = cs::detail::maxtrans_r(A, seed);
-            return res.imatch;
+            return cs::detail::maxtrans_r(A, seed);
         },
         py::arg("A"),
         py::arg("seed")=0
@@ -633,8 +641,7 @@ PYBIND11_MODULE(csparse, m) {
     m.def("maxtrans",
         [] (const py::object& A_scipy, cs::csint seed=0) {
             const cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            const cs::MaxMatch res = cs::maxtrans(A, seed);
-            return res.imatch;
+            return cs::maxtrans(A, seed);
         },
         py::arg("A"),
         py::arg("seed")=0

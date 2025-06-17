@@ -21,6 +21,7 @@ from scipy import linalg as la
 from scipy.sparse import linalg as spla
 
 from .helpers import (
+    BaseSuiteSparseTest,
     BaseSuiteSparsePlot,
     generate_suitesparse_matrices,
     generate_random_matrices,
@@ -145,15 +146,38 @@ class TestAMD(BaseSuiteSparsePlot):
 # -----------------------------------------------------------------------------
 #         Test 19
 # -----------------------------------------------------------------------------
+@pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")
 @pytest.mark.parametrize(
-    'A',
-    list(generate_random_matrices(N_max=100, d_scale=0.1))
+    'problem',
+    list(generate_random_matrices(N_max=100, d_scale=0.1)),
+    indirect=True
 )
-def test_maxtrans(A):
+class TestMaxTrans(BaseSuiteSparseTest):
     """Compare maxtrans recursive and non-recursive outputs."""
-    pm = csparse.maxtrans(A)
-    pr = csparse.maxtrans_r(A)
-    assert np.sum(pm >= 0) == np.sum(pr >= 0)
+    def test_maxtrans_sprank(self):
+        """Test that the sparse rank is the same for both methods."""
+        A = self.problem.A
+        pm = csparse.maxtrans(A).imatch
+        pr = csparse.maxtrans_r(A).imatch
+        assert np.sum(pm >= 0) == np.sum(pr >= 0)
+
+    @pytest.mark.parametrize('maxtrans_func', [
+        csparse.maxtrans,
+        csparse.maxtrans_r
+    ])
+    def test_maxtrans_matching(self, maxtrans_func):
+        """Test that the maximum matchings are valid."""
+        A = self.problem.A
+        M, N = A.shape
+        jmatch, imatch = maxtrans_func(A)
+
+        for i in range(M):
+            if jmatch[i] >= 0:
+                assert imatch[jmatch[i]] == i
+
+        for j in range(N):
+            if imatch[j] >= 0:
+                assert jmatch[imatch[j]] == j
 
 
 @pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")

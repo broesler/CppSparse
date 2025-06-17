@@ -148,6 +148,9 @@ class TestAMD(BaseSuiteSparsePlot):
 @pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")
 @pytest.mark.parametrize(
     'problem',
+@pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")
+@pytest.mark.parametrize(
+    'problem',
     list(generate_random_matrices(N_max=100, d_scale=0.1)),
     indirect=True
 )
@@ -160,16 +163,17 @@ class TestDMPerm(BaseSuiteSparsePlot):
 
     def test_dmperm_blocks(self):
         """Test dmperm block structure."""
-        p, q, r, s, cc, rr = csparse.dmperm(self.A, seed=0)  # TODO seed
+        A = self.problem.A
+        p, q, r, s, cc, rr = csparse.dmperm(A, seed=0)  # TODO seed
 
         assert is_valid_permutation(p)
         assert is_valid_permutation(q)
 
-        assert rr[4] == self.A.shape[0]
-        assert cc[4] == self.A.shape[1]
+        assert rr[4] == A.shape[0]
+        assert cc[4] == A.shape[1]
 
         # Permute the matrix into blocks
-        C = self.A[p][:, q]
+        C = A[p][:, q]
 
         # Check each block
         for i in range(3):
@@ -178,7 +182,7 @@ class TestDMPerm(BaseSuiteSparsePlot):
             assert np.count_nonzero(B.diagonal()) == B.shape[0]
 
         if self.make_figures:
-            csparse.cspy(self.A, colorbar=False, ax=self.axs[0])
+            csparse.cspy(A, colorbar=False, ax=self.axs[0])
             csparse.cspy(C, colorbar=False, ax=self.axs[1])
 
             for i in range(len(r) - 1):
@@ -190,19 +194,11 @@ class TestDMPerm(BaseSuiteSparsePlot):
                     ax=self.axs[1],
                 )
 
-            csparse.dmspy(self.A, colorbar=False, ax=self.axs[2])
+            csparse.dmspy(A, colorbar=False, ax=self.axs[2])
 
             self.axs[0].set_title('Original A')
             self.axs[1].set_title('Dulmage-Mendelsohn')
             self.axs[2].set_title('dmspy')
-
-
-# TODO see test19.m
-# def test_dmperm_maxtrans(self):
-#     """Compare dmperm and maxtrans outputs."""
-#     dm_res = csparse.dmperm(self.A)
-#     pm = csparse.maxtrans(self.A)
-#     assert np.sum(dm_res.p > 0) == np.sum(pm > 0)
 
 
 @pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")

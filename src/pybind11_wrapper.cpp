@@ -621,7 +621,7 @@ PYBIND11_MODULE(csparse, m) {
     );
 
     m.def("dmperm",
-        [] (const py::object& A_scipy, double seed=0) {
+        [] (const py::object& A_scipy, cs::csint seed=0) {
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
             return cs::dmperm(A, seed);
         },

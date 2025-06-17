@@ -999,6 +999,7 @@ class BaseSuiteSparsePlot(BaseSuiteSparseTest):
             clear=True
         )
         cls.fig.suptitle(f"{cls._fig_title_prefix}{cls.problem.name}")
+        cls.fig.set_size_inches((3 * cls._ncols, 4 * cls._nrows))
 
         cls.make_figures = True  # flag for tests that require figures
 

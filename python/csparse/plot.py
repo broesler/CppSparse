@@ -161,7 +161,7 @@ def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
         ax = plt.gca()
 
     # Compute the Dulmage-Mendelsohn (DM) ordering
-    p, q, r, s, rr, cc, Nb = dmperm(A, seed=seed)
+    p, q, r, s, cc, rr, Nb = dmperm(A, seed=seed)
 
     # Plot the result
     S = A[p][:, q]
@@ -185,13 +185,12 @@ def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
 
     # Draw boxes around the blocks
     drawboxes(Nb, r, s, ax=ax)
-    # Draw boxes around the singletons
-    M, N = A.shape
 
     # Box around entire matrix
+    # M, N = A.shape
     # drawbox(0, M, 0, N, ec='C4', fc='none', lw=2, ax=ax)
 
-    # TODO label the boxes
+    # Draw boxes around the singletons
     drawbox(rr[0], rr[1], cc[0], cc[1], ec='C0', fc='none', lw=2, ax=ax)
     drawbox(rr[0], rr[1], cc[1], cc[2], ec='C1', fc='none', lw=2, ax=ax)
     drawbox(rr[1], rr[2], cc[2], cc[3],  ec='k', fc='none', lw=2, ax=ax)

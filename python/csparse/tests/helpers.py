@@ -160,9 +160,6 @@ def get_ss_index():
     # dtypes: bool(6), category(2), complex128(2), float64(2), int32(11), int64(7), object(1)
     # memory usage: 478.4+ KB
 
-    # TODO include columns like 'has_b', 'has_notes', etc. for unique fields,
-    # so that we can test various functions with filters.
-
     return df
 
 
@@ -188,13 +185,13 @@ def get_ss_stats():
     # -------------------------------------------------------------------------
     #         Load the CSV file into a DataFrame
     # -------------------------------------------------------------------------
-    with open(stats_csv, 'r') as f:
+    with open(stats_csv, 'r') as fp:
         # First row is the total number of matrices
-        f.readline().strip()
+        fp.readline().strip()
         # N_matrices = int(line.split(',')[0])
 
         # Second row is the last modified date like "31-Oct-2023 18:12:37"
-        f.readline().strip()
+        fp.readline().strip()
         # last_modified = datetime.datetime.strptime(line, "%d-%b-%Y %H:%M:%S")
 
         # Read the rest of the CSV into a DataFrame (see 'ssgetpy/csvindex.py`)
@@ -214,7 +211,7 @@ def get_ss_stats():
             'pattern_entries'
         ]
 
-        df = pd.read_csv(f, header=None, names=columns)
+        df = pd.read_csv(fp, header=None, names=columns)
 
     # Add id column up front
     df['id'] = df.index + 1
@@ -965,8 +962,8 @@ class BaseSuiteSparseTest:
         elif isinstance(problem, sparse.sparray):
             A = problem
             cls.problem = MatrixProblem(
-                id=f"{A.shape}, {A.nnz} nnz",
-                name='random',
+                id=f"random_{A.shape[0]}_{A.shape[1]}_{A.nnz}",
+                name=f"Random {A.shape}, {A.nnz} nnz",
                 A=A
             )
         else:

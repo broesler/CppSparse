@@ -158,13 +158,6 @@ class TestDMPerm(BaseSuiteSparsePlot):
     _fig_dir = Path('test_dmperm')
     _fig_title_prefix = 'Dulmage-Mendelsohn Permutation for '
 
-    @pytest.fixture(scope='class', autouse=True)
-    def setup_problem(self, request, base_setup_problem):
-        """Setup method to initialize the problem matrix."""
-        cls = request.cls
-        cls.A = cls.problem.A
-        cls.M, cls.N = cls.A.shape
-
     def test_dmperm_blocks(self):
         """Test dmperm block structure."""
         p, q, r, s, cc, rr = csparse.dmperm(self.A, seed=0)  # TODO seed
@@ -172,8 +165,8 @@ class TestDMPerm(BaseSuiteSparsePlot):
         assert is_valid_permutation(p)
         assert is_valid_permutation(q)
 
-        assert rr[4] == self.M
-        assert cc[4] == self.N
+        assert rr[4] == self.A.shape[0]
+        assert cc[4] == self.A.shape[1]
 
         # Permute the matrix into blocks
         C = self.A[p][:, q]
@@ -212,9 +205,56 @@ class TestDMPerm(BaseSuiteSparsePlot):
 #     assert np.sum(dm_res.p > 0) == np.sum(pm > 0)
 
 
-# TODO see test19.m
-# def test_scc(A):
-#     pass
+@pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")
+@pytest.mark.parametrize(
+    'problem',
+    list(generate_random_matrices(N_max=100, d_scale=0.1, square_only=True)),
+    indirect=True
+)
+class TestSCC(BaseSuiteSparsePlot):
+    """Test strongly-connected components (SCC) on random matrices."""
+    _nrows = 1
+    _ncols = 2
+    _fig_dir = Path('test_scc')
+    _fig_title_prefix = 'SCC for '
+
+    def test_scc(self):
+        """Test strongly-connected components (SCC) on a random matrix."""
+        S = self.problem.A
+        S += sparse.eye_array(S.shape[0])  # ensure diagonal is non-zero
+
+        p, q, r, s, cc, rr = csparse.dmperm(S)
+        ps, rc, Nb = csparse.scc(S)
+
+        assert rc.size == r.size
+        assert is_valid_permutation(ps)
+
+        Nk = r.size - 1
+
+        if self.make_figures:
+            self.axs[0].set_title('Dulmage-Mendelsohn')
+            csparse.cspy(S[p][:, q], colorbar=False, ax=self.axs[0])
+
+            for i in range(Nk):
+                csparse.drawbox(
+                    r[i], r[i+1],
+                    s[i], s[i+1],
+                    edgecolor='C2',
+                    linewidth=2,
+                    ax=self.axs[0],
+                )
+
+            self.axs[1].set_title('SCC Permutation')
+            csparse.cspy(S[ps][:, ps], colorbar=False, ax=self.axs[1])
+
+            for i in range(Nk):
+                csparse.drawbox(
+                    rc[i], rc[i+1],
+                    rc[i], rc[i+1],
+                    edgecolor='C2',
+                    linewidth=2,
+                    ax=self.axs[1],
+                )
 
 
 # -----------------------------------------------------------------------------

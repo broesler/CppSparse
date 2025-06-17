@@ -86,13 +86,20 @@ def test_python_cholesky(A, chol_func):
 
 
 # See also: test20.m
+# NOTE pytest internals compare generated sparse matrix objects, so we get
+# a SparseEfficiencyWarning. Ignore it for this test.
 @pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")
 @pytest.mark.parametrize(
     'problem',
-    list(generate_random_matrices(N_trials=10, N_max=100, square_only=True)),
+    list(generate_random_matrices(
+        N_trials=10,
+        N_max=100,
+        d_scale=0.1,
+        square_only=True
+    )),
     indirect=True
 )
-class TestCholeskyUpdate(BaseSuiteSparseTest):
+class TestCholeskyUpdate(BaseSuiteSparsePlot):
     """Test the Cholesky update and downdate algorithms.
 
     .. note:: These tests only cover the python implementations of the
@@ -100,6 +107,11 @@ class TestCholeskyUpdate(BaseSuiteSparseTest):
     """
     _seed = 565656
     _rng = np.random.default_rng(_seed)
+
+    _nrows = 1
+    _ncols = 3
+    _fig_dir = Path('test_chol_update')
+    _fig_title_prefix = 'Cholesky Update for '
 
     @pytest.fixture(scope='class', autouse=True)
     def setup_problem(self, request, base_setup_problem):
@@ -114,8 +126,25 @@ class TestCholeskyUpdate(BaseSuiteSparseTest):
         cls.A = (A @ A.T + N * sparse.eye_array(N)).toarray()
         cls.N = N
 
+        cls.parent = csparse.etree(sparse.csc_array(cls.A))
+
         cls.L = la.cholesky(cls.A, lower=True)
         assert_allclose(cls.L @ cls.L.T, cls.A, atol=ATOL)
+
+    @pytest.fixture(scope='class', autouse=True)
+    def make_plot(self, request, setup_problem, setup_plot):
+        """Make a plot for the Cholesky update tests."""
+        cls = request.cls
+        if not cls.make_figures:
+            return
+
+        cls.axs[0].spy(cls.A, markersize=1)
+        # cls.axs[1].treeplot(cls.parent)  # TODO
+        cls.axs[2].spy(cls.L, markersize=1)
+
+        cls.axs[0].set_title('Original Matrix A')
+        # cls.axs[1].set_title('Tree plot of A')
+        cls.axs[2].set_title('Cholesky Factor L')
 
     @pytest.fixture(scope='function')
     def setup_update(self, request, setup_problem):
@@ -171,13 +200,11 @@ class TestCholeskyUpdate(BaseSuiteSparseTest):
         # Convert w to (N, 1) csc_array
         w = sparse.csc_array(w[:, np.newaxis])
 
-        parent = csparse.etree(sparse.csc_array(self.A))
-
-        L_up = csparse.chol_update_(L, True, w, parent)
+        L_up = csparse.chol_update_(L, True, w, self.parent)
         assert_allclose((L_up @ L_up.T).toarray(), A_up, atol=ATOL)
 
         # Just downdate back to the original matrix!
-        L_down = csparse.chol_update_(L_up, False, w, parent)
+        L_down = csparse.chol_update_(L_up, False, w, self.parent)
         assert_allclose((L_down @ L_down.T).toarray(), self.A, atol=1e-14)
 
 

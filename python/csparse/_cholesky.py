@@ -286,7 +286,9 @@ def chol_updown(L, w, update=True):
     σ = 1 if update else -1
 
     if N == 1:
-        L = np.sqrt(L*L.T + σ * w*w.T)
+        α = w[0] / L[0, 0]
+        L = np.sqrt(L @ L.T + σ * w @ w.T)
+        w[0] = α
         return L, w
 
     for k in range(N):

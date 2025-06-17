@@ -167,7 +167,7 @@ class TestDMPerm(BaseSuiteSparsePlot):
 
     def test_dmperm_blocks(self):
         """Test dmperm block structure."""
-        p, q, r, c, cc, rr, _ = csparse.dmperm(self.A, seed=0)  # TODO seed
+        p, q, r, s, cc, rr = csparse.dmperm(self.A, seed=0)  # TODO seed
 
         assert is_valid_permutation(p)
         assert is_valid_permutation(q)
@@ -191,7 +191,7 @@ class TestDMPerm(BaseSuiteSparsePlot):
             for i in range(len(r) - 1):
                 csparse.drawbox(
                     r[i], r[i+1],
-                    c[i], c[i+1],
+                    s[i], s[i+1],
                     edgecolor='C2',
                     linewidth=2,
                     ax=self.axs[1],

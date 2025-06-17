@@ -161,7 +161,8 @@ def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
         ax = plt.gca()
 
     # Compute the Dulmage-Mendelsohn (DM) ordering
-    p, q, r, s, cc, rr, Nb = dmperm(A, seed=seed)
+    p, q, r, s, cc, rr = dmperm(A, seed=seed)
+    Nb = r.size - 1
 
     # Plot the result
     S = A[p][:, q]

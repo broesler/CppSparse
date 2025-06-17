@@ -230,7 +230,7 @@ def node_from_edge_sep(A, a, b):
     a_s, b_s : ndarray of int
         The sets `a` and `b` with `s` removed.
     """
-    p, q, r, s, cc, rr, _ = dmperm(A[a][:, b])
+    p, q, r, s, cc, rr = dmperm(A[a][:, b])
     s = np.r_[a[p[:rr[1]]], b[q[cc[2]:cc[4]]]]
     w = np.ones(A.shape[1]).astype(bool)
     w[s] = False
@@ -328,7 +328,7 @@ def dm_solve(A, b):
     """
     M, N = A.shape
 
-    p, q, _, _, cc, rr, _ = dmperm(A)
+    p, q, _, _, cc, rr = dmperm(A)
 
     # Permute the matrix and the right-hand side
     C = A[p][:, q]

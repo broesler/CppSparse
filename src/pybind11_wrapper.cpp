@@ -106,8 +106,7 @@ PYBIND11_MODULE(csparse, m) {
                 res.r,
                 res.s,
                 array_to_numpy(res.cc),
-                array_to_numpy(res.rr),
-                res.Nb
+                array_to_numpy(res.rr)
             );
             return py::make_iterator(result);
         });

@@ -987,8 +987,9 @@ class BaseSuiteSparsePlot(BaseSuiteSparseTest):
         """Set up the problem and figure for plotting across tests."""
         cls = request.cls
 
-        if not request.config.getoption('--make-figures'):
-            cls.make_figures = False
+        cls.make_figures = request.config.getoption('--make-figures')
+
+        if not cls.make_figures:
             yield  # skip the setup if not making figures
             return
 
@@ -1001,23 +1002,31 @@ class BaseSuiteSparsePlot(BaseSuiteSparseTest):
         cls.fig.suptitle(f"{cls._fig_title_prefix}{cls.problem.name}")
         cls.fig.set_size_inches((3 * cls._ncols, 4 * cls._nrows))
 
-        cls.make_figures = True  # flag for tests that require figures
+        def finalize_plot():
+            """Finalize the plot after all tests."""
+            if cls.make_figures:
+                # Save the figure
+                cls.fig_dir = Path('test_figures') / cls._fig_dir
+                os.makedirs(cls.fig_dir, exist_ok=True)
+
+                cls.figure_path = (
+                    cls.fig_dir /
+                    f"{cls.problem.name.replace('/', '_')}.pdf"
+                )
+                print(f"Saving figure to {cls.figure_path}")
+                cls.fig.savefig(cls.figure_path)
+
+            # Clean up
+            if hasattr(cls, 'fig') and cls.fig is not None:
+                plt.close(cls.fig)
+                del cls.fig
+                del cls.axs
+
+        # Make sure to finalize the plot after all tests
+        request.addfinalizer(finalize_plot)
 
         # Run the tests
         yield
-
-        # Teardown code (save the figure)
-        cls.fig_dir = Path('test_figures') / cls._fig_dir
-        os.makedirs(cls.fig_dir, exist_ok=True)
-
-        cls.figure_path = (
-            cls.fig_dir /
-            f"{cls.problem.name.replace('/', '_')}.pdf"
-        )
-        print(f"Saving figure to {cls.figure_path}")
-        cls.fig.savefig(cls.figure_path)
-
-        plt.close(cls.fig)
 
 # =============================================================================
 # =============================================================================

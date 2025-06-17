@@ -21,7 +21,6 @@ from scipy import sparse
 from scipy.sparse import linalg as sla
 
 from .helpers import (
-    BaseSuiteSparseTest,
     generate_suitesparse_matrices,
     generate_random_matrices,
     generate_random_cholesky_matrices,
@@ -365,6 +364,38 @@ def test_reachability(L, b, lower, request):
 
     # Check vs. scipy
     assert_allclose(x, xd, atol=1e-8)  # works for upper
+
+
+# -----------------------------------------------------------------------------
+#         Test 19
+# -----------------------------------------------------------------------------
+@pytest.mark.parametrize("order", ['Natural', 'APlusAT'])
+@pytest.mark.parametrize(
+    "problem",
+    list(generate_suitesparse_matrices(N=200, square_only=True))
+)
+def test_rowcnt(problem, order):
+    """Test Cholesky row counts."""
+    A = problem.A
+    N = A.shape[0]
+    A = A.astype(bool).astype(float)  # "symbolic" all entries are ones
+
+    # Permute the matrix using AMD (or Natural order)
+    p = csparse.amd(A, order=order)
+    A = A[p][:, p]
+
+    # Make sure A is positive definite
+    A = A + A.T + N * sparse.eye_array(N)
+
+    # Get the Cholesky factorization
+    L = la.cholesky(A.toarray(), lower=True)
+    rc_scipy = np.sum(L != 0, axis=1)
+
+    parent = csparse.etree(A)
+    post = csparse.post(parent)
+    rc = csparse.rowcnt(sparse.csc_array(L), parent, post)
+
+    assert all(rc == rc_scipy)
 
 
 # =============================================================================

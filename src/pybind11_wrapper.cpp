@@ -471,7 +471,20 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("A"),
         py::arg("ata")=false
     );
+
     m.def("post", &cs::post);
+
+    m.def("rowcnt",
+        [] (
+            const py::object& A_scipy,
+            const std::vector<cs::csint>& parent,
+            const std::vector<cs::csint>& post
+        ) {
+            cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            return cs::rowcnt(A, parent, post);
+        },
+        py::arg("A"), py::arg("parent"), py::arg("post")
+    );
 
     m.def("chol",
         [] (

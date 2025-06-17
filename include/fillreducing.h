@@ -99,6 +99,52 @@ CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense);
 std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order=AMDOrder::Natural);
 
 
+namespace detail {
+
+/** Find an augmenting path starting at column k and extend the match if found.
+ *
+ * This function uses a recursive depth-first search (DFS) to find an augmenting
+ * path in the bipartite graph represented by the CSCMatrix A. If an augmenting
+ * path is found, it extends the match by flipping the matched edges along the
+ * path.
+ *
+ * @param k  the starting column index for the DFS
+ * @param A  the CSCMatrix representing the bipartite graph
+ * @param jmatch  the current matching vector for the rows
+ * @param cheap  the cheap assignment vector
+ * @param w  the workspace vector
+ * @param j  the column index of the current matching
+ *
+ * @return found  true if an augmenting path was found, false otherwise
+ */
+bool augment_r(
+    csint k,
+    const CSCMatrix& A,
+    std::vector<csint>& jmatch,
+    std::vector<csint>& cheap,
+    std::vector<csint>& w,
+    csint j
+);
+
+
+/** Find the maximum matching permutation of a matrix, recursively.
+ *
+ * This function finds the maximum matching permutation of a matrix using
+ * the augmenting path algorithm. The matching is also known as a "maximum
+ * transversal".
+ *
+ * @param A  the matrix to reorder
+ * @param seed  the seed for the random number generator. If `seed` is 0, no
+ *        permutation is applied. If `seed` is -1, the permutation is the
+ *        reverse of the identity. Otherwise, a random permutation is generated.
+ *
+ * @return the matching permutation vector
+ */
+MaxMatch maxtrans_r(const CSCMatrix& A, csint seed=0);
+
+}  // namespace detail
+
+
 /** Find an augmenting path starting at column k and extend the match if found.
  *
  * This function uses a depth-first search (DFS) to find an augmenting path

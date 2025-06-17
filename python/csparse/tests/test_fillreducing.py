@@ -145,9 +145,17 @@ class TestAMD(BaseSuiteSparsePlot):
 # -----------------------------------------------------------------------------
 #         Test 19
 # -----------------------------------------------------------------------------
-@pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")
 @pytest.mark.parametrize(
-    'problem',
+    'A',
+    list(generate_random_matrices(N_max=100, d_scale=0.1))
+)
+def test_maxtrans(A):
+    """Compare maxtrans recursive and non-recursive outputs."""
+    pm = csparse.maxtrans(A)
+    pr = csparse.maxtrans_r(A)
+    assert np.sum(pm >= 0) == np.sum(pr >= 0)
+
+
 @pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")
 @pytest.mark.parametrize(
     'problem',

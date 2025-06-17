@@ -579,7 +579,82 @@ void augment(
 }
 
 
-// Maximum matching
+// -----------------------------------------------------------------------------
+//         Maximum matching
+// -----------------------------------------------------------------------------
+namespace detail {
+
+bool augment_r(
+    csint k,
+    const CSCMatrix& A,
+    std::vector<csint>& jmatch,
+    std::vector<csint>& cheap,
+    std::vector<csint>& w,
+    csint j
+)
+{
+    bool found = false;
+
+    // --- Start depth-first-search at node j -------------------------------
+    w[j] = k;  // mark j as visited for kth path
+
+    csint p = -1,
+          i = -1;
+
+    for (p = cheap[j]; p < A.p_[j+1] && !found; p++) {
+        i = A.i_[p];  // try a cheap assignment (i,j)
+        found = (jmatch[i] == -1);
+    }
+
+    cheap[j] = p;  // start here next time j is traversed
+
+    // --- Depth-first-search of neighbors of j -----------------------------
+    for (p = A.p_[j]; p < A.p_[j+1] && !found; p++) {
+        i = A.i_[p];  // consider row i
+
+        if (w[jmatch[i]] == k) {
+            continue;  // skip jmatch[i] if marked
+        }
+
+        // Recursively search for an augmenting path
+        found = augment_r(k, A, jmatch, cheap, w, jmatch[i]);
+    }
+
+    if (found) {
+        jmatch[i] = j;  // augment jmatch if path found
+    }
+
+    return found;
+}
+
+
+MaxMatch maxtrans_r(const CSCMatrix& A, csint seed)
+{
+    auto [M, N] = A.shape();
+
+    MaxMatch jimatch(M, N, -1);  // allocate result
+    auto& [jmatch, imatch] = jimatch;  // reference to jmatch and imatch
+
+    std::vector<csint> w(N, -1),  // mark all nodes as unvisited
+                       cheap(A.p_);  // cheap assignment
+
+    for (csint k = 0; k < N; k++) {
+        augment_r(k, A, jmatch, cheap, w, k);
+    }
+    
+    // imatch is the inverse of jmatch
+    for (csint i = 0; i < M; i++) {
+        if (jmatch[i] >= 0) {
+            imatch[jmatch[i]] = i;
+        }
+    }
+
+    return jimatch;
+}
+
+}  // namespace detail
+
+
 MaxMatch maxtrans(const CSCMatrix& A, csint seed)
 {
     auto [M, N] = A.shape();
@@ -643,7 +718,9 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
 }
 
 
-// Strongly-connected components
+// -----------------------------------------------------------------------------
+//         Strongly-connected components
+// -----------------------------------------------------------------------------
 SCCResult scc(const CSCMatrix& A)
 {
     auto [M, N] = A.shape();

@@ -620,6 +620,26 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("order")="APlusAT"
     );
 
+    m.def("maxtrans_r",
+        [] (const py::object& A_scipy, cs::csint seed=0) {
+            const cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            const cs::MaxMatch res = cs::detail::maxtrans_r(A, seed);
+            return res.imatch;
+        },
+        py::arg("A"),
+        py::arg("seed")=0
+    );
+
+    m.def("maxtrans",
+        [] (const py::object& A_scipy, cs::csint seed=0) {
+            const cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            const cs::MaxMatch res = cs::maxtrans(A, seed);
+            return res.imatch;
+        },
+        py::arg("A"),
+        py::arg("seed")=0
+    );
+
     m.def("dmperm",
         [] (const py::object& A_scipy, cs::csint seed=0) {
             cs::CSCMatrix A = csc_from_scipy(A_scipy);

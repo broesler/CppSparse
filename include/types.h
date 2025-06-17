@@ -61,6 +61,17 @@ std::vector<csint>& dfs_r(
     std::vector<csint>& xi
 );
 
+bool augment_r(
+    csint k,
+    const CSCMatrix& A,
+    std::vector<csint>& jmatch,
+    std::vector<csint>& cheap,
+    std::vector<csint>& w,
+    csint j
+);
+
+MaxMatch maxtrans_r(const CSCMatrix& A, csint seed);
+
 }  // namespace detail
 
 }  // namespace cs

@@ -1090,6 +1090,17 @@ public:
     // -------------------------------------------------------------------------
     friend CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense);
     friend std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order);
+
+    friend MaxMatch detail::maxtrans_r(const CSCMatrix& A, csint seed);
+    friend bool detail::augment_r(
+        csint k,
+        const CSCMatrix& A,
+        std::vector<csint>& jmatch,
+        std::vector<csint>& cheap,
+        std::vector<csint>& w,
+        csint j
+    );
+
     friend MaxMatch maxtrans(const CSCMatrix& A, csint seed);
     friend void augment(
         csint k,
@@ -1101,6 +1112,7 @@ public:
         std::vector<csint>& is,
         std::vector<csint>& ps
     );
+
     friend SCCResult scc(const CSCMatrix& A);
     friend DMPermResult dmperm(const CSCMatrix& A, csint seed);
     friend void bfs(

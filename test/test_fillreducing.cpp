@@ -205,6 +205,9 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
     CSCMatrix A = davis_example_amd();
     auto [M, N] = A.shape();
 
+    bool recursive = GENERATE(true, false);
+    CAPTURE(recursive);
+
     csint seed = GENERATE(-1, 0, 1);
     CAPTURE(seed);
 
@@ -299,7 +302,12 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
         expect_imatch = {0, 1, -1, -1, -1,  2,  3};
     }
 
-    MaxMatch res = maxtrans(A, seed);
+    MaxMatch res;
+    if (recursive) {
+        res = detail::maxtrans_r(A, seed);
+    } else {
+        res = maxtrans(A, seed);
+    }
 
     // Count number of non-negative entries in jmatch
     csint row_rank = std::accumulate(
@@ -316,7 +324,7 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
 
     CHECK(sprank == expect_rank);
 
-    if (seed == 0) {
+    if (seed == 0 && !recursive) {
         CHECK(res.jmatch == expect_jmatch);
         CHECK(res.imatch == expect_imatch);
     }

@@ -10,7 +10,6 @@ Get a list of all field names in all SuiteSparse matrices' MAT files.
 # =============================================================================
 
 
-import numpy as np
 
 from helpers import get_ss_index, get_ss_problem_from_row
 

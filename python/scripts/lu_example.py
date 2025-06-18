@@ -12,7 +12,6 @@ Example of computing the LU decomposition of a matrix using scipy and csparse.
 import numpy as np
 import scipy.linalg as la
 
-from scipy import sparse
 from scipy.sparse import linalg as spla
 
 import csparse

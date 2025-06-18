@@ -230,7 +230,8 @@ def get_ss_index():
     #  28  xmin                2904 non-null   complex128
     #  29  xmax                2904 non-null   complex128
     #  30  nentries            2904 non-null   int64
-    # dtypes: bool(6), category(2), complex128(2), float64(2), int32(11), int64(7), object(1)
+    # dtypes: bool(6), category(2), complex128(2), float64(2), int32(11),
+    #   int64(7), object(1)
     # memory usage: 478.4+ KB
 
     return df
@@ -330,7 +331,8 @@ def parse_header(path):
         % kind: least squares problem
         %-------------------------------------------------------------------------------
         % notes:
-        % Brute force disjoint product matrices in tree algebra on n nodes, Nicolas Thiery
+        % Brute force disjoint product matrices in tree algebra on n nodes,
+        % Nicolas Thiery
         % From Jean-Guillaume Dumas' Sparse Integer Matrix Collection,
         % ...
         %-------------------------------------------------------------------------------

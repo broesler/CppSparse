@@ -15,13 +15,13 @@ import numpy as np
 from scipy import sparse
 from scipy import linalg as la
 
-from .csparse import CSCMatrix, etree
+from .csparse import etree
 
 
 # -----------------------------------------------------------------------------
 #         Householder Reflections
 # -----------------------------------------------------------------------------
-# Could implement apply_qleft for P^T Q b = P^T H1 H2 ... HN b. 
+# Could implement apply_qleft for P^T Q b = P^T H1 H2 ... HN b.
 # See Trefethen Algorithm 10.3, p 74.
 
 def apply_qright(V, beta, p=None, Y=None):

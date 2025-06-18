@@ -394,7 +394,7 @@ if __name__ == "__main__":
         plot_vector(Hx_D, 'Hx', ax=ax, color=CD)
         plot_vector(Hx_L, 'Hx', ax=ax, color=CL)
 
-        ss = ax.get_subplotspec() 
+        ss = ax.get_subplotspec()
         if ss.is_first_row() and ss.is_first_col():
             ax.legend(loc='lower left')
 

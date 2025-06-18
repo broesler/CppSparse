@@ -217,7 +217,7 @@ def test_qrightleft(shape_cat, case_name, A, qr_func):
 
 @pytest.mark.parametrize(
     "problem",
-    list(generate_suitesparse_matrices()) + 
+    list(generate_suitesparse_matrices()) +
     list(generate_random_matrices(N_max=100, d_scale=0.1))
 )
 def test_qr(request, problem):

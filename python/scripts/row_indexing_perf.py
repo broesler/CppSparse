@@ -29,7 +29,7 @@ log_times = np.zeros(len(Ms))
 fig1, ax = plt.subplots(num=1, clear=True)
 
 # Create a random sparse matrix and time row indexing
-with tqdm(total=len(Ms), desc=f"M", leave=False) as pbar0:
+with tqdm(total=len(Ms), desc="M", leave=False) as pbar0:
     for k, M in enumerate(Ms):
         A = sparse.random_array((M, M), density=density, format='csc')
 

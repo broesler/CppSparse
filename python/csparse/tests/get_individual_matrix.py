@@ -9,14 +9,8 @@ Description:
 """
 # =============================================================================
 
-import numpy as np
-import h5py
+from helpers import (get_ss_index, get_ss_problem)
 
-from pymatreader import read_mat
-from scipy import sparse
-
-from helpers import (get_ss_index, get_ss_problem, get_path_from_row, #is_real,
-    get_ss_problem_from_file, get_ss_problem_from_row)
 # import csparse
 
 

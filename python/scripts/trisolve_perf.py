@@ -30,7 +30,12 @@ filestem = 'trisolve_perf_py'
 # -----------------------------------------------------------------------------
 #         Create the data
 # -----------------------------------------------------------------------------
-trisolve_funcs = [csparse.lsolve, csparse.usolve, csparse.lsolve_opt, csparse.usolve_opt]
+trisolve_funcs = [
+    csparse.lsolve,
+    csparse.usolve,
+    csparse.lsolve_opt,
+    csparse.usolve_opt
+]
 
 N = 1000  # size of the square matrix
 

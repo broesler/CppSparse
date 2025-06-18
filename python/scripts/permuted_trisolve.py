@@ -12,7 +12,6 @@ Description:
 import numpy as np
 import scipy.linalg as la
 
-from scipy import sparse as sps
 
 # Create the matrices
 A = np.tile(np.c_[np.arange(1, 7)], 6)

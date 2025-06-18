@@ -94,7 +94,7 @@ np.testing.assert_allclose(Q @ R, Aq, atol=1e-9)
 
 # ---------- Prep for plotting
 # Filter small values
-#   NOTE the difference is *not* a thresholding problem! 
+#   NOTE the difference is *not* a thresholding problem!
 #   These are the smallest values in the MATLAB/octave matrices with COLAMD
 #   ordering and the proper number of non-zeros:
 #

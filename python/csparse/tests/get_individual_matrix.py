@@ -4,12 +4,10 @@
 #  Created: 2025-06-09 15:43
 #   Author: Bernie Roesler
 #
-"""
-Description:
-"""
+"""Test script to download and print a specific SuiteSparse matrix problem."""
 # =============================================================================
 
-from helpers import (get_ss_index, get_ss_problem)
+from suitesparseget import get_ss_index, get_ss_problem
 
 # import csparse
 

@@ -4,14 +4,12 @@
 #  Created: 2025-06-09 14:48
 #   Author: Bernie Roesler
 #
-"""
-Get a list of all field names in all SuiteSparse matrices' MAT files.
-"""
+"""Get a list of all field names in all SuiteSparse matrices' MAT files."""
 # =============================================================================
 
+from dataclasses import fields
 
-
-from helpers import get_ss_index, get_ss_problem_from_row
+from suitesparseget import get_ss_index, get_ss_problem_from_row
 
 
 if __name__ == "__main__":
@@ -27,15 +25,15 @@ if __name__ == "__main__":
         problem = get_ss_problem_from_row(row, fmt='mat')
 
         # Get all field names
-        new_names = set(problem.keys()) - fieldnames
+        new_names = set([x.name for x in fields(problem)]) - fieldnames
 
         if len(new_names) > 0:
             print("********** Found new field names in "
-                  f"{row['Group']}/{row['Name']}: {new_names}")
+                  f"{row['group']}/{row['name']}: {new_names}")
 
-        fieldnames.update(problem.keys())
+        fieldnames.update([x.name for x in fields(problem)])
 
-    print(fieldnames)
+    print(sorted(fieldnames))
 
 
 # =============================================================================

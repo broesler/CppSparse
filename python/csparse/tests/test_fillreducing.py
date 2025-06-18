@@ -11,7 +11,6 @@ Test fill-reducing ordering algorithms.
 
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import pytest
 import time
 
@@ -69,7 +68,7 @@ def test_amd(A, request):
         axs[1].set_title('AMD Reordered C')
 
         fig_dir = Path('test_figures/test_amd_random')
-        os.makedirs(fig_dir, exist_ok=True)
+        fig_dir.mkdir(parents=True, exist_ok=True)
 
         test_id = request.node.name
         figure_path = fig_dir / f"{test_id}.pdf"

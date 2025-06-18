@@ -11,7 +11,6 @@ Unit tests for the csparse.qr() function.
 
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import pytest
 
 from pathlib import Path
@@ -292,7 +291,7 @@ def test_qr(request, problem):
 
         # Teardown code (save the figure)
         fig_dir = Path('test_figures/test_qr')
-        os.makedirs(fig_dir, exist_ok=True)
+        fig_dir.mkdir(parents=True, exist_ok=True)
 
         figure_path = fig_dir / f"{problem_name.replace('/', '_')}.pdf"
         print(f"Saving figure to {figure_path}")

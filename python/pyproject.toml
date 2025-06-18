@@ -35,7 +35,7 @@ extend-select = [
     # 'D',  # docstring errors
     # 'I',  # isort errors
     # 'PL'  # pylint errors
-    # 'PTH', # use Path vs os
+    'PTH', # use Path vs os
 ]
 ignore = [
     'D105',     # Missing docstring in magic method

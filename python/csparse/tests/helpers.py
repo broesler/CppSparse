@@ -13,7 +13,6 @@ import pytest
 
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 
 from pathlib import Path
 from scipy import sparse
@@ -281,7 +280,7 @@ class BaseSuiteSparsePlot(BaseSuiteSparseTest):
             if cls.make_figures:
                 # Save the figure
                 cls.fig_dir = Path('test_figures') / cls._fig_dir
-                os.makedirs(cls.fig_dir, exist_ok=True)
+                cls.fig_dir.mkdir(parents=True, exist_ok=True)
 
                 cls.figure_path = (
                     cls.fig_dir /

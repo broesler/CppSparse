@@ -120,7 +120,7 @@ def download_file(url, path):
         # Make the request to download the file
         response = requests.get(url, stream=True)
         response.raise_for_status()  # raise an error for bad responses
-        with open(path, 'wb') as fp:
+        with path.open('wb') as fp:
             for chunk in response.iter_content(chunk_size=8192):
                 fp.write(chunk)
         print(f"Downloaded {url} to {path}")
@@ -259,7 +259,7 @@ def get_ss_stats():
     # -------------------------------------------------------------------------
     #         Load the CSV file into a DataFrame
     # -------------------------------------------------------------------------
-    with open(stats_csv, 'r') as fp:
+    with stats_csv.open('r') as fp:
         # First row is the total number of matrices
         fp.readline().strip()
         # N_matrices = int(line.split(',')[0])
@@ -367,7 +367,7 @@ def parse_header(path):
     # Get the header
     header_lines = []
 
-    with open(path, 'r') as fp:
+    with path.open('r') as fp:
         # Read the header lines until we find a non-comment line
         for line in fp:
             if not line.startswith('%'):

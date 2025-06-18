@@ -11,7 +11,6 @@ Unit tests for the python Cholesky algorithms.
 
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import pytest
 
 from pathlib import Path
@@ -351,7 +350,7 @@ def test_reachability(L, b, lower, request):
         ax.set_title(f"Reachability Test {test_id}")
         # Save the figure for reference
         fig_dir = Path('test_figures/test_reachability')
-        os.makedirs(fig_dir, exist_ok=True)
+        fig_dir.mkdir(parents=True, exist_ok=True)
         fig.savefig(fig_dir / f"reachability_{test_id}.pdf")
 
     xi = np.nonzero(xs)[0]

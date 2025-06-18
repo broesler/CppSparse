@@ -393,7 +393,7 @@ def parse_header(path):
 
             if key.startswith('http') or key == 'fields':
                 continue
-            elif key == 'id' or key == 'date':
+            elif key in {'id', 'date'}:
                 # Convert id to int and date (year) to int
                 try:
                     value = int(value)

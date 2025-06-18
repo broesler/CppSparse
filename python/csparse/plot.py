@@ -9,10 +9,10 @@ Functions for plotting sparse matrices.
 """
 # =============================================================================
 
-import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 
+from matplotlib import patches
 from matplotlib.ticker import MaxNLocator
 from scipy.sparse import issparse
 

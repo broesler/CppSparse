@@ -168,7 +168,7 @@ class TestLU(BaseSuiteSparsePlot):
     _fig_title_prefix = 'LU Factors for '
 
     @pytest.mark.parametrize('kind', ['natural', 'colamd', 'amd'])
-    def test_lu(self, kind):
+    def test_lu(self, kind, request):
         """Test LU decomposition with natural ordering."""
         A = self.problem.A
 
@@ -191,7 +191,7 @@ class TestLU(BaseSuiteSparsePlot):
         try:
             lu = spla.splu(A, permc_spec=permc_spec, diag_pivot_thresh=tol)
         except RuntimeError as e:
-            self.make_figures = False
+            request.cls.make_figures = False
             pytest.skip(f"scipy.sparse: {e}")  # catch singular matrix errors
 
         L_, U_, p_, q_ = lu.L, lu.U, lu.perm_r, lu.perm_c
@@ -257,14 +257,14 @@ class TestCond1est(BaseSuiteSparsePlot):
             κ_s = csparse.scipy_cond1est(A)
         except RuntimeError as e:
             # splu may fail if the matrix is singular
-            self.make_figures = False
+            request.cls.make_figures = False
             pytest.skip(f"csparse: {e}")
 
         print(f"numpy:   {κ_n:.4e}\n"
               f"scipy:   {κ_s:.4e}\n"
               f"csparse: {κ_c:.4e}\n")
 
-        assert (np.isclose(κ_n, κ_s, atol=1e-15) or 
+        assert (np.isclose(κ_n, κ_s, atol=1e-15) or
                 np.isclose(κ_c, κ_n, atol=1e-15) or
                 np.isclose(κ_c, κ_s, atol=1e-15))
 

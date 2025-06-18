@@ -4,9 +4,7 @@
 #  Created: 2025-06-18 14:00
 #   Author: Bernie Roesler
 #
-"""
-Get matrices from the SuiteSparse Matrix Library.
-"""
+"""Get matrices from the SuiteSparse Matrix Library."""
 # =============================================================================
 
 # import datetime
@@ -69,6 +67,7 @@ class MatrixProblem:
     notes : str, optional
         Explanatory notes about the matrix.
     """
+
     id:      int = None
     name:    str = None
     title:   str = None

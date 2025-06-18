@@ -4,9 +4,7 @@
 #  Created: 2025-04-26 13:51
 #   Author: Bernie Roesler
 #
-"""
-Scratch calculations to determine the threshold for realloc failure.
-"""
+"""Scratch calculations to determine the threshold for realloc failure."""
 # =============================================================================
 
 N = 100

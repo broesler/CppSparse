@@ -4,9 +4,7 @@
 #  Created: 2025-03-20 12:15
 #   Author: Bernie Roesler
 #
-"""
-Unit tests for the csparse.lu*() functions.
-"""
+"""Unit tests for the csparse.lu*() functions."""
 # =============================================================================
 
 import numpy as np
@@ -58,7 +56,7 @@ def test_lu_interface(order):
 
 
 def lu_helper(A, lu_func):
-    """Helper function to test the LU decomposition."""
+    """Test the LU decomposition."""
     # Compare to scipy PLU = A
     P_, L_, U_ = la.lu(A)
 
@@ -162,6 +160,7 @@ def test_1norm_estimate(A):
 )
 class TestLU(BaseSuiteSparsePlot):
     """Test class for the LU decomposition on SuiteSparse matrices."""
+
     _nrows = 3
     _ncols = 4
     _fig_dir = Path('test_lu')
@@ -236,6 +235,7 @@ _N_trials = 200
 @pytest.mark.xfail(reason='Estimates are inherently noisy.')
 class TestCond1est(BaseSuiteSparsePlot):
     """Test the 1-norm condition number estimate."""
+
     _nrows = 1
     _ncols = 2
     _fig_dir = Path('test_cond1est')

@@ -4,9 +4,7 @@
 #  Created: 2025-01-21 09:48
 #   Author: Bernie Roesler
 #
-"""
-Description:
-"""
+"""Test code to solve permuted triangular systems."""
 # =============================================================================
 
 import numpy as np

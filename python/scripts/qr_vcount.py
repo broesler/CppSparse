@@ -4,9 +4,7 @@
 #  Created: 2025-02-17 13:18
 #   Author: Bernie Roesler
 #
-"""
-Compute the Cholesky factor of A^T A for C++ testing of `vcount` function.
-"""
+"""Compute Cholesky factor of A^T A for C++ testing of `vcount` function."""
 # =============================================================================
 
 import numpy as np

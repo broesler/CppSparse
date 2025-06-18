@@ -4,9 +4,7 @@
 #  Created: 2025-01-11 10:57
 #   Author: Bernie Roesler
 #
-"""
-Plot the triangular solve performance data.
-"""
+"""Plot the triangular solve performance data."""
 # =============================================================================
 
 import matplotlib.pyplot as plt

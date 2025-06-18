@@ -4,9 +4,7 @@
 #  Created: 2025-05-28 15:46
 #   Author: Bernie Roesler
 #
-"""
-Test basic COOMatrix and CSCMatrix interface.
-"""
+"""Test basic COOMatrix and CSCMatrix interface."""
 # =============================================================================
 
 import pytest
@@ -157,6 +155,7 @@ def test_multiply(A, B):
 )
 class TestAdd:
     """Test the addition of two matrices."""
+
     @pytest.fixture(autouse=True)
     def setup_method(self, A, B):
         """Set up the matrices for testing."""

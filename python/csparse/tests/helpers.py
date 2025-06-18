@@ -4,9 +4,7 @@
 #  Created: 2025-05-28 15:44
 #   Author: Bernie Roesler
 #
-"""
-Helper functions for the C++Sparse python tests.
-"""
+"""Helper functions for the C++Sparse python tests."""
 # =============================================================================
 
 import pytest
@@ -220,6 +218,7 @@ def is_valid_permutation(p):
 # -----------------------------------------------------------------------------
 class BaseSuiteSparseTest:
     """An abstract base class for tests."""
+
     @pytest.fixture(scope='class')
     def problem(self, request):
         """Fixture to provide the problem matrix."""
@@ -227,7 +226,7 @@ class BaseSuiteSparseTest:
 
     @pytest.fixture(scope='class', autouse=True)
     def base_setup_problem(self, request, problem):
-        """Setup method to initialize the problem matrix."""
+        """Initialize the problem."""
         cls = request.cls
 
         if isinstance(problem, MatrixProblem):
@@ -249,6 +248,7 @@ class BaseSuiteSparseTest:
 
 class BaseSuiteSparsePlot(BaseSuiteSparseTest):
     """An abstract base class for tests that require a plot."""
+
     # Default values for parameters
     _nrows = 1
     _ncols = 1

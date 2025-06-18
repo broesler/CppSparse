@@ -4,9 +4,7 @@
 #  Created: 2025-02-20 11:49
 #   Author: Bernie Roesler
 #
-"""
-Unit tests for the csparse.qr() function.
-"""
+"""Unit tests for the csparse.qr() function."""
 # =============================================================================
 
 import matplotlib.pyplot as plt
@@ -46,6 +44,7 @@ TEST_MATRICES = [
 
 
 def categorize_shape(M, N):
+    """Categorize the shape of a matrix based on its dimensions."""
     if M < N:
         return "under"
     elif M == N:

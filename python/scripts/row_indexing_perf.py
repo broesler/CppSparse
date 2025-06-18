@@ -3,9 +3,12 @@
 #  Created: 2025-04-26 20:27
 #   Author: Bernie Roesler
 #
-#  Solution to Davis Exercise 2.30: Experment with row indexing of sparse
-#  matrices in python. Does it use binary search or linear search? Does it take
-#  advantage of special cases like A[1, :] or A[M, :]?
+"""Solution to Davis Exercise 2.30.
+
+Experment with row indexing of sparse matrices in python. Does it use binary
+search or linear search? Does it take advantage of special cases like A[1, :]
+or A[M, :]?
+"""
 #
 # ==============================================================================
 

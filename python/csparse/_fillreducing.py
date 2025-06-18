@@ -87,7 +87,7 @@ def bandwidth(A):
 
 
 def _profile_bandwidth(A, which='profile'):
-    """Internal function to check input and perform the computation."""
+    """Check input and perform the computation."""
     if not sparse.issparse(A):
         raise ValueError("Matrix must be sparse.")
 

@@ -4,9 +4,7 @@
 #  Created: 2025-02-10 21:34
 #   Author: Bernie Roesler
 #
-"""
-Compare the performance of the Cholesky decomposition using different methods.
-"""
+"""Compare the performance of the Cholesky decomposition methods."""
 # =============================================================================
 
 import matplotlib.pyplot as plt

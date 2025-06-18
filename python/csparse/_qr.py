@@ -48,7 +48,7 @@ def apply_qright(V, beta, p=None, Y=None):
     result : (M, N) ndarray
         The result of applying the Householder transformations to `Y`.
 
-    See also
+    See Also
     --------
     cs_qright : The CSparse implementation of this function.
     apply_qtleft : Apply Householder vectors on the left as :math:`Q^T Y`.
@@ -89,7 +89,7 @@ def apply_qtleft(V, beta, p=None, Y=None):
     result : (M, N) ndarray
         The result of applying the Householder transformations to `Y`.
 
-    See also
+    See Also
     --------
     cs_qleft : The CSparse implementation of this function.
     apply_qright : Apply Householder vectors on the right as :math:`Y Q`.

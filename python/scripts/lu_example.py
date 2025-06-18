@@ -4,9 +4,7 @@
 #  Created: 2025-03-31 12:13
 #   Author: Bernie Roesler
 #
-"""
-Example of computing the LU decomposition of a matrix using scipy and csparse.
-"""
+"""Compute the LU decomposition of a matrix using scipy and csparse."""
 # =============================================================================
 
 import numpy as np
@@ -18,6 +16,7 @@ import csparse
 
 
 def allclose(a, b, atol=1e-15):
+    """Check if two arrays are close to each other."""
     return np.testing.assert_allclose(a, b, atol=atol)
 
 

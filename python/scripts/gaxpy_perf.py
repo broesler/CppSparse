@@ -4,9 +4,7 @@
 #  Created: 2025-01-07 12:49
 #   Author: Bernie Roesler
 #
-"""
-Create and plot the gaxpy performance data.
-"""
+"""Create and plot the gaxpy performance data."""
 # =============================================================================
 
 import matplotlib.pyplot as plt

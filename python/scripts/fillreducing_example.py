@@ -4,13 +4,10 @@
 #  Created: 2025-04-23 09:16
 #   Author: Bernie Roesler
 #
-"""
-Test fill-reducing python functions.
-"""
+"""Test fill-reducing python functions."""
 # =============================================================================
 
 import numpy as np
-
 
 import csparse
 

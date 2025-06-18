@@ -4,9 +4,7 @@
 #  Created: 2025-02-05 11:45
 #   Author: Bernie Roesler
 #
-"""
-Description: Davis book example from Equation (2.1) on pages 7--8.
-"""
+"""Description: Davis book example from Equation (2.1) on pages 7--8."""
 # =============================================================================
 
 import numpy as np

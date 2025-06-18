@@ -32,16 +32,20 @@ extend-select = [
     'E',  # pycodestyle errors
     'W',  # pycodestyle warnings (whitespace)
     'F',  # pyflakes errors
-    # 'D',  # docstring errors
+    'D',  # docstring errors
     # 'I',  # isort errors
-    # 'PL'  # pylint errors
+    'PL',  # pylint errors
     'PTH', # use Path vs os
 ]
+
 ignore = [
     'D105',     # Missing docstring in magic method
     'D205',     # 1 blank line required between summary line and description
-    'PLC2401',  # allow non-ASCII characters
+    'D104',     # Missing docstring in __init__
+    'PLC2401',  # non-ASCII characters
     'PLR2004',  # magic value used in comparison
+    'PLR0912',  # too many branches (max-branches)
+    'PLR0915',  # too many statements (max-statements)
     'E741',     # ambiguous variable name (l, O, I)
 ]
 

@@ -4,9 +4,7 @@
 #  Created: 2025-02-20 14:55
 #   Author: Bernie Roesler
 #
-"""
-Unit tests for the python Cholesky algorithms.
-"""
+"""Unit tests for the python Cholesky algorithms."""
 # =============================================================================
 
 import matplotlib.pyplot as plt
@@ -103,6 +101,7 @@ class TestCholeskyUpdate(BaseSuiteSparsePlot):
     .. note:: These tests only cover the python implementations of the
     update/downdate functions, not the C++ cs::chol_update function.
     """
+
     _seed = 565656
     _rng = np.random.default_rng(_seed)
 
@@ -113,7 +112,7 @@ class TestCholeskyUpdate(BaseSuiteSparsePlot):
 
     @pytest.fixture(scope='class', autouse=True)
     def setup_problem(self, request, base_setup_problem):
-        """Setup fixture to prepare the problem for testing."""
+        """Prepare the problem for testing."""
         cls = request.cls
         A = cls.problem.A
         N = A.shape[0]
@@ -216,6 +215,7 @@ class TestCholeskyUpdate(BaseSuiteSparsePlot):
 )
 class TestTrisolveCholesky(BaseSuiteSparsePlot):
     """Test triangular solvers with Cholesky factors."""
+
     _nrows = 2
     _ncols = 3
     _fig_dir = Path('test_trisolve_cholesky')
@@ -223,7 +223,7 @@ class TestTrisolveCholesky(BaseSuiteSparsePlot):
 
     @pytest.fixture(scope='class', autouse=True)
     def setup_problem(self, request, base_setup_problem):
-        """Setup fixture to prepare the problem for testing."""
+        """Prepare the problem for testing."""
         cls = request.cls
         A = cls.problem.A
         cls.order = 'APlusAT'

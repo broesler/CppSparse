@@ -4,9 +4,7 @@
 #  Created: 2025-05-07 19:44
 #   Author: Bernie Roesler
 #
-"""
-Functions for plotting sparse matrices.
-"""
+"""Functions for plotting sparse matrices."""
 # =============================================================================
 
 import matplotlib.pyplot as plt

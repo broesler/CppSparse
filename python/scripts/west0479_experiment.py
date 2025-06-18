@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # =============================================================================
-#     File: householder_experiment.py
+#     File: west0479_experiment.py
 #  Created: 2025-02-12 16:06
 #   Author: Bernie Roesler
-
+"""Analyze the QR decomposition of a matrix using Householder reflections."""
 # =============================================================================
 
 import matplotlib.pyplot as plt

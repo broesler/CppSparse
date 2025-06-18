@@ -4,9 +4,7 @@
 #  Created: 2025-06-12 19:41
 #   Author: Bernie Roesler
 #
-"""
-Test fill-reducing ordering algorithms.
-"""
+"""Test fill-reducing ordering algorithms."""
 # =============================================================================
 
 import matplotlib.pyplot as plt
@@ -88,6 +86,7 @@ def test_amd(A, request):
 )
 class TestAMD(BaseSuiteSparsePlot):
     """Test AMD fill-reducing ordering on SuiteSparse matrices."""
+
     _nrows = 2
     _ncols = 2
     _fig_dir = Path('test_amd_suitesparse')
@@ -95,7 +94,7 @@ class TestAMD(BaseSuiteSparsePlot):
 
     @pytest.fixture(scope='class', autouse=True)
     def setup_problem(self, request, base_setup_problem):
-        """Setup method to initialize the problem matrix."""
+        """Initialize the problem matrix."""
         cls = request.cls
 
         A = cls.problem.A
@@ -154,6 +153,7 @@ class TestAMD(BaseSuiteSparsePlot):
 )
 class TestMaxTrans(BaseSuiteSparseTest):
     """Compare maxtrans recursive and non-recursive outputs."""
+
     def test_maxtrans_sprank(self, seed):
         """Test that the sparse rank is the same for both methods."""
         A = self.problem.A
@@ -189,6 +189,7 @@ class TestMaxTrans(BaseSuiteSparseTest):
 )
 class TestDMPerm(BaseSuiteSparsePlot):
     """Test Dulmage-Mendelsohn permutation."""
+
     _nrows = 1
     _ncols = 3
     _fig_dir = Path('test_dmperm')
@@ -245,6 +246,7 @@ class TestDMPerm(BaseSuiteSparsePlot):
 )
 class TestSCC(BaseSuiteSparsePlot):
     """Test strongly-connected components (SCC) on random matrices."""
+
     _nrows = 1
     _ncols = 2
     _fig_dir = Path('test_scc')
@@ -299,6 +301,7 @@ class TestSCC(BaseSuiteSparsePlot):
 )
 class TestFiedler(BaseSuiteSparsePlot):
     """Test Fiedler's fill-reducing ordering on SuiteSparse matrices."""
+
     _nrows = 1
     _ncols = 3
     _fig_dir = Path('test_fielder')
@@ -358,6 +361,7 @@ class TestFiedler(BaseSuiteSparsePlot):
 )
 class TestNestedDissection(BaseSuiteSparsePlot):
     """Test nested dissection ordering on SuiteSparse matrices."""
+
     _nrows = 1
     _ncols = 3
     _fig_dir = Path('test_nested_dissection')
@@ -423,6 +427,7 @@ _N_trials = 100
 )
 class TestDMSolve(BaseSuiteSparsePlot):
     """Test dm_solve function on random matrices."""
+
     _nrows = _ncols = 1
     _fig_dir = Path('test_dm_solve')
 

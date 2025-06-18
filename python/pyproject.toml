@@ -26,19 +26,27 @@ packages = ["csparse"]
 
 [tool.ruff]
 line-length = 88
+
+[tool.ruff.lint]
 extend-select = [
     'E',  # pycodestyle errors
+    'W',  # pycodestyle warnings (whitespace)
     'F',  # pyflakes errors
     # 'D',  # docstring errors
     # 'I',  # isort errors
     # 'PL'  # pylint errors
+    # 'PTH', # use Path vs os
 ]
 ignore = [
     'D105',     # Missing docstring in magic method
     'D205',     # 1 blank line required between summary line and description
     'PLC2401',  # allow non-ASCII characters
     'PLR2004',  # magic value used in comparison
+    'E741',     # ambiguous variable name (l, O, I)
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ['F403', 'F405']  # ignore wildcard imports and undefined names
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

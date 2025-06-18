@@ -418,7 +418,8 @@ def scipy_cond1est(A):
         return 0.0
 
     # Estimate ||A||_1
-    norm_A = onenormest(A)
+    # norm_A = onenormest(A)
+    norm_A = spnorm(A, 1)
 
     # Compute the LU decomposition of A
     try:
@@ -430,8 +431,15 @@ def scipy_cond1est(A):
             raise
 
     # Estimate ||A^-1||_1 using the LU decomposition
-    A_inv_operator = LinearOperator(shape=A.shape, matvec=lu.solve)
-    norm_A_inv = onenormest(A_inv_operator)  # FIXME? matvec bad?
+    A_inv_op = LinearOperator(
+        shape=A.shape,
+        matvec=lu.solve,                           # x = A \ b
+        rmatvec=lambda b: lu.solve(b, trans='T'),  # x = A.T \ b
+        dtype=A.dtype
+    )
+
+    # Estimate the 1-norm of the inverse
+    norm_A_inv = onenormest(A_inv_op)
 
     return norm_A * norm_A_inv
 

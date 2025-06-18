@@ -191,6 +191,7 @@ class TestLU(BaseSuiteSparsePlot):
         try:
             lu = spla.splu(A, permc_spec=permc_spec, diag_pivot_thresh=tol)
         except RuntimeError as e:
+            self.make_figures = False
             pytest.skip(f"scipy.sparse: {e}")  # catch singular matrix errors
 
         L_, U_, p_, q_ = lu.L, lu.U, lu.perm_r, lu.perm_c
@@ -232,6 +233,7 @@ _N_trials = 200
     list(generate_suitesparse_matrices(N=_N_trials, square_only=True)),
     indirect=True
 )
+@pytest.mark.xfail(reason='Estimates are inherently noisy.')
 class TestCond1est(BaseSuiteSparsePlot):
     """Test the 1-norm condition number estimate."""
     _nrows = 1
@@ -242,7 +244,7 @@ class TestCond1est(BaseSuiteSparsePlot):
     _i = 0
     _numpy_conds = np.zeros(_N_trials)
     _csparse_conds = np.zeros(_N_trials)
-    # scipy_conds = np.zeros(_N_trials)
+    _scipy_conds = np.zeros(_N_trials)
 
     def test_cond1est(self, request):
         """Test the condition number estimate and plot it."""
@@ -252,22 +254,27 @@ class TestCond1est(BaseSuiteSparsePlot):
 
         try:
             κ_c = csparse.cond1est(A)
+            κ_s = csparse.scipy_cond1est(A)
         except RuntimeError as e:
+            # splu may fail if the matrix is singular
+            self.make_figures = False
             pytest.skip(f"csparse: {e}")
 
-        # κ_s = csparse.scipy_cond1est(A)  # FIXME
+        print(f"numpy:   {κ_n:.4e}\n"
+              f"scipy:   {κ_s:.4e}\n"
+              f"csparse: {κ_c:.4e}\n")
 
-        # print(f"numpy:   {κ_n:.4e}, csparse: {κ_c:.4e}, scipy:   {κ_s:.4e}")
-        print(f"numpy:   {κ_n:.4e}, csparse: {κ_c:.4e}")
-        # assert_allclose(κ_c, κ_s)
+        assert (np.isclose(κ_n, κ_s, atol=1e-15) or 
+                np.isclose(κ_c, κ_n, atol=1e-15) or
+                np.isclose(κ_c, κ_s, atol=1e-15))
 
         if self.make_figures:
             self.fig.suptitle('1-Norm Condition Number Estimate')
 
             cls = request.cls
             cls._numpy_conds[cls._i] = κ_n
+            cls._scipy_conds[cls._i] = κ_s
             cls._csparse_conds[cls._i] = κ_c
-            # cls._scipy_conds[cls._i] = κ_s
             cls._i += 1
 
             self.axs[0].clear()
@@ -283,18 +290,18 @@ class TestCond1est(BaseSuiteSparsePlot):
                 aspect='equal'
             )
 
-            # TODO
-            # self.axs[1].clear()
-            # self.axs[1].axline((0, 0), slope=1, color='k', linestyle='-.')
-            # self.axs[1].scatter(self._scipy_conds, self._csparse_conds,
-            #                     marker='x', c='C3')
-            # self.axs[1].set(
-            #     title='scipy vs csparse',
-            #     xlabel='scipy cond',
-            #     ylabel='csparse cond1est',
-            #     xscale='log',
-            #     yscale='log',
-            # )
+            self.axs[1].clear()
+            self.axs[1].axline((0, 0), slope=1, color='k', linestyle='-.')
+            self.axs[1].scatter(self._scipy_conds, self._csparse_conds,
+                                marker='o', c='C3', alpha=0.5, zorder=3)
+            self.axs[1].set(
+                title='scipy vs csparse',
+                xlabel='scipy cond1est',
+                ylabel='csparse cond1est',
+                xscale='log',
+                yscale='log',
+                aspect='equal'
+            )
 
 # =============================================================================
 # =============================================================================

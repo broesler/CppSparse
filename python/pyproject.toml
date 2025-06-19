@@ -33,7 +33,7 @@ extend-select = [
     'W',  # pycodestyle warnings (whitespace)
     'F',  # pyflakes errors
     'D',  # docstring errors
-    # 'I',  # isort errors
+    # 'I',  # isort errors (import sorting)
     'PL',  # pylint errors
     'PTH', # use Path vs os
 ]

@@ -13,9 +13,7 @@ Davis, Chapter 6.
 import numpy as np
 
 from scipy.linalg import solve, norm
-from scipy.sparse.linalg import (
-    LinearOperator, SuperLU, splu, onenormest, norm as spnorm
-)
+from scipy.sparse import linalg as spla
 
 from csparse import inv_permute
 
@@ -306,7 +304,7 @@ def cond1est(A):
 
     # Compute the LU decomposition of A
     try:
-        lu = splu(A)
+        lu = spla.splu(A)
     except RuntimeError as e:
         if "Factor is exactly singular" in str(e):
             return np.inf
@@ -316,7 +314,7 @@ def cond1est(A):
     if np.any(lu.U.diagonal() == 0):
         return np.inf
     else:
-        return spnorm(A, 1) * norm1est_inv(lu)
+        return spla.norm(A, 1) * norm1est_inv(lu)
 
 
 def _norm1est_inv_lu(lu):
@@ -384,10 +382,10 @@ def norm1est_inv(A):
     result : float
         An estimate of the 1-norm of the inverse of the matrix.
     """
-    if isinstance(A, SuperLU):
+    if isinstance(A, spla.SuperLU):
         lu = A
     else:
-        lu = splu(A)
+        lu = spla.splu(A)
     return _norm1est_inv_lu(lu)
 
 
@@ -418,12 +416,12 @@ def scipy_cond1est(A):
         return 0.0
 
     # Estimate ||A||_1
-    # norm_A = onenormest(A)
-    norm_A = spnorm(A, 1)
+    # norm_A = spla.onenormest(A)
+    norm_A = spla.norm(A, 1)
 
     # Compute the LU decomposition of A
     try:
-        lu = splu(A)
+        lu = spla.splu(A)
     except RuntimeError as e:
         if "Factor is exactly singular" in str(e):
             return np.inf
@@ -431,7 +429,7 @@ def scipy_cond1est(A):
             raise
 
     # Estimate ||A^-1||_1 using the LU decomposition
-    A_inv_op = LinearOperator(
+    A_inv_op = spla.LinearOperator(
         shape=A.shape,
         matvec=lu.solve,                           # x = A \ b
         rmatvec=lambda b: lu.solve(b, trans='T'),  # x = A.T \ b
@@ -439,7 +437,7 @@ def scipy_cond1est(A):
     )
 
     # Estimate the 1-norm of the inverse
-    norm_A_inv = onenormest(A_inv_op)
+    norm_A_inv = spla.onenormest(A_inv_op)
 
     return norm_A * norm_A_inv
 

@@ -25,7 +25,7 @@ from scipy.io import loadmat, hb_read, mmread
 # TODO refactor into own package
 
 # TODO move this to a config.py file
-SS_DIR = Path.home() / ".ssgetpy"
+SS_DIR = Path.home() / ".suitesparseget"
 
 SS_ROOT_URL = "https://sparse.tamu.edu"
 SS_INDEX_URL = f"{SS_ROOT_URL}/files/ss_index.mat"

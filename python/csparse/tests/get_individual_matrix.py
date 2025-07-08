@@ -30,7 +30,9 @@ if __name__ == "__main__":
     #                  (list of ['cluster', 'colname', 'rowname'])
     # NOTE all Pajek matrices seem to be graphs with 'aux' data.
     # mat_id = 1440  # Oberwolfach/LFATS 'notes' is one line
-    mat_id = 2734  # VDOL/spaceStation_1 'aux' 'rowname' is long list of strings
+    # mat_id = 2734  # VDOL/spaceStation_1 'aux' 'rowname' is long list of strings
+
+    mat_id = df.loc[df.name == 'arc130'].index[0]
 
     problem = ssg.get_problem(
         index=df,
@@ -38,7 +40,10 @@ if __name__ == "__main__":
         fmt='mat'
     )
 
+    svals = ssg.get_svds(index=df, mat_id=mat_id)
+
     print(problem)
+    print(svals)
 
 # =============================================================================
 # =============================================================================

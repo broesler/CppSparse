@@ -111,6 +111,25 @@ class MatrixProblem:
         return f"<{self.__class__.__name__}:\n{self.__str__()}>"
 
 
+@dataclass(frozen=True)
+class MatrixSVDs:
+    """A class representing the singular values of a matrix problem.
+
+    Attributes
+    ----------
+    s : np.ndarray
+        The singular values of the matrix.
+    how : str
+        The MATLAB code used to compute the singular values.
+    status : str
+        The status of the singular value computation, e.g., 'ok', 'failed'.
+    """
+
+    s : np.ndarray = None
+    how : str = None
+    status : str = None
+
+
 def download_file(url, path):
     """Download a file from a URL and save it to the specified path."""
     try:
@@ -436,7 +455,13 @@ def load_matfile_ltv73(matrix_path):
     )
 
     # `mat` will be a dictionary-like structure with MATLAB variables
-    problem_mat = mat['Problem']
+    try:
+        problem_mat = mat['Problem']
+    except KeyError:
+        try:
+            problem_mat = mat['S']
+        except KeyError:
+            raise KeyError("MAT-file does not contain 'Problem' or 'S' variable.")
 
     # problem_mat is a structured numpy array of arrays, so get the
     # individual items as a dictionary
@@ -740,6 +765,44 @@ def ssweb(index=None, mat_id=None, group=None, name=None):
     except webbrowser.Error as e:
         print(f"Error opening web page: {e}")
         raise e
+
+
+def get_svds(index=None, mat_id=None, group=None, name=None):
+    """Get the singular values of a SuiteSparse matrix problem.
+
+    Parameters
+    ----------
+    index : DataFrame
+        The DataFrame containing the SuiteSparse index.
+    mat_id : int
+        The unique identifier of the matrix.
+    group : str
+        The group name of the matrix.
+    name : str
+        The name or a pattern matching the name of the matrix.
+    """
+    row = get_row(index=index, mat_id=mat_id, group=group, name=name)
+    local_svd_dir = SS_DIR / 'svd' / row['group']
+    local_filename = local_svd_dir / f"{row['name']}_SVD.mat"
+    url = f"{SS_ROOT_URL}/svd/{row['group']}/{row['name']}_SVD.mat"
+
+    if not local_svd_dir.exists():
+        local_svd_dir.mkdir(parents=True, exist_ok=True)
+
+    if not local_filename.exists():
+        try:
+            download_file(url, local_filename)
+        except requests.exceptions.RequestException as e:
+            print(f"Error downloading SVD file: {e}")
+            raise e
+
+    # Load the SVD data
+    try:
+        data = load_matfile_ltv73(local_filename)
+    except NotImplementedError:
+        data = load_matfile_gev73(local_filename)
+
+    return MatrixSVDs(**data)
 
 
 # =============================================================================

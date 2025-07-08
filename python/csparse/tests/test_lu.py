@@ -105,10 +105,10 @@ def test_1norm_estimate(A):
 
     normd = la.norm(A, 1)
     norms = spla.norm(As, 1)
-    norm_est = spla.onenormest(A)
+    norms_est = spla.onenormest(A)
 
     assert_allclose(normd, norms, atol=ATOL)
-    assert_allclose(normd, norm_est, atol=ATOL)
+    assert_allclose(normd, norms_est, atol=ATOL)
 
     # Condition number == ||A||_1 * ||A^-1||_1
     condd = np.linalg.cond(A, 1)
@@ -118,7 +118,7 @@ def test_1norm_estimate(A):
 
     normd_inv = la.norm(Ainv, 1)
     norms_inv = spla.norm(Asinv, 1)
-    norm_est_inv = spla.onenormest(Ainv)
+    norms_inv_est = spla.onenormest(Ainv)
 
     # Test out condition number estimate
     # CSparse version:
@@ -137,7 +137,7 @@ def test_1norm_estimate(A):
     normc_inv = csparse.norm1est_inv(As)  # == 0.11537500551678347
 
     assert_allclose(normd_inv, norms_inv, atol=ATOL)
-    assert_allclose(normd_inv, norm_est_inv, atol=ATOL)
+    assert_allclose(normd_inv, norms_inv_est, atol=ATOL)
     assert_allclose(normd_inv, normc_inv, atol=ATOL)
 
     κc = csparse.cond1est(As)          # == 2.422875115852453
@@ -232,7 +232,6 @@ _N_trials = 200
     list(generate_suitesparse_matrices(N=_N_trials, square_only=True)),
     indirect=True
 )
-@pytest.mark.xfail(reason='Estimates are inherently noisy.')
 class TestCond1est(BaseSuiteSparsePlot):
     """Test the 1-norm condition number estimate."""
 
@@ -260,13 +259,51 @@ class TestCond1est(BaseSuiteSparsePlot):
             request.cls.make_figures = False
             pytest.skip(f"csparse: {e}")
 
-        print(f"numpy:   {κ_n:.4e}\n"
-              f"scipy:   {κ_s:.4e}\n"
-              f"csparse: {κ_c:.4e}\n")
+        # Store the values in a string for logging
+        cond_str = (
+            f"  numpy:   {κ_n:.8e}\n"
+            f"  scipy:   {κ_s:.8e}\n"
+            f"  csparse: {κ_c:.8e}\n"
+        )
 
-        assert (np.isclose(κ_n, κ_s, atol=1e-15) or
-                np.isclose(κ_c, κ_n, atol=1e-15) or
-                np.isclose(κ_c, κ_s, atol=1e-15))
+        # Estimates are a lower bound on the exact condition number, but the
+        # "<=" condition may not hold if they are close to the exact value.
+        passed_any_check = False
+        failure_reasons = []
+
+        # All may be effectively infinite, but not necessarily "equal"
+        try:
+            huge_val = 1 / np.finfo(float).eps  # ~ 4.5e+15
+            assert κ_n > huge_val
+            assert κ_s > huge_val
+            assert κ_c > huge_val
+            passed_any_check = True
+            print(f"all huge:\n{cond_str}")
+        except AssertionError:
+            failure_reasons.append("Not all estimates are huge.")
+            print(f"NOT all huge:\n{cond_str}")
+
+        # assert_allclose tests: |a - d| <= atol + rtol * |d|
+        rtol = 1e-7
+        atol = 0
+
+        # Estimates are a lower bound on the exact condition number
+        if not passed_any_check:
+            try:
+                # similar to assert_allclose, but with "less than or equal"
+                assert κ_s - κ_n <= atol + rtol * abs(κ_n)
+                assert κ_c - κ_n <= atol + rtol * abs(κ_n)
+                passed_any_check = True
+                print(f"less than or equal:\n{cond_str}")
+            except AssertionError:
+                failure_reasons.append("Not all estimates are less than exact.")
+                print(f"NOT less than or equal:\n{cond_str}")
+
+        if not passed_any_check:
+            pytest.fail(
+                f"Condition number estimates failed for {self.problem.name}\n"
+                "\n".join(failure_reasons) + "\n" + cond_str
+            )
 
         if self.make_figures:
             self.fig.suptitle('1-Norm Condition Number Estimate')

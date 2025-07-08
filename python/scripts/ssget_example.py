@@ -27,16 +27,17 @@ import csparse
 df = get_ss_index()
 
 # Get the symmetric non-binary matrices
-tf = df.loc[df['numerical_symmetry'] == 1 & ~df['isBinary']]
+tf = df.loc[df['numerical_symmetry'] == 1 & ~df['is_binary']]
 
 # Sort by number of rows
 tf = tf.sort_values('nrows')
 
 fig = plt.figure(num=1, clear=True)
+plt.ion()
 plt.show()
 
 for _i, row in tf.iterrows():
-    print(f"Loading {row['Name']} ({row['nrows']} x {row['ncols']})...")
+    print(f"Loading {row['name']} ({row['nrows']} x {row['ncols']})...")
     fig.clear()
     ax = fig.add_subplot()
 

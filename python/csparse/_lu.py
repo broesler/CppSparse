@@ -393,7 +393,7 @@ def scipy_cond1est(A):
     """Estimate the 1-norm condition number of a real, square matrix.
 
     This function uses only scipy functions to compute the condition number, as
-    opposed to cond1est that uses our own algorithm.
+    opposed to `cond1est` that uses our own algorithm.
 
     See: Davis, Exercise 6.15.
 
@@ -415,8 +415,7 @@ def scipy_cond1est(A):
     if A.size == 0:
         return 0.0
 
-    # Estimate ||A||_1
-    # norm_A = spla.onenormest(A)
+    # Compute ||A||_1 exactly
     norm_A = spla.norm(A, 1)
 
     # Compute the LU decomposition of A

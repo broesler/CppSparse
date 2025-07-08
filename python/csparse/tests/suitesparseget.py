@@ -629,11 +629,11 @@ def get_path_from_row(row, fmt='mat'):
     path_tail = (Path(fmt) / row['group'] / row['name']).with_suffix(tar_ext)
     url = f"{SS_ROOT_URL}/{path_tail.as_posix()}"
 
-    mat_extd = dict(
-        MM='.mtx',
-        RB='.rb',
-        mat='.mat',
-    )
+    mat_extd = {
+        "MM": '.mtx',
+        "RB": '.rb',
+        "mat": '.mat',
+    }
     mat_ext = mat_extd[fmt]
 
     local_tar_path = SS_DIR / path_tail

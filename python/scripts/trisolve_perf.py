@@ -110,7 +110,7 @@ linestyles = {
 }
 
 ax = axs[0]
-for i, (key, val) in enumerate(times.items()):
+for key, val in times.items():
     ax.plot(densities, val,
             marker='.', color=colors[key], ls=linestyles[key], label=key)
 
@@ -123,7 +123,7 @@ ax.set_ylabel('Time (s)')
 
 # Plot the difference between the two methods
 ax = axs[1]
-for i, k in enumerate(['l', 'u']):
+for k in ['l', 'u']:
     key = f"{k}solve"
     opt_key = key + '_opt'
 

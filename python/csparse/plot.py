@@ -115,8 +115,8 @@ def cspy(A, cmap='viridis_r', colorbar=True, ticklabels=False, ax=None, **kwargs
         ax.set_xlabel(f"{A.shape}, nnz = 0, density = 0")
         return ax, None
 
-    ax.set_xlabel((f"{A.shape}, nnz = {nnz:,d}, "
-                   f"density = {nnz / (M * N):.2%}"))
+    ax.set_xlabel(f"{A.shape}, nnz = {nnz:,d}, "
+                   f"density = {nnz / (M * N):.2%}")
 
     # Convert to a dense matrix and use imshow
     im = ax.imshow(dense_matrix, cmap=cmap, origin='upper', aspect='equal',
@@ -266,7 +266,7 @@ def drawboxes(Nb, r, s, ax=None, **kwargs):
         Matrix of M vectors in N dimensions
     """
     # Default styling
-    opts = dict(ec='C3', fc='none', lw=2)
+    opts = {'ec': 'C3', 'fc': 'none', 'lw': 2}
     opts.update(kwargs)
 
     if Nb > 1:
@@ -300,7 +300,7 @@ def drawbox(r1, r2, c1, c2, ax=None, **kwargs):
     if ax is None:
         ax = plt.gca()
 
-    opts = dict(edgecolor='k', facecolor='none', lw=2)
+    opts = {'edgecolor': 'k', 'facecolor': 'none', 'lw': 2}
     opts.update(kwargs)
 
     # Draw a rectangle
@@ -373,8 +373,8 @@ if __name__ == '__main__':
     plt.show()
 
     # 5. Larger random matrix (more sparse-like)
-    np.random.seed(42)
-    large_random_matrix = np.random.randn(25, 35)
+    rng = np.random.default_rng(seed=42)
+    large_random_matrix = rng.normal(25, 35)
     large_random_matrix[np.abs(large_random_matrix) < 0.8] = 0
     fig6, ax6 = plt.subplots(figsize=(8, 6))
     cspy(large_random_matrix, cmap='magma', ax=ax6)

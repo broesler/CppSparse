@@ -86,12 +86,12 @@ def demo2(problem, name='', axs=None):
 
     ax = axs[3]
 
-    pad = dict(
-        Natural=' ' * 8,
-        APlusAT=' ' * 8,
-        ATANoDenseRows=' ',
-        ATA=' ' * 12
-    )
+    pad = {
+        'Natural': ' ' * 8,
+        'APlusAT': ' ' * 8,
+        'ATANoDenseRows': ' ',
+        'ATA': ' ' * 12
+    }
 
     if M == N:
         if is_sym:

@@ -25,7 +25,8 @@ if __name__ == "__main__":
     # mat_id = 449   # Grund/b1_ss  has 'b'
     # mat_id = 2396  # Newman/dolphins has 'aux' (single item)
     # mat_id = 1487  # Pajek/GD95_c has 'aux' (list of ['nodename', 'coords'])
-    # mat_id = 1457  # Pajek/Cities has 'aux' data (list of ['cluster', 'colname','rowname'])
+    # mat_id = 1457  # Pajek/Cities has 'aux' data
+    #                  (list of ['cluster', 'colname', 'rowname'])
     # NOTE all Pajek matrices seem to be graphs with 'aux' data.
     # mat_id = 1440  # Oberwolfach/LFATS 'notes' is one line
     mat_id = 2734  # VDOL/spaceStation_1 'aux' 'rowname' is long list of strings

@@ -35,22 +35,22 @@ density = 0.1  # density of the matrices
 N_repeats = 7  # number of "runs" in %timeit (7 is default)
 N_samples = 1  # number of samples in each run (100,000 is default)
 
-gaxpy_funcs = dict(
-    regular=[
+gaxpy_funcs = {
+    'regular': [
         csparse.gaxpy_col,
         csparse.gaxpy_row,
         csparse.gaxpy_block
     ],
-    transpose=[
+    'transpose': [
         csparse.gatxpy_col,
         csparse.gatxpy_row,
         csparse.gatxpy_block
     ]
-)
+}
 
 # Store the results
-times = dict(regular=defaultdict(list),
-             transpose=defaultdict(list))
+times = {'regular': defaultdict(list),
+             'transpose': defaultdict(list)}
 
 for kind in ['regular', 'transpose']:
     for N in Ns:
@@ -110,7 +110,7 @@ fig.suptitle(f"{filestem.split('_')[0].upper()}, density {density}")
 fig.set_size_inches(10, 4.8, forward=True)
 
 for ax, kind in zip(axs, ['regular', 'transpose']):
-    for i, (key, val) in enumerate(times[kind].items()):
+    for _i, (key, val) in enumerate(times[kind].items()):
         ax.plot(Ns, val, '.-', label=key)
 
     ax.set(

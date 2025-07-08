@@ -41,7 +41,7 @@ def test_amd(A, request):
     assert M == N, 'Matrix must be square for AMD ordering.'
 
     # Add a randomly-placed dense column
-    k = np.random.randint(0, N)
+    k = np.random.default_rng().integers(N)
     A = A.todok()
     A[:, k] = 1.0
 

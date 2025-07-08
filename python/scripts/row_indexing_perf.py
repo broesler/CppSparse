@@ -41,7 +41,7 @@ with tqdm(total=len(Ms), desc="M", leave=False) as pbar0:
 
         with tqdm(total=M, desc="i", leave=False) as pbar1:
             for i in range(M):
-                ts = timeit.repeat(lambda: A[i, :], repeat=5, number=7)
+                ts = timeit.repeat(lambda A=A, i=i: A[i, :], repeat=5, number=7)
                 row_times[i] = np.mean(ts)
                 pbar1.update(1)
 
@@ -85,8 +85,8 @@ ax.set(
 ax.grid(True, which='both')
 
 if SAVE_FIGS:
-    fig1.savefig('../data/row_indexing_distribution_py.png')
-    fig2.savefig('../data/row_indexing_scaling_py.png')
+    fig1.savefig('../../plots/row_indexing_distribution_py.png')
+    fig2.savefig('../../plots/row_indexing_scaling_py.png')
 
 
 # ==============================================================================

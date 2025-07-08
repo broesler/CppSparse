@@ -20,12 +20,12 @@ if __name__ == "__main__":
 
     fieldnames = set()
 
-    for idx, row in tf.iterrows():
+    for _, row in tf.iterrows():
         # Load the actual matrix
         problem = get_ss_problem_from_row(row, fmt='mat')
 
         # Get all field names
-        new_names = set([x.name for x in fields(problem)]) - fieldnames
+        new_names = {x.name for x in fields(problem)} - fieldnames
 
         if len(new_names) > 0:
             print("********** Found new field names in "

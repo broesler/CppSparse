@@ -97,7 +97,7 @@ print(np.c_[Ns, fill_in])
 # -----------------------------------------------------------------------------
 fig, ax = plt.subplots(num=1, clear=True)
 fig.set_size_inches(6.4, 4.8, forward=True)
-for i, (key, val) in enumerate(times.items()):
+for key, val in times.items():
     ax.plot(N_cols, val, '.-', label=key)
 
 ax.set_xscale('log')

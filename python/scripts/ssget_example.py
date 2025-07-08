@@ -35,7 +35,7 @@ tf = tf.sort_values('nrows')
 fig = plt.figure(num=1, clear=True)
 plt.show()
 
-for i, row in tf.iterrows():
+for _i, row in tf.iterrows():
     print(f"Loading {row['Name']} ({row['nrows']} x {row['ncols']})...")
     fig.clear()
     ax = fig.add_subplot()

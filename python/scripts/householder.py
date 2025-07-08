@@ -188,12 +188,12 @@ def plot_vector(v, text=None, ax=None, **kwargs):
         kwargs.pop('label', None)  # not used in ax.text()
         ax.text(v[0] + 0.1, v[1] + 0.3,
                 f"{text}: [{v[0]:.2g}, {v[1]:.2g}]",
-                bbox=dict(
-                    facecolor='white',
-                    alpha=0.5,
-                    edgecolor='none',
+                bbox={
+                    'facecolor': 'white',
+                    'alpha': 0.5,
+                    'edgecolor': 'none',
                     # pad=5
-                ),
+                },
                 **kwargs)
 
     return ax

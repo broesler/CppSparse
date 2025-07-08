@@ -591,22 +591,8 @@ def get_row(index=None, mat_id=None, group=None, name=None):
     return row
 
 
-# FIXME either re-name this function or refactor it, since "get_path" does not
-# imply actually downloading a file.
-def get_path_from_row(row, fmt='mat'):
-    """Get a SuiteSparse matrix problem from a DataFrame row.
-
-    This function is useful for iterating over rows in the SuiteSparse index,
-    typically after filtering to a desired subset.
-
-    .. code::
-        for index, row in df.iterrows():
-            problem = get_problem_from_row(row, fmt='mat')
-            A = problem.A
-            # ... operate on the matrix ...
-
-    It skips the checks and re-indexing used by `get_problem`, so it is
-    faster when iterating.
+def download_matrix(row, fmt='mat'):
+    """Download a SuiteSparse matrix file based on the index row.
 
     Parameters
     ----------
@@ -617,8 +603,8 @@ def get_path_from_row(row, fmt='mat'):
 
     Returns
     -------
-    MatrixProblem
-        The matrix problem instance containing the matrix and its metadata.
+    matrix_file : Path
+        The path to the downloaded matrix file.
     """
     if fmt not in ['MM', 'RB', 'mat']:
         raise ValueError("Format must be one of 'MM', 'RB', 'mat'.")
@@ -688,6 +674,18 @@ def get_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
 def get_problem_from_row(row, fmt='mat'):
     """Get a SuiteSparse matrix problem from a DataFrame row.
 
+    This function is useful for iterating over rows in the SuiteSparse index,
+    typically after filtering to a desired subset.
+
+    .. code::
+        for index, row in df.iterrows():
+            problem = get_problem_from_row(row, fmt='mat')
+            A = problem.A
+            # ... operate on the matrix ...
+
+    It skips the checks and re-indexing used by `get_problem`, so it is
+    faster when iterating.
+
     Parameters
     ----------
     row : Series
@@ -700,7 +698,7 @@ def get_problem_from_row(row, fmt='mat'):
     MatrixProblem
         The matrix problem instance containing the matrix and its metadata.
     """
-    matrix_file = get_path_from_row(row, fmt=fmt)
+    matrix_file = download_matrix(row, fmt=fmt)
     return load_problem(matrix_file)
 
 

@@ -299,8 +299,8 @@ def cond1est(A):
     if M != N:
         raise ValueError("Input matrix must be square.")
 
-    if A.size == 0:
-        return 0.0
+    if M == 0:
+        raise ValueError("Condition number of an empty matrix is undefined.")
 
     # Compute the LU decomposition of A
     try:

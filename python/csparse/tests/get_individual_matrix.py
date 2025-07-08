@@ -7,13 +7,14 @@
 """Test script to download and print a specific SuiteSparse matrix problem."""
 # =============================================================================
 
-from suitesparseget import get_ss_index, get_ss_problem
+import suitesparseget as ssg
 
 # import csparse
 
 
 if __name__ == "__main__":
-    df = get_ss_index()
+    # Get the entire index
+    df = ssg.get_index()
 
     # -------------------------------------------------------------------------
     #         Test download process
@@ -31,7 +32,7 @@ if __name__ == "__main__":
     # mat_id = 1440  # Oberwolfach/LFATS 'notes' is one line
     mat_id = 2734  # VDOL/spaceStation_1 'aux' 'rowname' is long list of strings
 
-    problem = get_ss_problem(
+    problem = ssg.get_problem(
         index=df,
         mat_id=mat_id,
         fmt='mat'

@@ -9,12 +9,12 @@
 
 from dataclasses import fields
 
-from suitesparseget import get_ss_index, get_ss_problem_from_row
+import suitesparseget as ssg
 
 
 if __name__ == "__main__":
     N = 1000
-    df = get_ss_index()
+    df = ssg.get_index()
     max_dim = df[['nrows', 'ncols']].max(axis=1)
     tf = df.loc[max_dim.sort_values().head(N).index]
 
@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     for _, row in tf.iterrows():
         # Load the actual matrix
-        problem = get_ss_problem_from_row(row, fmt='mat')
+        problem = ssg.get_problem_from_row(row, fmt='mat')
 
         # Get all field names
         new_names = {x.name for x in fields(problem)} - fieldnames

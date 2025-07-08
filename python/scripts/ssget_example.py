@@ -18,13 +18,13 @@ CSparse/MATLAB/ssget/ssget_example.m
 
 import matplotlib.pyplot as plt
 
-from csparse.tests.suitesparseget import get_ss_index, get_ss_problem, ssweb
+from csparse.tests import suitesparseget as ssg
 
 import csparse
 
 
 # Load the index
-df = get_ss_index()
+df = ssg.get_index()
 
 # Get the symmetric non-binary matrices
 tf = df.loc[df['numerical_symmetry'] == 1 & ~df['is_binary']]
@@ -42,7 +42,7 @@ for _i, row in tf.iterrows():
     ax = fig.add_subplot()
 
     # Load the matrix
-    problem = get_ss_problem(mat_id=row['id'], index=tf)
+    problem = ssg.get_problem(mat_id=row['id'], index=tf)
     print(problem)
 
     # Plot the matrix
@@ -50,7 +50,7 @@ for _i, row in tf.iterrows():
     ax.set_title(f"{problem.name}\n{problem.title}")
 
     # Open the web page for the problem
-    ssweb(mat_id=problem.id)
+    ssg.ssweb(mat_id=problem.id)
 
     plt.draw()
     input("Press Enter to continue (or Ctrl-C to stop)... ")

@@ -15,7 +15,7 @@ import numpy as np
 from pathlib import Path
 from scipy import sparse
 
-from .suitesparseget import MatrixProblem, get_ss_index, get_ss_problem_from_row
+from . import suitesparseget as ssg
 
 
 # -----------------------------------------------------------------------------
@@ -23,7 +23,7 @@ from .suitesparseget import MatrixProblem, get_ss_index, get_ss_problem_from_row
 # -----------------------------------------------------------------------------
 def generate_suitesparse_matrices(N=100, real_only=True, square_only=False):
     """Generate a list of SuiteSparse matrices."""
-    df = get_ss_index()
+    df = ssg.get_index()
 
     # Get the list of the N smallest SuiteSparse matrices
     max_dim = df[['nrows', 'ncols']].max(axis=1)
@@ -38,7 +38,7 @@ def generate_suitesparse_matrices(N=100, real_only=True, square_only=False):
 
     for idx, row in tf.head(N).iterrows():
         try:
-            problem = get_ss_problem_from_row(row, fmt='mat')
+            problem = ssg.get_problem_from_row(row, fmt='mat')
         except NotImplementedError as e:
             print(f"Skipping matrix {idx} due to: {e}")
             continue
@@ -229,11 +229,11 @@ class BaseSuiteSparseTest:
         """Initialize the problem."""
         cls = request.cls
 
-        if isinstance(problem, MatrixProblem):
+        if isinstance(problem, ssg.MatrixProblem):
             cls.problem = problem
         elif isinstance(problem, sparse.sparray):
             A = problem
-            cls.problem = MatrixProblem(
+            cls.problem = ssg.MatrixProblem(
                 id=f"random_{A.shape[0]}_{A.shape[1]}_{A.nnz}",
                 name=f"Random {A.shape}, {A.nnz} nnz",
                 A=A

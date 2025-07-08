@@ -128,7 +128,7 @@ def download_file(url, path):
         raise e
 
 
-def get_ss_index():
+def get_index():
     """Download the SuiteSparse index file load it into a DataFrame.
 
     Returns
@@ -236,7 +236,7 @@ def get_ss_index():
     return df
 
 
-def get_ss_stats():
+def get_stats():
     """Download the SuiteSparse statistics file and load it into a DataFrame.
 
     .. note:: The statistics file is not used in the CSparse testing.
@@ -302,8 +302,8 @@ def check_index_vs_csv():
         True if the DataFrame is valid, False otherwise.
     """
     # Load the index from the mat file
-    df = get_ss_index()
-    df_csv = get_ss_stats()
+    df = get_index()
+    df_csv = get_stats()
 
     # Both give the same results, but df_index has more columns of information
     assert df_csv['name'].equals(df['name']), "Names do not match"
@@ -548,7 +548,7 @@ def load_problem(matrix_path):
         raise ValueError(f"Unknown format: {fmt}")
 
 
-def get_ss_row(index=None, mat_id=None, group=None, name=None):
+def get_row(index=None, mat_id=None, group=None, name=None):
     """Get a SuiteSparse matrix row by ID, or group and name.
 
     Parameters
@@ -570,7 +570,7 @@ def get_ss_row(index=None, mat_id=None, group=None, name=None):
         The row from the SuiteSparse index DataFrame containing the matrix.
     """
     if index is None:
-        index = get_ss_index()
+        index = get_index()
 
     if mat_id is None and (group is None or name is None):
         raise ValueError("One of `mat_id` or the pair "
@@ -601,11 +601,11 @@ def get_path_from_row(row, fmt='mat'):
 
     .. code::
         for index, row in df.iterrows():
-            problem = get_ss_problem_from_row(row, fmt='mat')
+            problem = get_problem_from_row(row, fmt='mat')
             A = problem.A
             # ... operate on the matrix ...
 
-    It skips the checks and re-indexing used by `get_ss_problem`, so it is
+    It skips the checks and re-indexing used by `get_problem`, so it is
     faster when iterating.
 
     Parameters
@@ -658,7 +658,7 @@ def get_path_from_row(row, fmt='mat'):
     return local_matrix_file
 
 
-def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
+def get_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
     """Get a SuiteSparse matrix problem by ID, or group and name.
 
     Parameters
@@ -681,11 +681,11 @@ def get_ss_problem(index=None, mat_id=None, group=None, name=None, fmt='mat'):
     """
     if fmt not in ['MM', 'RB', 'mat']:
         raise ValueError("Format must be one of 'MM', 'RB', 'mat'.")
-    row = get_ss_row(index=index, mat_id=mat_id, group=group, name=name)
-    return get_ss_problem_from_row(row, fmt=fmt)
+    row = get_row(index=index, mat_id=mat_id, group=group, name=name)
+    return get_problem_from_row(row, fmt=fmt)
 
 
-def get_ss_problem_from_row(row, fmt='mat'):
+def get_problem_from_row(row, fmt='mat'):
     """Get a SuiteSparse matrix problem from a DataFrame row.
 
     Parameters
@@ -704,7 +704,7 @@ def get_ss_problem_from_row(row, fmt='mat'):
     return load_problem(matrix_file)
 
 
-def get_ss_problem_from_file(matrix_file):
+def get_problem_from_file(matrix_file):
     """Get a SuiteSparse matrix problem from a file path.
 
     Parameters
@@ -735,7 +735,7 @@ def ssweb(index=None, mat_id=None, group=None, name=None):
     name : str
         The name or a pattern matching the name of the matrix.
     """
-    row = get_ss_row(index=index, mat_id=mat_id, group=group, name=name)
+    row = get_row(index=index, mat_id=mat_id, group=group, name=name)
     web_url = f"{SS_ROOT_URL}/{row['group']}/{row['name']}"
     try:
         webbrowser.open(web_url, new=0, autoraise=True)

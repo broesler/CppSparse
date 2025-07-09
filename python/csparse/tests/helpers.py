@@ -38,7 +38,7 @@ def generate_suitesparse_matrices(N=100, real_only=True, square_only=False):
 
     for idx, row in tf.head(N).iterrows():
         try:
-            problem = ssg.get_problem_from_row(row, fmt='mat')
+            problem = ssg.get_problem(row=row, fmt='mat')
         except NotImplementedError as e:
             print(f"Skipping matrix {idx} due to: {e}")
             continue

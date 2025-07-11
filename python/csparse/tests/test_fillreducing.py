@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import time
+import warnings
 
 from pathlib import Path
 from scipy import sparse
@@ -332,12 +333,14 @@ class TestFiedler(BaseSuiteSparsePlot):
         rel = tf / max(tr, 1e-6)
         print(f"time: RCM {tr:.2e}s   Fiedler {tf:.2e}s   ratio {rel:.2e}")
 
-        # Evaluate the profile metric
-        r_profile = csparse.profile(A[pr][:, pr])
-        f_profile = csparse.profile(A[pf][:, pf])
-        print(f"{A.shape}, "
-              f"RCM profile: {r_profile}, "
-              f"Fiedler profile: {f_profile}")
+        # Evaluate the profile metric for symmetric matrices
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            r_profile = csparse.profile(A[pr][:, pr])
+            f_profile = csparse.profile(A[pf][:, pf])
+            print(f"{A.shape}, "
+                  f"RCM profile: {r_profile}, "
+                  f"Fiedler profile: {f_profile}")
 
         if self.make_figures:
             Ab = A.astype(bool)
@@ -393,11 +396,13 @@ class TestNestedDissection(BaseSuiteSparsePlot):
         print(f"time: RCM {tr:.2e}s   ND {tn:.2e}s   ratio {rel:.2e}")
 
         # Evaluate the profile metric
-        r_profile = csparse.profile(A[pr][:, pr])
-        f_profile = csparse.profile(A[pn][:, pn])
-        print(f"{A.shape}, "
-              f"RCM profile: {r_profile}, "
-              f"ND profile: {f_profile}")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            r_profile = csparse.profile(A[pr][:, pr])
+            f_profile = csparse.profile(A[pn][:, pn])
+            print(f"{A.shape}, "
+                  f"RCM profile: {r_profile}, "
+                  f"ND profile: {f_profile}")
 
         if self.make_figures:
             Ab = A.astype(bool)

@@ -9,12 +9,17 @@ description = "A Python wrapper for the CSparse++ library"
 readme = { file = "README.md" }
 authors = [{ name = "Bernie Roesler", email = "bernard.roesler@gmail.com" }]
 license = { text = "MIT" }
-requires-python = ">=3.10"  # TODO setup CI to test on multiple versions
+requires-python = ">=3.10"
 
 dependencies = [
-    "matplotlib>=3.10",
-    "numpy>=2.2",
+    "matplotlib>=3.5",
+    "numpy>=2.1",
+    "pandas>=2.3",
+    "pymatreader>=1.1",
+    "Requests>=2.32",
     "scipy>=1.15",
+    "toml",
+    "tqdm",
 ]
 
 
@@ -77,8 +82,3 @@ exclude = [
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
-
-[tool.ruff.format]
-exclude = [
-    '**/suitesparseget/**',  # git submodule
-]

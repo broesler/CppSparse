@@ -1,0 +1,51 @@
+# This workflow will build and test the C++Sparse library and the associated
+# Python package. It relies on the makefile to call CMake for building the C++
+# code and the pybind11 package.
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: [3.10, 3.11, 3.12, 3.13]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build and test C++
+      - name: Build C++ code
+        run: |
+          make test
+          ./test_csparse
+
+      # Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Install Python dependencies and development tools
+      - name: Install Python dependencies
+        run: |
+          cd python
+          pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      # Run Python unit tests
+      - name: Run Python tests
+        env:
+          MPLBACKEND: agg  # use headless backend for matplotlib
+        run: |
+          make python
+          pytest
+        # TODO pytest --make-figures

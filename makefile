@@ -64,7 +64,7 @@ all: test demos python
 
 test: OPT += -I$(TEST_DIR) -I$(BREW)/include
 test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
-test: CFLAGS := $(CFLAGS) -O2  # Use := to override, then append global
+test: CFLAGS := $(CFLAGS) -O2 -DNDEBUG  # Use := to override, then append global
 test: test_csparse
 
 test_debug: OPT += -I$(TEST_DIR) -I$(BREW)/include

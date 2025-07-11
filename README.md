@@ -37,7 +37,7 @@ make test
 ./test_csparse
 ```
 
-Then, build and test the Python interface. This requires `pip` and `setuptools`:
+Then, build and test the Python interface:
 
 ```bash
 make python
@@ -45,6 +45,27 @@ cd python
 pip install .
 pytest
 ```
+
+The python tests roughly replicate the tests in the original CSparse library
+(under `CSparse/MATLAB/Test`), and also include some additional tests for
+the Python interface.
+
+To make the figures in the python tests (saved to the `plots/` directory),
+
+```bash
+# cd to C++Sparse directory
+pytest --make-figures
+```
+
+**Warning:** Making the figures is slow. We recommend that you run the tests for
+individual modules or classes one at a time, *e.g.*
+
+```bash
+pytest --make-figures python/test/test_ly.py::TestLU
+```
+
+Note that figure windows may not be visible while the tests are running, but the
+files will still be saved.
 
 ## Demos
 In addition to the unit tests, there are also demo and example scripts.
@@ -67,8 +88,8 @@ python demo3.py
 Note that depending on your Matplotlib backend, you may need to close the figure
 window to continue on to the next plot for the python demos.
 
-The python scripts are located in the `python/scripts` directory. Many of them
-follow experiments and exercises as presented in Davis' book.
+Additional python scripts are located in the `python/scripts` directory. Many of
+them follow experiments and exercises as presented in Davis' book.
 
 ## Usage
 The library is intended to be run through the python interface, although the C++

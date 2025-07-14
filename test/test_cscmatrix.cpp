@@ -1198,10 +1198,11 @@ TEST_CASE("Exercise 2.29: Adding empty rows and columns to a CSCMatrix.", "[ex2.
         C.add_empty_left(k);
 
         std::vector<csint> expect_indptr(k, 0);
+        const auto& A_indptr = A.indptr();  // guarantee begin/end are valid
         expect_indptr.insert(
             expect_indptr.end(),
-            A.indptr().begin(),
-            A.indptr().end()
+            A_indptr.begin(),
+            A_indptr.end()
         );
 
         REQUIRE(C.nnz() == A.nnz());

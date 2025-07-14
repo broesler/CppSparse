@@ -49,9 +49,8 @@ jobs:
       # Install Python dependencies and development tools
       - name: Install Python dependencies
         run: |
-          cd python
           pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -e "./python[dev]"
 
       # Run Python unit tests
       - name: Run Python tests
@@ -59,9 +58,6 @@ jobs:
         # env:
         #   MPLBACKEND: agg  # use headless backend for matplotlib
         run: |
-          pwd
-          cd ../
-          tree -L 2
           cmake --build build --target csparse
           cmake --install build
           pytest

@@ -16,6 +16,10 @@ JOBS = 8
 CMAKE_CONFIG_ARGS := -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -DCMAKE_CXX_COMPILER=$(CXX)
 CMAKE_BUILD_ARGS := --build $(BUILD_DIR) --config $(BUILD_TYPE) -j${JOBS}
 
+ifdef USE_ASAN
+	CMAKE_CONFIG_ARGS += -DUSE_ASAN=$(USE_ASAN)
+endif
+
 .PHONY: all lib tests python demos install depend clean superclean
 
 DEMO_EXEC := demo1 demo2 demo3
@@ -35,6 +39,10 @@ lib:
 tests: lib
 	cmake $(CMAKE_BUILD_ARGS) --target test_csparse
 
+# Run the tests with LSAN options
+# run_debug_tests: tests
+# 	LSAN_OPTIONS="suppressions=$(abspath suppressions.sup)" ./test_csparse
+
 # Build the python module
 python: lib
 	cmake $(CMAKE_BUILD_ARGS) --target csparse
@@ -43,16 +51,6 @@ python: lib
 # Build the C++ demos
 demos: lib
 	cmake $(CMAKE_BUILD_ARGS) --target $(DEMO_EXEC)
-
-# debug: CFLAGS := $(CFLAGS) -DDEBUG -glldb -O0  # no optimization
-# debug: CFLAGS += -fno-inline -fno-omit-frame-pointer #-fsanitize=address
-
-# run_debug: debug
-# 	LSAN_OPTIONS="suppressions=$(abspath suppressions.sup)" ./test_csparse
-
-# .PHONY: profile
-# profile: CFLAGS := $(CFLAGS) -O2 -g  # optimize and add debug symbols
-# profile: $(DEMO_EXEC)
 
 .PHONY: run_demos
 run_demos: demos
@@ -69,7 +67,6 @@ run_demos: $(DEMO_EXEC)  # ensure demos are built before running
 	- ./demo3 './data/bcsstk01'
 	- ./demo3 './data/bcsstk16'
 
-
 # clean up
 clean:
 	rm -f *~
@@ -82,7 +79,7 @@ clean:
 
 # clean up
 superclean: clean
-	rm -rf $(BUILD_DIR)
+	rm -rf build/
 
 #==============================================================================
 #==============================================================================

@@ -15,6 +15,22 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)  # Use strict standard compliance
 
+# Set debugging flags
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG -fno-inline -fno-omit-frame-pointer")
+
+# Set ASAN options
+option(USE_ASAN "Enable AddressSanitizer" OFF)
+
+if (USE_ASAN)
+    if (UNIX AND NOT APPLE)
+        set(ENV{ASAN_OPTIONS} "detect_leaks=1")
+    endif()
+    set(ASAN_FLAGS "-fsanitize=address")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${ASAN_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${ASAN_FLAGS}")
+    message(STATUS "AddressSanitizer enabled.")
+endif()
+
 # Check for required packages
 find_package(Catch2 3 QUIET)
 
@@ -117,8 +133,13 @@ set_target_properties(test_csparse PROPERTIES
 )
 
 # Register with CTest
+enable_testing()
 include(CTest)
 add_test(NAME CppTests COMMAND test_csparse)
+# Ensure ./test_csparse is run from C++Sparse directory for relative paths
+set_tests_properties(CppTests PROPERTIES
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
 
 # ------------------------------------------------------------------------------
 #       C++ Demos: demo1, demo2, etc.

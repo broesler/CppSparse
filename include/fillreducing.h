@@ -34,7 +34,7 @@ struct SCCResult {
     csint Nb;              ///< # of blocks in fine dmperm decomposition
 
     SCCResult() = default;
-    SCCResult(csint M, csint N) : Nb(0) {
+    SCCResult(csint M) : Nb(0) {
         p.reserve(M);  // used as stacks in dfs, queues in bfs, so start empty
         r.reserve(M + 6);
     }

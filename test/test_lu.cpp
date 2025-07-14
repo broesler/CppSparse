@@ -61,7 +61,7 @@ TEST_CASE("Symbolic LU Factorization of Square Matrix", "[lu][M == N][symbolic]"
 
     SECTION("Symbolic Factorization") {
         AMDOrder order = AMDOrder::Natural;
-        csint expect_lnz;
+        csint expect_lnz = 0;
 
         SECTION("Natural") {
             order = AMDOrder::Natural;

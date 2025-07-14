@@ -29,7 +29,7 @@ all: lib tests python demos
 lib:
 	mkdir -p $(BUILD_DIR)
 	cmake -S . -B $(BUILD_DIR) $(CMAKE_CONFIG_ARGS)
-	cmake $(CMAKE_BUILD_ARGS) --target csc_lib
+	cmake $(CMAKE_BUILD_ARGS) --target csparse_lib
 
 # Build the C++ tests
 tests: lib

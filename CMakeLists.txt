@@ -68,9 +68,9 @@ endforeach()
 # -----------------------------------------------------------------------------
 #         Main C++ Library
 # -----------------------------------------------------------------------------
-add_library(csc_lib ${SOURCES} ${HEADERS})
-target_include_directories(csc_lib PUBLIC include)
-target_compile_options(csc_lib PRIVATE -Wall -pedantic)
+add_library(csparse_lib ${SOURCES} ${HEADERS})
+target_include_directories(csparse_lib PUBLIC include)
+target_compile_options(csparse_lib PRIVATE -Wall -pedantic)
 
 # -----------------------------------------------------------------------------
 #         Python Module with Pybind11
@@ -81,7 +81,7 @@ list(APPEND PYBIND11_SRC demo/demo.cpp)
 
 pybind11_add_module(csparse ${PYBIND11_SRC})
 target_include_directories(csparse PRIVATE include demo)
-target_link_libraries(csparse PRIVATE csc_lib)
+target_link_libraries(csparse PRIVATE csparse_lib)
 
 # Explicit compiler options for both the library and the Python module
 target_compile_options(csparse PRIVATE -Wall -pedantic)
@@ -110,7 +110,7 @@ file(GLOB TEST_HEADERS test/test_helpers.h)
 
 add_executable(test_csparse ${TEST_SOURCES} ${TEST_HEADERS} ${SOURCES} ${HEADERS})
 target_include_directories(test_csparse PRIVATE include test)
-target_link_libraries(test_csparse PRIVATE csc_lib Catch2::Catch2WithMain)
+target_link_libraries(test_csparse PRIVATE csparse_lib Catch2::Catch2WithMain)
 target_compile_options(test_csparse PRIVATE -Wall -pedantic)
 set_target_properties(test_csparse PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -131,7 +131,7 @@ foreach(DEMO_FILE ${DEMO_SRC})
     get_filename_component(DEMO_NAME ${DEMO_FILE} NAME_WE)
     add_executable(${DEMO_NAME} ${DEMO_FILE} ${DEMO_HELPERS} ${SOURCES} ${HEADERS})
     target_include_directories(${DEMO_NAME} PRIVATE include demo)
-    target_link_libraries(${DEMO_NAME} PRIVATE csc_lib)
+    target_link_libraries(${DEMO_NAME} PRIVATE csparse_lib)
     target_compile_options(${DEMO_NAME} PRIVATE -Wall -pedantic)
     set_target_properties(${DEMO_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}

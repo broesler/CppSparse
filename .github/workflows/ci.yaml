@@ -29,11 +29,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install pybind11
 
-      - name: Configure CMake
+      - name: Configure CMake (Linux/MacOS)
         run: |
           mkdir -p build
-          cmake -S . -B build \
-            -DCMAKE_PREFIX_PATH="$(python -m pybind11 --cmakedir)"
+          cmake -S . -B build -DCMAKE_PREFIX_PATH="$(python -m pybind11 --cmakedir)"
+
+      - name: Configure CMake (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          mkdir -p build
+          $cmakedir = python -m pybind11 --cmakedir
+          cmake -S . -B build -DCMAKE_PREFIX_PATH="$cmakedir"
 
       - name: Build and Test C++ Code
         run: |

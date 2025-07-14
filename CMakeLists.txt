@@ -15,6 +15,14 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)  # Use strict standard compliance
 
+add_compile_options(
+    -Wall
+    -pedantic
+    -Wextra
+    -Wno-sign-compare      # TODO ignore sign comparison warnings for now
+    -Wno-unused-parameter  # ignore fkeep and dummy functions
+)
+
 # Set debugging flags
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG -fno-inline -fno-omit-frame-pointer")
 
@@ -69,16 +77,16 @@ find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 #         Core Sources and Headers
 # -----------------------------------------------------------------------------
 set(BASENAMES
-	utils
-	sparse_matrix
-	coo
-	csc
-	fillreducing
-	cholesky
-	lu
-	qr
-	solve
-	example_matrices
+    utils
+    sparse_matrix
+    coo
+    csc
+    fillreducing
+    cholesky
+    lu
+    qr
+    solve
+    example_matrices
 )
 
 set(SOURCES "")
@@ -94,7 +102,6 @@ endforeach()
 # -----------------------------------------------------------------------------
 add_library(csparse_lib ${SOURCES} ${HEADERS})
 target_include_directories(csparse_lib PUBLIC include)
-target_compile_options(csparse_lib PRIVATE -Wall -pedantic)
 
 # -----------------------------------------------------------------------------
 #         Python Module with Pybind11
@@ -106,9 +113,6 @@ list(APPEND PYBIND11_SRC demo/demo.cpp)
 pybind11_add_module(csparse ${PYBIND11_SRC})
 target_include_directories(csparse PRIVATE include demo)
 target_link_libraries(csparse PRIVATE csparse_lib)
-
-# Explicit compiler options for both the library and the Python module
-target_compile_options(csparse PRIVATE -Wall -pedantic)
 
 # Build the Python module in the build directory
 set_target_properties(
@@ -135,7 +139,6 @@ file(GLOB TEST_HEADERS test/test_helpers.h)
 add_executable(test_csparse ${TEST_SOURCES} ${TEST_HEADERS} ${SOURCES} ${HEADERS})
 target_include_directories(test_csparse PRIVATE include test)
 target_link_libraries(test_csparse PRIVATE csparse_lib Catch2::Catch2WithMain)
-target_compile_options(test_csparse PRIVATE -Wall -pedantic)
 set_target_properties(test_csparse PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
@@ -161,7 +164,6 @@ foreach(DEMO_FILE ${DEMO_SRC})
     add_executable(${DEMO_NAME} ${DEMO_FILE} ${DEMO_HELPERS} ${SOURCES} ${HEADERS})
     target_include_directories(${DEMO_NAME} PRIVATE include demo)
     target_link_libraries(${DEMO_NAME} PRIVATE csparse_lib)
-    target_compile_options(${DEMO_NAME} PRIVATE -Wall -pedantic)
     set_target_properties(${DEMO_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}
     )

@@ -33,13 +33,13 @@ namespace cs {
 std::vector<double> operator+(
     const std::vector<double>& a,
     const std::vector<double>& b
-    )
+)
 {
     assert(a.size() == b.size());
 
     std::vector<double> out(a.size());
 
-    for (csint i = 0; i < a.size(); i++) {
+    for (size_t i = 0; i < a.size(); i++) {
         out[i] = a[i] + b[i];
     }
 
@@ -51,7 +51,7 @@ std::vector<double> operator-(const std::vector<double>& a)
 {
     std::vector<double> out(a.size());
 
-    for (csint i = 0; i < a.size(); i++) {
+    for (size_t i = 0; i < a.size(); i++) {
         out[i] = -a[i];
     }
 
@@ -69,7 +69,7 @@ std::vector<double> operator-(
 
     std::vector<double> out(a.size());
 
-    for (csint i = 0; i < a.size(); i++) {
+    for (size_t i = 0; i < a.size(); i++) {
         out[i] = a[i] - b[i];
     }
 
@@ -111,7 +111,7 @@ std::vector<csint> inv_permute(const std::vector<csint>& p)
 {
     std::vector<csint> out(p.size());
 
-    for (csint k = 0; k < p.size(); k++)
+    for (size_t k = 0; k < p.size(); k++)
         out[p[k]] = k;
 
     return out;
@@ -223,7 +223,7 @@ void print_dense_vec(
     std::ostream& os
 )
 {
-    if (A.size() != (M * N)) {
+    if (A.size() != static_cast<size_t>(M * N)) {
         throw std::runtime_error("Matrix size does not match dimensions!");
     }
 

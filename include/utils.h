@@ -103,7 +103,7 @@ std::vector<T> pvec(const std::vector<csint>& p, const std::vector<T>& b)
 {
     std::vector<T> x(b.size());
 
-    for (csint k = 0; k < b.size(); k++)
+    for (size_t k = 0; k < b.size(); k++)
         x[k] = b[p[k]];
 
     return x;
@@ -123,7 +123,7 @@ std::vector<T> ipvec(const std::vector<csint>& p, const std::vector<T>& b)
 {
     std::vector<T> x(b.size());
 
-    for (csint k = 0; k < b.size(); k++)
+    for (size_t k = 0; k < b.size(); k++)
         x[p[k]] = b[k];
 
     return x;
@@ -154,7 +154,7 @@ void print_vec(
 )
 {
     os << "[";
-    for (int i = 0; i < vec.size(); i++) {
+    for (size_t i = 0; i < vec.size(); i++) {
         os << vec[i];
         if (i < vec.size() - 1) {
             os << ", ";

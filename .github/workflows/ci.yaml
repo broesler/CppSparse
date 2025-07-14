@@ -4,6 +4,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -46,18 +47,24 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      # Run Python unit tests
+      - name: Build and Install Python C++ module
+        run: |
+          cmake --build build --target csparse
+          cmake --install build
+
       # Install Python dependencies and development tools
-      - name: Install Python dependencies
+      - name: Install Python dependencies and csparse module
         run: |
           pip install --upgrade pip
-          pip install -e "./python[dev]"
+          pip install -e "${{ github.workspace }}/python[dev]"
+          ls -l python/csparse
+          ls -lR $(python -c 'import csparse; print(csparse.__path__[0])'))
 
       # Run Python unit tests
-      - name: Run Python tests
+      - name: Run Python unit tests
         # TODO pytest --make-figures
         # env:
         #   MPLBACKEND: agg  # use headless backend for matplotlib
         run: |
-          cmake --build build --target csparse
-          cmake --install build
           pytest

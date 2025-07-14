@@ -35,6 +35,9 @@ dev = [
 [tool.setuptools]
 packages = ["csparse"]
 
+[tool.setuptools.package-data]
+csparse = ["*.so"]
+
 [tool.ruff]
 line-length = 88
 

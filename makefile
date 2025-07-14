@@ -13,6 +13,8 @@ BUILD_DIR := build/$(BUILD_TYPE)
 CXX ?= clang++
 JOBS = 8
 
+CMAKE_FLAGS ?=
+
 CMAKE_CONFIG_ARGS := -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -DCMAKE_CXX_COMPILER=$(CXX)
 CMAKE_BUILD_ARGS := --build $(BUILD_DIR) --config $(BUILD_TYPE) -j${JOBS}
 
@@ -33,7 +35,7 @@ all: lib tests python demos
 lib:
 	mkdir -p $(BUILD_DIR)
 	cmake -S . -B $(BUILD_DIR) $(CMAKE_CONFIG_ARGS)
-	cmake $(CMAKE_BUILD_ARGS) --target csparse_lib
+	cmake $(CMAKE_BUILD_ARGS) --target csparse_lib $(CMAKE_FLAGS)
 
 # Build the C++ tests
 tests: lib

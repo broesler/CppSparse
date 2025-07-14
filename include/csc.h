@@ -368,7 +368,7 @@ public:
      *
      * @return the value of the matrix if it is a 1x1 matrix.
      */
-    operator const double() const {
+    operator double() const {
         assert((M_ == 1) && (N_ == 1));
         return v_[0];
     }

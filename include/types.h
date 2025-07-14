@@ -11,6 +11,7 @@
 #define _CSPARSE_TYPES_H_
 
 #include <cstdint>
+#include <optional>
 
 
 namespace cs {

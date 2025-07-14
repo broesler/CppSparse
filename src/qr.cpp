@@ -8,6 +8,7 @@
  *
  *============================================================================*/
 
+#include <cmath>    // copysign
 #include <numeric>  // accumulate
 #include <ranges>   // views::reverse, span
 #include <vector>

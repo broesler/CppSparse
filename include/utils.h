@@ -10,8 +10,9 @@
 #ifndef _CSPARSE_UTILS_H_
 #define _CSPARSE_UTILS_H_
 
+#include <algorithm>  // sort
 #include <iostream>
-#include <numeric>  // iota
+#include <numeric>    // iota
 #include <span>
 #include <string>
 #include <vector>

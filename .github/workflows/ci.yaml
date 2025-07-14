@@ -35,33 +35,39 @@ jobs:
           cmake -S . -B build \
             -DCMAKE_PREFIX_PATH="$(python -m pybind11 --cmakedir)"
 
-      # Build and test C++
       - name: Build and Test C++ Code
         run: |
           cmake --build build --target test_csparse
           ./test_csparse
 
-      # Set up Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Run Python unit tests
       - name: Build and Install Python C++ module
         run: |
           cmake --build build --target csparse
           cmake --install build
 
-      # Install Python dependencies and development tools
+      - name: List build directory
+        run: |
+          ls -l build/
+
+      - name: Verify csparse module installation
+        run: |
+          ls -l python/csparse/
+
       - name: Install Python dependencies and csparse module
         run: |
           pip install --upgrade pip
           pip install -e "${{ github.workspace }}/python[dev]"
           ls -l python/csparse
-          ls -lR $(python -c 'import csparse; print(csparse.__path__[0])'))
 
-      # Run Python unit tests
+      - name: List csparse package directory after install
+        run: |
+          ls -l "$(python -c 'import csparse; print(csparse.__path__[0])')"
+
       - name: Run Python unit tests
         # TODO pytest --make-figures
         # env:

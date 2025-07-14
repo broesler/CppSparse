@@ -13,6 +13,7 @@
 #include <optional>
 #include <ranges>     // reverse
 #include <stdexcept>
+#include <tuple>      // tie
 #include <vector>
 
 #include "types.h"

@@ -9,7 +9,7 @@
 
 #include <algorithm>  // max_element
 #include <cassert>
-#include <cmath>
+#include <cmath>      // isfinite
 #include <format>
 #include <fstream>
 #include <iomanip>    // setw, fixed, setprecision

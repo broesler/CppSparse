@@ -9,6 +9,7 @@
 
 #include <algorithm>   // fill
 #include <cassert>
+#include <cmath>       // fabs
 #include <functional>  // reference wrapper
 #include <ranges>      // views::reverse
 #include <vector>

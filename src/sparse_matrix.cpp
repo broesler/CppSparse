@@ -7,6 +7,7 @@
  *
  *============================================================================*/
 
+#include <cmath>      // isfinite, fabs
 #include <iostream>
 #include <format>
 #include <sstream>

@@ -5,6 +5,7 @@
 # Directories
 build/
 data/
+Testing/
 # Executables
 test_csparse
 test_printing

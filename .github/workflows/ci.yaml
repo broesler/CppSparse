@@ -15,17 +15,29 @@ jobs:
   build-and-test:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false  # continue testing other OSes even if one fails
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.10, 3.11, 3.12, 3.13]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
 
-      # Build and test C++
-      - name: Build C++ code
+      - name: Install pybind11
         run: |
-          make test
+          python -m pip install --upgrade pip
+          pip install pybind11
+
+      - name: Configure CMake
+        run: |
+          mkdir -p build
+          cmake -S . -B build \
+            -DCMAKE_PREFIX_PATH="$(python -m pybind11 --cmakedir)"
+
+      # Build and test C++
+      - name: Build and Test C++ Code
+        run: |
+          cmake --build build --target test_csparse
           ./test_csparse
 
       # Set up Python
@@ -43,9 +55,10 @@ jobs:
 
       # Run Python unit tests
       - name: Run Python tests
-        env:
-          MPLBACKEND: agg  # use headless backend for matplotlib
-        run: |
-          make python
-          pytest
         # TODO pytest --make-figures
+        # env:
+        #   MPLBACKEND: agg  # use headless backend for matplotlib
+        run: |
+          cmake --build build --target csparse
+          cmake --install build
+          pytest

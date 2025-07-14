@@ -6,107 +6,55 @@
 #  Description: Build executables and tests for CSparse++.
 #==============================================================================
 
-# Set the compiler options
-CC = clang++
-CFLAGS = -Wall -pedantic -std=c++20
+# Set the build options
+BUILD_TYPE ?= Release
+BUILD_DIR := build/$(BUILD_TYPE)
+
+CXX ?= clang++
 JOBS = 8
 
-BREW = /opt/homebrew
+CMAKE_FLAGS ?=
 
-SRC_DIR := src
-INCL_DIR := include
-TEST_DIR := test
-DEMO_DIR := demo
+CMAKE_CONFIG_ARGS := -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -DCMAKE_CXX_COMPILER=$(CXX)
+CMAKE_BUILD_ARGS := --build $(BUILD_DIR) --config $(BUILD_TYPE) -j${JOBS}
 
-OPT := -I$(INCL_DIR)
-INCL := $(wildcard $(INCL_DIR)/*.h) \
-		$(wildcard $(TEST_DIR)/*.h) \
-		$(wildcard $(DEMO_DIR)/*.h)
+ifdef USE_ASAN
+	CMAKE_CONFIG_ARGS += -DUSE_ASAN=$(USE_ASAN)
+endif
 
-INCL := $(filter-out $(wildcard $(INCL_DIR)/pybind11*.h), $(INCL))
+.PHONY: all lib tests python demos install depend clean superclean
 
-# NOTE: all executables go in top-level dir, object files in source dir
-# Source files, object files, and executables
-SRC := $(wildcard $(SRC_DIR)/*.cpp)
-SRC := $(filter-out $(wildcard $(SRC_DIR)/pybind11*.cpp), $(SRC))
-OBJ := $(SRC:%.cpp=%.o)
-
-# Test source files
-TEST_SRC := $(wildcard $(TEST_DIR)/*.cpp)
-TEST_SRC := $(filter-out $(TEST_DIR)/test_printing.cpp, $(TEST_SRC))
-TEST_OBJ := $(TEST_SRC:%.cpp=%.o)
-
-# Demo source files
-ALL_DEMO_SRC := $(wildcard $(DEMO_DIR)/*.cpp)
-ALL_DEMO_OBJ := $(ALL_DEMO_SRC:%.cpp=%.o)
-
-DEMO_EXEC_SRC := $(wildcard $(DEMO_DIR)/demo[1-9]*.cpp)
-DEMO_EXEC := $(notdir $(DEMO_EXEC_SRC:.cpp=))
-DEMO_HELPER_OBJ := $(filter-out $(DEMO_EXEC_SRC:.cpp=.o), $(ALL_DEMO_OBJ))
-
-info :
-	@echo "INCL: $(INCL)"
-	@echo "SRC: $(SRC)"
-	@echo "OBJ: $(OBJ)"
-	@echo "TEST_SRC: $(TEST_SRC)"
-	@echo "TEST_OBJ: $(TEST_OBJ)"
-	@echo "ALL_DEMO_SRC: $(ALL_DEMO_SRC)"
-	@echo "ALL_DEMO_OBJ: $(ALL_DEMO_OBJ)"
-	@echo "DEMO_EXEC_SRC: $(DEMO_EXEC_SRC)"
-	@echo "DEMO_EXEC: $(DEMO_EXEC)"
-	@echo "DEMO_HELPER_OBJ: $(DEMO_HELPER_OBJ)"
-
+DEMO_EXEC := demo1 demo2 demo3
 
 # -----------------------------------------------------------------------------
-#        Make options 
+#         Targets
 # -----------------------------------------------------------------------------
-all: test demos python
+all: lib tests python demos
 
-test: OPT += -I$(TEST_DIR) -I$(BREW)/include
-test: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
-test: CFLAGS := $(CFLAGS) -O2 -DNDEBUG  # Use := to override, then append global
-test: test_csparse
+# Build the C++ library
+lib:
+	mkdir -p $(BUILD_DIR)
+	cmake -S . -B $(BUILD_DIR) $(CMAKE_CONFIG_ARGS)
+	cmake $(CMAKE_BUILD_ARGS) --target csparse_lib $(CMAKE_FLAGS)
 
-test_debug: OPT += -I$(TEST_DIR) -I$(BREW)/include
-test_debug: LDLIBS = -L$(BREW)/lib -lcatch2 -lCatch2Main
-test_debug: test_csparse
+# Build the C++ tests
+tests: lib
+	cmake $(CMAKE_BUILD_ARGS) --target test_csparse
 
-debug: CFLAGS := $(CFLAGS) -DDEBUG -glldb -O0  # no optimization
-debug: CFLAGS += -fno-inline -fno-omit-frame-pointer #-fsanitize=address 
-debug: test_debug demos_debug
+# Run the tests with LSAN options
+# run_debug_tests: tests
+# 	LSAN_OPTIONS="suppressions=$(abspath suppressions.sup)" ./test_csparse
 
-run_debug: debug
-	LSAN_OPTIONS="suppressions=$(abspath suppressions.sup)" ./test_csparse
+# Build the python module
+python: lib
+	cmake $(CMAKE_BUILD_ARGS) --target csparse
+	cmake --install $(BUILD_DIR)
 
-.PHONY: python
-python:
-	( cd build && \
-	  cmake -DCMAKE_BUILD_TYPE=Release .. && \
-	  cmake --build . --config Release -j${JOBS} && \
-	  cmake --install . \
-	)
-
-.PHONY: python_debug
-python_debug:
-	( cd build && \
-	  cmake -DCMAKE_BUILD_TYPE=Debug .. && \
-	  cmake --build . --config Debug -j${JOBS} && \
-	  cmake --install . \
-	)
-
-.PHONY: demos
-demos: CFLAGS := $(CFLAGS) -O2 -DNDEBUG  # optimize and disable asserts
-demos: $(DEMO_EXEC)
-
-.PHONY: demos_debug
-demos_debug: $(DEMO_EXEC)
-
-.PHONY: profile
-profile: CFLAGS := $(CFLAGS) -O2 -g  # optimize and add debug symbols
-profile: $(DEMO_EXEC)
+# Build the C++ demos
+demos: lib
+	cmake $(CMAKE_BUILD_ARGS) --target $(DEMO_EXEC)
 
 .PHONY: run_demos
-run_demos: CFLAGS := $(CFLAGS) -O2 -DNDEBUG  # optimize and disable asserts
 run_demos: demos
 run_demos: $(DEMO_EXEC)  # ensure demos are built before running
 	- ./demo1 './data/t1'
@@ -121,37 +69,19 @@ run_demos: $(DEMO_EXEC)  # ensure demos are built before running
 	- ./demo3 './data/bcsstk01'
 	- ./demo3 './data/bcsstk16'
 
-
-# -----------------------------------------------------------------------------
-#         Compile and Link
-# -----------------------------------------------------------------------------
-test_csparse: % : $(TEST_OBJ) $(OBJ)
-	$(CC) $(CFLAGS) $(OPT) -o $@ $^ $(LDLIBS)
-
-$(DEMO_EXEC): % : $(DEMO_DIR)/%.o $(DEMO_HELPER_OBJ) $(OBJ)
-	$(CC) $(CFLAGS) $(OPT) -o $@ $^
-
-# Objects depend on source and headers
-$(SRC_DIR)/%.o : $(SRC_DIR)/%.cpp $(INCL)
-	$(CC) $(CFLAGS) $(OPT) -c $< -o $@
-
-$(TEST_DIR)/%.o : $(TEST_DIR)/%.cpp $(INCL)
-	$(CC) $(CFLAGS) $(OPT) -c $< -o $@
-
-$(DEMO_DIR)/%.o : $(DEMO_DIR)/%.cpp $(INCL)
-	$(CC) $(CFLAGS) $(OPT) -c $< -o $@
-
 # clean up
-.PHONY: depend clean
 clean:
 	rm -f *~
-	rm -f $(SRC_DIR)/*.o
-	rm -f $(TEST_DIR)/*.o
-	rm -f $(DEMO_DIR)/*.o
-	rm -rf *.dSYM/
+	rm -f $(BUILD_DIR)/*.o
+	rm -f $(BUILD_DIR)/*.a
+	rm -f $(BUILD_DIR)/*.so
+	rm -rf $(BUILD_DIR)/*.dSYM
 	rm -f test_csparse
 	rm -f $(DEMO_EXEC)
-	rm -rf build/*
+
+# clean up
+superclean: clean
+	rm -rf build/
 
 #==============================================================================
 #==============================================================================

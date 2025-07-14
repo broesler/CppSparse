@@ -59,6 +59,9 @@ jobs:
         # env:
         #   MPLBACKEND: agg  # use headless backend for matplotlib
         run: |
+          pwd
+          cd ../
+          tree -L 2
           cmake --build build --target csparse
           cmake --install build
           pytest

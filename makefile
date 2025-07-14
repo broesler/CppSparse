@@ -78,9 +78,6 @@ clean:
 	rm -rf $(BUILD_DIR)/*.dSYM
 	rm -f test_csparse
 	rm -f $(DEMO_EXEC)
-
-# clean up
-superclean: clean
 	rm -rf build/
 
 #==============================================================================

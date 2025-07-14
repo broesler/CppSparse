@@ -919,7 +919,7 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
     L.has_sorted_indices_ = true;
     L.has_canonical_format_ = true;
 
-    return {L, S.p_inv};
+    return {L, S.p_inv, S.parent};
 }
 
 
@@ -1033,7 +1033,7 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
     L.has_sorted_indices_ = true;
     L.has_canonical_format_ = true;
 
-    return {L, S.p_inv};
+    return {L, S.p_inv, S.parent};
 }
 
 

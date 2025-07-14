@@ -685,7 +685,8 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
 
     // transpose if needed
     const CSCMatrix C = (m2 < n2) ? A.transpose(false) : A;
-    std::tie(M, N) = C.shape();
+    M = C.M_;
+    N = C.N_;
 
     // If we transposed, we need to swap the imatch and jmatch vectors
     std::vector<csint>& jmatch = (m2 < n2) ? jimatch.imatch : jimatch.jmatch;
@@ -730,7 +731,7 @@ SCCResult scc(const CSCMatrix& A)
         throw std::runtime_error("Matrix must be square!");
     }
 
-    SCCResult D(M, N);  // allocate result
+    SCCResult D(M);  // allocate result
 
     const CSCMatrix AT = A.transpose(false);  // symbolic transpose
 

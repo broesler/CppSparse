@@ -7,9 +7,9 @@
  *
  *============================================================================*/
 
-#include <algorithm>  // max_element
+#include <algorithm>      // max_element
 #include <cassert>
-#include <cmath>      // abs
+#include <cmath>          // abs
 #include <iostream>
 #include <fstream>
 #include <format>
@@ -114,7 +114,8 @@ COOMatrix::COOMatrix(const CSCMatrix& A)
       j_(A.nnz())
 {
     // Get the shape
-    std::tie(M_, N_) = A.shape();
+    M_ = A.M_;
+    N_ = A.N_;
     // Get all elements in column order
     csint nz = 0;
     for (csint j = 0; j < N_; j++) {

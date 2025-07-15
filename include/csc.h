@@ -213,6 +213,10 @@ public:
             return A_.get_item_(i_, j_).value;
         }
 
+        // Copy constructor (explicitly defined for "+=" etc. operators)
+        ItemProxy (const ItemProxy& other)
+            : A_(other.A_), i_(other.i_), j_(other.j_) {}
+
         // Assignment operator: `A(i, j) = v;`
         // Returning a reference to the object allows for method chaining
         // and assignment like `A(i, j) = A(k, l) = v;`

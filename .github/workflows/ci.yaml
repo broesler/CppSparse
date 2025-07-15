@@ -46,7 +46,8 @@ jobs:
       - name: Configure CMake (Linux/MacOS)
         run: |
           mkdir -p build
-          cmake -S . -B build -DCMAKE_PREFIX_PATH="$(python -m pybind11 --cmakedir)"
+          cmake -S . -B build \
+            -DCMAKE_PREFIX_PATH="$(python -m pybind11 --cmakedir)"
 
       - name: Build C++ Code
         run: |
@@ -75,9 +76,13 @@ jobs:
         # pytest --last-failed (re-run with only the last failed tests)
         # env:
         #   MPLBACKEND: agg  # use headless backend for matplotlib
+        run: pytest
+        continue-on-error: true
+        id: first_pytest_run  # reference on failure
+
+      - name: Re-run pytest on failures
+        if: (steps.first_pytest_run.outcome == 'failure' ||
+             steps.first_pytest_run.outcome == 'cancelled')
         run: |
-          pytest
-          if [[ $? -ne 0 ]]; then
             echo "Tests failed. Running pytest with verbose output."
             pytest -v -s --last-failed --tb=auto --showlocals
-          fi

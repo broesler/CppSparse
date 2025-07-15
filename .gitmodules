@@ -1,3 +1,0 @@
-[submodule "python/csparse/tests/suitesparseget"]
-	path = python/csparse/tests/suitesparseget
-	url = https://github.com/broesler/suitesparseget_py.git

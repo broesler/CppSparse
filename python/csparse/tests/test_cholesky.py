@@ -116,7 +116,6 @@ class TestCholeskyUpdate(BaseSuiteSparsePlot):
         cls = request.cls
         A = cls.problem.A
         N = A.shape[0]
-        print(f"{N=}")
 
         # Make sure the matrix is symmetric positive definite
         # (Scipy Cholesky factorization is only for dense matrices)
@@ -163,7 +162,6 @@ class TestCholeskyUpdate(BaseSuiteSparsePlot):
     @pytest.mark.parametrize('trial', range(10))
     def test_python_chol_update(self, trial, setup_update):
         """Test the python Cholesky update and downdate."""
-        print(f"Testing python Cholesky {trial=}")
         A_up, w = setup_update
         A, L = self.A, self.L
 
@@ -190,7 +188,6 @@ class TestCholeskyUpdate(BaseSuiteSparsePlot):
     @pytest.mark.parametrize('trial', range(10))
     def test_cpp_chol_update(self, trial, setup_update):
         """Test the C++ Cholesky update and downdate."""
-        print(f"Testing C++ Cholesky {trial=}")
         A_up, w = setup_update
         L = sparse.csc_array(self.L)
 

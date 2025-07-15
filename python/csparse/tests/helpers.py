@@ -74,10 +74,11 @@ def generate_random_matrices(
             random_state=rng
         )
 
-        print(f"Random matrix {trial} ({seed=}): "
-              f"{A.shape} with {A.nnz} non-zeros")
-
-        yield pytest.param(A, id=f"random_{trial}", marks=pytest.mark.random)
+        yield pytest.param(
+            A,
+            id=f"random_{trial}::{A.shape}::{A.nnz}",
+            marks=pytest.mark.random
+        )
 
 
 def generate_random_compatible_matrices(
@@ -115,7 +116,7 @@ def generate_random_compatible_matrices(
 
         yield pytest.param(
             A, B,
-            id=f"random_{trial}",
+            id=f"random_{trial}::{A.shape}::{A.nnz}::{B.nnz}",
             marks=pytest.mark.random
         )
 
@@ -152,7 +153,7 @@ def generate_random_cholesky_matrices(seed=565656, N_trials=100, N_max=100):
 
         yield pytest.param(
             L, b,
-            id=f"random_{trial}",
+            id=f"random_{trial}::{L.shape}::{L.nnz}::{b.nnz}",
             marks=pytest.mark.random
         )
 
@@ -161,13 +162,12 @@ def generate_pvec_params(seed=565656, N_trials=100, N_max=10):
     """Generate random permutation vectors and values."""
     rng = np.random.default_rng(seed)
     for i in range(N_trials):
-        print(f"Trial {i+1} with seed {seed}")
         M = rng.integers(1, N_max, endpoint=True)
         p = rng.permutation(M)
         x = rng.random(M)
         yield pytest.param(
             p, x,
-            id=f"trial_{i+1}",
+            id=f"trial_{i+1}_seed_{seed}",
             marks=pytest.mark.random
         )
 
@@ -241,7 +241,7 @@ class BaseSuiteSparseTest:
             raise TypeError(f"Expected MatrixProblem or sparse.sparray, "
                             f"got {type(problem)}")
 
-        print(f"Testing matrix {cls.problem.id} ({cls.problem.name})")
+        # print(f"Testing matrix {cls.problem.id} ({cls.problem.name})")
         # Subclasses should override this method to set up the problem
 
 

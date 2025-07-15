@@ -212,7 +212,6 @@ class TestDMPerm(BaseSuiteSparsePlot):
 
         # Check each block
         for i in range(3):
-            print(f"Block C{i}")
             B = C[rr[i]:rr[i+1], cc[i+1]:cc[i+2]]
             assert np.count_nonzero(B.diagonal()) == B.shape[0]
 

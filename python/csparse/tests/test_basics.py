@@ -32,7 +32,6 @@ import csparse
 @pytest.mark.parametrize("problem", generate_suitesparse_matrices())
 def test_transpose(problem):
     """Test the transpose operation on SuiteSparse matrices."""
-    print(f"Testing matrix {problem.id} ({problem.name})")
     A = problem.A
     Ac = csparse.csc_from_scipy(A)
     B = A.T
@@ -43,7 +42,6 @@ def test_transpose(problem):
 @pytest.mark.parametrize("problem", generate_suitesparse_matrices())
 def test_gaxpy(problem):
     """Test the GAXPY operation on SuiteSparse matrices."""
-    print(f"Testing matrix {problem.id} ({problem.name})")
     A = problem.A
     M, N = A.shape
     rng = np.random.default_rng(problem.id)
@@ -126,10 +124,7 @@ def test_symmetric_matrix_permutation(A):
 
     C1 = sparse.triu(B[p][:, p])
     C2 = csparse.csc_from_scipy(B).symperm(p)
-    print(C1.toarray())
-    print(C2.toarray())
-    err = sla.norm(C1 - C2.toscipy(), ord=1)
-    assert err < 1e-14
+    assert_allclose(C1.toarray(), C2.toarray(), atol=1e-15)
 
 
 # -----------------------------------------------------------------------------

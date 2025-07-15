@@ -28,7 +28,7 @@ struct Problem
 {
     const CSCMatrix A,            ///< original matrix
                     C;            ///< symmetric version of original matrix
-    const csint is_sym;           ///< -1 if lower, 1 if upper, 0 otherwise
+    const csint is_sym = 0;       ///< -1 if lower, 1 if upper, 0 otherwise
     const std::vector<double> b;  ///< rhs
     std::vector<double> x,        ///< solution
                         resid;    ///< residuals

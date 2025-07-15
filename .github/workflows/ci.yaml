@@ -48,17 +48,12 @@ jobs:
           mkdir -p build
           cmake -S . -B build -DCMAKE_PREFIX_PATH="$(python -m pybind11 --cmakedir)"
 
-      # - name: Configure CMake (Windows)
-      #   if: runner.os == 'Windows'
-      #   shell: pwsh
-      #   run: |
-      #     mkdir -p build
-      #     $cmakedir = python -m pybind11 --cmakedir
-      #     cmake -S . -B build -j8 -DCMAKE_PREFIX_PATH="$cmakedir"
-
-      - name: Build and Test C++ Code
+      - name: Build C++ Code
         run: |
           cmake --build build -j8 --target test_csparse
+
+      - name: Run C++ unit tests
+        run: |
           ./test_csparse
 
       - name: Build and Install Python C++ module

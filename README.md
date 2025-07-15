@@ -15,10 +15,11 @@ API as similar to that of the original library as possible. I have included
 comments where function names have changed, and where I have made significant
 changes to the code.
 
-This repo also includes my
-[suitesparseget_py](https://github.com/broesler/suitesparseget_py) package as
-a submodule. This package provides a Python interface to the SuiteSparse Matrix
-Collection, so that you can load into `scipy.sparse` matrices.
+The python tests for this repo rely on my
+[suitesparseget_py](https://github.com/broesler/suitesparseget_py). This package
+provides a Python interface to the SuiteSparse Matrix Collection, so that you
+can load into `scipy.sparse` matrices. It mimics the behavior of the `ssget`
+package built into the original CSparse library for use with MATLAB.
 
 ## Installation
 Clone the repository:

@@ -14,8 +14,7 @@ import numpy as np
 
 from pathlib import Path
 from scipy import sparse
-
-from .suitesparseget import suitesparseget as ssg
+from suitesparseget import suitesparseget as ssg
 
 
 # -----------------------------------------------------------------------------

@@ -18,6 +18,7 @@ dependencies = [
     "pymatreader>=1.1",
     "Requests>=2.32",
     "scipy>=1.15",
+    "suitesparsegetpy",
     "toml",
     "tqdm",
 ]
@@ -73,10 +74,6 @@ ignore = [
     'PLR0912',  # too many branches (max-branches)
     'PLR0915',  # too many statements (max-statements)
     'PLR2004',  # magic value used in comparison
-]
-
-exclude = [
-    '**/suitesparseget/**',  # git submodule
 ]
 
 [tool.ruff.lint.per-file-ignores]

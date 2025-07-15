@@ -46,9 +46,7 @@ jobs:
       - name: Configure CMake (Linux/MacOS)
         run: |
           mkdir -p build
-          cmake -S . -B build \
-            -DCMAKE_PREFIX_PATH="$(python -m pybind11 --cmakedir)" \
-            -DPython3_EXECUTABLE="$(which python3)"
+          cmake -S . -B build -DCMAKE_PREFIX_PATH="$(python -m pybind11 --cmakedir)"
 
       # - name: Configure CMake (Windows)
       #   if: runner.os == 'Windows'
@@ -67,14 +65,6 @@ jobs:
         run: |
           cmake --build build -j8 --target csparse
           cmake --install build
-
-      - name: List build directory
-        run: |
-          ls -l build/
-
-      - name: Verify csparse module installation
-        run: |
-          ls -l python/csparse/
 
       - name: Install Python dependencies and csparse module
         run: |

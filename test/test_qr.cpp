@@ -232,6 +232,7 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][n
 {
     CSCMatrix A = davis_example_qr();
     csint N = A.shape()[1];  // == 8
+    double tol = 1e-12;  // QR factorization is sensitive to numerical errors
 
     // CSparse only uses 2 possible orders for QR factorization:
     AMDOrder order = GENERATE(
@@ -250,9 +251,9 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][n
     std::vector<double> vals(N, 1.0);
     CSCMatrix I = COOMatrix(vals, idx, idx).tocsc();
 
-    SECTION("Numeric Factorization") {
+    SECTION("Numeric Factorization") {  // FIXME fails on ubuntu with g++
         CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
-        CSCMatrix QR = (Q * res.R).droptol().to_canonical();
+        CSCMatrix QR = (Q * res.R).droptol(tol).to_canonical();
         CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
         check_sparse_allclose(QR, Aq);
@@ -270,20 +271,20 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][n
         REQUIRE(sym_res.R.data().empty());
     }
 
-    SECTION("Exercise 5.3: Re-QR factorization") {
+    SECTION("Exercise 5.3: Re-QR factorization") {  // FIXME fails on ubuntu with g++
         res = symbolic_qr(A, S);
 
         // Compute the numeric factorization using the symbolic result
         reqr(A, S, res);
 
         CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
-        CSCMatrix QR = (Q * res.R).droptol().to_canonical();
+        CSCMatrix QR = (Q * res.R).droptol(tol).to_canonical();
         CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
         check_sparse_allclose(QR, Aq);
     }
 
-    SECTION("Exercise 5.5: Use post-ordering") {
+    SECTION("Exercise 5.5: Use post-ordering") {  // FIXME fails on ubuntu with g++
         // Compute the symbolic factorization with postordering
         bool use_postorder = true;
         SymbolicQR S = sqr(A, order, use_postorder);
@@ -292,7 +293,7 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][n
         // The postordering of this matrix *is* the natural ordering.
         // TODO Find an example with a different postorder for testing
         CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
-        CSCMatrix QR = (Q * res.R).droptol().to_canonical();
+        CSCMatrix QR = (Q * res.R).droptol(tol).to_canonical();
         CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
 
         check_sparse_allclose(QR, Aq);

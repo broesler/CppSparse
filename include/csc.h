@@ -227,7 +227,7 @@ public:
 
         // Copy assignment operator: `A(i, j) = B(i, j);`
         ItemProxy& operator=(const ItemProxy& other) {
-            A_.set_item_(i_, j_, other.A_.get_item_(i_, j_).value);
+            A_.set_item_(i_, j_, other.A_.get_item_(other.i_, other.j_).value);
             return *this;
         }
 

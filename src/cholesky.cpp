@@ -58,7 +58,7 @@ csint etree_height(const std::vector<csint>& parent)
     assert(!parent.empty());
 
     csint height = 0;
-    for (csint i = 0; i < parent.size(); i++) {
+    for (csint i = 0; i < static_cast<csint>(parent.size()); i++) {
         csint h = 0;
         for (csint p = i; p != -1; p = parent[p]) {
             h++;
@@ -121,7 +121,8 @@ std::vector<csint> ereach_post(
 
     for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
         csint i = A.i_[p];  // A(i, k) is nonzero
-        csint i2 = p < (A.i_.size() - 1) ? A.i_[p+1] : A.i_.size();  // next row index
+        csint A_i_size = static_cast<csint>(A.i_.size());
+        csint i2 = p < (A_i_size - 1) ? A.i_[p+1] : A_i_size;  // next row index
         if (i <= k) {     // only consider upper triangular part of A
             // Traverse up the etree i -> a = lca(i1, i2)
             while (i < i2 && i != -1 && !marked[i]) {
@@ -193,7 +194,7 @@ std::vector<csint> post(const std::vector<csint>& parent)
         }
     }
 
-    assert(postorder.size() == N);
+    assert(static_cast<csint>(postorder.size()) == N);
     postorder.shrink_to_fit();
 
     return postorder;
@@ -261,7 +262,7 @@ std::vector<csint> rowcnt(
 )
 {
     assert(A.M_ == A.N_);
-    assert(parent.size() == A.N_);
+    assert(static_cast<csint>(parent.size()) == A.N_);
     assert(parent.size() == postorder.size());
 
     // Count of nonzeros in each row of L

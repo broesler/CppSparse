@@ -108,7 +108,7 @@ void check_vectors_allclose(
 )
 {
     REQUIRE(a.size() == b.size());
-    for (int i = 0; i < a.size(); i++) {
+    for (int i = 0; i < static_cast<csint>(a.size()); i++) {
         CAPTURE(i, a[i], b[i]);
         CHECK_THAT(a[i], WithinAbs(b[i], tol));
     }

@@ -30,7 +30,7 @@ Householder house(std::span<const double> x)
     std::vector<double> v(x.begin(), x.end());  // copy x into v
 
     // sigma is the sum of squares of all elements *except* the first
-    for (csint i = 1; i < v.size(); i++) {
+    for (csint i = 1; i < static_cast<csint>(v.size()); i++) {
         sigma += v[i] * v[i];
     }
 
@@ -53,7 +53,7 @@ Householder house(std::span<const double> x)
         beta = (s - alpha) / s;
 
         v[0] = 1;
-        for (csint i = 1; i < v.size(); i++) {
+        for (csint i = 1; i < static_cast<csint>(v.size()); i++) {
             v[i] /= (alpha - s);
         }
 
@@ -122,8 +122,8 @@ std::vector<csint> find_leftmost(const CSCMatrix& A)
 
 void vcount(const CSCMatrix& A, SymbolicQR& S)
 {
-    assert(S.leftmost.size() == A.M_);
-    assert(S.parent.size() == A.N_);
+    assert(static_cast<csint>(S.leftmost.size()) == A.M_);
+    assert(static_cast<csint>(S.parent.size()) == A.N_);
 
     auto [M, N] = A.shape();
     std::vector<csint> next(M),      // the next row index

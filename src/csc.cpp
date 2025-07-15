@@ -82,7 +82,7 @@ CSCMatrix::CSCMatrix(
 ) : M_(shape[0]),
     N_(shape[1])
 {
-    assert(A.size() == (M_ * N_));  // ensure input is valid
+    assert(static_cast<csint>(A.size()) == (M_ * N_));  // ensure input is valid
 
     if (order != 'C' && order != 'F') {
         throw std::invalid_argument("Order must be 'C' or 'F'.");
@@ -269,7 +269,8 @@ CSCMatrix::GetItemResult CSCMatrix::get_item_(csint i, csint j) const
                 v = v_[k];
             } else {
                 // Sum duplicate entries, k points to the first entry
-                for (csint p = k; p < i_.size() && i_[p] == i; p++) {
+                csint i_size = static_cast<csint>(i_.size());;
+                for (csint p = k; p < i_size && i_[p] == i; p++) {
                     v += v_[p];
                 }
             }
@@ -312,7 +313,8 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
 
             if (!has_canonical_format_) {
                 // Duplicates may exist, so zero them out
-                for (csint p = k + 1; p < i_.size() && i_[p] == i; p++) {
+                csint i_size = static_cast<csint>(i_.size());
+                for (csint p = k + 1; p < i_size && i_[p] == i; p++) {
                     v_[p] = 0.0;
                 }
             }
@@ -370,9 +372,11 @@ CSCMatrix& CSCMatrix::assign(
         throw std::invalid_argument("Input matrix must be of size M x N.");
     }
 
-    for (csint i = 0; i < rows.size(); i++) {
-        for (csint j = 0; j < cols.size(); j++) {
-            set_item_(rows[i], cols[j], C[i + j * rows.size()]);
+    csint rows_size = static_cast<csint>(rows.size());
+    csint cols_size = static_cast<csint>(cols.size());
+    for (csint i = 0; i < rows_size; i++) {
+        for (csint j = 0; j < cols_size; j++) {
+            set_item_(rows[i], cols[j], C[i + j * rows_size]);
         }
     }
 
@@ -386,10 +390,12 @@ CSCMatrix& CSCMatrix::assign(
     const CSCMatrix& C
 )
 {
-    assert(C.M_ == rows.size());
-    assert(C.N_ == cols.size());
+    [[maybe_unused]] csint rows_size = static_cast<csint>(rows.size());
+    csint cols_size = static_cast<csint>(cols.size());
+    assert(C.M_ == rows_size);
+    assert(C.N_ == cols_size);
 
-    for (csint j = 0; j < cols.size(); j++) {
+    for (csint j = 0; j < cols_size; j++) {
         for (csint p = C.p_[j]; p < C.p_[j+1]; p++) {
             csint i = C.i_[p];
             (*this)(rows[i], cols[j]) = C.v_[p];
@@ -406,7 +412,7 @@ double& CSCMatrix::insert_(csint i, csint j, double v, csint p)
     v_.insert(v_.begin() + p, v);
 
     // Increment all subsequent pointers
-    for (csint k = j + 1; k < p_.size(); k++) {
+    for (csint k = j + 1; k < static_cast<csint>(p_.size()); k++) {
         p_[k]++;
     }
 
@@ -517,7 +523,7 @@ CSCMatrix& CSCMatrix::qsort()
         std::vector<csint> idx = argsort(w);
 
         // Re-assign the values
-        for (csint i = 0; i < idx.size(); i++) {
+        for (csint i = 0; i < static_cast<csint>(idx.size()); i++) {
             i_[p + i] = w[idx[i]];
             v_[p + i] = x[idx[i]];
         }
@@ -687,8 +693,8 @@ std::vector<double> gaxpy(
     const std::vector<double>& y
 )
 {
-    assert(A.M_ == y.size());  // addition
-    assert(A.N_ == x.size());  // multiplication
+    assert(A.M_ == static_cast<csint>(y.size()));  // addition
+    assert(A.N_ == static_cast<csint>(x.size()));  // multiplication
 
     std::vector<double> out = y;  // copy the input vector
 
@@ -709,8 +715,8 @@ std::vector<double> gatxpy(
     const std::vector<double>& y
 )
 {
-    assert(A.M_ == x.size());  // multiplication
-    assert(A.N_ == y.size());  // addition
+    assert(A.M_ == static_cast<csint>(x.size()));  // multiplication
+    assert(A.N_ == static_cast<csint>(y.size()));  // addition
 
     std::vector<double> out = y;  // copy the input vector
 
@@ -732,7 +738,7 @@ std::vector<double> sym_gaxpy(
 )
 {
     assert(A.M_ == A.N_);  // matrix must be square to be symmetric
-    assert(A.N_ == x.size());
+    assert(A.N_ == static_cast<csint>(x.size()));
     assert(x.size() == y.size());
 
     std::vector<double> out = y;  // copy the input vector
@@ -961,8 +967,8 @@ std::vector<double> gatxpy_row(
 // Exercise 2.4
 CSCMatrix CSCMatrix::scale(const std::vector<double>& r, const std::vector<double> c) const
 {
-    assert(r.size() == M_);
-    assert(c.size() == N_);
+    assert(static_cast<csint>(r.size()) == M_);
+    assert(static_cast<csint>(c.size()) == N_);
 
     CSCMatrix out(*this);
 
@@ -978,7 +984,7 @@ CSCMatrix CSCMatrix::scale(const std::vector<double>& r, const std::vector<doubl
 
 std::vector<double> CSCMatrix::dot(const std::vector<double>& x) const
 {
-    assert(N_ == x.size());
+    assert(N_ == static_cast<csint>(x.size()));
 
     std::vector<double> out(M_);
 
@@ -1469,7 +1475,7 @@ double CSCMatrix::fronorm() const
 bool CSCMatrix::is_valid(const bool sorted, const bool values) const
 {
     // Check number of columns
-    if (p_.size() != (N_ + 1)) {
+    if (static_cast<csint>(p_.size()) != (N_ + 1)) {
         throw std::runtime_error("Number of columns inconsistent!");
     }
 

@@ -19,7 +19,6 @@ add_compile_options(
     -Wall
     -pedantic
     -Wextra
-    -Wno-sign-compare      # TODO ignore sign comparison warnings for now
 )
 
 # Set debugging flags

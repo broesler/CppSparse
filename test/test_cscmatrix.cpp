@@ -1130,10 +1130,12 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
 
             A.assign(rows, cols, vals);
 
-            for (csint i = 0; i < rows.size(); i++) {
-                for (csint j = 0; j < cols.size(); j++) {
+            csint rows_size = static_cast<csint>(rows.size());
+            csint cols_size = static_cast<csint>(cols.size());
+            for (csint i = 0; i < rows_size; i++) {
+                for (csint j = 0; j < cols_size; j++) {
                     double A_val = A(rows[i], cols[j]);
-                    double expect_val = vals[i + j * rows.size()];
+                    double expect_val = vals[i + j * rows_size];
                     CAPTURE(i, j, A_val, expect_val);
                     REQUIRE(A_val == expect_val);
                 }
@@ -1150,8 +1152,10 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
 
             A.assign(rows, cols, C);
 
-            for (csint i = 0; i < rows.size(); i++) {
-                for (csint j = 0; j < cols.size(); j++) {
+            csint rows_size = static_cast<csint>(rows.size());
+            csint cols_size = static_cast<csint>(cols.size());
+            for (csint i = 0; i < rows_size; i++) {
+                for (csint j = 0; j < cols_size; j++) {
                     double A_val = A(rows[i], cols[j]);
                     double expect_val = C(i, j);
                     CAPTURE(i, j, A_val, expect_val);

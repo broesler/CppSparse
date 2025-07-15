@@ -26,7 +26,7 @@ namespace cs {
 // Exercise 6.1
 std::vector<double> LUResult::solve(const std::vector<double>& b) const
 {
-    if (L.shape()[0] != b.size()) {
+    if (L.shape()[0] != static_cast<csint>(b.size())) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
     }
 
@@ -43,7 +43,7 @@ std::vector<double> LUResult::solve(const std::vector<double>& b) const
 // Exercise 6.1
 std::vector<double> LUResult::tsolve(const std::vector<double>& b) const
 {
-    if (U.shape()[1] != b.size()) {
+    if (U.shape()[1] != static_cast<csint>(b.size())) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
     }
 
@@ -251,7 +251,7 @@ static void make_valid_permutation(std::vector<csint>& p_inv)
     csint idx = 0;
     for (csint& i : p_inv) {
         if (i < 0) {
-            if (idx < missing.size()) {
+            if (idx < static_cast<csint>(missing.size())) {
                 i = missing[idx++];
             } else {
                 throw std::runtime_error("More missing rows than values!");

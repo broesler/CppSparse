@@ -29,7 +29,7 @@ namespace cs {
 std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
 {
     assert(L.M_ == L.N_);
-    assert(L.M_ == b.size());
+    assert(L.M_ == static_cast<csint>(b.size()));
 
     std::vector<double> x = b;
 
@@ -47,7 +47,7 @@ std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
 std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
 {
     assert(L.M_ == L.N_);
-    assert(L.M_ == b.size());
+    assert(L.M_ == static_cast<csint>(b.size()));
 
     std::vector<double> x = b;
 
@@ -65,7 +65,7 @@ std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
 std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
 {
     auto [M, N] = U.shape();
-    assert(M == b.size());
+    assert(M == static_cast<csint>(b.size()));
 
     // Copy the RHS vector, only taking N elements if M > N
     std::vector<double> x = (M <= N) ? b : std::vector<double>(b.begin(), b.begin() + N);
@@ -84,7 +84,7 @@ std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
 std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
 {
     auto [M, N] = U.shape();
-    assert(N == b.size());
+    assert(N == static_cast<csint>(b.size()));
 
     // Copy the RHS vector, only taking M elements if N > M
     std::vector<double> x = (N <= M) ? b : std::vector<double>(b.begin(), b.begin() + M);
@@ -104,7 +104,7 @@ std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
 std::vector<double> lsolve_opt(const CSCMatrix& U, const std::vector<double>& b)
 {
     assert(U.M_ == U.N_);
-    assert(U.M_ == b.size());
+    assert(U.M_ == static_cast<csint>(b.size()));
 
     std::vector<double> x = b;
 
@@ -127,7 +127,7 @@ std::vector<double> lsolve_opt(const CSCMatrix& U, const std::vector<double>& b)
 std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b)
 {
     assert(U.M_ == U.N_);
-    assert(U.M_ == b.size());
+    assert(U.M_ == static_cast<csint>(b.size()));
 
     std::vector<double> x = b;
 
@@ -180,7 +180,7 @@ std::vector<csint> find_lower_diagonals(const CSCMatrix& U)
 std::vector<double> lsolve_rows(const CSCMatrix& U, const std::vector<double>& b)
 {
     assert(U.M_ == U.N_);
-    assert(U.M_ == b.size());
+    assert(U.M_ == static_cast<csint>(b.size()));
 
     // First (backward) pass to find diagonal entries
     // p_diags is a vector of pointers to the diagonal entries
@@ -218,7 +218,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& U, const std::vector<double>& b
 std::vector<double> lsolve_cols(const CSCMatrix& U, const std::vector<double>& b)
 {
     assert(U.M_ == U.N_);
-    assert(U.M_ == b.size());
+    assert(U.M_ == static_cast<csint>(b.size()));
 
     // First O(N) pass to find the diagonal entries
     // Assume that the first entry in each column has the smallest row index
@@ -293,7 +293,7 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
 std::vector<double> usolve_rows(const CSCMatrix& U, const std::vector<double>& b)
 {
     assert(U.M_ == U.N_);
-    assert(U.M_ == b.size());
+    assert(U.M_ == static_cast<csint>(b.size()));
 
     // First (backward) pass to find diagonal entries
     // p_diags is a vector of pointers to the diagonal entries
@@ -331,7 +331,7 @@ std::vector<double> usolve_rows(const CSCMatrix& U, const std::vector<double>& b
 std::vector<double> usolve_cols(const CSCMatrix& U, const std::vector<double>& b)
 {
     assert(U.M_ == U.N_);
-    assert(U.M_ == b.size());
+    assert(U.M_ == static_cast<csint>(b.size()));
 
     // First O(N) pass to find the diagonal entries
     // Assume that the last entry in each column has the largest row index
@@ -441,7 +441,7 @@ std::vector<double> tri_solve_perm(
 )
 {
     assert(A.M_ == A.N_);
-    assert(A.M_ == b.size());
+    assert(A.M_ == static_cast<csint>(b.size()));
 
     // Get the permutation vectors
     // NOTE If upper triangular, the permutation vectors are reversed
@@ -556,8 +556,8 @@ std::vector<csint>& dfs(
 )
 {
     // Ensure the stacks are reserved and cleared
-    if (pstack.capacity() < A.N_) { pstack.reserve(A.N_); }
-    if (rstack.capacity() < A.N_) { rstack.reserve(A.N_); }
+    if (static_cast<csint>(pstack.capacity()) < A.N_) { pstack.reserve(A.N_); }
+    if (static_cast<csint>(rstack.capacity()) < A.N_) { rstack.reserve(A.N_); }
     pstack.clear();
     rstack.clear();
 
@@ -783,7 +783,7 @@ std::vector<double> chol_solve(
         throw std::runtime_error("Matrix must be square!");
     }
 
-    if (M != b.size()) {
+    if (M != static_cast<csint>(b.size())) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
     }
 
@@ -851,7 +851,7 @@ std::vector<double> lu_solve(
     double tol
 )
 {
-    if (A.shape()[0] != b.size()) {
+    if (A.shape()[0] != static_cast<csint>(b.size())) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
     }
 
@@ -870,7 +870,7 @@ std::vector<double> lu_tsolve(
     double tol
 )
 {
-    if (A.shape()[1] != b.size()) {
+    if (A.shape()[1] != static_cast<csint>(b.size())) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
     }
 

@@ -44,7 +44,7 @@ void check_sparse_eq_dense(
 {
     auto [M, N] = shape;
     REQUIRE(A.shape() == shape);
-    REQUIRE(expect.size() == M * N);
+    REQUIRE(static_cast<csint>(expect.size()) == M * N);
 
     // Check all elements
     for (csint i = 0; i < M; i++) {

@@ -640,14 +640,18 @@ CSCMatrix CSCMatrix::fkeep(KeepFunc fk) const
 
 CSCMatrix& CSCMatrix::dropzeros()
 {
-    return fkeep([] (csint i, csint j, double Aij) { return (Aij != 0); });
+    return fkeep(
+        [] ([[maybe_unused]] csint i, [[maybe_unused]] csint j, double Aij) {
+            return (Aij != 0);
+        }
+    );
 }
 
 
 CSCMatrix& CSCMatrix::droptol(double tol)
 {
     return fkeep(
-        [tol](csint i, csint j, double Aij) {
+        [tol] ([[maybe_unused]] csint i, [[maybe_unused]] csint j, double Aij) {
             return std::fabs(Aij) > tol; 
         }
     );
@@ -659,7 +663,7 @@ CSCMatrix& CSCMatrix::band(const csint kl, const csint ku)
 {
     assert(kl <= ku);
     return fkeep(
-        [=](csint i, csint j, double Aij) {
+        [=](csint i, csint j, [[maybe_unused]] double Aij) {
             return (i <= (j - kl)) && (i >= (j - ku));
         }
     );

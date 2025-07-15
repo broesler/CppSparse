@@ -74,7 +74,7 @@ TEST_CASE("Build Graph", "[amd][build_graph]")
     }
 
     // Remove diagonal elements
-    expect_C.fkeep([] (csint i, csint j, double v) { return i != j; });
+    expect_C.fkeep([] (csint i, csint j, [[maybe_unused]] double v) { return i != j; });
 
     const CSCMatrix C = build_graph(A, order, dense);
 

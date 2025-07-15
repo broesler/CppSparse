@@ -20,7 +20,6 @@ add_compile_options(
     -pedantic
     -Wextra
     -Wno-sign-compare      # TODO ignore sign comparison warnings for now
-    -Wno-unused-parameter  # ignore fkeep and dummy functions
 )
 
 # Set debugging flags

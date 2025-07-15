@@ -120,7 +120,7 @@ CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense)
     }
 
     // Drop diagonal entries from C (no self-edges in the graph)
-    C.fkeep([] (csint i, csint j, double v) { return i != j; });
+    C.fkeep([] (csint i, csint j, [[maybe_unused]] double v) { return i != j; });
 
     return C;
 }
@@ -629,7 +629,7 @@ bool augment_r(
 }
 
 
-MaxMatch maxtrans_r(const CSCMatrix& A, csint seed)
+MaxMatch maxtrans_r(const CSCMatrix& A, [[maybe_unused]] csint seed)
 {
     auto [M, N] = A.shape();
 
@@ -945,7 +945,7 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
     // Delete rows R0, R1, and R3 from C
     if (D.rr[2] - D.rr[1] < M) {
         C.fkeep(
-            [D](csint i, csint j, double v) {
+            [D](csint i, [[maybe_unused]] csint j, [[maybe_unused]] double v) {
                 return i >= D.rr[1] && i < D.rr[2];  // true if row i is in R2
             }
         );

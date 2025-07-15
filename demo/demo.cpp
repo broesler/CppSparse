@@ -61,7 +61,7 @@ CSCMatrix make_sym(const CSCMatrix& A)
 {
     CSCMatrix AT = A.T();
     // Drop diagonal entries from AT
-    AT.fkeep([](csint i, csint j, double aij) { return i != j; });
+    AT.fkeep([](csint i, csint j, [[maybe_unused]] double aij) { return i != j; });
     return A + AT;
 }
 

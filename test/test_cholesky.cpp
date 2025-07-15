@@ -452,7 +452,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
 
             const CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
             const CSCMatrix LLT_Anz = LLT.fkeep(
-                [A](csint i, csint j, double x) {
+                [A](csint i, csint j, [[maybe_unused]] double x) {
                     return std::as_const(A)(i, j) != 0.0;
                 }
             );
@@ -528,7 +528,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
 
                 // Test the norm just on the pattern of A
                 const CSCMatrix LLT_Anz = LLT.fkeep(
-                    [A](csint i, csint j, double x) {
+                    [A](csint i, csint j, [[maybe_unused]] double x) {
                         return std::as_const(A)(i, j) != 0.0;
                     }
                 );

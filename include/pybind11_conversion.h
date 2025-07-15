@@ -55,8 +55,8 @@ struct type_caster<std::vector<T>> {
     // Output conversion (when a C++ function returns std::vector)
     static handle cast(
         const std::vector<T>& src,
-        return_value_policy policy,
-        handle parent
+        [[maybe_unused]] return_value_policy policy,
+        [[maybe_unused]] handle parent
     ) {
         py::array_t<T> arr(src.size(), src.data());
         return arr.release();
@@ -64,7 +64,7 @@ struct type_caster<std::vector<T>> {
 
     // Python (py::array_t<T> or list) to C++ (std::vector<T>)
     // Input conversion (when a C++ function takes std::vector)
-    bool load(handle src, bool convert) {
+    bool load(handle src, [[maybe_unused]] bool convert) {
         // --- Try to load as a NumPy array ---
         if (py::isinstance<py::array>(src)) {
             try {

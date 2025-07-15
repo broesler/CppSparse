@@ -72,7 +72,12 @@ jobs:
 
       - name: Run Python unit tests
         # TODO pytest --make-figures
+        # pytest --last-failed (re-run with only the last failed tests)
         # env:
         #   MPLBACKEND: agg  # use headless backend for matplotlib
         run: |
           pytest
+          if [[ $? -ne 0 ]]; then
+            echo "Tests failed. Running pytest with verbose output."
+            pytest -v -s --last-failed --tb=auto --showlocals
+          fi

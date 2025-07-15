@@ -56,16 +56,16 @@ jobs:
       #   run: |
       #     mkdir -p build
       #     $cmakedir = python -m pybind11 --cmakedir
-      #     cmake -S . -B build -DCMAKE_PREFIX_PATH="$cmakedir"
+      #     cmake -S . -B build -j8 -DCMAKE_PREFIX_PATH="$cmakedir"
 
       - name: Build and Test C++ Code
         run: |
-          cmake --build build --target test_csparse
+          cmake --build build -j8 --target test_csparse
           ./test_csparse
 
       - name: Build and Install Python C++ module
         run: |
-          cmake --build build --target csparse
+          cmake --build build -j8 --target csparse
           cmake --install build
 
       - name: List build directory

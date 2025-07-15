@@ -86,3 +86,21 @@ jobs:
         run: |
             echo "Tests failed. Running pytest with verbose output."
             pytest -v -s --last-failed --tb=auto --showlocals
+
+      - name: Build C++ Demos
+        run: |
+          cmake --build build -j8 --target demo1 demo2 demo3
+
+      - name: Run C++ Demos
+        run: |
+          ./demo1 './data/t1'
+          ./demo2 './data/t1'
+          ./demo2 './data/ash219'
+          ./demo2 './data/bcsstk01'
+          ./demo2 './data/fs_183_1'
+          ./demo2 './data/mbeacxc'
+          ./demo2 './data/west0067'
+          ./demo2 './data/lp_afiro'
+          ./demo2 './data/bcsstk16'
+          ./demo3 './data/bcsstk01'
+          ./demo3 './data/bcsstk16'

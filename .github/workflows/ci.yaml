@@ -72,72 +72,12 @@ jobs:
           ls -l "$(python -c 'import csparse; print(csparse.__path__[0])')"
 
       - name: Run Python unit tests with conditional reruns
-        # TODO pytest --make-figures
-        # pytest --last-failed (re-run with only the last failed tests)
-        # env:
-        #   MPLBACKEND: agg  # use headless backend for matplotlib
-        run: |
-          #!/bin/bash
-          # Allow script to continue on error
-          set +e
-
-          # Run pytest in a subshell in case it segfaults
-          echo "--- Running pytest with full test suite."
-          (pytest)
-          INITIAL_EXIT_CODE=$?
-
-          echo "--- Initial pytest exit code $INITIAL_EXIT_CODE."
-
-          # Check if the initial pytest run failed
-          DESELECT_TESTS='--deselect=python/csparse/tests/test_lu.py::TestLU'
-          LAST_FAILED_FLAGS='-v -s --last-failed --tb=auto --showlocals'
-
-          if [[ $INITIAL_EXIT_CODE -eq 139 ]]; then
-              echo "--- Initial pytest run likely segfaulted (exit code 139)."
-              echo "--- Re-Run: skipping TestLU."
-              pytest $DESELECT_TESTS
-              if [[ $? -ne 0 ]]; then
-                  echo "--- Re-run: pytest still failed after skipping TestLU."
-                  pytest $DESELECT_TESTS $LAST_FAILED_FLAGS
-              fi
-          elif [[ $INITIAL_EXIT_CODE -ne 0 ]]; then
-              echo "--- Initial pytest failed: exit code $INITIAL_EXIT_CODE."
-              echo "--- Re-run: last failed tests."
-              pytest $LAST_FAILED_FLAGS
-          fi
+        run: ./run_pytest.sh
 
       - name: Run Python unit tests with figures
         env:
           MPLBACKEND: agg  # use headless backend for matplotlib
-        run: |
-          #!/bin/bash
-          # Allow script to continue on error
-          set +e
-
-          # Run pytest in a subshell in case it segfaults
-          echo "--- Running pytest with full test suite."
-          (pytest --make-figures)
-          INITIAL_EXIT_CODE=$?
-
-          echo "--- Initial pytest exit code $INITIAL_EXIT_CODE."
-
-          # Check if the initial pytest run failed
-          DESELECT_TESTS='--deselect=python/csparse/tests/test_lu.py::TestLU'
-          LAST_FAILED_FLAGS='-v -s --last-failed --tb=auto --showlocals'
-
-          if [[ $INITIAL_EXIT_CODE -eq 139 ]]; then
-              echo "--- Initial pytest run likely segfaulted (exit code 139)."
-              echo "--- Re-Run: skipping TestLU."
-              pytest --make-figures $DESELECT_TESTS
-              if [[ $? -ne 0 ]]; then
-                  echo "--- Re-run: pytest still failed after skipping TestLU."
-                  pytest --make-figures $DESELECT_TESTS $LAST_FAILED_FLAGS
-              fi
-          elif [[ $INITIAL_EXIT_CODE -ne 0 ]]; then
-              echo "--- Initial pytest failed: exit code $INITIAL_EXIT_CODE."
-              echo "--- Re-run: last failed tests."
-              pytest --make-figures $LAST_FAILED_FLAGS
-          fi
+        run: ./run_pytest.sh --make-figures
 
       - name : Upload Test Figures
         uses: actions/upload-artifact@v4

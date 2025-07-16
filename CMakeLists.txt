@@ -21,6 +21,10 @@ add_compile_options(
     -Wextra
 )
 
+# Enable position-independent code for shared libraries (-fPIC)
+# Without this flag, shared libraries may not link correctly on Ubuntu, etc.
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # Set debugging flags
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG -fno-inline -fno-omit-frame-pointer")
 

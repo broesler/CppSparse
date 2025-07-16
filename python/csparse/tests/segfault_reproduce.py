@@ -18,6 +18,7 @@ import scipy.linalg as la
 import suitesparseget as ssg
 
 from numpy.testing import assert_allclose
+from scipy import sparse
 from scipy.sparse import linalg as spla
 
 
@@ -25,6 +26,15 @@ from scipy.sparse import linalg as spla
 df = ssg.get_index()
 problem = ssg.get_problem(index=df, group="Pajek", name="GD99_c")
 A = problem.A
+
+print("Pre-conversion:")
+print(f"{type(A) = }")
+
+# Convert A to a sparse matrix
+A = sparse.csr_array(A)
+
+print("Post-conversion:")
+print(f"{type(A) = }")
 
 fig, axs = plt.subplots(num=1, nrows=2, ncols=2, clear=True)
 ax = axs[0, 0]

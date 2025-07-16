@@ -116,10 +116,27 @@ class TestCholLUSolve(BaseSuiteSparseTest):
 # -----------------------------------------------------------------------------
 #         Test 17
 # -----------------------------------------------------------------------------
-@pytest.mark.parametrize('A', list(generate_random_matrices(square_only=True)))
-def test_qr_solve(request, A):
+# Known failures for seed 565656
+# NOTE These tests fail because the last entry in U[-1, -1] is either exactly
+# 0.0 or extremely small (e.g. ~1e-21), so when we do "x /= U[-1, -1]" it
+# results is ~1e+20, and blows up the rest of the solution.
+#
+# When we run the same matrix and RHS through cs_qrsol -> same result.
+#
+# Neither function supports the least squares solution.
+FAIL_TRIALS = [6, 12, 18, 53, 71, 78, 91, 93]
+
+@pytest.mark.parametrize('A', [
+    pytest.param(
+        param.values[0],
+        id=param.id,
+        marks=pytest.mark.xfail(reason="Matrix is singular.")
+    )
+    if i in FAIL_TRIALS else param
+    for i, param in enumerate(list(generate_random_matrices(square_only=True)))
+])
+def test_qr_solve(A):
     """Test QR solve on a random matrix."""
-    test_id = request.node.name
     order = 'ATA'  # column ordering for QR
 
     M, N = A.shape
@@ -153,18 +170,6 @@ def test_qr_solve(request, A):
     assert_allclose(Q_ @ R_, Aq, atol=ATOL)
 
     # Test the actual problem solution
-    fail_ids = [6, 12, 18, 53, 71, 78, 91, 93]
-    if test_id in [f"test_qr_solve[random_{i}]" for i in fail_ids]:
-        # These tests fail because the last entry in U[-1, -1] is either
-        # exactly 0.0 or extremely small (e.g. ~1e-21), so when we do "x /=
-        # U[-1, -1]" it results is ~1e+20, and blows up the rest of the
-        # solution.
-        #
-        # When we run the same matrix and RHS through cs_qrsol -> same result.
-        #
-        # Neither function supports the least squares solution.
-        pytest.xfail("Matrix is singular, expected failure.")
-
     x_ = la.lstsq(R_, Q_.T @ b)[0]
     x_[q] = x_  # inverse permutation
     r_ = la.norm(A @ x_ - b)
@@ -181,7 +186,7 @@ def test_qr_solve(request, A):
     rq = la.norm(A @ xq - b)
 
     # Check the solution
-    print(f"{test_id}: r_={r_:.2e}, r={r:.2e}, rq={rq:.2e}")
+    print(f"r_={r_:.2e}\n r={r:.2e}\nrq={rq:.2e}")
     assert_allclose(xq, x_, atol=1e-10)  # always passes
     assert_allclose(x, x_, atol=1e-10)   # fails
 

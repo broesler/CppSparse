@@ -27,14 +27,13 @@ Clone the repository:
 ```bash
 gh repo clone broesler/CppSparse C++Sparse
 cd C++Sparse
-git submodule update --init --recursive  # get the suitesparseget_py submodule
 ```
 
 To build the library, you will need to have CMake and a C++ compiler.
 First, build and test the C++ library:
 
 ```bash
-make test
+make tests
 ./test_csparse
 ```
 
@@ -42,8 +41,6 @@ Then, build and test the Python interface:
 
 ```bash
 make python
-cd python
-pip install .
 pytest
 ```
 
@@ -51,10 +48,9 @@ The python tests roughly replicate the tests in the original CSparse library
 (under `CSparse/MATLAB/Test`), and also include some additional tests for
 the Python interface.
 
-To make the figures in the python tests (saved to the `plots/` directory),
+To make the figures in the python tests (saved to the `test_figures/` directory),
 
 ```bash
-# cd to C++Sparse directory
 pytest --make-figures
 ```
 
@@ -62,7 +58,7 @@ pytest --make-figures
 individual modules or classes one at a time, *e.g.*
 
 ```bash
-pytest --make-figures python/test/test_ly.py::TestLU
+pytest --make-figures -k 'test_amd'
 ```
 
 Note that figure windows may not be visible while the tests are running, but the

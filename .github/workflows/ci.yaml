@@ -80,8 +80,10 @@ jobs:
         id: pytest_full_run
         run: |
           #!/bin/bash
-          # Run pytest in a subprocess in case it segfaults
-          (bash -c "pytest")
+          # Run pytest in a background process in case it segfaults
+          pytest &
+          PYTEST_PID=$!
+          wait $PYTEST_PID
           INITIAL_EXIT_CODE=$?
 
           echo "--- Initial pytest exit code $INITIAL_EXIT_CODE."

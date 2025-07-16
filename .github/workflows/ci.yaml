@@ -80,30 +80,27 @@ jobs:
         id: pytest_full_run
         run: |
           #!/bin/bash
-          # Run pytest with the first run
-          pytest
+          # Run pytest in a subprocess in case it segfaults
+          (bash -c "pytest")
           INITIAL_EXIT_CODE=$?
-          
+
+          echo "--- Initial pytest exit code $INITIAL_EXIT_CODE."
+
           # Check if the initial pytest run failed
-          RUN_LAST_FAILED=false
+          IGNORE_FILES='--ignore=python/csparse/tests/test_lu.py::TestLU'
+          LAST_FAILED_FLAGS='-v -s --last-failed --tb=auto --showlocals'
 
           if [[ $INITIAL_EXIT_CODE -eq 139 ]]; then
               echo "--- Initial pytest run likely segfaulted (exit code 139)."
               echo "--- Attempting to re-run pytest skipping TestLU."
-              pytest --ignore=python/csparse/tests/test_lu.py::TestLU
+              pytest $IGNORE_FILES
               if [[ $? -ne 0 ]]; then
-                  echo "--- Re-run pytest still failed after skipping TestLU."
-                  RUN_LAST_FAILED=true
+                  echo "--- Re-run: pytest still failed after skipping TestLU."
+                  pytest $IGNORE_FILES $LAST_FAILED_FLAGS
               fi
           elif [[ $INITIAL_EXIT_CODE -ne 0 ]]; then
-              echo "--- Initial pytest run failed with exit code $INITIAL_EXIT_CODE."
-              RUN_LAST_FAILED=true
-          fi
-
-          # Re-run pytest with last-failed option if the first run failed
-          if $RUN_LAST_FAILED; then
-              echo "Initial pytest run failed. Re-running with --last-failed."
-              pytest -v -s --last-failed --tb=auto --showlocals
+              echo "--- Initial pytest failed: exit code $INITIAL_EXIT_CODE."
+              pytest $LAST_FAILED_FLAGS
           fi
 
       - name: Check for pytest run outcome

@@ -82,7 +82,8 @@ jobs:
       - name : Upload Test Figures
         uses: actions/upload-artifact@v4
         with:
-          name: test-figures
+          # Use a unique name for each OS and Python version
+          name: test-figures-${{ matrix.os }}-${{ matrix.python-version }}
           path: ./test_figures/
           if-no-files-found: error
 

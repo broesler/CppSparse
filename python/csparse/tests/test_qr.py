@@ -292,7 +292,9 @@ def test_qr(request, problem):
         fig_dir = Path('test_figures/test_qr')
         fig_dir.mkdir(parents=True, exist_ok=True)
 
-        figure_path = fig_dir / f"{problem_name.replace('/', '_')}.pdf"
+        # Clean up problem_name for file saving
+        test_fileroot = problem_name.replace('/', '_').split("::")[0]
+        figure_path = fig_dir / f"{test_fileroot}.pdf"
         print(f"Saving figure to {figure_path}")
         fig.savefig(figure_path)
 

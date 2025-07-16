@@ -28,11 +28,13 @@ echo "--- Initial pytest exit code $INITIAL_EXIT_CODE."
 DESELECT_TESTS='--deselect=python/csparse/tests/test_lu.py::TestLU'
 LAST_FAILED_FLAGS=( -v -s --last-failed --tb=auto --showlocals )
 
-if [[ $INITIAL_EXIT_CODE -eq 139 ]]; then
-    echo "--- Initial pytest run likely segfaulted (exit code 139)."
+if [[ $INITIAL_EXIT_CODE -gt 128 ]]; then
+    echo "::error:: Initial pytest run failed (exit code $INITIAL_EXIT_CODE)."
     echo "--- Re-Run: skipping TestLU."
-    if pytest "$@" $DESELECT_TESTS; then
-        echo "--- Re-run: pytest failed with exit code $?."
+    (pytest "$@" $DESELECT_TESTS)
+    NOTESTLU_EXIT_CODE=$?
+    if [[ $NOTESTLU_EXIT_CODE -ne 0 ]]; then
+        echo "--- Re-run: pytest failed with exit code $NOTESTLU_EXIT_CODE."
         pytest "$@" $DESELECT_TESTS "${LAST_FAILED_FLAGS[@]}"
     fi
 elif [[ $INITIAL_EXIT_CODE -ne 0 ]]; then

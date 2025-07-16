@@ -76,7 +76,7 @@ def generate_random_matrices(
 
         yield pytest.param(
             A,
-            id=f"random_{trial}::{A.shape}::{A.nnz}",
+            id=f"random_{trial:02d}::{A.shape}::{A.nnz}",
             marks=pytest.mark.random
         )
 
@@ -116,7 +116,7 @@ def generate_random_compatible_matrices(
 
         yield pytest.param(
             A, B,
-            id=f"random_{trial}::{A.shape}::{A.nnz}::{B.nnz}",
+            id=f"random_{trial:02d}::{A.shape}::{A.nnz}::{B.nnz}",
             marks=pytest.mark.random
         )
 
@@ -153,7 +153,7 @@ def generate_random_cholesky_matrices(seed=565656, N_trials=100, N_max=100):
 
         yield pytest.param(
             L, b,
-            id=f"random_{trial}::{L.shape}::{L.nnz}::{b.nnz}",
+            id=f"random_{trial:02d}::{L.shape}::{L.nnz}::{b.nnz}",
             marks=pytest.mark.random
         )
 

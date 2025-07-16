@@ -189,29 +189,6 @@ std::ostream& operator<<(std::ostream& os, const std::array<T, N>& arr)
 }
 
 
-/** Print a matrix in dense format.
- *
- * @param A  a dense matrix
- * @param M, N  the number of rows and columns
- * @param order  the order to print the matrix ('C' for row-major or 'F' for
- *        column-major)
- * @param precision  the number of significant digits to print
- * @param suppress  print small numbers as 0 if true
- * @param os  the output stream
- * 
- * @return os  the output stream
- */
-void print_dense_vec(
-    const std::vector<double>& A,
-    csint M,
-    csint N,
-    char order='F',
-    int precision=4,
-    bool suppress=true,
-    std::ostream& os=std::cout
-);
-
-
 } // namespace cs
 
 #endif  // _UTILS_H_

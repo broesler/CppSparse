@@ -209,65 +209,6 @@ std::vector<csint> randperm(csint N, csint seed)
 }
 
 
-
-/*------------------------------------------------------------------------------
- *         Printing 
- *----------------------------------------------------------------------------*/
-void print_dense_vec(
-    const std::vector<double>& A,
-    csint M,
-    csint N,
-    char order,
-    int precision,
-    bool suppress,
-    std::ostream& os
-)
-{
-    if (A.size() != static_cast<size_t>(M * N)) {
-        throw std::runtime_error("Matrix size does not match dimensions!");
-    }
-
-    // Determine whether to use scientific notation
-    double abs_max = 0.0;
-    for (const auto& val : A) {
-        if (std::isfinite(val)) {
-            abs_max = std::max(abs_max, std::fabs(val));
-        }
-    }
-
-    bool use_scientific = !suppress || (abs_max < 1e-4 || abs_max > 1e4);
-
-    // Compute column width
-    int width = use_scientific ? (9 + precision) : (6 + precision);
-    width = std::max(width, 5);  // enough for "nan", "-inf", etc.
-
-    constexpr double suppress_tol = 1e-10;
-
-    const std::string indent(1, ' ');
-
-    for (csint i = 0; i < M; i++) {
-        os << indent;
-        for (csint j = 0; j < N; j++) {
-            csint idx = (order == 'F') ? (i + j*M) : (i*N + j);
-            double val = A[idx];
-
-            if (val == 0.0 || (suppress && std::fabs(val) < suppress_tol)) {
-                os << std::format("{:>{}}", "0", width);
-            } else {
-                // bool is_integer = std::abs(val - std::round(val)) < suppress_tol;
-                // bool print_integer = is_integer && !use_scientific;
-                os << std::setw(width)
-                   // << std::setprecision(print_integer ? 0 : precision)
-                   << std::setprecision(precision)
-                   << (use_scientific ? std::scientific : std::fixed)
-                   << val;
-            }
-        }
-        os << std::endl;
-    }
-}
-
-
 } // namespace cs
 
 /*==============================================================================

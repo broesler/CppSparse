@@ -89,11 +89,7 @@ public:
         int precision=4,
         bool suppress=true,
         std::ostream& os=std::cout
-    ) const
-    {
-        auto [M, N] = shape();
-        print_dense_vec(to_dense_vector('F'), M, N, 'F', precision, suppress, os);
-    }
+    ) const;
 
     ///  Print the matrix.
     /// 

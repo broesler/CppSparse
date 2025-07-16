@@ -32,7 +32,7 @@ if [[ $INITIAL_EXIT_CODE -eq 139 ]]; then
     echo "--- Initial pytest run likely segfaulted (exit code 139)."
     echo "--- Re-Run: skipping TestLU."
     if pytest "$@" $DESELECT_TESTS; then
-        echo "--- Re-run: pytest still failed after skipping TestLU."
+        echo "--- Re-run: pytest failed with exit code $?."
         pytest "$@" $DESELECT_TESTS "${LAST_FAILED_FLAGS[@]}"
     fi
 elif [[ $INITIAL_EXIT_CODE -ne 0 ]]; then

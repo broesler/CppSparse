@@ -70,7 +70,9 @@ def test_amd(A, request):
         fig_dir.mkdir(parents=True, exist_ok=True)
 
         test_id = request.node.name
-        figure_path = fig_dir / f"{test_id}.pdf"
+        # Take only the "random_dd" part of "random_dd::(M, N)::nnz"
+        test_fileroot = test_id.split('::')[0] + ']'
+        figure_path = fig_dir / f"{test_fileroot}.pdf"
         print(f"Saving figure to {figure_path}")
         fig.savefig(figure_path)
 

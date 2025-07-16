@@ -348,7 +348,9 @@ def test_reachability(L, b, lower, request):
         # Save the figure for reference
         fig_dir = Path('test_figures/test_reachability')
         fig_dir.mkdir(parents=True, exist_ok=True)
-        fig.savefig(fig_dir / f"reachability_{test_id}.pdf")
+        # Take only the "random_dd" part of "random_dd::(M, N)::nnz"
+        test_fileroot = test_id.split('::')[0] + ']'
+        fig.savefig(fig_dir / f"reachability_{test_fileroot}.pdf")
 
     xi = np.nonzero(xs)[0]
     s = np.sort(sr)

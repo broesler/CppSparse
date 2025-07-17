@@ -46,7 +46,7 @@ else:
     density = 0.2
 
 N_repeats = 3  # number of "runs" in %timeit (7 is default)
-N_samples = 1  # number of samples in each run (100,000 is default)
+# N_samples = 1  # number of samples in each run (100,000 is default)
 
 times = defaultdict(list)
 fill_in = []
@@ -72,10 +72,12 @@ for N in Ns:
 
     for func in chol_funcs:
         func_name = func.__name__
-        partial_func = partial(func, A)
+        pfunc = partial(func, A)
 
         # Time the function
-        ts = timeit.repeat(partial_func, repeat=N_repeats, number=N_samples)
+        timer = timeit.Timer(pfunc)
+        N_samples, _ = timer.autorange()
+        ts = timer.repeat(repeat=N_repeats, number=N_samples)
 
         ts = np.array(ts) / N_samples  # time per loop
         ts_min = np.min(ts)

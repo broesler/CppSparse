@@ -19,7 +19,7 @@ from scipy import sparse
 import csparse
 
 
-SAVE_FIG = True
+SAVE_FIG = False
 
 SEED = 565656
 
@@ -42,7 +42,7 @@ densities = np.r_[
 ]
 
 N_repeats = 7    # number of "runs" in %timeit (7 is default)
-N_samples = 100  # number of samples in each run (100,000 is default)
+# N_samples = 100  # number of samples in each run (100,000 is default)
 
 times = defaultdict(list)
 
@@ -77,7 +77,9 @@ for density in densities:
         partial_func = partial(func, *args)
 
         # Time the function
-        ts = timeit.repeat(partial_func, repeat=N_repeats, number=N_samples)
+        timer = timeit.Timer(partial_func)
+        N_samples, _ = timer.autorange()
+        ts = timer.repeat(repeat=N_repeats, number=N_samples)
 
         ts = np.array(ts) / N_samples  # time per loop
         ts_min = np.min(ts)

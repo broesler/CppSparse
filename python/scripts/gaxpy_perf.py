@@ -33,7 +33,7 @@ Ns = np.r_[10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
 density = 0.1  # density of the matrices
 
 N_repeats = 7  # number of "runs" in %timeit (7 is default)
-N_samples = 1  # number of samples in each run (100,000 is default)
+# N_samples = 1  # number of samples in each run (100,000 is default)
 
 gaxpy_funcs = {
     'regular': [
@@ -84,9 +84,9 @@ for kind in ['regular', 'transpose']:
             partial_method = partial(func, A, *args)
 
             # Run the function
-            ts = timeit.repeat(partial_method,
-                               repeat=N_repeats,
-                               number=N_samples)
+            timer = timeit.Timer(partial_method)
+            N_samples, _ = timer.autorange()
+            ts = timer.repeat(repeat=N_repeats, number=N_samples)
 
             # NOTE timeit returns the total time for all "number" loops for
             # each repeat, so we divide by N_samples to get the time per loop.

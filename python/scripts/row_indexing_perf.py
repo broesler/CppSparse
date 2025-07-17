@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import timeit
 
+from functools import partial
 from tqdm import tqdm
 from scipy import sparse
 
@@ -41,8 +42,11 @@ with tqdm(total=len(Ms), desc="M", leave=False) as pbar0:
 
         with tqdm(total=M, desc="i", leave=False) as pbar1:
             for i in range(M):
-                ts = timeit.repeat(lambda A=A, i=i: A[i, :], repeat=5, number=7)
-                row_times[i] = np.mean(ts)
+                func = partial(sparse.csc_array.__getitem__, A, i)
+                timer = timeit.Timer()
+                N_samples, _ = timer.autorange()
+                ts = timeit.repeat(repeat=7, number=N_samples)
+                row_times[i] = np.min(ts) / N_samples
                 pbar1.update(1)
 
         times[k] = np.mean(row_times)

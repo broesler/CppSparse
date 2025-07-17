@@ -83,7 +83,7 @@ else:
             dm_func = partial(csparse.dmperm, A, seed=seed)
 
             # Determine how many times to repeat the function
-            timer = timeit.Timer('dm_func()', globals={'dm_func': dm_func})
+            timer = timeit.Timer(dm_func)
             N_samples, _ = timer.autorange()
             ts = timer.repeat(repeat=N_repeats, number=N_samples)
             ts = np.array(ts) / N_samples

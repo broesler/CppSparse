@@ -90,6 +90,9 @@ for tag = tags
             A = sprand(N, N, density);
         end
 
+        % Ensure the diagonal is non-zero
+        A = A + speye(N);
+
         bw = round(N/10);
         [i, j, v] = find(A);
         keep = abs(i - j) <= bw;

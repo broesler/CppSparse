@@ -79,7 +79,7 @@ jobs:
           MPLBACKEND: agg  # use headless backend for matplotlib
         run: ./run_pytest.sh --make-figures
 
-      - name : Upload Test Figures
+      - name: Upload Test Figures
         uses: actions/upload-artifact@v4
         with:
           # Use a unique name for each OS and Python version

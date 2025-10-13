@@ -324,6 +324,10 @@ PYBIND11_MODULE(csparse, m) {
         .def("transpose", &cs::CSCMatrix::transpose, py::arg("values")=true)
         .def_property_readonly("T", &cs::CSCMatrix::T)
         //
+        .def("sort", &cs::CSCMatrix::sort)
+        .def("tsort", &cs::CSCMatrix::tsort)
+        .def("qsort", &cs::CSCMatrix::qsort)
+        //
         .def("band", py::overload_cast<cs::csint, cs::csint>
                         (&cs::CSCMatrix::band, py::const_))
         //

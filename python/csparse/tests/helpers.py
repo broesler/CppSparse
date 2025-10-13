@@ -71,7 +71,7 @@ def generate_random_matrices(
             (M, N),
             density=d,
             format='csc',
-            random_state=rng
+            rng=rng
         )
 
         yield pytest.param(
@@ -102,7 +102,7 @@ def generate_random_compatible_matrices(
             A_shape,
             density=d,
             format='csc',
-            random_state=rng,
+            rng=rng,
             data_sampler=rng.normal
         )
 
@@ -110,7 +110,7 @@ def generate_random_compatible_matrices(
             B_shape,
             density=d,
             format='csc',
-            random_state=rng,
+            rng=rng,
             data_sampler=rng.normal
         )
 
@@ -134,7 +134,7 @@ def generate_random_cholesky_matrices(seed=565656, N_trials=100, N_max=100):
             (N, N),
             density=d,
             format='csc',
-            random_state=rng,
+            rng=rng,
             data_sampler=rng.normal
         )
 
@@ -147,7 +147,7 @@ def generate_random_cholesky_matrices(seed=565656, N_trials=100, N_max=100):
             (N, 1),
             density=d,
             format='csc',
-            random_state=rng,
+            rng=rng,
             data_sampler=rng.normal
         )
 

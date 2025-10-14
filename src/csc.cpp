@@ -502,22 +502,30 @@ CSCMatrix CSCMatrix::tsort() const
 // Exercise 2.8
 CSCMatrix& CSCMatrix::qsort()
 {
+    // Find maximum column size
+    csint max_len = 0;
+    for (csint j = 0; j < N_; j++) {
+        max_len = std::max(max_len, p_[j+1] - p_[j]);
+    }
+
     // Allocate workspaces
-    std::vector<csint> w(nnz());
-    std::vector<double> x(nnz());
+    std::vector<csint> w;
+    std::vector<double> x;
+    w.reserve(max_len);
+    x.reserve(max_len);
 
     for (csint j = 0; j < N_; j++) {
         // Pointers to the rows
-        csint p = p_[j],
-              pn = p_[j+1];
+        csint p = p_[j];
+        csint len = p_[j+1] - p;
 
-        // clear workspaces
-        w.clear();
-        x.clear();
+        // resize workspaces
+        w.resize(len);
+        x.resize(len);
 
         // Copy the row indices and values into the workspace
-        std::copy(i_.begin() + p, i_.begin() + pn, std::back_inserter(w));
-        std::copy(v_.begin() + p, v_.begin() + pn, std::back_inserter(x));
+        std::copy_n(i_.begin() + p, len, w.begin());
+        std::copy_n(v_.begin() + p, len, x.begin());
 
         // argsort the rows to get indices
         std::vector<csint> idx = argsort(w);

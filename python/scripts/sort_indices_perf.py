@@ -188,14 +188,15 @@ ax.axvline(
     color="C3",
     ls="--",
     lw=1,
-    label="0.50 Quantile of SuiteSparse Matrix Collection",
+    label="Median of SSMC",
 )
+
 ax.axvline(
     x=0.01055,
     color="k",
     ls="--",
     lw=1,
-    label="0.95 Quantile of SuiteSparse Matrix Collection",
+    label="95% Quantile of SSMC",
 )
 
 ax.grid(True, which="both")
@@ -206,6 +207,7 @@ ax.set(
     xscale="log",
     yscale="log",
 )
+ax.legend()
 
 if SAVE_FIGS:
     full_fig_path = fig_path / f"{filestem}_density.pdf"

@@ -141,6 +141,35 @@ sns.lineplot(
     ax=ax,
 )
 
+
+# Approx. square matrices in SuiteSparse Matrix Collection between 8k and 20k
+# >>> import suitesparseget as ssg
+# >>> df = ssg.get_index()
+# >>> df['density'] = df['nnz'] / (df['nrows'] * df['ncols'])
+# >>> tf = df.loc[
+#   (df.nrows >= 8_000) & (df.ncols >= 8_000)
+#   & (df.nrows <= 20_000) & (df.ncols <= 20_000)
+# ]
+# >>> tf['density'].quantile(0.5)
+# === np.float64(0.0009235722900674114)
+# >>> tf['density'].quantile(0.95)
+# === np.float64(0.010556930751160046)
+
+ax.axvline(
+    x=0.00092,
+    color="C3",
+    ls="--",
+    lw=1,
+    label="0.50 Quantile of SuiteSparse Matrix Collection",
+)
+ax.axvline(
+    x=0.01055,
+    color="k",
+    ls="--",
+    lw=1,
+    label="0.95 Quantile of SuiteSparse Matrix Collection",
+)
+
 ax.grid(True, which="both")
 ax.set(
     title=f"Row Index Sorting Performance (M = N = {square_N:,d})",

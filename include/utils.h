@@ -38,15 +38,6 @@ std::vector<double> operator*(const std::vector<double>& x, const double c);
 std::vector<double>& operator*=(std::vector<double>& x, const double c);
 
 
-/** Compute the cumulative sum of a vector, starting with 0.
- *
- * @param w  a reference to a vector of length N.
- *
- * @return p  the cumulative sum of `w`, of length N + 1.
- */
-std::vector<csint> cumsum(const std::vector<csint>& w);
-
-
 /** Compute the norm of a vector.
  *
  * @param x  the vector

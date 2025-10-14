@@ -142,10 +142,12 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
 
         auto c = chol_colcounts(A);
         csint expect_nnz = std::accumulate(c.begin(), c.end(), 0);
+        std::vector<csint> expect_cp(N + 1);
+        std::partial_sum(c.begin(), c.end(), expect_cp.begin() + 1);
 
         REQUIRE(S.p_inv == expect_p_inv);
         REQUIRE(S.parent == etree(A));
-        REQUIRE(S.cp == cumsum(chol_colcounts(A)));
+        REQUIRE(S.cp == expect_cp);
         REQUIRE(S.cp.back() == expect_nnz);
         REQUIRE(S.lnz == expect_nnz);
     }

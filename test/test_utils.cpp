@@ -51,16 +51,6 @@ TEST_CASE("Vector Operators", "[vector][ops]")
 }
 
 
-TEST_CASE("Cumulative Sum", "[vector][cumsum]")
-{
-    std::vector<csint> a = {1, 1, 1, 1};
-    std::vector<csint> c = cumsum(a);
-    std::vector<csint> expect = {0, 1, 2, 3, 4};
-    REQUIRE(c == expect);
-    REQUIRE(&a != &c);
-}
-
-
 TEST_CASE("Vector permutations", "[vector][perm]")
 {
     std::vector<double> b = {0, 1, 2, 3, 4};

@@ -13,6 +13,7 @@
 #include <iostream>
 #include <fstream>
 #include <format>
+#include <numeric>        // partial_sum
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -295,8 +296,8 @@ CSCMatrix COOMatrix::compress() const
     for (csint k = 0; k < nnz_; k++)
         w[j_[k]]++;
 
-    // Column pointers are the cumulative sum
-    C.p_ = cumsum(w);
+    // Column pointers are the cumulative sum, starting with 0
+    std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
     for (csint k = 0; k < nnz_; k++) {

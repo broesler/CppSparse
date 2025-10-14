@@ -11,7 +11,7 @@
 #include <cassert>
 #include <cmath>      // std::sqrt
 #include <iterator>   // std::back_inserter
-#include <numeric>    // std::iota
+#include <numeric>    // std::iota, partial_sum
 
 #include "cholesky.h"
 #include "csc.h"
@@ -496,8 +496,10 @@ SymbolicChol schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 
     std::vector<csint> c = counts(C, S.parent, postorder);
 
-    S.cp = cumsum(c);                   // find column pointers for L
-    S.lnz = S.cp.back();                // number of non-zeros in L
+    // Compute column pointers for L
+    S.cp.resize(c.size() + 1);
+    std::partial_sum(c.cbegin(), c.cend(), S.cp.begin() + 1);
+    S.lnz = S.cp.back();  // number of non-zeros in L
 
     return S;
 }

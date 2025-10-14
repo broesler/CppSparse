@@ -15,7 +15,7 @@
 #include <iomanip>    // setw, fixed, setprecision
 #include <iostream>
 #include <limits>     // numeric_limits
-#include <numeric>    // partial_sum, accumulate
+#include <numeric>    // accumulate
 #include <random>
 #include <span>
 #include <stdexcept>
@@ -113,17 +113,6 @@ std::vector<csint> inv_permute(const std::vector<csint>& p)
 
     for (size_t k = 0; k < p.size(); k++)
         out[p[k]] = k;
-
-    return out;
-}
-
-
-std::vector<csint> cumsum(const std::vector<csint>& w)
-{
-    std::vector<csint> out(w.size() + 1);
-
-    // Row pointers are the cumulative sum of the counts, starting with 0
-    std::partial_sum(w.begin(), w.end(), out.begin() + 1);
 
     return out;
 }

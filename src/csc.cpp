@@ -13,7 +13,7 @@
 #include <format>
 #include <functional>  // reference_wrapper
 #include <new>         // bad_alloc
-#include <numeric>     // iota
+#include <numeric>     // partial_sum, iota
 #include <optional>    // optional
 #include <ranges>      // views::reverse
 #include <stdexcept>
@@ -468,7 +468,7 @@ CSCMatrix CSCMatrix::transpose(bool values) const
         w[i_[p]]++;
 
     // Row pointers are the cumulative sum of the counts, starting with 0.
-    C.p_ = cumsum(w);
+    std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
     for (csint j = 0; j < N_; j++) {
@@ -566,7 +566,7 @@ CSCMatrix& CSCMatrix::sort()
         w[i_[p]]++;
 
     // Row pointers are the cumulative sum of the counts, starting with 0.
-    C.p_ = cumsum(w);
+    std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
     for (csint j = 0; j < N_; j++) {
@@ -1399,7 +1399,7 @@ CSCMatrix CSCMatrix::symperm(const std::vector<csint>& p_inv, bool values) const
     }
 
     // Row pointers are the cumulative sum of the counts, starting with 0.
-    C.p_ = cumsum(w);
+    std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
     for (csint j = 0; j < N_; j++) {
@@ -1438,7 +1438,7 @@ CSCMatrix CSCMatrix::permute_transpose(
     for (csint p = 0; p < nnz(); p++)
         w[p_inv[i_[p]]]++;
 
-    C.p_ = cumsum(w);
+    std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
     // place A(i, j) as C(j, i) (permuted)

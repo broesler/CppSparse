@@ -9,6 +9,7 @@
 
 import timeit
 from functools import partial
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,11 +19,13 @@ from tqdm import tqdm
 
 import csparse
 
-SAVE_FIGS = False
+
+SAVE_FIGS = True
 
 SEED = 565656
 
-filestem = "sort_indices_perf_py"
+filestem = "sort_indices_perf"
+fig_path = Path(__file__).absolute().parent.parent.parent / "plots"
 
 # TODO test memory usage. what is expected?
 
@@ -31,20 +34,45 @@ filestem = "sort_indices_perf_py"
 # -----------------------------------------------------------------------------
 sort_methods = ["sort", "tsort", "qsort"]
 
-N_repeats = 7  # number of "runs" in %timeit (7 is default)
+N_repeats = 5  # length of output vector from %timeit (5 is default)
+
+# Define the test cases
+# Stats from SuiteSparse Matrix Collection:
+# >>> import suitesparseget as ssg
+# >>> df = ssg.get_index()
+# >>> df['ar'] = df['nrows'] / df['ncols']  # tall: ar > 1, wide: ar < 1
+# >>> np.count_nonzero(df['ar'] == 1.0) / len(df)
+# === np.float64(0.7665289256198347)
+# >>> tf = df.loc[df['ar'] != 1.0]
+# >>> np.log10(tf['ar']).describe()
+# ===
+# count    678.000000
+# mean      -0.234338
+# std        0.701142
+# min       -3.228024
+# 25%       -0.489519
+# 50%       -0.272248
+# 75%        0.007986
+# max        2.475286
+# Name: ar, dtype: float64
+# >>> np.log10(tf['ar']).quantile(0.95)
+# === np.float64(0.9892992417881823)
+# >>> np.log10(tf['ar']).quantile(0.05)
+# === np.float64(-1.3740623687218865)
+#
+# i.e. 90% of non-square matrices have aspect ratios < ~20x
 
 # --- Case 1: Varying density, fixed size
 square_N = 10_000
 min_log_d = -np.log10(square_N)  # diagonal matrix
-ds = np.logspace(min_log_d, np.log10(0.1), 20)
+ds = np.logspace(min_log_d, -1, 20)
 
 cases = [(square_N, square_N, d) for d in ds]
 
 # --- Case 2: Tall matrices, fixed density
-fixed_N = 10_000
-# Ms = fixed_N * np.r_[1, 2, 5, 10, 20, 50, 100]
-Ms = fixed_N * np.r_[1, 2, 5, 10]
-fixed_d = 0.001
+fixed_N = 1_000
+Ms = fixed_N * np.r_[1, 2, 5, 10, 20]
+fixed_d = 10 / fixed_N  # ~10 nonzeros per column
 
 cases.extend([(M, fixed_N, fixed_d) for M in Ms])
 
@@ -71,8 +99,8 @@ for M, N, density in tqdm(df.index.droplevel("method")):
         sort_func = partial(getattr(A, sort_method))
 
         timer = timeit.Timer(sort_func)
-        N_samples, _ = timer.autorange()  # TODO
-        # N_samples = 1  # fast testing
+        N_samples, _ = timer.autorange()
+        # N_samples = 1  # fast for testing
 
         ts = timer.repeat(repeat=N_repeats, number=N_samples)
         ts = np.array(ts) / N_samples
@@ -132,7 +160,7 @@ ax.grid(True, which="both")
 fig, ax = plt.subplots(num=2, clear=True)
 
 sns.lineplot(
-    data=df.loc[df["M"] == df["N"]],
+    data=df.loc[(df["M"] == df["N"]) & (df["M"] == square_N)],
     x="density",
     y="time",
     hue="method",
@@ -180,7 +208,11 @@ ax.set(
 )
 
 if SAVE_FIGS:
-    fig.savefig(f"{filestem}_density.png")
+    full_fig_path = fig_path / f"{filestem}_density.pdf"
+    try:
+        fig.savefig(full_fig_path)
+    except Exception as e:
+        print(f"Failed to save figure to {full_fig_path}: {e}")
 
 # -----------------------------------------------------------------------------
 #         Plot varying M and N
@@ -191,7 +223,7 @@ fig.set_size_inches((10, 4.8), forward=True)
 ax = axs[0]
 
 sns.lineplot(
-    data=df.loc[df["M"] == fixed_N],
+    data=df.loc[(df["M"] == fixed_N) & (df["density"] == fixed_d)],
     x="N",
     y="time",
     hue="method",
@@ -212,7 +244,7 @@ ax.grid(True, which="both")
 ax = axs[1]
 
 sns.lineplot(
-    data=df.loc[df["N"] == fixed_N],
+    data=df.loc[(df["N"] == fixed_N) & (df["density"] == fixed_d)],
     x="M",
     y="time",
     hue="method",
@@ -230,7 +262,11 @@ ax.set(
 ax.grid(True, which="both")
 
 if SAVE_FIGS:
-    fig.savefig(f"{filestem}_M_N.png")
+    full_fig_path = fig_path / f"{filestem}_MN.pdf"
+    try:
+        fig.savefig(full_fig_path)
+    except Exception as e:
+        print(f"Failed to save figure to {full_fig_path}: {e}")
 
 plt.show()
 

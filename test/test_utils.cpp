@@ -101,20 +101,6 @@ TEST_CASE("Random permutation", "[vector][randperm]")
 }
 
 
-TEST_CASE("Argsort", "[vector][argsort]")
-{
-    SECTION("Vector of doubles") {
-        std::vector<double> v = {5.6, 6.9, 42.0, 1.7, 9.0};
-        REQUIRE(argsort(v) == std::vector<csint> {3, 0, 1, 4, 2});
-    }
-
-    SECTION("Vector of ints") {
-        std::vector<int> v = {5, 6, 42, 1, 9};
-        REQUIRE(argsort(v) == std::vector<csint> {3, 0, 1, 4, 2});
-    }
-}
-
-
 TEST_CASE("Vector norms", "[vector][norm]")
 {
     std::vector<double> v = {3, -4};

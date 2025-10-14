@@ -47,24 +47,6 @@ std::vector<double>& operator*=(std::vector<double>& x, const double c);
 std::vector<csint> cumsum(const std::vector<csint>& w);
 
 
-/** Sort the indices of a vector. */
-template <typename T>
-std::vector<csint> argsort(const std::vector<T>& vec)
-{
-    std::vector<csint> idx(vec.size());
-    std::iota(idx.begin(), idx.end(), 0);
-
-    // Sort the indices by referencing the vector
-    std::sort(
-        idx.begin(),
-        idx.end(),
-        [&vec](csint i, csint j) { return vec[i] < vec[j]; }
-    );
-
-    return idx;
-}
-
-
 /** Compute the norm of a vector.
  *
  * @param x  the vector

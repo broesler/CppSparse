@@ -509,10 +509,12 @@ CSCMatrix& CSCMatrix::qsort()
     }
 
     // Allocate workspaces
-    std::vector<csint> w;
+    std::vector<csint> w,
+                       idx;
     std::vector<double> x;
     w.reserve(max_len);
     x.reserve(max_len);
+    idx.reserve(max_len);
 
     for (csint j = 0; j < N_; j++) {
         // Pointers to the rows
@@ -522,16 +524,22 @@ CSCMatrix& CSCMatrix::qsort()
         // resize workspaces
         w.resize(len);
         x.resize(len);
+        idx.resize(len);
 
         // Copy the row indices and values into the workspace
         std::copy_n(i_.begin() + p, len, w.begin());
         std::copy_n(v_.begin() + p, len, x.begin());
+        std::iota(idx.begin(), idx.end(), 0);
 
         // argsort the rows to get indices
-        std::vector<csint> idx = argsort(w);
+        std::sort(
+            idx.begin(),
+            idx.end(),
+            [&w](csint i, csint j) { return w[i] < w[j]; }
+        );
 
         // Re-assign the values
-        for (csint i = 0; i < static_cast<csint>(idx.size()); i++) {
+        for (csint i = 0; i < len; i++) {
             i_[p + i] = w[idx[i]];
             v_[p + i] = x[idx[i]];
         }

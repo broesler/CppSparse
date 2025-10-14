@@ -7,54 +7,52 @@
 """Test and plot the performance of sorting the indices of a sparse matrix."""
 # =============================================================================
 
+import timeit
+from functools import partial
+
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
 import pandas as pd
-import timeit
-
-from functools import partial
+import seaborn as sns
 from tqdm import tqdm
 
 import csparse
 
-
-SAVE_FIG = False
+SAVE_FIGS = False
 
 SEED = 565656
 
 filestem = "sort_indices_perf_py"
 
+# TODO test memory usage. what is expected?
+
 # -----------------------------------------------------------------------------
 #         Create the data
 # -----------------------------------------------------------------------------
-# TODO test memory usage. what is expected?
+sort_methods = ["sort", "tsort", "qsort"]
 
 N_repeats = 7  # number of "runs" in %timeit (7 is default)
 
-sort_methods = ["sort", "tsort", "qsort"]
-
-# Generate the test matrix
-
 # --- Case 1: Varying density, fixed size
-fixed_N = 10_000
-min_log_d = -np.log10(fixed_N)  # diagonal matrix
+square_N = 10_000
+min_log_d = -np.log10(square_N)  # diagonal matrix
 ds = np.logspace(min_log_d, np.log10(0.1), 20)
 
-cases = [(fixed_N, fixed_N, d) for d in ds]
+cases = [(square_N, square_N, d) for d in ds]
 
 # --- Case 2: Tall matrices, fixed density
-N = 1_000
-Ms = N * np.r_[1, 2, 5, 10, 20, 50, 100]
-d = 0.001
+fixed_N = 10_000
+# Ms = fixed_N * np.r_[1, 2, 5, 10, 20, 50, 100]
+Ms = fixed_N * np.r_[1, 2, 5, 10]
+fixed_d = 0.001
 
-cases.extend([(M, N, d) for M in Ms])
+cases.extend([(M, fixed_N, fixed_d) for M in Ms])
 
 # --- Case 3: Wide matrices, fixed density
-M = N
+M = fixed_N
 Ns = Ms
 
-cases.extend([(M, N, d) for N in Ns])
+cases.extend([(M, N, fixed_d) for N in Ns])
 
 # Build the DataFrame to hold results
 flat_tuples = [(M, N, d, method) for M, N, d in cases for method in sort_methods]
@@ -63,17 +61,18 @@ index = pd.MultiIndex.from_tuples(flat_tuples, names=["M", "N", "density", "meth
 df = pd.DataFrame(index=index, columns=["time"]).sort_index()
 df = df[~df.index.duplicated(keep="first")]  # remove duplicates
 
+
 for M, N, density in tqdm(df.index.droplevel("method")):
     # Create a random sparse matrix
     A = csparse.COOMatrix.random(M, N, density=density, seed=SEED).tocsc()
 
     # Time the sorting of the indices
-    for sort_method in sort_methods):
+    for sort_method in sort_methods:
         sort_func = partial(getattr(A, sort_method))
 
         timer = timeit.Timer(sort_func)
-        # N_samples, _ = timer.autorange()  # TODO
-        N_samples = 1  # fast testing
+        N_samples, _ = timer.autorange()  # TODO
+        # N_samples = 1  # fast testing
 
         ts = timer.repeat(repeat=N_repeats, number=N_samples)
         ts = np.array(ts) / N_samples
@@ -144,13 +143,67 @@ sns.lineplot(
 
 ax.grid(True, which="both")
 ax.set(
-    title=f"Row Index Sorting Performance (M = N = {fixed_N})",
+    title=f"Row Index Sorting Performance (M = N = {square_N:,d})",
     xlabel=r"density = $\frac{|A|}{MN}$",
     ylabel="time [s]",
     xscale="log",
     yscale="log",
 )
 
+if SAVE_FIGS:
+    fig.savefig(f"{filestem}_density.png")
+
+# -----------------------------------------------------------------------------
+#         Plot varying M and N
+# -----------------------------------------------------------------------------
+fig, axs = plt.subplots(num=3, nrows=1, ncols=2, clear=True)
+fig.set_size_inches((10, 4.8), forward=True)
+
+ax = axs[0]
+
+sns.lineplot(
+    data=df.loc[df["M"] == fixed_N],
+    x="N",
+    y="time",
+    hue="method",
+    style="method",
+    markers=True,
+    ax=ax,
+)
+
+ax.set(
+    title=f"Wide Matrices (M={fixed_N:,d}, density={fixed_d})",
+    ylabel="time [s]",
+    xscale="log",
+    yscale="log",
+)
+ax.grid(True, which="both")
+
+
+ax = axs[1]
+
+sns.lineplot(
+    data=df.loc[df["N"] == fixed_N],
+    x="M",
+    y="time",
+    hue="method",
+    style="method",
+    markers=True,
+    ax=ax,
+)
+
+ax.set(
+    title=f"Tall Matrices (N={fixed_N:,d}, density={fixed_d})",
+    ylabel="time [s]",
+    xscale="log",
+    yscale="log",
+)
+ax.grid(True, which="both")
+
+if SAVE_FIGS:
+    fig.savefig(f"{filestem}_M_N.png")
+
+plt.show()
 
 # =============================================================================
 # =============================================================================

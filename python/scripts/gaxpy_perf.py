@@ -7,16 +7,15 @@
 """Create and plot the gaxpy performance data."""
 # =============================================================================
 
-import matplotlib.pyplot as plt
-import numpy as np
 import timeit
-
 from collections import defaultdict
 from functools import partial
 from pathlib import Path
 
-import csparse
+import matplotlib.pyplot as plt
+import numpy as np
 
+import csparse
 
 SAVE_FIG = False
 

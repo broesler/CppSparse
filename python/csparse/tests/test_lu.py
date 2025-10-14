@@ -7,17 +7,18 @@
 """Unit tests for the csparse.lu*() functions."""
 # =============================================================================
 
+from pathlib import Path
+
 import numpy as np
 import pytest
-
 from numpy.testing import assert_allclose
-from pathlib import Path
-from scipy import linalg as la, sparse
+from scipy import linalg as la
+from scipy import sparse
 from scipy.sparse import linalg as spla
 
-from .helpers import generate_suitesparse_matrices, BaseSuiteSparsePlot
-
 import csparse
+
+from .helpers import BaseSuiteSparsePlot, generate_suitesparse_matrices
 
 ATOL = 1e-15  # testing tolerance
 

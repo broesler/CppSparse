@@ -12,9 +12,8 @@ Use for testing usage of the csparse module API interactively.
 # =============================================================================
 
 import numpy as np
-
-from scipy import sparse
 from scipy import linalg as la
+from scipy import sparse
 
 import csparse
 

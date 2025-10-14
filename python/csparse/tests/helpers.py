@@ -7,12 +7,11 @@
 """Helper functions for the C++Sparse python tests."""
 # =============================================================================
 
-import pytest
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-from pathlib import Path
+import pytest
 from scipy import sparse
 from suitesparseget import suitesparseget as ssg
 

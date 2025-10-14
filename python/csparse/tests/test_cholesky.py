@@ -7,24 +7,24 @@
 """Unit tests for the python Cholesky algorithms."""
 # =============================================================================
 
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-
-from pathlib import Path
 from numpy.testing import assert_allclose
 from scipy import linalg as la
 from scipy import sparse
 from scipy.sparse import linalg as sla
 
-from .helpers import (
-    generate_suitesparse_matrices,
-    generate_random_matrices,
-    generate_random_cholesky_matrices,
-    BaseSuiteSparsePlot
-)
-
 import csparse
+
+from .helpers import (
+    BaseSuiteSparsePlot,
+    generate_random_cholesky_matrices,
+    generate_random_matrices,
+    generate_suitesparse_matrices,
+)
 
 ATOL = 1e-15  # testing tolerance
 

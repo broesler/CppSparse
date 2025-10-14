@@ -22,7 +22,7 @@ ifdef USE_ASAN
 	CMAKE_CONFIG_ARGS += -DUSE_ASAN=$(USE_ASAN)
 endif
 
-.PHONY: all lib tests python demos install depend clean superclean
+.PHONY: all lib tests python demos install depend clean
 
 DEMO_EXEC := demo1 demo2 demo3
 

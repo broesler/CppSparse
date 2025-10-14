@@ -8,7 +8,8 @@
 # =============================================================================
 
 import numpy as np
-from scipy import linalg as la, sparse
+from scipy import linalg as la
+from scipy import sparse
 
 import csparse
 

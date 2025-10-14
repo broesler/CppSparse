@@ -9,13 +9,12 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 from matplotlib import patches
 from matplotlib.ticker import MaxNLocator
 from scipy.sparse import issparse
 
-from csparse.csparse import dmperm
 from csparse._fillreducing import scc_perm
+from csparse.csparse import dmperm
 
 
 def cspy(A, cmap='viridis_r', colorbar=True, ticklabels=False, ax=None, **kwargs):

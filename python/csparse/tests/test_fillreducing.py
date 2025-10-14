@@ -7,26 +7,26 @@
 """Test fill-reducing ordering algorithms."""
 # =============================================================================
 
+import time
+import warnings
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-import time
-import warnings
-
-from pathlib import Path
-from scipy import sparse
 from scipy import linalg as la
+from scipy import sparse
 from scipy.sparse import linalg as spla
 
-from .helpers import (
-    BaseSuiteSparseTest,
-    BaseSuiteSparsePlot,
-    generate_suitesparse_matrices,
-    generate_random_matrices,
-    is_valid_permutation
-)
-
 import csparse
+
+from .helpers import (
+    BaseSuiteSparsePlot,
+    BaseSuiteSparseTest,
+    generate_random_matrices,
+    generate_suitesparse_matrices,
+    is_valid_permutation,
+)
 
 
 # -----------------------------------------------------------------------------

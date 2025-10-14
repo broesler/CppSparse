@@ -10,7 +10,6 @@
 import numpy as np
 import scipy.linalg as la
 
-
 # Create the matrices
 A = np.tile(np.c_[np.arange(1, 7)], 6)
 L = np.tril(A)

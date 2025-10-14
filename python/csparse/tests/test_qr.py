@@ -7,19 +7,18 @@
 """Unit tests for the csparse.qr() function."""
 # =============================================================================
 
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-
-from pathlib import Path
 from numpy.testing import assert_allclose
-from scipy import sparse
 from scipy import linalg as la
-
-from .helpers import generate_suitesparse_matrices, generate_random_matrices
+from scipy import sparse
 
 import csparse
 
+from .helpers import generate_random_matrices, generate_suitesparse_matrices
 
 ATOL = 1e-12  # random matrices need a bit larger tolerance than 1e-15
 

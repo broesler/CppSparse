@@ -49,7 +49,7 @@ extend-select = [
     'D',    # docstring errors
     'E',    # pycodestyle errors
     'F',    # pyflakes errors
-    # 'I',    # TODO isort errors (import sorting)
+    'I',    # isort errors (import sorting)
     'ISC',  # flake8-implicit-str-concat
     'NPY',  # numpy-specific checks
     'PD',   # pandas-vet
@@ -68,7 +68,6 @@ ignore = [
     'D105',     # Missing docstring in magic method
     'D205',     # 1 blank line required between summary line and description
     'E741',     # ambiguous variable name (l, O, I)
-    'PD901',    # Avoid using the generic variable name `df` for DataFrames
     'PIE790',   # Unnecessary `pass` statement
     'PLC2401',  # non-ASCII characters
     'PLR0912',  # too many branches (max-branches)

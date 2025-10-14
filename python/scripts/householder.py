@@ -42,11 +42,11 @@ result.
 """
 # =============================================================================
 
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.linalg as la
-
-from pathlib import Path
 
 SAVE_FIGS = False
 verbose = False

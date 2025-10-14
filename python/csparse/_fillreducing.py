@@ -10,11 +10,11 @@ Chapter 7.
 """
 # =============================================================================
 
-import numpy as np
 import warnings
 
-from scipy import sparse
+import numpy as np
 from scipy import linalg as la
+from scipy import sparse
 from scipy.sparse import linalg as spla
 
 from .csparse import amd, dmperm, lu_solve, qr_solve, scc

@@ -12,13 +12,13 @@ or A[M, :]?
 #
 # ==============================================================================
 
+import timeit
+from functools import partial
+
 import matplotlib.pyplot as plt
 import numpy as np
-import timeit
-
-from functools import partial
-from tqdm import tqdm
 from scipy import sparse
+from tqdm import tqdm
 
 SAVE_FIGS = False
 

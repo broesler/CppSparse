@@ -6,13 +6,13 @@
 """Analyze the QR decomposition of a matrix using Householder reflections."""
 # =============================================================================
 
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
-
-from scipy import linalg as la, sparse
+from scipy import linalg as la
+from scipy import sparse
 from scipy.sparse import linalg as spla
-
-from pathlib import Path
 
 import csparse
 

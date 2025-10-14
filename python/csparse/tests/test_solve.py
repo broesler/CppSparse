@@ -7,22 +7,22 @@
 """Unit tests for csparse solve functions."""
 # =============================================================================
 
-import pytest
-import numpy as np
-import scipy.linalg as la
 import warnings
 
+import numpy as np
+import pytest
+import scipy.linalg as la
 from numpy.testing import assert_allclose
 from scipy import sparse
 from scipy.sparse import linalg as spla
 
-from .helpers import (
-    generate_suitesparse_matrices,
-    generate_random_matrices,
-    BaseSuiteSparseTest
-)
-
 import csparse
+
+from .helpers import (
+    BaseSuiteSparseTest,
+    generate_random_matrices,
+    generate_suitesparse_matrices,
+)
 
 ATOL = 1e-14
 

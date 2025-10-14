@@ -11,16 +11,15 @@ Uses both C++Sparse function and Python functions and compares the results.
 """
 # =============================================================================
 
+import sys
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
-
-from pathlib import Path
 from scipy import sparse
 from scipy.sparse import linalg as spla
 
 import csparse
-
 
 # Read the name of the matrix from the command line
 if len(sys.argv) != 2:

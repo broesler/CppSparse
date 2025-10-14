@@ -7,17 +7,16 @@
 """Plot the triangular solve performance data."""
 # =============================================================================
 
-import matplotlib.pyplot as plt
-import numpy as np
 import timeit
-
 from collections import defaultdict
 from functools import partial
 from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
 from scipy import sparse
 
 import csparse
-
 
 SAVE_FIG = False
 

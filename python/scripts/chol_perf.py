@@ -7,19 +7,17 @@
 """Compare the performance of the Cholesky decomposition methods."""
 # =============================================================================
 
-import matplotlib.pyplot as plt
-import numpy as np
 import re
 import timeit
-
 from collections import defaultdict
 from functools import partial
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+import numpy as np
 from scipy.sparse.linalg import LaplacianNd
 
 import csparse
-
 
 LAPLACE = True
 SAVE_FIG = False

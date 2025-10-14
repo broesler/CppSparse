@@ -7,23 +7,21 @@
 """Test basic COOMatrix and CSCMatrix interface."""
 # =============================================================================
 
-import pytest
-
 import numpy as np
-
+import pytest
 from numpy.testing import assert_allclose
 from scipy import linalg as la
 from scipy import sparse
 from scipy.sparse import linalg as sla
 
-from .helpers import (
-    generate_suitesparse_matrices,
-    generate_random_matrices,
-    generate_random_compatible_matrices,
-    generate_pvec_params
-)
-
 import csparse
+
+from .helpers import (
+    generate_pvec_params,
+    generate_random_compatible_matrices,
+    generate_random_matrices,
+    generate_suitesparse_matrices,
+)
 
 
 # -----------------------------------------------------------------------------

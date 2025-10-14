@@ -11,7 +11,6 @@ presented in Davis, Chapter 4.
 # =============================================================================
 
 import numpy as np
-
 from scipy import linalg as la
 
 

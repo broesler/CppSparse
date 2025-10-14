@@ -11,8 +11,7 @@ Davis, Chapter 6.
 # =============================================================================
 
 import numpy as np
-
-from scipy.linalg import solve, norm
+from scipy.linalg import norm, solve
 from scipy.sparse import linalg as spla
 
 from csparse import inv_permute

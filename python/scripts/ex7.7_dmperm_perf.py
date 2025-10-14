@@ -19,16 +19,17 @@ example).
 """
 # =============================================================================
 
+import timeit
+from functools import partial
+
+# from scipy import sparse
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import suitesparseget as ssg
-import timeit
-
-from functools import partial
-# from scipy import sparse
-from pathlib import Path
 from tqdm import tqdm
 
 import csparse
@@ -137,19 +138,19 @@ fig, ax = plt.subplots(num=1, clear=True)
 
 # sns.histplot(
 #     tf,
-# 	x='time',
-# 	hue='seed',
-# 	bins=bins,
-# 	stat='probability',
-# 	multiple='stack',
+#   x='time',
+#   hue='seed',
+#   bins=bins,
+#   stat='probability',
+#   multiple='stack',
 #     ax=ax
 # )
 # ax.set(xscale='log')
 
 sns.kdeplot(
     tf,
-	x='time ratio',
-	hue='seed',
+    x='time ratio',
+    hue='seed',
     log_scale=True,
     common_grid=True,
     ax=ax

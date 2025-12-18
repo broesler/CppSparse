@@ -111,7 +111,7 @@ def cspy(A, cmap="viridis_r", colorbar=True, ticklabels=False, ax=None, **kwargs
         ax.set_xlabel(f"{A.shape}, nnz = 0, density = 0")
         return ax, None
 
-    ax.set_xlabel(f"{A.shape}, nnz = {A.nnz:,d}, density = {A.nnz / (M * N):.2%}")
+    ax.set_xlabel(f"{A.shape}, nnz = {A.nnz:,d},\ndensity = {A.nnz / (M * N):.2%}")
 
     # Use patches to create square markers
     patches = [Rectangle((c - 0.5, r - 0.5), 1, 1) for r, c in zip(A.row, A.col)]

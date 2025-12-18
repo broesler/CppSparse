@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import patches
 from matplotlib.ticker import MaxNLocator
-from scipy.sparse import issparse
+from scipy.sparse import coo_array, issparse
 
 from csparse._fillreducing import scc_perm
 from csparse.csparse import dmperm
@@ -73,30 +73,25 @@ def cspy(A, cmap='viridis_r', colorbar=True, ticklabels=False, ax=None, **kwargs
 
     fig = ax.figure
 
-    if issparse(A):
-        dense_matrix = A.toarray().astype(np.float64)
-    else:
+    if not issparse(A):
         try:
-            dense_matrix = np.array(A, dtype=np.float64)
+            A = np.asarray(A)
         except Exception as e:
-            raise TypeError(
-                "Input matrix must be a NumPy array, SciPy sparse matrix, "
-                f"or convertible to a 2D NumPy array. Error: {e}"
-            )
+            raise TypeError(f"Input must be convertible to a 2D array. Error: {e}")
 
-    if dense_matrix.ndim != 2:
+    # Convert to sparse COOrdinate format
+    A = coo_array(A)
+
+    if A.ndim != 2:
         raise ValueError("Input matrix must be 2-dimensional.")
 
-    M, N = dense_matrix.shape
-    nnz = np.count_nonzero(dense_matrix)
-
-    # Set zeros to NaN
-    dense_matrix[dense_matrix == 0] = np.nan
+    M, N = A.shape
 
     # Set plot limits and aspect ratio
     # Ensure limits are appropriate even for single row/column matrices
     ax.set_xlim(-0.75, N - 0.25 if N > 0 else 0.75)
     ax.set_ylim(M - 0.25 if M > 0 else 0.75, -0.75)  # inverted y-axis like spy
+    ax.set_aspect("equal")
 
     # ax.spines['bottom'].set_visible(False)
     ax.spines['right'].set_visible(True)
@@ -110,20 +105,46 @@ def cspy(A, cmap='viridis_r', colorbar=True, ticklabels=False, ax=None, **kwargs
     else:
         ax.set(xticks=[], yticks=[])
 
-    if nnz == 0:
+    if A.nnz == 0:
         ax.set_xlabel(f"{A.shape}, nnz = 0, density = 0")
         return ax, None
 
-    ax.set_xlabel(f"{A.shape}, nnz = {nnz:,d}, "
-                   f"density = {nnz / (M * N):.2%}")
+    ax.set_xlabel(f"{A.shape}, nnz = {A.nnz:,d}, "
+                   f"density = {A.nnz / (M * N):.2%}")
+
+    markersize = kwargs.pop("markersize", None)
+
+    if markersize is None:
+        # Heuristic for marker size based on matrix size
+        dpi = fig.get_dpi()
+        bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+        ax_w_in, ax_h_in = bbox.width, bbox.height
+
+        # Calculate markersize to fill in space
+        marker_w_pixels = (ax_w_in * dpi) / N if N > 0 else ax_w_in * dpi
+        marker_h_pixels = (ax_h_in * dpi) / M if M > 0 else ax_h_in * dpi
+
+        # Markersize is points^2, 1 point = 1/72 inch
+        markersize = (min(marker_w_pixels, marker_h_pixels) * (72 / dpi))**2
+
+        # Slightly increase size to avoid gaps
+        markersize *= 1.05
 
     # Convert to a dense matrix and use imshow
-    im = ax.imshow(dense_matrix, cmap=cmap, origin='upper', aspect='equal',
-                   **kwargs)
+    h = ax.scatter(
+        x=A.col,
+        y=A.row,
+        c=A.data,
+        cmap=cmap,
+        marker='s',
+        s=markersize,
+        edgecolors='none',
+        **kwargs,
+    )
 
     # Add a colorbar
     if colorbar:
-        cb = fig.colorbar(im, ax=ax, shrink=0.8)
+        cb = fig.colorbar(h, ax=ax, shrink=0.8)
     else:
         cb = None
 
@@ -373,7 +394,7 @@ if __name__ == '__main__':
 
     # 5. Larger random matrix (more sparse-like)
     rng = np.random.default_rng(seed=42)
-    large_random_matrix = rng.normal(25, 35)
+    large_random_matrix = rng.normal(size=(25, 35))
     large_random_matrix[np.abs(large_random_matrix) < 0.8] = 0
     fig6, ax6 = plt.subplots(figsize=(8, 6))
     cspy(large_random_matrix, cmap='magma', ax=ax6)

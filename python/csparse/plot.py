@@ -19,7 +19,7 @@ from csparse._fillreducing import scc_perm
 from csparse.csparse import dmperm
 
 
-def cspy(A, cmap='viridis_r', colorbar=True, ticklabels=False, ax=None, **kwargs):
+def cspy(A, cmap="viridis_r", colorbar=True, ticklabels=False, ax=None, **kwargs):
     """Visualize a sparse or dense matrix with colored markers.
 
     This function is similar to `matplotlib.pyplot.spy`, but it colors the
@@ -96,8 +96,8 @@ def cspy(A, cmap='viridis_r', colorbar=True, ticklabels=False, ax=None, **kwargs
     ax.set_aspect("equal")
 
     # ax.spines['bottom'].set_visible(False)
-    ax.spines['right'].set_visible(True)
-    ax.spines['top'].set_visible(True)
+    ax.spines["right"].set_visible(True)
+    ax.spines["top"].set_visible(True)
 
     if ticklabels:
         # Use MaxNLocator to ensure integer ticks on both axes
@@ -111,8 +111,7 @@ def cspy(A, cmap='viridis_r', colorbar=True, ticklabels=False, ax=None, **kwargs
         ax.set_xlabel(f"{A.shape}, nnz = 0, density = 0")
         return ax, None
 
-    ax.set_xlabel(f"{A.shape}, nnz = {A.nnz:,d}, "
-                   f"density = {A.nnz / (M * N):.2%}")
+    ax.set_xlabel(f"{A.shape}, nnz = {A.nnz:,d}, density = {A.nnz / (M * N):.2%}")
 
     # Use patches to create square markers
     patches = [Rectangle((c - 0.5, r - 0.5), 1, 1) for r, c in zip(A.row, A.col)]
@@ -120,7 +119,7 @@ def cspy(A, cmap='viridis_r', colorbar=True, ticklabels=False, ax=None, **kwargs
     p = PatchCollection(
         patches,
         cmap=cmap,
-        edgecolors='none',
+        edgecolors="none",
         **kwargs,
     )
 
@@ -185,10 +184,7 @@ def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
     m = np.nonzero(np.diff(rr))[0].size
     n = np.nonzero(np.diff(cc))[0].size
 
-    ax.set_title(
-        f"sprank: {sprank:d},\n"
-        f"fine blocks: {Nb}, coarse blocks: {m, n}"
-    )
+    ax.set_title(f"sprank: {sprank:d},\nfine blocks: {Nb}, coarse blocks: {m, n}")
 
     # Draw boxes around the blocks
     drawboxes(Nb, r, s, ax=ax)
@@ -198,11 +194,11 @@ def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
     # drawbox(0, M, 0, N, ec='C4', fc='none', lw=2, ax=ax)
 
     # Draw boxes around the singletons
-    drawbox(rr[0], rr[1], cc[0], cc[1], ec='C0', fc='none', lw=2, ax=ax)
-    drawbox(rr[0], rr[1], cc[1], cc[2], ec='C1', fc='none', lw=2, ax=ax)
-    drawbox(rr[1], rr[2], cc[2], cc[3],  ec='k', fc='none', lw=2, ax=ax)
-    drawbox(rr[2], rr[3], cc[3], cc[4], ec='C2', fc='none', lw=2, ax=ax)
-    drawbox(rr[3], rr[4], cc[3], cc[4], ec='C4', fc='none', lw=2, ax=ax)
+    drawbox(rr[0], rr[1], cc[0], cc[1], ec="C0", fc="none", lw=2, ax=ax)
+    drawbox(rr[0], rr[1], cc[1], cc[2], ec="C1", fc="none", lw=2, ax=ax)
+    drawbox(rr[1], rr[2], cc[2], cc[3], ec="k", fc="none", lw=2, ax=ax)
+    drawbox(rr[2], rr[3], cc[3], cc[4], ec="C2", fc="none", lw=2, ax=ax)
+    drawbox(rr[3], rr[4], cc[3], cc[4], ec="C4", fc="none", lw=2, ax=ax)
 
     return ax, cb
 
@@ -274,20 +270,20 @@ def drawboxes(Nb, r, s, ax=None, **kwargs):
         Matrix of M vectors in N dimensions
     """
     # Default styling
-    opts = {'ec': 'C3', 'fc': 'none', 'lw': 2}
+    opts = {"ec": "C3", "fc": "none", "lw": 2}
     opts.update(kwargs)
 
     if Nb > 1:
         r1 = r[:Nb]
-        r2 = r[1:Nb+1]
+        r2 = r[1 : Nb + 1]
         c1 = s[:Nb]
-        c2 = s[1:Nb+1]
+        c2 = s[1 : Nb + 1]
 
         kk = np.nonzero(
-            (np.diff(c1) > 0) |
-            (np.diff(c2) > 0) |
-            (np.diff(r1) > 0) |
-            (np.diff(r2) > 0)
+            (np.diff(c1) > 0)
+            | (np.diff(c2) > 0)
+            | (np.diff(r1) > 0)
+            | (np.diff(r2) > 0)
         )[0]
 
         for k in kk:
@@ -295,7 +291,7 @@ def drawboxes(Nb, r, s, ax=None, **kwargs):
                 (c1[k] - 0.5, r1[k] - 0.5),  # shift center to corner of pixel
                 width=c2[k] - c1[k],
                 height=r2[k] - r1[k],
-                **opts
+                **opts,
             )
             ax.add_patch(rect)
 
@@ -308,7 +304,7 @@ def drawbox(r1, r2, c1, c2, ax=None, **kwargs):
     if ax is None:
         ax = plt.gca()
 
-    opts = {'edgecolor': 'k', 'facecolor': 'none', 'lw': 2}
+    opts = {"edgecolor": "k", "facecolor": "none", "lw": 2}
     opts.update(kwargs)
 
     # Draw a rectangle
@@ -316,53 +312,48 @@ def drawbox(r1, r2, c1, c2, ax=None, **kwargs):
         (c1 - 0.5, r1 - 0.5),  # shift center to corner of pixel
         width=c2 - c1,
         height=r2 - r1,
-        **opts
+        **opts,
     )
     ax.add_patch(rect)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # --- Example Usage ---
-    plt.close('all')
+    plt.close("all")
 
     # # 1. Dense NumPy array
-    dense_matrix = np.array([
-        [1.5, 0, 0, 2.1],
-        [0, -3.3, 0, 0],
-        [0, 0, 0, 0],
-        [4.7, 0, 5.0, -0.5]
-    ])
+    dense_matrix = np.array(
+        [[1.5, 0, 0, 2.1], [0, -3.3, 0, 0], [0, 0, 0, 0], [4.7, 0, 5.0, -0.5]]
+    )
     fig1, ax1 = plt.subplots(figsize=(6, 5))
-    cspy(dense_matrix, cmap='coolwarm', ax=ax1)
+    cspy(dense_matrix, cmap="coolwarm", ax=ax1)
     ax1.set_title("Dense Matrix")
     plt.show()
 
     # 2. SciPy sparse matrix (if SciPy is installed)
     from scipy.sparse import csr_array
+
     sparse_matrix_data = np.array([10, 20, -30, 40, 50, 60, -70, 80, 5, -15])
     row_ind = np.array([0, 0, 1, 2, 3, 3, 4, 4, 0, 1])
     col_ind = np.array([0, 2, 1, 3, 0, 3, 1, 2, 3, 3])
     # Ensure shape is large enough for all indices
     shape = (max(row_ind) + 1, max(col_ind) + 1)
-    sparse_matrix = csr_array(
-        (sparse_matrix_data, (row_ind, col_ind)),
-        shape=shape
-    )
+    sparse_matrix = csr_array((sparse_matrix_data, (row_ind, col_ind)), shape=shape)
 
     fig2, ax2 = plt.subplots(figsize=(6, 5))
-    cspy(sparse_matrix, cmap='plasma',
-         vmin=-100, vmax=100, ax=ax2)
+    cspy(sparse_matrix, cmap="plasma", vmin=-100, vmax=100, ax=ax2)
     ax2.set_title("Sparse Matrix")
     plt.show()
 
     # Example with a different sparse format (COO)
     from scipy.sparse import coo_array
+
     row = np.array([0, 3, 1, 0, 5, 5, 2])
     col = np.array([0, 3, 1, 2, 0, 2, 2])
     data = np.array([1, 2.5, 3.1, 4.9, -1.2, -5.5, 0.5])
     coo_m = coo_array((data, (row, col)), shape=(6, 4))
     fig3, ax3 = plt.subplots(figsize=(6, 5))
-    cspy(coo_m, cmap='viridis', ax=ax3)
+    cspy(coo_m, cmap="viridis", ax=ax3)
     ax3.set_title("COO Sparse Matrix")
     plt.show()
 
@@ -385,7 +376,7 @@ if __name__ == '__main__':
     large_random_matrix = rng.normal(size=(25, 35))
     large_random_matrix[np.abs(large_random_matrix) < 0.8] = 0
     fig6, ax6 = plt.subplots(figsize=(8, 6))
-    cspy(large_random_matrix, cmap='magma', ax=ax6)
+    cspy(large_random_matrix, cmap="magma", ax=ax6)
     ax6.set_title("Larger Random Matrix")
     plt.show()
 
@@ -393,8 +384,7 @@ if __name__ == '__main__':
     positive_matrix = np.abs(dense_matrix) + 1  # ensure all positive
     fig7, ax7 = plt.subplots(figsize=(6, 5))
     # Example of using vmin/vmax for color normalization
-    cspy(positive_matrix, cmap='Reds',
-         vmin=0, vmax=np.max(positive_matrix)+2, ax=ax7)
+    cspy(positive_matrix, cmap="Reds", vmin=0, vmax=np.max(positive_matrix) + 2, ax=ax7)
     ax7.set_title("Positive Values Matrix with vmin/vmax")
     plt.show()
 
@@ -404,7 +394,7 @@ if __name__ == '__main__':
     ax_spy.spy(dense_matrix)
     ax_spy.set_title("pyplot.spy")
     # Our cspy plot on the second axes
-    cspy(dense_matrix, cmap='coolwarm', ax=ax_cspy)
+    cspy(dense_matrix, cmap="coolwarm", ax=ax_cspy)
     ax_cspy.set_title("cspy")
     plt.show()
 

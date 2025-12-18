@@ -19,7 +19,7 @@ from csparse._fillreducing import scc_perm
 from csparse.csparse import dmperm
 
 
-def cspy(A, cmap="viridis_r", colorbar=True, ticklabels=False, ax=None, **kwargs):
+def cspy(A, *, cmap="viridis_r", colorbar=True, ticklabels=False, ax=None, **kwargs):
     """Visualize a sparse or dense matrix with colored markers.
 
     This function is similar to `matplotlib.pyplot.spy`, but it colors the
@@ -40,9 +40,9 @@ def cspy(A, cmap="viridis_r", colorbar=True, ticklabels=False, ax=None, **kwargs
     ax : matplotlib.axes.Axes, optional
         An existing Axes object to plot on. If None (default), the current axes
         are used.
-    **kwargs?
+    **kwargs
         Additional keyword arguments passed directly to
-        `matplotlib.pyplot.imshow`.
+        `matplotlib.collections.Collection`.
 
     Returns
     -------
@@ -54,15 +54,13 @@ def cspy(A, cmap="viridis_r", colorbar=True, ticklabels=False, ax=None, **kwargs
     See Also
     --------
     matplotlib.pyplot.spy : Plot the sparsity pattern of a 2D array.
-    matplotlib.pyplot.imshow : Display data as an image, i.e., on a 2D regular
-        raster.
 
     Examples
     --------
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> data = np.array([[1, 0, 2], [0, -3, 0], [4, 0, 0]])
-    >>> ax, cb = cspy(data, markersize=50)
+    >>> ax, cb = cspy(data)
     >>> plt.show()
 
     >>> from scipy.sparse import csr_array
@@ -138,7 +136,7 @@ def cspy(A, cmap="viridis_r", colorbar=True, ticklabels=False, ax=None, **kwargs
     return ax, cb
 
 
-def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
+def dmspy(A, *, colored=True, seed=0, ax=None, **kwargs):
     """Plot the Dulmage-Mendelsohn (DM) ordering of a sparse matrix.
 
     Parameters
@@ -203,7 +201,7 @@ def dmspy(A, colored=True, seed=0, ax=None, **kwargs):
     return ax, cb
 
 
-def ccspy(A, colored=True, seed=0, ax=None, **kwargs):
+def ccspy(A, *, colored=True, seed=0, ax=None, **kwargs):
     """Plot the connected components of a sparse matrix.
 
     Parameters
@@ -331,6 +329,7 @@ if __name__ == "__main__":
     plt.show()
 
     # 2. SciPy sparse matrix (if SciPy is installed)
+    from matplotlib.colors import Normalize
     from scipy.sparse import csr_array
 
     sparse_matrix_data = np.array([10, 20, -30, 40, 50, 60, -70, 80, 5, -15])
@@ -341,7 +340,7 @@ if __name__ == "__main__":
     sparse_matrix = csr_array((sparse_matrix_data, (row_ind, col_ind)), shape=shape)
 
     fig2, ax2 = plt.subplots(figsize=(6, 5))
-    cspy(sparse_matrix, cmap="plasma", vmin=-100, vmax=100, ax=ax2)
+    cspy(sparse_matrix, cmap="plasma", norm=Normalize(vmin=-100, vmax=100), ax=ax2)
     ax2.set_title("Sparse Matrix")
     plt.show()
 
@@ -384,7 +383,12 @@ if __name__ == "__main__":
     positive_matrix = np.abs(dense_matrix) + 1  # ensure all positive
     fig7, ax7 = plt.subplots(figsize=(6, 5))
     # Example of using vmin/vmax for color normalization
-    cspy(positive_matrix, cmap="Reds", vmin=0, vmax=np.max(positive_matrix) + 2, ax=ax7)
+    cspy(
+        positive_matrix,
+        cmap="Reds",
+        norm=Normalize(vmin=0, vmax=np.max(positive_matrix) + 2),
+        ax=ax7,
+    )
     ax7.set_title("Positive Values Matrix with vmin/vmax")
     plt.show()
 

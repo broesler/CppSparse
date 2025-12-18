@@ -10,6 +10,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import patches
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Rectangle
 from matplotlib.ticker import MaxNLocator
 from scipy.sparse import coo_array, issparse
 
@@ -112,39 +114,25 @@ def cspy(A, cmap='viridis_r', colorbar=True, ticklabels=False, ax=None, **kwargs
     ax.set_xlabel(f"{A.shape}, nnz = {A.nnz:,d}, "
                    f"density = {A.nnz / (M * N):.2%}")
 
-    markersize = kwargs.pop("markersize", None)
+    # Use patches to create square markers
+    patches = [Rectangle((c - 0.5, r - 0.5), 1, 1) for r, c in zip(A.row, A.col)]
 
-    if markersize is None:
-        # Heuristic for marker size based on matrix size
-        dpi = fig.get_dpi()
-        bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-        ax_w_in, ax_h_in = bbox.width, bbox.height
-
-        # Calculate markersize to fill in space
-        marker_w_pixels = (ax_w_in * dpi) / N if N > 0 else ax_w_in * dpi
-        marker_h_pixels = (ax_h_in * dpi) / M if M > 0 else ax_h_in * dpi
-
-        # Markersize is points^2, 1 point = 1/72 inch
-        markersize = (min(marker_w_pixels, marker_h_pixels) * (72 / dpi))**2
-
-        # Slightly increase size to avoid gaps
-        markersize *= 1.05
-
-    # Convert to a dense matrix and use imshow
-    h = ax.scatter(
-        x=A.col,
-        y=A.row,
-        c=A.data,
+    p = PatchCollection(
+        patches,
         cmap=cmap,
-        marker='s',
-        s=markersize,
         edgecolors='none',
         **kwargs,
     )
 
+    # Set the colors based on the data values
+    p.set_array(A.data)
+
+    # Plot the collection
+    ax.add_collection(p)
+
     # Add a colorbar
     if colorbar:
-        cb = fig.colorbar(h, ax=ax, shrink=0.8)
+        cb = fig.colorbar(p, ax=ax, shrink=0.8)
     else:
         cb = None
 

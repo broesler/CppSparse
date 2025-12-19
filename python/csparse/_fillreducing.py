@@ -50,7 +50,7 @@ def profile(A):
     scipy.linalg.bandwidth : Compute the upper and lower bandwidths of a dense
         matrix.
     """
-    return _profile_bandwidth(A, which='profile')
+    return np.sum(diag_dist(A))
 
 
 def bandwidth(A):
@@ -83,11 +83,22 @@ def bandwidth(A):
     scipy.linalg.bandwidth : Compute the upper and lower bandwidths of a dense
         matrix.
     """
-    return _profile_bandwidth(A, which='bandwidth')
+    return np.max(diag_dist(A))
 
 
-def _profile_bandwidth(A, which='profile'):
-    """Check input and perform the computation."""
+def diag_dist(A):
+    """Compute the distance to the diagonal of the first non-zero in each column. 
+
+    Parameters
+    ----------
+    A : (N, N) sparse array
+        A square symmetric matrix.
+
+    Returns
+    -------
+    result : (N,) ndarray
+        The distance to the diagonal of the first non-zero in each column.
+    """
     if not sparse.issparse(A):
         raise ValueError("Matrix must be sparse.")
 
@@ -97,27 +108,23 @@ def _profile_bandwidth(A, which='profile'):
         raise ValueError("Matrix must be square.")
 
     if (A != A.T).nnz > 0:
-        # raise ValueError("Matrix must be symmetric.")
-        warnings.warn("Matrix is not symmetric; results may be incorrect.",
-                      UserWarning, stacklevel=2)
+        warnings.warn(
+            "Matrix is not symmetric; results may be incorrect.",
+            UserWarning,
+            stacklevel=2
+        )
 
     # Ensure the diagonal is non-zero so that every column has at least one
     # entry and A.indptr is well-defined
     A = sparse.csc_array(A)
     A.setdiag(1.0)
+    A.has_sorted_indices = False
     A.sort_indices()
 
     # Get the minimum row index for each column
     min_row = A.indices[A.indptr[:-1]]
 
-    diag_dist = np.arange(N) - min_row
-
-    if which == 'profile':
-        return np.sum(diag_dist)
-    elif which == 'bandwidth':
-        return np.max(diag_dist)
-    else:
-        raise ValueError("`which` must be 'profile' or 'bandwidth'.")
+    return np.arange(N) - min_row
 
 
 def fiedler(A):

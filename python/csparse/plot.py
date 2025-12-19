@@ -9,7 +9,6 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import patches
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import MaxNLocator
@@ -184,19 +183,19 @@ def dmspy(A, *, colored=True, seed=0, ax=None, **kwargs):
 
     ax.set_title(f"sprank: {sprank:d},\nfine blocks: {Nb}, coarse blocks: {m, n}")
 
-    # Draw boxes around the blocks
+    # Draw boxes around the fine decomposition blocks
     drawboxes(Nb, r, s, ax=ax)
 
     # Box around entire matrix
     # M, N = A.shape
     # drawbox(0, M, 0, N, ec='C4', fc='none', lw=2, ax=ax)
 
-    # Draw boxes around the singletons
-    drawbox(rr[0], rr[1], cc[0], cc[1], ec="C0", fc="none", lw=2, ax=ax)
-    drawbox(rr[0], rr[1], cc[1], cc[2], ec="C1", fc="none", lw=2, ax=ax)
-    drawbox(rr[1], rr[2], cc[2], cc[3], ec="k", fc="none", lw=2, ax=ax)
-    drawbox(rr[2], rr[3], cc[3], cc[4], ec="C2", fc="none", lw=2, ax=ax)
-    drawbox(rr[3], rr[4], cc[3], cc[4], ec="C4", fc="none", lw=2, ax=ax)
+    # Draw boxes around the coarse blocks
+    drawbox(rr[0], rr[1], cc[0], cc[1], ec="tab:cyan", fc="none", lw=2, ax=ax)
+    drawbox(rr[0], rr[1], cc[1], cc[2], ec="tab:blue", fc="none", lw=2, ax=ax)
+    drawbox(rr[1], rr[2], cc[2], cc[3], ec="tab:green", fc="none", lw=2, ax=ax)
+    drawbox(rr[2], rr[3], cc[3], cc[4], ec="tab:red", fc="none", lw=2, ax=ax)
+    drawbox(rr[3], rr[4], cc[3], cc[4], ec="tab:pink", fc="none", lw=2, ax=ax)
 
     return ax, cb
 
@@ -273,9 +272,9 @@ def drawboxes(Nb, r, s, ax=None, **kwargs):
 
     if Nb > 1:
         r1 = r[:Nb]
-        r2 = r[1 : Nb + 1]
+        r2 = r[1:Nb+1]
         c1 = s[:Nb]
-        c2 = s[1 : Nb + 1]
+        c2 = s[1:Nb+1]
 
         kk = np.nonzero(
             (np.diff(c1) > 0)
@@ -284,14 +283,17 @@ def drawboxes(Nb, r, s, ax=None, **kwargs):
             | (np.diff(r2) > 0)
         )[0]
 
-        for k in kk:
-            rect = patches.Rectangle(
+        patches = [
+            Rectangle(
                 (c1[k] - 0.5, r1[k] - 0.5),  # shift center to corner of pixel
                 width=c2[k] - c1[k],
                 height=r2[k] - r1[k],
-                **opts,
             )
-            ax.add_patch(rect)
+            for k in kk
+        ]
+
+        p = PatchCollection(patches, **opts)
+        ax.add_collection(p)
 
 
 def drawbox(r1, r2, c1, c2, ax=None, **kwargs):
@@ -306,7 +308,7 @@ def drawbox(r1, r2, c1, c2, ax=None, **kwargs):
     opts.update(kwargs)
 
     # Draw a rectangle
-    rect = patches.Rectangle(
+    rect = Rectangle(
         (c1 - 0.5, r1 - 0.5),  # shift center to corner of pixel
         width=c2 - c1,
         height=r2 - r1,
@@ -315,8 +317,10 @@ def drawbox(r1, r2, c1, c2, ax=None, **kwargs):
     ax.add_patch(rect)
 
 
+# -----------------------------------------------------------------------------
+#         Example Usage
+# -----------------------------------------------------------------------------
 if __name__ == "__main__":
-    # --- Example Usage ---
     plt.close("all")
 
     # # 1. Dense NumPy array

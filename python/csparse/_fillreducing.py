@@ -331,24 +331,47 @@ def dm_solve(A, b):
     p, q, _, _, cc, rr = dmperm(A)
 
     # Permute the matrix and the right-hand side
-    C = A[p][:, q]
+    C = A[p[:, np.newaxis], q]
     b = b[p]
     x = np.zeros(N)
 
-    # Solve the system
-    if rr[2] < M and rr[3] < N:
-        Cp = C[rr[2]:, cc[3]:]
-        x[cc[3]:] = qr_solve(Cp, b[rr[2]:], order='ATA')
-        b[:rr[2]] -= C[:rr[2], cc[3]:] @ x[cc[3]:]
+    # Backsolve the upper block triangular system
+    # [ C00 C01 C02 ] [ x0 ]   [ b0 ]
+    # [  0  C11 C12 ] [ x1 ] = [ b1 ]
+    # [  0   0  C22 ] [ x2 ]   [ b2 ]
+    #
+    # where
+    #   C00 = [A11, A12]
+    #   C22 = [A34; A44]
 
+    # Solve the overdetermined system [A34; A44]
+    if rr[2] < M and cc[3] < N:
+        C22 = C[rr[2]:, cc[3]:]
+        b2 = b[rr[2]:]
+        x2 = x[cc[3]:]
+        x2[:] = qr_solve(C22, b2, order='ATA')
+        # Update the right-hand side for the next system(s)
+        C02_12 = C[:rr[2], cc[3]:]
+        b0_1 = b[:rr[2]]
+        b0_1 -= C02_12 @ x2
+
+    # Solve the square system
     if rr[1] < rr[2] and cc[2] < cc[3]:
-        Cp = C[rr[1]:rr[2], cc[2]:cc[3]]
-        x[cc[2]:cc[3]] = lu_solve(Cp, b[rr[1]:rr[2]], order='ATANoDenseRows')
-        b[:rr[1]] -= C[:rr[1], cc[2]:cc[3]] @ x[cc[2]:cc[3]]
+        C11 = C[rr[1]:rr[2], cc[2]:cc[3]]
+        b1 = b[rr[1]:rr[2]]
+        x1 = x[cc[2]:cc[3]]
+        x1[:] = lu_solve(C11, b1, order='ATANoDenseRows')
+        # Update the right-hand side for the next system
+        C01 = C[:rr[1], cc[2]:cc[3]]
+        b0 = b[:rr[1]]
+        b0 -= C01 @ x1
 
+    # Solve the underdetermined system [A11 A12]
     if rr[1] > 0 and cc[2] > 0:
-        Cp = C[:rr[1], :cc[2]]
-        x[:cc[2]] = qr_solve(Cp, b[:rr[1]], order='ATA')
+        C00 = C[:rr[1], :cc[2]]
+        b0 = b[:rr[1]]
+        x0 = x[:cc[2]]
+        x0[:] = qr_solve(C00, b0, order='ATA')
 
     x[q] = x  # inverse permute the solution
 

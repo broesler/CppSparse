@@ -328,7 +328,7 @@ def dm_solve(A, b):
     """
     M, N = A.shape
 
-    p, q, _, _, cc, rr = dmperm(A)
+    p, q, r, s, cc, rr = dmperm(A)
 
     # Permute the matrix and the right-hand side
     C = A[p[:, np.newaxis], q]
@@ -357,10 +357,8 @@ def dm_solve(A, b):
 
     # Solve the square system
     if rr[1] < rr[2] and cc[2] < cc[3]:
-        C11 = C[rr[1]:rr[2], cc[2]:cc[3]]
-        b1 = b[rr[1]:rr[2]]
         x1 = x[cc[2]:cc[3]]
-        x1[:] = lu_solve(C11, b1, order='ATANoDenseRows')
+        x1[:] = _lu_solve_btf(C, b, r, s, cc, rr, order='ATANoDenseRows')
         # Update the right-hand side for the next system
         C01 = C[:rr[1], cc[2]:cc[3]]
         b0 = b[:rr[1]]
@@ -376,6 +374,74 @@ def dm_solve(A, b):
     x[q] = x  # inverse permute the solution
 
     return x
+
+
+# Exercise 7.4
+def _lu_solve_btf(C, b, r, s, cc, rr, **kwargs):  # noqa:PLR0913
+    """Solve `Cx = b` using LU factorization with BTF ordering.
+
+    Parameters
+    ----------
+    C : (N, N) csc_array
+        Square matrix in block triangular form.
+    b : (N,) array_like
+        Right-hand side vector.
+    r : (Nb,) ndarray of int
+        The row indices of the diagonal blocks.
+    s : (Nb,) ndarray of int
+        The column indices of the diagonal blocks.
+    cc : (5,) ndarray of int
+        The column indices of the Dulmage-Mendelsohn coarse decomposition.
+    rr : (5,) ndarray of int
+        The row indices of the Dulmage-Mendelsohn coarse decomposition.
+    **kwargs
+        Additional keyword arguments to pass to ``lu_solve``.
+
+    Returns
+    -------
+    x : (N,) ndarray
+        Solution vector. If ``A`` is overdetermined, ``x`` is the least-squares
+        solution.
+    """
+    M, N = C.shape
+
+    if M != N:
+        raise ValueError(f"Matrix C must be square, got {C.shape}.")
+
+    assert len(r) == len(s)
+
+    Nb = len(r) - 1
+    x = np.zeros(N)
+    b = b.copy()
+
+    # Solve all blocks by default
+    hi = Nb - 1
+    lo = -1
+
+    # If [A34; A44] block exists, skip it
+    if rr[2] < M and cc[3] < N:
+        hi = Nb - 2
+
+    # If [A11, A12] block exists, skip it
+    if rr[1] > 0 and cc[2] > 0:
+        lo = 0
+
+    # Backsolve the middle, square blocks using LU
+    for k in range(hi, lo, -1):
+        # Solve the kth diagonal block
+        rows = slice(r[k], r[k+1])
+        cols = slice(s[k], s[k+1])
+        Ckk = C[rows, cols]
+        bk = b[rows]
+        xk = x[cols]
+        xk[:] = lu_solve(Ckk, bk, **kwargs)
+
+        # Update the right-hand side for the next block
+        if k > 0:
+            Cik = C[:r[k], cols]
+            b[:r[k]] -= Cik @ xk
+
+    return x[s[lo+1]:s[hi+1]]
 
 
 def scc_perm(A):

@@ -17,7 +17,7 @@ from scipy import linalg as la
 from scipy import sparse
 from scipy.sparse import linalg as spla
 
-from .csparse import amd, dmperm, lu_solve, qr_solve, scc
+from .csparse import amd, dmperm, lu_solve, maxtrans, qr_solve, scc
 
 
 def profile(A):
@@ -87,7 +87,7 @@ def bandwidth(A):
 
 
 def diag_dist(A):
-    """Compute the distance to the diagonal of the first non-zero in each column. 
+    """Compute the distance to the diagonal of the first non-zero in each column.
 
     Parameters
     ----------
@@ -111,7 +111,7 @@ def diag_dist(A):
         warnings.warn(
             "Matrix is not symmetric; results may be incorrect.",
             UserWarning,
-            stacklevel=2
+            stacklevel=2,
         )
 
     # Ensure the diagonal is non-zero so that every column has at least one
@@ -173,7 +173,7 @@ def fiedler(A):
 
     # Get the eigenvalues and eigenvectors of the Laplacian matrix
     try:
-        λ, x = spla.eigsh(L, k=2, which='SA', tol=np.sqrt(np.finfo(float).eps))
+        λ, x = spla.eigsh(L, k=2, which="SA", tol=np.sqrt(np.finfo(float).eps))
     except TypeError:
         # k must be < N for sparse.linalg.eigsh
         λ, x = la.eigh(L.toarray())
@@ -298,7 +298,7 @@ def nested_dissection(A):
     if N == 1:
         return np.array([0])
     elif N < 500:
-        return amd(A, order='APlusAT')
+        return amd(A, order="APlusAT")
     else:
         # Compute the node separator
         s, a, b = node_separator(A)
@@ -356,7 +356,7 @@ def dm_solve(A, b):
         C22 = C[rr[2]:, cc[3]:]
         b2 = b[rr[2]:]
         x2 = x[cc[3]:]
-        x2[:] = qr_solve(C22, b2, order='ATA')
+        x2[:] = qr_solve(C22, b2, order="ATA")
         # Update the right-hand side for the next system(s)
         C02_12 = C[:rr[2], cc[3]:]
         b0_1 = b[:rr[2]]
@@ -365,7 +365,7 @@ def dm_solve(A, b):
     # Solve the square system
     if rr[1] < rr[2] and cc[2] < cc[3]:
         x1 = x[cc[2]:cc[3]]
-        x1[:] = _lu_solve_btf(C, b, r, s, cc, rr, order='ATANoDenseRows')
+        x1[:] = _lu_solve_btf(C, b, r, s, cc, rr, order="ATANoDenseRows")
         # Update the right-hand side for the next system
         C01 = C[:rr[1], cc[2]:cc[3]]
         b0 = b[:rr[1]]
@@ -537,6 +537,59 @@ def spaugment(A):
          [A.T, None]],
         format=A.format
     )
+
+
+# Exercise 7.6 -- python prototype
+def permute_large_diag(A, droptol=1e-6):
+    """Permute large entries onto the diagonal of a matrix.
+
+    See: Davis, Exercise 7.6.
+
+    Parameters
+    ----------
+    A : (M, N) sparse matrix
+        Matrix of M vectors in N dimensions.
+    droptol : float, optional
+        The tolerance below which to drop entries from the scaled matrix,
+        *i.e.* the minimum ratio of the smallest entry to the largest entry in
+        each column.
+
+    Returns
+    -------
+    C : (M, N) sparse matrix
+        The permuted matrix.
+
+    Notes
+    -----
+    The algorithm drops small entries from the matrix, permutes the columns
+    according to a maximum matching, and then orders the rows based on the AMD
+    of ``AQ + (AQ).T``.
+    """
+    S = A.copy()
+
+    # Scale the array so that the largest entry in each column is 1
+    col_max = S.max(axis=0).toarray()
+
+    # NOTE
+    # S / S.max(axis=0) fails!
+    # ValueError: inconsistent shapes (10, 10) and (10,)
+    # but S / S.max(axis=0).toarray() works?
+
+    S = (S / col_max).tocsc()
+
+    # Drop small entries
+    droptol = 0.2
+    S.data[np.abs(S.data) < droptol] = 0.0
+    S.eliminate_zeros()
+
+    # Compute the maximum matching
+    q = maxtrans(S).jmatch
+
+    # TODO check if too many entries were dropped?
+
+    # Use the matching as a column pre-ordering
+    return A[:, q]
+
 
 # =============================================================================
 # =============================================================================

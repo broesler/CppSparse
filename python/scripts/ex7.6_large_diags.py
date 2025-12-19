@@ -1,66 +1,108 @@
 #!/usr/bin/env python3
 # =============================================================================
 #     File: ex7.6_large_diags.py
-#  Created: 2025-07-17 16:23
+#  Created: 2025-12-19 10:34
 #   Author: Bernie Roesler
-#
+# =============================================================================
+
 """
 Solution to Davis, Exercise 7.6: Heuristics for placing large entries on the
 diagonal of a matrix.
 
-Try the following method:
-1. Scale a copy of *A* so that the largest entry in each column is 1.
-2. Remove small entries from the matrix.
-3. Use `cs_maxtrans` to find a zero-free diagonal.
-4. If too many entries were dropped, decrease the drop tolerance and repeat.
-5. Use the matching as a pre-ordering *Q*, and order :math:`AQ + (AQ)^T` with
-   minimum degree.
-6. Use a small pivot tolerance in `cs_lu` and determine how many off-diagonal
-   pivots are found.
+This script runs an experiment on random matrices to determine how many
+off-diagonal pivot elements are found after using a heuristic for pivoting
+large entries to the diagonal.
 """
-# =============================================================================
+
+from pathlib import Path
 
 import numpy as np
+import pandas as pd
+import seaborn as sns
 from scipy import sparse
+from tqdm import tqdm
 
 import csparse
 
-A = csparse.davis_example_amd()
+FORCE_UPDATE = True
+SAVE_FIGS = True
 
-# Create a random matrix with the same pattern as A
-rng = np.random.default_rng(565656)
-A.data = np.full(A.nnz, rng.uniform(size=A.nnz))
+DATA_PATH = Path(__file__).absolute().parent.parent.parent / "plots"
+DATA_PATH.mkdir(parents=True, exist_ok=True)
 
-# Scale the matrix so that the largest entry in each column is 1
-# NOTE sparse "A / max_elems" does not work ("dimension mismatch")
-max_elems = A.max(axis=0).toarray()
-A = sparse.csc_array(A.toarray() / max_elems)
+df_file = DATA_PATH / "ex7.6_pivoting.pkl"
 
-# Remove small entries from the matrix
-drop_tol = 0.5
-A = A * (A > drop_tol)
+# -----------------------------------------------------------------------------
+#         Run Tests
+# -----------------------------------------------------------------------------
+if not FORCE_UPDATE and df_file.exists():
+    print("Loading existing results...")
+    df = pd.read_pickle(df_file)
+else:
+    print(f"Running tests for {df_file}...")
 
-if A.nnz < A.shape[0]:
-    raise ValueError(f"Too many entries dropped with {drop_tol=:.2e}. "
-                     "Try decreasing the drop tolerance.")
-    # TODO retry in a loop with decreasing drop tolerance
-    # print("Too many entries dropped, decreasing drop tolerance and retrying...")
-    # drop_tol *= 0.5
-    # A = A * (A > drop_tol)
+    # Compare the number of non-zeros in the factorization
+    results = []
 
-# Find a zero-free diagonal using cs_maxtrans
-jmatch, imatch = csparse.maxtrans(A, seed=0)
+    N_trials = 100  # arbitrary number of matrices to test
+    N = 100  # arbitrary matrix size (TODO test over multiple?)
+    density = 0.1  # arbitrary density
 
-# Use the matching as a pre-ordering Q
-AQ = A[:, jmatch]
+    for i in tqdm(range(N_trials)):
+        A = sparse.random_array((N, N), density=density, format="csc")
+        C = csparse.permute_large_diag(A)
 
-# Compute the LU factorization with minimum degree ordering of AQ + (AQ)^T
-L, U, p, q = csparse.lu(AQ, order='APlusAT', tol=1e-3)
+        for name, M in [("A", A), ("C", C)]:
+            for order in ["Natural", "APlusAT"]:
+                for tol in [1.0, 1e-3]:
+                    lu = csparse.lu(M, order=order, tol=tol)
+                    pivots = np.count_nonzero(lu.p != lu.q)
+                    results.append(
+                        {
+                            "trial": i,
+                            "matrix": name,
+                            "order": order,
+                            "tol": tol,
+                            "pivots": pivots,
+                        }
+                    )
 
-np.testing.assert_allclose((L @ U).toarray(), AQ[p][:, q].toarray(), atol=1e-15)
+    df = (
+        pd.DataFrame(results)
+        .assign(
+            tol=lambda x: x["tol"].astype("category"),
+            pivot_ratio=lambda x: x["pivots"] / N,
+        )
+        .set_index(["trial", "matrix", "order", "tol"])
+        .sort_index()
+    )
+    df.to_pickle(df_file)
 
-# Determine how many off-diagonal pivots are found
-off_diag_pivots = np.sum(np.abs(U.diagonal()) < 1.0)
+
+# -----------------------------------------------------------------------------
+#         Make Plot
+# -----------------------------------------------------------------------------
+g = sns.catplot(
+    data=df,
+    x="matrix",
+    y="pivot_ratio",
+    hue="tol",
+    col="order",
+    palette="deep",
+    kind="strip",
+    alpha=0.5,
+    aspect=0.5,
+)
+
+g.axes[0, 0].set_ylabel("pivots / N")
+g.figure.suptitle("Compare C = AQ (Large Entries on Diagonal)")
+g.figure.tight_layout()
+
+if SAVE_FIGS:
+    fig_file = DATA_PATH / "ex7.6_pivoting.pdf"
+    g.figure.savefig(fig_file)
+    print(f"Saved figure to {fig_file}")
+
 
 # =============================================================================
 # =============================================================================

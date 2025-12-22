@@ -202,31 +202,33 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
 TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
 {
     // >>> L.toarray()
-    // === array([[1, 0, 0, 0, 0, 0],
-    //            [2, 2, 0, 0, 0, 0],
-    //            [3, 3, 3, 0, 0, 0],
-    //            [4, 4, 4, 4, 0, 0],
-    //            [5, 5, 5, 5, 5, 0],
-    //            [6, 6, 6, 6, 6, 6]])
+    // === array([[11,  0,  0,  0,  0,  0],
+    //            [21, 22,  0,  0,  0,  0],
+    //            [31, 32, 33,  0,  0,  0],
+    //            [41, 42, 43, 44,  0,  0],
+    //            [51, 52, 53, 54, 55,  0],
+    //            [61, 62, 63, 64, 65, 66]])
     // >>> (P @ L).toarray().astype(int)
-    // === array([[ 6,  6,  6,  6,  6, *6],
-    //            [ 4,  4,  4, *4,  0,  0],
-    //            [*1,  0,  0,  0,  0,  0],
-    //            [ 2, *2,  0,  0,  0,  0],
-    //            [ 5,  5,  5,  5, *5,  0],
-    //            [ 3,  3, *3,  0,  0,  0]])
+    // === array([[61, 62, 63, 64, 65, 66],
+    //            [41, 42, 43, 44,  0,  0],
+    //            [11,  0,  0,  0,  0,  0],
+    //            [21, 22,  0,  0,  0,  0],
+    //            [51, 52, 53, 54, 55,  0],
+    //            [31, 32, 33,  0,  0,  0]])
     //
     // Starred elements are the diagonals of the un-permuted matrix
 
     // Create full matrix with row numbers as values
-    const std::vector<double> row_vals = {1, 2, 3, 4, 5, 6};
-    const csint N = row_vals.size();
+    const csint N = 6;
 
     std::vector<double> A_vals;
     A_vals.reserve(N * N);
 
     for (csint i = 0; i < N; i++) {
-        A_vals.insert(A_vals.end(), row_vals.begin(), row_vals.end());
+        for (csint j = 0; j < N; j++) {
+            // column-major order, values are "indices" 11, 12, ..., 66
+            A_vals[N*j + i] = static_cast<double>(10 * (i + 1) + j + 1);
+        }
     }
 
     const CSCMatrix A = CSCMatrix(A_vals, {N, N});

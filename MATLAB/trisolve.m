@@ -24,16 +24,11 @@ PUQ = P * U * Q
 x = [1:6]';
 
 % Create the RHS
-bL = L * x
-bU = U * x
-
-PbU = PUQ * x
-PbL = PLQ * x
+bU = PUQ * x
+bL = PLQ * x
 
 assert (L \ bL == x)
 assert (U \ bU == x)
-assert (PLQ \ PbL == x)
-assert (PUQ \ PbU == x)
 
 % =============================================================================
 % =============================================================================

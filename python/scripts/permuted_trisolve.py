@@ -11,7 +11,8 @@ import numpy as np
 import scipy.linalg as la
 
 # Create the matrices
-A = np.tile(np.c_[np.arange(1, 7)], 6)
+# A = np.tile(np.c_[np.arange(1, 7)], 6)
+A = np.c_[np.arange(10, 70, 10)] + np.arange(1, 7)
 L = np.tril(A)
 U = np.triu(A)
 
@@ -28,14 +29,11 @@ PUQ = P @ U @ Q
 x = np.arange(1, 7)
 
 # Create the RHS
-bL = L @ x
-bU = U @ x
+bL = PLQ @ x
+bU = PUQ @ x
 
-PbU = PUQ @ x
-PbL = PLQ @ x
-
-assert np.allclose(la.solve(PLQ, PbL), x)
-assert np.allclose(la.solve(PUQ, PbU), x)
+assert np.allclose(la.solve(PLQ, bL), x)
+assert np.allclose(la.solve(PUQ, bU), x)
 
 print("L = ")
 print(L)
@@ -46,16 +44,6 @@ print("bL = ")
 print(bL)
 print("bU = ")
 print(bU)
-
-print("PLQ = ")
-print(PLQ)
-print("PUQ = ")
-print(PUQ)
-
-print("PbL = ")
-print(PbL)
-print("PbU = ")
-print(PbU)
 
 # =============================================================================
 # =============================================================================

@@ -375,8 +375,8 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
     SECTION("Permuted P L Q x = b, with unknown P and Q") {
         // Create RHS for Lx = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> b = { 1,  6, 18, 40, 75, 126};
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
+        const std::vector<double> b = PLQ * expect;
 
         // Solve P L Q x = b
         const std::vector<double> xt = tri_solve_perm(PLQ, b);
@@ -386,11 +386,11 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
     SECTION("Permuted P U Q x = b, with unknown P and Q") {
         // Create RHS for Ux = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> b = {21, 40, 54, 60, 55, 36};
         const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
+        const std::vector<double> b = PUQ * expect;
 
         // Solve P U Q x = b
-        std::vector<double> xp = tri_solve_perm(PUQ, b, true);
+        std::vector<double> xp = tri_solve_perm(PUQ, b);
         check_vectors_allclose(xp, expect, tol);
     }
 }

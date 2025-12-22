@@ -199,14 +199,12 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U);
  *
  * @param A  a permuted triangular matrix
  * @param b  a dense RHS vector, *not* permuted.
- * @param is_upper  true if the matrix is upper triangular, false otherwise.
  *
  * @return x  the dense solution vector, also *not* permuted.
  */
 std::vector<double> tri_solve_perm(
     const CSCMatrix& A,
-    const std::vector<double>& b,
-    bool is_upper=false
+    const std::vector<double>& b
 );
 
 

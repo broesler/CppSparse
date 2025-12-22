@@ -436,44 +436,36 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
 // Exercise 3.7
 std::vector<double> tri_solve_perm(
     const CSCMatrix& A, 
-    const std::vector<double>& b,
-    bool is_upper
+    const std::vector<double>& b
 )
 {
     assert(A.M_ == A.N_);
     assert(A.M_ == static_cast<csint>(b.size()));
 
     // Get the permutation vectors
-    // NOTE If upper triangular, the permutation vectors are reversed
     auto [p_inv, q_inv, p_diags] = find_tri_permutation(A);
 
-    // Get the non-inverse row-permutation vector O(N)
-    std::vector<csint> p = inv_permute(p_inv);
+    std::vector<double> x(A.N_);     // solution vector
+    std::vector<double> b_work = b;  // copy the RHS vector
 
-    // Copy the RHS vector
-    std::vector<double> x =
-        (is_upper) ? std::vector<double>(b.rbegin(), b.rend()) : b;
-
-    // Solve the system
+    // Solve the system (PUQ) x = b => U (Q x) = (P^T b)
     for (csint k = 0; k < A.N_; k++) {
+        csint i = p_inv[k];    // permuted row
         csint j = q_inv[k];    // permuted column
         csint d = p_diags[k];  // pointer to the diagonal entry
 
-        // Update the solution
-        double& x_val = x[k];  // diagonal of un-permuted row of x
+        // Solve for x[j]
+        double x_val = b_work[i];
         if (x_val != 0) {
             x_val /= A.v_[d];  // diagonal entry
-            for (csint t = A.p_[j]; t < A.p_[j+1]; t++) {
-                // off-diagonals from un-permuted row
-                if (t != d) {
-                    x[p[A.i_[t]]] -= A.v_[t] * x_val;
+            x[j] = x_val;
+            // Update off-diagonals
+            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+                if (p != d) {
+                    b_work[A.i_[p]] -= A.v_[p] * x_val;
                 }
             }
         }
-    }
-
-    if (is_upper) {
-        std::reverse(x.begin(), x.end());
     }
 
     return x;

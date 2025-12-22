@@ -917,8 +917,7 @@ public:
 
     friend std::vector<double> tri_solve_perm(
         const CSCMatrix& A,
-        const std::vector<double>& b,
-        bool is_upper
+        const std::vector<double>& b
     );
 
     friend TriPerm find_tri_permutation(const CSCMatrix& A);

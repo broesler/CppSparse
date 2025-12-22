@@ -255,6 +255,8 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
     const CSCMatrix PLQ = L.permute(inv_permute(p), q).to_canonical();
     const CSCMatrix PUQ = U.permute(inv_permute(p), q).to_canonical();
 
+    const std::vector<double> expect_x = {1, 2, 3, 4, 5, 6};
+
     SECTION("Find diagonals of permuted L") {
         std::vector<csint> expect = {2, 8, 14, 16, 19, 20};
         std::vector<csint> p_diags = find_lower_diagonals(PL);
@@ -320,78 +322,61 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
     SECTION("Permuted P L x = b, with unknown P") {
         // Create RHS for Lx = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> b = { 1,  6, 18, 40, 75, 126};
-        const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
-
-        // Solve Lx = b
-        const std::vector<double> x = lsolve(L, b);
-        check_vectors_allclose(x, expect, tol);
+        const std::vector<double> b = PL * expect_x;
 
         // Solve PLx = b
-        const std::vector<double> xp = lsolve_rows(PL, b);
-
-        check_vectors_allclose(xp, expect, tol);
+        const std::vector<double> x = lsolve_rows(PL, b);
+        check_vectors_allclose(x, expect_x, tol);
     }
 
     SECTION("Permuted L Q x = b, with unknown Q") {
         // Create RHS for Lx = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> b = { 1,  6, 18, 40, 75, 126};
-        const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
+        const std::vector<double> b = LQ * expect_x;
 
         // Solve L Q.T x = b
-        const std::vector<double> xp = lsolve_cols(LQ, b);
-
-        check_vectors_allclose(xp, expect, tol);
+        const std::vector<double> x = lsolve_cols(LQ, b);
+        check_vectors_allclose(x, expect_x, tol);
     }
 
     SECTION("Permuted P U x = b, with unknown P") {
         // Create RHS for Ux = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> b = {21, 40, 54, 60, 55, 36};
-        const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
-
-        // Solve Ux = b (un-permuted)
-        const std::vector<double> x = usolve(U, b);
-        check_vectors_allclose(x, expect, tol);
+        const std::vector<double> b = PU * expect_x;
 
         // Solve PUx = b
-        const std::vector<double> xp = usolve_rows(PU, b);
-        check_vectors_allclose(xp, expect, tol);
+        const std::vector<double> x = usolve_rows(PU, b);
+        check_vectors_allclose(x, expect_x, tol);
     }
 
     SECTION("Permuted U Q x = b, with unknown Q") {
         // Create RHS for Ux = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> b = {21, 40, 54, 60, 55, 36};
-        const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
+        const std::vector<double> b = UQ * expect_x;
 
         // Solve U Q.T x = b
-        const std::vector<double> xp = usolve_cols(UQ, b);
-
-        check_vectors_allclose(xp, expect, tol);
+        const std::vector<double> x = usolve_cols(UQ, b);
+        check_vectors_allclose(x, expect_x, tol);
     }
 
     SECTION("Permuted P L Q x = b, with unknown P and Q") {
         // Create RHS for Lx = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
-        const std::vector<double> b = PLQ * expect;
+        const std::vector<double> b = PLQ * expect_x;
 
         // Solve P L Q x = b
-        const std::vector<double> xt = tri_solve_perm(PLQ, b);
-        check_vectors_allclose(xt, expect, tol);
+        const std::vector<double> x = tri_solve_perm(PLQ, b);
+        check_vectors_allclose(x, expect_x, tol);
     }
 
     SECTION("Permuted P U Q x = b, with unknown P and Q") {
         // Create RHS for Ux = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> expect = {1, 2, 3, 4, 5, 6};
-        const std::vector<double> b = PUQ * expect;
+        const std::vector<double> b = PUQ * expect_x;
 
         // Solve P U Q x = b
-        std::vector<double> xp = tri_solve_perm(PUQ, b);
-        check_vectors_allclose(xp, expect, tol);
+        std::vector<double> x = tri_solve_perm(PUQ, b);
+        check_vectors_allclose(x, expect_x, tol);
     }
 }
 

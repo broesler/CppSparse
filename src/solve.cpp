@@ -1001,6 +1001,68 @@ double cond1est(const CSCMatrix& A)
 }
 
 
+// Exercise 8.1
+std::vector<double> spsolve(const CSCMatrix& A, const std::vector<double>& b)
+{
+    auto [M, N] = A.shape();
+    
+    if (M != static_cast<csint>(b.size())) {
+        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
+    }
+
+    if (M != N) {
+        // Use QR factorization for rectangular matrices
+        return qr_solve(A, b, AMDOrder::ATA);
+    }
+
+    // For square matrices, go through the decision tree
+    csint is_tri = A.is_triangular();
+
+    // Check if diagonal is structurally non-zero
+    bool diag_nz = true;
+    bool diag_pos = true;
+
+    for (auto v : A.diagonal()) {
+        if (v == 0) {
+            diag_nz = false;
+        }
+        if (v < 0) {
+            diag_pos = false;
+        }
+    }
+
+    // If triangular with non-zero diagonal, use triangular solve
+    if (diag_nz) {
+        if (is_tri == -1) {
+            return lsolve_opt(A, b);  // lower triangular
+        } else if (is_tri == 1) {
+            return usolve_opt(A, b);  // upper triangular
+        }
+    }
+
+    // Matrix may be permuted triangular
+    try {
+        return tri_solve_perm(A, b);
+    } catch (const PermutedTriangularMatrixError&) {
+        // do nothing
+    }
+
+    // Cholesky factorization if symmetric positive definite
+    // TODO if diag(A) is negative, solve -A x = -b
+    if (A.is_symmetric() and diag_pos) {
+        try {
+            return chol_solve(A, b, AMDOrder::APlusAT);
+        } catch (const CholeskyNotPositiveDefiniteError& e) {
+            // do nothing
+        }
+    }
+
+    // General LU Solver
+    // TODO implement "symmetric" vs "non-symmetric" strategies (see UMFPACK)
+    return lu_solve(A, b, AMDOrder::ATANoDenseRows);
+}
+
+
 }  // namespace cs
 
 /*==============================================================================

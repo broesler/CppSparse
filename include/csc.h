@@ -1138,6 +1138,10 @@ public:
         csint mark
     );
 
+    /*--------------------------------------------------------------------------
+     *          Linear System Solutions
+     *------------------------------------------------------------------------*/
+    friend std::vector<double> spsolve(const CSCMatrix& A, const std::vector<double>& b);
 
 protected:
     /** Return the format description of the matrix. */

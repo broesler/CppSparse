@@ -1021,6 +1021,7 @@ std::vector<double> spsolve(const CSCMatrix& A, const std::vector<double>& b)
     // Check if diagonal is structurally non-zero
     bool diag_nz = true;
     bool diag_pos = true;
+    csint nnz_diag = 0;
 
     for (auto v : A.diagonal()) {
         if (v == 0) {
@@ -1028,6 +1029,9 @@ std::vector<double> spsolve(const CSCMatrix& A, const std::vector<double>& b)
         }
         if (v < 0) {
             diag_pos = false;
+        }
+        if (v != 0) {
+            nnz_diag++;
         }
     }
 
@@ -1058,8 +1062,63 @@ std::vector<double> spsolve(const CSCMatrix& A, const std::vector<double>& b)
     }
 
     // General LU Solver
-    // TODO implement "symmetric" vs "non-symmetric" strategies (see UMFPACK)
-    return lu_solve(A, b, AMDOrder::ATANoDenseRows);
+    double sym = A.structural_symmetry();
+    double diag_dens = static_cast<double>(nnz_diag) / N;
+
+    // These thresholds are set in SuiteSparse/UMFPACK/Include/umfpack.h:311:
+    //     // added for v6.0.0.  Default changed fro 0.5 to 0.3
+    //     #define UMFPACK_DEFAULT_STRATEGY_THRESH_SYM 0.3         /* was 0.5 */
+    //     #define UMFPACK_DEFAULT_STRATEGY_THRESH_NNZDIAG 0.9
+    //
+    double tsym = 0.3;
+    double tnzd = 0.9;
+
+    // These notes are from umfpack.h:602:
+    //
+    // UMFPACK_STRATEGY_UNSYMMETRIC:  Use the unsymmetric strategy.  COLAMD
+    //     is used to order the columns of A, followed by a postorder of
+    //     the column elimination tree.  No attempt is made to perform
+    //     diagonal pivoting.  The column ordering is refined during
+    //     factorization.
+    //
+    //     In the numerical factorization, the
+    //     Control [UMFPACK_SYM_PIVOT_TOLERANCE] parameter is ignored.  A
+    //     pivot is selected if its magnitude is >=
+    //     Control [UMFPACK_PIVOT_TOLERANCE] (default 0.1) times the
+    //     largest entry in its column.
+    //
+    // UMFPACK_STRATEGY_SYMMETRIC:  Use the symmetric strategy
+    //     In this method, the approximate minimum degree
+    //     ordering (AMD) is applied to A+A', followed by a postorder of
+    //     the elimination tree of A+A'.  UMFPACK attempts to perform
+    //     diagonal pivoting during numerical factorization.  No refinement
+    //     of the column pre-ordering is performed during factorization.
+    //
+    //     In the numerical factorization, a nonzero entry on the diagonal
+    //     is selected as the pivot if its magnitude is >= Control
+    //     [UMFPACK_SYM_PIVOT_TOLERANCE] (default 0.001) times the largest
+    //     entry in its column.  If this is not acceptable, then an
+    //     off-diagonal pivot is selected with magnitude >= Control
+    //     [UMFPACK_PIVOT_TOLERANCE] (default 0.1) times the largest entry
+    //     in its column.
+    //
+    //  C++Sparse only allows a single pivot tolerance, so our symmetric
+    //  strategy does not perform the secondary check on off-diagonal pivots.
+
+    AMDOrder order;
+    double tol;
+
+    if ((sym >= tsym) && (diag_dens >= tnzd)) {
+        // symmetric strategy
+        order = AMDOrder::APlusAT;
+        tol = 0.001;
+    } else {
+        // non-symmetric strategy
+        order = AMDOrder::ATANoDenseRows;
+        tol = 0.1;
+    }
+
+    return lu_solve(A, b, order, tol);
 }
 
 

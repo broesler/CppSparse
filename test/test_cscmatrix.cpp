@@ -737,6 +737,7 @@ TEST_CASE("Exercise 2.15: Band function", "[ex2.15][band]")
 }
 
 
+
 TEST_CASE("Exercise 2.16: CSC to/from dense", "[ex2.16][fromdense][todense]")
 {
     COOMatrix A = davis_example_small();
@@ -776,6 +777,34 @@ TEST_CASE("Exercise 2.16: CSC to/from dense", "[ex2.16][fromdense][todense]")
         REQUIRE(C.to_dense_vector('C') == dense_row_major);          // non-canonical form
     }
 }
+
+
+TEST_CASE("Extract a diagonal", "[diagonal]")
+{
+    CSCMatrix A = davis_example_small().tocsc();
+
+    SECTION("Main diagonal") {
+        std::vector<double> expect = {4.5, 2.9, 3.0, 1.0};
+        REQUIRE(A.diagonal() == expect);
+    }
+
+    SECTION("Super-diagonal") {
+        std::vector<double> expect = {3.2, 0.9};
+        REQUIRE(A.diagonal(2) == expect);
+    }
+
+    SECTION("Sub-diagonal") {
+        std::vector<double> expect = {3.1, 1.7, 0.0};
+        REQUIRE(A.diagonal(-1) == expect);
+    }
+
+    SECTION("Out-of-bounds diagonal") {
+        std::vector<double> expect = {};
+        REQUIRE(A.diagonal(5) == expect);
+        REQUIRE(A.diagonal(-9) == expect);
+    }
+}
+
 
 // Create a dummy class that builds an invalid matrix
 class TestCSCMatrix {

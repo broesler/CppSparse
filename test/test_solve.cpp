@@ -145,6 +145,136 @@ TEST_CASE("LU Solution", "[lusol]") {
 }
 
 
+/*------------------------------------------------------------------------------
+ *         Exercise 8.1: General Sparse Solver
+ *----------------------------------------------------------------------------*/
+TEST_CASE("Dense RHS Backslash: Triangular", "[spsol-dense-tri]") {
+    CSCMatrix A = davis_example_small().tocsc();
+    auto [M, N] = A.shape();
+
+    // Create RHS for Lx = b
+    std::vector<double> expect_x(N);
+    std::iota(expect_x.begin(), expect_x.end(), 1);
+
+    const std::vector<csint> p = {3, 0, 1, 2};
+    const std::vector<csint> q = {1, 2, 0, 3};
+
+    std::vector<double> b, x;
+
+    // Triangular with non-zero diagonal
+    SECTION("Lx = b") {
+        CSCMatrix L = A.band(-N, 0);
+        b = L * expect_x;
+        x = spsolve(L, b);
+        check_vectors_allclose(x, expect_x, tol);
+    }
+
+    SECTION("Ux = b") {
+        CSCMatrix U = A.band(0, N);
+        b = U * expect_x;
+        x = spsolve(U, b);
+        check_vectors_allclose(x, expect_x, tol);
+    }
+
+    SECTION("Permuted lower triangular") {
+        CSCMatrix L = A.band(-N, 0);
+        CSCMatrix PLQ = L.permute(inv_permute(p), q).to_canonical();
+        b = PLQ * expect_x;
+        x = spsolve(PLQ, b);
+        check_vectors_allclose(x, expect_x, tol);
+    }
+
+    SECTION("Permuted upper triangular") {
+        CSCMatrix U = A.band(0, N);
+        CSCMatrix PUQ = U.permute(inv_permute(p), q).to_canonical();
+        b = PUQ * expect_x;
+        x = spsolve(PUQ, b);
+        check_vectors_allclose(x, expect_x, tol);
+    }
+}
+
+
+TEST_CASE("Dense RHS Backslash: Cholesky", "[spsol-dense-chol]") {
+    CSCMatrix A = davis_example_chol();
+    auto [M, N] = A.shape();
+
+    // Create RHS for Ax = b
+    std::vector<double> expect_x(N);
+    std::iota(expect_x.begin(), expect_x.end(), 1);
+
+    const std::vector<double> b = A * expect_x;
+    std::vector<double> x = spsolve(A, b);
+    check_vectors_allclose(x, expect_x, tol);
+}
+
+
+TEST_CASE("Dense RHS Backslash: LU", "[spsol-dense-lu]") {
+    CSCMatrix A = davis_example_qr();
+    auto [M, N] = A.shape();
+
+    // Create RHS for Ax = b
+    std::vector<double> expect_x(N);
+    std::iota(expect_x.begin(), expect_x.end(), 1);
+
+    const std::vector<double> b = A * expect_x;
+    std::vector<double> x = spsolve(A, b);
+    check_vectors_allclose(x, expect_x, tol);
+}
+
+
+TEST_CASE("Dense RHS Backslash: QR", "[spsol-dense-qr]") {
+    CSCMatrix A = davis_example_qr();
+    auto [M, N] = A.shape();
+
+    // Create RHS for Ax = b
+    std::vector<double> expect_x(N);
+    std::iota(expect_x.begin(), expect_x.end(), 1);
+
+    std::vector<double> b, x;
+
+    SECTION("Square") {
+        b = A * expect_x;
+        x = spsolve(A, b);
+        check_vectors_allclose(x, expect_x, 1e-13);
+    }
+
+    SECTION("Over-determined") {
+        // Create a new matrix with more rows than columns
+        csint k = 3;
+        A = A.slice(0, M, 0, N - k);
+
+        // Take only the first N - k elements of expect_x
+        expect_x = std::vector<double>(expect_x.begin(), expect_x.end() - k);
+
+        b = A * expect_x;
+        x = spsolve(A, b);
+        check_vectors_allclose(x, expect_x, 1e-13);
+    }
+
+    SECTION("Under-determined") {
+        // Create a new matrix with more rows than columns
+        csint k = 3;
+        A = A.slice(0, M - k, 0, N);
+
+        b = A * expect_x;
+        x = spsolve(A, b);  // (M - k, N)
+
+        // Actual expect_x (python and MATLAB)
+        const std::vector<double> min_norm_x = {
+            3.2222222222222143,
+            3.1111111111111125,
+            3.                ,
+            4.000000000000004 ,
+            5.961538461538462 ,
+            1.192307692307692 ,
+            4.7777777777777715,
+            0.                
+        };
+
+        check_vectors_allclose(x, min_norm_x, tol);
+    }
+}
+
 }  // namespace cs
 
 /*==============================================================================

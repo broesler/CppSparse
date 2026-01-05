@@ -565,6 +565,20 @@ double cond1est(const CSCMatrix& A);
 std::vector<double> spsolve(const CSCMatrix& A, const std::vector<double>& b);
 
 
+/** Solve a sparse linear system Ax = b.
+ *
+ * See: Davis, Exercise 8.1.
+ *
+ * This function mimics the behavior of MATLAB's `\` operator for sparse
+ * matrices.
+ *
+ * @param A  a sparse matrix
+ * @param b  a sparse vector
+ */
+std::vector<double> spsolve(const CSCMatrix& A, const CSCMatrix& b);
+
+
+
 }  // namespace cs
 
 #endif  // _SOLVE_H_

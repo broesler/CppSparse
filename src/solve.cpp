@@ -1003,16 +1003,16 @@ double cond1est(const CSCMatrix& A)
 
 // Exercise 8.1
 template <bool IsSparseRHS, typename RhsT>
-std::vector<double> spsolve_impl(const CSCMatrix& A, const RhsT& b)
+std::vector<double> spsolve_impl(const CSCMatrix& A, const RhsT& rhs)
 {
     auto [M, N] = A.shape();
 
     csint b_rows, b_cols;
 
     if constexpr(IsSparseRHS) {
-        std::tie(b_rows, b_cols) = b.shape();
+        std::tie(b_rows, b_cols) = rhs.shape();
     } else {
-        b_rows = static_cast<csint>(b.size());
+        b_rows = static_cast<csint>(rhs.size());
         b_cols = 1;
     }
     
@@ -1024,13 +1024,17 @@ std::vector<double> spsolve_impl(const CSCMatrix& A, const RhsT& b)
         throw std::runtime_error("Sparse RHS matrix must have exactly one column!");
     }
 
+    // Create reference to dense b
+    std::vector<double> b;
+    if constexpr(IsSparseRHS) {
+        b = rhs.to_dense_vector();
+    } else {
+        b = rhs;
+    }
+
     if (M != N) {
         // Use QR factorization for rectangular matrices
-        if constexpr(IsSparseRHS) {
-            return qr_solve(A, b.to_dense_vector(), AMDOrder::ATA);
-        } else {
-            return qr_solve(A, b, AMDOrder::ATA);
-        }
+        return qr_solve(A, b, AMDOrder::ATA);
     }
 
     // For square matrices, go through the decision tree
@@ -1049,39 +1053,26 @@ std::vector<double> spsolve_impl(const CSCMatrix& A, const RhsT& b)
 
     // If triangular with non-zero diagonal, use triangular solve
     if (diag_nz) {
-        SparseSolution res;
-        if (is_tri == -1) {
-            // lower triangular
-            if constexpr(IsSparseRHS) {
-                res = spsolve(A, b, 0, std::nullopt, true);
-            } else {
-                return lsolve_opt(A, b);
+        if constexpr(IsSparseRHS) {
+            // Sparse system solution
+            if (is_tri == -1) {
+                return spsolve(A, rhs, 0, std::nullopt, true).x;
+            } else if (is_tri == 1) {
+                return spsolve(A, rhs, 0, std::nullopt, false).x;
             }
-        } else if (is_tri == 1) {
-            // upper triangular
-            if constexpr(IsSparseRHS) {
-                res = spsolve(A, b, 0, std::nullopt, false);
-            } else {
+        } else {
+            // Dense RHS solution
+            if (is_tri == -1) {
+                return lsolve_opt(A, b);
+            } else if (is_tri == 1) {
                 return usolve_opt(A, b);
             }
-        }
-
-        if constexpr(IsSparseRHS) {
-            std::vector<double> x(N);
-            for (csint i = 0; i < N; i++) {
-                x[res.xi[i]] = res.x[i];
-            }
-            return x;
         }
     }
 
     // Matrix may be permuted triangular
     try {
-        if constexpr(IsSparseRHS) {
-            return tri_solve_perm(A, b.to_dense_vector());
-        } else {
-            return tri_solve_perm(A, b);
-        }
+        return tri_solve_perm(A, b);
     } catch (const PermutedTriangularMatrixError&) {
         // do nothing
     }
@@ -1090,11 +1081,7 @@ std::vector<double> spsolve_impl(const CSCMatrix& A, const RhsT& b)
     // TODO if diag(A) is negative, solve -A x = -b
     if (A.is_symmetric() and diag_pos) {
         try {
-            if constexpr(IsSparseRHS) {
-                return chol_solve(A, b.to_dense_vector(), AMDOrder::APlusAT);
-            } else {
-                return chol_solve(A, b, AMDOrder::APlusAT);
-            }
+            return chol_solve(A, b, AMDOrder::APlusAT);
         } catch (const CholeskyNotPositiveDefiniteError& e) {
             // do nothing
         }
@@ -1157,11 +1144,7 @@ std::vector<double> spsolve_impl(const CSCMatrix& A, const RhsT& b)
         tol = 0.1;
     }
 
-    if constexpr(IsSparseRHS) {
-        return lu_solve(A, b.to_dense_vector(), order, tol);
-    } else {
-        return lu_solve(A, b, order, tol);
-    }
+    return lu_solve(A, b, order, tol);
 }
 
 

@@ -289,9 +289,9 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
 
     SECTION("Find diagonals of non-triangular matrix") {
         const CSCMatrix A = davis_example_small().tocsc();
-        REQUIRE_THROWS(find_lower_diagonals(A));
-        REQUIRE_THROWS(find_upper_diagonals(A));
-        REQUIRE_THROWS(find_tri_permutation(A));
+        REQUIRE_THROWS_AS(find_lower_diagonals(A), PermutedTriangularMatrixError);
+        REQUIRE_THROWS_AS(find_upper_diagonals(A), PermutedTriangularMatrixError);
+        REQUIRE_THROWS_AS(find_tri_permutation(A), PermutedTriangularMatrixError);
     }
 
     SECTION("Find permutation vectors of permuted L") {

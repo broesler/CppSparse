@@ -208,9 +208,34 @@ TEST_CASE("Dense RHS Backslash: Cholesky", "[spsol-dense-chol]") {
 }
 
 
-TEST_CASE("Dense RHS Backslash: LU", "[spsol-dense-lu]") {
-    CSCMatrix A = davis_example_qr();
+TEST_CASE("Dense RHS Backslash: LU Symmetric", "[spsol-dense-lu-sym]") {
+    CSCMatrix A = davis_example_chol();
     auto [M, N] = A.shape();
+
+    // Change one element to make unsymmetric
+    A(1, 2) = 0.0;
+    A.dropzeros();
+
+    CHECK(A.structural_symmetry() < 1.0);
+
+    // Create RHS for Ax = b
+    std::vector<double> expect_x(N);
+    std::iota(expect_x.begin(), expect_x.end(), 1);
+
+    const std::vector<double> b = A * expect_x;
+    std::vector<double> x = spsolve(A, b);
+    check_vectors_allclose(x, expect_x, tol);
+}
+
+
+TEST_CASE("Dense RHS Backslash: LU Unsymmetric", "[spsol-dense-lu-unsym]") {
+    CSCMatrix A = davis_example_chol();
+    auto [M, N] = A.shape();
+
+    // Drop upper bands to make less symmetric (below 0.3 threshold)
+    A.band(-M, 1);
+
+    CHECK(A.structural_symmetry() < 0.3);
 
     // Create RHS for Ax = b
     std::vector<double> expect_x(N);

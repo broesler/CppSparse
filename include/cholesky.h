@@ -63,6 +63,16 @@ struct CholResult
 };
 
 
+/** Exception raised when a matrix is not positive definite for Cholesky
+ * factorization.
+ */
+class CholeskyNotPositiveDefiniteError : public std::runtime_error {
+public:
+    CholeskyNotPositiveDefiniteError(const std::string& msg)
+        : std::runtime_error(msg) {}
+};
+
+
 /*------------------------------------------------------------------------------
  *          Cholesky Decomposition
  *----------------------------------------------------------------------------*/

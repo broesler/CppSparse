@@ -590,7 +590,9 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
 
         //--- Compute L(k, k) --------------------------------------------------
         if (d <= 0) {
-            throw std::runtime_error("Matrix not positive definite!");
+            throw CholeskyNotPositiveDefiniteError(
+                "Matrix not positive definite!"
+            );
         }
 
         // store L(k, k) = sqrt(d) in column k

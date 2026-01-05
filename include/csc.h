@@ -497,6 +497,15 @@ public:
      */
     CSCMatrix band(csint kl, csint ku) const;
 
+    /** Return the kth diagonal of the matrix as a dense vector.
+     *
+     * @param k  the diagonal to extract. The main diagonal is 0, with
+     *        sub-diagonals < 0, and super-diagonals > 0.
+     *
+     * @return  a dense vector containing the values of the kth diagonal.
+     */
+    std::vector<double> diagonal(csint k=0) const;
+
     //--------------------------------------------------------------------------
     //        Math Operations
     //--------------------------------------------------------------------------

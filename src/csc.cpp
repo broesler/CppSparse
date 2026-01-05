@@ -700,6 +700,26 @@ CSCMatrix CSCMatrix::band(const csint kl, const csint ku) const
 }
 
 
+std::vector<double> CSCMatrix::diagonal(csint k) const
+{
+    auto [M, N] = shape();
+    csint K = std::min(M, N) - std::abs(k);
+
+    if (K < 0) {
+        return std::vector<double>{};
+    }
+
+    std::vector<double> diag(K);
+
+    for (csint i = 0; i < K; i++) {
+        auto [row, col] = (k < 0) ? std::pair{i - k, i} : std::pair{i, i + k};
+        diag[i] = get_item_(row, col).value;
+    }
+
+    return diag;
+}
+
+
 /*------------------------------------------------------------------------------
        Math Operations
 ----------------------------------------------------------------------------*/

@@ -29,6 +29,15 @@ struct TriPerm {
 };
 
 
+/** Exception raised when a matrix is *not* permuted triangular.
+ */
+class PermutedTriangularMatrixError : public std::runtime_error {
+public:
+    PermutedTriangularMatrixError(const std::string& msg)
+        : std::runtime_error(msg) {}
+};
+
+
 //------------------------------------------------------------------------------
 //        Triangular Matrix Solutions
 //------------------------------------------------------------------------------
@@ -130,6 +139,9 @@ std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b)
  * @param b  a dense RHS vector, *not* permuted.
  *
  * @return x  the dense solution vector, also *not* permuted.
+ *
+ * @throws PermutedTriangularMatrixError if L is not a permuted lower triangular
+ * matrix.
  */
 std::vector<double> lsolve_rows(const CSCMatrix& L, const std::vector<double>& b);
 
@@ -142,6 +154,9 @@ std::vector<double> lsolve_rows(const CSCMatrix& L, const std::vector<double>& b
  * @param b  a dense RHS vector, *not* permuted.
  *
  * @return x  the dense solution vector, also *not* permuted.
+ *
+ * @throws PermutedTriangularMatrixError if U is not a permuted upper triangular
+ * matrix.
  */
 std::vector<double> usolve_rows(const CSCMatrix& U, const std::vector<double>& b);
 
@@ -154,6 +169,9 @@ std::vector<double> usolve_rows(const CSCMatrix& U, const std::vector<double>& b
  * @param b  a dense RHS vector, *not* permuted.
  *
  * @return x  the dense solution vector, also *not* permuted.
+ *
+ * @throws PermutedTriangularMatrixError if L is not a permuted lower triangular
+ * matrix.
  */
 std::vector<double> lsolve_cols(const CSCMatrix& L, const std::vector<double>& b);
 
@@ -166,6 +184,9 @@ std::vector<double> lsolve_cols(const CSCMatrix& L, const std::vector<double>& b
  * @param b  a dense RHS vector, *not* permuted.
  *
  * @return x  the dense solution vector, also *not* permuted.
+ *
+ * #throws PermutedTriangularMatrixError if U is not a permuted upper triangular
+ * matrix.
  */
 std::vector<double> usolve_cols(const CSCMatrix& U, const std::vector<double>& b);
 
@@ -177,6 +198,9 @@ std::vector<double> usolve_cols(const CSCMatrix& U, const std::vector<double>& b
  * @param L  a permuted lower-triangular matrix
  *
  * @return p_diags  a vector of pointers to the indices of the diagonal entries.
+ *
+ * @throws PermutedTriangularMatrixError if L is not a permuted lower triangular
+ * matrix.
  */
 std::vector<csint> find_lower_diagonals(const CSCMatrix& L);
 
@@ -188,6 +212,9 @@ std::vector<csint> find_lower_diagonals(const CSCMatrix& L);
  * @param U  a permuted upper-triangular matrix
  *
  * @return p_diags  a vector of pointers to the indices of the diagonal entries.
+ *
+ * @throws PermutedTriangularMatrixError if U is not a permuted upper triangular
+ * matrix.
  */
 std::vector<csint> find_upper_diagonals(const CSCMatrix& U);
 
@@ -201,6 +228,9 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U);
  * @param b  a dense RHS vector, *not* permuted.
  *
  * @return x  the dense solution vector, also *not* permuted.
+ *
+ * @throws PermutedTriangularMatrixError if A is not a permuted triangular
+ * matrix.
  */
 std::vector<double> tri_solve_perm(
     const CSCMatrix& A,
@@ -216,6 +246,9 @@ std::vector<double> tri_solve_perm(
  *
  * @return p_inv, q_inv  the inverse row and column permutation vectors.
  * @return p_diags  the pointers to the diagonal entries.
+ *
+ * @throws PermutedTriangularMatrixError if A is not a permuted triangular
+ * matrix.
  */
 TriPerm find_tri_permutation(const CSCMatrix& A);
 

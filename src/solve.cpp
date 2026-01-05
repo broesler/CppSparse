@@ -168,7 +168,9 @@ std::vector<csint> find_lower_diagonals(const CSCMatrix& A)
 
         // If 0 or > 1 "diagonal" entries found, the matrix is not permuted.
         if (N_unmarked != 1) {
-            throw std::runtime_error("Matrix is not a permuted lower triangular matrix!");
+            throw PermutedTriangularMatrixError(
+                "Matrix is not a permuted lower triangular matrix!"
+            );
         }
     }
 
@@ -232,7 +234,9 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, const std::vector<double>& b
             p_diags[j] = A.p_[j];  // pointer to the diagonal entry
         } else {
             // We have seen this column index before
-            throw std::runtime_error("Matrix is not a permuted lower triangular matrix!");
+            throw PermutedTriangularMatrixError(
+                "Matrix is not a permuted lower triangular matrix!"
+            );
         }
     }
 
@@ -288,7 +292,9 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
 
         // If 0 or > 1 "diagonal" entries found, the matrix is not permuted.
         if (N_unmarked != 1) {
-            throw std::runtime_error("Matrix is not a permuted upper triangular matrix!");
+            throw PermutedTriangularMatrixError(
+                "Matrix is not a permuted upper triangular matrix!"
+            );
         }
     }
 
@@ -350,7 +356,9 @@ std::vector<double> usolve_cols(const CSCMatrix& A, const std::vector<double>& b
             p_diags[j] = A.p_[j+1] - 1;  // pointer to the diagonal entry
         } else {
             // We have seen this column index before
-            throw std::runtime_error("Matrix is not a permuted lower triangular matrix!");
+            throw PermutedTriangularMatrixError(
+                "Matrix is not a permuted upper triangular matrix!"
+            );
         }
     }
 
@@ -417,7 +425,9 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
     for (csint k = 0; k < A.N_; k++) {
         // Take a singleton row
         if (singles.empty()) {
-            throw std::runtime_error("Matrix is not a permuted triangular matrix!");
+            throw PermutedTriangularMatrixError(
+                "Matrix is not a permuted triangular matrix!"
+            );
         }
 
         csint i = singles.back();

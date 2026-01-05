@@ -8,6 +8,7 @@
  *============================================================================*/
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_all.hpp>
 #include <catch2/generators/catch_generators.hpp>
 
@@ -148,7 +149,17 @@ TEST_CASE("LU Solution", "[lusol]") {
 /*------------------------------------------------------------------------------
  *         Exercise 8.1: General Sparse Solver
  *----------------------------------------------------------------------------*/
-TEST_CASE("Dense RHS Backslash: Triangular", "[spsol-dense-tri]") {
+struct DenseRHS {};
+struct SparseRHS {};
+
+CSCMatrix sparse_from_dense(const std::vector<double>& b) {
+    csint N = static_cast<csint>(b.size());
+    return CSCMatrix(b, {N, 1});
+}
+
+
+TEMPLATE_TEST_CASE("Backslash: Triangular", "[spsol-tri]", DenseRHS, SparseRHS)
+{
     CSCMatrix A = davis_example_small().tocsc();
     auto [M, N] = A.shape();
 
@@ -159,42 +170,44 @@ TEST_CASE("Dense RHS Backslash: Triangular", "[spsol-dense-tri]") {
     const std::vector<csint> p = {3, 0, 1, 2};
     const std::vector<csint> q = {1, 2, 0, 3};
 
-    std::vector<double> b, x;
+    auto solve_and_check = [&](const CSCMatrix& A) {
+        std::vector<double> b = A * expect_x;
+        std::vector<double> x;
+        if constexpr (std::is_same_v<TestType, DenseRHS>) {
+            x = spsolve(A, b);
+        } else {
+            x = spsolve(A, sparse_from_dense(b));
+        }
+        check_vectors_allclose(x, expect_x, tol);
+    };
 
     // Triangular with non-zero diagonal
     SECTION("Lx = b") {
         CSCMatrix L = A.band(-N, 0);
-        b = L * expect_x;
-        x = spsolve(L, b);
-        check_vectors_allclose(x, expect_x, tol);
+        solve_and_check(L);
     }
 
     SECTION("Ux = b") {
         CSCMatrix U = A.band(0, N);
-        b = U * expect_x;
-        x = spsolve(U, b);
-        check_vectors_allclose(x, expect_x, tol);
+        solve_and_check(U);
     }
 
     SECTION("Permuted lower triangular") {
         CSCMatrix L = A.band(-N, 0);
         CSCMatrix PLQ = L.permute(inv_permute(p), q).to_canonical();
-        b = PLQ * expect_x;
-        x = spsolve(PLQ, b);
-        check_vectors_allclose(x, expect_x, tol);
+        solve_and_check(PLQ);
     }
 
     SECTION("Permuted upper triangular") {
         CSCMatrix U = A.band(0, N);
         CSCMatrix PUQ = U.permute(inv_permute(p), q).to_canonical();
-        b = PUQ * expect_x;
-        x = spsolve(PUQ, b);
-        check_vectors_allclose(x, expect_x, tol);
+        solve_and_check(PUQ);
     }
 }
 
 
-TEST_CASE("Dense RHS Backslash: Cholesky", "[spsol-dense-chol]") {
+TEMPLATE_TEST_CASE("Backslash: Cholesky", "[spsol-chol]", DenseRHS, SparseRHS)
+{
     CSCMatrix A = davis_example_chol();
     auto [M, N] = A.shape();
 
@@ -203,12 +216,20 @@ TEST_CASE("Dense RHS Backslash: Cholesky", "[spsol-dense-chol]") {
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
     const std::vector<double> b = A * expect_x;
-    std::vector<double> x = spsolve(A, b);
+
+    std::vector<double> x;
+    if constexpr (std::is_same_v<TestType, DenseRHS>) {
+        x = spsolve(A, b);
+    } else {
+        x = spsolve(A, sparse_from_dense(b));
+    }
+
     check_vectors_allclose(x, expect_x, tol);
 }
 
 
-TEST_CASE("Dense RHS Backslash: LU Symmetric", "[spsol-dense-lu-sym]") {
+TEMPLATE_TEST_CASE("Backslash: LU Symmetric", "[spsol-lu-sym]", DenseRHS, SparseRHS)
+{
     CSCMatrix A = davis_example_chol();
     auto [M, N] = A.shape();
 
@@ -223,12 +244,20 @@ TEST_CASE("Dense RHS Backslash: LU Symmetric", "[spsol-dense-lu-sym]") {
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
     const std::vector<double> b = A * expect_x;
-    std::vector<double> x = spsolve(A, b);
+
+    std::vector<double> x;
+    if constexpr (std::is_same_v<TestType, DenseRHS>) {
+        x = spsolve(A, b);
+    } else {
+        x = spsolve(A, sparse_from_dense(b));
+    }
+
     check_vectors_allclose(x, expect_x, tol);
 }
 
 
-TEST_CASE("Dense RHS Backslash: LU Unsymmetric", "[spsol-dense-lu-unsym]") {
+TEMPLATE_TEST_CASE("Backslash: LU Unsymmetric", "[spsol-lu-unsym]", DenseRHS, SparseRHS)
+{
     CSCMatrix A = davis_example_chol();
     auto [M, N] = A.shape();
 
@@ -242,12 +271,20 @@ TEST_CASE("Dense RHS Backslash: LU Unsymmetric", "[spsol-dense-lu-unsym]") {
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
     const std::vector<double> b = A * expect_x;
-    std::vector<double> x = spsolve(A, b);
+
+    std::vector<double> x;
+    if constexpr (std::is_same_v<TestType, DenseRHS>) {
+        x = spsolve(A, b);
+    } else {
+        x = spsolve(A, sparse_from_dense(b));
+    }
+
     check_vectors_allclose(x, expect_x, tol);
 }
 
 
-TEST_CASE("Dense RHS Backslash: QR", "[spsol-dense-qr]") {
+TEMPLATE_TEST_CASE("Backslash: QR", "[spsol-qr]", DenseRHS, SparseRHS)
+{
     CSCMatrix A = davis_example_qr();
     auto [M, N] = A.shape();
 
@@ -259,7 +296,14 @@ TEST_CASE("Dense RHS Backslash: QR", "[spsol-dense-qr]") {
 
     SECTION("Square") {
         b = A * expect_x;
-        x = spsolve(A, b);
+
+        std::vector<double> x;
+        if constexpr (std::is_same_v<TestType, DenseRHS>) {
+            x = spsolve(A, b);
+        } else {
+            x = spsolve(A, sparse_from_dense(b));
+        }
+
         check_vectors_allclose(x, expect_x, 1e-13);
     }
 
@@ -272,7 +316,14 @@ TEST_CASE("Dense RHS Backslash: QR", "[spsol-dense-qr]") {
         expect_x = std::vector<double>(expect_x.begin(), expect_x.end() - k);
 
         b = A * expect_x;
-        x = spsolve(A, b);
+
+        std::vector<double> x;
+        if constexpr (std::is_same_v<TestType, DenseRHS>) {
+            x = spsolve(A, b);
+        } else {
+            x = spsolve(A, sparse_from_dense(b));
+        }
+
         check_vectors_allclose(x, expect_x, 1e-13);
     }
 
@@ -282,7 +333,13 @@ TEST_CASE("Dense RHS Backslash: QR", "[spsol-dense-qr]") {
         A = A.slice(0, M - k, 0, N);
 
         b = A * expect_x;
-        x = spsolve(A, b);  // (M - k, N)
+
+        std::vector<double> x;  // (M - k, N)
+        if constexpr (std::is_same_v<TestType, DenseRHS>) {
+            x = spsolve(A, b);
+        } else {
+            x = spsolve(A, sparse_from_dense(b));
+        }
 
         // Actual expect_x (python and MATLAB)
         const std::vector<double> min_norm_x = {

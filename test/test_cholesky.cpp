@@ -158,7 +158,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
             A.assign(i, i, 1.0);
         }
         SymbolicChol S = schol(A, AMDOrder::Natural);
-        CHECK_THROWS(chol(A, S));  // A is not positive definite
+        CHECK_THROWS_AS(chol(A, S), CholeskyNotPositiveDefiniteError);
     }
 
     SECTION("Numeric factorization") {

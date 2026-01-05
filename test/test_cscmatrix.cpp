@@ -806,6 +806,26 @@ TEST_CASE("Extract a diagonal", "[diagonal]")
 }
 
 
+TEST_CASE("Structural Symmetry")
+{
+    CSCMatrix A = davis_example_small().tocsc();
+
+    SECTION("Non-square") {
+        CSCMatrix M = A.slice(0, A.shape()[0], 0, 2);
+        REQUIRE(M.structural_symmetry() == 0.0);
+    }
+
+    SECTION("Full A") {
+        REQUIRE_THAT(A.structural_symmetry(), WithinAbs((1.0 / 3.0), tol));
+    }
+
+    SECTION("Symmetric A") {
+        CSCMatrix S = A + A.T();
+        REQUIRE(S.structural_symmetry() == 1.0);
+    }
+}
+
+
 // Create a dummy class that builds an invalid matrix
 class TestCSCMatrix {
     CSCMatrix& test_matrix_;  // matrix to test

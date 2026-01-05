@@ -506,6 +506,22 @@ public:
      */
     std::vector<double> diagonal(csint k=0) const;
 
+    /** Compute the structural symmetry of the matrix.
+     *
+     * See: Davis, Exercise 8.1.
+     *
+     * The structural symmetry is defined as:
+     * \f$ sym(S) = \frac{nnz(S \land S^T)}{nnz(S)} \f$,
+     * where \f$ S = A - \diag(A) \f$ (off-diagonal elements only).
+     *
+     * In Scipy:
+     *   S = A - sparse.diags_array(A.diagonal())
+     *   sym = (S * S.T).nnz / S.nnz
+     *
+     * @return sym  the structural symmetry of the matrix.
+     */
+    double structural_symmetry() const;
+
     //--------------------------------------------------------------------------
     //        Math Operations
     //--------------------------------------------------------------------------

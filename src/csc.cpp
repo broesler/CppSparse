@@ -720,6 +720,35 @@ std::vector<double> CSCMatrix::diagonal(csint k) const
 }
 
 
+double CSCMatrix::structural_symmetry() const
+{
+    if (M_ != N_) {
+        return 0.0;
+    }
+
+    csint nnz_AAT = 0;
+    csint nnz_A = 0;
+
+    for (csint j = 0; j < N_; j++) {
+        for (csint p = p_[j]; p < p_[j+1]; p++) {
+            csint i = i_[p];
+
+            // Count all off-diagonal elements in A
+            if (i != j) {
+                nnz_A++;
+            }
+
+            // Count paired off-diagonal elements
+            if (i < j && get_item_(j, i).found) {
+                nnz_AAT += 2;
+            }
+        }
+    }
+
+    return static_cast<double>(nnz_AAT) / nnz_A;
+}
+
+
 /*------------------------------------------------------------------------------
        Math Operations
 ----------------------------------------------------------------------------*/

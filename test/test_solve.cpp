@@ -150,6 +150,45 @@ TEST_CASE("LU Solution", "[lusol]") {
 }
 
 
+TEST_CASE("LU with Iterative Refinement", "[lusol-ir]") {
+    CSCMatrix A = davis_example_qr(0.0, true);  // randomized with small diag
+    auto [M, N] = A.shape();
+
+    AMDOrder order = GENERATE(
+        AMDOrder::Natural,
+        AMDOrder::ATANoDenseRows,
+        AMDOrder::ATA
+    );
+    CAPTURE(order);
+
+    // Create RHS for Ax = b
+    std::vector<double> expect(N);
+    std::iota(expect.begin(), expect.end(), 1);
+
+    const std::vector<double> b = A * expect;
+
+    // Solve Ax = b
+    double tol = 1e-3;
+    std::vector<double> x = lu_solve(A, b, order, tol, 0);
+    std::vector<double> x_ir = lu_solve(A, b, order, tol, 2);
+
+    // Check that Ax = b
+    check_vectors_allclose(x, expect, tol);
+    check_vectors_allclose(x_ir, expect, tol);
+
+#ifdef DEBUG
+    double r_norm = norm(b - A * x);
+    double r_ir_norm = norm(b - A * x_ir);
+
+    std::cout << "\nIterative Refinement: " << std::endl;
+    std::cout << "x    = " << x << std::endl;
+    std::cout << "x_ir = " << x_ir << std::endl;
+    std::cout << "norm(r)    = " << r_norm << std::endl;
+    std::cout << "norm(r_ir) = " << r_ir_norm << std::endl;
+#endif
+}
+
+
 /*------------------------------------------------------------------------------
  *         Exercise 8.1: General Sparse Solver
  *----------------------------------------------------------------------------*/

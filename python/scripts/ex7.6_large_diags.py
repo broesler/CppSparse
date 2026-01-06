@@ -24,12 +24,13 @@ from tqdm import tqdm
 
 import csparse
 
-FORCE_UPDATE = True
-SAVE_FIGS = True
+FORCE_UPDATE = False
+SAVE_FIGS = False
 
-DATA_PATH = Path(__file__).absolute().parent.parent.parent / "plots"
-DATA_PATH.mkdir(parents=True, exist_ok=True)
+PLOT_PATH = Path(__file__).absolute().parent.parent.parent / "plots"
+PLOT_PATH.mkdir(parents=True, exist_ok=True)
 
+DATA_PATH = Path(__file__).absolute().parent / "data"
 df_file = DATA_PATH / "ex7.6_pivoting.pkl"
 
 # -----------------------------------------------------------------------------
@@ -99,7 +100,7 @@ g.figure.suptitle("Compare C = AQ (Large Entries on Diagonal)")
 g.figure.tight_layout()
 
 if SAVE_FIGS:
-    fig_file = DATA_PATH / "ex7.6_pivoting.pdf"
+    fig_file = PLOT_PATH / "ex7.6_pivoting.pdf"
     g.figure.savefig(fig_file)
     print(f"Saved figure to {fig_file}")
 

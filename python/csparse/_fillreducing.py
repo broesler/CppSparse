@@ -364,8 +364,12 @@ def dm_solve(A, b):
 
     # Solve the square system
     if rr[1] < rr[2] and cc[2] < cc[3]:
+        C11 = C[rr[1]:rr[2], cc[2]:cc[3]]
+        b1 = b[rr[1]:rr[2]]
+        r_s = r - rr[1]  # adjust block indices to be 0-based within C11
+        s_s = s - cc[2]
         x1 = x[cc[2]:cc[3]]
-        x1[:] = _lu_solve_btf(C, b, r, s, cc, rr, order="ATANoDenseRows")
+        x1[:] = _lu_solve_btf(C11, b1, r_s, s_s, order="ATANoDenseRows")
         # Update the right-hand side for the next system
         C01 = C[:rr[1], cc[2]:cc[3]]
         b0 = b[:rr[1]]
@@ -384,7 +388,7 @@ def dm_solve(A, b):
 
 
 # Exercise 7.4
-def _lu_solve_btf(C, b, r, s, cc, rr, **kwargs):  # noqa:PLR0913
+def _lu_solve_btf(C, b, r, s, **kwargs):  # noqa:PLR0913
     """Solve `Cx = b` using LU factorization with BTF ordering.
 
     Parameters
@@ -397,10 +401,6 @@ def _lu_solve_btf(C, b, r, s, cc, rr, **kwargs):  # noqa:PLR0913
         The row indices of the diagonal blocks.
     s : (Nb,) ndarray of int
         The column indices of the diagonal blocks.
-    cc : (5,) ndarray of int
-        The column indices of the Dulmage-Mendelsohn coarse decomposition.
-    rr : (5,) ndarray of int
-        The row indices of the Dulmage-Mendelsohn coarse decomposition.
     **kwargs
         Additional keyword arguments to pass to ``lu_solve``.
 
@@ -421,34 +421,24 @@ def _lu_solve_btf(C, b, r, s, cc, rr, **kwargs):  # noqa:PLR0913
     x = np.zeros(N)
     b = b.copy()
 
-    # Solve all blocks by default
-    hi = Nb - 1
-    lo = -1
-
-    # If [A34; A44] block exists, skip it
-    if rr[2] < M and cc[3] < N:
-        hi = Nb - 2
-
-    # If [A11, A12] block exists, skip it
-    if rr[1] > 0 and cc[2] > 0:
-        lo = 0
-
     # Backsolve the middle, square blocks using LU
-    for k in range(hi, lo, -1):
+    for k in range(Nb - 1, -1, -1):
         # Solve the kth diagonal block
         rows = slice(r[k], r[k+1])
         cols = slice(s[k], s[k+1])
         Ckk = C[rows, cols]
-        bk = b[rows]
-        xk = x[cols]
-        xk[:] = lu_solve(Ckk, bk, **kwargs)
 
-        # Update the right-hand side for the next block
-        if k > 0:
-            Cik = C[:r[k], cols]
-            b[:r[k]] -= Cik @ xk
+        if Ckk.shape[0] > 0 and Ckk.shape[1] > 0:
+            bk = b[rows]
+            xk = x[cols]
+            xk[:] = lu_solve(Ckk, bk, **kwargs)
 
-    return x[s[lo+1]:s[hi+1]]
+            # Update the right-hand side for the next block
+            if k > 0:
+                Cik = C[:r[k], cols]
+                b[:r[k]] -= Cik @ xk
+
+    return x
 
 
 def scc_perm(A):

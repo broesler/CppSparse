@@ -19,8 +19,8 @@
 namespace cs {
 
 struct SparseSolution {
-    std::vector<csint> xi;
-    std::vector<double> x;
+    std::vector<csint> xi;  // non-zero indices of x
+    std::vector<double> x;  // (N,) dense solution vector
 };
 
 
@@ -35,6 +35,13 @@ class PermutedTriangularMatrixError : public std::runtime_error {
 public:
     PermutedTriangularMatrixError(const std::string& msg)
         : std::runtime_error(msg) {}
+};
+
+
+struct QRSolveResult {
+    std::vector<double> x;  // solution vector
+    std::vector<double> r;  // residual b - A * x
+    double rnorm;           // residual 2-norm
 };
 
 
@@ -472,11 +479,14 @@ std::vector<double> chol_solve(
  * @param b  a dense vector
  * @param order  the fill-reducing ordering of the matrix to compute
  *
- * @return x  the solution vector
+ * @return res  a struct containing:
+ *        * x the solution vector
+ *        * r the residual vector (b - A * x)
+ *        * rnorm the residual 2-norm
  *
  * @see cs_qrsol
  */
-std::vector<double> qr_solve(
+QRSolveResult qr_solve(
     const CSCMatrix& A,
     const std::vector<double>& b,
     AMDOrder order=AMDOrder::Natural

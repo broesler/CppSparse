@@ -62,17 +62,19 @@ TEST_CASE("QR Solution", "[qrsol]")
     std::vector<double> expect(N);
     std::iota(expect.begin(), expect.end(), 1);
 
-    std::vector<double> b, x;
+    std::vector<double> b;
+    QRSolveResult res;
 
     SECTION("Square") {
         // Create RHS for Ax = b
         b = A * expect;
 
         // Solve Ax = b
-        x = qr_solve(A, b, order);
+        res = qr_solve(A, b, order);
 
         // Check that Ax = b
-        check_vectors_allclose(x, expect, 1e-13);
+        check_vectors_allclose(res.x, expect, 1e-13);
+        REQUIRE(res.rnorm < 1e-13);
     }
 
     SECTION("Over-determined") {
@@ -86,10 +88,11 @@ TEST_CASE("QR Solution", "[qrsol]")
         b = A * expect;
 
         // Solve Ax = b
-        x = qr_solve(A, b, order);
+        res = qr_solve(A, b, order);
 
         // Check that Ax = b
-        check_vectors_allclose(x, expect, 1e-13);
+        check_vectors_allclose(res.x, expect, 1e-13);
+        REQUIRE(res.rnorm < 1e-13);
     }
 
     SECTION("Under-determined") {
@@ -100,7 +103,7 @@ TEST_CASE("QR Solution", "[qrsol]")
         b = A * expect;
 
         // Solve Ax = b
-        x = qr_solve(A, b, order);  // (M - k, N)
+        res = qr_solve(A, b, order);  // (M - k, N)
 
         // Actual expect (python and MATLAB)
         const std::vector<double> min_norm_x = {
@@ -115,7 +118,8 @@ TEST_CASE("QR Solution", "[qrsol]")
         };
 
         // Check that Ax = b
-        check_vectors_allclose(x, min_norm_x, tol);
+        check_vectors_allclose(res.x, min_norm_x, tol);
+        REQUIRE(res.rnorm < 1e-13);
     }
 }
 

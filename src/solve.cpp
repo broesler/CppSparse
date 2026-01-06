@@ -819,7 +819,7 @@ std::vector<double> chol_solve(
 // -----------------------------------------------------------------------------
 //         QR Factorization Solvers
 // -----------------------------------------------------------------------------
-std::vector<double> qr_solve(
+QRSolveResult qr_solve(
     const CSCMatrix& A,
     const std::vector<double>& b,
     AMDOrder order
@@ -829,6 +829,7 @@ std::vector<double> qr_solve(
     std::vector<double> x;
 
     if (M >= N) {
+        // Compute the least-squares solution
         SymbolicQR S = sqr(A, order);
         QRResult res = qr(A, S);
 
@@ -837,6 +838,7 @@ std::vector<double> qr_solve(
         const std::vector<double> qx = usolve(res.R, QTPb);  // y = R \ Q^T P b
         x = ipvec(res.q, qx);  // x = q^T q x
     } else {
+        // Compute the minimum-norm solution
         CSCMatrix AT = A.transpose();
 
         SymbolicQR S = sqr(AT, order);
@@ -847,7 +849,10 @@ std::vector<double> qr_solve(
         x = apply_qleft(res.V, res.beta, res.p_inv, QTPx);    // x = P^T Q (Q^T P x)
     }
 
-    return x;
+    // Compute the residual
+    std::vector<double> r = b - A * x;
+
+    return QRSolveResult{x, r, norm(r, 2)};
 }
 
 
@@ -1034,7 +1039,7 @@ std::vector<double> spsolve_impl(const CSCMatrix& A, const RhsT& rhs)
 
     if (M != N) {
         // Use QR factorization for rectangular matrices
-        return qr_solve(A, b, AMDOrder::ATA);
+        return qr_solve(A, b, AMDOrder::ATA).x;
     }
 
     // For square matrices, go through the decision tree

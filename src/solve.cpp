@@ -1041,18 +1041,29 @@ std::vector<double> spsolve_impl(const CSCMatrix& A, const RhsT& rhs)
     csint is_tri = A.is_triangular();
 
     // Check if diagonal is structurally non-zero
-    bool diag_nz = true;
-    bool diag_pos = true;
-    csint nnz_diag = 0;
+    int diag_sign = 0;   // -1: all neg, 0: mixed, 1: all pos
+    csint nnz_diag = 0;  // number of non-zeros on diagonal
+    bool first_seen = false;
 
     for (auto v : A.diagonal()) {
-        if (v == 0) { diag_nz = false; }
-        if (v < 0) { diag_pos = false; }
-        if (v != 0) { nnz_diag++; }
+        if (v == 0) {
+            continue;
+        }
+
+        nnz_diag++;  // count non-zeros
+                     //
+        if (!first_seen) {
+            diag_sign = (v > 0) ? 1 : -1;
+            first_seen = true;
+        } else if (diag_sign != 0) {
+            if ((v > 0 && diag_sign == -1) || (v < 0 && diag_sign == 1)) {
+                diag_sign = 0;  // mixed signs
+            }
+        }
     }
 
     // If triangular with non-zero diagonal, use triangular solve
-    if (diag_nz) {
+    if (nnz_diag == N) {
         if constexpr(IsSparseRHS) {
             // Sparse system solution
             if (is_tri == -1) {
@@ -1078,10 +1089,13 @@ std::vector<double> spsolve_impl(const CSCMatrix& A, const RhsT& rhs)
     }
 
     // Cholesky factorization if symmetric positive definite
-    // TODO if diag(A) is negative, solve -A x = -b
-    if (A.is_symmetric() and diag_pos) {
+    if (A.is_symmetric() && diag_sign) {
         try {
-            return chol_solve(A, b, AMDOrder::APlusAT);
+            if (diag_sign == 1) {
+                return chol_solve(A, b, AMDOrder::APlusAT);
+            } else {  // diag_sign == -1
+                return chol_solve(-A, -b, AMDOrder::APlusAT);
+            }
         } catch (const CholeskyNotPositiveDefiniteError& e) {
             // do nothing
         }

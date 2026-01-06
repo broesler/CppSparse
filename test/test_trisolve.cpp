@@ -221,8 +221,7 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
     // Create full matrix with row numbers as values
     const csint N = 6;
 
-    std::vector<double> A_vals;
-    A_vals.reserve(N * N);
+    std::vector<double> A_vals(N * N);
 
     for (csint i = 0; i < N; i++) {
         for (csint j = 0; j < N; j++) {

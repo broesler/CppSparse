@@ -152,6 +152,9 @@ TEST_CASE("LU Solution", "[lusol]") {
 struct DenseRHS {};
 struct SparseRHS {};
 
+struct PositiveA {};
+struct NegativeA {};
+
 CSCMatrix sparse_from_dense(const std::vector<double>& b) {
     csint N = static_cast<csint>(b.size());
     return CSCMatrix(b, {N, 1});
@@ -206,8 +209,18 @@ TEMPLATE_TEST_CASE("Backslash: Triangular", "[spsol-tri]", DenseRHS, SparseRHS)
 }
 
 
-TEMPLATE_TEST_CASE("Backslash: Cholesky", "[spsol-chol]", DenseRHS, SparseRHS)
+using TestCombinations = std::tuple<
+    std::tuple<DenseRHS, PositiveA>,
+    std::tuple<SparseRHS, PositiveA>,
+    std::tuple<DenseRHS, NegativeA>,
+    std::tuple<SparseRHS, NegativeA>
+>;
+
+TEMPLATE_LIST_TEST_CASE("Backslash: Cholesky", "[spsol-chol]", TestCombinations)
 {
+    using RhsType = std::tuple_element_t<0, TestType>;
+    using ASignType = std::tuple_element_t<1, TestType>;
+
     CSCMatrix A = davis_example_chol();
     auto [M, N] = A.shape();
 
@@ -215,10 +228,15 @@ TEMPLATE_TEST_CASE("Backslash: Cholesky", "[spsol-chol]", DenseRHS, SparseRHS)
     std::vector<double> expect_x(N);
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
-    const std::vector<double> b = A * expect_x;
+    std::vector<double> b = A * expect_x;
+
+    if constexpr (std::is_same_v<ASignType, NegativeA>) {
+        A = -A;
+        b = -b;
+    }
 
     std::vector<double> x;
-    if constexpr (std::is_same_v<TestType, DenseRHS>) {
+    if constexpr (std::is_same_v<RhsType, DenseRHS>) {
         x = spsolve(A, b);
     } else {
         x = spsolve(A, sparse_from_dense(b));

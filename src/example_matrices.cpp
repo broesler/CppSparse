@@ -8,6 +8,7 @@
  *============================================================================*/
 
 #include <numeric>  // iota
+#include <random>
 #include <vector>
 
 #include "types.h"
@@ -54,7 +55,7 @@ CSCMatrix davis_example_chol()
 
 
 // 8 x 8, non-symmetric QR example. Davis, Figure 5.1, p 74.
-CSCMatrix davis_example_qr(float add_diag)
+CSCMatrix davis_example_qr(double add_diag, bool random_vals)
 {
     // Define the test matrix A (See Davis, Figure 5.1, p 74)
     std::vector<csint> rows = {0, 1, 2, 3, 4, 5, 6,
@@ -62,9 +63,23 @@ CSCMatrix davis_example_qr(float add_diag)
     std::vector<csint> cols = {0, 1, 2, 3, 4, 5, 6,
                                0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7};
 
-    // Label the diagonal elements 1..7, skipping the 8th
-    std::vector<double> vals(rows.size(), 1.0);
-    std::iota(vals.begin(), vals.begin() + 7, 1.0);
+    std::vector<double> vals(rows.size());
+    if (random_vals) {
+        // Randomize the non-zero values
+        unsigned int seed = std::random_device{}();
+        std::default_random_engine rng(seed);
+        std::uniform_real_distribution<double> uniform(0.0, 1.0);
+        std::generate(
+            vals.begin(),
+            vals.end(),
+            [&rng, &uniform]() { return uniform(rng); }
+        );
+    } else {
+        // Label the diagonal elements 1..7, skipping the 8th
+        std::iota(vals.begin(), vals.begin() + 7, 1.0);
+        // All non-diagonal values set to 1.0
+        std::fill(vals.begin() + 7, vals.end(), 1.0);
+    }
 
     COOMatrix A(vals, rows, cols);
 

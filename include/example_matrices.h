@@ -74,9 +74,12 @@ CSCMatrix davis_example_chol();
  *
  * @param add_diag  If non-zero, add this value to the diagonal of the matrix.
  *        Can be used to make the matrix positive definite.
+ * @param random_vals  If true, randomize the non-zero values in the matrix,
+ *        before adding to the diagonal.
+ *
  * @return A  An 8x8 matrix in CSC format.
  */
-CSCMatrix davis_example_qr(float add_diag=0.0);
+CSCMatrix davis_example_qr(double add_diag=0.0, bool random_vals=false);
 
 
 /** Build the 10 x 10 symmetric, positive definite AMD example matrix.

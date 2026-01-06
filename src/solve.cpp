@@ -1025,7 +1025,8 @@ std::vector<double> spsolve_impl(const CSCMatrix& A, const RhsT& rhs)
     csint b_rows, b_cols;
 
     if constexpr(IsSparseRHS) {
-        std::tie(b_rows, b_cols) = rhs.shape();
+        b_rows = rhs.shape()[0];
+        b_cols = rhs.shape()[1];
     } else {
         b_rows = static_cast<csint>(rhs.size());
         b_cols = 1;

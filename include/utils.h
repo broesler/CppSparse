@@ -33,6 +33,11 @@ std::vector<double> operator-(
 
 std::vector<double> operator-(const std::vector<double>& a);
 
+std::vector<double>& operator+=(
+    std::vector<double>& a,
+    const std::vector<double>& b
+);
+
 std::vector<double> operator*(const double c, const std::vector<double>& x);
 std::vector<double> operator*(const std::vector<double>& x, const double c);
 std::vector<double>& operator*=(std::vector<double>& x, const double c);

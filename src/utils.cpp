@@ -103,6 +103,21 @@ std::vector<double>& operator*=(std::vector<double>& vec, const double c)
 }
 
 
+std::vector<double>& operator+=(
+    std::vector<double>& a,
+    const std::vector<double>& b
+)
+{
+    assert(a.size() == b.size());
+
+    for (size_t i = 0; i < a.size(); i++) {
+        a[i] += b[i];
+    }
+
+    return a;
+}
+
+
 /*------------------------------------------------------------------------------
  *          Vector Functions
  *----------------------------------------------------------------------------*/

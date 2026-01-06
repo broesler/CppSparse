@@ -1327,6 +1327,14 @@ CSCMatrix CSCMatrix::subtract(const CSCMatrix& B) const
 CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B) { return A.add(B); }
 CSCMatrix operator-(const CSCMatrix& A, const CSCMatrix& B) { return A.subtract(B); }
 
+CSCMatrix operator-(const CSCMatrix& A) {
+    CSCMatrix C = A;
+    for (auto& val : C.v_) {
+        val = -val;
+    }
+    return C;
+}
+
 
 csint CSCMatrix::scatter(
     csint j,

@@ -1154,6 +1154,8 @@ public:
         csint mark
     );
 
+    // Unary minus operator
+    friend CSCMatrix operator-(const CSCMatrix& A);
 
 protected:
     /** Return the format description of the matrix. */
@@ -1280,6 +1282,7 @@ private:
  *----------------------------------------------------------------------------*/
 CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B);
 CSCMatrix operator-(const CSCMatrix& A, const CSCMatrix& B);
+CSCMatrix operator-(const CSCMatrix& A);
 
 CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B);
 CSCMatrix operator*(const CSCMatrix& A, const double c);

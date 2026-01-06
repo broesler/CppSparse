@@ -68,7 +68,8 @@ std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
     assert(M == static_cast<csint>(b.size()));
 
     // Copy the RHS vector, only taking N elements if M > N
-    std::vector<double> x = (M <= N) ? b : std::vector<double>(b.begin(), b.begin() + N);
+    std::vector<double> x(N);
+    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
 
     for (csint j = N - 1; j >= 0; j--) {
         x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
@@ -87,7 +88,8 @@ std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
     assert(N == static_cast<csint>(b.size()));
 
     // Copy the RHS vector, only taking M elements if N > M
-    std::vector<double> x = (N <= M) ? b : std::vector<double>(b.begin(), b.begin() + M);
+    std::vector<double> x(N);
+    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
 
     for (csint j = 0; j < N; j++) {
         for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {

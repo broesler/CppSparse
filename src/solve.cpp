@@ -864,7 +864,8 @@ std::vector<double> lu_solve(
     const CSCMatrix& A,
     const std::vector<double>& b,
     AMDOrder order,
-    double tol
+    double tol,
+    csint ir_steps
 )
 {
     if (A.shape()[0] != static_cast<csint>(b.size())) {
@@ -874,7 +875,16 @@ std::vector<double> lu_solve(
     SymbolicLU S = slu(A, order);
     LUResult res = lu(A, S, tol);
 
-    return res.solve(b);
+    std::vector<double> x = res.solve(b);
+
+    // Exercise 8.5: Iterative refinement
+    for (csint i = 0; i < ir_steps; i++) {
+        std::vector<double> r = b - A * x;
+        std::vector<double> d = res.solve(r);
+        x += d;
+    }
+
+    return x;
 }
 
 

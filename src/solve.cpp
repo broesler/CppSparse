@@ -1173,7 +1173,9 @@ std::vector<double> spsolve_impl(const CSCMatrix& A, const RhsT& rhs)
         tol = 0.1;
     }
 
-    return lu_solve(A, b, order, tol);
+    csint ir_steps = 2;  // number of iterative refinement steps
+
+    return lu_solve(A, b, order, tol, ir_steps);
 }
 
 

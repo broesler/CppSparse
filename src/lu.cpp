@@ -16,6 +16,7 @@
 #include "types.h"
 #include "cholesky.h"
 #include "lu.h"
+#include "qr.h"
 #include "solve.h"
 #include "utils.h"  // inv_permute
 
@@ -57,7 +58,7 @@ std::vector<double> LUResult::tsolve(const std::vector<double>& b) const
 }
 
 
-SymbolicLU slu(const CSCMatrix& A, AMDOrder order)
+SymbolicLU slu(const CSCMatrix& A, AMDOrder order, bool qr_bound, double alpha)
 {
     auto [M, N] = A.shape();
     SymbolicLU S;             // allocate result
@@ -74,13 +75,19 @@ SymbolicLU slu(const CSCMatrix& A, AMDOrder order)
     S.q = q;  // store the column permutation
 
     // Estimate non-zeros in L and U
-    if (order == AMDOrder::APlusAT) {
+    if ((order == AMDOrder::APlusAT) && (!qr_bound)) {
         // Exercise 6.10: symbolic Cholesky analysis
         SymbolicChol S_chol = schol(A, AMDOrder::APlusAT);
         S.lnz = S.unz = S_chol.lnz;
+    } else if (qr_bound) {
+        // Exercise 8.6: use QR upper bound
+        bool use_postorder = true;
+        SymbolicQR S_qr = sqr(A, order, use_postorder);
+        S.lnz = S_qr.vnz;
+        S.unz = S_qr.rnz;
     } else {
         // Optimistic LU factorization estimate (Davis, p. 85)
-        S.lnz = S.unz = 4 * A.nnz() + N;  // guess nnz(L) and nnz(U)
+        S.lnz = S.unz = alpha * (4 * A.nnz() + N);  // guess nnz(L) and nnz(U)
     }
 
     return S;

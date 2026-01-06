@@ -70,10 +70,21 @@ struct LUResult
  *
  * @param A  the matrix to factorize
  * @param order  the ordering method to use
+ * @param qr_bound  if true, use the QR factorization bound for the non-zero
+ *       counts of L and U. This option is only applicable when `order` is
+ *       not `AMDOrder::APlusAT`.
+ * @param alpha  the scaling factor for the optimistic estimate of the number
+ *       of the non-zero counts of L and U. This option is only applicable when
+ *       `order` is not `AMDOrder::APlusAT` and `qr_bound` is false.
  *
  * @return the symbolic factorization
  */
-SymbolicLU slu(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
+SymbolicLU slu(
+    const CSCMatrix& A,
+    AMDOrder order=AMDOrder::Natural,
+    bool qr_bound=false,
+    double alpha=1.0
+);
 
 
 /** Compute the numeric LU decomposition of A, such that \f$PA = LU\f$.

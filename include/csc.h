@@ -935,7 +935,7 @@ public:
     friend void lsolve_inplace(const CSCMatrix& A, std::span<double> x);
     friend void ltsolve_inplace(const CSCMatrix& A, std::span<double> x);
     friend void usolve_inplace(const CSCMatrix& A, std::span<double> x);
-    friend std::vector<double> utsolve(const CSCMatrix& A, const std::vector<double>& b);
+    friend void utsolve_inplace(const CSCMatrix& A, std::span<double> x);
 
     friend std::vector<double> lsolve_opt(const CSCMatrix& A, const std::vector<double>& b);
     friend std::vector<double> usolve_opt(const CSCMatrix& A, const std::vector<double>& b);

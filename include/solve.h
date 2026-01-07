@@ -133,6 +133,18 @@ std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b);
  * column of `U` may appear in any order.
  *
  * @param U  an upper-triangular matrix
+ * @param x[in,out]  RHS vector on input, solution on output.
+ */
+void utsolve_inplace(const CSCMatrix& U, std::span<double> x);
+
+
+/** Forward solve an upper-triangular system \f$ U^T x = b \f$.
+ *
+ * @note This function assumes that the diagonal entry of `U` is always present
+ * and is the last entry in each column. Otherwise, the row indices in each
+ * column of `U` may appear in any order.
+ *
+ * @param U  an upper-triangular matrix
  * @param b  a dense vector
  *
  * @return x  the solution vector

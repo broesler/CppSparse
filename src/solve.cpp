@@ -123,14 +123,20 @@ std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
 }
 
 
-std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
+void utsolve_inplace(const CSCMatrix& U, std::span<double> x)
 {
     auto [M, N] = U.shape();
-    assert(N == static_cast<csint>(b.size()));
 
-    // Copy the RHS vector, only taking M elements if N > M
-    std::vector<double> x(M);
-    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    csint Nx = static_cast<csint>(x.size()); 
+    if (N != Nx) {
+        throw std::runtime_error(
+            std::format("Matrix and RHS vector sizes do not match! {} != {}.", N, Nx)
+        );
+    }
 
     for (csint j = 0; j < N; j++) {
         for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
@@ -138,7 +144,13 @@ std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
         }
         x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
     }
+}
 
+
+std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
+{
+    std::vector<double> x = b;
+    utsolve_inplace(U, x);
     return x;
 }
 

@@ -56,7 +56,7 @@ struct QRSolveResult {
  * indices in each column of `L` may appear in any order.
  *
  * @param L  a lower-triangular matrix
- * @param b[in,out]  RHS vector on input, solution on output.
+ * @param x[in,out]  RHS vector on input, solution on output.
  */
 void lsolve_inplace(const CSCMatrix& L, std::span<double> x);
 
@@ -72,6 +72,18 @@ void lsolve_inplace(const CSCMatrix& L, std::span<double> x);
  * @return x  the solution vector
  */
 std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b);
+
+
+/** Backsolve a lower-triangular system \f$ L^Tx = b \f$.
+ *
+ * @note This function assumes that the diagonal entry of `L` is always
+ * present and is the first entry in each column. Otherwise, the row
+ * indices in each column of `L` may appear in any order.
+ *
+ * @param L  a lower-triangular matrix
+ * @param x[in,out]  RHS vector on input, solution on output.
+ */
+void ltsolve_inplace(const CSCMatrix& L, std::span<double> x);
 
 
 /** Backsolve a lower-triangular system \f$ L^Tx = b \f$.

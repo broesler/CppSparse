@@ -933,7 +933,7 @@ public:
     //        Triangular Matrix Solutions
     //--------------------------------------------------------------------------
     friend void lsolve_inplace(const CSCMatrix& A, std::span<double> x);
-    friend std::vector<double> ltsolve(const CSCMatrix& A, const std::vector<double>& b);
+    friend void ltsolve_inplace(const CSCMatrix& A, std::span<double> x);
     friend void usolve_inplace(const CSCMatrix& A, std::span<double> x);
     friend std::vector<double> utsolve(const CSCMatrix& A, const std::vector<double>& b);
 

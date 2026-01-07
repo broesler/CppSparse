@@ -50,6 +50,7 @@ void lsolve_inplace(const CSCMatrix& L, std::span<double> x)
     }
 }
 
+
 std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
 {
     std::vector<double> x = b;
@@ -58,13 +59,20 @@ std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
 }
 
 
-std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
+void ltsolve_inplace(const CSCMatrix& L, std::span<double> x)
 {
     auto [M, N] = L.shape();
-    assert(M == static_cast<csint>(b.size()));
 
-    std::vector<double> x(N);
-    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    csint Nx = static_cast<csint>(x.size()); 
+    if (M != Nx) {
+        throw std::runtime_error(
+            std::format("Matrix and RHS vector sizes do not match! {} != {}.", M, Nx)
+        );
+    }
 
     for (csint j = N - 1; j >= 0; j--) {
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
@@ -72,7 +80,13 @@ std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
         }
         x[j] /= L.v_[L.p_[j]];
     }
+}
 
+
+std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
+{
+    std::vector<double> x = b;
+    ltsolve_inplace(L, x);
     return x;
 }
 

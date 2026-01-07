@@ -893,52 +893,51 @@ QRSolveResult qr_solve(
 // Exercise 6.1
 std::vector<double> lu_solve(
     const CSCMatrix& A,
-    const std::vector<double>& b,
+    const std::vector<double>& B,
     AMDOrder order,
     double tol,
     csint ir_steps
 )
 {
     auto [M, N] = A.shape();
-    csint MxK = static_cast<csint>(b.size());
+    csint MxK = static_cast<csint>(B.size());
+
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
 
     if (MxK % M != 0) {
-        throw std::runtime_error(
-            "RHS vector size is not a multiple of matrix size!"
-        );
+        throw std::runtime_error("RHS vector size is not a multiple of matrix rows!");
     }
 
-    csint K = MxK / M;
-    csint Mb = MxK / K;
-
-    if (M != Mb) {
-        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
-    }
+    csint K = MxK / M;  // number of RHS columns
 
     const SymbolicLU S = slu(A, order);
     const LUResult res = lu(A, S, tol);
 
-    std::vector<double> X(N * K);  // solution matrix
-    std::vector<double> b_k(M);    // k-th column of b
+    std::vector<double> X = B;  // solution matrix
+    std::vector<double> r;
 
-    // TODO rewrite LUResult::solve to accept a span and operate in-place
-    // * also requires ipvec and lsolve/usolve to accept spans
+    if (ir_steps > 0) {
+        // Preallocate workspace for iterative refinement
+        r.resize(M);
+    }
+
+    // Solve for each RHS column
     for (csint k = 0; k < K; k++) {
-        // Extract k-th column of b
-        std::copy(b.begin() + k * M, b.begin() + (k + 1) * M, b_k.begin());
+        // Create a view into the k-th columns of B and X
+        std::span<const double> B_k(B.data() + k * M, M);
+        std::span<double> X_k(X.data() + k * N, N);
 
-        // Solve for each RHS column
-        std::vector<double> x = res.solve(b_k);
+        // Solve Ax = B
+        res.solve_inplace(X_k);
 
         // Exercise 8.5: Iterative refinement
         for (csint i = 0; i < ir_steps; i++) {
-            const std::vector<double> r = b_k - A * x;
-            const std::vector<double> d = res.solve(r);
-            x += d;
+            r = B_k - A * X_k;
+            res.solve_inplace(r);
+            X_k += r;
         }
-
-        // Store solution back into X in column-major order
-        std::copy(x.begin(), x.end(), X.begin() + k * N);
     }
 
     return X;

@@ -11,6 +11,7 @@
 #define _CSPARSE_SOLVE_H_
 
 #include <optional>
+#include <span>
 #include <vector>
 
 #include "types.h"
@@ -534,7 +535,7 @@ QRSolveResult qr_solve(
  */
 std::vector<double> lu_solve(
     const CSCMatrix& A,
-    const std::vector<double>& b,
+    const std::vector<double>& B,
     AMDOrder order=AMDOrder::Natural,
     double tol=1.0,
     csint ir_steps=0

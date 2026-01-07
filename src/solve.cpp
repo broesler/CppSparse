@@ -90,7 +90,7 @@ std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
     assert(N == static_cast<csint>(b.size()));
 
     // Copy the RHS vector, only taking M elements if N > M
-    std::vector<double> x(N);
+    std::vector<double> x(M);
     std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
 
     for (csint j = 0; j < N; j++) {

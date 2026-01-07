@@ -560,6 +560,26 @@ TEST_CASE("Add sparse column vectors", "[math][add_scaled]")
 }
 
 
+TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
+{
+    CSCMatrix A = davis_example_small().tocsc().slice(0, 3, 0, 4);  // 3 x 4
+
+    std::vector<double> X = {
+        1, 2, 3, 4,
+        2, 4, 6, 8
+    };  // 4 x 2 in column-major format
+
+    std::vector<double> expect = {
+        14.1, 12.5, 12.4,
+        28.2, 25. , 24.8
+    };  // 3 x 2 in column-major format
+
+    std::vector<double> C = A * X;
+
+    check_vectors_allclose(C, expect, tol);
+}
+
+
 }  // namespace cs
 
 /*==============================================================================

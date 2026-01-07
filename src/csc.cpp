@@ -1047,15 +1047,28 @@ CSCMatrix CSCMatrix::scale(const std::vector<double>& r, const std::vector<doubl
 }
 
 
-std::vector<double> CSCMatrix::dot(const std::vector<double>& x) const
+std::vector<double> CSCMatrix::dot(const std::vector<double>& X) const
 {
-    assert(N_ == static_cast<csint>(x.size()));
+    csint NxK = static_cast<csint>(X.size());
 
-    std::vector<double> out(M_);
+    if (NxK % N_ != 0) {
+        throw std::invalid_argument(
+            "Input vector size must be a multiple of number of matrix columns."
+        );
+    }
 
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
-            out[i_[p]] += v_[p] * x[j];
+    csint K = NxK / N_;  // number of columns in X
+
+    std::vector<double> out(M_ * K);
+
+    for (csint k = 0; k < K; k++) {
+        // Compute one column of output
+        for (csint j = 0; j < N_; j++) {
+            for (csint p = p_[j]; p < p_[j+1]; p++) {
+                csint idx = i_[p] + k * M_;  // column-major input/output order
+                csint jdx =     j + k * N_;
+                out[idx] += v_[p] * X[jdx];
+            }
         }
     }
 

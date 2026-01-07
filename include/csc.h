@@ -591,8 +591,15 @@ public:
      */
     CSCMatrix scale(const std::vector<double>& r, const std::vector<double> c) const;
 
-    /** Matrix-vector right-multiply (see cs_multiply) */
-    virtual std::vector<double> dot(const std::vector<double>& x) const override;
+    /** Matrix-dense matrix right-multiply (see cs_multiply)
+     *
+     * @param X  the dense matrix to multiply. X is size N x K, stored in
+     *        column-major order.
+     *
+     * @return Y  the dense matrix result. Y is size M x K, stored in
+     *         column-major order.
+     */
+    virtual std::vector<double> dot(const std::vector<double>& X) const override;
 
     /** Scale a matrix by a scalar */
     CSCMatrix dot(const double c) const;

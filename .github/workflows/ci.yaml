@@ -72,7 +72,7 @@ jobs:
           ls -l "$(python -c 'import csparse; print(csparse.__path__[0])')"
 
       - name: Run Python unit tests with conditional reruns
-        run: ./run_pytest.sh
+        run: ./run_pytest.sh -v
 
       - name: Run Python unit tests with figures
         env:

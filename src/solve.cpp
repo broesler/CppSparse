@@ -28,12 +28,13 @@ namespace cs {
  *----------------------------------------------------------------------------*/
 std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
 {
-    assert(L.M_ == L.N_);
-    assert(L.M_ == static_cast<csint>(b.size()));
+    auto [M, N] = L.shape();
+    assert(M == static_cast<csint>(b.size()));
 
-    std::vector<double> x = b;
+    std::vector<double> x(N);
+    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
 
-    for (csint j = 0; j < L.N_; j++) {
+    for (csint j = 0; j < N; j++) {
         x[j] /= L.v_[L.p_[j]];
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
             x[L.i_[p]] -= L.v_[p] * x[j];
@@ -46,12 +47,13 @@ std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
 
 std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
 {
-    assert(L.M_ == L.N_);
-    assert(L.M_ == static_cast<csint>(b.size()));
+    auto [M, N] = L.shape();
+    assert(M == static_cast<csint>(b.size()));
 
-    std::vector<double> x = b;
+    std::vector<double> x(N);
+    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
 
-    for (csint j = L.N_ - 1; j >= 0; j--) {
+    for (csint j = N - 1; j >= 0; j--) {
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
             x[j] -= L.v_[p] * x[L.i_[p]];
         }
@@ -105,12 +107,13 @@ std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
 // Exercise 3.8
 std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
 {
-    assert(L.M_ == L.N_);
-    assert(L.M_ == static_cast<csint>(b.size()));
+    auto [M, N] = L.shape();
+    assert(M == static_cast<csint>(b.size()));
 
-    std::vector<double> x = b;
+    std::vector<double> x(N);
+    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
 
-    for (csint j = 0; j < L.N_; j++) {
+    for (csint j = 0; j < N; j++) {
         double& x_val = x[j];  // cache reference to value
         // Exercise 3.8: improve performance by checking for zeros
         if (x_val != 0) {
@@ -128,12 +131,13 @@ std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
 // Exercise 3.8
 std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b)
 {
-    assert(U.M_ == U.N_);
-    assert(U.M_ == static_cast<csint>(b.size()));
+    auto [M, N] = U.shape();
+    assert(M == static_cast<csint>(b.size()));
 
-    std::vector<double> x = b;
+    std::vector<double> x(N);
+    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
 
-    for (csint j = U.N_ - 1; j >= 0; j--) {
+    for (csint j = N - 1; j >= 0; j--) {
         double& x_val = x[j];  // cache reference to value
         if (x_val != 0) {
             x_val /= U.v_[U.p_[j+1] - 1];  // diagonal entry

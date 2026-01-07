@@ -11,6 +11,7 @@
 #define _CSPARSE_SPARSE_MATRIX_H_
 
 #include <iostream>
+#include <span>
 #include <vector>
 
 #include "types.h"
@@ -53,7 +54,7 @@ public:
     virtual const std::vector<double>& data() const = 0;  // numerical values
 
     /// Matrix-vector right-multiply (see cs_multiply)
-    virtual std::vector<double> dot(const std::vector<double>& x) const = 0;
+    virtual std::vector<double> dot(std::span<const double> x) const = 0;
 
     /// Convert the matrix to a dense array.
     ///
@@ -112,11 +113,21 @@ public:
 // Exercise 2.10
 inline std::vector<double> operator*(
     const SparseMatrix& A,
+    std::span<const double> x
+)
+{
+    return A.dot(x); 
+}
+
+// Exercise 2.10 (overload for exact match with vector inputs)
+inline std::vector<double> operator*(
+    const SparseMatrix& A,
     const std::vector<double>& x
 )
 {
     return A.dot(x); 
 }
+
 
 
 // inline since it's defined in the header

@@ -17,6 +17,7 @@
 #include <string>
 #include <string_view>
 #include <sstream>
+#include <span>
 #include <vector>
 
 #include "types.h"
@@ -599,7 +600,7 @@ public:
      * @return Y  the dense matrix result. Y is size M x K, stored in
      *         column-major order.
      */
-    virtual std::vector<double> dot(const std::vector<double>& X) const override;
+    virtual std::vector<double> dot(std::span<const double> X) const override;
 
     /** Scale a matrix by a scalar */
     CSCMatrix dot(const double c) const;

@@ -214,7 +214,7 @@ public:
      *
      * @return y  the result of the matrix-vector multiplication.
      */
-    virtual std::vector<double> dot(const std::vector<double>& x) const override;
+    virtual std::vector<double> dot(std::span<const double> x) const override;
 
 
 protected:

@@ -890,10 +890,13 @@ QRSolveResult qr_solve(
         SymbolicQR S = sqr(A, order);
         QRResult res = qr(A, S);
 
-        // R y = Q^T P b
-        const std::vector<double> QTPb = apply_qtleft(res.V, res.beta, res.p_inv, b);
-        const std::vector<double> qx = usolve(res.R, QTPb);  // y = R \ Q^T P b
-        x = ipvec(res.q, qx);  // x = q^T q x
+        // Solve P^T Q R q x = b
+        // R y = Q^T P b -> w = Q^T P b
+        std::vector<double> w(S.m2);
+        ipvec<double>(res.p_inv, b, w);    // w = Pb
+        apply_qtleft(res.V, res.beta, w);  // y = Q^T P b -> w
+        usolve_inplace(res.R, w);          // y = q x = R \ (Q^T P b) -> w = y
+        x = ipvec(res.q, w);               // x = q^T q x
     } else {
         // Compute the minimum-norm solution
         CSCMatrix AT = A.transpose();
@@ -901,9 +904,11 @@ QRSolveResult qr_solve(
         SymbolicQR S = sqr(AT, order);
         QRResult res = qr(AT, S);
 
-        const std::vector<double> qb = pvec(S.q, b);          // b = b[q]
-        const std::vector<double> QTPx = utsolve(res.R, qb);  // y = R^T \ b[q]
-        x = apply_qleft(res.V, res.beta, res.p_inv, QTPx);    // x = P^T Q (Q^T P x)
+        std::vector<double> w(S.m2);
+        pvec<double>(S.q, b, w);          // b = q b -> w = q b
+        utsolve_inplace(res.R, w);        // y = R^T \ q b -> w = y
+        apply_qleft(res.V, res.beta, w);  // w = Q (Q^T P x)
+        x = pvec(res.p_inv, w);           // x = P^T Q (Q^T P x)
     }
 
     // Compute the residual

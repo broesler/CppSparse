@@ -562,21 +562,91 @@ TEST_CASE("Add sparse column vectors", "[math][add_scaled]")
 
 TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
 {
-    CSCMatrix A = davis_example_small().tocsc().slice(0, 3, 0, 4);  // 3 x 4
+    CSCMatrix A = davis_example_small().tocsc();
 
-    std::vector<double> X = {
-        1, 2, 3, 4,
-        2, 4, 6, 8
-    };  // 4 x 2 in column-major format
+    SECTION("M < N, N > K") {
+        A = A.slice(0, 3, 0, 4);  // 3 x 4
 
-    std::vector<double> expect = {
-        14.1, 12.5, 12.4,
-        28.2, 25. , 24.8
-    };  // 3 x 2 in column-major format
+        std::vector<double> X = {
+            1, 2, 3, 4,
+            2, 4, 6, 8
+        };  // 4 x 2 in column-major format
 
-    std::vector<double> C = A * X;
+        std::vector<double> expect = {
+            14.1, 12.5, 12.4,
+            28.2, 25. , 24.8
+        };  // 3 x 2 in column-major format
 
-    check_vectors_allclose(C, expect, tol);
+        std::vector<double> C = A * X;
+
+        check_vectors_allclose(C, expect, tol);
+    }
+
+    SECTION("M < N, N < K") {
+        A = A.slice(0, 3, 0, 4);  // 3 x 4
+
+        std::vector<double> X = {
+            1, 2,   3,  4,
+            2, 4,   6,  8,
+            3, 6,   9, 12,
+            4, 8,  12, 16,
+            5, 10, 15, 20
+        };  // 4 x 5 in column-major format
+
+        std::vector<double> expect = {
+            14.1, 12.5, 12.4,
+            28.2, 25.0, 24.8,
+            42.3, 37.5, 37.2,
+            56.4, 50.0, 49.6,
+            70.5, 62.5, 62.0
+        };  // 3 x 5 in column-major format
+
+        std::vector<double> C = A * X;
+
+        check_vectors_allclose(C, expect, tol);
+    }
+
+    SECTION("M > N, N < K") {
+        A = A.slice(0, 4, 0, 3);  // 4 x 3
+
+        std::vector<double> X = {
+            1, 2,   3,
+            2, 4,   6,
+            3, 6,   9,
+            4, 8,  12,
+            5, 10, 15,
+        };  // 3 x 5 in column-major format
+
+        std::vector<double> expect = {
+            14.1,  8.9, 12.4,  4.3,
+            28.2, 17.8, 24.8,  8.6,
+            42.3, 26.7, 37.2, 12.9,
+            56.4, 35.6, 49.6, 17.2,
+            70.5, 44.5, 62.0, 21.5
+        };  // 4 x 5 in column-major format
+
+        std::vector<double> C = A * X;
+
+        check_vectors_allclose(C, expect, tol);
+    }
+
+    SECTION("M > N, N > K") {
+        A = A.slice(0, 4, 0, 3);  // 4 x 3
+
+        std::vector<double> X = {
+            1, 2,   3,
+            2, 4,   6,
+        };  // 3 x 2 in column-major format
+
+        std::vector<double> expect = {
+            14.1,  8.9, 12.4,  4.3,
+            28.2, 17.8, 24.8,  8.6,
+        };  // 4 x 2 in column-major format
+
+        std::vector<double> C = A * X;
+
+        check_vectors_allclose(C, expect, tol);
+    }
 }
 
 

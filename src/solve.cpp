@@ -12,6 +12,7 @@
 #include <cmath>       // fabs
 #include <functional>  // reference wrapper
 #include <ranges>      // views::reverse
+#include <span>
 #include <vector>
 
 #include "solve.h"
@@ -26,13 +27,20 @@ namespace cs {
 /*------------------------------------------------------------------------------
  *      Triangular Matrix Solutions 
  *----------------------------------------------------------------------------*/
-std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
+void lsolve_inplace(const CSCMatrix& L, std::span<double> x)
 {
     auto [M, N] = L.shape();
-    assert(M == static_cast<csint>(b.size()));
 
-    std::vector<double> x(N);
-    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    csint Nx = static_cast<csint>(x.size()); 
+    if (N != Nx) {
+        throw std::runtime_error(
+            std::format("Matrix and RHS vector sizes do not match! {} != {}.", N, Nx)
+        );
+    }
 
     for (csint j = 0; j < N; j++) {
         x[j] /= L.v_[L.p_[j]];
@@ -40,7 +48,12 @@ std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
             x[L.i_[p]] -= L.v_[p] * x[j];
         }
     }
+}
 
+std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
+{
+    std::vector<double> x = b;
+    lsolve_inplace(L, x);
     return x;
 }
 
@@ -64,14 +77,20 @@ std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
 }
 
 
-std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
+void usolve_inplace(const CSCMatrix& U, std::span<double> x)
 {
     auto [M, N] = U.shape();
-    assert(M == static_cast<csint>(b.size()));
 
-    // Copy the RHS vector, only taking N elements if M > N
-    std::vector<double> x(N);
-    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    csint Nx = static_cast<csint>(x.size()); 
+    if (N != Nx) {
+        throw std::runtime_error(
+            std::format("Matrix and RHS vector sizes do not match! {} != {}.", N, Nx)
+        );
+    }
 
     for (csint j = N - 1; j >= 0; j--) {
         x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
@@ -79,7 +98,13 @@ std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
             x[U.i_[p]] -= U.v_[p] * x[j];
         }
     }
+}
 
+
+std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
+{
+    std::vector<double> x = b;
+    usolve_inplace(U, x);
     return x;
 }
 

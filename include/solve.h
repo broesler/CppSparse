@@ -48,6 +48,17 @@ struct QRSolveResult {
 //------------------------------------------------------------------------------
 //        Triangular Matrix Solutions
 //------------------------------------------------------------------------------
+/** Forward solve a lower-triangular system \f$ Lx = b \f$, in-place.
+ *
+ * @note This function assumes that the diagonal entry of `L` is always
+ * present and is the first entry in each column. Otherwise, the row
+ * indices in each column of `L` may appear in any order.
+ *
+ * @param L  a lower-triangular matrix
+ * @param b[in,out]  RHS vector on input, solution on output.
+ */
+void lsolve_inplace(const CSCMatrix& L, std::span<double> x);
+
 /** Forward solve a lower-triangular system \f$ Lx = b \f$.
  *
  * @note This function assumes that the diagonal entry of `L` is always
@@ -74,6 +85,18 @@ std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b);
  * @return x  the solution vector
  */
 std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b);
+
+
+/** Backsolve an upper-triangular system \f$ Ux = b \f$.
+ *
+ * @note This function assumes that the diagonal entry of `U` is always
+ * present and is the last entry in each column. Otherwise, the row
+ * indices in each column of `U` may appear in any order.
+ *
+ * @param U  an upper-triangular matrix
+ * @param x[in,out]  RHS vector on input, solution on output.
+ */
+void usolve_inplace(const CSCMatrix& U, std::span<double> x);
 
 
 /** Backsolve an upper-triangular system \f$ Ux = b \f$.

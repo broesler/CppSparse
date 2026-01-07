@@ -189,6 +189,32 @@ TEST_CASE("LU with Iterative Refinement", "[lusol-ir]") {
 }
 
 
+TEST_CASE("LU Solution with Dense Matrix RHS", "[lusol-dense-matrix]") {
+    CSCMatrix A = davis_example_qr();
+    auto [M, N] = A.shape();
+
+    AMDOrder order = GENERATE(
+        AMDOrder::Natural,
+        AMDOrder::ATANoDenseRows,
+        AMDOrder::ATA
+    );
+    CAPTURE(order);
+
+    // Create RHS for Ax = b
+    csint K = 3;  // arbitrary number of RHS columns
+    std::vector<double> expect_x(N * K);
+    std::iota(expect_x.begin(), expect_x.end(), 1);
+
+    const std::vector<double> b = A * expect_x;
+
+    // Solve Ax = b
+    std::vector<double> x = lu_solve(A, b, order);
+
+    // Check that Ax = b
+    check_vectors_allclose(x, expect_x, 1e-12);
+}
+
+
 /*------------------------------------------------------------------------------
  *         Exercise 8.1: General Sparse Solver
  *----------------------------------------------------------------------------*/

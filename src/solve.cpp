@@ -870,23 +870,49 @@ std::vector<double> lu_solve(
     csint ir_steps
 )
 {
-    if (A.shape()[0] != static_cast<csint>(b.size())) {
+    auto [M, N] = A.shape();
+    csint MxK = static_cast<csint>(b.size());
+
+    if (MxK % M != 0) {
+        throw std::runtime_error(
+            "RHS vector size is not a multiple of matrix size!"
+        );
+    }
+
+    csint K = MxK / M;
+    csint Mb = MxK / K;
+
+    if (M != Mb) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
     }
 
-    SymbolicLU S = slu(A, order);
-    LUResult res = lu(A, S, tol);
+    const SymbolicLU S = slu(A, order);
+    const LUResult res = lu(A, S, tol);
 
-    std::vector<double> x = res.solve(b);
+    std::vector<double> X(N * K);  // solution matrix
+    std::vector<double> b_k(M);    // k-th column of b
 
-    // Exercise 8.5: Iterative refinement
-    for (csint i = 0; i < ir_steps; i++) {
-        std::vector<double> r = b - A * x;
-        std::vector<double> d = res.solve(r);
-        x += d;
+    // TODO rewrite LUResult::solve to accept a span and operate in-place
+    // * also requires ipvec and lsolve/usolve to accept spans
+    for (csint k = 0; k < K; k++) {
+        // Extract k-th column of b
+        std::copy(b.begin() + k * M, b.begin() + (k + 1) * M, b_k.begin());
+
+        // Solve for each RHS column
+        std::vector<double> x = res.solve(b_k);
+
+        // Exercise 8.5: Iterative refinement
+        for (csint i = 0; i < ir_steps; i++) {
+            const std::vector<double> r = b_k - A * x;
+            const std::vector<double> d = res.solve(r);
+            x += d;
+        }
+
+        // Store solution back into X in column-major order
+        std::copy(x.begin(), x.end(), X.begin() + k * N);
     }
 
-    return x;
+    return X;
 }
 
 

@@ -10,6 +10,7 @@
 #include <cmath>    // fabs
 #include <numeric>  // iota
 #include <ranges>   // views::reverse
+#include <span>
 #include <stdexcept>
 #include <vector>
 
@@ -25,18 +26,34 @@ namespace cs {
 
 // Define solve functions for LUResult
 // Exercise 6.1
-std::vector<double> LUResult::solve(const std::vector<double>& b) const
+void LUResult::solve_inplace(std::span<double> b) const
 {
-    if (L.shape()[0] != static_cast<csint>(b.size())) {
+    auto [M, N] = L.shape();
+
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    if (M != static_cast<csint>(b.size())) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
     }
 
+    // allocate workspace
+    std::vector<double> w(N);
+
     // Solve A x = b == (P^T L U Q^T) x = b
-    const std::vector<double> Pb = ipvec(p_inv, b);  // permute b -> Pb
-    const std::vector<double> y = lsolve(L, Pb);     // solve Ly = Pb
-    const std::vector<double> QTx = usolve(U, y);    // solve U (Q^T x) = y
-    std::vector<double> x = ipvec(q, QTx);           // Q (Q^T x) = x
-    
+    ipvec<double>(p_inv, b, w);  // permute b -> w = Pb
+    lsolve_inplace(L, w);        // solve Ly = Pb -> w = y
+    usolve_inplace(U, w);        // solve U (Q^T x) = y -> w = Q^T x
+    ipvec<double>(q, w, b);      // Q (Q^T x) = x -> b = x
+}
+
+
+// Exercise 6.1
+std::vector<double> LUResult::solve(const std::vector<double>& b) const
+{
+    std::vector<double> x = b;
+    solve_inplace(x);
     return x;
 }
 

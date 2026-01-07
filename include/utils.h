@@ -78,13 +78,26 @@ std::vector<csint> inv_permute(const std::vector<csint>& p);
  * @return x  `x = Pb` the permuted vector, like `x = b(p)` in MATLAB.
  */
 template <typename T>
+void pvec(std::span<const csint> p, std::span<const T> b, std::span<T> x)
+{
+    for (size_t k = 0; k < b.size(); k++)
+        x[k] = b[p[k]];
+}
+
+
+/** Compute \f$ x = Pb \f$ where P is a permutation matrix, represented as
+ * a vector.
+ *
+ * @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
+ * @param b  vector of data to permute
+ *
+ * @return x  `x = Pb` the permuted vector, like `x = b(p)` in MATLAB.
+ */
+template <typename T>
 std::vector<T> pvec(const std::vector<csint>& p, const std::vector<T>& b)
 {
     std::vector<T> x(b.size());
-
-    for (size_t k = 0; k < b.size(); k++)
-        x[k] = b[p[k]];
-
+    pvec<T>(p, b, x);  // pass in workspace
     return x;
 }
 

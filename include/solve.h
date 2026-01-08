@@ -497,17 +497,17 @@ std::vector<csint> topological_order(
 
 /** Solve the system Ax = b using the Cholesky factorization.
  *
- * @param A  a symmetric, positive-definite matrix
- * @param b  a dense vector
+ * @param A  (N, N) a symmetric, positive-definite matrix
+ * @param b  (N, K) a dense matrix, in column-major format
  * @param order  the fill-reducing ordering of the matrix to compute
  *
- * @return x  the dense solution vector
+ * @return x  (N, K) the dense solution matrix
  *
  * @see cs_cholsol
  */
 std::vector<double> chol_solve(
     const CSCMatrix& A,
-    const std::vector<double>& b,
+    const std::vector<double>& B,
     AMDOrder order=AMDOrder::Natural
 );
 

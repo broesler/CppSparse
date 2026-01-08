@@ -815,19 +815,22 @@ SparseSolution chol_ltsolve(
 
 std::vector<double> chol_solve(
     const CSCMatrix& A,
-    const std::vector<double>& b,
+    const std::vector<double>& B,
     AMDOrder order
 )
 {
     auto [M, N] = A.shape();
+    csint MxK = static_cast<csint>(B.size());
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");
     }
 
-    if (M != static_cast<csint>(b.size())) {
-        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
+    if (MxK % M != 0) {
+        throw std::runtime_error("RHS vector size is not a multiple of matrix rows!");
     }
+
+    csint K = MxK / M;  // number of RHS columns
 
     SymbolicChol S = schol(A, order);
     CholResult res = chol(A, S);
@@ -836,14 +839,23 @@ std::vector<double> chol_solve(
     // std::vector<double> y = chol_lsolve(L, Pb, S.parent).x;
     // std::vector<double> PTx = chol_ltsolve(L, Pb, S.parent).x;
 
-    std::vector<double> w(N);  // workspace
-    
-    ipvec<double>(res.p_inv, b, w);              // permute b -> w = Pb
-    lsolve_inplace(res.L, w);                    // y = L \ b -> w = y
-    ltsolve_inplace(res.L, w);                   // P^T x = L^T \ y -> w = P^T x
-    std::vector<double> x = pvec(res.p_inv, w);  // x = P P^T x
+    std::vector<double> X(N * K);  // solution matrix
 
-    return x;
+    for (csint k = 0; k < K; k++) {
+        // Create a view into the k-th columns of B and X
+        std::span<const double> B_k(B.data() + k * M, M);
+        std::span<double> X_k(X.data() + k * N, N);
+
+        // Solve for each RHS column
+        std::vector<double> w(N);  // workspace
+        
+        ipvec<double>(res.p_inv, B_k, w);  // permute b -> w = Pb
+        lsolve_inplace(res.L, w);          // y = L \ b -> w = y
+        ltsolve_inplace(res.L, w);         // P^T x = L^T \ y -> w = P^T x
+        pvec<double>(res.p_inv, w, X_k);   // x = P P^T x
+    }
+
+    return X;
 }
 
 

@@ -48,6 +48,32 @@ TEST_CASE("Cholesky Solution", "[cholsol]")
 }
 
 
+TEST_CASE("Cholesky Solution with Dense Matrix RHS", "[cholsol-dense-matrix]")
+{
+    CSCMatrix A = davis_example_chol();
+    auto [M, N] = A.shape();
+
+    AMDOrder order = GENERATE(
+        AMDOrder::Natural,
+        AMDOrder::APlusAT
+    );
+    CAPTURE(order);
+
+    // Create RHS for Ax = b
+    csint K = 3;  // arbitrary number of RHS columns
+    std::vector<double> expect_x(N * K);
+    std::iota(expect_x.begin(), expect_x.end(), 1);
+
+    const std::vector<double> b = A * expect_x;
+
+    // Solve Ax = b
+    std::vector<double> x = chol_solve(A, b, order);
+
+    // Check that Ax = b
+    check_vectors_allclose(x, expect_x, tol);
+}
+
+
 TEST_CASE("QR Solution", "[qrsol]")
 {
     CSCMatrix A = davis_example_qr();

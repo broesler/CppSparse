@@ -40,23 +40,7 @@ void lsolve_inplace(const CSCMatrix& L, std::span<double> x)
 
 std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& B)
 {
-    auto [M, N] = L.shape();
-    csint MxK = static_cast<csint>(B.size());
-
-    if (MxK % M != 0) {
-        throw std::runtime_error("RHS vector size is not a multiple of matrix rows!");
-    }
-
-    csint K = MxK / M;  // number of RHS columns
-    std::vector<double> X = B;
-    std::span<double> X_span(X);  // view onto X
-
-    for (csint k = 0; k < K; k++) {
-        auto X_k = X_span.subspan(k * N, N);
-        lsolve_inplace(L, X_k);
-    }
-
-    return X;
+    return trisolve_impl(L, B, lsolve_inplace);
 }
 
 
@@ -66,23 +50,9 @@ std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& b)
 }
 
 
-
 void ltsolve_inplace(const CSCMatrix& L, std::span<double> x)
 {
-    auto [M, N] = L.shape();
-
-    if (M != N) {
-        throw std::runtime_error("Matrix must be square!");
-    }
-
-    csint Nx = static_cast<csint>(x.size()); 
-    if (M != Nx) {
-        throw std::runtime_error(
-            std::format("Matrix and RHS vector sizes do not match! {} != {}.", M, Nx)
-        );
-    }
-
-    for (csint j = N - 1; j >= 0; j--) {
+    for (csint j = L.N_ - 1; j >= 0; j--) {
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
             x[j] -= L.v_[p] * x[L.i_[p]];
         }
@@ -91,11 +61,9 @@ void ltsolve_inplace(const CSCMatrix& L, std::span<double> x)
 }
 
 
-std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
+std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& B)
 {
-    std::vector<double> x = b;
-    ltsolve_inplace(L, x);
-    return x;
+    return trisolve_impl(L, B, ltsolve_inplace);
 }
 
 
@@ -110,11 +78,9 @@ void usolve_inplace(const CSCMatrix& U, std::span<double> x)
 }
 
 
-std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
+std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& B)
 {
-    std::vector<double> x = b;
-    usolve_inplace(U, x);
-    return x;
+    return trisolve_impl(U, B, usolve_inplace);
 }
 
 
@@ -135,24 +101,16 @@ void utsolve_inplace(const CSCMatrix& U, std::span<double> x)
 }
 
 
-std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
+std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& B)
 {
-    std::vector<double> x = b;
-    utsolve_inplace(U, x);
-    return x;
+    return trisolve_impl(U, B, utsolve_inplace);
 }
 
 
 // Exercise 3.8
-std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
+void lsolve_inplace_opt(const CSCMatrix& L, std::span<double> x)
 {
-    auto [M, N] = L.shape();
-    assert(M == static_cast<csint>(b.size()));
-
-    std::vector<double> x(N);
-    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
-
-    for (csint j = 0; j < N; j++) {
+    for (csint j = 0; j < L.N_; j++) {
         double& x_val = x[j];  // cache reference to value
         // Exercise 3.8: improve performance by checking for zeros
         if (x_val != 0) {
@@ -162,21 +120,19 @@ std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
             }
         }
     }
+}
 
-    return x;
+
+std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
+{
+    return trisolve_impl(L, b, lsolve_inplace_opt);
 }
 
 
 // Exercise 3.8
-std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b)
+void usolve_inplace_opt(const CSCMatrix& U, std::span<double> x)
 {
-    auto [M, N] = U.shape();
-    assert(M == static_cast<csint>(b.size()));
-
-    std::vector<double> x(N);
-    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
-
-    for (csint j = N - 1; j >= 0; j--) {
+    for (csint j = U.N_ - 1; j >= 0; j--) {
         double& x_val = x[j];  // cache reference to value
         if (x_val != 0) {
             x_val /= U.v_[U.p_[j+1] - 1];  // diagonal entry
@@ -185,8 +141,12 @@ std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b)
             }
         }
     }
+}
 
-    return x;
+
+std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b)
+{
+    return trisolve_impl(U, b, usolve_inplace_opt);
 }
 
 

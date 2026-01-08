@@ -14,6 +14,7 @@
 #include <span>
 #include <vector>
 
+#include "csc.h"
 #include "types.h"
 
 
@@ -49,6 +50,45 @@ struct QRSolveResult {
 //------------------------------------------------------------------------------
 //        Triangular Matrix Solutions
 //------------------------------------------------------------------------------
+/** Solve a triangular linear system \f$ Tx = B \f$ for multiple RHS columns.
+ *
+ * @tparam InplaceTriSolve  a function that performs an in-place triangular
+ *         solve on a single RHS vector.
+ *
+ * @param L  a triangular matrix
+ * @param B  a dense matrix with multiple RHS columns, stored column-wise
+ * @param inplace_solver  a function that performs an in-place triangular
+ *         solve on a single RHS vector.
+ *
+ * @return X  the solution matrix with multiple columns, stored column-wise
+ */
+template<typename InplaceTriSolve>
+std::vector<double> trisolve_impl(
+    const CSCMatrix& L,
+    const std::vector<double>& B,
+    InplaceTriSolve inplace_solver
+)
+{
+    auto [M, N] = L.shape();
+    csint MxK = static_cast<csint>(B.size());
+
+    if (MxK % M != 0) {
+        throw std::runtime_error("RHS vector size is not a multiple of matrix rows!");
+    }
+
+    csint K = MxK / M;            // number of RHS columns
+    std::vector<double> X = B;    // NOTE only works if M == N
+    std::span<double> X_span(X);  // view onto X
+
+    for (csint k = 0; k < K; k++) {
+        auto X_k = X_span.subspan(k * N, N);
+        inplace_solver(L, X_k);
+    }
+
+    return X;
+};
+
+
 /** Forward solve a lower-triangular system \f$ Lx = b \f$, in-place.
  *
  * @note This function assumes that the diagonal entry of `L` is always
@@ -59,6 +99,7 @@ struct QRSolveResult {
  * @param x[in,out]  RHS vector on input, solution on output.
  */
 void lsolve_inplace(const CSCMatrix& L, std::span<double> x);
+
 
 /** Forward solve a lower-triangular system \f$ Lx = b \f$.
  *
@@ -164,11 +205,41 @@ std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b);
  * indices in each column of `L` may appear in any order.
  *
  * @param L  a lower-triangular matrix
+ * @param x[in,out]  the RHS vector on input, solution on output.
+ */
+void lsolve_inplace_opt(const CSCMatrix& A, std::span<double> x);
+
+
+/** Forward solve a lower-triangular system \f$ Lx = b \f$, but
+ * optimized for cache efficiency.
+ *
+ * See: Davis, Exercise 3.8
+ *
+ * @note This function assumes that the diagonal entry of `L` is always
+ * present and is the first entry in each column. Otherwise, the row
+ * indices in each column of `L` may appear in any order.
+ *
+ * @param L  a lower-triangular matrix
  * @param b  a dense vector
  *
  * @return x  the solution vector
  */
 std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b);
+
+
+/** Backsolve an upper-triangular system \f$ Ux = b \f$, but optimized for cache
+ * efficiency.
+ *
+ * See: Davis, Exercise 3.8
+ *
+ * @note This function assumes that the diagonal entry of `U` is always present
+ * and is the last entry in each column. Otherwise, the row indices in each
+ * column of `U` may appear in any order.
+ *
+ * @param U  an upper-triangular matrix
+ * @param x[in,out]  the RHS vector on input, solution on output.
+ */
+void usolve_inplace_opt(const CSCMatrix& A, std::span<double> x);
 
 
 /** Backsolve an upper-triangular system \f$ Ux = b \f$, but optimized for cache

@@ -336,10 +336,10 @@ PYBIND11_MODULE(csparse, m) {
         .def("__mul__", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_), py::is_operator())
         .def("__rmul__", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_), py::is_operator())
         .def("dot", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
-        .def("dot", py::overload_cast<const std::vector<double>&>(&cs::CSCMatrix::dot, py::const_))
+        .def("dot", py::overload_cast<std::span<const double>>(&cs::CSCMatrix::dot, py::const_))
         .def("dot", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
         .def("__matmul__", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
-        .def("__matmul__", py::overload_cast<const std::vector<double>&>(&cs::CSCMatrix::dot, py::const_))
+        .def("__matmul__", py::overload_cast<std::span<const double>>(&cs::CSCMatrix::dot, py::const_))
         .def("__matmul__", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
         //
         .def("add", &cs::CSCMatrix::add)
@@ -438,10 +438,17 @@ PYBIND11_MODULE(csparse, m) {
     //--------------------------------------------------------------------------
     //        Utility Functions
     //--------------------------------------------------------------------------
+    // Define the pvec/ipvec function pointer types
+    using pvec_func_double_t = std::vector<double> (*)(const std::vector<cs::csint>&, const std::vector<double>&);
+    using pvec_func_csint_t = std::vector<cs::csint> (*)(const std::vector<cs::csint>&, const std::vector<cs::csint>&);
+
     m.def("pvec", 
         [](const std::vector<cs::csint>& p, const py::object& b_obj) {
             return dispatch_pvec_ipvec(
-                p, b_obj, &cs::pvec<double>, &cs::pvec<cs::csint>
+                p,
+                b_obj,
+                static_cast<pvec_func_double_t>(&cs::pvec<double>),
+                static_cast<pvec_func_csint_t>(&cs::pvec<cs::csint>)
             );
         },
         py::arg("p"), py::arg("b")
@@ -449,7 +456,10 @@ PYBIND11_MODULE(csparse, m) {
     m.def("ipvec", 
         [](const std::vector<cs::csint>& p, const py::object& b_obj) {
             return dispatch_pvec_ipvec(
-                p, b_obj, &cs::ipvec<double>, &cs::ipvec<cs::csint>
+                p,
+                b_obj,
+                static_cast<pvec_func_double_t>(&cs::ipvec<double>),
+                static_cast<pvec_func_csint_t>(&cs::ipvec<cs::csint>)
             );
         },
         py::arg("p"), py::arg("b")

@@ -862,14 +862,24 @@ std::vector<double> chol_solve(
 // -----------------------------------------------------------------------------
 //         QR Factorization Solvers
 // -----------------------------------------------------------------------------
-QRSolveResult qr_solve(
+/** Solve the linear system Ax = b using QR factorization.
+ *
+ * If A is tall (m >= n), compute the least-squares solution.
+ * If A is wide (m < n), compute the minimum-norm solution.
+ *
+ * @param A  the input matrix in CSC format
+ * @param b  the right-hand side vector
+ * @param order  the AMD ordering to use
+ * @param x[out]  the output solution vector
+ */
+static void qr_solve_(
     const CSCMatrix& A,
-    const std::vector<double>& b,
-    AMDOrder order
+    std::span<const double> b,
+    AMDOrder order,
+    std::span<double> x
 )
 {
     auto [M, N] = A.shape();
-    std::vector<double> x;
 
     if (M >= N) {
         // Compute the least-squares solution
@@ -881,7 +891,7 @@ QRSolveResult qr_solve(
         ipvec<double>(res.p_inv, b, w);    // permute b -> E b -> w = Eb
         apply_qtleft(res.V, res.beta, w);  // y = Q^T E b -> w = y
         usolve_inplace(res.R, w);          // E x = R \ y -> w = E x
-        x = ipvec(res.q, w);               // x = E^T (E x)
+        ipvec<double>(res.q, w, x);        // x = E^T (E x)
     } else {
         // Compute the minimum-norm solution
         CSCMatrix AT = A.transpose();
@@ -894,13 +904,39 @@ QRSolveResult qr_solve(
         pvec<double>(S.q, b, w);          // permute b -> E b -> w = Eb
         utsolve_inplace(res.R, w);        // y = R^T \ E b -> w = y
         apply_qleft(res.V, res.beta, w);  // P x = Q y -> w = P x
-        x = pvec(res.p_inv, w);           // x = P^T (P x)
+        pvec<double>(res.p_inv, w, x);    // x = P^T (P x)
+    }
+}
+
+
+QRSolveResult qr_solve(
+    const CSCMatrix& A,
+    const std::vector<double>& B,
+    AMDOrder order
+)
+{
+    auto [M, N] = A.shape();
+    csint MxK = static_cast<csint>(B.size());
+
+    if (MxK % M != 0) {
+        throw std::runtime_error("RHS vector size is not a multiple of matrix rows!");
+    }
+
+    csint K = MxK / M;  // number of RHS columns
+
+    std::vector<double> X(N * K);  // solution matrix
+
+    for (csint k = 0; k < K; k++) {
+        // Solve for each RHS column
+        std::span<const double> B_k(B.data() + k * M, M);
+        std::span<double> X_k(X.data() + k * N, N);
+        qr_solve_(A, B_k, order, X_k);
     }
 
     // Compute the residual
-    std::vector<double> r = b - A * x;
+    std::vector<double> R = B - A * X;
 
-    return QRSolveResult{x, r, norm(r, 2)};
+    return QRSolveResult{X, R, norm(R, 2)};
 }
 
 

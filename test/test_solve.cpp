@@ -150,6 +150,87 @@ TEST_CASE("QR Solution", "[qrsol]")
 }
 
 
+TEST_CASE("QR Solution with Dense Matrix RHS", "[qrsol-dense-matrix]")
+{
+    CSCMatrix A = davis_example_qr();
+    auto [M, N] = A.shape();
+
+    AMDOrder order = GENERATE(
+        AMDOrder::Natural,
+        AMDOrder::ATA
+    );
+    CAPTURE(order);
+
+    // Create RHS for Ax = b
+    csint K = 3;  // arbitrary number of RHS columns
+    std::vector<double> expect(N * K);
+    std::iota(expect.begin(), expect.end(), 1);
+
+
+    std::vector<double> b;
+    QRSolveResult res;
+
+    SECTION("Square") {
+        // Create RHS for Ax = b
+        b = A * expect;
+
+        // Solve Ax = b
+        res = qr_solve(A, b, order);
+
+        // Check that Ax = b
+        check_vectors_allclose(res.x, expect, 1e-12);
+        REQUIRE(res.rnorm < 1e-12);
+    }
+
+    SECTION("Over-determined") {
+        std::vector<double> expect_x = expect;  // copy the original expect
+
+        // Create a new matrix with more rows than columns
+        csint k = 3;
+        A = A.slice(0, M, 0, N - k);
+
+        // Take only the first N - k rows of expect_x
+        csint Nmk = N - k;
+        for (csint j = 0; j < K; j++) {
+            auto read_start = expect_x.begin() + j * N;
+            auto write_start = expect_x.begin() + j * Nmk;
+            std::copy(read_start, read_start + Nmk, write_start);
+        } 
+        expect_x.resize(Nmk * K);
+
+        b = A * expect_x;
+
+        // Solve Ax = b
+        res = qr_solve(A, b, order);
+
+        // Check that Ax = b
+        check_vectors_allclose(res.x, expect_x, 1e-12);
+        REQUIRE(res.rnorm < 1e-12);
+    }
+
+    SECTION("Under-determined") {
+        // Create a new matrix with more rows than columns
+        csint k = 3;
+        A = A.slice(0, M - k, 0, N);
+
+        b = A * expect;
+
+        // Solve Ax = b
+        res = qr_solve(A, b, order);  // (M - k, N)
+
+        // Actual expect_x la.lstsq(A.toarray(), b)
+        const std::vector<double> min_norm_x = {
+             3.2222222222222143,  3.1111111111111125,  3.                ,  4.000000000000004 ,  5.961538461538462 ,  1.192307692307692 ,  4.7777777777777715,  0.,
+             9.444444444444414 , 10.222222222222229 , 10.999999999999996 , 12.000000000000016 , 15.192307692307692 ,  3.0384615384615374, 14.55555555555553  ,  0.,
+            15.666666666666636 , 17.333333333333343 , 19.                , 20.000000000000018 , 24.423076923076923 ,  4.884615384615383 , 24.33333333333331  ,  0.
+        };
+
+        // Check that Ax = b
+        check_vectors_allclose(res.x, min_norm_x, 1e-12);
+        REQUIRE(res.rnorm < 1e-12);
+    }
+}
+
 TEST_CASE("LU Solution", "[lusol]") {
     CSCMatrix A = davis_example_qr();
     auto [M, N] = A.shape();

@@ -461,16 +461,15 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
 
 
 // Exercise 3.7
-std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>& b)
+void tri_solve_perm_inplace(
+    const CSCMatrix& A,
+    const TriPerm& tri_perm,
+    std::span<double> b,
+    std::span<double> x
+)
 {
-    assert(A.M_ == A.N_);
-    assert(A.M_ == static_cast<csint>(b.size()));
-
-    // Get the permutation vectors
-    auto [p_inv, q_inv, p_diags] = find_tri_permutation(A);
-
-    std::vector<double> x(A.N_);     // solution vector
-    std::vector<double> b_work = b;  // copy the RHS vector
+    // Extract the permutation vectors
+    auto [p_inv, q_inv, p_diags] = tri_perm;
 
     // Solve the system (PTQ) x = b => T (Q x) = (P^T b)
     for (csint k = 0; k < A.N_; k++) {
@@ -479,18 +478,41 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>
         csint d = p_diags[k];  // pointer to the diagonal entry
 
         // Solve for x[j]
-        double x_val = b_work[i];
+        double x_val = b[i];
         if (x_val != 0) {
             x_val /= A.v_[d];  // diagonal entry
             x[j] = x_val;
             // Update off-diagonals
             for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
                 if (p != d) {
-                    b_work[A.i_[p]] -= A.v_[p] * x_val;
+                    b[A.i_[p]] -= A.v_[p] * x_val;
+                }
                 }
             }
         }
+}
+
+std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>& b)
+{
+    auto [M, N] = A.shape();
+    csint MxK = static_cast<csint>(b.size());
+
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
     }
+
+    if (MxK != M) {
+        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
+    }
+
+    // Get the permutation vectors and check if A is permuted triangular
+    const TriPerm tri_perm = find_tri_permutation(A);
+
+    std::vector<double> x(N);        // solution vector
+    std::vector<double> b_work = b;  // copy the RHS vector
+
+    // Solve the system
+    tri_solve_perm_inplace(A, tri_perm, b_work, x);
 
     return x;
 }

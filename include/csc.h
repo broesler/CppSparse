@@ -948,12 +948,14 @@ public:
     friend std::vector<csint> find_lower_diagonals(const CSCMatrix& A);
     friend std::vector<csint> find_upper_diagonals(const CSCMatrix& A);
 
-    friend std::vector<double> tri_solve_perm(
-        const CSCMatrix& A,
-        const std::vector<double>& b
-    );
-
     friend TriPerm find_tri_permutation(const CSCMatrix& A);
+
+    friend void tri_solve_perm_inplace(
+        const CSCMatrix& A,
+        const TriPerm& tri_perm,
+        std::span<double> b,
+        std::span<double> x
+    );
 
     friend SparseSolution spsolve(
         const CSCMatrix& A,

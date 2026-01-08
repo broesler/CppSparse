@@ -353,6 +353,27 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U);
  * See: Davis, Exercise 3.7
  *
  * @param A  a permuted triangular matrix
+ * @param tri_perm  the permutation vectors of A, as returned by
+ *        find_tri_permutation
+ * @param b  a dense RHS vector, *not* permuted.
+ * @param x  the dense solution vector, also *not* permuted.
+ *
+ * @see find_tri_permutation
+ */
+void tri_solve_perm_inplace(
+    const CSCMatrix& A,
+    const TriPerm& tri_perm,
+    std::span<double> b,
+    std::span<double> x
+);
+
+
+/** Solve a row- and column-permuted triangular system P A Q x = b, for unknown
+ * P and Q.
+ *
+ * See: Davis, Exercise 3.7
+ *
+ * @param A  a permuted triangular matrix
  * @param b  a dense RHS vector, *not* permuted.
  *
  * @return x  the dense solution vector, also *not* permuted.

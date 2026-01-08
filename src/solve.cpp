@@ -844,17 +844,16 @@ std::vector<double> chol_solve(
     // std::vector<double> y = chol_lsolve(L, Pb, S.parent).x;
     // std::vector<double> PTx = chol_ltsolve(L, Pb, S.parent).x;
 
-    std::vector<double> X(N * K);  // solution matrix
+    std::vector<double> X = B;  // solution matrix
 
     for (csint k = 0; k < K; k++) {
         // Create a view into the k-th columns of B and X
-        std::span<const double> B_k(B.data() + k * M, M);
         std::span<double> X_k(X.data() + k * N, N);
 
         // Solve for each RHS column
         std::vector<double> w(N);  // workspace
         
-        ipvec<double>(res.p_inv, B_k, w);  // permute b -> w = Pb
+        ipvec<double>(res.p_inv, X_k, w);  // permute b -> w = Pb
         lsolve_inplace(res.L, w);          // y = L \ b -> w = y
         ltsolve_inplace(res.L, w);         // P^T x = L^T \ y -> w = P^T x
         pvec<double>(res.p_inv, w, X_k);   // x = P P^T x

@@ -1054,7 +1054,11 @@ std::vector<double> CSCMatrix::dot(std::span<const double> X) const
 
     if (NxK % N_ != 0) {
         throw std::invalid_argument(
-            "Input vector size must be a multiple of number of matrix columns."
+            std::format(
+                "Input vector size must be a multiple of number of matrix columns."
+                "{} % {} != 0.",
+                NxK, N_
+            )
         );
     }
 

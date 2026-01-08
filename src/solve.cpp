@@ -59,6 +59,13 @@ std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
 }
 
 
+std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& b)
+{
+    return spsolve(L, b, 0, std::nullopt, true).x;
+}
+
+
+
 void ltsolve_inplace(const CSCMatrix& L, std::span<double> x)
 {
     auto [M, N] = L.shape();
@@ -107,6 +114,12 @@ std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
     std::vector<double> x = b;
     usolve_inplace(U, x);
     return x;
+}
+
+
+std::vector<double> usolve(const CSCMatrix& U, const CSCMatrix b)
+{
+    return spsolve(U, b, 0, std::nullopt, false).x;
 }
 
 

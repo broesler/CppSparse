@@ -72,6 +72,7 @@ void lsolve_inplace(const CSCMatrix& L, std::span<double> x);
  * @return x  the solution vector
  */
 std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b);
+std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& b);
 
 
 /** Backsolve a lower-triangular system \f$ L^Tx = b \f$.
@@ -124,6 +125,7 @@ void usolve_inplace(const CSCMatrix& U, std::span<double> x);
  * @return x  the solution vector
  */
 std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b);
+std::vector<double> usolve(const CSCMatrix& U, const CSCMatrix b);
 
 
 /** Forward solve an upper-triangular system \f$ U^T x = b \f$.

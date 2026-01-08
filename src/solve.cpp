@@ -1139,35 +1139,16 @@ double cond1est(const CSCMatrix& A)
 
 
 // Exercise 8.1
-template <bool IsSparseRHS, typename RhsT>
-std::vector<double> spsolve_impl(const CSCMatrix& A, const RhsT& rhs)
+std::vector<double> spsolve(
+    const CSCMatrix& A,
+    const std::vector<double>& b
+)
 {
     auto [M, N] = A.shape();
+    csint b_rows = static_cast<csint>(b.size());
 
-    csint b_rows, b_cols;
-
-    if constexpr(IsSparseRHS) {
-        b_rows = rhs.shape()[0];
-        b_cols = rhs.shape()[1];
-    } else {
-        b_rows = static_cast<csint>(rhs.size());
-        b_cols = 1;
-    }
-    
     if (M != b_rows) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
-    }
-
-    if (b_cols != 1) {
-        throw std::runtime_error("Sparse RHS matrix must have exactly one column!");
-    }
-
-    // Create reference to dense b
-    std::vector<double> b;
-    if constexpr(IsSparseRHS) {
-        b = rhs.to_dense_vector();
-    } else {
-        b = rhs;
     }
 
     if (M != N) {
@@ -1202,20 +1183,10 @@ std::vector<double> spsolve_impl(const CSCMatrix& A, const RhsT& rhs)
 
     // If triangular with non-zero diagonal, use triangular solve
     if (nnz_diag == N) {
-        if constexpr(IsSparseRHS) {
-            // Sparse system solution
-            if (is_tri == -1) {
-                return spsolve(A, rhs, 0, std::nullopt, true).x;
-            } else if (is_tri == 1) {
-                return spsolve(A, rhs, 0, std::nullopt, false).x;
-            }
-        } else {
-            // Dense RHS solution
-            if (is_tri == -1) {
-                return lsolve_opt(A, b);
-            } else if (is_tri == 1) {
-                return usolve_opt(A, b);
-            }
+        if (is_tri == -1) {
+            return lsolve(A, b);
+        } else if (is_tri == 1) {
+            return usolve(A, b);
         }
     }
 
@@ -1302,17 +1273,13 @@ std::vector<double> spsolve_impl(const CSCMatrix& A, const RhsT& rhs)
 }
 
 
-// Concrete implementations
-std::vector<double> spsolve(const CSCMatrix& A, const std::vector<double>& b)
-{
-    return spsolve_impl<false>(A, b);
-}
-
-
-// Concrete implementations
 std::vector<double> spsolve(const CSCMatrix& A, const CSCMatrix& b)
 {
-    return spsolve_impl<true>(A, b);
+    if (b.shape()[1] != 1) {
+        throw std::runtime_error("Sparse RHS matrix must have exactly one column!");
+    }
+
+    return spsolve(A, b.to_dense_vector());
 }
 
 

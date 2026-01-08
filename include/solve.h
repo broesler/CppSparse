@@ -368,22 +368,23 @@ void tri_solve_perm_inplace(
 );
 
 
-/** Solve a row- and column-permuted triangular system P A Q x = b, for unknown
+/** Solve a row- and column-permuted triangular system P A Q X = B, for unknown
  * P and Q.
  *
  * See: Davis, Exercise 3.7
  *
  * @param A  a permuted triangular matrix
- * @param b  a dense RHS vector, *not* permuted.
+ * @param b  a dense RHS matrix, *not* permuted, in column-major order.
  *
- * @return x  the dense solution vector, also *not* permuted.
+ * @return x  the dense solution matrix, also *not* permuted, in column-major
+ *         order.
  *
  * @throws PermutedTriangularMatrixError if A is not a permuted triangular
  * matrix.
  */
 std::vector<double> tri_solve_perm(
     const CSCMatrix& A,
-    const std::vector<double>& b
+    const std::vector<double>& B
 );
 
 

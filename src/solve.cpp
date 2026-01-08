@@ -492,10 +492,11 @@ void tri_solve_perm_inplace(
         }
 }
 
-std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>& b)
+
+std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>& B)
 {
     auto [M, N] = A.shape();
-    csint MxK = static_cast<csint>(b.size());
+    csint MxK = static_cast<csint>(B.size());
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");
@@ -508,13 +509,21 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>
     // Get the permutation vectors and check if A is permuted triangular
     const TriPerm tri_perm = find_tri_permutation(A);
 
-    std::vector<double> x(N);        // solution vector
-    std::vector<double> b_work = b;  // copy the RHS vector
+    csint K = MxK / M;               // number of RHS columns
+    std::vector<double> X(N * K);    // solution vector
+    std::vector<double> B_work = B;  // copy the RHS vector
 
-    // Solve the system
-    tri_solve_perm_inplace(A, tri_perm, b_work, x);
+    std::span<double> X_span(X);
+    std::span<double> B_work_span(B_work);
 
-    return x;
+    // Solve each column of the system
+    for (csint k = 0; k < K; k++) {
+        auto B_work_k = B_work_span.subspan(k * M, M);
+        auto X_k = X_span.subspan(k * N, N);
+        tri_solve_perm_inplace(A, tri_perm, B_work_k, X_k);
+    }
+
+    return X;
 }
 
 

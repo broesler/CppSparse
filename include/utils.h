@@ -15,6 +15,7 @@
 #include <numeric>    // iota
 #include <span>
 #include <string>
+#include <span>
 #include <vector>
 
 #include "types.h"
@@ -22,20 +23,20 @@
 namespace cs {
 
 std::vector<double> operator+(
-    const std::vector<double>& a,
-    const std::vector<double>& b
+    std::span<const double> a,
+    std::span<const double> b
 );
 
 std::vector<double> operator-(
-    const std::vector<double>& a,
-    const std::vector<double>& b
+    std::span<const double> a,
+    std::span<const double> b
 );
 
 std::vector<double> operator-(const std::vector<double>& a);
 
-std::vector<double>& operator+=(
-    std::vector<double>& a,
-    const std::vector<double>& b
+std::span<double> operator+=(
+    std::span<double> a,
+    std::span<const double> b
 );
 
 std::vector<double> operator*(const double c, const std::vector<double>& x);
@@ -77,14 +78,42 @@ std::vector<csint> inv_permute(const std::vector<csint>& p);
  * @return x  `x = Pb` the permuted vector, like `x = b(p)` in MATLAB.
  */
 template <typename T>
+void pvec(std::span<const csint> p, std::span<const T> b, std::span<T> x)
+{
+    for (size_t k = 0; k < p.size(); k++)
+        x[k] = b[p[k]];
+}
+
+
+/** Compute \f$ x = Pb \f$ where P is a permutation matrix, represented as
+ * a vector.
+ *
+ * @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
+ * @param b  vector of data to permute
+ *
+ * @return x  `x = Pb` the permuted vector, like `x = b(p)` in MATLAB.
+ */
+template <typename T>
 std::vector<T> pvec(const std::vector<csint>& p, const std::vector<T>& b)
 {
-    std::vector<T> x(b.size());
-
-    for (size_t k = 0; k < b.size(); k++)
-        x[k] = b[p[k]];
-
+    std::vector<T> x(p.size());
+    pvec<T>(p, b, x);  // pass in workspace
     return x;
+}
+
+
+/** Compute \f$ x = P^T b = P^{-1} b \f$ where P is a permutation matrix,
+ * represented as a vector.
+ *
+ * @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
+ * @param b  vector of data to permute
+ * @param x[out]  `x = P^T b` the permuted vector, like `x(p) = b` in MATLAB.
+ */
+template <typename T>
+void ipvec(std::span<const csint> p, std::span<const T> b, std::span<T> x)
+{
+    for (size_t k = 0; k < p.size(); k++)
+        x[p[k]] = b[k];
 }
 
 
@@ -99,11 +128,8 @@ std::vector<T> pvec(const std::vector<csint>& p, const std::vector<T>& b)
 template <typename T>
 std::vector<T> ipvec(const std::vector<csint>& p, const std::vector<T>& b)
 {
-    std::vector<T> x(b.size());
-
-    for (size_t k = 0; k < b.size(); k++)
-        x[p[k]] = b[k];
-
+    std::vector<T> x(p.size());
+    ipvec<T>(p, b, x);  // pass in workspace
     return x;
 }
 

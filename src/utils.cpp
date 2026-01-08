@@ -20,6 +20,7 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <span>
 #include <vector>
 
 #include "utils.h"
@@ -31,8 +32,8 @@ namespace cs {
  *----------------------------------------------------------------------------*/
 /** Vector-vector addition */
 std::vector<double> operator+(
-    const std::vector<double>& a,
-    const std::vector<double>& b
+    std::span<const double> a,
+    std::span<const double> b
 )
 {
     assert(a.size() == b.size());
@@ -61,9 +62,9 @@ std::vector<double> operator-(const std::vector<double>& a)
 
 /** Vector-vector subtraction */
 std::vector<double> operator-(
-    const std::vector<double>& a,
-    const std::vector<double>& b
-    )
+    std::span<const double> a,
+    std::span<const double> b
+)
 {
     assert(a.size() == b.size());
 
@@ -103,9 +104,9 @@ std::vector<double>& operator*=(std::vector<double>& vec, const double c)
 }
 
 
-std::vector<double>& operator+=(
-    std::vector<double>& a,
-    const std::vector<double>& b
+std::span<double> operator+=(
+    std::span<double> a,
+    std::span<const double> b
 )
 {
     assert(a.size() == b.size());

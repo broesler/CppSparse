@@ -228,47 +228,41 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res);
 
 /** Apply \f$ Q \f$ to a dense vector `y`.
  *
- * This function computes \f$ x = P^T H_1 \dots H_N y = Q y \f$ where 
+ * This function computes \f$ x = H_1 \dots H_N y = Q y \f$ where 
  * `Q` is represented by the Householder vectors `V`, the scaling factors
- * `beta`, and the row permutation vector `p_inv`.
+ * `beta`.
  *
  * @param V  the Householder vectors
  * @param beta  the scaling factors
- * @param p_inv  the row permutation vector
- * @param y  the dense vector to which to apply the transformation
- *
- * @return x  the result of applying the transformation to `y`
+ * @param x[in,out]  On input, the dense vector to which to apply the
+ *        transformation. On output, the result of applying the transformation.
  *
  * @see cs::happly, cs::qrsol
  */
-std::vector<double> apply_qleft(
+void apply_qleft(
     const CSCMatrix& V,
     const std::vector<double>& beta,
-    const std::vector<csint>& p_inv,
-    const std::vector<double>& y
+    std::vector<double>& x
 );
 
 
 /** Apply \f$ Q^T \f$ to a dense vector `y`.
  *
- * This function computes \f$ x = H_N \dots H_1 P y = Q^T y \f$ where 
+ * This function computes \f$ x = H_N \dots H_1 y = Q^T y \f$ where 
  * `Q` is represented by the Householder vectors `V`, the scaling factors
- * `beta`, and the row permutation vector `p_inv`.
+ * `beta`.
  *
  * @param V  the Householder vectors
  * @param beta  the scaling factors
- * @param p_inv  the row permutation vector
- * @param y  the dense vector to which to apply the transformation
- *
- * @return x  the result of applying the transformation to `y`
+ * @param x[in,out]  On input, the dense vector to which to apply the
+ *        transformation. On output, the result of applying the transformation.
  *
  * @see cs::happly, cs::qrsol
  */
-std::vector<double> apply_qtleft(
+void apply_qtleft(
     const CSCMatrix& V,
     const std::vector<double>& beta,
-    const std::vector<csint>& p_inv,
-    const std::vector<double>& y
+    std::vector<double>& x
 );
 
 

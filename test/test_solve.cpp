@@ -151,7 +151,9 @@ TEST_CASE("LU Solution", "[lusol]") {
 
 
 TEST_CASE("LU with Iterative Refinement", "[lusol-ir]") {
-    CSCMatrix A = davis_example_qr(0.0, true);  // randomized with small diag
+    double add_diag = 0.0;
+    bool randomized = true;
+    CSCMatrix A = davis_example_qr(add_diag, randomized);
     auto [M, N] = A.shape();
 
     AMDOrder order = GENERATE(
@@ -168,13 +170,13 @@ TEST_CASE("LU with Iterative Refinement", "[lusol-ir]") {
     const std::vector<double> b = A * expect;
 
     // Solve Ax = b
-    double tol = 1e-3;
-    std::vector<double> x = lu_solve(A, b, order, tol, 0);
-    std::vector<double> x_ir = lu_solve(A, b, order, tol, 2);
+    double piv_tol = 1e-3;
+    std::vector<double> x = lu_solve(A, b, order, piv_tol, 0);
+    std::vector<double> x_ir = lu_solve(A, b, order, piv_tol, 2);
 
     // Check that Ax = b
-    check_vectors_allclose(x, expect, tol);
-    check_vectors_allclose(x_ir, expect, tol);
+    check_vectors_allclose(x, expect, 1e-12);
+    check_vectors_allclose(x_ir, expect, 1e-12);
 
 #ifdef DEBUG
     double r_norm = norm(b - A * x);
@@ -230,7 +232,7 @@ CSCMatrix sparse_from_dense(const std::vector<double>& b) {
 }
 
 
-TEMPLATE_TEST_CASE("Backslash: Triangular", "[spsol-tri]", DenseRHS, SparseRHS)
+TEMPLATE_TEST_CASE("Backslash: Triangular", "[spsolve-tri]", DenseRHS, SparseRHS)
 {
     CSCMatrix A = davis_example_small().tocsc();
     auto [M, N] = A.shape();
@@ -285,7 +287,7 @@ using TestCombinations = std::tuple<
     std::tuple<SparseRHS, NegativeA>
 >;
 
-TEMPLATE_LIST_TEST_CASE("Backslash: Cholesky", "[spsol-chol]", TestCombinations)
+TEMPLATE_LIST_TEST_CASE("Backslash: Cholesky", "[spsolve-chol]", TestCombinations)
 {
     using RhsType = std::tuple_element_t<0, TestType>;
     using ASignType = std::tuple_element_t<1, TestType>;
@@ -315,7 +317,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Cholesky", "[spsol-chol]", TestCombinations)
 }
 
 
-TEMPLATE_TEST_CASE("Backslash: LU Symmetric", "[spsol-lu-sym]", DenseRHS, SparseRHS)
+TEMPLATE_TEST_CASE("Backslash: LU Symmetric", "[spsolve-lu-sym]", DenseRHS, SparseRHS)
 {
     CSCMatrix A = davis_example_chol();
     auto [M, N] = A.shape();
@@ -343,7 +345,7 @@ TEMPLATE_TEST_CASE("Backslash: LU Symmetric", "[spsol-lu-sym]", DenseRHS, Sparse
 }
 
 
-TEMPLATE_TEST_CASE("Backslash: LU Unsymmetric", "[spsol-lu-unsym]", DenseRHS, SparseRHS)
+TEMPLATE_TEST_CASE("Backslash: LU Unsymmetric", "[spsolve-lu-unsym]", DenseRHS, SparseRHS)
 {
     CSCMatrix A = davis_example_chol();
     auto [M, N] = A.shape();
@@ -370,7 +372,7 @@ TEMPLATE_TEST_CASE("Backslash: LU Unsymmetric", "[spsol-lu-unsym]", DenseRHS, Sp
 }
 
 
-TEMPLATE_TEST_CASE("Backslash: QR", "[spsol-qr]", DenseRHS, SparseRHS)
+TEMPLATE_TEST_CASE("Backslash: QR", "[spsolve-qr]", DenseRHS, SparseRHS)
 {
     CSCMatrix A = davis_example_qr();
     auto [M, N] = A.shape();

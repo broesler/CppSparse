@@ -10,6 +10,7 @@
 #ifndef _CSPARSE_LU_H_
 #define _CSPARSE_LU_H_
 
+#include <span>
 #include <vector>
 
 #include "types.h"
@@ -37,6 +38,14 @@ struct LUResult
               U;               ///< upper triangular matrix
     std::vector<csint> p_inv,  ///< row permutation of A
                        q;      ///< column permutation of A
+
+    /** Solve the linear system Ax = b in-place.
+     *
+     * See also: Davis, Exercise 6.1.
+     *
+     * @param b[in,out]  right-hand side vector on input, solution on output.
+     */
+    void solve_inplace(std::span<double> b) const; 
 
     /** Solve the linear system Ax = b.
      *

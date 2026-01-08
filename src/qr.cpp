@@ -8,9 +8,10 @@
  *
  *============================================================================*/
 
-#include <cmath>    // copysign
-#include <numeric>  // accumulate
-#include <ranges>   // views::reverse, span
+#include <algorithm>  // max
+#include <cmath>      // copysign
+#include <numeric>    // accumulate
+#include <ranges>     // views::reverse, span
 #include <vector>
 #include <optional>
 
@@ -480,55 +481,29 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 }
 
 
-std::vector<double> apply_qleft(
+void apply_qleft(
     const CSCMatrix& V,
     const std::vector<double>& beta,
-    const std::vector<csint>& p_inv,
-    const std::vector<double>& y
+    std::vector<double>& x
 )
 {
-    auto [M2, N] = V.shape();
-
-    std::vector<double> Px = y;
-
-    // Px is size N, but happly expects size M2
-    if (M2 > N) {
-        Px.insert(Px.end(), M2 - N, 0.0);  // pad with zeros
-    }
-
+    csint N = V.shape()[1];
     for (csint j = N - 1; j >= 0; j--) {
-        Px = happly(V, j, beta[j], Px);
+        x = happly(V, j, beta[j], x);
     }
-
-    std::vector<double> x = pvec(p_inv, Px);
-
-    return x;
 }
 
 
-std::vector<double> apply_qtleft(
+void apply_qtleft(
     const CSCMatrix& V,
     const std::vector<double>& beta,
-    const std::vector<csint>& p_inv,
-    const std::vector<double>& y
+    std::vector<double>& x
 )
 {
-    auto [M2, N] = V.shape();
-
-    std::vector<double> x = y;
-
-    csint M = x.size();
-    if (M2 > M) {
-        x.insert(x.end(), M2 - M, 0.0);  // pad with zeros
-    }
-
-    x = ipvec(p_inv, x);  // x = Py
-
+    csint N = V.shape()[1];
     for (csint j = 0; j < N; j++) {
         x = happly(V, j, beta[j], x);
     }
-
-    return x;
 }
 
 
@@ -549,8 +524,7 @@ CSCMatrix apply_qtleft(
         X.add_empty_bottom(M2 - M);
     }
 
-    // NOTE p_inv is passed along to apply_qtleft(V, beta, p_inv, x)
-    // X = X.permute_rows(p_inv);  // apply p_inv to Y
+    X = X.permute_rows(p_inv);  // apply p_inv to Y
 
     std::vector<double> x(M);
     csint nz = 0;
@@ -569,7 +543,7 @@ CSCMatrix apply_qtleft(
         }
 
         // Apply Householder reflection to x
-        x = apply_qtleft(V, beta, p_inv, x);
+        apply_qtleft(V, beta, x);
 
         // Gather x into X(:, k)
         for (csint i = 0; i < M; i++) {

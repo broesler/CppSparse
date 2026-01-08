@@ -12,6 +12,7 @@
 #include <cmath>       // fabs
 #include <functional>  // reference wrapper
 #include <ranges>      // views::reverse
+#include <span>
 #include <vector>
 
 #include "solve.h"
@@ -26,13 +27,20 @@ namespace cs {
 /*------------------------------------------------------------------------------
  *      Triangular Matrix Solutions 
  *----------------------------------------------------------------------------*/
-std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
+void lsolve_inplace(const CSCMatrix& L, std::span<double> x)
 {
     auto [M, N] = L.shape();
-    assert(M == static_cast<csint>(b.size()));
 
-    std::vector<double> x(N);
-    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    csint Nx = static_cast<csint>(x.size()); 
+    if (N != Nx) {
+        throw std::runtime_error(
+            std::format("Matrix and RHS vector sizes do not match! {} != {}.", N, Nx)
+        );
+    }
 
     for (csint j = 0; j < N; j++) {
         x[j] /= L.v_[L.p_[j]];
@@ -40,18 +48,31 @@ std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
             x[L.i_[p]] -= L.v_[p] * x[j];
         }
     }
+}
 
+
+std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
+{
+    std::vector<double> x = b;
+    lsolve_inplace(L, x);
     return x;
 }
 
 
-std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
+void ltsolve_inplace(const CSCMatrix& L, std::span<double> x)
 {
     auto [M, N] = L.shape();
-    assert(M == static_cast<csint>(b.size()));
 
-    std::vector<double> x(N);
-    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    csint Nx = static_cast<csint>(x.size()); 
+    if (M != Nx) {
+        throw std::runtime_error(
+            std::format("Matrix and RHS vector sizes do not match! {} != {}.", M, Nx)
+        );
+    }
 
     for (csint j = N - 1; j >= 0; j--) {
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
@@ -59,47 +80,51 @@ std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
         }
         x[j] /= L.v_[L.p_[j]];
     }
+}
 
+
+std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
+{
+    std::vector<double> x = b;
+    ltsolve_inplace(L, x);
     return x;
 }
 
 
-std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
+void usolve_inplace(const CSCMatrix& U, std::span<double> x)
 {
-    auto [M, N] = U.shape();
-    assert(M == static_cast<csint>(b.size()));
-
-    // Copy the RHS vector, only taking N elements if M > N
-    std::vector<double> x(N);
-    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
-
-    for (csint j = N - 1; j >= 0; j--) {
+    for (csint j = U.N_ - 1; j >= 0; j--) {
         x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
         for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
             x[U.i_[p]] -= U.v_[p] * x[j];
         }
     }
+}
 
+
+std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
+{
+    std::vector<double> x = b;
+    usolve_inplace(U, x);
     return x;
 }
 
 
-std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
+void utsolve_inplace(const CSCMatrix& U, std::span<double> x)
 {
-    auto [M, N] = U.shape();
-    assert(N == static_cast<csint>(b.size()));
-
-    // Copy the RHS vector, only taking M elements if N > M
-    std::vector<double> x(N);
-    std::copy(b.begin(), b.begin() + std::min(M, N), x.begin());
-
-    for (csint j = 0; j < N; j++) {
+    for (csint j = 0; j < U.N_; j++) {
         for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
             x[j] -= U.v_[p] * x[U.i_[p]];
         }
         x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
     }
+}
 
+
+std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b)
+{
+    std::vector<double> x = b;
+    utsolve_inplace(U, x);
     return x;
 }
 
@@ -807,16 +832,16 @@ std::vector<double> chol_solve(
     SymbolicChol S = schol(A, order);
     CholResult res = chol(A, S);
 
-    // TODO use chol_lsolve for more efficient solution?
+    // TODO use chol_lsolve for with sparse b
     // std::vector<double> y = chol_lsolve(L, Pb, S.parent).x;
     // std::vector<double> PTx = chol_ltsolve(L, Pb, S.parent).x;
 
-    // TODO overwrite x each time? Need to change [i]pvec to take
-    // a workspace vector
-    const std::vector<double> Pb = ipvec(res.p_inv, b);  // permute b
-    const std::vector<double> y = lsolve(res.L, Pb);     // y = L \ b
-    const std::vector<double> PTx = ltsolve(res.L, y);   // P^T x = L^T \ y
-    std::vector<double> x = pvec(res.p_inv, PTx);        // x = P P^T x
+    std::vector<double> w(N);  // workspace
+    
+    ipvec<double>(res.p_inv, b, w);              // permute b -> w = Pb
+    lsolve_inplace(res.L, w);                    // y = L \ b -> w = y
+    ltsolve_inplace(res.L, w);                   // P^T x = L^T \ y -> w = P^T x
+    std::vector<double> x = pvec(res.p_inv, w);  // x = P P^T x
 
     return x;
 }
@@ -839,10 +864,12 @@ QRSolveResult qr_solve(
         SymbolicQR S = sqr(A, order);
         QRResult res = qr(A, S);
 
-        // R y = Q^T P b
-        const std::vector<double> QTPb = apply_qtleft(res.V, res.beta, res.p_inv, b);
-        const std::vector<double> qx = usolve(res.R, QTPb);  // y = R \ Q^T P b
-        x = ipvec(res.q, qx);  // x = q^T q x
+        // Solve P^T Q R E x = b
+        std::vector<double> w(S.m2);
+        ipvec<double>(res.p_inv, b, w);    // permute b -> E b -> w = Eb
+        apply_qtleft(res.V, res.beta, w);  // y = Q^T E b -> w = y
+        usolve_inplace(res.R, w);          // E x = R \ y -> w = E x
+        x = ipvec(res.q, w);               // x = E^T (E x)
     } else {
         // Compute the minimum-norm solution
         CSCMatrix AT = A.transpose();
@@ -850,9 +877,12 @@ QRSolveResult qr_solve(
         SymbolicQR S = sqr(AT, order);
         QRResult res = qr(AT, S);
 
-        const std::vector<double> qb = pvec(S.q, b);          // b = b[q]
-        const std::vector<double> QTPx = utsolve(res.R, qb);  // y = R^T \ b[q]
-        x = apply_qleft(res.V, res.beta, res.p_inv, QTPx);    // x = P^T Q (Q^T P x)
+        // Solve P^T R^T Q^T E x = b
+        std::vector<double> w(S.m2);
+        pvec<double>(S.q, b, w);          // permute b -> E b -> w = Eb
+        utsolve_inplace(res.R, w);        // y = R^T \ E b -> w = y
+        apply_qleft(res.V, res.beta, w);  // P x = Q y -> w = P x
+        x = pvec(res.p_inv, w);           // x = P^T (P x)
     }
 
     // Compute the residual
@@ -868,52 +898,51 @@ QRSolveResult qr_solve(
 // Exercise 6.1
 std::vector<double> lu_solve(
     const CSCMatrix& A,
-    const std::vector<double>& b,
+    const std::vector<double>& B,
     AMDOrder order,
     double tol,
     csint ir_steps
 )
 {
     auto [M, N] = A.shape();
-    csint MxK = static_cast<csint>(b.size());
+    csint MxK = static_cast<csint>(B.size());
+
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
 
     if (MxK % M != 0) {
-        throw std::runtime_error(
-            "RHS vector size is not a multiple of matrix size!"
-        );
+        throw std::runtime_error("RHS vector size is not a multiple of matrix rows!");
     }
 
-    csint K = MxK / M;
-    csint Mb = MxK / K;
-
-    if (M != Mb) {
-        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
-    }
+    csint K = MxK / M;  // number of RHS columns
 
     const SymbolicLU S = slu(A, order);
     const LUResult res = lu(A, S, tol);
 
-    std::vector<double> X(N * K);  // solution matrix
-    std::vector<double> b_k(M);    // k-th column of b
+    std::vector<double> X = B;  // solution matrix
+    std::vector<double> r;
 
-    // TODO rewrite LUResult::solve to accept a span and operate in-place
-    // * also requires ipvec and lsolve/usolve to accept spans
+    if (ir_steps > 0) {
+        // Preallocate workspace for iterative refinement
+        r.resize(M);
+    }
+
+    // Solve for each RHS column
     for (csint k = 0; k < K; k++) {
-        // Extract k-th column of b
-        std::copy(b.begin() + k * M, b.begin() + (k + 1) * M, b_k.begin());
+        // Create a view into the k-th columns of B and X
+        std::span<const double> B_k(B.data() + k * M, M);
+        std::span<double> X_k(X.data() + k * N, N);
 
-        // Solve for each RHS column
-        std::vector<double> x = res.solve(b_k);
+        // Solve Ax = B
+        res.solve_inplace(X_k);
 
         // Exercise 8.5: Iterative refinement
         for (csint i = 0; i < ir_steps; i++) {
-            const std::vector<double> r = b_k - A * x;
-            const std::vector<double> d = res.solve(r);
-            x += d;
+            r = B_k - A * X_k;
+            res.solve_inplace(r);
+            X_k += r;
         }
-
-        // Store solution back into X in column-major order
-        std::copy(x.begin(), x.end(), X.begin() + k * N);
     }
 
     return X;

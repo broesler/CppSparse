@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <string>
+#include <span>
 #include <vector>
 
 #include "utils.h"
@@ -1047,13 +1048,17 @@ CSCMatrix CSCMatrix::scale(const std::vector<double>& r, const std::vector<doubl
 }
 
 
-std::vector<double> CSCMatrix::dot(const std::vector<double>& X) const
+std::vector<double> CSCMatrix::dot(std::span<const double> X) const
 {
     csint NxK = static_cast<csint>(X.size());
 
     if (NxK % N_ != 0) {
         throw std::invalid_argument(
-            "Input vector size must be a multiple of number of matrix columns."
+            std::format(
+                "Input vector size must be a multiple of number of matrix columns."
+                "{} % {} != 0.",
+                NxK, N_
+            )
         );
     }
 

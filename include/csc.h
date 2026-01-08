@@ -17,6 +17,7 @@
 #include <string>
 #include <string_view>
 #include <sstream>
+#include <span>
 #include <vector>
 
 #include "types.h"
@@ -599,7 +600,7 @@ public:
      * @return Y  the dense matrix result. Y is size M x K, stored in
      *         column-major order.
      */
-    virtual std::vector<double> dot(const std::vector<double>& X) const override;
+    virtual std::vector<double> dot(std::span<const double> X) const override;
 
     /** Scale a matrix by a scalar */
     CSCMatrix dot(const double c) const;
@@ -931,10 +932,10 @@ public:
     //--------------------------------------------------------------------------
     //        Triangular Matrix Solutions
     //--------------------------------------------------------------------------
-    friend std::vector<double> lsolve(const CSCMatrix& A, const std::vector<double>& b);
-    friend std::vector<double> ltsolve(const CSCMatrix& A, const std::vector<double>& b);
-    friend std::vector<double> usolve(const CSCMatrix& A, const std::vector<double>& b);
-    friend std::vector<double> utsolve(const CSCMatrix& A, const std::vector<double>& b);
+    friend void lsolve_inplace(const CSCMatrix& A, std::span<double> x);
+    friend void ltsolve_inplace(const CSCMatrix& A, std::span<double> x);
+    friend void usolve_inplace(const CSCMatrix& A, std::span<double> x);
+    friend void utsolve_inplace(const CSCMatrix& A, std::span<double> x);
 
     friend std::vector<double> lsolve_opt(const CSCMatrix& A, const std::vector<double>& b);
     friend std::vector<double> usolve_opt(const CSCMatrix& A, const std::vector<double>& b);

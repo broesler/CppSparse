@@ -15,11 +15,13 @@
 #include <format>
 #include <numeric>        // partial_sum
 #include <random>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <sstream>
 #include <tuple>          // tie
 #include <unordered_set>
+#include <vector>
 
 #include "utils.h"
 #include "coo.h"
@@ -353,7 +355,7 @@ COOMatrix COOMatrix::T() const { return this->transpose(); }
 
 
 // Exercise 2.10
-std::vector<double> COOMatrix::dot(const std::vector<double>& x) const
+std::vector<double> COOMatrix::dot(std::span<const double> x) const
 {
     assert(N_ == static_cast<csint>(x.size()));
     std::vector<double> out(x.size());

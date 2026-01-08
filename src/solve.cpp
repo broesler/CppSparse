@@ -93,20 +93,7 @@ std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b)
 
 void usolve_inplace(const CSCMatrix& U, std::span<double> x)
 {
-    auto [M, N] = U.shape();
-
-    if (M != N) {
-        throw std::runtime_error("Matrix must be square!");
-    }
-
-    csint Nx = static_cast<csint>(x.size()); 
-    if (N != Nx) {
-        throw std::runtime_error(
-            std::format("Matrix and RHS vector sizes do not match! {} != {}.", N, Nx)
-        );
-    }
-
-    for (csint j = N - 1; j >= 0; j--) {
+    for (csint j = U.N_ - 1; j >= 0; j--) {
         x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
         for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
             x[U.i_[p]] -= U.v_[p] * x[j];
@@ -125,20 +112,7 @@ std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b)
 
 void utsolve_inplace(const CSCMatrix& U, std::span<double> x)
 {
-    auto [M, N] = U.shape();
-
-    if (M != N) {
-        throw std::runtime_error("Matrix must be square!");
-    }
-
-    csint Nx = static_cast<csint>(x.size()); 
-    if (N != Nx) {
-        throw std::runtime_error(
-            std::format("Matrix and RHS vector sizes do not match! {} != {}.", N, Nx)
-        );
-    }
-
-    for (csint j = 0; j < N; j++) {
+    for (csint j = 0; j < U.N_; j++) {
         for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
             x[j] -= U.v_[p] * x[U.i_[p]];
         }

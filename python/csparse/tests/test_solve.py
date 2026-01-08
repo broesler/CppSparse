@@ -176,7 +176,7 @@ def test_qr_solve(A):
 
     # Solve using csparse QR
     x = csparse.qr_solve(A, b, order=order)
-    x[np.isnan(x)] = 0
+    x[np.isnan(x) | np.isinf(x)] = 0
     r = la.norm(A @ x - b)
 
     # Solve using Q matrix created from csparse QR
@@ -187,6 +187,8 @@ def test_qr_solve(A):
 
     # Check the solution
     print(f"r_={r_:.2e}\n r={r:.2e}\nrq={rq:.2e}")
+    assert_allclose(r, r_, atol=1e-10)
+    assert_allclose(rq, r_, atol=1e-10)
     assert_allclose(xq, x_, atol=1e-10)  # always passes
     assert_allclose(x, x_, atol=1e-10)   # fails
 

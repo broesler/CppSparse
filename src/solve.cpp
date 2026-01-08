@@ -29,20 +29,7 @@ namespace cs {
  *----------------------------------------------------------------------------*/
 void lsolve_inplace(const CSCMatrix& L, std::span<double> x)
 {
-    auto [M, N] = L.shape();
-
-    if (M != N) {
-        throw std::runtime_error("Matrix must be square!");
-    }
-
-    csint Nx = static_cast<csint>(x.size()); 
-    if (N != Nx) {
-        throw std::runtime_error(
-            std::format("Matrix and RHS vector sizes do not match! {} != {}.", N, Nx)
-        );
-    }
-
-    for (csint j = 0; j < N; j++) {
+    for (csint j = 0; j < L.N_; j++) {
         x[j] /= L.v_[L.p_[j]];
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
             x[L.i_[p]] -= L.v_[p] * x[j];
@@ -51,11 +38,25 @@ void lsolve_inplace(const CSCMatrix& L, std::span<double> x)
 }
 
 
-std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b)
+std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& B)
 {
-    std::vector<double> x = b;
-    lsolve_inplace(L, x);
-    return x;
+    auto [M, N] = L.shape();
+    csint MxK = static_cast<csint>(B.size());
+
+    if (MxK % M != 0) {
+        throw std::runtime_error("RHS vector size is not a multiple of matrix rows!");
+    }
+
+    csint K = MxK / M;  // number of RHS columns
+    std::vector<double> X = B;
+    std::span<double> X_span(X);  // view onto X
+
+    for (csint k = 0; k < K; k++) {
+        auto X_k = X_span.subspan(k * N, N);
+        lsolve_inplace(L, X_k);
+    }
+
+    return X;
 }
 
 

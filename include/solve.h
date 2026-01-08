@@ -71,7 +71,7 @@ void lsolve_inplace(const CSCMatrix& L, std::span<double> x);
  *
  * @return x  the solution vector
  */
-std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& b);
+std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& B);
 std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& b);
 
 

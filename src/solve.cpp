@@ -1072,6 +1072,9 @@ std::vector<double> lu_solve(
     const LUResult res = lu(A, S, tol);
 
     std::vector<double> X = B;  // solution matrix
+    std::span<const double> B_span(B);
+    std::span<double> X_span(X);
+
     std::vector<double> r;
 
     if (ir_steps > 0) {
@@ -1082,17 +1085,86 @@ std::vector<double> lu_solve(
     // Solve for each RHS column
     for (csint k = 0; k < K; k++) {
         // Create a view into the k-th columns of B and X
-        std::span<const double> B_k(B.data() + k * M, M);
-        std::span<double> X_k(X.data() + k * N, N);
+        auto B_k = B_span.subspan(k * M, M);
+        auto X_k = X_span.subspan(k * N, N);
 
         // Solve Ax = B
         res.solve_inplace(X_k);
 
         // Exercise 8.5: Iterative refinement
         for (csint i = 0; i < ir_steps; i++) {
-            r = B_k - A * X_k;
-            res.solve_inplace(r);
-            X_k += r;
+            r = B_k - A * X_k;     // r = b - Ax
+            res.solve_inplace(r);  // solve Ad = r
+            X_k += r;              // x += d
+        }
+    }
+
+    return X;
+}
+
+
+// Exercise 8.8
+std::vector<double> lu_solve(
+    const CSCMatrix& A,
+    const CSCMatrix& B,
+    AMDOrder order,
+    double tol,
+    csint ir_steps
+)
+{
+    auto [M, N] = A.shape();
+    auto [Mb, K] = B.shape();
+
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    if (M != Mb) {
+        throw std::runtime_error(
+            std::format("Matrix and RHS sizes do not match! Got {} and {}.", M, Mb)
+        );
+    }
+
+    // Factor the matrix once
+    const SymbolicLU S = slu(A, order);
+    const LUResult res = lu(A, S, tol);
+
+    std::vector<double> X(N * K);  // dense solution matrix
+    std::span<double> X_span(X);
+
+    std::vector<double> r, B_k;
+
+    if (ir_steps > 0) {
+        r.resize(M);   // Preallocate workspaces for iterative refinement
+        B_k.resize(M);
+    }
+
+    // Solve for each RHS column
+    for (csint k = 0; k < K; k++) {
+        // Create a view into the k-th column of X
+        auto X_k = X_span.subspan(k * N, N);
+        std::fill(B_k.begin(), B_k.end(), 0.0);
+
+        // Scatter B[:, k] into X_k (and B_k if necessary)
+        for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
+            const csint i = B.i_[p];
+            const double v = B.v_[p];
+
+            X_k[i] = v;
+
+            if (ir_steps > 0) {
+                B_k[i] = v;
+            }
+        }
+
+        // Solve Ax = B
+        res.solve_inplace(X_k);
+
+        // Exercise 8.5: Iterative refinement
+        for (csint i = 0; i < ir_steps; i++) {
+            r = B_k - A * X_k;     // r = b - Ax
+            res.solve_inplace(r);  // solve Ad = r
+            X_k += r;              // x += d
         }
     }
 
@@ -1101,6 +1173,7 @@ std::vector<double> lu_solve(
 
 
 // Exercise 6.1
+// TODO support matrix RHS inputs in lu_tsolve
 std::vector<double> lu_tsolve(
     const CSCMatrix& A,
     const std::vector<double>& b,

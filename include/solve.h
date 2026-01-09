@@ -610,26 +610,49 @@ QRSolveResult qr_solve(
     AMDOrder order=AMDOrder::Natural
 );
 
+
 // -----------------------------------------------------------------------------
 //         LU Factorization Solutions
 // -----------------------------------------------------------------------------
 
-/** Solve a system \f$ A x = b \f$ using the LU factorization of `A`.
+/** Solve a system \f$ A X = B \f$ using the LU factorization of `A`.
  *
  * See also: Davis, Exercise 6.1.
  *
- * @param A  (N, N) square matrix
- * @param b  (N, K) dense matrix
+ * @param A  (N, N) the sparse system matrix
+ * @param B  (N, K) the dense RHS matrix in column-major format.
  * @param order  the fill-reducing ordering of the matrix to compute
  * @param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
  *        used. If `tol` is less than 1.0, diagonal pivoting is used. 
  * @param ir_steps  the maximum number of iterative refinement steps to perform.
  *
- * @return x  (N, K) the solution vector
+ * @return X  (N, K) the dense solution matrix, in column-major format.
  */
 std::vector<double> lu_solve(
     const CSCMatrix& A,
     const std::vector<double>& B,
+    AMDOrder order=AMDOrder::Natural,
+    double tol=1.0,
+    csint ir_steps=0
+);
+
+
+/** Solve a system \f$ A X = B \f$ using the LU factorization of `A`.
+ *
+ * See also: Davis, Exercise 6.1.
+ *
+ * @param A  (N, N) the sparse system matrix
+ * @param B  (N, K) the sparse RHS matrix in column-major format.
+ * @param order  the fill-reducing ordering of the matrix to compute
+ * @param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
+ *        used. If `tol` is less than 1.0, diagonal pivoting is used. 
+ * @param ir_steps  the maximum number of iterative refinement steps to perform.
+ *
+ * @return X  (N, K) the dense solution matrix, in column-major format.
+ */
+std::vector<double> lu_solve(
+    const CSCMatrix& A,
+    const CSCMatrix& B,
     AMDOrder order=AMDOrder::Natural,
     double tol=1.0,
     csint ir_steps=0

@@ -1111,6 +1111,13 @@ public:
         double tol
     );
     friend LUResult ilu_nofill(const CSCMatrix& A, const SymbolicLU& S);
+    friend std::vector<double> lu_solve(
+        const CSCMatrix& A,
+        const CSCMatrix& B,
+        AMDOrder order,
+        double tol,
+        csint ir_steps
+    );
 
     // -------------------------------------------------------------------------
     //         Fill-reducing Orderings

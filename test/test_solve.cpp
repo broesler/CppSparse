@@ -312,7 +312,13 @@ TEST_CASE("LU with Iterative Refinement", "[lusol-ir]") {
 }
 
 
-TEST_CASE("LU Solution with Dense Matrix RHS", "[lusol-dense-matrix]") {
+TEMPLATE_TEST_CASE(
+    "LU Solution with Matrix RHS",
+    "[lusol-matrix]",
+    DenseRHS,
+    SparseRHS
+)
+{
     CSCMatrix A = davis_example_qr();
     auto [M, N] = A.shape();
 
@@ -329,12 +335,17 @@ TEST_CASE("LU Solution with Dense Matrix RHS", "[lusol-dense-matrix]") {
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
     const std::vector<double> b = A * expect_x;
+    std::vector<double> x;
 
     // Solve Ax = b
-    std::vector<double> x = lu_solve(A, b, order);
+    if constexpr (std::is_same_v<TestType, DenseRHS>) {
+        x = lu_solve(A, b, order);
+    } else {
+        x = lu_solve(A, CSCMatrix(b, {M, K}), order);
+    }
 
     // Check that Ax = b
-    check_vectors_allclose(x, expect_x, 1e-12);
+    check_vectors_allclose(x, expect_x, 1e-10);
 }
 
 

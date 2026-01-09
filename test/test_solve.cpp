@@ -22,6 +22,8 @@ using Catch::Matchers::AllTrue;
 
 namespace cs {
 
+constexpr double solve_tol = 1e-12;
+
 
 TEST_CASE("Cholesky Solution", "[cholsol]")
 {
@@ -44,7 +46,7 @@ TEST_CASE("Cholesky Solution", "[cholsol]")
     std::vector<double> x = chol_solve(A, b, order);
 
     // Check that Ax = b
-    check_vectors_allclose(x, expect, tol);
+    check_vectors_allclose(x, expect, solve_tol);
 }
 
 
@@ -70,7 +72,7 @@ TEST_CASE("Cholesky Solution with Dense Matrix RHS", "[cholsol-dense-matrix]")
     std::vector<double> x = chol_solve(A, b, order);
 
     // Check that Ax = b
-    check_vectors_allclose(x, expect_x, tol);
+    check_vectors_allclose(x, expect_x, solve_tol);
 }
 
 
@@ -144,7 +146,7 @@ TEST_CASE("QR Solution", "[qrsol]")
         };
 
         // Check that Ax = b
-        check_vectors_allclose(res.x, min_norm_x, tol);
+        check_vectors_allclose(res.x, min_norm_x, solve_tol);
         REQUIRE(res.rnorm < 1e-13);
     }
 }
@@ -194,7 +196,7 @@ TEST_CASE("QR Solution with Dense Matrix RHS", "[qrsol-dense-matrix]")
         for (csint j = 0; j < K; j++) {
             auto read_start = expect_x.begin() + j * N;
             auto write_start = expect_x.begin() + j * Nmk;
-            std::copy(read_start, read_start + Nmk, write_start);
+            std::move(read_start, read_start + Nmk, write_start);
         } 
         expect_x.resize(Nmk * K);
 
@@ -253,7 +255,7 @@ TEST_CASE("LU Solution", "[lusol]") {
     std::vector<double> x = lu_solve(A, b, order);
 
     // Check that Ax = b
-    check_vectors_allclose(x, expect, tol);
+    check_vectors_allclose(x, expect, solve_tol);
 }
 
 
@@ -330,22 +332,31 @@ TEST_CASE("LU Solution with Dense Matrix RHS", "[lusol-dense-matrix]") {
 struct DenseRHS {};
 struct SparseRHS {};
 
+struct SingleRHS { static constexpr csint K = 1; };
+struct MultipleRHS { static constexpr csint K = 3; };
+
 struct PositiveA {};
 struct NegativeA {};
 
-CSCMatrix sparse_from_dense(const std::vector<double>& b) {
-    csint N = static_cast<csint>(b.size());
-    return CSCMatrix(b, {N, 1});
-}
+using RhsCombinations = std::tuple<
+    std::tuple<DenseRHS, SingleRHS>,
+    std::tuple<SparseRHS, SingleRHS>,
+    std::tuple<DenseRHS, MultipleRHS>
+    // std::tuple<SparseRHS, MultipleRHS>  // TODO
+>;
 
 
-TEMPLATE_TEST_CASE("Backslash: Triangular", "[spsolve-tri]", DenseRHS, SparseRHS)
+TEMPLATE_LIST_TEST_CASE("Backslash: Triangular", "[spsolve-tri]", RhsCombinations)
 {
+    using RhsType = std::tuple_element_t<0, TestType>;
+    using RhsCountType = std::tuple_element_t<1, TestType>;
+    constexpr csint K = RhsCountType::K;
+
     CSCMatrix A = davis_example_small().tocsc();
     auto [M, N] = A.shape();
 
     // Create RHS for Lx = b
-    std::vector<double> expect_x(N);
+    std::vector<double> expect_x(N * K);
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
     const std::vector<csint> p = {3, 0, 1, 2};
@@ -354,12 +365,12 @@ TEMPLATE_TEST_CASE("Backslash: Triangular", "[spsolve-tri]", DenseRHS, SparseRHS
     auto solve_and_check = [&](const CSCMatrix& A) {
         std::vector<double> b = A * expect_x;
         std::vector<double> x;
-        if constexpr (std::is_same_v<TestType, DenseRHS>) {
+        if constexpr (std::is_same_v<RhsType, DenseRHS>) {
             x = spsolve(A, b);
         } else {
-            x = spsolve(A, sparse_from_dense(b));
+            x = spsolve(A, CSCMatrix(b, {M, K}));
         }
-        check_vectors_allclose(x, expect_x, tol);
+        check_vectors_allclose(x, expect_x, solve_tol);
     };
 
     // Triangular with non-zero diagonal
@@ -387,23 +398,30 @@ TEMPLATE_TEST_CASE("Backslash: Triangular", "[spsolve-tri]", DenseRHS, SparseRHS
 }
 
 
-using TestCombinations = std::tuple<
-    std::tuple<DenseRHS, PositiveA>,
-    std::tuple<SparseRHS, PositiveA>,
-    std::tuple<DenseRHS, NegativeA>,
-    std::tuple<SparseRHS, NegativeA>
+using CholeskyCombinations = std::tuple<
+    std::tuple<DenseRHS, SingleRHS, PositiveA>,
+    std::tuple<SparseRHS, SingleRHS, PositiveA>,
+    std::tuple<DenseRHS, SingleRHS, NegativeA>,
+    std::tuple<SparseRHS, SingleRHS, NegativeA>,
+    std::tuple<DenseRHS, MultipleRHS, PositiveA>,
+    // TODO std::tuple<SparseRHS, MultipleRHS, PositiveA>,
+    std::tuple<DenseRHS, MultipleRHS, NegativeA>
+    // TODO std::tuple<SparseRHS, MultipleRHS, NegativeA>
 >;
 
-TEMPLATE_LIST_TEST_CASE("Backslash: Cholesky", "[spsolve-chol]", TestCombinations)
+
+TEMPLATE_LIST_TEST_CASE("Backslash: Cholesky", "[spsolve-chol]", CholeskyCombinations)
 {
     using RhsType = std::tuple_element_t<0, TestType>;
-    using ASignType = std::tuple_element_t<1, TestType>;
+    using RhsCountType = std::tuple_element_t<1, TestType>;
+    using ASignType = std::tuple_element_t<2, TestType>;
+    constexpr csint K = RhsCountType::K;
 
     CSCMatrix A = davis_example_chol();
     auto [M, N] = A.shape();
 
     // Create RHS for Ax = b
-    std::vector<double> expect_x(N);
+    std::vector<double> expect_x(N * K);
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
     std::vector<double> b = A * expect_x;
@@ -417,15 +435,19 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Cholesky", "[spsolve-chol]", TestCombination
     if constexpr (std::is_same_v<RhsType, DenseRHS>) {
         x = spsolve(A, b);
     } else {
-        x = spsolve(A, sparse_from_dense(b));
+        x = spsolve(A, CSCMatrix(b, {M, K}));
     }
 
-    check_vectors_allclose(x, expect_x, tol);
+    check_vectors_allclose(x, expect_x, solve_tol);
 }
 
 
-TEMPLATE_TEST_CASE("Backslash: LU Symmetric", "[spsolve-lu-sym]", DenseRHS, SparseRHS)
+TEMPLATE_LIST_TEST_CASE("Backslash: LU Symmetric", "[spsolve-lu-sym]", RhsCombinations)
 {
+    using RhsType = std::tuple_element_t<0, TestType>;
+    using RhsCountType = std::tuple_element_t<1, TestType>;
+    constexpr csint K = RhsCountType::K;
+
     CSCMatrix A = davis_example_chol();
     auto [M, N] = A.shape();
 
@@ -436,24 +458,28 @@ TEMPLATE_TEST_CASE("Backslash: LU Symmetric", "[spsolve-lu-sym]", DenseRHS, Spar
     CHECK(A.structural_symmetry() < 1.0);
 
     // Create RHS for Ax = b
-    std::vector<double> expect_x(N);
+    std::vector<double> expect_x(N * K);
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
     const std::vector<double> b = A * expect_x;
 
     std::vector<double> x;
-    if constexpr (std::is_same_v<TestType, DenseRHS>) {
+    if constexpr (std::is_same_v<RhsType, DenseRHS>) {
         x = spsolve(A, b);
     } else {
-        x = spsolve(A, sparse_from_dense(b));
+        x = spsolve(A, CSCMatrix(b, {M, K}));
     }
 
-    check_vectors_allclose(x, expect_x, tol);
+    check_vectors_allclose(x, expect_x, solve_tol);
 }
 
 
-TEMPLATE_TEST_CASE("Backslash: LU Unsymmetric", "[spsolve-lu-unsym]", DenseRHS, SparseRHS)
+TEMPLATE_LIST_TEST_CASE("Backslash: LU Unsymmetric", "[spsolve-lu-unsym]", RhsCombinations)
 {
+    using RhsType = std::tuple_element_t<0, TestType>;
+    using RhsCountType = std::tuple_element_t<1, TestType>;
+    constexpr csint K = RhsCountType::K;
+
     CSCMatrix A = davis_example_chol();
     auto [M, N] = A.shape();
 
@@ -463,29 +489,33 @@ TEMPLATE_TEST_CASE("Backslash: LU Unsymmetric", "[spsolve-lu-unsym]", DenseRHS, 
     CHECK(A.structural_symmetry() < 0.3);
 
     // Create RHS for Ax = b
-    std::vector<double> expect_x(N);
+    std::vector<double> expect_x(N * K);
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
     const std::vector<double> b = A * expect_x;
 
     std::vector<double> x;
-    if constexpr (std::is_same_v<TestType, DenseRHS>) {
+    if constexpr (std::is_same_v<RhsType, DenseRHS>) {
         x = spsolve(A, b);
     } else {
-        x = spsolve(A, sparse_from_dense(b));
+        x = spsolve(A, CSCMatrix(b, {M, K}));
     }
 
-    check_vectors_allclose(x, expect_x, tol);
+    check_vectors_allclose(x, expect_x, solve_tol);
 }
 
 
-TEMPLATE_TEST_CASE("Backslash: QR", "[spsolve-qr]", DenseRHS, SparseRHS)
+TEMPLATE_LIST_TEST_CASE("Backslash: QR", "[spsolve-qr]", RhsCombinations)
 {
+    using RhsType = std::tuple_element_t<0, TestType>;
+    using RhsCountType = std::tuple_element_t<1, TestType>;
+    constexpr csint K = RhsCountType::K;
+
     CSCMatrix A = davis_example_qr();
     auto [M, N] = A.shape();
 
     // Create RHS for Ax = b
-    std::vector<double> expect_x(N);
+    std::vector<double> expect_x(N * K);
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
     std::vector<double> b, x;
@@ -493,14 +523,13 @@ TEMPLATE_TEST_CASE("Backslash: QR", "[spsolve-qr]", DenseRHS, SparseRHS)
     SECTION("Square") {
         b = A * expect_x;
 
-        std::vector<double> x;
-        if constexpr (std::is_same_v<TestType, DenseRHS>) {
+        if constexpr (std::is_same_v<RhsType, DenseRHS>) {
             x = spsolve(A, b);
         } else {
-            x = spsolve(A, sparse_from_dense(b));
+            x = spsolve(A, CSCMatrix(b, {M, K}));
         }
 
-        check_vectors_allclose(x, expect_x, 1e-13);
+        check_vectors_allclose(x, expect_x, solve_tol);
     }
 
     SECTION("Over-determined") {
@@ -508,19 +537,24 @@ TEMPLATE_TEST_CASE("Backslash: QR", "[spsolve-qr]", DenseRHS, SparseRHS)
         csint k = 3;
         A = A.slice(0, M, 0, N - k);
 
-        // Take only the first N - k elements of expect_x
-        expect_x = std::vector<double>(expect_x.begin(), expect_x.end() - k);
+        // Take only the first N - k rows of expect_x
+        csint Nmk = N - k;
+        for (csint j = 0; j < K; j++) {
+            auto read_start = expect_x.begin() + j * N;
+            auto write_start = expect_x.begin() + j * Nmk;
+            std::move(read_start, read_start + Nmk, write_start);
+        } 
+        expect_x.resize(Nmk * K);
 
         b = A * expect_x;
 
-        std::vector<double> x;
-        if constexpr (std::is_same_v<TestType, DenseRHS>) {
+        if constexpr (std::is_same_v<RhsType, DenseRHS>) {
             x = spsolve(A, b);
         } else {
-            x = spsolve(A, sparse_from_dense(b));
+            x = spsolve(A, CSCMatrix(b, {M, K}));
         }
 
-        check_vectors_allclose(x, expect_x, 1e-13);
+        check_vectors_allclose(x, expect_x, solve_tol);
     }
 
     SECTION("Under-determined") {
@@ -530,26 +564,35 @@ TEMPLATE_TEST_CASE("Backslash: QR", "[spsolve-qr]", DenseRHS, SparseRHS)
 
         b = A * expect_x;
 
-        std::vector<double> x;  // (M - k, N)
-        if constexpr (std::is_same_v<TestType, DenseRHS>) {
+        if constexpr (std::is_same_v<RhsType, DenseRHS>) {
             x = spsolve(A, b);
         } else {
-            x = spsolve(A, sparse_from_dense(b));
+            x = spsolve(A, CSCMatrix(b, {M - k, K}));
         }
 
         // Actual expect_x (python and MATLAB)
-        const std::vector<double> min_norm_x = {
-            3.2222222222222143,
-            3.1111111111111125,
-            3.                ,
-            4.000000000000004 ,
-            5.961538461538462 ,
-            1.192307692307692 ,
-            4.7777777777777715,
-            0.                
-        };
+        std::vector<double> min_norm_x;
 
-        check_vectors_allclose(x, min_norm_x, tol);
+        if constexpr (std::is_same_v<RhsCountType, SingleRHS>) {
+            min_norm_x = {
+                3.2222222222222143,
+                3.1111111111111125,
+                3.                ,
+                4.000000000000004 ,
+                5.961538461538462 ,
+                1.192307692307692 ,
+                4.7777777777777715,
+                0.                
+            };
+        } else {
+            min_norm_x = {
+                 3.2222222222222143,  3.1111111111111125,  3.                ,  4.000000000000004 ,  5.961538461538462 ,  1.192307692307692 ,  4.7777777777777715,  0.,
+                 9.444444444444414 , 10.222222222222229 , 10.999999999999996 , 12.000000000000016 , 15.192307692307692 ,  3.0384615384615374, 14.55555555555553  ,  0.,
+                15.666666666666636 , 17.333333333333343 , 19.                , 20.000000000000018 , 24.423076923076923 ,  4.884615384615383 , 24.33333333333331  ,  0.
+            };
+        }
+
+        check_vectors_allclose(x, min_norm_x, solve_tol);
     }
 }
 

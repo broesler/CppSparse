@@ -25,7 +25,7 @@
 namespace cs {
 
 /*------------------------------------------------------------------------------
- *      Triangular Matrix Solutions 
+ *      Triangular Matrix Solutions
  *----------------------------------------------------------------------------*/
 void lsolve_inplace(const CSCMatrix& L, std::span<double> x)
 {
@@ -487,9 +487,9 @@ void tri_solve_perm_inplace(
                 if (p != d) {
                     b[A.i_[p]] -= A.v_[p] * x_val;
                 }
-                }
             }
         }
+    }
 }
 
 
@@ -502,8 +502,13 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>
         throw std::runtime_error("Matrix must be square!");
     }
 
-    if (MxK != M) {
-        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
+    if (MxK % M != 0) {
+        throw std::runtime_error(
+            std::format(
+                "RHS vector size is not a multiple of matrix rows! {} % {} != 0",
+                MxK, M
+            )
+        );
     }
 
     // Get the permutation vectors and check if A is permuted triangular
@@ -528,7 +533,7 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>
 
 
 SparseSolution spsolve(
-    const CSCMatrix& A, 
+    const CSCMatrix& A,
     const CSCMatrix& B,
     csint k,
     OptionalVectorRef<csint> p_inv_ref,
@@ -593,7 +598,7 @@ std::vector<csint> reach(
 
 
 std::vector<csint>& dfs(
-    const CSCMatrix& A, 
+    const CSCMatrix& A,
     csint j,
     std::vector<char>& marked,
     std::vector<csint>& xi,
@@ -852,7 +857,7 @@ std::vector<double> chol_solve(
 
         // Solve for each RHS column
         std::vector<double> w(N);  // workspace
-        
+
         ipvec<double>(res.p_inv, X_k, w);  // permute b -> w = Pb
         lsolve_inplace(res.L, w);          // y = L \ b -> w = y
         ltsolve_inplace(res.L, w);         // P^T x = L^T \ y -> w = P^T x
@@ -1132,19 +1137,19 @@ double cond1est(const CSCMatrix& A)
 // Exercise 8.1
 std::vector<double> spsolve(
     const CSCMatrix& A,
-    const std::vector<double>& b
+    const std::vector<double>& B
 )
 {
     auto [M, N] = A.shape();
-    csint b_rows = static_cast<csint>(b.size());
+    csint MxK = static_cast<csint>(B.size());
 
-    if (M != b_rows) {
-        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
+    if (MxK % M != 0) {
+        throw std::runtime_error("RHS vector size is not a multiple of matrix rows!");
     }
 
     if (M != N) {
         // Use QR factorization for rectangular matrices
-        return qr_solve(A, b, AMDOrder::ATA).x;
+        return qr_solve(A, B, AMDOrder::ATA).x;
     }
 
     // For square matrices, go through the decision tree
@@ -1175,15 +1180,15 @@ std::vector<double> spsolve(
     // If triangular with non-zero diagonal, use triangular solve
     if (nnz_diag == N) {
         if (is_tri == -1) {
-            return lsolve(A, b);
+            return lsolve_opt(A, B);
         } else if (is_tri == 1) {
-            return usolve(A, b);
+            return usolve_opt(A, B);
         }
     }
 
     // Matrix may be permuted triangular
     try {
-        return tri_solve_perm(A, b);
+        return tri_solve_perm(A, B);
     } catch (const PermutedTriangularMatrixError&) {
         // do nothing
     }
@@ -1192,9 +1197,9 @@ std::vector<double> spsolve(
     if (A.is_symmetric() && diag_sign) {
         try {
             if (diag_sign == 1) {
-                return chol_solve(A, b, AMDOrder::APlusAT);
+                return chol_solve(A, B, AMDOrder::APlusAT);
             } else {  // diag_sign == -1
-                return chol_solve(-A, -b, AMDOrder::APlusAT);
+                return chol_solve(-A, -B, AMDOrder::APlusAT);
             }
         } catch (const CholeskyNotPositiveDefiniteError& e) {
             // do nothing
@@ -1260,14 +1265,21 @@ std::vector<double> spsolve(
 
     csint ir_steps = 2;  // number of iterative refinement steps
 
-    return lu_solve(A, b, order, tol, ir_steps);
+    return lu_solve(A, B, order, tol, ir_steps);
 }
 
 
+// TODO update for multiple RHS
 std::vector<double> spsolve(const CSCMatrix& A, const CSCMatrix& b)
 {
     if (b.shape()[1] != 1) {
-        throw std::runtime_error("Sparse RHS matrix must have exactly one column!");
+        throw std::runtime_error(
+            std::format(
+                "Sparse RHS matrix must have exactly one column!"
+                " Got shape ({}, {})",
+                b.shape()[0], b.shape()[1]
+            )
+        );
     }
 
     return spsolve(A, b.to_dense_vector());

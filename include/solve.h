@@ -707,17 +707,19 @@ double norm1est_inv(const LUResult& res);
 double cond1est(const CSCMatrix& A);
 
 
-/** Solve a sparse linear system Ax = b.
+/** Solve a sparse linear system AX = B.
  *
- * See: Davis, Exercise 8.1.
+ * See: Davis, Exercise 8.1 and 8.10.
  *
  * This function mimics the behavior of MATLAB's `\` operator for sparse
  * matrices.
  *
- * @param A  a sparse matrix
- * @param b  a dense vector
+ * @param A  (M, N) the sparse system matrix
+ * @param b  (M, K) the dense RHS matrix
+ *
+ * @return x (N, K) the dense solution matrix
  */
-std::vector<double> spsolve(const CSCMatrix& A, const std::vector<double>& b);
+std::vector<double> spsolve(const CSCMatrix& A, const std::vector<double>& B);
 
 
 /** Solve a sparse linear system Ax = b.
@@ -727,8 +729,10 @@ std::vector<double> spsolve(const CSCMatrix& A, const std::vector<double>& b);
  * This function mimics the behavior of MATLAB's `\` operator for sparse
  * matrices.
  *
- * @param A  a sparse matrix
- * @param b  a sparse vector
+ * @param A  (M, N) the sparse system matrix
+ * @param b  (M, 1) the sparse RHS matrix
+ *
+ * @return x (N,) the dense solution vector
  */
 std::vector<double> spsolve(const CSCMatrix& A, const CSCMatrix& b);
 

@@ -58,9 +58,8 @@ struct SymbolicChol
 /** CholResult Cholesky decomposition return struct (see cs_chol aka csc) */
 struct CholResult
 {
-    CSCMatrix L;                ///< Cholesky factor
-    std::vector<csint> p_inv,   ///< fill-reducing permutation (symmetric)
-                       parent;  ///< the elimination tree (for chol_update)
+    CSCMatrix L;               ///< Cholesky factor
+    std::vector<csint> p_inv;  ///< fill-reducing permutation (symmetric)
 
     /** Solve the linear system Ax = b in-place.
      *

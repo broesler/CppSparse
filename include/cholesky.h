@@ -10,6 +10,7 @@
 #ifndef _CSPARSE_DECOMPOSITION_H_
 #define _CSPARSE_DECOMPOSITION_H_
 
+#include <span>
 #include <vector>
 
 #include "types.h"
@@ -60,6 +61,12 @@ struct CholResult
     CSCMatrix L;                ///< Cholesky factor
     std::vector<csint> p_inv,   ///< fill-reducing permutation (symmetric)
                        parent;  ///< the elimination tree (for chol_update)
+
+    /** Solve the linear system Ax = b in-place.
+     *
+     * @param b[in,out]  right-hand side vector on input, solution on output.
+     */
+    void solve_inplace(std::span<double> b) const; 
 };
 
 

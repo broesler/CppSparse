@@ -699,6 +699,18 @@ std::vector<csint>& dfs_r(
 // -----------------------------------------------------------------------------
 //         Cholesky Factorization Solvers
 // -----------------------------------------------------------------------------
+void CholResult::solve_inplace(std::span<double> b) const
+{
+    // Solve Ax = b ==> (P^T L L^T P) x = b
+    std::vector<double> w(L.shape()[0]);  // workspace
+
+    ipvec<double>(p_inv, b, w);  // permute b -> w = Pb
+    lsolve_inplace(L, w);        // y = L \ b -> w = y
+    ltsolve_inplace(L, w);       // P^T x = L^T \ y -> w = P^T x
+    pvec<double>(p_inv, w, b);   // x = P P^T x
+}
+
+
 std::vector<csint> topological_order(
     const CSCMatrix& b,
     const std::vector<csint>& parent,
@@ -842,26 +854,17 @@ std::vector<double> chol_solve(
 
     csint K = MxK / M;  // number of RHS columns
 
+    // Factorize the matrix once
     SymbolicChol S = schol(A, order);
     CholResult res = chol(A, S);
 
-    // TODO use chol_lsolve for with sparse b
-    // std::vector<double> y = chol_lsolve(L, Pb, S.parent).x;
-    // std::vector<double> PTx = chol_ltsolve(L, Pb, S.parent).x;
-
     std::vector<double> X = B;  // solution matrix
+    std::span<double> X_span(X);
 
+    // Solve each column of the system
     for (csint k = 0; k < K; k++) {
-        // Create a view into the k-th columns of B and X
-        std::span<double> X_k(X.data() + k * N, N);
-
-        // Solve for each RHS column
-        std::vector<double> w(N);  // workspace
-
-        ipvec<double>(res.p_inv, X_k, w);  // permute b -> w = Pb
-        lsolve_inplace(res.L, w);          // y = L \ b -> w = y
-        ltsolve_inplace(res.L, w);         // P^T x = L^T \ y -> w = P^T x
-        pvec<double>(res.p_inv, w, X_k);   // x = P P^T x
+        auto X_k = X_span.subspan(k * N, N);
+        res.solve_inplace(X_k);
     }
 
     return X;

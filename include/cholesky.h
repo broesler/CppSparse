@@ -67,6 +67,80 @@ struct CholResult
      * @param b[in,out]  right-hand side vector on input, solution on output.
      */
     void solve_inplace(std::span<double> b) const; 
+
+    /** Solve \f$ Lx = b \f$ with sparse RHS `b`, where `L` is
+     * a lower-triangular Cholesky factor.
+    *
+    * See: Davis, Exercise 4.3.
+    *
+    * @param L  a lower-triangular matrix from a Cholesky factorization. `L`
+    *        must be in canonical format.
+    * @param b  a sparse RHS vector, stored as an Nx1 CSCMatrix.
+    * @param parent  the parent vector of the elimination tree of `L`. If not
+    *        given, the function will compute it from `L`.
+    *
+    * @return xi  the row indices of the non-zero entries in `x`.
+    * @return x  the solution vector, stored as a dense vector.
+    */
+    SparseSolution lsolve(
+        const CSCMatrix& b,
+        std::vector<csint> parent = {}
+    ) const;
+
+    /** Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is
+     * a lower-triangular Cholesky factor.
+    *
+    * See: Davis, Exercise 4.4.
+    *
+    * @param b  a sparse RHS vector, stored as an Nx1 CSCMatrix.
+    * @param parent  the parent vector of the elimination tree of `L`. If not
+    *        given, the function will compute it from `L`.
+    *
+    * @return xi  the row indices of the non-zero entries in `x`.
+    * @return x  the solution vector, stored as a dense vector.
+    */
+    SparseSolution ltsolve(
+        const CSCMatrix& b,
+        std::vector<csint> parent = {}
+    ) const;
+
+private:
+    /** Solve \f$ Lx = b \f$ with sparse RHS `b`, where `L` is a lower-triangular
+    * Cholesky factor.
+    *
+    * See: Davis, Exercise 4.3.
+    *
+    * @param xi  the non-zero indices of the solution vector, as computed by
+    *        topological_order.
+    * @param x[in,out]  the RHS on input, solution on output
+    */
+    void lsolve_inplace_(std::span<const csint> xi, std::span<double> x) const;
+
+    /** Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is
+     * a lower-triangular Cholesky factor.
+    *
+    * See: Davis, Exercise 4.3.
+    *
+    * @param xi  the non-zero indices of the solution vector, as computed by
+    *        topological_order.
+    * @param x[in,out]  the RHS on input, solution on output
+    */
+    void ltsolve_inplace_(std::span<const csint> xi, std::span<double> x) const;
+
+    /** Solve \f$ Lx = b \f$, or \f$ L^T x = b \f$, with sparse RHS `b`, where
+     * `L` is a lower-triangular Cholesky factor.
+    *
+    * See: Davis, Exercise 4.3 and 4.4.
+    *
+    * @param b  a sparse RHS vector, stored as an Nx1 CSCMatrix.
+    * @param parent  the parent vector of the elimination tree of `L`. If not
+    *        given, the function will compute it from `L`.
+    *
+    * @return xi  the row indices of the non-zero entries in `x`.
+    * @return x  the solution vector, stored as a dense vector.
+    */
+    template <bool IsTranspose>
+    SparseSolution lsolve_impl_(const CSCMatrix& b, std::vector<csint> parent) const;
 };
 
 

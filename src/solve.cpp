@@ -720,7 +720,7 @@ std::vector<csint> topological_order(
     assert(b.N_ == 1);
     csint N = b.M_;
 
-    std::vector<bool> marked(N, false);
+    std::vector<char> marked(N, false);
     std::vector<csint> s, xi;
     s.reserve(N);
     xi.reserve(N);
@@ -752,35 +752,11 @@ std::vector<csint> topological_order(
 }
 
 
-// Exercise 4.3
-SparseSolution chol_lsolve(
-    const CSCMatrix& L,
-    const CSCMatrix& b,
-    std::vector<csint> parent
-)
+void CholResult::lsolve_inplace_(
+    std::span<const csint> xi,
+    std::span<double> x
+) const
 {
-    csint N = L.N_;
-    std::vector<double> x(N);
-
-    // Scatter b into x
-    assert(b.N_ == 1);
-    for (csint p = b.p_[0]; p < b.p_[1]; p++) {
-        x[b.i_[p]] = b.v_[p];
-    }
-
-    if (parent.empty()) {
-        // Inspect L to get the parent vector, since it has sorted indices
-        assert(L.has_sorted_indices());
-        parent.assign(N, -1);
-        for (csint j = 0; j < N-1; j++) {  // skip the last row (only diagonal)
-            parent[j] = L.i_[L.p_[j]+1];   // first off-diagonal element
-        }
-    }
-
-    // Get the order of the nodes from the elimination tree
-    std::vector<csint> xi = topological_order(b, parent);
-
-    // Solve Lx = b
     for (const auto& j : xi) {
         double& x_val = x[j];  // cache diagonal value
         x_val /= L.v_[L.p_[j]];
@@ -788,18 +764,31 @@ SparseSolution chol_lsolve(
             x[L.i_[p]] -= L.v_[p] * x_val;
         }
     }
+}
 
-    return {xi, x};
+
+void CholResult::ltsolve_inplace_(
+    std::span<const csint> xi,
+    std::span<double> x
+) const
+{
+    for (const auto& j : xi) {
+        double& x_val = x[j];  // cache diagonal value
+        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
+            x_val -= L.v_[p] * x[L.i_[p]];
+        }
+        x_val /= L.v_[L.p_[j]];
+    }
 }
 
 
 
-// Exercise 4.4
-SparseSolution chol_ltsolve(
-    const CSCMatrix& L,
+// Exercise 4.3/4.4
+template <bool IsTranspose>
+SparseSolution CholResult::lsolve_impl_(
     const CSCMatrix& b,
     std::vector<csint> parent
-)
+) const
 {
     csint N = L.N_;
     std::vector<double> x(N);
@@ -819,19 +808,38 @@ SparseSolution chol_ltsolve(
         }
     }
 
-    // Get the order of the nodes from the elimination tree
-    std::vector<csint> xi = topological_order(b, parent, false);
+    std::vector<csint> xi;  // order of nodes from the elimination tree
 
-    // Solve Lx = b
-    for (const auto& j : xi) {
-        double& x_val = x[j];  // cache diagonal value
-        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
-            x_val -= L.v_[p] * x[L.i_[p]];
-        }
-        x_val /= L.v_[L.p_[j]];
+    // Solve Lx = b or L^T x = b
+    if constexpr (IsTranspose) {
+        xi = topological_order(b, parent, false);
+        ltsolve_inplace_(xi, x);
+    } else {
+        xi = topological_order(b, parent, true);
+        lsolve_inplace_(xi, x);
     }
 
     return {xi, x};
+}
+
+
+// Exercise 4.3
+SparseSolution CholResult::lsolve(
+    const CSCMatrix& b,
+    std::vector<csint> parent
+) const
+{
+    return lsolve_impl_<false>(b, parent);
+}
+
+
+// Exercise 4.4
+SparseSolution CholResult::ltsolve(
+    const CSCMatrix& b,
+    std::vector<csint> parent
+) const
+{
+    return lsolve_impl_<true>(b, parent);
 }
 
 

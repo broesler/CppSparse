@@ -30,6 +30,7 @@ class CSCMatrix : public SparseMatrix
 public:
     friend class COOMatrix;
     friend class TestCSCMatrix;  // dummy class for testing
+    friend struct CholResult;    // for use with CholResult::lsolve
 
     /** 
      * @typedef KeepFunc
@@ -1061,18 +1062,6 @@ public:
     );
 
     friend CholCounts chol_etree_counts(const CSCMatrix& A);
-
-    friend SparseSolution chol_lsolve(
-        const CSCMatrix& L,
-        const CSCMatrix& b,
-        std::vector<csint> parent
-    );
-
-    friend SparseSolution chol_ltsolve(
-        const CSCMatrix& L,
-        const CSCMatrix& b,
-        std::vector<csint> parent
-    );
 
     friend std::vector<csint> topological_order(
         const CSCMatrix& b,

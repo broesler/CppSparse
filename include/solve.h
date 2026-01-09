@@ -62,7 +62,7 @@ struct QRSolveResult {
  *
  * @return X  the solution matrix with multiple columns, stored column-wise
  */
-template<typename InplaceTriSolve>
+template <typename InplaceTriSolve>
 std::vector<double> trisolve_impl(
     const CSCMatrix& L,
     const std::vector<double>& B,
@@ -529,48 +529,6 @@ std::vector<csint>& dfs(
 // -----------------------------------------------------------------------------
 //        Cholesky Factorization Solutions
 // -----------------------------------------------------------------------------
-/** Solve \f$ Lx = b \f$ with sparse RHS `b`, where `L` is a lower-triangular
- * Cholesky factor.
- *
- * See: Davis, Exercise 4.3.
- *
- * @param L  a lower-triangular matrix from a Cholesky factorization. `L` must
- *        be in canonical format.
- * @param b  a sparse RHS vector, stored as an Nx1 CSCMatrix.
- * @param parent  the parent vector of the elimination tree of `L`. If not
- *        given, the function will compute it from `L`.
- *
- * @return xi  the row indices of the non-zero entries in `x`.
- * @return x  the solution vector, stored as a dense vector.
- */
-SparseSolution chol_lsolve(
-    const CSCMatrix& L,
-    const CSCMatrix& b,
-    std::vector<csint> parent = {}
-);
-
-
-/** Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is a lower-triangular
- * Cholesky factor.
- *
- * See: Davis, Exercise 4.4.
- *
- * @param L  a lower-triangular matrix from a Cholesky factorization. `L` must
- *        be in canonical format.
- * @param b  a sparse RHS vector, stored as an Nx1 CSCMatrix.
- * @param parent  the parent vector of the elimination tree of `L`. If not
- *        given, the function will compute it from `L`.
- *
- * @return xi  the row indices of the non-zero entries in `x`.
- * @return x  the solution vector, stored as a dense vector.
- */
-SparseSolution chol_ltsolve(
-    const CSCMatrix& L,
-    const CSCMatrix& b,
-    std::vector<csint> parent = {}
-);
-
-
 /** Find the topological order of the nodes in the elimination tree.
  *
  * @param b  a sparse matrix

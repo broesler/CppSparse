@@ -24,6 +24,9 @@ namespace cs {
 
 constexpr double solve_tol = 1e-12;
 
+struct DenseRHS {};
+struct SparseRHS {};
+
 
 TEST_CASE("Cholesky Solution", "[cholsol]")
 {
@@ -50,7 +53,12 @@ TEST_CASE("Cholesky Solution", "[cholsol]")
 }
 
 
-TEST_CASE("Cholesky Solution with Dense Matrix RHS", "[cholsol-dense-matrix]")
+TEMPLATE_TEST_CASE(
+    "Cholesky Solution with Matrix RHS",
+    "[cholsol-matrix]",
+    DenseRHS,
+    SparseRHS
+)
 {
     CSCMatrix A = davis_example_chol();
     auto [M, N] = A.shape();
@@ -67,9 +75,13 @@ TEST_CASE("Cholesky Solution with Dense Matrix RHS", "[cholsol-dense-matrix]")
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
     const std::vector<double> b = A * expect_x;
+    std::vector<double> x;
 
-    // Solve Ax = b
-    std::vector<double> x = chol_solve(A, b, order);
+    if constexpr (std::is_same_v<TestType, DenseRHS>) {
+        x = chol_solve(A, b, order);  // solve Ax = b
+    } else {
+        x = chol_solve(A, CSCMatrix(b, {M, K}), order);
+    }
 
     // Check that Ax = b
     check_vectors_allclose(x, expect_x, solve_tol);
@@ -329,9 +341,6 @@ TEST_CASE("LU Solution with Dense Matrix RHS", "[lusol-dense-matrix]") {
 /*------------------------------------------------------------------------------
  *         Exercise 8.1: General Sparse Solver
  *----------------------------------------------------------------------------*/
-struct DenseRHS {};
-struct SparseRHS {};
-
 struct SingleRHS { static constexpr csint K = 1; };
 struct MultipleRHS { static constexpr csint K = 3; };
 

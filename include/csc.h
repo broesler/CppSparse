@@ -1091,6 +1091,11 @@ public:
         const std::vector<csint>& p_inv,
         const CSCMatrix& Y
     );
+    friend QRSolveResult qr_solve(
+        const CSCMatrix& A,
+        const CSCMatrix& B,
+        AMDOrder order
+    );
 
     // -------------------------------------------------------------------------
     //         LU Decomposition

@@ -164,7 +164,12 @@ TEST_CASE("QR Solution", "[qrsol]")
 }
 
 
-TEST_CASE("QR Solution with Dense Matrix RHS", "[qrsol-dense-matrix]")
+TEMPLATE_TEST_CASE(
+    "QR Solution with Matrix RHS",
+    "[qrsol-matrix]",
+    DenseRHS,
+    SparseRHS
+)
 {
     CSCMatrix A = davis_example_qr();
     auto [M, N] = A.shape();
@@ -189,7 +194,11 @@ TEST_CASE("QR Solution with Dense Matrix RHS", "[qrsol-dense-matrix]")
         b = A * expect;
 
         // Solve Ax = b
-        res = qr_solve(A, b, order);
+        if constexpr (std::is_same_v<TestType, DenseRHS>) {
+            res = qr_solve(A, b, order);
+        } else {
+            res = qr_solve(A, CSCMatrix(b, {M, K}), order);
+        }
 
         // Check that Ax = b
         check_vectors_allclose(res.x, expect, 1e-12);
@@ -215,7 +224,12 @@ TEST_CASE("QR Solution with Dense Matrix RHS", "[qrsol-dense-matrix]")
         b = A * expect_x;
 
         // Solve Ax = b
-        res = qr_solve(A, b, order);
+        // Solve Ax = b
+        if constexpr (std::is_same_v<TestType, DenseRHS>) {
+            res = qr_solve(A, b, order);
+        } else {
+            res = qr_solve(A, CSCMatrix(b, {M, K}), order);
+        }
 
         // Check that Ax = b
         check_vectors_allclose(res.x, expect_x, 1e-12);
@@ -230,7 +244,11 @@ TEST_CASE("QR Solution with Dense Matrix RHS", "[qrsol-dense-matrix]")
         b = A * expect;
 
         // Solve Ax = b
-        res = qr_solve(A, b, order);  // (M - k, N)
+        if constexpr (std::is_same_v<TestType, DenseRHS>) {
+            res = qr_solve(A, b, order);
+        } else {
+            res = qr_solve(A, CSCMatrix(b, {M - k, K}), order);
+        }
 
         // Actual expect_x la.lstsq(A.toarray(), b)
         const std::vector<double> min_norm_x = {

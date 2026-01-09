@@ -1021,7 +1021,7 @@ QRSolveResult qr_solve(
         res = qr(AT, S);
     }
 
-    std::vector<double> X(N * K);  // solution matrix
+    std::vector<double> X(N * K);  // dense solution matrix
     std::span<double> X_span(X);
     std::span<const double> B_span(B);
 
@@ -1041,6 +1041,66 @@ QRSolveResult qr_solve(
 
     // Compute the residual
     std::vector<double> R = B - A * X;
+
+    return QRSolveResult{X, R, norm(R, 2)};
+}
+
+
+// Exercise 8.8
+QRSolveResult qr_solve(
+    const CSCMatrix& A,
+    const CSCMatrix& B,
+    AMDOrder order
+)
+{
+    auto [M, N] = A.shape();
+    auto [Mb, K] = B.shape();
+
+    if (M != Mb) {
+        throw std::runtime_error(
+            std::format("Matrix and RHS sizes do not match! Got {} and {}.", M, Mb)
+        );
+    }
+
+    // Factorize the matrix once
+    SymbolicQR S;
+    QRResult res;
+
+    if (M >= N) {
+        S = sqr(A, order);
+        res = qr(A, S);
+    } else {
+        CSCMatrix AT = A.transpose();
+        S = sqr(AT, order);
+        res = qr(AT, S);
+    }
+
+    std::vector<double> X(N * K);  // dense solution matrix
+    std::span<double> X_span(X);
+
+    std::vector<double> B_k(M);
+
+    for (csint k = 0; k < K; k++) {
+        // Solve for each RHS column
+        auto X_k = X_span.subspan(k * N, N);
+        std::fill(B_k.begin(), B_k.end(), 0.0);
+
+        // Scatter B[:, k] into B_k
+        for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
+            B_k[B.i_[p]] = B.v_[p];
+        }
+
+        if (M >= N) {
+            // Compute the least-squares solution
+            res.solve_inplace(S.m2, B_k, X_k);
+        } else {
+            // Compute the minimum-norm solution
+            res.tsolve_inplace(S.m2, B_k, X_k);
+        }
+    }
+
+    // Compute the residual
+    std::vector<double> R = B.to_dense_vector() - A * X;
 
     return QRSolveResult{X, R, norm(R, 2)};
 }

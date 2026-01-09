@@ -41,6 +41,7 @@ struct SymbolicChol;
 struct SymbolicQR;
 struct SymbolicLU;
 struct QRResult;
+struct QRSolveResult;
 struct LUResult;
 struct MaxMatch;
 struct SCCResult;

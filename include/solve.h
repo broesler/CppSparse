@@ -611,6 +611,31 @@ QRSolveResult qr_solve(
 );
 
 
+/** Solve the system AX = B using the QR factorization.
+ *
+ * This method is useful for solving least-squares problems where the matrix `A`
+ * is `M`-by-`N` and `M` > `N`. It can also be used to solve under-determined
+ * systems where `M` < `N`. In the under-determined case, the solution is
+ * the minimum-norm solution.
+ *
+ * @param A  (M, N) the sparse system matrix
+ * @param B  (M, K) the sparse RHS matrix
+ * @param order  the fill-reducing ordering of the matrix to compute
+ *
+ * @return res  a struct containing:
+ *        * x  (N, K) the solution matrix
+ *        * r  (M, K) the residual matrix (b - A * x)
+ *        * rnorm  the residual 2-norm (in the flattened vector sense)
+ *
+ * @see cs_qrsol
+ */
+QRSolveResult qr_solve(
+    const CSCMatrix& A,
+    const CSCMatrix& B,
+    AMDOrder order=AMDOrder::Natural
+);
+
+
 // -----------------------------------------------------------------------------
 //         LU Factorization Solutions
 // -----------------------------------------------------------------------------

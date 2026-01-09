@@ -271,12 +271,12 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         CSCMatrix b {b_vals, {N, 1}};
 
         // Solve Lx = b
-        auto [xi, x] = chol_lsolve(L, b, res.parent);
+        auto [xi, x] = res.lsolve(b, S.parent);
 
         check_vectors_allclose(x, expect, tol);
 
         // Solve Lx = b, inferring parent from L
-        auto [xi_s, x_s] = chol_lsolve(L, b);
+        auto [xi_s, x_s] = res.lsolve(b);
 
         CHECK(xi == xi_s);
         check_vectors_allclose(x_s, expect, tol);
@@ -312,12 +312,12 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         CSCMatrix b {b_vals, {N, 1}};
 
         // Solve Lx = b
-        auto [xi, x] = chol_ltsolve(L, b, res.parent);
+        auto [xi, x] = res.ltsolve(b, S.parent);
 
         check_vectors_allclose(x, expect, tol);
 
         // Solve Lx = b, inferring parent from L
-        auto [xi_s, x_s] = chol_ltsolve(L, b);
+        auto [xi_s, x_s] = res.ltsolve(b);
 
         CHECK(xi == xi_s);
         check_vectors_allclose(x_s, expect, tol);

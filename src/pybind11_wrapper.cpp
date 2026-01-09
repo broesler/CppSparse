@@ -45,12 +45,10 @@ PYBIND11_MODULE(csparse, m) {
     py::class_<cs::CholResult>(m, "CholResult")
         .def_property_readonly("L", [](const cs::CholResult& res) { return scipy_from_csc(res.L); })
         .def_property_readonly("p", [](const cs::CholResult& res) { return cs::inv_permute(res.p_inv); })
-        .def_readonly("parent", &cs::CholResult::parent)
         .def("__iter__", [](const cs::CholResult& res) {
             py::object result = py::make_tuple(
                 scipy_from_csc(res.L),
-                cs::inv_permute(res.p_inv),
-                res.parent
+                cs::inv_permute(res.p_inv)
             );
             return py::make_iterator(result);
         });

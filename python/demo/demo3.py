@@ -67,7 +67,8 @@ def demo3(prob, name='', axs=None):
     print(f"chol then update/downdate ({order})")
 
     tic = time.perf_counter()
-    L, p, parent = csparse.chol(C, order)
+    L, p = csparse.chol(C, order)
+    parent = csparse.etree(C[p[:, np.newaxis], p])
     t = time.perf_counter() - tic
     print(f"chol  time: {t:.2e} s")
 
@@ -128,7 +129,7 @@ def demo3(prob, name='', axs=None):
     print(f"residual: {resid:.2e}")
 
     tic = time.perf_counter()
-    L2, p2, _ = csparse.chol(E, order)
+    L2, p2 = csparse.chol(E, order)
     x = b[p2]
     x = csparse.lsolve(L2, x)
     x = csparse.ltsolve(L2, x)

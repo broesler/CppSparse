@@ -50,7 +50,7 @@ def test_cholesky_interface(order, use_postorder):
     """Test the Cholesky decomposition python interface."""
     A = csparse.davis_example_chol()
 
-    L, p, _ = csparse.chol(A, order, use_postorder)
+    L, p = csparse.chol(A, order, use_postorder)
     Ls = csparse.symbolic_cholesky(A, order, use_postorder).L
     Ll = csparse.leftchol(A, order, use_postorder).L
     Lr = csparse.rechol(A, order, use_postorder).L

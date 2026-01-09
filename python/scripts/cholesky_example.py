@@ -46,7 +46,7 @@ nnz_cols = np.diff(sparse.csc_matrix(L_ATA).indptr)
 
 # Compute the Cholesky factor using csparse C++ algorithms
 order = 'APlusAT'
-L, p, _ = csparse.chol(Ac, order=order)
+L, p = csparse.chol(Ac, order=order)
 Ls = csparse.symbolic_cholesky(Ac, order=order).L
 Ll = csparse.leftchol(Ac, order=order).L
 Lr = csparse.rechol(Ac, order=order).L

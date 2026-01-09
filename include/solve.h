@@ -565,6 +565,23 @@ std::vector<double> chol_solve(
 );
 
 
+/** Solve the system AX = B using the Cholesky factorization.
+ *
+ * @param A  (N, N) a symmetric, positive-definite matrix
+ * @param B  (N, K) a sparse matrix
+ * @param order  the fill-reducing ordering of the matrix to compute
+ *
+ * @return X  (N, K) the dense solution matrix
+ *
+ * @see cs_cholsol
+ */
+std::vector<double> chol_solve(
+    const CSCMatrix& A,
+    const CSCMatrix& B,
+    AMDOrder order=AMDOrder::Natural
+);
+
+
 // -----------------------------------------------------------------------------
 //         QR Factorization Solvers
 // -----------------------------------------------------------------------------

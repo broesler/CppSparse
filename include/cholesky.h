@@ -68,6 +68,20 @@ struct CholResult
      */
     void solve_inplace(std::span<double> b) const; 
 
+    /** Solve the linear system AX = B in-place.
+     *
+     * @param B  right-hand side matrix
+     * @param k  the column index of `b` to solve
+     * @param parent  the parent vector of the elimination tree
+     * @param x[out]  the output solution vector
+     */
+    void solve_inplace(
+        const CSCMatrix& B,
+        csint k,
+        const std::vector<csint> parent,
+        std::span<double> x
+    ) const; 
+
     /** Solve \f$ Lx = b \f$ with sparse RHS `b`, where `L` is
      * a lower-triangular Cholesky factor.
     *

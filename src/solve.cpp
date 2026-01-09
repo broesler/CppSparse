@@ -705,8 +705,8 @@ void CholResult::solve_inplace(std::span<double> b) const
     std::vector<double> w(L.shape()[0]);  // workspace
 
     ipvec<double>(p_inv, b, w);  // permute b -> w = Pb
-    lsolve_inplace(L, w);        // y = L \ b -> w = y
-    ltsolve_inplace(L, w);       // P^T x = L^T \ y -> w = P^T x
+    lsolve_inplace(L, w);    // y = L \ b -> w = y
+    ltsolve_inplace(L, w);   // P^T x = L^T \ y -> w = P^T x
     pvec<double>(p_inv, w, b);   // x = P P^T x
 }
 
@@ -781,6 +781,50 @@ void CholResult::ltsolve_inplace_(
     }
 }
 
+
+void CholResult::solve_inplace(
+    const CSCMatrix& B,
+    csint k,
+    const std::vector<csint> parent,
+    std::span<double> x
+) const
+{
+    // ----- Option 1: scatter into dense column and solve dense
+    // // Solve Ax = b ==> (P^T L L^T P) x = b
+    // std::vector<double> w(L.M_);  // workspace
+
+    // // scatter permuted b -> w = Pb
+    // assert(k < B.N_);
+    // for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
+    //     w[p_inv[B.i_[p]]] = B.v_[p];
+    // }
+
+    // lsolve_inplace(L, w);    // y = L \ b -> w = y
+    // ltsolve_inplace(L, w);   // P^T x = L^T \ y -> w = P^T x
+    // pvec<double>(p_inv, w, x);   // x = P P^T x
+
+    // ----- Option 2: Solve as sparse column and scatter to dense at end
+    CSCMatrix b = B.slice(0, B.M_, k, k+1);  // get single column
+
+    // Permute the rows in-place
+    for (auto& i : b.i_) {
+        i = p_inv[i];
+    }
+
+    // Get the order of the nodes from the elimination tree
+    std::vector<csint> xi = topological_order(b, parent);
+
+    // Scatter into w
+    std::vector<double> w(L.M_);  // workspace
+    for (csint p = b.p_[0]; p < b.p_[1]; p++) {
+        w[b.i_[p]] = b.v_[p];
+    }
+
+    lsolve_inplace_(xi, w);               // y = L \ b -> w = y
+    std::reverse(xi.begin(), xi.end());  // reverse the order for L^T
+    ltsolve_inplace_(xi, w);              // P^T x = L^T \ y -> w = P^T x
+    pvec<double>(p_inv, w, x);           // x = P P^T x
+}
 
 
 // Exercise 4.3/4.4
@@ -873,6 +917,45 @@ std::vector<double> chol_solve(
     for (csint k = 0; k < K; k++) {
         auto X_k = X_span.subspan(k * N, N);
         res.solve_inplace(X_k);
+    }
+
+    return X;
+}
+
+
+std::vector<double> chol_solve(
+    const CSCMatrix& A,
+    const CSCMatrix& B,
+    AMDOrder order
+)
+{
+    auto [M, N] = A.shape();
+    auto [Mb, K] = B.shape();
+
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    if (M != Mb) {
+        throw std::runtime_error(
+            std::format(
+                "Matrix and RHS sizes do not match! Got {} and {}.",
+                M, Mb
+            )
+        );
+    }
+
+    // Factorize the matrix once
+    SymbolicChol S = schol(A, order);
+    CholResult res = chol(A, S);
+
+    std::vector<double> X(N * K);  // dense solution matrix
+    std::span<double> X_span(X);
+
+    // Solve each column of the system
+    for (csint k = 0; k < K; k++) {
+        auto X_k = X_span.subspan(k * N, N);
+        res.solve_inplace(B, k, S.parent, X_k);
     }
 
     return X;

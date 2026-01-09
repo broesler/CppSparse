@@ -913,7 +913,7 @@ std::vector<double> chol_solve(
     std::vector<double> X = B;  // solution matrix
     std::span<double> X_span(X);
 
-    // Solve each column of the system
+    // Exercise 8.7/8.9: solve each column of the system
     for (csint k = 0; k < K; k++) {
         auto X_k = X_span.subspan(k * N, N);
         res.solve_inplace(X_k);
@@ -923,6 +923,7 @@ std::vector<double> chol_solve(
 }
 
 
+// Exercise 8.8/8.9
 std::vector<double> chol_solve(
     const CSCMatrix& A,
     const CSCMatrix& B,
@@ -938,10 +939,7 @@ std::vector<double> chol_solve(
 
     if (M != Mb) {
         throw std::runtime_error(
-            std::format(
-                "Matrix and RHS sizes do not match! Got {} and {}.",
-                M, Mb
-            )
+            std::format("Matrix and RHS sizes do not match! Got {} and {}.", M, Mb)
         );
     }
 
@@ -965,50 +963,33 @@ std::vector<double> chol_solve(
 // -----------------------------------------------------------------------------
 //         QR Factorization Solvers
 // -----------------------------------------------------------------------------
-/** Solve the linear system Ax = b using QR factorization.
- *
- * If A is tall (m >= n), compute the least-squares solution.
- * If A is wide (m < n), compute the minimum-norm solution.
- *
- * @param A  the input matrix in CSC format
- * @param b  the right-hand side vector
- * @param order  the AMD ordering to use
- * @param x[out]  the output solution vector
- */
-static void qr_solve_(
-    const CSCMatrix& A,
+void QRResult::solve_inplace(
+    size_t M2,
     std::span<const double> b,
-    AMDOrder order,
     std::span<double> x
-)
+) const
 {
-    auto [M, N] = A.shape();
+    // Solve P^T Q R E x = b
+    std::vector<double> w(M2);
+    ipvec<double>(p_inv, b, w);  // permute b -> E b -> w = Eb
+    apply_qtleft(V, beta, w);    // y = Q^T E b -> w = y
+    usolve_inplace(R, w);        // E x = R \ y -> w = E x
+    ipvec<double>(q, w, x);      // x = E^T (E x)
+}
 
-    if (M >= N) {
-        // Compute the least-squares solution
-        SymbolicQR S = sqr(A, order);
-        QRResult res = qr(A, S);
 
-        // Solve P^T Q R E x = b
-        std::vector<double> w(S.m2);
-        ipvec<double>(res.p_inv, b, w);    // permute b -> E b -> w = Eb
-        apply_qtleft(res.V, res.beta, w);  // y = Q^T E b -> w = y
-        usolve_inplace(res.R, w);          // E x = R \ y -> w = E x
-        ipvec<double>(res.q, w, x);        // x = E^T (E x)
-    } else {
-        // Compute the minimum-norm solution
-        CSCMatrix AT = A.transpose();
-
-        SymbolicQR S = sqr(AT, order);
-        QRResult res = qr(AT, S);
-
-        // Solve P^T R^T Q^T E x = b
-        std::vector<double> w(S.m2);
-        pvec<double>(S.q, b, w);          // permute b -> E b -> w = Eb
-        utsolve_inplace(res.R, w);        // y = R^T \ E b -> w = y
-        apply_qleft(res.V, res.beta, w);  // P x = Q y -> w = P x
-        pvec<double>(res.p_inv, w, x);    // x = P^T (P x)
-    }
+void QRResult::tsolve_inplace(
+    size_t M2,
+    std::span<const double> b,
+    std::span<double> x
+) const
+{
+    // Solve P^T R^T Q^T E x = b
+    std::vector<double> w(M2);
+    pvec<double>(q, b, w);      // permute b -> E b -> w = Eb
+    utsolve_inplace(R, w);      // y = R^T \ E b -> w = y
+    apply_qleft(V, beta, w);    // P x = Q y -> w = P x
+    pvec<double>(p_inv, w, x);  // x = P^T (P x)
 }
 
 
@@ -1027,13 +1008,35 @@ QRSolveResult qr_solve(
 
     csint K = MxK / M;  // number of RHS columns
 
+    // Factorize the matrix once
+    SymbolicQR S;
+    QRResult res;
+
+    if (M >= N) {
+        S = sqr(A, order);
+        res = qr(A, S);
+    } else {
+        CSCMatrix AT = A.transpose();
+        S = sqr(AT, order);
+        res = qr(AT, S);
+    }
+
     std::vector<double> X(N * K);  // solution matrix
+    std::span<double> X_span(X);
+    std::span<const double> B_span(B);
 
     for (csint k = 0; k < K; k++) {
         // Solve for each RHS column
-        std::span<const double> B_k(B.data() + k * M, M);
-        std::span<double> X_k(X.data() + k * N, N);
-        qr_solve_(A, B_k, order, X_k);
+        auto B_k = B_span.subspan(k * M, M);
+        auto X_k = X_span.subspan(k * N, N);
+
+        if (M >= N) {
+            // Compute the least-squares solution
+            res.solve_inplace(S.m2, B_k, X_k);
+        } else {
+            // Compute the minimum-norm solution
+            res.tsolve_inplace(S.m2, B_k, X_k);
+        }
     }
 
     // Compute the residual

@@ -586,27 +586,27 @@ std::vector<double> chol_solve(
 //         QR Factorization Solvers
 // -----------------------------------------------------------------------------
 
-/** Solve the system Ax = b using the QR factorization.
+/** Solve the system AX = B using the QR factorization.
  *
  * This method is useful for solving least-squares problems where the matrix `A`
  * is `M`-by-`N` and `M` > `N`. It can also be used to solve under-determined
  * systems where `M` < `N`. In the under-determined case, the solution is
  * the minimum-norm solution.
  *
- * @param A  a matrix
- * @param b  a dense vector
+ * @param A  (M, N) a sparse matrix
+ * @param B  (M, K) a dense vector
  * @param order  the fill-reducing ordering of the matrix to compute
  *
  * @return res  a struct containing:
- *        * x the solution vector
- *        * r the residual vector (b - A * x)
- *        * rnorm the residual 2-norm
+ *        * x  (N, K) the solution matrix
+ *        * r  (M, K) the residual matrix (b - A * x)
+ *        * rnorm  the residual 2-norm (in the flattened vector sense)
  *
  * @see cs_qrsol
  */
 QRSolveResult qr_solve(
     const CSCMatrix& A,
-    const std::vector<double>& b,
+    const std::vector<double>& B,
     AMDOrder order=AMDOrder::Natural
 );
 

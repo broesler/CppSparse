@@ -379,8 +379,8 @@ struct NegativeA {};
 using RhsCombinations = std::tuple<
     std::tuple<DenseRHS, SingleRHS>,
     std::tuple<SparseRHS, SingleRHS>,
-    std::tuple<DenseRHS, MultipleRHS>
-    // std::tuple<SparseRHS, MultipleRHS>  // TODO
+    std::tuple<DenseRHS, MultipleRHS>,
+    std::tuple<SparseRHS, MultipleRHS>
 >;
 
 
@@ -442,9 +442,9 @@ using CholeskyCombinations = std::tuple<
     std::tuple<DenseRHS, SingleRHS, NegativeA>,
     std::tuple<SparseRHS, SingleRHS, NegativeA>,
     std::tuple<DenseRHS, MultipleRHS, PositiveA>,
-    // TODO std::tuple<SparseRHS, MultipleRHS, PositiveA>,
-    std::tuple<DenseRHS, MultipleRHS, NegativeA>
-    // TODO std::tuple<SparseRHS, MultipleRHS, NegativeA>
+    std::tuple<SparseRHS, MultipleRHS, PositiveA>,
+    std::tuple<DenseRHS, MultipleRHS, NegativeA>,
+    std::tuple<SparseRHS, MultipleRHS, NegativeA>
 >;
 
 

@@ -40,13 +40,13 @@ void lsolve_inplace(const CSCMatrix& L, std::span<double> x)
 
 std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& B)
 {
-    return trisolve_impl(L, B, lsolve_inplace);
+    return detail::trisolve_dense(L, B, lsolve_inplace);
 }
 
 
-std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& b)
+std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& B)
 {
-    return spsolve(L, b, 0, std::nullopt, true).x;
+    return detail::trisolve_sparse<true>(L, B);
 }
 
 
@@ -63,7 +63,7 @@ void ltsolve_inplace(const CSCMatrix& L, std::span<double> x)
 
 std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& B)
 {
-    return trisolve_impl(L, B, ltsolve_inplace);
+    return detail::trisolve_dense(L, B, ltsolve_inplace);
 }
 
 
@@ -80,13 +80,13 @@ void usolve_inplace(const CSCMatrix& U, std::span<double> x)
 
 std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& B)
 {
-    return trisolve_impl(U, B, usolve_inplace);
+    return detail::trisolve_dense(U, B, usolve_inplace);
 }
 
 
-std::vector<double> usolve(const CSCMatrix& U, const CSCMatrix b)
+std::vector<double> usolve(const CSCMatrix& U, const CSCMatrix& B)
 {
-    return spsolve(U, b, 0, std::nullopt, false).x;
+    return detail::trisolve_sparse<false>(U, B);
 }
 
 
@@ -103,7 +103,7 @@ void utsolve_inplace(const CSCMatrix& U, std::span<double> x)
 
 std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& B)
 {
-    return trisolve_impl(U, B, utsolve_inplace);
+    return detail::trisolve_dense(U, B, utsolve_inplace);
 }
 
 
@@ -123,9 +123,10 @@ void lsolve_inplace_opt(const CSCMatrix& L, std::span<double> x)
 }
 
 
+// TODO overload with CSCMatrix RHS.
 std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
 {
-    return trisolve_impl(L, b, lsolve_inplace_opt);
+    return detail::trisolve_dense(L, b, lsolve_inplace_opt);
 }
 
 
@@ -146,7 +147,7 @@ void usolve_inplace_opt(const CSCMatrix& U, std::span<double> x)
 
 std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b)
 {
-    return trisolve_impl(U, b, usolve_inplace_opt);
+    return detail::trisolve_dense(U, b, usolve_inplace_opt);
 }
 
 
@@ -504,10 +505,7 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>
 
     if (MxK % M != 0) {
         throw std::runtime_error(
-            std::format(
-                "RHS vector size is not a multiple of matrix rows! {} % {} != 0",
-                MxK, M
-            )
+            std::format("RHS vector size is not a multiple of matrix rows!")
         );
     }
 

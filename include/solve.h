@@ -50,6 +50,9 @@ struct QRSolveResult {
 //------------------------------------------------------------------------------
 //        Triangular Matrix Solutions
 //------------------------------------------------------------------------------
+
+namespace detail {
+
 /** Solve a triangular linear system \f$ Tx = B \f$ for multiple RHS columns.
  *
  * @tparam InplaceTriSolve  a function that performs an in-place triangular
@@ -63,7 +66,7 @@ struct QRSolveResult {
  * @return X  the solution matrix with multiple columns, stored column-wise
  */
 template <typename InplaceTriSolve>
-std::vector<double> trisolve_impl(
+std::vector<double> trisolve_dense(
     const CSCMatrix& L,
     const std::vector<double>& B,
     InplaceTriSolve inplace_solver
@@ -77,7 +80,7 @@ std::vector<double> trisolve_impl(
     }
 
     csint K = MxK / M;            // number of RHS columns
-    std::vector<double> X = B;    // NOTE only works if M == N
+    std::vector<double> X = B;    // NOTE only works if M >= N
     std::span<double> X_span(X);  // view onto X
 
     for (csint k = 0; k < K; k++) {
@@ -88,6 +91,39 @@ std::vector<double> trisolve_impl(
     return X;
 };
 
+
+/** Solve a triangular linear system \f$ Tx = B \f$ for multiple RHS columns.
+ *
+ * @tparam Lower  True if input is lower triangular, otherwise upper.
+ *
+ * @param L  a triangular matrix
+ * @param B  a sparse matrix with multiple RHS columns
+ *
+ * @return X  the solution matrix with multiple columns, stored column-wise
+ */
+template <bool Lower>
+std::vector<double> trisolve_sparse(const CSCMatrix& L, const CSCMatrix& B)
+{
+    auto [M, N] = L.shape();
+    csint K = B.shape()[1];
+
+    csint Nx = std::max(M, N);  // enough space for non-square solutions
+    std::vector<double> X(Nx * K);
+    std::span<double> X_span(X);
+
+    for (csint k = 0; k < K; k++) {
+        auto X_k = X_span.subspan(k * Nx, Nx);
+        // TODO rewrite spsolve to take xi and x vectors as inputs
+        SparseSolution sol = spsolve(L, B, k, std::nullopt, Lower);
+        for (auto& i : sol.xi) {
+            X_k[i] = sol.x[i];
+        }
+    }
+
+    return X;
+}
+
+}  // namespace detail
 
 /** Forward solve a lower-triangular system \f$ Lx = b \f$, in-place.
  *
@@ -108,12 +144,12 @@ void lsolve_inplace(const CSCMatrix& L, std::span<double> x);
  * indices in each column of `L` may appear in any order.
  *
  * @param L  a lower-triangular matrix
- * @param b  a dense vector
+ * @param B  the RHS matrix (in column-major order if dense)
  *
- * @return x  the solution vector
+ * @return x  the solution matrix, in column-major order.
  */
 std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& B);
-std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& b);
+std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& B);
 
 
 /** Backsolve a lower-triangular system \f$ L^Tx = b \f$.
@@ -166,7 +202,7 @@ void usolve_inplace(const CSCMatrix& U, std::span<double> x);
  * @return x  the solution vector
  */
 std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b);
-std::vector<double> usolve(const CSCMatrix& U, const CSCMatrix b);
+std::vector<double> usolve(const CSCMatrix& U, const CSCMatrix& B);
 
 
 /** Forward solve an upper-triangular system \f$ U^T x = b \f$.

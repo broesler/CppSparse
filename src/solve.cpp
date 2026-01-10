@@ -280,7 +280,7 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
 {
     assert(U.M_ == U.N_);
 
-    std::vector<bool> marked(U.N_, false);  // workspace
+    std::vector<char> marked(U.N_, false);  // workspace
     std::vector<csint> p_diags(U.N_);  // diagonal indicies (inverse permutation)
 
     for (csint j = 0; j < U.N_; j++) {

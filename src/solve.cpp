@@ -559,9 +559,7 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B)
 
         // Scatter B[:, k] into B_k
         std::fill(B_k.begin(), B_k.end(), 0.0);
-        for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
-            B_k[B.i_[p]] = B.v_[p];
-        }
+        B.scatter(k, B_k);
 
         tri_solve_perm_inplace(A, tri_perm, B_k, X_k);
     }
@@ -582,10 +580,7 @@ SparseSolution spsolve(
     std::vector<csint> xi = reach(A, B, k, p_inv_ref);
     std::vector<double> x(A.M_);  // dense output vector
 
-    // scatter B(:, k) into x
-    for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
-        x[B.i_[p]] = B.v_[p];
-    }
+    B.scatter(k, x);  // scatter B(:, k) into x
 
     // Solve Lx = b_k or Ux = b_k
     for (auto& j : xi) {  // x(j) is nonzero
@@ -854,11 +849,9 @@ void CholResult::solve_inplace(
     // Get the order of the nodes from the elimination tree
     std::vector<csint> xi = topological_order(b, parent);
 
-    // Scatter into w
+    // Scatter b into w
     std::vector<double> w(L.M_);  // workspace
-    for (csint p = b.p_[0]; p < b.p_[1]; p++) {
-        w[b.i_[p]] = b.v_[p];
-    }
+    b.scatter(0, w);
 
     lsolve_inplace_(xi, w);              // y = L \ b -> w = y
     std::reverse(xi.begin(), xi.end());  // reverse the order for L^T
@@ -879,9 +872,7 @@ SparseSolution CholResult::lsolve_impl_(
 
     // Scatter b into x
     assert(b.N_ == 1);
-    for (csint p = b.p_[0]; p < b.p_[1]; p++) {
-        x[b.i_[p]] = b.v_[p];
-    }
+    b.scatter(0, x);
 
     if (parent.empty()) {
         // Inspect L to get the parent vector, since it has sorted indices
@@ -1125,10 +1116,7 @@ QRSolveResult qr_solve(
         auto X_k = X_span.subspan(k * N, N);
         std::fill(B_k.begin(), B_k.end(), 0.0);
 
-        // Scatter B[:, k] into B_k
-        for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
-            B_k[B.i_[p]] = B.v_[p];
-        }
+        B.scatter(k, B_k);  // scatter B[:, k] into B_k
 
         if (M >= N) {
             // Compute the least-squares solution
@@ -1246,18 +1234,12 @@ std::vector<double> lu_solve(
     for (csint k = 0; k < K; k++) {
         // Create a view into the k-th column of X
         auto X_k = X_span.subspan(k * N, N);
-        std::fill(B_k.begin(), B_k.end(), 0.0);
 
-        // Scatter B[:, k] into X_k (and B_k if necessary)
-        for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
-            const csint i = B.i_[p];
-            const double v = B.v_[p];
+        B.scatter(k, X_k);  // scatter B[:, k] into X_k
 
-            X_k[i] = v;
-
-            if (ir_steps > 0) {
-                B_k[i] = v;
-            }
+        if (ir_steps > 0) {
+            // Cache B_k for iterative refinement
+            std::copy(X_k.begin(), X_k.end(), B_k.begin());
         }
 
         // Solve Ax = B

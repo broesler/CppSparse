@@ -24,57 +24,6 @@
 namespace cs {
 
 
-// Define solve functions for LUResult
-// Exercise 6.1
-void LUResult::solve_inplace(std::span<double> b) const
-{
-    auto [M, N] = L.shape();
-
-    if (M != N) {
-        throw std::runtime_error("Matrix must be square!");
-    }
-
-    if (M != static_cast<csint>(b.size())) {
-        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
-    }
-
-    // allocate workspace
-    std::vector<double> w(N);
-
-    // Solve A x = b == (P^T L U Q^T) x = b
-    ipvec<double>(p_inv, b, w);  // permute b -> w = Pb
-    lsolve_inplace(L, w);        // solve Ly = Pb -> w = y
-    usolve_inplace(U, w);        // solve U (Q^T x) = y -> w = Q^T x
-    ipvec<double>(q, w, b);      // Q (Q^T x) = x -> b = x
-}
-
-
-// Exercise 6.1
-std::vector<double> LUResult::solve(const std::vector<double>& b) const
-{
-    std::vector<double> x = b;
-    solve_inplace(x);
-    return x;
-}
-
-
-// Exercise 6.1
-std::vector<double> LUResult::tsolve(const std::vector<double>& b) const
-{
-    if (U.shape()[1] != static_cast<csint>(b.size())) {
-        throw std::runtime_error("Matrix and RHS vector sizes do not match!");
-    }
-
-    // Solve A^T x = b == (P^T L U Q^T)^T x = b == (Q U^T L^T P) x = b
-    const std::vector<double> QTb = pvec(q, b);     // permute b -> Q^T b
-    const std::vector<double> y = utsolve(U, QTb);  // solve U^T y = Q^T b
-    const std::vector<double> Px = ltsolve(L, y);   // solve L^T P x = y
-    std::vector<double> x = pvec(p_inv, Px);        // P^T (P x) = x
-    
-    return x;
-}
-
-
 SymbolicLU slu(const CSCMatrix& A, AMDOrder order, bool qr_bound, double alpha)
 {
     auto [M, N] = A.shape();

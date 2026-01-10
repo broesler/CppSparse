@@ -1402,16 +1402,27 @@ double cond1est(const CSCMatrix& A)
 
 
 // Exercise 8.1
-std::vector<double> spsolve(
-    const CSCMatrix& A,
-    const std::vector<double>& B
-)
+template <typename RHSType>
+std::vector<double> spsolve(const CSCMatrix& A, const RHSType& B)
 {
     auto [M, N] = A.shape();
-    csint MxK = static_cast<csint>(B.size());
 
-    if (MxK % M != 0) {
-        throw std::runtime_error("RHS vector size is not a multiple of matrix rows!");
+    if constexpr (std::is_same_v<RHSType, std::vector<double>>) {
+        csint MxK = static_cast<csint>(B.size());
+
+        if (MxK % M != 0) {
+            throw std::runtime_error(
+                std::format("Matrix and RHS sizes do not match! {} % {} != 0.", MxK, M)
+            );
+        }
+    } else {
+        auto [Mb, K] = B.shape();
+
+        if (M != Mb) {
+            throw std::runtime_error(
+                std::format("Matrix and RHS sizes do not match! Got {} and {}.", M, Mb)
+            );
+        }
     }
 
     if (M != N) {
@@ -1447,9 +1458,9 @@ std::vector<double> spsolve(
     // If triangular with non-zero diagonal, use triangular solve
     if (nnz_diag == N) {
         if (is_tri == -1) {
-            return lsolve_opt(A, B);
+            return lsolve(A, B);
         } else if (is_tri == 1) {
-            return usolve_opt(A, B);
+            return usolve(A, B);
         }
     }
 
@@ -1536,20 +1547,15 @@ std::vector<double> spsolve(
 }
 
 
-// TODO update for multiple RHS
-std::vector<double> spsolve(const CSCMatrix& A, const CSCMatrix& b)
+std::vector<double> spsolve(const CSCMatrix& A, const std::vector<double> & B)
 {
-    if (b.shape()[1] != 1) {
-        throw std::runtime_error(
-            std::format(
-                "Sparse RHS matrix must have exactly one column!"
-                " Got shape ({}, {})",
-                b.shape()[0], b.shape()[1]
-            )
-        );
-    }
+    return spsolve<std::vector<double>>(A, B);
+}
 
-    return spsolve(A, b.to_dense_vector());
+
+std::vector<double> spsolve(const CSCMatrix& A, const CSCMatrix& B)
+{
+    return spsolve<CSCMatrix>(A, B);
 }
 
 

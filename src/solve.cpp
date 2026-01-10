@@ -569,6 +569,7 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B)
     return X;
 }
 
+
 SparseSolution spsolve(
     const CSCMatrix& A,
     const CSCMatrix& B,
@@ -594,11 +595,13 @@ SparseSolution spsolve(
             continue;  // x(j) is not in the pattern of G
         }
         double& xj = x[j];                              // cache reference to value
-        xj /= A.v_[lower ? A.p_[J] : A.p_[J+1] - 1];    // x(j) /= G(j, j)
-        csint p = lower ? A.p_[J] + 1 : A.p_[J];        // lower: L(j,j) 1st entry
-        csint q = lower ? A.p_[J+1]   : A.p_[J+1] - 1;  // up: U(j,j) last entry
-        for (; p < q; p++) {
-            x[A.i_[p]] -= A.v_[p] * xj;              // x[i] -= G(i, j) * x[j]
+        if (xj != 0) {
+            xj /= A.v_[lower ? A.p_[J] : A.p_[J+1] - 1];    // x(j) /= G(j, j)
+            csint p = lower ? A.p_[J] + 1 : A.p_[J];        // lower: L(j,j) 1st entry
+            csint q = lower ? A.p_[J+1]   : A.p_[J+1] - 1;  // up: U(j,j) last entry
+            for (; p < q; p++) {
+                x[A.i_[p]] -= A.v_[p] * xj;              // x[i] -= G(i, j) * x[j]
+            }
         }
     }
 
@@ -857,9 +860,9 @@ void CholResult::solve_inplace(
         w[b.i_[p]] = b.v_[p];
     }
 
-    lsolve_inplace_(xi, w);               // y = L \ b -> w = y
+    lsolve_inplace_(xi, w);              // y = L \ b -> w = y
     std::reverse(xi.begin(), xi.end());  // reverse the order for L^T
-    ltsolve_inplace_(xi, w);              // P^T x = L^T \ y -> w = P^T x
+    ltsolve_inplace_(xi, w);             // P^T x = L^T \ y -> w = P^T x
     pvec<double>(p_inv, w, x);           // x = P P^T x
 }
 

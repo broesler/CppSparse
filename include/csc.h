@@ -712,6 +712,13 @@ public:
         bool fs=false    // Exercise 2.19
     ) const;
 
+    /** Scatter a column of the matrix into a dense vector.
+     *
+     * @param k  the column index to scatter
+     * @param x  the dense vector to scatter into. Must be length M.
+     */
+    void scatter(csint k, std::span<double> x) const;
+
     //--------------------------------------------------------------------------
     //        Permutations
     //--------------------------------------------------------------------------

@@ -1405,6 +1405,15 @@ csint CSCMatrix::scatter(
 }
 
 
+void CSCMatrix::scatter(csint k, std::span<double> x) const
+{
+    assert(static_cast<csint>(x.size()) == M_);
+    for (csint p = p_[k]; p < p_[k+1]; p++) {
+        x[i_[p]] += v_[p];  // accumulate duplicate entries
+    }
+}
+
+
 /*------------------------------------------------------------------------------
  *         Permutations 
  *----------------------------------------------------------------------------*/

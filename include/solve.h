@@ -418,10 +418,8 @@ void tri_solve_perm_inplace(
  * @throws PermutedTriangularMatrixError if A is not a permuted triangular
  * matrix.
  */
-std::vector<double> tri_solve_perm(
-    const CSCMatrix& A,
-    const std::vector<double>& B
-);
+std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>& B);
+std::vector<double> tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B);
 
 
 /** Find the permutation vectors of a permuted triangular matrix.

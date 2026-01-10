@@ -958,6 +958,8 @@ public:
         std::span<double> x
     );
 
+    friend std::vector<double> tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B);
+
     friend SparseSolution spsolve(
         const CSCMatrix& A,
         const CSCMatrix& B,

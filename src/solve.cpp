@@ -530,6 +530,45 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>
 }
 
 
+std::vector<double> tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B)
+{
+    auto [M, N] = A.shape();
+    auto [Mb, K] = B.shape();
+
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    if (M != Mb) {
+        throw std::runtime_error(
+            std::format("Matrix and RHS sizes do not match! Got {} and {}.", M, Mb)
+        );
+    }
+
+    // Get the permutation vectors and check if A is permuted triangular
+    const TriPerm tri_perm = find_tri_permutation(A);
+
+    std::vector<double> X(N * K);    // solution vector
+    std::span<double> X_span(X);
+
+    std::vector<double> B_k(M);  // single dense RHS column
+
+    // Solve each column of the system
+    for (csint k = 0; k < K; k++) {
+        auto X_k = X_span.subspan(k * N, N);
+
+        // Scatter B[:, k] into B_k
+        std::fill(B_k.begin(), B_k.end(), 0.0);
+        for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
+            B_k[B.i_[p]] = B.v_[p];
+        }
+
+        tri_solve_perm_inplace(A, tri_perm, B_k, X_k);
+    }
+
+    return X;
+}
+
 SparseSolution spsolve(
     const CSCMatrix& A,
     const CSCMatrix& B,

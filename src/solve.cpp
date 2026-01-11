@@ -1176,7 +1176,7 @@ void LUResult::tsolve_inplace(std::span<double> b) const
 
     // allocate workspace
     std::vector<double> w(N);
-    
+
     // Solve A^T x = b == (P^T L U Q^T)^T x = b == (Q U^T L^T P) x = b
     pvec<double>(q, b, w);      // permute b -> Q^T b -> w = Q^T b
     utsolve_inplace(U, w);      // solve U^T y = Q^T b -> w = y
@@ -1364,6 +1364,7 @@ double norm1est_inv(const LUResult& res)
 
     double est = 0.0;
     std::vector<double> x(N, 1.0 / N);  // sum(x) == 1.0
+    std::vector<double> s(N);
     csint jold = -1;
 
     // Estimate the 1-norm
@@ -1393,14 +1394,15 @@ double norm1est_inv(const LUResult& res)
         }
 
         // s elements are in {-1, 1}
-        std::vector<double> s(N, 1.0);
+        std::fill(s.begin(), s.end(), 1.0);
         for (csint p = 0; p < N; p++) {
             if (x[p] < 0) {
                 s[p] = -1.0;
             }
         }
 
-        x = res.tsolve(s);
+        std::swap(x, s);        // x = s
+        res.tsolve_inplace(x);  // Solve A^T x = s
     }
 
     return est;

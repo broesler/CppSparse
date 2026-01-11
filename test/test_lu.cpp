@@ -165,9 +165,6 @@ TEST_CASE("Solve Ax = b with LU", "[lu_solve]")
     CSCMatrix Ap;
     std::vector<double> bp;
 
-    std::vector<double> x;
-    std::vector<double> x_ov;
-
     SECTION("Natural Order") {
         Ap = A;
         bp = b;
@@ -192,12 +189,13 @@ TEST_CASE("Solve Ax = b with LU", "[lu_solve]")
     }
 
     // Solve the system
-    x = lu_solve(Ap, bp, order);
+    std::vector<double> x = lu_solve(Ap, bp, order);
 
     // Test overload
     SymbolicLU S = slu(Ap, order);
     LUResult res = lu(Ap, S);
-    x_ov = res.solve(bp);
+    std::vector<double> x_ov = bp;  // copy RHS
+    res.solve_inplace(x_ov);        // solve Ax = b
 
     check_vectors_allclose(x, x_ov, tol);
     check_vectors_allclose(x, expect, tol);

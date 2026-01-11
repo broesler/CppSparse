@@ -47,16 +47,6 @@ struct LUResult
      */
     void solve_inplace(std::span<double> b) const; 
 
-    /** Solve the linear system Ax = b.
-     *
-     * See also: Davis, Exercise 6.1.
-     *
-     * @param b  the right-hand side vector
-     *
-     * @return x  the solution vector
-     */
-    std::vector<double> solve(const std::vector<double>& b) const; 
-
     /** Solve the linear system A^T x = b.
      *
      * See: Davis, Exercise 6.1.

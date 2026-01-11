@@ -1162,15 +1162,6 @@ void LUResult::solve_inplace(std::span<double> b) const
 
 
 // Exercise 6.1
-std::vector<double> LUResult::solve(const std::vector<double>& b) const
-{
-    std::vector<double> x = b;
-    solve_inplace(x);
-    return x;
-}
-
-
-// Exercise 6.1
 std::vector<double> LUResult::tsolve(const std::vector<double>& b) const
 {
     if (U.shape()[1] != static_cast<csint>(b.size())) {
@@ -1308,6 +1299,7 @@ std::vector<double> lu_solve(
 
 
 // Exercise 6.1
+// TODO tsolve_inplace
 // TODO support matrix RHS inputs in lu_tsolve
 std::vector<double> lu_tsolve(
     const CSCMatrix& A,
@@ -1383,7 +1375,7 @@ double norm1est_inv(const LUResult& res)
         }
 
         // Solve Ax = x
-        x = res.solve(x);
+        res.solve_inplace(x);
 
         double est_old = est;
         est = norm(x, 1);

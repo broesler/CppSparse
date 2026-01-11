@@ -214,8 +214,6 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU", "[ex6.1][lu_tsolve]")
     AMDOrder order = AMDOrder::Natural;
     CSCMatrix Ap;
 
-    std::vector<double> x;
-    std::vector<double> x_ov;
     std::vector<csint> p_inv;
 
     SECTION("Natural Order") {
@@ -235,12 +233,12 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU", "[ex6.1][lu_tsolve]")
     }
 
     // Solve the system
-    x = lu_tsolve(Ap, b, order);
-
+    std::vector<double> x = lu_tsolve(Ap, b, order);
     // Test overload
     SymbolicLU S = slu(Ap, order);
     LUResult res = lu(Ap, S);
-    x_ov = res.tsolve(b);
+    std::vector<double> x_ov = b;
+    res.tsolve_inplace(x_ov);
 
     // Permuting the rows of A is the same as permuting the columns of A^T, so
     // the RHS vector is not affected, but the solution vector will be permuted,

@@ -1162,19 +1162,26 @@ void LUResult::solve_inplace(std::span<double> b) const
 
 
 // Exercise 6.1
-std::vector<double> LUResult::tsolve(const std::vector<double>& b) const
+void LUResult::tsolve_inplace(std::span<double> b) const
 {
-    if (U.shape()[1] != static_cast<csint>(b.size())) {
+    auto [M, N] = U.shape();
+
+    if (M != N) {
+        throw std::runtime_error("Matrix must be square!");
+    }
+
+    if (N != static_cast<csint>(b.size())) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
     }
 
-    // Solve A^T x = b == (P^T L U Q^T)^T x = b == (Q U^T L^T P) x = b
-    const std::vector<double> QTb = pvec(q, b);     // permute b -> Q^T b
-    const std::vector<double> y = utsolve(U, QTb);  // solve U^T y = Q^T b
-    const std::vector<double> Px = ltsolve(L, y);   // solve L^T P x = y
-    std::vector<double> x = pvec(p_inv, Px);        // P^T (P x) = x
+    // allocate workspace
+    std::vector<double> w(N);
     
-    return x;
+    // Solve A^T x = b == (P^T L U Q^T)^T x = b == (Q U^T L^T P) x = b
+    pvec<double>(q, b, w);      // permute b -> Q^T b -> w = Q^T b
+    utsolve_inplace(U, w);      // solve U^T y = Q^T b -> w = y
+    ltsolve_inplace(L, w);      // solve L^T P x = y -> w = P x
+    pvec<double>(p_inv, w, b);  // P^T (P x) = x -> b = x
 }
 
 
@@ -1299,7 +1306,6 @@ std::vector<double> lu_solve(
 
 
 // Exercise 6.1
-// TODO tsolve_inplace
 // TODO support matrix RHS inputs in lu_tsolve
 std::vector<double> lu_tsolve(
     const CSCMatrix& A,
@@ -1315,8 +1321,10 @@ std::vector<double> lu_tsolve(
     // Compute the numeric factorization
     SymbolicLU S = slu(A, order);
     LUResult res = lu(A, S, tol);
+    std::vector<double> x = b;
+    res.tsolve_inplace(x);
 
-    return res.tsolve(b);
+    return x;
 }
 
 

@@ -51,11 +51,9 @@ struct LUResult
      *
      * See: Davis, Exercise 6.1.
      *
-     * @param b  the right-hand side vector
-     *
-     * @return x  the solution vector
+     * @param b[in,out]  right-hand side vector on input, solution on output.
      */
-    std::vector<double> tsolve(const std::vector<double>& b) const; 
+    void tsolve_inplace(std::span<double> b) const; 
 };
 
 

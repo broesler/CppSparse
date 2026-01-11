@@ -734,14 +734,14 @@ std::vector<csint>& dfs_r(
 // -----------------------------------------------------------------------------
 //         Cholesky Factorization Solvers
 // -----------------------------------------------------------------------------
-void CholResult::solve_inplace(std::span<double> b) const
+void CholResult::solve(std::span<double> b) const
 {
     // Solve Ax = b ==> (P^T L L^T P) x = b
     std::vector<double> w(L.shape()[0]);  // workspace
 
     ipvec<double>(p_inv, b, w);  // permute b -> w = Pb
-    lsolve_inplace(L, w);    // y = L \ b -> w = y
-    ltsolve_inplace(L, w);   // P^T x = L^T \ y -> w = P^T x
+    lsolve_inplace(L, w);        // y = L \ b -> w = y
+    ltsolve_inplace(L, w);       // P^T x = L^T \ y -> w = P^T x
     pvec<double>(p_inv, w, b);   // x = P P^T x
 }
 
@@ -787,7 +787,7 @@ std::vector<csint> topological_order(
 }
 
 
-void CholResult::lsolve_inplace_(
+void CholResult::lsolve_(
     std::span<const csint> xi,
     std::span<double> x
 ) const
@@ -802,7 +802,7 @@ void CholResult::lsolve_inplace_(
 }
 
 
-void CholResult::ltsolve_inplace_(
+void CholResult::ltsolve_(
     std::span<const csint> xi,
     std::span<double> x
 ) const
@@ -817,7 +817,7 @@ void CholResult::ltsolve_inplace_(
 }
 
 
-void CholResult::solve_inplace(
+void CholResult::solve(
     const CSCMatrix& B,
     csint k,
     const std::vector<csint> parent,
@@ -853,9 +853,9 @@ void CholResult::solve_inplace(
     std::vector<double> w(L.M_);  // workspace
     b.scatter(0, w);
 
-    lsolve_inplace_(xi, w);              // y = L \ b -> w = y
+    lsolve_(xi, w);                      // y = L \ b -> w = y
     std::reverse(xi.begin(), xi.end());  // reverse the order for L^T
-    ltsolve_inplace_(xi, w);             // P^T x = L^T \ y -> w = P^T x
+    ltsolve_(xi, w);                     // P^T x = L^T \ y -> w = P^T x
     pvec<double>(p_inv, w, x);           // x = P P^T x
 }
 
@@ -888,10 +888,10 @@ SparseSolution CholResult::lsolve_impl_(
     // Solve Lx = b or L^T x = b
     if constexpr (IsTranspose) {
         xi = topological_order(b, parent, false);
-        ltsolve_inplace_(xi, x);
+        ltsolve_(xi, x);
     } else {
         xi = topological_order(b, parent, true);
-        lsolve_inplace_(xi, x);
+        lsolve_(xi, x);
     }
 
     return {xi, x};
@@ -947,7 +947,7 @@ std::vector<double> chol_solve(
     // Exercise 8.7/8.9: solve each column of the system
     for (csint k = 0; k < K; k++) {
         auto X_k = X_span.subspan(k * N, N);
-        res.solve_inplace(X_k);
+        res.solve(X_k);
     }
 
     return X;
@@ -984,7 +984,7 @@ std::vector<double> chol_solve(
     // Solve each column of the system
     for (csint k = 0; k < K; k++) {
         auto X_k = X_span.subspan(k * N, N);
-        res.solve_inplace(B, k, S.parent, X_k);
+        res.solve(B, k, S.parent, X_k);
     }
 
     return X;
@@ -994,7 +994,7 @@ std::vector<double> chol_solve(
 // -----------------------------------------------------------------------------
 //         QR Factorization Solvers
 // -----------------------------------------------------------------------------
-void QRResult::solve_inplace(
+void QRResult::solve(
     size_t M2,
     std::span<const double> b,
     std::span<double> x
@@ -1009,7 +1009,7 @@ void QRResult::solve_inplace(
 }
 
 
-void QRResult::tsolve_inplace(
+void QRResult::tsolve(
     size_t M2,
     std::span<const double> b,
     std::span<double> x
@@ -1063,10 +1063,10 @@ QRSolveResult qr_solve(
 
         if (M >= N) {
             // Compute the least-squares solution
-            res.solve_inplace(S.m2, B_k, X_k);
+            res.solve(S.m2, B_k, X_k);
         } else {
             // Compute the minimum-norm solution
-            res.tsolve_inplace(S.m2, B_k, X_k);
+            res.tsolve(S.m2, B_k, X_k);
         }
     }
 
@@ -1120,10 +1120,10 @@ QRSolveResult qr_solve(
 
         if (M >= N) {
             // Compute the least-squares solution
-            res.solve_inplace(S.m2, B_k, X_k);
+            res.solve(S.m2, B_k, X_k);
         } else {
             // Compute the minimum-norm solution
-            res.tsolve_inplace(S.m2, B_k, X_k);
+            res.tsolve(S.m2, B_k, X_k);
         }
     }
 
@@ -1138,7 +1138,7 @@ QRSolveResult qr_solve(
 //         LU Factorization Solvers
 // -----------------------------------------------------------------------------
 // Exercise 6.1
-void LUResult::solve_inplace(std::span<double> b) const
+void LUResult::solve(std::span<double> b) const
 {
     auto [M, N] = L.shape();
 
@@ -1162,7 +1162,7 @@ void LUResult::solve_inplace(std::span<double> b) const
 
 
 // Exercise 6.1
-void LUResult::tsolve_inplace(std::span<double> b) const
+void LUResult::tsolve(std::span<double> b) const
 {
     auto [M, N] = U.shape();
 
@@ -1228,12 +1228,12 @@ std::vector<double> lu_solve(
         auto X_k = X_span.subspan(k * N, N);
 
         // Solve Ax = B
-        res.solve_inplace(X_k);
+        res.solve(X_k);
 
         // Exercise 8.5: Iterative refinement
         for (csint i = 0; i < ir_steps; i++) {
             r = B_k - A * X_k;     // r = b - Ax
-            res.solve_inplace(r);  // solve Ad = r
+            res.solve(r);  // solve Ad = r
             X_k += r;              // x += d
         }
     }
@@ -1291,12 +1291,12 @@ std::vector<double> lu_solve(
         }
 
         // Solve Ax = B
-        res.solve_inplace(X_k);
+        res.solve(X_k);
 
         // Exercise 8.5: Iterative refinement
         for (csint i = 0; i < ir_steps; i++) {
             r = B_k - A * X_k;     // r = b - Ax
-            res.solve_inplace(r);  // solve Ad = r
+            res.solve(r);  // solve Ad = r
             X_k += r;              // x += d
         }
     }
@@ -1306,7 +1306,6 @@ std::vector<double> lu_solve(
 
 
 // Exercise 6.1
-// TODO support matrix RHS inputs in lu_tsolve
 std::vector<double> lu_tsolve(
     const CSCMatrix& A,
     const std::vector<double>& b,
@@ -1322,7 +1321,7 @@ std::vector<double> lu_tsolve(
     SymbolicLU S = slu(A, order);
     LUResult res = lu(A, S, tol);
     std::vector<double> x = b;
-    res.tsolve_inplace(x);
+    res.tsolve(x);
 
     return x;
 }
@@ -1384,7 +1383,7 @@ double norm1est_inv(const LUResult& res)
         }
 
         // Solve Ax = x
-        res.solve_inplace(x);
+        res.solve(x);
 
         double est_old = est;
         est = norm(x, 1);
@@ -1402,7 +1401,7 @@ double norm1est_inv(const LUResult& res)
         }
 
         std::swap(x, s);        // x = s
-        res.tsolve_inplace(x);  // Solve A^T x = s
+        res.tsolve(x);  // Solve A^T x = s
     }
 
     return est;

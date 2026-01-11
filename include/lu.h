@@ -45,7 +45,7 @@ struct LUResult
      *
      * @param b[in,out]  right-hand side vector on input, solution on output.
      */
-    void solve_inplace(std::span<double> b) const; 
+    void solve(std::span<double> b) const; 
 
     /** Solve the linear system A^T x = b.
      *
@@ -53,7 +53,7 @@ struct LUResult
      *
      * @param b[in,out]  right-hand side vector on input, solution on output.
      */
-    void tsolve_inplace(std::span<double> b) const; 
+    void tsolve(std::span<double> b) const; 
 };
 
 

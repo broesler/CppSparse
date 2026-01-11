@@ -195,7 +195,7 @@ TEST_CASE("Solve Ax = b with LU", "[lu_solve]")
     SymbolicLU S = slu(Ap, order);
     LUResult res = lu(Ap, S);
     std::vector<double> x_ov = bp;  // copy RHS
-    res.solve_inplace(x_ov);        // solve Ax = b
+    res.solve(x_ov);        // solve Ax = b
 
     check_vectors_allclose(x, x_ov, tol);
     check_vectors_allclose(x, expect, tol);
@@ -238,7 +238,7 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU", "[ex6.1][lu_tsolve]")
     SymbolicLU S = slu(Ap, order);
     LUResult res = lu(Ap, S);
     std::vector<double> x_ov = b;
-    res.tsolve_inplace(x_ov);
+    res.tsolve(x_ov);
 
     // Permuting the rows of A is the same as permuting the columns of A^T, so
     // the RHS vector is not affected, but the solution vector will be permuted,

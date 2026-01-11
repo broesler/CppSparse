@@ -65,16 +65,16 @@ struct CholResult
      *
      * @param b[in,out]  right-hand side vector on input, solution on output.
      */
-    void solve_inplace(std::span<double> b) const; 
+    void solve(std::span<double> b) const; 
 
-    /** Solve the linear system AX = B in-place.
+    /** Solve the linear system Ax = b in-place.
      *
      * @param B  right-hand side matrix
      * @param k  the column index of `b` to solve
      * @param parent  the parent vector of the elimination tree
      * @param x[out]  the output solution vector
      */
-    void solve_inplace(
+    void solve(
         const CSCMatrix& B,
         csint k,
         const std::vector<csint> parent,
@@ -127,7 +127,7 @@ private:
     *        topological_order.
     * @param x[in,out]  the RHS on input, solution on output
     */
-    void lsolve_inplace_(std::span<const csint> xi, std::span<double> x) const;
+    void lsolve_(std::span<const csint> xi, std::span<double> x) const;
 
     /** Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is
      * a lower-triangular Cholesky factor.
@@ -138,7 +138,7 @@ private:
     *        topological_order.
     * @param x[in,out]  the RHS on input, solution on output
     */
-    void ltsolve_inplace_(std::span<const csint> xi, std::span<double> x) const;
+    void ltsolve_(std::span<const csint> xi, std::span<double> x) const;
 
     /** Solve \f$ Lx = b \f$, or \f$ L^T x = b \f$, with sparse RHS `b`, where
      * `L` is a lower-triangular Cholesky factor.

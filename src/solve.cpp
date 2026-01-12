@@ -578,6 +578,9 @@ void spsolve(
 )
 {
     auto& [xi, x] = sol;
+    assert(static_cast<csint>(x.size()) >= A.M_);  // ensure x has been allocated
+    std::fill(x.begin(), x.end(), 0.0);            // clear x
+
     // Populate xi with the non-zero indices of x
     reach(A, B, k, xi, p_inv_ref);
 
@@ -614,6 +617,7 @@ void reach(
     std::vector<char> marked(A.M_, false);
     std::vector<csint> pstack,  // pause and recursion stacks
                        rstack;
+    xi.clear();
     xi.reserve(A.N_);
     pstack.reserve(A.N_);
     rstack.reserve(A.N_);

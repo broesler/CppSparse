@@ -93,7 +93,6 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
 
         // Solve Lx = A[:, k]
         csint col = S.q[k];
-        sol.clear();
         spsolve(L, A, col, sol, p_inv);  // x = L \ A[:, col]
 
         // --- Find pivot ------------------------------------------------------
@@ -291,7 +290,6 @@ LUResult lu(
 
         // Solve Lx = A[:, k]
         csint col = q[k];
-        sol.clear();
         spsolve(L, A, col, sol, p_inv);  // x = L \ A[:, col]
 
         // --- Find pivot ------------------------------------------------------
@@ -439,7 +437,6 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     for (csint k = 0; k < N; k++) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
         // Solve Lx = A[:, col], where col is the permuted column
-        sol.clear();
         spsolve(L, A, S.q[k], sol, p_inv);  // x = L \ A[:, col]
 
         // --- Find pivot ------------------------------------------------------
@@ -629,7 +626,6 @@ LUResult ilutp(
 
         // Solve Lx = A[:, k]
         csint col = S.q[k];
-        sol.clear();
         spsolve(L, A, col, sol, p_inv);  // x = L \ A[:, col]
 
         // --- Find pivot ------------------------------------------------------
@@ -732,7 +728,6 @@ LUResult ilu_nofill(
 
         // Solve Lx = A[:, k]
         csint col = S.q[k];
-        sol.clear();
         spsolve(L, A, col, sol, p_inv);  // x = L \ A[:, col]
 
         // Scatter the pattern of A[:, col] into w

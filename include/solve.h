@@ -27,11 +27,6 @@ struct SparseSolution {
     SparseSolution(csint N) : x(N) {
         xi.reserve(N);  // do not initialize for dfs call!
     }
-
-    void clear() {
-        xi.clear();
-        std::fill(x.begin(), x.end(), 0.0);
-    }
 };
 
 
@@ -123,7 +118,6 @@ std::vector<double> trisolve_sparse(const CSCMatrix& L, const CSCMatrix& B)
 
     for (csint k = 0; k < K; k++) {
         auto X_k = X_span.subspan(k * Nx, Nx);
-        sol.clear();
         spsolve(L, B, k, sol, std::nullopt, Lower);
         for (auto& i : sol.xi) {
             X_k[i] = sol.x[i];

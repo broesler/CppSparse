@@ -271,9 +271,14 @@ auto wrap_gaxpy_mat(Func&& f)
 
 
 /** Wrap a solve function that takes a matrix, vector, and order. */
-template <typename... Args>
+template <bool IsQR=false, typename... Args>
 auto wrap_solve(
-    std::vector<double> (*f)(
+    typename std::conditional_t<
+        IsQR,
+        cs::QRSolveResult,
+        std::vector<double>
+    >
+    (*f)(
         const cs::CSCMatrix& A,
         const std::vector<double>& b,
         cs::AMDOrder order,
@@ -289,7 +294,13 @@ auto wrap_solve(
     ) {
         const cs::CSCMatrix A = csc_from_scipy(A_scipy);
         cs::AMDOrder order_enum = string_to_amdorder(order);
-        std::vector<double> x = f(A, b, order_enum, std::forward<Args>(args)...);
+        std::vector<double> x;
+        if constexpr (IsQR) {
+            // Take the .x member of the returned struct
+            x = f(A, b, order_enum, std::forward<Args>(args)...).x;
+        } else {
+            x = f(A, b, order_enum, std::forward<Args>(args)...);
+        }
         return py::cast(x);
     };
 }

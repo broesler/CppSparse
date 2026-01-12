@@ -775,17 +775,7 @@ PYBIND11_MODULE(csparse, m) {
     );
 
     m.def("qr_solve",
-        // wrap_solve(&cs::qr_solve), // TODO?
-        [](
-            const py::object& A_scipy,
-            const std::vector<double>& b,
-            const std::string& order="Natural"
-        ) {
-            const cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = string_to_amdorder(order);
-            std::vector<double> x = cs::qr_solve(A, b, order_enum).x;
-            return py::cast(x);
-        },
+        wrap_solve<true>(&cs::qr_solve),
         py::arg("A"),
         py::arg("b"),
         py::arg("order")="Natural"  // CSparse default is "ATA"

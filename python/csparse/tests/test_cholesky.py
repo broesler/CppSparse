@@ -358,10 +358,10 @@ def test_reachability(L, b, lower, request):
 
     # Check sparse and dense solutions
     # Ensure 1D array for comparison
-    assert_allclose(xs.toarray().reshape(-1), xd, atol=1e-8)
+    assert_allclose(xs.toarray(), xd, atol=1e-8)
 
     # Check vs. scipy
-    assert_allclose(x, xd, atol=1e-8)  # works for upper
+    assert_allclose(x, xd.squeeze(), atol=1e-8)  # works for upper
 
 
 # -----------------------------------------------------------------------------

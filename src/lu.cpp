@@ -69,9 +69,10 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
     }
 
     // Allocate result matrices
-    CSCMatrix L({N, N}, S.lnz);  // lower triangular matrix
-    CSCMatrix U({N, N}, S.unz);  // upper triangular matrix
+    CSCMatrix L({N, N}, S.lnz);       // lower triangular matrix
+    CSCMatrix U({N, N}, S.unz);       // upper triangular matrix
     std::vector<csint> p_inv(N, -1);  // row permutation vector
+    SparseSolution sol(N);            // workspace for triangular solves
 
     csint lnz = 0,
           unz = 0;
@@ -92,7 +93,8 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
 
         // Solve Lx = A[:, k]
         csint col = S.q[k];
-        SparseSolution sol = spsolve(L, A, col, p_inv);  // x = L \ A[:, col]
+        sol.clear();
+        spsolve(L, A, col, sol, p_inv);  // x = L \ A[:, col]
 
         // --- Find pivot ------------------------------------------------------
         csint ipiv = -1;
@@ -258,6 +260,7 @@ LUResult lu(
     CSCMatrix L({M, min_MN}, S.lnz);  // lower triangular matrix
     CSCMatrix U({min_MN, N}, S.unz);  // upper triangular matrix
     std::vector<csint> p_inv(M, -1);  // row permutation vector
+    SparseSolution sol(M);            // workspace for triangular solves
 
     // Exercise 6.3: modify to allow column pivoting
     std::vector<csint> q = S.q;  // column permutation vector
@@ -288,7 +291,8 @@ LUResult lu(
 
         // Solve Lx = A[:, k]
         csint col = q[k];
-        SparseSolution sol = spsolve(L, A, col, p_inv);  // x = L \ A[:, col]
+        sol.clear();
+        spsolve(L, A, col, sol, p_inv);  // x = L \ A[:, col]
 
         // --- Find pivot ------------------------------------------------------
         csint pre_unz = unz;  // Exercise 6.3: store in case we pivot the column
@@ -427,13 +431,16 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
         L.i_[p] = R_p[L.i_[p]];
     }
 
+    SparseSolution sol(M);  // workspace for triangular solves
+
     csint lnz = 0,
           unz = 0;
 
     for (csint k = 0; k < N; k++) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
         // Solve Lx = A[:, col], where col is the permuted column
-        SparseSolution sol = spsolve(L, A, S.q[k], p_inv);  // x = L \ A[:, col]
+        sol.clear();
+        spsolve(L, A, S.q[k], sol, p_inv);  // x = L \ A[:, col]
 
         // --- Find pivot ------------------------------------------------------
         // Use the (un-permuted) pivot from the symbolic factorization
@@ -598,9 +605,10 @@ LUResult ilutp(
     }
 
     // Allocate result matrices
-    CSCMatrix L({N, N}, S.lnz);  // lower triangular matrix
-    CSCMatrix U({N, N}, S.unz);  // upper triangular matrix
+    CSCMatrix L({N, N}, S.lnz);       // lower triangular matrix
+    CSCMatrix U({N, N}, S.unz);       // upper triangular matrix
     std::vector<csint> p_inv(N, -1);  // row permutation vector
+    SparseSolution sol(M);            // workspace for triangular solves
 
     csint lnz = 0,
           unz = 0;
@@ -621,7 +629,8 @@ LUResult ilutp(
 
         // Solve Lx = A[:, k]
         csint col = S.q[k];
-        SparseSolution sol = spsolve(L, A, col, p_inv);  // x = L \ A[:, col]
+        sol.clear();
+        spsolve(L, A, col, sol, p_inv);  // x = L \ A[:, col]
 
         // --- Find pivot ------------------------------------------------------
         csint ipiv = -1;
@@ -705,10 +714,11 @@ LUResult ilu_nofill(
     }
 
     // Allocate result matrices
-    CSCMatrix L({N, N}, A.nnz());  // lower triangular matrix
-    CSCMatrix U({N, N}, A.nnz());  // upper triangular matrix
+    CSCMatrix L({N, N}, A.nnz());     // lower triangular matrix
+    CSCMatrix U({N, N}, A.nnz());     // upper triangular matrix
     std::vector<csint> p_inv(N, -1);  // row permutation vector
-    std::vector<csint> w(N, -1);
+    std::vector<csint> w(N, -1);      // workspace for values
+    SparseSolution sol(M);            // workspace for triangular solves
 
     csint lnz = 0,
           unz = 0;
@@ -722,7 +732,8 @@ LUResult ilu_nofill(
 
         // Solve Lx = A[:, k]
         csint col = S.q[k];
-        SparseSolution sol = spsolve(L, A, col, p_inv);  // x = L \ A[:, col]
+        sol.clear();
+        spsolve(L, A, col, sol, p_inv);  // x = L \ A[:, col]
 
         // Scatter the pattern of A[:, col] into w
         for (csint p = A.p_[col]; p < A.p_[col + 1]; p++) {

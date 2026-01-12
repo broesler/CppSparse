@@ -107,7 +107,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
             pstack.reserve(N);
             rstack.reserve(N);
 
-            xi = dfs(L, j, marked, xi, pstack, rstack);
+            dfs(L, j, marked, xi, pstack, rstack);
 
             REQUIRE(xi == expect);
         }
@@ -130,7 +130,9 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
         std::vector<csint> expect = {3, 8, 11, 12, 13};
 
         SECTION("Non-recursive") {
-            std::vector<csint> xi = reach(L, B, 0);
+            std::vector<csint> xi;
+            xi.reserve(N);
+            reach(L, B, 0, xi);
 
             REQUIRE(xi == expect);
         }
@@ -148,7 +150,9 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
         std::vector<csint> expect = {5, 9, 10, 3, 8, 11, 12, 13};
 
         SECTION("Non-recursive") {
-            std::vector<csint> xi = reach(L, B, 0);
+            std::vector<csint> xi;
+            xi.reserve(N);
+            reach(L, B, 0, xi);
 
             REQUIRE(xi == expect);
         }
@@ -168,10 +172,10 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
         }
         std::vector<double> expect(N, 1.0);
 
-        // Use structured bindings to unpack the result
-        auto [xi, x] = spsolve(L, B, 0);
+        SparseSolution sol(N);
+        spsolve(L, B, 0, sol);
 
-        REQUIRE(x == expect);
+        REQUIRE(sol.x == expect);
     }
 
     SECTION("spsolve Lx = b with sparse RHS") {
@@ -181,9 +185,10 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
         std::vector<double> expect = { 0.,  0.,  0.,  1.,  0.,  0.,  0.,  0., -1.,  0.,  0.,  1.,  0.,  0.};
 
         // Use structured bindings to unpack the result
-        auto [xi, x] = spsolve(L, B, 0);
+        SparseSolution sol(N);
+        spsolve(L, B, 0, sol);
 
-        REQUIRE(x == expect);
+        REQUIRE(sol.x == expect);
     }
 
     SECTION("spsolve Ux = b with sparse RHS") {
@@ -192,9 +197,10 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
 
         std::vector<double> expect = {0., -1.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.};
 
-        auto [xi, x] = spsolve(U, B, 0, std::nullopt, false);
+        SparseSolution sol(N);
+        spsolve(U, B, 0, sol, std::nullopt, false);
 
-        REQUIRE(x == expect);
+        REQUIRE(sol.x == expect);
     }
 }
 

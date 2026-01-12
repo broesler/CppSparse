@@ -744,7 +744,7 @@ SCCResult scc(const CSCMatrix& A)
     // ----- DFS through all of A
     for (csint i = 0; i < N; i++) {
         if (!marked[i]) {
-            xi = dfs(A, i, marked, xi, pstack, rstack);
+            dfs(A, i, marked, xi, pstack, rstack);
         }
     }
 
@@ -755,7 +755,7 @@ SCCResult scc(const CSCMatrix& A)
     for (const auto& i : std::views::reverse(xi)) {
         if (!marked[i]) {
             D.r.push_back(N - D.p.size());  // node i is the start of a block
-            D.p = dfs(AT, i, marked, D.p, pstack, rstack);
+            dfs(AT, i, marked, D.p, pstack, rstack);
         }
     }
 

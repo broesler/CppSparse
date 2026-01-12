@@ -767,22 +767,36 @@ PYBIND11_MODULE(csparse, m) {
     m.def("lsolve_opt", make_trisolver_dense(lsolve_opt_dense), py::arg("L"), py::arg("b"));
     m.def("usolve_opt", make_trisolver_dense(usolve_opt_dense), py::arg("U"), py::arg("b"));
 
+    using chol_solver_t = std::vector<double>(*)(
+        const cs::CSCMatrix&,
+        const std::vector<double>&,
+        cs::AMDOrder
+    );
+    using chol_solver_sparse_t = std::vector<double>(*)(
+        const cs::CSCMatrix&,
+        const cs::CSCMatrix&,
+        cs::AMDOrder
+    );
+
     m.def("chol_solve",
-        wrap_solve(&cs::chol_solve),
+        wrap_solve(
+            static_cast<chol_solver_t>(&cs::chol_solve),
+            static_cast<chol_solver_sparse_t>(&cs::chol_solve)
+        ),
         py::arg("A"),
         py::arg("b"),
         py::arg("order")="Natural"  // CSparse default is "ATANoDenseRows"
     );
 
     m.def("qr_solve",
-        wrap_solve<true>(&cs::qr_solve),
+        wrap_solve_dense<true>(&cs::qr_solve),
         py::arg("A"),
         py::arg("b"),
         py::arg("order")="Natural"  // CSparse default is "ATA"
     );
 
     m.def("lu_solve",
-        wrap_solve(&cs::lu_solve),
+        wrap_solve_dense(&cs::lu_solve),
         py::arg("A"),
         py::arg("b"),
         py::arg("order")="Natural",  // CSparse default is "ATANoDenseRows"

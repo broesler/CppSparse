@@ -568,17 +568,21 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B)
 }
 
 
-SparseSolution spsolve(
+void spsolve(
     const CSCMatrix& A,
     const CSCMatrix& B,
     csint k,
+    SparseSolution& sol,
     OptionalVectorRef<csint> p_inv_ref,
     bool lower
 )
 {
+    auto& [xi, x] = sol;
+    assert(static_cast<csint>(x.size()) >= A.M_);  // ensure x has been allocated
+    std::fill(x.begin(), x.end(), 0.0);            // clear x
+
     // Populate xi with the non-zero indices of x
-    std::vector<csint> xi = reach(A, B, k, p_inv_ref);
-    std::vector<double> x(A.M_);  // dense output vector
+    reach(A, B, k, xi, p_inv_ref);
 
     B.scatter(k, x);  // scatter B(:, k) into x
 
@@ -599,22 +603,21 @@ SparseSolution spsolve(
             }
         }
     }
-
-    return {xi, x};
 }
 
 
-std::vector<csint> reach(
+void reach(
     const CSCMatrix& A,
     const CSCMatrix& B,
     csint k,
+    std::vector<csint>& xi,
     OptionalVectorRef<csint> p_inv_ref
 )
 {
     std::vector<char> marked(A.M_, false);
-    std::vector<csint> xi,      // do not initialize for dfs call!
-                       pstack,  // pause and recursion stacks
+    std::vector<csint> pstack,  // pause and recursion stacks
                        rstack;
+    xi.clear();
     xi.reserve(A.N_);
     pstack.reserve(A.N_);
     rstack.reserve(A.N_);
@@ -622,17 +625,16 @@ std::vector<csint> reach(
     for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
         csint j = B.i_[p];  // consider nonzero B(j, k)
         if (!marked[j]) {
-            xi = dfs(A, j, marked, xi, pstack, rstack, p_inv_ref);
+            dfs(A, j, marked, xi, pstack, rstack, p_inv_ref);
         }
     }
 
     // xi is returned from dfs in reverse order, since it is a stack
     std::reverse(xi.begin(), xi.end());
-    return xi;
 }
 
 
-std::vector<csint>& dfs(
+void dfs(
     const CSCMatrix& A,
     csint j,
     std::vector<char>& marked,
@@ -682,8 +684,6 @@ std::vector<csint>& dfs(
             xi.push_back(j);    // node j is the next on the output stack
         }
     }
-
-    return xi;
 }
 
 
@@ -868,7 +868,8 @@ SparseSolution CholResult::lsolve_impl_(
 ) const
 {
     csint N = L.N_;
-    std::vector<double> x(N);
+    SparseSolution sol(N);
+    auto& [xi, x] = sol;
 
     // Scatter b into x
     assert(b.N_ == 1);
@@ -883,8 +884,6 @@ SparseSolution CholResult::lsolve_impl_(
         }
     }
 
-    std::vector<csint> xi;  // order of nodes from the elimination tree
-
     // Solve Lx = b or L^T x = b
     if constexpr (IsTranspose) {
         xi = topological_order(b, parent, false);
@@ -894,7 +893,7 @@ SparseSolution CholResult::lsolve_impl_(
         lsolve_(xi, x);
     }
 
-    return {xi, x};
+    return sol;
 }
 
 

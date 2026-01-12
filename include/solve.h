@@ -23,6 +23,10 @@ namespace cs {
 struct SparseSolution {
     std::vector<csint> xi;  // non-zero indices of x
     std::vector<double> x;  // (N,) dense solution vector
+
+    SparseSolution(csint N) : x(N) {
+        xi.reserve(N);  // do not initialize for dfs call!
+    }
 };
 
 
@@ -110,11 +114,11 @@ std::vector<double> trisolve_sparse(const CSCMatrix& L, const CSCMatrix& B)
     csint Nx = std::max(M, N);  // enough space for non-square solutions
     std::vector<double> X(Nx * K);
     std::span<double> X_span(X);
+    SparseSolution sol(Nx);
 
     for (csint k = 0; k < K; k++) {
         auto X_k = X_span.subspan(k * Nx, Nx);
-        // TODO rewrite spsolve to take xi and x vectors as inputs
-        SparseSolution sol = spsolve(L, B, k, std::nullopt, Lower);
+        spsolve(L, B, k, sol, std::nullopt, Lower);
         for (auto& i : sol.xi) {
             X_k[i] = sol.x[i];
         }
@@ -124,6 +128,7 @@ std::vector<double> trisolve_sparse(const CSCMatrix& L, const CSCMatrix& B)
 }
 
 }  // namespace detail
+
 
 /** Forward solve a lower-triangular system \f$ Lx = b \f$, in-place.
  *
@@ -456,17 +461,20 @@ TriPerm find_tri_permutation(const CSCMatrix& A);
  * @param k  the column index of `B` to solve
  * @param p_inv  the inverse permutation vector of the matrix `A`. If not given,
  *        A is taken in natural order.
- * @param lower  If `lower` is true, the function solves \f$ Lx = b_k`, otherwise it
- *        solves \f$ Ux = b_k \f$.
- *
- * @return res  a struct containing:
+ * @param res[out]  a struct containing:
  *         * xi the row indices of the non-zero entries in `x`.
  *         * x  the numerical values of the solution vector, as a dense vector.
+ *         The vector `xi` should be pre-reserved to length `N`, but *not*
+ *         initialized, since it is populated by the `reach` function.
+ *         The vector `x` should be pre-allocated to length `N`.
+ * @param lower  If `lower` is true, the function solves \f$ Lx = b_k`, otherwise it
+ *        solves \f$ Ux = b_k \f$.
  */
-SparseSolution spsolve(
+void spsolve(
     const CSCMatrix& A,
     const CSCMatrix& B,
     csint k,
+    SparseSolution& sol,
     OptionalVectorRef<csint> p_inv_ref=std::nullopt,
     bool lower=true
 );
@@ -526,10 +534,11 @@ std::vector<csint>& dfs_r(
  * @return xi  the row indices of the non-zero entries in `x`, in topological
  *         order of the graph.
  */
-std::vector<csint> reach(
+void reach(
     const CSCMatrix& A,
     const CSCMatrix& B,
     csint k,
+    std::vector<csint>& xi,
     OptionalVectorRef<csint> p_inv_ref=std::nullopt
 );
 
@@ -549,7 +558,7 @@ std::vector<csint> reach(
  *
  * @return xi  a reference to the row indices of the non-zero entries in `x`.
  */
-std::vector<csint>& dfs(
+void dfs(
     const CSCMatrix& A,
     csint j,
     std::vector<char>& marked,

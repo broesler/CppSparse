@@ -965,22 +965,24 @@ public:
         std::span<double> x
     );
 
-    friend SparseSolution spsolve(
+    friend void spsolve(
         const CSCMatrix& A,
         const CSCMatrix& B,
         csint k,
+        SparseSolution& sol,
         OptionalVectorRef<csint> p_inv_ref,
         bool lower
     );
 
-    friend std::vector<csint> reach(
+    friend void reach(
         const CSCMatrix& A,
         const CSCMatrix& B,
         csint k,
+        std::vector<csint>& xi,
         OptionalVectorRef<csint> p_inv_ref
     );
 
-    friend std::vector<csint>& dfs(
+    friend void dfs(
         const CSCMatrix& A,
         csint j,
         std::vector<char>& marked,

@@ -325,57 +325,98 @@ py::object dispatch_pvec_ipvec(
 }
 
 
-/** Solve a triangular system with the given function. */
+/** Solve a triangular system with dense RHS */
 template <typename DenseSolver>
-auto make_trisolver(DenseSolver dense_solver)
+auto make_trisolver_dense(DenseSolver dense_solver)
 {
-    return [dense_solver](const py::object& A_scipy, const py::object& b_obj) {
+    return [dense_solver](
+        const py::object& A_scipy,
+        const py::object& B_obj
+    ) -> py::array {
         const cs::CSCMatrix A = csc_from_scipy(A_scipy);
         py::module_ sparse = py::module_::import("scipy.sparse");
 
-        if (sparse.attr("issparse")(b_obj).cast<bool>()) {
-            const cs::CSCMatrix B = csc_from_scipy(b_obj);
+        if (sparse.attr("issparse")(B_obj).cast<bool>()) {
+            throw std::invalid_argument("RHS B must be a dense array.");
+        }
 
-            if (B.shape()[1] != 1) {
-                throw std::invalid_argument(
-                    "b must be a column vector (shape (N, 1))."
-                );
-            }
+        // Assume b is a dense vector, return a dense vector solution
+        py::module_ np = py::module_::import("numpy");
+        py::array b_np = np.attr("asarray")(B_obj);
 
-            int is_tri = A.is_triangular();
+        int b_ndim = b_np.attr("ndim").cast<int>();
+        if (b_ndim != 1 && b_ndim != 2) {
+            throw std::invalid_argument("Input b must be a 1D or 2D array.");
+        }
 
-            if (is_tri == 0) {
-                throw std::invalid_argument(
-                    "Matrix A must be lower or upper triangular."
-                );
-            }
+        py::tuple b_shape = b_np.attr("shape");
+        b_np = b_np.attr("ravel")(py::arg("order")="F");
+        std::vector<double> B = b_np.cast<std::vector<double>>();
 
-            // If A is lower triangular, is_tri < 0, otherwise is_tri > 0
-            bool lower = (is_tri < 0);
+        std::vector<double> X = dense_solver(A, B);
 
-            cs::SparseSolution sol = cs::spsolve(A, B, 0, std::nullopt, lower);
-
-            // Solution is an (N, 1) CSCMatrix
-            cs::csint N = B.shape()[0];
-            cs::COOMatrix x({N, 1}, sol.xi.size());
-
-            for (const auto& i : sol.xi) {
-                x.insert(i, 0, sol.x[i]);
-            }
-
-            return scipy_from_csc(x.tocsc());
+        if (b_ndim == 1) {
+            return py::cast(X);
         } else {
-            // Assume b is a dense vector, return a dense vector solution
-            try {
-                py::module_ np = py::module_::import("numpy");
-                // Guarantee array is 1D, or fail
-                std::vector<double> b = np.attr("atleast_1d")(
-                    b_obj.attr("squeeze")()
-                ).cast<std::vector<double>>();
-                return py::cast(dense_solver(A, b));
-            } catch (const py::cast_error&) {
-                throw py::type_error("b must have shape (N,) or (N, 1).");
-            }
+            py::array X_np = py::array(py::cast(X));
+            X_np = X_np.attr("reshape")(b_shape, py::arg("order")="F");
+            return X_np;
+        }
+    };
+}
+
+
+template <typename SparseSolver>
+auto make_trisolver_sparse(SparseSolver sparse_solver)
+{
+    return [sparse_solver](
+        const py::object& A_scipy,
+        const py::object& B_obj
+    ) {
+        const cs::CSCMatrix A = csc_from_scipy(A_scipy);
+        const auto [M, N] = A.shape();
+        py::module_ sparse = py::module_::import("scipy.sparse");
+
+        if (!sparse.attr("issparse")(B_obj).cast<bool>()) {
+            throw std::invalid_argument("RHS B must be a sparse matrix.");
+        }
+
+        const cs::CSCMatrix B = csc_from_scipy(B_obj);
+        const cs::csint K = B.shape()[1];
+
+        int is_tri = A.is_triangular();
+
+        if (is_tri == 0) {
+            throw std::invalid_argument(
+                "Matrix A must be lower or upper triangular."
+            );
+        }
+
+        // Solve sparse triangular system
+        std::vector<double> x = sparse_solver(A, B);
+
+        return scipy_from_csc(cs::CSCMatrix(x, {N, K}));
+    };
+}
+
+
+/** Solve a triangular system with the given function. */
+template <typename DenseSolver, typename SparseSolver>
+auto make_trisolver(DenseSolver dense_solver, SparseSolver sparse_solver)
+{
+    return [
+        dense_handler=make_trisolver_dense(dense_solver),
+        sparse_handler=make_trisolver_sparse(sparse_solver)
+    ](
+        const py::object& A_scipy,
+        const py::object& B_obj
+    ) -> py::object {
+        py::module_ sparse = py::module_::import("scipy.sparse");
+
+        if (sparse.attr("issparse")(B_obj).cast<bool>()) {
+            return sparse_handler(A_scipy, B_obj);
+        } else {
+            return dense_handler(A_scipy, B_obj);
         }
     };
 }

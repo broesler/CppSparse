@@ -714,7 +714,10 @@ PYBIND11_MODULE(csparse, m) {
                 );
             }
 
-            return cs::reach(A, b, 0);
+            std::vector<cs::csint> xi;
+            xi.reserve(A.shape()[1]);
+            cs::reach(A, b, 0, xi);
+            return xi;
         },
         py::arg("A"), py::arg("b")
     );
@@ -741,12 +744,28 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("A"), py::arg("b")
     );
 
-    m.def("lsolve", make_trisolver(&cs::lsolve), py::arg("L"), py::arg("b"));
-    m.def("usolve", make_trisolver(&cs::usolve), py::arg("U"), py::arg("b"));
-    m.def("ltsolve", make_trisolver(&cs::ltsolve), py::arg("L"), py::arg("b"));
-    m.def("utsolve", make_trisolver(&cs::utsolve), py::arg("U"), py::arg("b"));
-    m.def("lsolve_opt", make_trisolver(&cs::lsolve_opt), py::arg("L"), py::arg("b"));
-    m.def("usolve_opt", make_trisolver(&cs::usolve_opt), py::arg("U"), py::arg("b"));
+    // Cast sparse/dense overloads of triangular solvers to function pointers
+    using dense_solver_t = std::vector<double>(*)(const cs::CSCMatrix&, const std::vector<double>&);
+    using sparse_solver_t = std::vector<double>(*)(const cs::CSCMatrix&, const cs::CSCMatrix&);
+
+    auto lsolve_dense = static_cast<dense_solver_t>(&cs::lsolve);
+    auto usolve_dense = static_cast<dense_solver_t>(&cs::usolve);
+    auto ltsolve_dense = static_cast<dense_solver_t>(&cs::ltsolve);
+    auto utsolve_dense = static_cast<dense_solver_t>(&cs::utsolve);
+    auto lsolve_opt_dense = static_cast<dense_solver_t>(&cs::lsolve_opt);
+    auto usolve_opt_dense = static_cast<dense_solver_t>(&cs::usolve_opt);
+
+    auto lsolve_sparse = static_cast<sparse_solver_t>(&cs::lsolve);
+    auto usolve_sparse = static_cast<sparse_solver_t>(&cs::usolve);
+    // TODO update for sparse inputs of other solvers
+
+    // Define the triangular solver bindings
+    m.def("lsolve", make_trisolver(lsolve_dense, lsolve_sparse), py::arg("L"), py::arg("b"));
+    m.def("usolve", make_trisolver(usolve_dense, usolve_sparse), py::arg("U"), py::arg("b"));
+    m.def("ltsolve", make_trisolver_dense(ltsolve_dense), py::arg("L"), py::arg("b"));
+    m.def("utsolve", make_trisolver_dense(utsolve_dense), py::arg("U"), py::arg("b"));
+    m.def("lsolve_opt", make_trisolver_dense(lsolve_opt_dense), py::arg("L"), py::arg("b"));
+    m.def("usolve_opt", make_trisolver_dense(usolve_opt_dense), py::arg("U"), py::arg("b"));
 
     m.def("chol_solve",
         wrap_solve(&cs::chol_solve),

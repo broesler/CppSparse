@@ -26,11 +26,11 @@ ATOL = 1e-12  # random matrices need a bit larger tolerance than 1e-15
 N = 7  # arbitrary matrix size for testing
 TEST_MATRICES = [
     ("Identity", sparse.eye_array(N).tocsc()),
-    ("Diagonal", sparse.diags(np.arange(1, N)).tocsc()),
+    ("Diagonal", sparse.diags(np.arange(1, N), dtype=float).tocsc()),
     ("Asymmetric Banded",
         sparse.diags([np.ones(N-1), np.arange(1, N+1)], [-1, 0]).tocsc()),
     ("Laplacian (Symmetric Banded)",
-        sparse.diags([1, -2, 1], [-1, 0, 1]).tocsc()),
+        sparse.diags([1, -2, 1], [-1, 0, 1], dtype=float).tocsc()),
     ("Davis 8x8", csparse.davis_example_qr()),
     ("Davis 4x4", csparse.davis_example_small()),
     # See: Strang Linear Algebra p 203.

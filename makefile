@@ -55,8 +55,7 @@ demos: lib
 	cmake $(CMAKE_BUILD_ARGS) --target $(DEMO_EXEC)
 
 .PHONY: run_demos
-run_demos: demos
-run_demos: $(DEMO_EXEC)  # ensure demos are built before running
+run_demos: demos  # ensure demos are built before running
 	- ./demo1 './data/t1'
 	- ./demo2 './data/t1'
 	- ./demo2 './data/ash219'

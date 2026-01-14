@@ -270,42 +270,6 @@ auto wrap_gaxpy_mat(Func&& f)
 }
 
 
-/** Wrap a solve function that takes a matrix, vector, and order. */
-template <bool IsQR=false, typename... Args>
-auto wrap_solve_dense(
-    typename std::conditional_t<
-        IsQR,
-        cs::QRSolveResult,
-        std::vector<double>
-    >
-    (*f)(
-        const cs::CSCMatrix& A,
-        const std::vector<double>& b,
-        cs::AMDOrder order,
-        Args...
-    )
-)
-{
-    return [f](
-        const py::object& A_scipy,
-        const std::vector<double>& b,
-        const std::string& order,
-        Args... args
-    ) {
-        const cs::CSCMatrix A = csc_from_scipy(A_scipy);
-        cs::AMDOrder order_enum = string_to_amdorder(order);
-        std::vector<double> x;
-        if constexpr (IsQR) {
-            // Take the .x member of the returned struct
-            x = f(A, b, order_enum, std::forward<Args>(args)...).x;
-        } else {
-            x = f(A, b, order_enum, std::forward<Args>(args)...);
-        }
-        return py::cast(x);
-    };
-}
-
-
 /** Dispatch the vector permutation functions for appropriate types.
  *
  * @param p  the permutation vector
@@ -336,20 +300,13 @@ py::object dispatch_pvec_ipvec(
 }
 
 
-/** Solve a triangular system with dense RHS */
-template <typename... Args>
-auto make_trisolver_dense(
-    std::vector<double>(*dense_solver)(
-        const cs::CSCMatrix& A,
-        const std::vector<double>& B,
-        Args...
-    )
-)
+/** Solve a linear system with dense RHS */
+template <typename DenseSolver>
+auto make_solver_dense(DenseSolver dense_solver)
 {
     return [dense_solver](
         const py::object& A_scipy,
-        const py::object& B_obj,
-        Args... args
+        const py::object& B_obj
     ) -> py::array {
         const cs::CSCMatrix A = csc_from_scipy(A_scipy);
         py::module_ sparse = py::module_::import("scipy.sparse");
@@ -371,7 +328,7 @@ auto make_trisolver_dense(
         b_np = b_np.attr("ravel")(py::arg("order")="F");
         std::vector<double> B = b_np.cast<std::vector<double>>();
 
-        std::vector<double> X = dense_solver(A, B, std::forward<Args>(args)...);
+        std::vector<double> X = dense_solver(A, B);
 
         if (b_ndim == 1) {
             return py::cast(X);
@@ -384,90 +341,166 @@ auto make_trisolver_dense(
 }
 
 
-template <typename... Args>
-auto make_trisolver_sparse(
-    std::vector<double>(*sparse_solver)(
-        const cs::CSCMatrix& A,
-        const cs::CSCMatrix& B,
-        Args...
-    )
+/** Wrap a solve function that takes a matrix, vector, and order. */
+template <typename DenseSolver, typename SparseSolver, typename... Args>
+py::object solver_impl_(
+    DenseSolver dense_solver,
+    SparseSolver sparse_solver,
+    const py::object& A_scipy,
+    const py::object& B_obj,
+    Args&&... args
 )
 {
-    return [sparse_solver](
-        const py::object& A_scipy,
-        const py::object& B_obj,
-        Args... args
-    ) {
-        const cs::CSCMatrix A = csc_from_scipy(A_scipy);
-        const auto [M, N] = A.shape();
-        py::module_ sparse = py::module_::import("scipy.sparse");
+    // Extract order argument, if present
+    auto args_tuple = [&]() {
+        if constexpr (sizeof...(Args) == 0) {
+            return std::make_tuple();
+        } else {
+            // Get first argument as order string
+            auto order = std::apply(
+                [](const std::string& ord, [[maybe_unused]] auto&&... rest) { return ord; },
+                std::forward_as_tuple(args...)
+            );
+            cs::AMDOrder order_enum = string_to_amdorder(order);
 
-        if (!sparse.attr("issparse")(B_obj).cast<bool>()) {
-            throw std::invalid_argument("RHS B must be a sparse matrix.");
+            // Get remaining arguments as a tuple
+            auto remaining = std::apply(
+                [](const std::string&, auto&&... rest) {
+                    return std::make_tuple(std::forward<decltype(rest)>(rest)...);
+                },
+                std::forward_as_tuple(args...)
+            );
+
+            return std::tuple_cat(std::make_tuple(order_enum), remaining);
+        }
+    }();
+
+    py::module_ sparse = py::module_::import("scipy.sparse");
+    const cs::CSCMatrix A = csc_from_scipy(A_scipy);
+
+    bool is_sparse_RHS = sparse.attr("issparse")(B_obj).cast<bool>();
+
+    if (is_sparse_RHS) {
+        py::object B_scipy = B_obj;
+
+        int B_ndim = B_scipy.attr("ndim").cast<int>();
+        if (B_ndim > 2) {
+            throw py::value_error("B must be a 1D or 2D matrix.");
         }
 
-        const cs::CSCMatrix B = csc_from_scipy(B_obj);
+        // Get number of columns for output shape
+        const cs::csint N = A.shape()[1];
+
+        // Convert (N,) -> (N, 1)
+        bool return_1D = B_ndim == 1;
+
+        if (B_ndim == 1) {
+            py::tuple B_shape = B_scipy.attr("shape");
+            int Mb = B_shape[0].cast<int>();
+            B_scipy = B_scipy.attr("reshape")(py::make_tuple(Mb, 1));
+        }
+
+        const cs::CSCMatrix B = csc_from_scipy(B_scipy);
+
+        // Solve the system with the unpacked args
+        std::vector<double> X = std::apply(
+            [&](auto&&... unpacked_args) {
+                return sparse_solver(
+                    A, B, std::forward<decltype(unpacked_args)>(unpacked_args)...
+                );
+            },
+            args_tuple
+        );
+
+        // Output number of columns
         const cs::csint K = B.shape()[1];
 
-        int is_tri = A.is_triangular();
+        // Return a sparse array
+        py::object X_py = scipy_from_csc(cs::CSCMatrix(X, {N, K}));
 
-        if (is_tri == 0) {
-            throw std::invalid_argument(
-                "Matrix A must be lower or upper triangular."
-            );
+        if (return_1D) {
+            // X[:, 0] slice the only column so that output is (N,)
+            X_py = X_py.attr("__getitem__")(py::make_tuple(py::slice(), 0));
         }
 
-        // Solve sparse triangular system
-        std::vector<double> x = sparse_solver(A, B, std::forward<Args>(args)...);
+        return X_py;
+    } else {
+        // Assume b is a dense vector, return a dense vector solution
+        py::module_ np = py::module_::import("numpy");
+        py::array b_np = np.attr("asarray")(B_obj);
 
-        return scipy_from_csc(cs::CSCMatrix(x, {N, K}));
-    };
+        int b_ndim = b_np.attr("ndim").cast<int>();
+        if (b_ndim != 1 && b_ndim != 2) {
+            throw std::invalid_argument("Input b must be a 1D or 2D array.");
+        }
+
+        // Get original shape for reshaping output
+        py::tuple b_shape = b_np.attr("shape");
+
+        // Flatten b to 1D column-major
+        b_np = b_np.attr("ravel")(py::arg("order")="F");
+
+        std::vector<double> B = b_np.cast<std::vector<double>>();
+
+        // Solve the system with the unpacked args
+        std::vector<double> X = std::apply(
+            [&](auto&&... unpacked_args) {
+                return dense_solver(
+                    A, B, std::forward<decltype(unpacked_args)>(unpacked_args)...
+                );
+            },
+            args_tuple
+        );
+
+        if (b_ndim == 1) {
+            return py::cast(X);
+        } else {
+            py::array X_np = py::array(py::cast(X));
+            X_np = X_np.attr("reshape")(b_shape, py::arg("order")="F");
+            return X_np;
+        }
+    }
 }
 
 
-/** Solve a triangular system with the given function. */
 template <typename DenseSolver, typename SparseSolver>
-auto make_trisolver(DenseSolver dense_solver, SparseSolver sparse_solver)
+auto make_simple_solver(DenseSolver dense_solver, SparseSolver sparse_solver)
 {
-    return [
-        dense_handler=make_trisolver_dense(dense_solver),
-        sparse_handler=make_trisolver_sparse(sparse_solver)
-    ](
+    return [dense_solver, sparse_solver](
         const py::object& A_scipy,
         const py::object& B_obj
     ) -> py::object {
-        py::module_ sparse = py::module_::import("scipy.sparse");
-
-        if (sparse.attr("issparse")(B_obj).cast<bool>()) {
-            return sparse_handler(A_scipy, B_obj);
-        } else {
-            return dense_handler(A_scipy, B_obj);
-        }
+        return solver_impl_(dense_solver, sparse_solver, A_scipy, B_obj);
     };
 }
 
 
-/** Wrap a solve function that takes a matrix, vector, and order. */
 template <typename DenseSolver, typename SparseSolver>
-auto wrap_solve(DenseSolver dense_solver, SparseSolver sparse_solver)
+auto make_chol_solver(DenseSolver dense_solver, SparseSolver sparse_solver)
 {
-    return [
-        dense_handler=make_trisolver_dense(dense_solver),
-        sparse_handler=make_trisolver_sparse(sparse_solver)
-    ](
+    return [dense_solver, sparse_solver](
         const py::object& A_scipy,
         const py::object& B_obj,
         const std::string& order
     ) -> py::object {
-        py::module_ sparse = py::module_::import("scipy.sparse");
-        const cs::CSCMatrix A = csc_from_scipy(A_scipy);
-        cs::AMDOrder order_enum = string_to_amdorder(order);
+        return solver_impl_(dense_solver, sparse_solver, A_scipy, B_obj, order);
+    };
+}
 
-        if (sparse.attr("issparse")(B_obj).cast<bool>()) {
-            return sparse_handler(A_scipy, B_obj, order_enum);
-        } else {
-            return dense_handler(A_scipy, B_obj, order_enum);
-        }
+
+template <typename DenseSolver, typename SparseSolver>
+auto make_lu_solver(DenseSolver dense_solver, SparseSolver sparse_solver)
+{
+    return [dense_solver, sparse_solver](
+        const py::object& A_scipy,
+        const py::object& B_obj,
+        const std::string& order,
+        double tol,
+        cs::csint ir_steps
+    ) -> py::object {
+        return solver_impl_(
+            dense_solver, sparse_solver, A_scipy, B_obj, order, tol, ir_steps
+        );
     };
 }
 

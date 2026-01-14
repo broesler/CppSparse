@@ -744,61 +744,160 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("A"), py::arg("b")
     );
 
-    // Cast sparse/dense overloads of triangular solvers to function pointers
-    using dense_solver_t = std::vector<double>(*)(const cs::CSCMatrix&, const std::vector<double>&);
-    using sparse_solver_t = std::vector<double>(*)(const cs::CSCMatrix&, const cs::CSCMatrix&);
-
-    auto lsolve_dense = static_cast<dense_solver_t>(&cs::lsolve);
-    auto usolve_dense = static_cast<dense_solver_t>(&cs::usolve);
-    auto ltsolve_dense = static_cast<dense_solver_t>(&cs::ltsolve);
-    auto utsolve_dense = static_cast<dense_solver_t>(&cs::utsolve);
-    auto lsolve_opt_dense = static_cast<dense_solver_t>(&cs::lsolve_opt);
-    auto usolve_opt_dense = static_cast<dense_solver_t>(&cs::usolve_opt);
-
-    auto lsolve_sparse = static_cast<sparse_solver_t>(&cs::lsolve);
-    auto usolve_sparse = static_cast<sparse_solver_t>(&cs::usolve);
-    // TODO update for sparse inputs of other solvers
-
-    // Define the triangular solver bindings
-    m.def("lsolve", make_trisolver(lsolve_dense, lsolve_sparse), py::arg("L"), py::arg("b"));
-    m.def("usolve", make_trisolver(usolve_dense, usolve_sparse), py::arg("U"), py::arg("b"));
-    m.def("ltsolve", make_trisolver_dense(ltsolve_dense), py::arg("L"), py::arg("b"));
-    m.def("utsolve", make_trisolver_dense(utsolve_dense), py::arg("U"), py::arg("b"));
-    m.def("lsolve_opt", make_trisolver_dense(lsolve_opt_dense), py::arg("L"), py::arg("b"));
-    m.def("usolve_opt", make_trisolver_dense(usolve_opt_dense), py::arg("U"), py::arg("b"));
-
-    using chol_solver_t = std::vector<double>(*)(
-        const cs::CSCMatrix&,
-        const std::vector<double>&,
-        cs::AMDOrder
-    );
-    using chol_solver_sparse_t = std::vector<double>(*)(
-        const cs::CSCMatrix&,
-        const cs::CSCMatrix&,
-        cs::AMDOrder
+    //--------------------------------------------------------------------------
+    //      Triangular Solvers
+    //--------------------------------------------------------------------------
+    m.def(
+        "lsolve",
+        make_simple_solver(
+            [](const cs::CSCMatrix& L, const std::vector<double>& B) {
+                return cs::lsolve(L, B);
+            },
+            [](const cs::CSCMatrix& L, const cs::CSCMatrix& B) {
+                return cs::lsolve(L, B);
+            }
+        ),
+        py::arg("L"),
+        py::arg("b")
     );
 
+    m.def(
+        "usolve",
+        make_simple_solver(
+            [](const cs::CSCMatrix& U, const std::vector<double>& B) {
+                return cs::usolve(U, B);
+            },
+            [](const cs::CSCMatrix& U, const cs::CSCMatrix& B) {
+                return cs::usolve(U, B);
+            }
+        ),
+        py::arg("U"),
+        py::arg("b")
+    );
+
+    m.def(
+        "ltsolve",
+        make_solver_dense(
+            [](const cs::CSCMatrix& L, const std::vector<double>& B) {
+                return cs::ltsolve(L, B);
+            }
+        ),
+        py::arg("L"),
+        py::arg("b")
+    );
+
+    m.def(
+        "utsolve",
+        make_solver_dense(
+            [](const cs::CSCMatrix& U, const std::vector<double>& B) {
+                return cs::utsolve(U, B);
+            }
+        ),
+        py::arg("U"),
+        py::arg("b")
+    );
+
+    m.def(
+        "lsolve_opt",
+        make_solver_dense(
+            [](const cs::CSCMatrix& L, const std::vector<double>& B) {
+                return cs::lsolve_opt(L, B);
+            }
+        ),
+        py::arg("L"),
+        py::arg("b")
+    );
+
+    m.def(
+        "usolve_opt",
+        make_solver_dense(
+            [](const cs::CSCMatrix& U, const std::vector<double>& B) {
+                return cs::usolve_opt(U, B);
+            }
+        ),
+        py::arg("U"),
+        py::arg("b")
+    );
+
+    //--------------------------------------------------------------------------
+    //      Full Matrix Solvers
+    //--------------------------------------------------------------------------
     m.def("chol_solve",
-        wrap_solve(
-            static_cast<chol_solver_t>(&cs::chol_solve),
-            static_cast<chol_solver_sparse_t>(&cs::chol_solve)
+        make_chol_solver(
+            // dense solver
+            [](
+                const cs::CSCMatrix& A,
+                const std::vector<double>& B,
+                cs::AMDOrder order
+            ) {
+                return cs::chol_solve(A, B, order);
+            },
+            // sparse solver
+            [](
+                const cs::CSCMatrix& A,
+                const cs::CSCMatrix& B,
+                cs::AMDOrder order
+            ) {
+                return cs::chol_solve(A, B, order);
+            }
         ),
         py::arg("A"),
         py::arg("b"),
+        py::kw_only(),
         py::arg("order")="Natural"  // CSparse default is "ATANoDenseRows"
     );
 
     m.def("qr_solve",
-        wrap_solve_dense<true>(&cs::qr_solve),
+        make_chol_solver(
+            // dense solver
+            [](
+                const cs::CSCMatrix& A,
+                const std::vector<double>& B,
+                cs::AMDOrder order
+            ) {
+                return cs::qr_solve(A, B, order).x;
+            },
+            // sparse solver
+            [](
+                const cs::CSCMatrix& A,
+                const cs::CSCMatrix& B,
+                cs::AMDOrder order
+            ) {
+                return cs::qr_solve(A, B, order).x;
+            }
+        ),
         py::arg("A"),
         py::arg("b"),
+        py::kw_only(),
         py::arg("order")="Natural"  // CSparse default is "ATA"
     );
 
     m.def("lu_solve",
-        wrap_solve_dense(&cs::lu_solve),
+        make_lu_solver(
+            // dense solver
+            [](
+                const cs::CSCMatrix& A,
+                const std::vector<double>& B,
+                cs::AMDOrder order,
+                double tol,
+                cs::csint ir_steps
+            ) {
+                return cs::lu_solve(A, B, order, tol, ir_steps);
+            },
+            // sparse solver
+            [](
+                const cs::CSCMatrix& A,
+                const cs::CSCMatrix& B,
+                cs::AMDOrder order,
+                double tol,
+                cs::csint ir_steps
+            ) {
+                return cs::lu_solve(A, B, order, tol, ir_steps);
+            }
+        ),
         py::arg("A"),
         py::arg("b"),
+        py::kw_only(),
         py::arg("order")="Natural",  // CSparse default is "ATANoDenseRows"
         py::arg("tol")=1.0,
         py::arg("ir_steps")=0

@@ -12,10 +12,16 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_array_equal
 from scipy import linalg as la
 from scipy import sparse
 from scipy.sparse import linalg as sla
+
+try:
+    from sksparse import cholmod
+    HAS_CHOLMOD = True
+except ImportError:
+    HAS_CHOLMOD = False
 
 import csparse
 
@@ -365,7 +371,7 @@ def test_reachability(L, b, lower, request):
 
 
 # -----------------------------------------------------------------------------
-#         Test 19
+#         Test 11
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize("order", ['Natural', 'APlusAT'])
 @pytest.mark.parametrize(
@@ -395,6 +401,71 @@ def test_rowcnt(problem, order):
 
     assert all(rc == rc_scipy)
 
+
+# -----------------------------------------------------------------------------
+#         Test 13
+# -----------------------------------------------------------------------------
+def _cholmod_counts(A, ATA):
+    kind = 'col' if ATA else None
+
+    # Get the etree and postordering
+    parent_, post_ = cholmod.etree(A, kind=kind, return_post=True)
+
+    parent = csparse.etree(A, ATA=ATA)
+    post = csparse.post(parent)
+
+    assert_array_equal(parent, parent_)
+    assert_array_equal(post, post_)
+
+    # Get the column counts of L
+    counts_ = cholmod.symbfact(A, kind=kind)[0]
+
+    counts = csparse.chol_colcounts(A, ATA=ATA)
+    assert_array_equal(counts, counts_)
+
+    if not ATA:
+        counts_triu = csparse.chol_colcounts(sparse.triu(A))
+        assert_array_equal(counts_triu, counts_)
+
+
+@pytest.mark.skipif(not HAS_CHOLMOD, reason="scikit-sparse not installed")
+@pytest.mark.parametrize(
+    "A",
+    list(generate_random_matrices(
+        N_trials=100,
+        N_max=100,
+        d_scale=0.1,
+        square_only=True
+    )),
+)
+def test_chol_counts(A, subtests):
+    A = A.copy()  # don't modify the original matrix
+
+    # Make sure A is symmetric positive definite
+    A = (A + A.T) / 2
+    A.setdiag(A.diagonal() + 1e-6)
+    A = A.tocsc()
+
+    for ATA in [False, True]:
+        with subtests.test(ATA=ATA):
+            _cholmod_counts(A, ATA)
+
+    # One more test for non-square A
+    M, N = A.shape
+    rng = np.random.default_rng(565656)
+
+    for overunder in ['M < N', 'M > N']:
+        with subtests.test(overunder=overunder):
+            if overunder == 'M < N' and M > 1:
+                Mc = rng.integers(1, M)
+                C = A[:Mc].copy()
+            elif N > 1:
+                Nc = rng.integers(1, N)
+                C = A[:, :Nc].copy()
+            else:
+                C = A.copy()
+
+            _cholmod_counts(C, ATA=True)
 
 # =============================================================================
 # =============================================================================

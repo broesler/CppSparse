@@ -494,7 +494,7 @@ PYBIND11_MODULE(csparse, m)
             return cs::etree(A, ata);
         },
         py::arg("A"),
-        py::arg("ata")=false
+        py::arg("ATA")=false
     );
 
     m.def("post", &cs::post);
@@ -509,6 +509,15 @@ PYBIND11_MODULE(csparse, m)
             return cs::rowcnt(A, parent, post);
         },
         py::arg("A"), py::arg("parent"), py::arg("post")
+    );
+
+    m.def("chol_colcounts",
+        [] (const py::object& A_scipy, bool ata=false) {
+            const cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            return cs::chol_colcounts(A, ata);
+        },
+        py::arg("A"),
+        py::arg("ATA")=false
     );
 
     m.def("chol",

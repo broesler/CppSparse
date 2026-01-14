@@ -380,6 +380,54 @@ py::object solver_dense_impl_(
 }
 
 
+/** Wrap a sparse solve function. */
+template <typename SparseSolver, typename... Args>
+py::object solver_sparse_impl_(
+    SparseSolver sparse_solver,
+    const cs::CSCMatrix& A,
+    const py::object& B_obj,
+    Args&&... solver_args  // actual C++ arguments
+)
+{
+    py::object B_scipy = B_obj;
+
+    int B_ndim = B_scipy.attr("ndim").cast<int>();
+    if (B_ndim > 2) {
+        throw py::value_error("B must be a 1D or 2D matrix.");
+    }
+
+    // Get number of columns for output shape
+    const cs::csint N = A.shape()[1];
+
+    // Convert (N,) -> (N, 1)
+    bool return_1D = B_ndim == 1;
+
+    if (B_ndim == 1) {
+        py::tuple B_shape = B_scipy.attr("shape");
+        int Mb = B_shape[0].cast<int>();
+        B_scipy = B_scipy.attr("reshape")(py::make_tuple(Mb, 1));
+    }
+
+    const cs::CSCMatrix B = csc_from_scipy(B_scipy);
+
+    // Solve the system with the unpacked args
+    std::vector<double> X = sparse_solver(A, B, std::forward<Args>(solver_args)...);
+
+    // Output number of columns
+    const cs::csint K = B.shape()[1];
+
+    // Return a sparse array
+    py::object X_py = scipy_from_csc(cs::CSCMatrix(X, {N, K}));
+
+    if (return_1D) {
+        // X[:, 0] slice the only column so that output is (N,)
+        X_py = X_py.attr("__getitem__")(py::make_tuple(py::slice(), 0));
+    }
+
+    return X_py;
+}
+
+
 /** Wrap a solve function that takes a matrix, vector, and order. */
 template <typename DenseSolver, typename SparseSolver, typename... Args>
 py::object solver_impl_(
@@ -420,49 +468,16 @@ py::object solver_impl_(
     bool is_sparse_RHS = sparse.attr("issparse")(B_obj).cast<bool>();
 
     if (is_sparse_RHS) {
-        py::object B_scipy = B_obj;
-
-        int B_ndim = B_scipy.attr("ndim").cast<int>();
-        if (B_ndim > 2) {
-            throw py::value_error("B must be a 1D or 2D matrix.");
-        }
-
-        // Get number of columns for output shape
-        const cs::csint N = A.shape()[1];
-
-        // Convert (N,) -> (N, 1)
-        bool return_1D = B_ndim == 1;
-
-        if (B_ndim == 1) {
-            py::tuple B_shape = B_scipy.attr("shape");
-            int Mb = B_shape[0].cast<int>();
-            B_scipy = B_scipy.attr("reshape")(py::make_tuple(Mb, 1));
-        }
-
-        const cs::CSCMatrix B = csc_from_scipy(B_scipy);
-
-        // Solve the system with the unpacked args
-        std::vector<double> X = std::apply(
+        // Call the sparse solver with the unpacked args
+        return std::apply(
             [&](auto&&... unpacked_args) {
-                return sparse_solver(
-                    A, B, std::forward<decltype(unpacked_args)>(unpacked_args)...
+                return solver_sparse_impl_(
+                    sparse_solver, A, B_obj,
+                    std::forward<decltype(unpacked_args)>(unpacked_args)...
                 );
             },
             args_tuple
         );
-
-        // Output number of columns
-        const cs::csint K = B.shape()[1];
-
-        // Return a sparse array
-        py::object X_py = scipy_from_csc(cs::CSCMatrix(X, {N, K}));
-
-        if (return_1D) {
-            // X[:, 0] slice the only column so that output is (N,)
-            X_py = X_py.attr("__getitem__")(py::make_tuple(py::slice(), 0));
-        }
-
-        return X_py;
     } else {
         // Call the dense solver with the unpacked args
         return std::apply(

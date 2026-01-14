@@ -39,6 +39,7 @@ PYBIND11_MODULE(csparse, m) {
         .def_static("from_matrix",
             &cs::Problem::from_matrix,
             py::arg("T"),
+            py::kw_only(),
             py::arg("droptol")=0
         );
 
@@ -150,6 +151,7 @@ PYBIND11_MODULE(csparse, m) {
             py::arg("M"),
             py::arg("N"),
             py::arg("density")=0.1,
+            py::kw_only(),
             py::arg("seed")=0
         )
         .def(py::init<const cs::CSCMatrix&>())
@@ -244,6 +246,7 @@ PYBIND11_MODULE(csparse, m) {
         )
         .def(py::init<const cs::Shape&, cs::csint, bool>(),
             py::arg("shape"),
+            py::kw_only(),
             py::arg("nzmax")=0,
             py::arg("values")=true
         )
@@ -319,7 +322,7 @@ PYBIND11_MODULE(csparse, m) {
         .def("to_dense_vector", &cs::CSCMatrix::to_dense_vector, py::arg("order")='F')
         .def("toarray", &sparse_to_ndarray<cs::CSCMatrix>, py::arg("order")='C')
         //
-        .def("transpose", &cs::CSCMatrix::transpose, py::arg("values")=true)
+        .def("transpose", &cs::CSCMatrix::transpose, py::kw_only(), py::arg("values")=true)
         .def_property_readonly("T", &cs::CSCMatrix::T)
         //
         .def("sort", &cs::CSCMatrix::sort)
@@ -353,7 +356,7 @@ PYBIND11_MODULE(csparse, m) {
             {
                 return self.permute(cs::inv_permute(p), q, values);
             },
-            py::arg("p"), py::arg("q"), py::arg("values")=true
+            py::arg("p"), py::arg("q"), py::kw_only(), py::arg("values")=true
         )
         .def("symperm", 
             [](const cs::CSCMatrix& self,
@@ -362,7 +365,7 @@ PYBIND11_MODULE(csparse, m) {
             {
                 return self.symperm(cs::inv_permute(p), values);
             },
-            py::arg("p"), py::arg("values")=true
+            py::arg("p"), py::kw_only(), py::arg("values")=true
         )
         .def("permute_transpose",
             [](const cs::CSCMatrix& self, 
@@ -372,7 +375,7 @@ PYBIND11_MODULE(csparse, m) {
             {
                 return self.permute_transpose(cs::inv_permute(p), q, values);
             },
-            py::arg("p"), py::arg("q"), py::arg("values")=true
+            py::arg("p"), py::arg("q"), py::kw_only(), py::arg("values")=true
         )
         .def("permute_rows", 
             [](const cs::CSCMatrix& self,
@@ -381,10 +384,10 @@ PYBIND11_MODULE(csparse, m) {
             {
                 return self.permute_rows(cs::inv_permute(p), values);
             },
-            py::arg("p"), py::arg("values")=true
+            py::arg("p"), py::kw_only(), py::arg("values")=true
         )
         .def("permute_cols", &cs::CSCMatrix::permute_cols,
-             py::arg("q"), py::arg("values")=true)
+             py::arg("q"), py::kw_only(), py::arg("values")=true)
         //
         .def("norm", &cs::CSCMatrix::norm)
         .def("fronorm", &cs::CSCMatrix::fronorm)
@@ -843,7 +846,6 @@ PYBIND11_MODULE(csparse, m) {
         ),
         py::arg("A"),
         py::arg("b"),
-        py::kw_only(),
         py::arg("order")="Natural"  // CSparse default is "ATANoDenseRows"
     );
 
@@ -868,7 +870,6 @@ PYBIND11_MODULE(csparse, m) {
         ),
         py::arg("A"),
         py::arg("b"),
-        py::kw_only(),
         py::arg("order")="Natural"  // CSparse default is "ATA"
     );
 
@@ -897,7 +898,6 @@ PYBIND11_MODULE(csparse, m) {
         ),
         py::arg("A"),
         py::arg("b"),
-        py::kw_only(),
         py::arg("order")="Natural",  // CSparse default is "ATANoDenseRows"
         py::arg("tol")=1.0,
         py::arg("ir_steps")=0

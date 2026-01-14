@@ -777,7 +777,7 @@ PYBIND11_MODULE(csparse, m) {
 
     m.def(
         "ltsolve",
-        make_solver_dense(
+        make_dense_solver(
             [](const cs::CSCMatrix& L, const std::vector<double>& B) {
                 return cs::ltsolve(L, B);
             }
@@ -788,7 +788,7 @@ PYBIND11_MODULE(csparse, m) {
 
     m.def(
         "utsolve",
-        make_solver_dense(
+        make_dense_solver(
             [](const cs::CSCMatrix& U, const std::vector<double>& B) {
                 return cs::utsolve(U, B);
             }
@@ -799,7 +799,7 @@ PYBIND11_MODULE(csparse, m) {
 
     m.def(
         "lsolve_opt",
-        make_solver_dense(
+        make_dense_solver(
             [](const cs::CSCMatrix& L, const std::vector<double>& B) {
                 return cs::lsolve_opt(L, B);
             }
@@ -810,7 +810,7 @@ PYBIND11_MODULE(csparse, m) {
 
     m.def(
         "usolve_opt",
-        make_solver_dense(
+        make_dense_solver(
             [](const cs::CSCMatrix& U, const std::vector<double>& B) {
                 return cs::usolve_opt(U, B);
             }

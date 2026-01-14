@@ -342,6 +342,45 @@ auto make_solver_dense(DenseSolver dense_solver)
 
 
 /** Wrap a solve function that takes a matrix, vector, and order. */
+template <typename DenseSolver, typename... Args>
+py::object solver_dense_impl_(
+    DenseSolver dense_solver,
+    const cs::CSCMatrix& A,
+    const py::object& B_obj,
+    Args&&... solver_args  // actual C++ arguments
+)
+{
+    // Assume b is a dense vector, return a dense vector solution
+    py::module_ np = py::module_::import("numpy");
+    py::array b_np = np.attr("asarray")(B_obj);
+
+    int b_ndim = b_np.attr("ndim").cast<int>();
+    if (b_ndim != 1 && b_ndim != 2) {
+        throw std::invalid_argument("Input b must be a 1D or 2D array.");
+    }
+
+    // Get original shape for reshaping output
+    py::tuple b_shape = b_np.attr("shape");
+
+    // Flatten b to 1D column-major
+    b_np = b_np.attr("ravel")(py::arg("order")="F");
+
+    std::vector<double> B = b_np.cast<std::vector<double>>();
+
+    // Solve the system with the unpacked args
+    std::vector<double> X = dense_solver(A, B, std::forward<Args>(solver_args)...);
+
+    if (b_ndim == 1) {
+        return py::cast(X);
+    } else {
+        py::array X_np = py::array(py::cast(X));
+        X_np = X_np.attr("reshape")(b_shape, py::arg("order")="F");
+        return X_np;
+    }
+}
+
+
+/** Wrap a solve function that takes a matrix, vector, and order. */
 template <typename DenseSolver, typename SparseSolver, typename... Args>
 py::object solver_impl_(
     DenseSolver dense_solver,
@@ -425,41 +464,30 @@ py::object solver_impl_(
 
         return X_py;
     } else {
-        // Assume b is a dense vector, return a dense vector solution
-        py::module_ np = py::module_::import("numpy");
-        py::array b_np = np.attr("asarray")(B_obj);
-
-        int b_ndim = b_np.attr("ndim").cast<int>();
-        if (b_ndim != 1 && b_ndim != 2) {
-            throw std::invalid_argument("Input b must be a 1D or 2D array.");
-        }
-
-        // Get original shape for reshaping output
-        py::tuple b_shape = b_np.attr("shape");
-
-        // Flatten b to 1D column-major
-        b_np = b_np.attr("ravel")(py::arg("order")="F");
-
-        std::vector<double> B = b_np.cast<std::vector<double>>();
-
-        // Solve the system with the unpacked args
-        std::vector<double> X = std::apply(
+        // Call the dense solver with the unpacked args
+        return std::apply(
             [&](auto&&... unpacked_args) {
-                return dense_solver(
-                    A, B, std::forward<decltype(unpacked_args)>(unpacked_args)...
+                return solver_dense_impl_(
+                    dense_solver, A, B_obj,
+                    std::forward<decltype(unpacked_args)>(unpacked_args)...
                 );
             },
             args_tuple
         );
-
-        if (b_ndim == 1) {
-            return py::cast(X);
-        } else {
-            py::array X_np = py::array(py::cast(X));
-            X_np = X_np.attr("reshape")(b_shape, py::arg("order")="F");
-            return X_np;
-        }
     }
+}
+
+
+template <typename DenseSolver>
+auto make_dense_solver(DenseSolver dense_solver)
+{
+    return [dense_solver](
+        const py::object& A_scipy,
+        const py::object& B_obj
+    ) -> py::object {
+        const cs::CSCMatrix A = csc_from_scipy(A_scipy);
+        return solver_dense_impl_(dense_solver, A, B_obj);
+    };
 }
 
 

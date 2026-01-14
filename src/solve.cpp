@@ -10,6 +10,7 @@
 #include <algorithm>   // fill
 #include <cassert>
 #include <cmath>       // fabs
+#include <format>
 #include <functional>  // reference wrapper
 #include <ranges>      // views::reverse
 #include <span>
@@ -505,7 +506,7 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>
 
     if (MxK % M != 0) {
         throw std::runtime_error(
-            std::format("RHS vector size is not a multiple of matrix rows!")
+            std::format("Matrix and RHS sizes do not match! {} % {} != 0.", MxK, M)
         );
     }
 

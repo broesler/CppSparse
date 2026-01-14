@@ -43,16 +43,21 @@ SOLVE_FUNCS = [
 
 
 @pytest.mark.parametrize('solve_func', SOLVE_FUNCS)
-def test_solve_func(solve_func):
+@pytest.mark.parametrize('K', [0, 1, 3])
+def test_solve_func(solve_func, K):
     """Test the solve function with a known right-hand side."""
     A = csparse.davis_example_chol()
     M, N = A.shape
-    expect = np.arange(1, M + 1)  # use range to test permutations
+    # use range to test permutations
+    if K == 0:
+        expect = np.arange(1, N + 1, dtype=float)
+    else:
+        expect = np.arange(1, N * K + 1, dtype=float).reshape((N, K), order='F')
     b = np.array(A @ expect)
     x = np.array(solve_func(A, b))
     assert x is not None
-    assert x.shape == (N,)
-    assert_allclose(A @ x, b, atol=ATOL)
+    assert_allclose(A @ x, b, atol=ATOL, strict=True)
+    assert_allclose(x, expect, atol=ATOL, strict=True)
 
 
 # -----------------------------------------------------------------------------

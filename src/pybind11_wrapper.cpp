@@ -846,7 +846,7 @@ PYBIND11_MODULE(csparse, m) {
         ),
         py::arg("A"),
         py::arg("b"),
-        py::arg("order")="Natural"  // CSparse default is "ATANoDenseRows"
+        py::arg("order")="APlusAT"  // CSparse default is "APlusAT"
     );
 
     m.def("qr_solve",
@@ -870,7 +870,7 @@ PYBIND11_MODULE(csparse, m) {
         ),
         py::arg("A"),
         py::arg("b"),
-        py::arg("order")="Natural"  // CSparse default is "ATA"
+        py::arg("order")="ATA"  // CSparse default is "ATA"
     );
 
     m.def("lu_solve",
@@ -898,7 +898,7 @@ PYBIND11_MODULE(csparse, m) {
         ),
         py::arg("A"),
         py::arg("b"),
-        py::arg("order")="Natural",  // CSparse default is "ATANoDenseRows"
+        py::arg("order")="ATANoDenseRows",  // CSparse default is "ATANoDenseRows"
         py::arg("tol")=1.0,
         py::arg("ir_steps")=0
     );

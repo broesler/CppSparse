@@ -334,6 +334,7 @@ def dm_solve(A, b):
         solution.
     """
     M, N = A.shape
+    is_sparse = sparse.issparse(b)
 
     if b.ndim not in (1, 2):
         raise ValueError("Right-hand side b must be 1D or 2D.")
@@ -348,10 +349,13 @@ def dm_solve(A, b):
 
     # Permute the matrix and the right-hand side
     C = A[p[:, np.newaxis], q]
-    b = b[p]
+
+    if is_sparse and b.ndim == 1:
+        b = b.todok()[p]  # COO not subscriptable on scipy < v1.16 (Python < v3.11)
+    else:
+        b = b[p]
 
     x_shape = (N,) if b.ndim == 1 else (N, b.shape[1])
-    is_sparse = sparse.issparse(b)
 
     # TODO when csc_array (0, N) bug is fixed (scipy v1.17.0)
     # if is_sparse:

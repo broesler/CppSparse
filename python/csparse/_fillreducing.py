@@ -350,10 +350,14 @@ def dm_solve(A, b):
     C = A[p[:, np.newaxis], q]
     b = b[p]
 
-    if b.ndim == 1:
-        x = np.zeros(N)
-    else:
-        x = np.zeros((N, b.shape[1]))
+    x_shape = (N,) if b.ndim == 1 else (N, b.shape[1])
+    is_sparse = sparse.issparse(b)
+
+    # TODO when csc_array (0, N) bug is fixed (scipy v1.17.0)
+    # if is_sparse:
+    #     x = sparse.dok_array(x_shape)  # dok is indexable
+    # else:
+    x = np.zeros(x_shape)
 
     # Backsolve the upper block triangular system
     # [ C00 C01 C02 ] [ x0 ]   [ b0 ]
@@ -387,6 +391,7 @@ def dm_solve(A, b):
         C01 = C[:rr[1], cc[2]:cc[3]]
         b0 = b[:rr[1]]
         b0 -= C01 @ x1
+        # FIXME ^^^^ error when C01 is csc_array of shape (0, N) (scipy v1.17.0)
 
     # Solve the underdetermined system [A11 A12]
     if rr[1] > 0 and cc[2] > 0:
@@ -396,6 +401,10 @@ def dm_solve(A, b):
         x0[:] = qr_solve(C00, b0, order='ATA')
 
     x[q] = x  # inverse permute the solution
+
+    if is_sparse:
+        # x = x.tocoo() if b.ndim == 1 else x.tocsc()  # TODO when bug fixed
+        x = sparse.coo_array(x) if b.ndim == 1 else sparse.csc_array(x)
 
     return x
 
@@ -432,7 +441,7 @@ def _lu_solve_btf(C, b, r, s, **kwargs):  # noqa:PLR0913
 
     Nb = len(r) - 1
     b = b.copy()
-    x = np.zeros_like(b)
+    x = np.zeros(b.shape)
 
     # Backsolve the middle, square blocks using LU
     for k in range(Nb - 1, -1, -1):
@@ -444,7 +453,11 @@ def _lu_solve_btf(C, b, r, s, **kwargs):  # noqa:PLR0913
         if Ckk.shape[0] > 0 and Ckk.shape[1] > 0:
             bk = b[rows]
             xk = x[cols]
-            xk[:] = lu_solve(Ckk, bk, **kwargs)
+            res = lu_solve(Ckk, bk, **kwargs)
+            if sparse.issparse(bk):
+                xk[:] = res.toarray()
+            else:
+                xk[:] = res
 
             # Update the right-hand side for the next block
             if k > 0:

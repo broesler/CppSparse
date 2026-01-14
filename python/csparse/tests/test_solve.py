@@ -30,7 +30,8 @@ SOLVE_FUNCS = [
     csparse.chol_solve,
     csparse.lu_solve,
     csparse.qr_solve,
-    csparse.dm_solve
+    csparse.dm_solve,
+    csparse.spsolve,
 ]
 
 

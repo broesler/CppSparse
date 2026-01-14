@@ -44,18 +44,30 @@ SOLVE_FUNCS = [
 
 @pytest.mark.parametrize('solve_func', SOLVE_FUNCS)
 @pytest.mark.parametrize('K', [0, 1, 3])
-def test_solve_func(solve_func, K):
+@pytest.mark.parametrize("is_sparse", [False, True], ids=["dense", "sparse"])
+def test_solve_func(solve_func, K, is_sparse):
     """Test the solve function with a known right-hand side."""
     A = csparse.davis_example_chol()
     M, N = A.shape
-    # use range to test permutations
+
     if K == 0:
         expect = np.arange(1, N + 1, dtype=float)
     else:
         expect = np.arange(1, N * K + 1, dtype=float).reshape((N, K), order='F')
-    b = np.array(A @ expect)
-    x = np.array(solve_func(A, b))
-    assert x is not None
+
+    if is_sparse:
+        b = sparse.coo_array(A @ expect)
+        if b.ndim == 2:
+            b = b.tocsc()
+    else:
+        b = np.array(A @ expect)
+
+    x = solve_func(A, b)
+
+    if is_sparse:
+        b = b.toarray()
+        x = x.toarray()
+
     assert_allclose(A @ x, b, atol=ATOL, strict=True)
     assert_allclose(x, expect, atol=ATOL, strict=True)
 

@@ -1047,9 +1047,6 @@ public:
         bool ata
     );
 
-    friend std::vector<csint> chol_rowcounts(const CSCMatrix& A);
-    friend std::vector<csint> chol_colcounts(const CSCMatrix& A, bool ata);
-
     friend CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S);
 
     friend CholResult chol(const CSCMatrix& A, const SymbolicChol& S);

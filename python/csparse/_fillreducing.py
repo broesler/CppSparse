@@ -335,12 +335,25 @@ def dm_solve(A, b):
     """
     M, N = A.shape
 
+    if b.ndim not in (1, 2):
+        raise ValueError("Right-hand side b must be 1D or 2D.")
+
+    if b.shape[0] != M:
+        raise ValueError(
+            "Right-hand side b incompatible with matrix A: "
+            f"{A.shape=} vs {b.shape=}"
+        )
+
     p, q, r, s, cc, rr = dmperm(A)
 
     # Permute the matrix and the right-hand side
     C = A[p[:, np.newaxis], q]
     b = b[p]
-    x = np.zeros(N)
+
+    if b.ndim == 1:
+        x = np.zeros(N)
+    else:
+        x = np.zeros((N, b.shape[1]))
 
     # Backsolve the upper block triangular system
     # [ C00 C01 C02 ] [ x0 ]   [ b0 ]
@@ -418,8 +431,8 @@ def _lu_solve_btf(C, b, r, s, **kwargs):  # noqa:PLR0913
     assert len(r) == len(s)
 
     Nb = len(r) - 1
-    x = np.zeros(N)
     b = b.copy()
+    x = np.zeros_like(b)
 
     # Backsolve the middle, square blocks using LU
     for k in range(Nb - 1, -1, -1):

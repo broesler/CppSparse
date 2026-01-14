@@ -1438,7 +1438,7 @@ double cond1est(const CSCMatrix& A)
 
 // Exercise 8.1
 template <typename RHSType>
-std::vector<double> spsolve(const CSCMatrix& A, const RHSType& B)
+std::vector<double> spsolve_impl_(const CSCMatrix& A, const RHSType& B)
 {
     auto [M, N] = A.shape();
 
@@ -1584,13 +1584,13 @@ std::vector<double> spsolve(const CSCMatrix& A, const RHSType& B)
 
 std::vector<double> spsolve(const CSCMatrix& A, const std::vector<double> & B)
 {
-    return spsolve<std::vector<double>>(A, B);
+    return spsolve_impl_<std::vector<double>>(A, B);
 }
 
 
 std::vector<double> spsolve(const CSCMatrix& A, const CSCMatrix& B)
 {
-    return spsolve<CSCMatrix>(A, B);
+    return spsolve_impl_<CSCMatrix>(A, B);
 }
 
 

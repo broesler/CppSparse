@@ -796,11 +796,11 @@ std::vector<double> spsolve(const CSCMatrix& A, const std::vector<double>& B);
  * matrices.
  *
  * @param A  (M, N) the sparse system matrix
- * @param b  (M, 1) the sparse RHS matrix
+ * @param b  (M, K) the sparse RHS matrix
  *
- * @return x (N,) the dense solution vector
+ * @return x (N, K) the dense solution vector
  */
-std::vector<double> spsolve(const CSCMatrix& A, const CSCMatrix& b);
+std::vector<double> spsolve(const CSCMatrix& A, const CSCMatrix& B);
 
 
 

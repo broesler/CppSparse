@@ -345,11 +345,13 @@ auto make_solver_dense(DenseSolver dense_solver)
 template <typename DenseSolver, typename... Args>
 py::object solver_dense_impl_(
     DenseSolver dense_solver,
-    const cs::CSCMatrix& A,
+    const py::object& A_scipy,
     const py::object& B_obj,
     Args&&... solver_args  // actual C++ arguments
 )
 {
+    cs::CSCMatrix A = csc_from_scipy(A_scipy);
+
     // Assume b is a dense vector, return a dense vector solution
     py::module_ np = py::module_::import("numpy");
     py::array b_np = np.attr("asarray")(B_obj);
@@ -384,11 +386,12 @@ py::object solver_dense_impl_(
 template <typename SparseSolver, typename... Args>
 py::object solver_sparse_impl_(
     SparseSolver sparse_solver,
-    const cs::CSCMatrix& A,
+    const py::object& A_scipy,
     const py::object& B_obj,
     Args&&... solver_args  // actual C++ arguments
 )
 {
+    const cs::CSCMatrix A = csc_from_scipy(A_scipy);
     py::object B_scipy = B_obj;
 
     int B_ndim = B_scipy.attr("ndim").cast<int>();
@@ -463,8 +466,6 @@ py::object solver_impl_(
     }();
 
     py::module_ sparse = py::module_::import("scipy.sparse");
-    const cs::CSCMatrix A = csc_from_scipy(A_scipy);
-
     bool is_sparse_RHS = sparse.attr("issparse")(B_obj).cast<bool>();
 
     if (is_sparse_RHS) {
@@ -472,7 +473,7 @@ py::object solver_impl_(
         return std::apply(
             [&](auto&&... unpacked_args) {
                 return solver_sparse_impl_(
-                    sparse_solver, A, B_obj,
+                    sparse_solver, A_scipy, B_obj,
                     std::forward<decltype(unpacked_args)>(unpacked_args)...
                 );
             },
@@ -483,7 +484,7 @@ py::object solver_impl_(
         return std::apply(
             [&](auto&&... unpacked_args) {
                 return solver_dense_impl_(
-                    dense_solver, A, B_obj,
+                    dense_solver, A_scipy, B_obj,
                     std::forward<decltype(unpacked_args)>(unpacked_args)...
                 );
             },
@@ -500,8 +501,7 @@ auto make_dense_solver(DenseSolver dense_solver)
         const py::object& A_scipy,
         const py::object& B_obj
     ) -> py::object {
-        const cs::CSCMatrix A = csc_from_scipy(A_scipy);
-        return solver_dense_impl_(dense_solver, A, B_obj);
+        return solver_dense_impl_(dense_solver, A_scipy, B_obj);
     };
 }
 

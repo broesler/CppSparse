@@ -22,7 +22,8 @@
 namespace py = pybind11;
 
 
-PYBIND11_MODULE(csparse, m) {
+PYBIND11_MODULE(csparse, m)
+{
     m.doc() = "C++Sparse module for sparse matrix operations.";
 
     //--------------------------------------------------------------------------
@@ -416,10 +417,11 @@ PYBIND11_MODULE(csparse, m) {
     m.def("davis_example_small", []() { return scipy_from_coo(cs::davis_example_small()); });
     m.def("davis_example_chol", []() { return scipy_from_csc(cs::davis_example_chol()); });
     m.def("davis_example_qr",
-        [](double add_diag=0.0) {
-            return scipy_from_csc(cs::davis_example_qr(add_diag));
+        [](double add_diag=0.0, bool random_vals=false) {
+            return scipy_from_csc(cs::davis_example_qr(add_diag, random_vals));
         },
-        py::arg("add_diag")=0.0
+        py::arg("add_diag")=0.0,
+        py::arg("random_vals")=false
     );
     m.def("davis_example_amd", []() { return scipy_from_csc(cs::davis_example_amd()); });
 
@@ -902,7 +904,22 @@ PYBIND11_MODULE(csparse, m) {
         py::arg("tol")=1.0,
         py::arg("ir_steps")=0
     );
-}
+
+    m.def("spsolve", 
+        make_simple_solver(
+            [](const cs::CSCMatrix& A, const std::vector<double>& B) {
+                return cs::spsolve(A, B);
+            },
+            [](const cs::CSCMatrix& A, const cs::CSCMatrix& B) {
+                return cs::spsolve(A, B);
+            }
+        ),
+        py::arg("A"),
+        py::arg("b")
+    );
+
+}  // PYBIND11_MODULE
+   //
 
 /*==============================================================================
  *============================================================================*/

@@ -355,7 +355,7 @@ auto make_pvec_wrapper(FuncD&& func_double, FuncI&& func_int)
 /** Wrap a solve function that takes a matrix, vector, and order. */
 template <typename DenseSolver, typename... Args>
 py::object solver_dense_impl_(
-    DenseSolver dense_solver,
+    DenseSolver&& dense_solver,
     const py::object& A_scipy,
     const py::object& B_obj,
     Args&&... solver_args  // actual C++ arguments
@@ -376,7 +376,7 @@ py::object solver_dense_impl_(
     py::tuple b_shape = b_np.attr("shape");
 
     // Flatten b to 1D column-major
-    b_np = b_np.attr("ravel")(py::arg("order")="F");
+    b_np = b_np.attr("reshape")(-1, py::arg("order")="F");
 
     std::vector<double> B = b_np.cast<std::vector<double>>();
 
@@ -396,7 +396,7 @@ py::object solver_dense_impl_(
 /** Wrap a sparse solve function. */
 template <typename SparseSolver, typename... Args>
 py::object solver_sparse_impl_(
-    SparseSolver sparse_solver,
+    SparseSolver&& sparse_solver,
     const py::object& A_scipy,
     const py::object& B_obj,
     Args&&... solver_args  // actual C++ arguments
@@ -445,8 +445,8 @@ py::object solver_sparse_impl_(
 /** Wrap a solve function that takes a matrix, vector, and order. */
 template <typename DenseSolver, typename SparseSolver, typename... Args>
 py::object solver_impl_(
-    DenseSolver dense_solver,
-    SparseSolver sparse_solver,
+    DenseSolver&& dense_solver,
+    SparseSolver&& sparse_solver,
     const py::object& A_scipy,
     const py::object& B_obj,
     Args&&... args
@@ -506,9 +506,9 @@ py::object solver_impl_(
 
 
 template <typename DenseSolver>
-auto make_dense_solver(DenseSolver dense_solver)
+auto make_dense_solver(DenseSolver&& dense_solver)
 {
-    return [dense_solver](
+    return [dense_solver = std::forward<DenseSolver>(dense_solver)](
         const py::object& A_scipy,
         const py::object& B_obj
     ) -> py::object {
@@ -518,9 +518,12 @@ auto make_dense_solver(DenseSolver dense_solver)
 
 
 template <typename DenseSolver, typename SparseSolver>
-auto make_simple_solver(DenseSolver dense_solver, SparseSolver sparse_solver)
+auto make_simple_solver(DenseSolver&& dense_solver, SparseSolver&& sparse_solver)
 {
-    return [dense_solver, sparse_solver](
+    return [
+        dense_solver = std::forward<DenseSolver>(dense_solver),
+        sparse_solver = std::forward<SparseSolver>(sparse_solver)
+    ](
         const py::object& A_scipy,
         const py::object& B_obj
     ) -> py::object {
@@ -530,9 +533,12 @@ auto make_simple_solver(DenseSolver dense_solver, SparseSolver sparse_solver)
 
 
 template <typename DenseSolver, typename SparseSolver>
-auto make_chol_solver(DenseSolver dense_solver, SparseSolver sparse_solver)
+auto make_chol_solver(DenseSolver&& dense_solver, SparseSolver&& sparse_solver)
 {
-    return [dense_solver, sparse_solver](
+    return [
+        dense_solver = std::forward<DenseSolver>(dense_solver),
+        sparse_solver = std::forward<SparseSolver>(sparse_solver)
+    ](
         const py::object& A_scipy,
         const py::object& B_obj,
         const std::string& order
@@ -543,9 +549,12 @@ auto make_chol_solver(DenseSolver dense_solver, SparseSolver sparse_solver)
 
 
 template <typename DenseSolver, typename SparseSolver>
-auto make_lu_solver(DenseSolver dense_solver, SparseSolver sparse_solver)
+auto make_lu_solver(DenseSolver&& dense_solver, SparseSolver&& sparse_solver)
 {
-    return [dense_solver, sparse_solver](
+    return [
+        dense_solver = std::forward<DenseSolver>(dense_solver),
+        sparse_solver = std::forward<SparseSolver>(sparse_solver)
+    ](
         const py::object& A_scipy,
         const py::object& B_obj,
         const std::string& order,

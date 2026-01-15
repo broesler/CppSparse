@@ -19,6 +19,9 @@ from scipy.sparse import linalg as spla
 
 from .csparse import amd, dmperm, lu_solve, maxtrans, qr_solve, scc
 
+# from packaging import version
+# from scipy import __version__ as scipy_version
+
 
 def profile(A):
     r"""Compute the profile of a sparse, symmetric matrix.
@@ -334,7 +337,8 @@ def dm_solve(A, b):
         solution.
     """
     M, N = A.shape
-    is_sparse = sparse.issparse(b)
+    b_is_sparse = sparse.issparse(b)
+    # use_sparse_x = version.parse(scipy_version) <= version.parse("1.17")
 
     if b.ndim not in (1, 2):
         raise ValueError("Right-hand side b must be 1D or 2D.")
@@ -350,15 +354,19 @@ def dm_solve(A, b):
     # Permute the matrix and the right-hand side
     C = A[p[:, np.newaxis], q]
 
-    if is_sparse and b.ndim == 1:
+    if b_is_sparse and b.ndim == 1:
         b = b.todok()[p]  # COO not subscriptable on scipy < v1.16 (Python < v3.11)
     else:
         b = b[p]
 
     x_shape = (N,) if b.ndim == 1 else (N, b.shape[1])
 
-    # TODO when csc_array (0, N) bug is fixed (scipy v1.17.0)
-    # if is_sparse:
+    # TODO there is a bug as of scipy v1.17 where CSC matrics of shape (0, N)
+    # multiplied by sparse matrices of shape (0,) raise an error, since (0, N)
+    # CSC matrices cannot be created. the "b0 -= C01 @ x1" line below triggers
+    # this bug if C01 has shape (0, N). To avoid this issue, just use a dense
+    # array for x.
+    # if b_is_sparse and use_sparse_x:
     #     x = sparse.dok_array(x_shape)  # dok is indexable
     # else:
     x = np.zeros(x_shape)
@@ -395,7 +403,6 @@ def dm_solve(A, b):
         C01 = C[:rr[1], cc[2]:cc[3]]
         b0 = b[:rr[1]]
         b0 -= C01 @ x1
-        # FIXME ^^^^ error when C01 is csc_array of shape (0, N) (scipy v1.17.0)
 
     # Solve the underdetermined system [A11 A12]
     if rr[1] > 0 and cc[2] > 0:
@@ -406,8 +413,10 @@ def dm_solve(A, b):
 
     x[q] = x  # inverse permute the solution
 
-    if is_sparse:
-        # x = x.tocoo() if b.ndim == 1 else x.tocsc()  # TODO when bug fixed
+    if b_is_sparse:
+        # if use_sparse_x:  # TODO when bug fixed
+        #     x = x.tocoo() if b.ndim == 1 else x.tocsc()
+        # else:
         x = sparse.coo_array(x) if b.ndim == 1 else sparse.csc_array(x)
 
     return x
@@ -605,7 +614,7 @@ def permute_large_diag(A, droptol=1e-6):
     # Compute the maximum matching
     q = maxtrans(S).jmatch
 
-    # TODO check if too many entries were dropped?
+    # NOTE could check if "too many" entries were dropped here
 
     # Use the matching as a column pre-ordering
     return A[:, q]

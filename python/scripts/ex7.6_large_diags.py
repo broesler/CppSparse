@@ -46,7 +46,7 @@ else:
     results = []
 
     N_trials = 100  # arbitrary number of matrices to test
-    N = 100  # arbitrary matrix size (TODO test over multiple?)
+    N = 100  # arbitrary matrix size
     density = 0.1  # arbitrary density
 
     for i in tqdm(range(N_trials)):

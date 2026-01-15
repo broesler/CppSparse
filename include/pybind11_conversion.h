@@ -256,18 +256,55 @@ auto make_vector_func(Func&& func)
  * @return a lambda function that takes a `scipy.sparse.sparray` and 
  *         forwards the rest of the arguments to the wrapped function.
  */
-template <typename Func>
-auto wrap_gaxpy_mat(Func&& f)
+template <bool ColMajor = true, typename Func>
+auto make_gaxpy_matrix_func(Func&& func)
 {
-    return [f = std::forward<Func>(f)](
+    return [func = std::forward<Func>(func)](
         const py::object& A_scipy,
-        const std::vector<double>& X,
-        const std::vector<double>& Y
-    ) {
+        const py::object& X_obj,
+        const py::object& Y_obj
+    ) -> py::array {
         cs::CSCMatrix A = csc_from_scipy(A_scipy);
-        // TODO X and Y are dense matrices! Accept numpy matrices
-        std::vector<double> Z = f(A, X, Y);
-        return py::cast(Z);  // TODO Z is actually a dense matrix!
+        // X and Y are dense matrices
+        py::module_ np = py::module_::import("numpy");
+        py::array X_np = np.attr("asarray")(X_obj);
+        py::array Y_np = np.attr("asarray")(Y_obj);
+
+        int X_ndim = X_np.attr("ndim").cast<int>();
+        int Y_ndim = Y_np.attr("ndim").cast<int>();
+
+        if (X_ndim != 1 && X_ndim != 2) {
+            throw std::invalid_argument("Input X must be a 1D or 2D array.");
+        }
+
+        if (Y_ndim != 1 && Y_ndim != 2) {
+            throw std::invalid_argument("Input Y must be a 1D or 2D array.");
+        }
+
+        // Store original shape of Y for reshaping output
+        py::tuple Y_shape = Y_np.attr("shape");
+
+        std::string order;
+
+        if constexpr (ColMajor) {
+            order = "F";
+        } else {
+            order = "C";
+        }
+
+        // Flatten arrays to 1D
+        X_np = X_np.attr("reshape")(-1, py::arg("order")=order);
+        Y_np = Y_np.attr("reshape")(-1, py::arg("order")=order);
+
+        std::vector<double> X = X_np.cast<std::vector<double>>();
+        std::vector<double> Y = Y_np.cast<std::vector<double>>();
+
+        std::vector<double> Z = func(A, X, Y);
+
+        // Reshape output to original shape of Y
+        py::array Z_np = py::array(py::cast(Z));
+        Z_np = Z_np.attr("reshape")(Y_shape, py::arg("order")=order);
+        return Z_np;
     };
 }
 

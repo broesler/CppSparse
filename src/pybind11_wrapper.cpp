@@ -431,12 +431,12 @@ PYBIND11_MODULE(csparse, m)
     m.def("gaxpy",         make_vector_func(&cs::gaxpy));
     m.def("gatxpy",        make_vector_func(&cs::gatxpy));
     m.def("sym_gaxpy",     make_vector_func(&cs::sym_gaxpy));
-    m.def("gaxpy_row",     wrap_gaxpy_mat(&cs::gaxpy_row));
-    m.def("gaxpy_col",     wrap_gaxpy_mat(&cs::gaxpy_col));
-    m.def("gaxpy_block",   wrap_gaxpy_mat(&cs::gaxpy_block));
-    m.def("gatxpy_row",    wrap_gaxpy_mat(&cs::gatxpy_row));
-    m.def("gatxpy_col",    wrap_gaxpy_mat(&cs::gatxpy_col));
-    m.def("gatxpy_block",  wrap_gaxpy_mat(&cs::gatxpy_block));
+    m.def("gaxpy_row",     make_gaxpy_matrix_func<false>(&cs::gaxpy_row));
+    m.def("gaxpy_col",     make_gaxpy_matrix_func(&cs::gaxpy_col));
+    m.def("gaxpy_block",   make_gaxpy_matrix_func(&cs::gaxpy_block));
+    m.def("gatxpy_row",    make_gaxpy_matrix_func<false>(&cs::gatxpy_row));
+    m.def("gatxpy_col",    make_gaxpy_matrix_func(&cs::gatxpy_col));
+    m.def("gatxpy_block",  make_gaxpy_matrix_func(&cs::gatxpy_block));
 
     //--------------------------------------------------------------------------
     //        Utility Functions

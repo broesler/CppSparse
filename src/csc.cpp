@@ -753,14 +753,51 @@ double CSCMatrix::structural_symmetry() const
 /*------------------------------------------------------------------------------
        Math Operations
 ----------------------------------------------------------------------------*/
+template <bool Transpose = false>
+static void gaxpy_check_(
+    const CSCMatrix& A,
+    const std::vector<double>& X,
+    const std::vector<double>& Y
+)
+{
+    // (M, N) * (N, K) + (M, K) = (M, K) if Transpose = false
+    // (N, M) * (M, K) + (N, K) = (N, K) if Transpose = true
+    auto [M, N] = A.shape();
+    csint NxK = static_cast<csint>((!Transpose) ? X.size() : Y.size());
+    csint MxK = static_cast<csint>((!Transpose) ? Y.size() : X.size());
+
+    if (NxK % N != 0) {
+        throw std::invalid_argument(
+            std::format("{} size is not compatible with A: {} % {} != 0.",
+                (!Transpose) ? "X" : "Y", NxK, N)
+        );
+    }
+
+    if (MxK % M != 0) {
+        throw std::invalid_argument(
+            std::format("{} size is not compatible with A: {} % {} != 0.",
+                (!Transpose) ? "Y" : "X", NxK, N)
+        );
+    }
+
+    csint Kx = NxK / N;  // number of columns in X
+    csint Ky = MxK / M;  // number of columns in Y
+
+    if (Kx != Ky) {
+        throw std::invalid_argument(
+            std::format("X and Y have different number of columns: {} != {}.", Kx, Ky)
+        );
+    }
+}
+
+
 std::vector<double> gaxpy(
     const CSCMatrix& A,
     const std::vector<double>& x,
     const std::vector<double>& y
 )
 {
-    assert(A.M_ == static_cast<csint>(y.size()));  // addition
-    assert(A.N_ == static_cast<csint>(x.size()));  // multiplication
+    gaxpy_check_(A, x, y);
 
     std::vector<double> out = y;  // copy the input vector
 
@@ -781,8 +818,7 @@ std::vector<double> gatxpy(
     const std::vector<double>& y
 )
 {
-    assert(A.M_ == static_cast<csint>(x.size()));  // multiplication
-    assert(A.N_ == static_cast<csint>(y.size()));  // addition
+    gaxpy_check_<true>(A, x, y);
 
     std::vector<double> out = y;  // copy the input vector
 
@@ -803,9 +839,11 @@ std::vector<double> sym_gaxpy(
     const std::vector<double>& y
 )
 {
-    assert(A.M_ == A.N_);  // matrix must be square to be symmetric
-    assert(A.N_ == static_cast<csint>(x.size()));
-    assert(x.size() == y.size());
+    if (A.M_ != A.N_) {
+        throw std::invalid_argument("A must be square.");
+    }
+
+    gaxpy_check_(A, x, y);
 
     std::vector<double> out = y;  // copy the input vector
 
@@ -836,8 +874,7 @@ std::vector<double> gaxpy_col(
     const std::vector<double>& Y
 )
 {
-    assert(X.size() % A.N_ == 0);  // check that X.size() is a multiple of A.N_
-    assert(Y.size() == A.M_ * (X.size() / A.N_));
+    gaxpy_check_(A, X, Y);
 
     std::vector<double> out = Y;  // copy the input matrix
 
@@ -870,8 +907,7 @@ std::vector<double> gaxpy_block(
     const std::vector<double>& Y
 )
 {
-    assert(X.size() % A.N_ == 0);  // check that X.size() is a multiple of A.N_
-    assert(Y.size() == A.M_ * (X.size() / A.N_));
+    gaxpy_check_(A, X, Y);
 
     std::vector<double> out = Y;  // copy the input matrix
 
@@ -910,8 +946,7 @@ std::vector<double> gaxpy_row(
     const std::vector<double>& Y
 )
 {
-    assert(X.size() % A.N_ == 0);  // check that X.size() is a multiple of A.N_
-    assert(Y.size() == A.M_ * (X.size() / A.N_));
+    gaxpy_check_(A, X, Y);
 
     std::vector<double> out = Y;  // copy the input matrix
 
@@ -944,8 +979,7 @@ std::vector<double> gatxpy_col(
     const std::vector<double>& Y
 )
 {
-    assert(X.size() % A.M_ == 0);  // check that X.size() is a multiple of A.M_
-    assert(Y.size() == A.N_ * (X.size() / A.M_));
+    gaxpy_check_<true>(A, X, Y);
 
     std::vector<double> out = Y;  // copy the input matrix
 
@@ -973,8 +1007,7 @@ std::vector<double> gatxpy_block(
     const std::vector<double>& Y
 )
 {
-    assert(X.size() % A.M_ == 0);  // check that X.size() is a multiple of A.N_
-    assert(Y.size() == A.N_ * (X.size() / A.M_));
+    gaxpy_check_<true>(A, X, Y);
 
     std::vector<double> out = Y;  // copy the input matrix
 
@@ -1008,8 +1041,7 @@ std::vector<double> gatxpy_row(
     const std::vector<double>& Y
 )
 {
-    assert(X.size() % A.M_ == 0);  // check that X.size() is a multiple of A.N_
-    assert(Y.size() == A.N_ * (X.size() / A.M_));
+    gaxpy_check_<true>(A, X, Y);
 
     std::vector<double> out = Y;  // copy the input matrix
 

@@ -124,7 +124,6 @@ void lsolve_inplace_opt(const CSCMatrix& L, std::span<double> x)
 }
 
 
-// TODO overload with CSCMatrix RHS.
 std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
 {
     return detail::trisolve_dense(L, b, lsolve_inplace_opt);
@@ -595,13 +594,11 @@ void spsolve(
             continue;  // x(j) is not in the pattern of G
         }
         double& xj = x[j];                              // cache reference to value
-        if (xj != 0) {
-            xj /= A.v_[lower ? A.p_[J] : A.p_[J+1] - 1];    // x(j) /= G(j, j)
-            csint p = lower ? A.p_[J] + 1 : A.p_[J];        // lower: L(j,j) 1st entry
-            csint q = lower ? A.p_[J+1]   : A.p_[J+1] - 1;  // up: U(j,j) last entry
-            for (; p < q; p++) {
-                x[A.i_[p]] -= A.v_[p] * xj;              // x[i] -= G(i, j) * x[j]
-            }
+        xj /= A.v_[lower ? A.p_[J] : A.p_[J+1] - 1];    // x(j) /= G(j, j)
+        csint p = lower ? A.p_[J] + 1 : A.p_[J];        // lower: L(j,j) 1st entry
+        csint q = lower ? A.p_[J+1]   : A.p_[J+1] - 1;  // up: U(j,j) last entry
+        for (; p < q; p++) {
+            x[A.i_[p]] -= A.v_[p] * xj;              // x[i] -= G(i, j) * x[j]
         }
     }
 }

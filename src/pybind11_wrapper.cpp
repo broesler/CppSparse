@@ -256,7 +256,26 @@ PYBIND11_MODULE(csparse, m)
     //--------------------------------------------------------------------------
     //        COOMatrix class
     //--------------------------------------------------------------------------
-    py::class_<cs::COOMatrix>(m, "COOMatrix")
+    py::class_<cs::COOMatrix>(m, "COOMatrix",
+        R"pbdoc(
+        A class to represent a sparse matrix in Coordinate (COO) format.
+
+        Attributes
+        ----------
+        data : (nnz,) np.array of float
+            The non-zero values of the matrix.
+        row : (nnz,) np.array of int
+            The row indices of the non-zero values.
+        col : (nnz,) np.array of int
+            The column indices of the non-zero values.
+        nnz : int
+            The number of non-zero elements in the matrix.
+        nzmax : int
+            The maximum number of non-zero elements allocated.
+        shape : 2-tuple
+            The shape of the matrix.
+        )pbdoc"
+    )
         .def(py::init<>())
         .def(py::init<
             const std::vector<double>&,
@@ -276,7 +295,26 @@ PYBIND11_MODULE(csparse, m)
             py::arg("N"),
             py::arg("density")=0.1,
             py::kw_only(),
-            py::arg("seed")=0
+            py::arg("seed")=0,
+            R"pbdoc(
+            Create a random sparse matrix in COO format.
+
+            Parameters
+            ----------
+            M : int
+                The number of rows.
+            N : int
+                The number of columns.
+            density : float, optional
+                The fraction of non-zero elements. Default is 0.1.
+            seed : int, optional
+                The random seed. Default is 0.
+
+            Returns
+            -------
+            COOMatrix
+                A random sparse matrix in COO format.
+            )pbdoc"
         )
         .def(py::init<const cs::CSCMatrix&>())
         .def_property_readonly("nnz", &cs::COOMatrix::nnz)
@@ -292,7 +330,21 @@ PYBIND11_MODULE(csparse, m)
         .def_property_readonly("row", &cs::COOMatrix::row)
         .def_property_readonly("col", &cs::COOMatrix::col)
         //
-        .def("insert", py::overload_cast<cs::csint, cs::csint, double>(&cs::COOMatrix::insert))
+        .def("insert",
+            py::overload_cast<cs::csint, cs::csint, double>(&cs::COOMatrix::insert),
+            R"pbdoc(
+            Insert a single value into the matrix at position (i, j).
+
+            Parameters
+            ----------
+            i : int
+                The row index.
+            j : int
+                The column index.
+            v : float
+                The value to insert.
+            )pbdoc"
+        )
         .def("__setitem__",
             [](cs::COOMatrix& A, py::tuple t, double v) {
                 cs::csint i = t[0].cast<cs::csint>();
@@ -301,20 +353,92 @@ PYBIND11_MODULE(csparse, m)
             }
         )
         //
-        .def("compress", &cs::COOMatrix::compress)
-        .def("tocsc", &cs::COOMatrix::tocsc)
+        .def("compress", &cs::COOMatrix::compress,
+            R"pbdoc(
+            Convert the COO matrix to a compressed sparse column (CSC) format.
+
+            Returns
+            -------
+            CSCMatrix
+                The equivalent matrix in CSC format. The columns are not
+                guaranteed to be sorted, and duplicates are allowed.
+            )pbdoc"
+        )
+        .def("tocsc", &cs::COOMatrix::tocsc,
+            R"pbdoc(
+            Convert the COO matrix to a compressed sparse column (CSC) format.
+
+            Returns
+            -------
+            CSCMatrix
+                The equivalent matrix in canonical CSC format. The columns are
+                guaranteed to be sorted, and duplicate entries are summed.
+            )pbdoc"
+        )
         .def("toscipy",
             [](const cs::COOMatrix& self) {
                 return scipy_from_coo(self);
-            }
+            },
+            R"pbdoc(
+            Convert the COO matrix to a SciPy sparse matrix.
+
+            Returns
+            -------
+            scipy.sparse.coo_matrix
+                The equivalent SciPy COO sparse matrix.
+            )pbdoc"
         )
-        .def("to_dense_vector", &cs::COOMatrix::to_dense_vector, py::arg("order")='F')
-        .def("toarray", &sparse_to_ndarray<cs::COOMatrix>, py::arg("order")='C')
+        .def("to_dense_vector", &cs::COOMatrix::to_dense_vector, py::arg("order")='F',
+            R"pbdoc(
+            Convert the COO matrix to a dense vector.
+
+            Parameters
+            ----------
+            order : {'C', 'F'}, optional
+                The order of the array, either 'C' for row-major or 'F' for
+                column-major order. Default is 'F'.
+
+            Returns
+            -------
+            np.ndarray
+                A dense array representation of the matrix.
+            )pbdoc"
+        )
+        .def("toarray", &sparse_to_ndarray<cs::COOMatrix>, py::arg("order")='C',
+            R"pbdoc(
+            Convert the COO matrix to a dense vector.
+
+            Parameters
+            ----------
+            order : {'C', 'F'}, optional
+                The order of the array, either 'C' for row-major or 'F' for
+                column-major order. Default is 'F'.
+
+            Returns
+            -------
+            np.ndarray
+                A dense array representation of the matrix.
+            )pbdoc"
+        )
         //
         .def("transpose", &cs::COOMatrix::transpose)
         .def_property_readonly("T", &cs::COOMatrix::T)
         //
-        .def("dot", &cs::COOMatrix::dot)
+        .def("dot", &cs::COOMatrix::dot,
+            R"pbdoc(
+            Multiply the COO matrix by a dense vector.
+
+            Parameters
+            ----------
+            x : np.ndarray
+                The dense vector by which to multiply.
+
+            Returns
+            -------
+            np.ndarray
+                The result of the matrix-vector multiplication.
+            )pbdoc"
+        )
         .def("__matmul__", &cs::COOMatrix::dot)
         //
         .def("__repr__", [](const cs::COOMatrix& A) {

@@ -280,12 +280,17 @@ TEST_CASE("LU Solution", "[lusol]") {
 
     const std::vector<double> b = A * expect;
 
-    // TODO test with different pivot tolerance
-    // Solve Ax = b
-    std::vector<double> x = lu_solve(A, b, order);
+    const std::vector<double> piv_tols = {0.0, 1e-3, 1.0};
 
-    // Check that Ax = b
-    check_vectors_allclose(x, expect, solve_tol);
+    for (const auto& piv_tol : piv_tols) {
+        CAPTURE(piv_tol);
+
+        // Solve Ax = b
+        std::vector<double> x = lu_solve(A, b, order, piv_tol);
+
+        // Check that Ax = b
+        check_vectors_allclose(x, expect, solve_tol);
+    }
 }
 
 

@@ -203,5 +203,60 @@ def test_droptol(A):
     assert_allclose(A.toarray(), B.toarray(), atol=1e-15)
 
 
+# -----------------------------------------------------------------------------
+#         Test 2D matrix input to gaxpy functions
+# -----------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    "gaxpy_func", [csparse.gaxpy_col, csparse.gaxpy_row, csparse.gaxpy_block]
+)
+def test_gaxpy_2D(gaxpy_func, subtests):
+    """Test gaxpy with 2D matrix input."""
+    rng = np.random.default_rng(56)
+
+    for overunder in ['over', 'under']:
+        with subtests.test(overunder=overunder):
+            if overunder == 'over':
+                M, N, K = 10, 7, 5
+            else:  # under
+                M, N, K = 5, 7, 10
+
+            A = sparse.random_array(
+                (M, N), density=0.8, format='csc', random_state=rng
+            )
+            X = rng.random((N, K))
+            Y = rng.random((M, K))
+
+            Z = A @ X + Y
+            Q = gaxpy_func(A, X, Y)
+
+            assert_allclose(Q, Z, atol=1e-15)
+
+
+@pytest.mark.parametrize(
+    "gatxpy_func", [csparse.gatxpy_col, csparse.gatxpy_row, csparse.gatxpy_block]
+)
+def test_gatxpy_2D(gatxpy_func, subtests):
+    """Test gatxpy with 2D matrix input."""
+    rng = np.random.default_rng(56)
+
+    for overunder in ['over', 'under']:
+        with subtests.test(overunder=overunder):
+            if overunder == 'over':
+                M, N, K = 10, 7, 5
+            else:  # under
+                M, N, K = 5, 7, 10
+
+            A = sparse.random_array(
+                (M, N), density=0.8, format='csc', random_state=rng
+            )
+            X = rng.random((M, K))
+            Y = rng.random((N, K))
+
+            Z = A.T @ X + Y
+            Q = gatxpy_func(A, X, Y)
+
+            assert_allclose(Q, Z, atol=1e-15)
+
+
 # =============================================================================
 # =============================================================================

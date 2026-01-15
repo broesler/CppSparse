@@ -29,7 +29,26 @@ PYBIND11_MODULE(csparse, m)
     //--------------------------------------------------------------------------
     //        Structs
     //--------------------------------------------------------------------------
-    py::class_<cs::Problem>(m, "Problem")
+    py::class_<cs::Problem>(m, "Problem",
+        R"pbdoc(
+        A data structure to represent a sparse linear system *Ax = b*.
+
+        Attributes
+        ----------
+        A : (M, N) CSCMatrix
+            The original matrix A.
+        C : (M, M) CSCMatrix
+            The symmetric version of the original matrix.
+        is_sym : int
+            -1 if A is lower triangular, 1 if upper triangular, 0 otherwise.
+        b : (M,) np.ndarray
+            The right-hand side vector b.
+        x : (N,) np.ndarray
+            The solution vector x.
+        resid : (N,) np.ndarray
+            The residual vector *b - Ax*.
+        )pbdoc"
+    )
         .def(py::init<>())
         .def_property_readonly("A", [](const cs::Problem& p) { return scipy_from_csc(p.A); })
         .def_property_readonly("C", [](const cs::Problem& p) { return scipy_from_csc(p.C); })
@@ -41,10 +60,37 @@ PYBIND11_MODULE(csparse, m)
             &cs::Problem::from_matrix,
             py::arg("T"),
             py::kw_only(),
-            py::arg("droptol")=0
+            py::arg("droptol")=0,
+            R"pbdoc(
+            Create a Problem instance from a given matrix T.
+
+            Parameters
+            ----------
+            T : (M, N) CSCMatrix
+                The input matrix.
+            droptol : float, optional
+                Drop tolerance for zeroing small entries. Default is 0 (no dropping).
+
+            Returns
+            -------
+            Problem
+                An instance of the Problem class.
+            )pbdoc"
         );
 
-    py::class_<cs::CholResult>(m, "CholResult")
+    // TODO bind the solve methods
+    py::class_<cs::CholResult>(m, "CholResult",
+        R"pbdoc(
+        A data structure to represent the result of a Cholesky factorization.
+
+        Attributes
+        ----------
+        L : (N, N) CSCMatrix
+            The lower-triangular Cholesky factor.
+        p : (N,) np.ndarray of int
+            The fill-reducing permutation vector.
+        )pbdoc"
+    )
         .def_property_readonly("L", [](const cs::CholResult& res) { return scipy_from_csc(res.L); })
         .def_property_readonly("p", [](const cs::CholResult& res) { return cs::inv_permute(res.p_inv); })
         .def("__iter__", [](const cs::CholResult& res) {
@@ -55,8 +101,25 @@ PYBIND11_MODULE(csparse, m)
             return py::make_iterator(result);
         });
 
-    // Bind the QRResult struct
-    py::class_<cs::QRResult>(m, "QRResult")
+    // TODO bind the solve methods
+    py::class_<cs::QRResult>(m, "QRResult",
+        R"pbdoc(
+        A data structure to represent the result of a QR factorization.
+
+        Attributes
+        ----------
+        V : (M, K) CSCMatrix
+            The Householder vectors.
+        beta : (K,) np.ndarray of float
+            The scaling factors for the Householder reflections.
+        R : (M, N) CSCMatrix
+            The upper-triangular matrix R.
+        p : (M,) np.ndarray of int
+            The row permutation vector.
+        q : (N,) np.ndarray of int
+            The column permutation vector.
+        )pbdoc"
+    )
         .def_property_readonly("V", [](const cs::QRResult& qr) { return scipy_from_csc(qr.V); })
         .def_readonly("beta", &cs::QRResult::beta)
         .def_property_readonly("R", [](const cs::QRResult& qr) { return scipy_from_csc(qr.R); })
@@ -74,8 +137,23 @@ PYBIND11_MODULE(csparse, m)
             return py::make_iterator(result);
         });
 
-    // Bind the LUResult struct
-    py::class_<cs::LUResult>(m, "LUResult")
+    // TODO bind the solve methods
+    py::class_<cs::LUResult>(m, "LUResult",
+        R"pbdoc(
+        A data structure to represent the result of an LU factorization.
+
+        Attributes
+        ----------
+        L : (M, M) CSCMatrix
+            The lower-triangular matrix L.
+        U : (M, N) CSCMatrix
+            The upper-triangular matrix U.
+        p : (M,) np.ndarray of int
+            The row permutation vector.
+        q : (N,) np.ndarray of int
+            The column permutation vector.
+        )pbdoc"
+    )
         .def_property_readonly("L", [](const cs::LUResult& lu) { return scipy_from_csc(lu.L); })
         .def_property_readonly("U", [](const cs::LUResult& lu) { return scipy_from_csc(lu.U); })
         .def_property_readonly("p", [](const cs::LUResult& lu) { return cs::inv_permute(lu.p_inv); })
@@ -91,7 +169,18 @@ PYBIND11_MODULE(csparse, m)
         });
 
     // Bind the MaxMatch struct
-    py::class_<cs::MaxMatch>(m, "MaxMatch")
+    py::class_<cs::MaxMatch>(m, "MaxMatch",
+        R"pbdoc(
+        A data structure to represent the result of a maximum matching.
+
+        Attributes
+        ----------
+        jmatch : (M,) np.ndarray of int
+            The column matches for each row.
+        imatch : (N,) np.ndarray of int
+            The row matches for each column.
+        )pbdoc"
+    )
         .def_readonly("jmatch", &cs::MaxMatch::jmatch)
         .def_readonly("imatch", &cs::MaxMatch::imatch)
         .def("__iter__", [](const cs::MaxMatch& res) {
@@ -100,7 +189,28 @@ PYBIND11_MODULE(csparse, m)
         });
 
     // Bind the DMPermResult struct
-    py::class_<cs::DMPermResult>(m, "DMPermResult")
+    py::class_<cs::DMPermResult>(m, "DMPermResult",
+        R"pbdoc(
+        A data structure to represent the result of a Dulmage-Mendelsohn permutation.
+
+        Attributes
+        ----------
+        p : (M,) np.ndarray of int
+            The row permutation vector.
+        q : (N,) np.ndarray of int
+            The column permutation vector.
+        r : (Nb+1,) np.ndarray of int
+            The row block boundaries of the permuted matrix.
+        s : (Nb+1,) np.ndarray of int
+            The column block boundaries of the permuted matrix.
+        cc : (5,) np.ndarray of int
+            The coarse column decomposition.
+        rr : (5,) np.ndarray of int
+            The coarse row decomposition.
+        Nb : int
+            The number of blocks in the fine Dulmage-Mendelsohn decomposition.
+        )pbdoc"
+    )
         .def_readonly("p", &cs::DMPermResult::p)
         .def_readonly("q", &cs::DMPermResult::q)
         .def_readonly("r", &cs::DMPermResult::r)
@@ -121,7 +231,20 @@ PYBIND11_MODULE(csparse, m)
         });
 
     // Bind the SCCResult struct
-    py::class_<cs::SCCResult>(m, "SCCResult")
+    py::class_<cs::SCCResult>(m, "SCCResult",
+        R"pbdoc(
+        A data structure representing the strongly connected components of a matrix.
+
+        Attributes
+        ----------
+        p : (M,) np.ndarray of int
+            The row permutation vector.
+        r : (Nb+1,) np.ndarray of int
+            The block boundaries of the permuted matrix.
+        Nb : int
+            The number of blocks in the decomposition.
+        )pbdoc"
+    )
         .def_readonly("p", &cs::SCCResult::p)
         .def_readonly("r", &cs::SCCResult::r)
         .def_readonly("Nb", &cs::SCCResult::Nb)
@@ -494,10 +617,29 @@ PYBIND11_MODULE(csparse, m)
             return cs::etree(A, ata);
         },
         py::arg("A"),
-        py::arg("ATA")=false
+        py::arg("ATA")=false,
+        R"pbdoc(
+        Compute the elimination tree of a matrix `A` or :math:`A^T A`.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The matrix to factorize.
+        ATA : bool, optional
+            If True, compute the elimination tree of :math:`A^T A`. Default is False.
+        )pbdoc"
     );
 
-    m.def("post", &cs::post);
+    m.def("post", &cs::post, py::arg("parent"),
+        R"pbdoc(
+        Compute the postordering of an elimination tree.
+
+        Parameters
+        ----------
+        parent : array_like of int
+            The parent vector of the elimination tree.
+        )pbdoc"
+    );
 
     m.def("rowcnt",
         [] (
@@ -508,7 +650,19 @@ PYBIND11_MODULE(csparse, m)
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
             return cs::rowcnt(A, parent, post);
         },
-        py::arg("A"), py::arg("parent"), py::arg("post")
+        py::arg("A"), py::arg("parent"), py::arg("post"),
+        R"pbdoc(
+        Compute the row counts for Cholesky factorization.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The matrix to factorize.
+        parent : array_like of int
+            The parent vector of the elimination tree.
+        post : array_like of int
+            The postordering of the elimination tree.
+        )pbdoc"
     );
 
     m.def("chol_colcounts",
@@ -516,8 +670,17 @@ PYBIND11_MODULE(csparse, m)
             const cs::CSCMatrix A = csc_from_scipy(A_scipy);
             return cs::chol_colcounts(A, ata);
         },
-        py::arg("A"),
-        py::arg("ATA")=false
+        py::arg("A"), py::arg("ATA")=false,
+        R"pbdoc(
+        Compute the column counts for Cholesky factorization.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The matrix to factorize.
+        ATA : bool, optional
+            If True, compute the column counts for :math:`A^T A`. Default is False.
+        )pbdoc"
     );
 
     m.def("chol",
@@ -531,9 +694,20 @@ PYBIND11_MODULE(csparse, m)
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
             return cs::chol(A, S);
         },
-        py::arg("A"),
-        py::arg("order")="Natural",
-        py::arg("use_postorder")=false
+        py::arg("A"), py::arg("order")="Natural", py::arg("use_postorder")=false,
+        R"pbdoc(
+        Perform Cholesky factorization of a sparse matrix.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The matrix to factorize.
+        order : str, optional
+            The ordering strategy to use. Options are "Natural", "AMD", "COLAMD".
+            Default is "Natural".
+        use_postorder : bool, optional
+            Whether to use postordering in the factorization. Default is False.
+        )pbdoc"
     );
 
     m.def("symbolic_cholesky",
@@ -553,7 +727,20 @@ PYBIND11_MODULE(csparse, m)
         },
         py::arg("A"),
         py::arg("order")="Natural",
-        py::arg("use_postorder")=false
+        py::arg("use_postorder")=false,
+        R"pbdoc(
+        Perform symbolic Cholesky factorization of a sparse matrix.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The matrix to factorize.
+        order : str, optional
+            The ordering strategy to use. Options are "Natural", "AMD", "COLAMD".
+            Default is "Natural".
+        use_postorder : bool, optional
+            Whether to use postordering in the factorization. Default is False.
+        )pbdoc"
     );
 
     m.def("leftchol",
@@ -571,7 +758,21 @@ PYBIND11_MODULE(csparse, m)
         },
         py::arg("A"),
         py::arg("order")="Natural",
-        py::arg("use_postorder")=false
+        py::arg("use_postorder")=false,
+        R"pbdoc(
+        Perform left-looking Cholesky factorization of a sparse matrix,
+        given the non-zero pattern.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The matrix to factorize.
+        order : str, optional
+            The ordering strategy to use. Options are "Natural", "AMD", "COLAMD".
+            Default is "Natural".
+        use_postorder : bool, optional
+            Whether to use postordering in the factorization. Default is False.
+        )pbdoc"
     );
 
     m.def("rechol",
@@ -589,7 +790,21 @@ PYBIND11_MODULE(csparse, m)
         },
         py::arg("A"),
         py::arg("order")="Natural",
-        py::arg("use_postorder")=false
+        py::arg("use_postorder")=false,
+        R"pbdoc(
+        Perform up-looking Cholesky factorization of a sparse matrix, given the
+        non-zero pattern.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The matrix to factorize.
+        order : str, optional
+            The ordering strategy to use. Options are "Natural", "AMD", "COLAMD".
+            Default is "Natural".
+        use_postorder : bool, optional
+            Whether to use postordering in the factorization. Default is False.
+        )pbdoc"
     );
 
     m.def("chol_update_",
@@ -602,7 +817,24 @@ PYBIND11_MODULE(csparse, m)
             const cs::CSCMatrix C = csc_from_scipy(C_scipy);
             return scipy_from_csc(cs::chol_update(L, update, C, parent));
         },
-        py::arg("L"), py::arg("update"), py::arg("C"), py::arg("parent")
+        py::arg("L"),
+        py::arg("update"),
+        py::arg("C"),
+        py::arg("parent"),
+        R"pbdoc(
+        Perform a rank-k update or downdate of a Cholesky factorization.
+
+        Parameters
+        ----------
+        L : (N, N) CSCMatrix
+            The Cholesky factor to be updated or downdated.
+        update : bool
+            If True, perform an update; if False, perform a downdate.
+        C : (N, k) CSCMatrix
+            The matrix used for the rank-k update/downdate.
+        parent : array_like of int
+            The parent vector of the elimination tree.
+        )pbdoc"
     );
 
     // ---------- QR decomposition
@@ -620,7 +852,20 @@ PYBIND11_MODULE(csparse, m)
         },
         py::arg("A"),
         py::arg("order")="Natural",
-        py::arg("use_postorder")=false
+        py::arg("use_postorder")=false,
+        R"pbdoc(
+        Perform QR factorization of a sparse matrix.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The matrix to factorize.
+        order : str, optional
+            The ordering strategy to use. Options are "Natural", "AMD", "COLAMD".
+            Default is "Natural".
+        use_postorder : bool, optional
+            Whether to use postordering in the factorization. Default is False.
+        )pbdoc"
     );
 
     // ---------- LU decomposition
@@ -639,7 +884,23 @@ PYBIND11_MODULE(csparse, m)
         py::arg("A"),
         py::arg("order")="Natural",
         py::arg("qr_bound")=false,
-        py::arg("alpha")=1.0
+        py::arg("alpha")=1.0,
+        R"pbdoc(
+        Perform symbolic LU factorization of a sparse matrix.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The matrix to factorize.
+        order : str, optional
+            The ordering strategy to use. Options are "Natural", "AMD", "COLAMD".
+            Default is "Natural".
+        qr_bound : bool, optional
+            Whether to use a QR-based bound for allocating memory. Default is False.
+        alpha : float, optional
+            The multiple of the memory estimate, :math:`\alpha(4 |A| + N)`, to
+            allocate. Default is 1.0.
+        )pbdoc"
     );
 
     // Define the python lu function here, and call the C++ slu function.
@@ -656,7 +917,22 @@ PYBIND11_MODULE(csparse, m)
         },
         py::arg("A"),
         py::arg("order")="Natural",
-        py::arg("tol")=1.0
+        py::arg("tol")=1.0,
+        R"pbdoc(
+        Perform LU factorization of a sparse matrix.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The matrix to factorize.
+        order : str, optional
+            The ordering strategy to use. Options are "Natural", "AMD", "COLAMD".
+            Default is "Natural".
+        tol : float, optional
+            The pivot tolerance. Default is 1.0 (partial pivoting). Smaller
+            values increasingly rely on the existing diagonal elements, which
+            decreases fill-in but may lead to numerical instability.
+        )pbdoc"
     );
 
     // ---------- Fill-reducing orderings
@@ -670,16 +946,62 @@ PYBIND11_MODULE(csparse, m)
             return cs::amd(A, order_enum);
         },
         py::arg("A"),
-        py::arg("order")="APlusAT"
+        py::arg("order")="APlusAT",
+        R"pbdoc(
+        Compute the approximate minimum degree (AMD) ordering of a sparse matrix.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The matrix for which to compute the ordering.
+        order : str, optional
+            The form of the matrix to use for ordering. Options are:
+
+            * `Natural`: natural ordering (no permutation)
+            * `APlusAT`: AMD ordering of :math:`A + A^T`. This option is
+              appropriate for Cholesky factorization, or LU factorization with
+              substantial entries on the diagonal and a roughly symmetric
+              nonzero pattern. If `lu` is used, `tol < 1.0` should be used to
+              prefer the diagonal entries for partial pivoting.
+            * `ATANoDenseRows`: AMD ordering of :math:`A^T A`, with "dense"
+              rows removed from `A`. This option is appropriate for LU
+              factorization of unsymmetric matrices and produces a similar
+              ordering to that of `COLAMD`.
+            * `ATA`: AMD ordering of :math:`A^T A`. This option is appropriate
+              for QR factorization, or for LU factorization if `A` has no
+              "dense" rows. A "dense" row is defined as a row with more than
+              :math:`10 \sqrt{N}` nonzeros, where `N` is the number of columns
+              in the matrix.
+
+        Returns
+        -------
+        p : (N,) np.ndarray of int
+            The AMD ordering permutation vector.
+        )pbdoc"
     );
 
     m.def("maxtrans_r",
-        [] (const py::object& A_scipy, cs::csint seed=0) {
+        [] (const py::object& A_scipy) {
             const cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            cs::csint seed = 0;  // unused, but required by interface
             return cs::detail::maxtrans_r(A, seed);
         },
         py::arg("A"),
-        py::arg("seed")=0
+        R"pbdoc(
+        Compute a maximum transversal of a sparse matrix using a recursive
+        algorithm.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The input matrix.
+
+        Returns
+        -------
+        p : (N,) np.ndarray of int
+            The column indices of the maximum transversal. If column ``j`` is
+            not matched, then ``p[j] = -1``.
+        )pbdoc"
     );
 
     m.def("maxtrans",
@@ -688,7 +1010,21 @@ PYBIND11_MODULE(csparse, m)
             return cs::maxtrans(A, seed);
         },
         py::arg("A"),
-        py::arg("seed")=0
+        py::arg("seed")=0,
+        R"pbdoc(
+        Compute a maximum transversal of a sparse matrix.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The input matrix.
+        seed : int, optional
+            Seed for the random number generator. Default is 0. If `seed` is 0,
+            no permutation is applied. If `seed` is -1, the permutation is the
+            reverse of the identity. Otherwise, a random permutation is
+            generated.
+
+        )pbdoc"
     );
 
     m.def("dmperm",
@@ -697,7 +1033,26 @@ PYBIND11_MODULE(csparse, m)
             return cs::dmperm(A, seed);
         },
         py::arg("A"),
-        py::arg("seed")=0
+        py::arg("seed")=0,
+        R"pbdoc(
+        Compute the Dulmage-Mendelsohn decomposition of a sparse matrix.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The input matrix.
+        seed : int, optional
+            Seed for the random number generator. Default is 0. If `seed` is 0,
+            no permutation is applied. If `seed` is -1, the permutation is the
+            reverse of the identity. Otherwise, a random permutation is
+            generated.
+
+        Returns
+        -------
+        DMPermResult
+            A data structure containing the row and column permutations, as well
+            as the block boundaries of the decomposition.
+        )pbdoc"
     );
 
     m.def("scc",
@@ -705,7 +1060,21 @@ PYBIND11_MODULE(csparse, m)
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
             return cs::scc(A);
         },
-        py::arg("A")
+        py::arg("A"),
+        R"pbdoc(
+        Compute the strongly connected components of a matrix.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The input matrix.
+
+        Returns
+        -------
+        SCCResult
+            A data structure containing the component labels and the number of
+            components.
+        )pbdoc"
     );
 
     //--------------------------------------------------------------------------
@@ -733,7 +1102,23 @@ PYBIND11_MODULE(csparse, m)
             cs::reach(A, b, 0, xi);
             return xi;
         },
-        py::arg("A"), py::arg("b")
+        py::arg("A"),
+        py::arg("b"),
+        R"pbdoc(
+        Compute the reachability set of a sparse matrix and a right-hand side vector.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The input matrix.
+        b : (M, 1) CSCMatrix
+            The right-hand side vector.
+
+        Returns
+        -------
+        xi : np.ndarray of int
+            The row indices that are reachable.
+        )pbdoc"
     );
     
     m.def("reach_r", 
@@ -755,7 +1140,24 @@ PYBIND11_MODULE(csparse, m)
 
             return cs::detail::reach_r(A, b);
         },
-        py::arg("A"), py::arg("b")
+        py::arg("A"),
+        py::arg("b"),
+        R"pbdoc(
+        Compute the reachability set of a sparse matrix and a right-hand side
+        vector, using a recursive algorithm.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The input matrix.
+        b : (M, 1) CSCMatrix
+            The right-hand side vector.
+
+        Returns
+        -------
+        xi : np.ndarray of int
+            The row indices that are reachable.
+        )pbdoc"
     );
 
     //--------------------------------------------------------------------------
@@ -772,7 +1174,22 @@ PYBIND11_MODULE(csparse, m)
             }
         ),
         py::arg("L"),
-        py::arg("B")
+        py::arg("B"),
+        R"pbdoc(
+        Solve a lower-triangular system of equations `L x = B`.
+
+        Parameters
+        ----------
+        L : (N, N) CSCMatrix
+            The lower-triangular matrix.
+        B : (N,) or (N, K) array_like or sparse matrix
+            The right-hand side vector or matrix.
+
+        Returns
+        -------
+        x : (N,) or (N, K) np.ndarray or sparse matrix
+            The solution vector or matrix. The type matches that of `B`.
+        )pbdoc"
     );
 
     m.def(
@@ -786,13 +1203,97 @@ PYBIND11_MODULE(csparse, m)
             }
         ),
         py::arg("U"),
-        py::arg("B")
+        py::arg("B"),
+        R"pbdoc(
+        Solve a upper-triangular system of equations `U x = B`.
+
+        Parameters
+        ----------
+        U : (N, N) CSCMatrix
+            The upper-triangular matrix.
+        B : (N,) or (N, K) array_like or sparse matrix
+            The right-hand side vector or matrix.
+
+        Returns
+        -------
+        x : (N,) or (N, K) np.ndarray or sparse matrix
+            The solution vector or matrix. The type matches that of `B`.
+        )pbdoc"
     );
 
-    m.def("ltsolve", make_dense_solver(&cs::ltsolve), py::arg("L"), py::arg("B"));
-    m.def("utsolve", make_dense_solver(&cs::utsolve), py::arg("U"), py::arg("B"));
-    m.def("lsolve_opt", make_dense_solver(&cs::lsolve_opt), py::arg("L"), py::arg("B"));
-    m.def("usolve_opt", make_dense_solver(&cs::usolve_opt), py::arg("U"), py::arg("B"));
+    m.def("ltsolve", make_dense_solver(&cs::ltsolve), py::arg("L"), py::arg("B"),
+        R"pbdoc(
+        Solve a transposed lower-triangular system of equations `L^T x = B`.
+
+        Parameters
+        ----------
+        L : (N, N) CSCMatrix
+            The lower-triangular matrix.
+        B : (N,) or (N, K) array_like or sparse matrix
+            The right-hand side vector or matrix.
+
+        Returns
+        -------
+        x : (N,) or (N, K) np.ndarray or sparse matrix
+            The solution vector or matrix. The type matches that of `B`.
+        )pbdoc"
+    );
+
+    m.def("utsolve", make_dense_solver(&cs::utsolve), py::arg("U"), py::arg("B"),
+        R"pbdoc(
+        Solve a transposed upper-triangular system of equations `U^T x = B`.
+
+        Parameters
+        ----------
+        U : (N, N) CSCMatrix
+            The upper-triangular matrix.
+        B : (N,) or (N, K) array_like or sparse matrix
+            The right-hand side vector or matrix.
+
+        Returns
+        -------
+        x : (N,) or (N, K) np.ndarray or sparse matrix
+            The solution vector or matrix. The type matches that of `B`.
+        )pbdoc"
+    );
+
+    m.def("lsolve_opt", make_dense_solver(&cs::lsolve_opt), py::arg("L"), py::arg("B"),
+        R"pbdoc(
+        Solve a lower-triangular system of equations `L x = B`, with an
+        optimized algorithm.
+
+        Parameters
+        ----------
+        L : (N, N) CSCMatrix
+            The lower-triangular matrix.
+        B : (N,) or (N, K) array_like or sparse matrix
+            The right-hand side vector or matrix.
+
+        Returns
+        -------
+        x : (N,) or (N, K) np.ndarray or sparse matrix
+            The solution vector or matrix. The type matches that of `B`.
+        )pbdoc"
+    );
+
+    m.def("usolve_opt", make_dense_solver(&cs::usolve_opt), py::arg("U"), py::arg("B"),
+        R"pbdoc(
+        Solve an upper-triangular system of equations `U x = B`, with an
+        optimized algorithm.
+
+        Parameters
+        ----------
+        U : (N, N) CSCMatrix
+            The upper-triangular matrix.
+        B : (N,) or (N, K) array_like or sparse matrix
+            The right-hand side vector or matrix.
+
+        Returns
+        -------
+        x : (N,) or (N, K) np.ndarray or sparse matrix
+            The solution vector or matrix. The type matches that of `B`.
+        )pbdoc"
+    );
 
     //--------------------------------------------------------------------------
     //      Full Matrix Solvers
@@ -818,7 +1319,25 @@ PYBIND11_MODULE(csparse, m)
         ),
         py::arg("A"),
         py::arg("B"),
-        py::arg("order")="APlusAT"  // CSparse default is "APlusAT"
+        py::arg("order")="APlusAT",  // CSparse default is "APlusAT"
+        R"pbdoc(
+        Solve a system of equations `A x = B` using Cholesky factorization.
+
+        Parameters
+        ----------
+        A : (N, N) CSCMatrix
+            The symmetric positive definite matrix.
+        B : (N,) or (N, K) array_like or sparse matrix
+            The right-hand side vector or matrix.
+        order : str, optional
+            The ordering strategy to use. Options are "Natural", "AMD", "COLAMD",
+            "APlusAT". Default is "APlusAT".
+
+        Returns
+        -------
+        x : (N,) or (N, K) np.ndarray or sparse matrix
+            The solution vector or matrix. The type matches that of `B`.
+        )pbdoc"
     );
 
     m.def("qr_solve",
@@ -842,7 +1361,31 @@ PYBIND11_MODULE(csparse, m)
         ),
         py::arg("A"),
         py::arg("B"),
-        py::arg("order")="ATA"  // CSparse default is "ATA"
+        py::arg("order")="ATA",  // CSparse default is "ATA"
+        R"pbdoc(
+        Solve a system of equations `A x = B` using QR factorization.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The matrix.
+        B : (M,) or (M, K) array_like or sparse matrix
+            The right-hand side vector or matrix.
+        order : str, optional
+            The ordering strategy to use. Options are "Natural", "AMD", "COLAMD",
+            "ATA". Default is "ATA".
+
+        Returns
+        -------
+        x : (N,) or (N, K) np.ndarray or sparse matrix
+            The solution vector or matrix. The type matches that of `B`.
+
+        Notes
+        -----
+        If `A` has full column rank, this function returns th least-squares
+        solution to the system of equations. Otherwise, it returns
+        a minimum-norm solution, which may not be unique.
+        )pbdoc"
     );
 
     m.def("lu_solve",
@@ -872,7 +1415,32 @@ PYBIND11_MODULE(csparse, m)
         py::arg("B"),
         py::arg("order")="ATANoDenseRows",  // CSparse default is "ATANoDenseRows"
         py::arg("tol")=1.0,
-        py::arg("ir_steps")=0
+        py::arg("ir_steps")=0,
+        R"pbdoc(
+        Solve a system of equations `A x = B` using LU factorization.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The matrix.
+        B : (M,) or (M, K) array_like or sparse matrix
+            The right-hand side vector or matrix.
+        order : str, optional
+            The ordering strategy to use. Options are "Natural", "AMD", "COLAMD",
+            "ATANoDenseRows". Default is "ATANoDenseRows".
+        tol : float, optional
+            The pivot tolerance. Default is 1.0 (partial pivoting). Smaller
+            values increasingly rely on the diagonal entries for partial
+            pivoting, which decreases fill-in but may lead to numerical
+            instability.
+        ir_steps : int, optional
+            The number of iterative refinement steps to perform. Default is 0.
+
+        Returns
+        -------
+        x : (N,) or (N, K) np.ndarray or sparse matrix
+            The solution vector or matrix. The type matches that of `B`.
+        )pbdoc"
     );
 
     m.def("spsolve", 
@@ -885,11 +1453,34 @@ PYBIND11_MODULE(csparse, m)
             }
         ),
         py::arg("A"),
-        py::arg("B")
+        py::arg("B"),
+        R"pbdoc(
+        Solve a system of equations `A x = B` using sparse direct methods.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The matrix.
+        B : (M,) or (M, K) array_like or sparse matrix
+            The right-hand side vector or matrix.
+
+        Returns
+        -------
+        x : (N,) or (N, K) np.ndarray or sparse matrix
+            The solution vector or matrix. The type matches that of `B`.
+
+        See Also
+        --------
+        lsolve : Solve a lower-triangular system.
+        usolve : Solve an upper-triangular system.
+        chol_solve : Solve a system using Cholesky factorization.
+        qr_solve : Solve a system using QR factorization.
+        lu_solve : Solve a system using LU factorization.
+        )pbdoc"
     );
 
 }  // PYBIND11_MODULE
-   //
+
 
 /*==============================================================================
  *============================================================================*/

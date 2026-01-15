@@ -319,12 +319,13 @@ auto make_gaxpy_matrix_func(Func&& func)
  * @return  a new vector with the elements of `b_obj` permuted according to `p`
  */
 template <typename FuncD, typename FuncI>
-py::object dispatch_pvec_ipvec(
+py::object permute_impl_(
+    FuncD&& func_double,
+    FuncI&& func_int,
     const std::vector<cs::csint>& p,
-    const py::object& b_obj,
-    FuncD func_double,
-    FuncI func_int
-) {
+    const py::object& b_obj
+)
+{
     try {
         std::vector<double> b = b_obj.cast<std::vector<double>>();
         return py::cast(func_double(p, b));
@@ -339,43 +340,14 @@ py::object dispatch_pvec_ipvec(
 }
 
 
-/** Solve a linear system with dense RHS */
-template <typename DenseSolver>
-auto make_solver_dense(DenseSolver dense_solver)
+template <typename FuncD, typename FuncI>
+auto make_pvec_wrapper(FuncD&& func_double, FuncI&& func_int)
 {
-    return [dense_solver](
-        const py::object& A_scipy,
-        const py::object& B_obj
-    ) -> py::array {
-        const cs::CSCMatrix A = csc_from_scipy(A_scipy);
-        py::module_ sparse = py::module_::import("scipy.sparse");
-
-        if (sparse.attr("issparse")(B_obj).cast<bool>()) {
-            throw std::invalid_argument("RHS B must be a dense array.");
-        }
-
-        // Assume b is a dense vector, return a dense vector solution
-        py::module_ np = py::module_::import("numpy");
-        py::array b_np = np.attr("asarray")(B_obj);
-
-        int b_ndim = b_np.attr("ndim").cast<int>();
-        if (b_ndim != 1 && b_ndim != 2) {
-            throw std::invalid_argument("Input b must be a 1D or 2D array.");
-        }
-
-        py::tuple b_shape = b_np.attr("shape");
-        b_np = b_np.attr("ravel")(py::arg("order")="F");
-        std::vector<double> B = b_np.cast<std::vector<double>>();
-
-        std::vector<double> X = dense_solver(A, B);
-
-        if (b_ndim == 1) {
-            return py::cast(X);
-        } else {
-            py::array X_np = py::array(py::cast(X));
-            X_np = X_np.attr("reshape")(b_shape, py::arg("order")="F");
-            return X_np;
-        }
+    return [
+        func_double = std::forward<FuncD>(func_double),
+        func_int = std::forward<FuncI>(func_int)
+    ](const std::vector<cs::csint>& p, const py::object& b_obj) -> py::object {
+        return permute_impl_(func_double, func_int, p, b_obj);
     };
 }
 

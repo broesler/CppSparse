@@ -441,37 +441,37 @@ PYBIND11_MODULE(csparse, m)
     //--------------------------------------------------------------------------
     //        Utility Functions
     //--------------------------------------------------------------------------
-    // Define the pvec/ipvec function pointer types
-    using pvec_func_double_t = std::vector<double> (*)(const std::vector<cs::csint>&, const std::vector<double>&);
-    using pvec_func_csint_t = std::vector<cs::csint> (*)(const std::vector<cs::csint>&, const std::vector<cs::csint>&);
-
     m.def("pvec", 
-        [](const std::vector<cs::csint>& p, const py::object& b_obj) {
-            return dispatch_pvec_ipvec(
-                p,
-                b_obj,
-                static_cast<pvec_func_double_t>(&cs::pvec<double>),
-                static_cast<pvec_func_csint_t>(&cs::pvec<cs::csint>)
-            );
-        },
-        py::arg("p"), py::arg("b")
+        make_pvec_wrapper(
+            [](const std::vector<cs::csint>& p, const std::vector<double>& b) {
+                return cs::pvec<double>(p, b);
+            },
+            [](const std::vector<cs::csint>& p, const std::vector<cs::csint>& b) {
+                return cs::pvec<cs::csint>(p, b);
+            }
+        ),
+        py::arg("p"),
+        py::arg("b")
     );
-    m.def("ipvec", 
-        [](const std::vector<cs::csint>& p, const py::object& b_obj) {
-            return dispatch_pvec_ipvec(
-                p,
-                b_obj,
-                static_cast<pvec_func_double_t>(&cs::ipvec<double>),
-                static_cast<pvec_func_csint_t>(&cs::ipvec<cs::csint>)
-            );
-        },
-        py::arg("p"), py::arg("b")
+    m.def("ipvec",
+        make_pvec_wrapper(
+            [](const std::vector<cs::csint>& p, const std::vector<double>& b) {
+                return cs::ipvec<double>(p, b);
+            },
+            [](const std::vector<cs::csint>& p, const std::vector<cs::csint>& b) {
+                return cs::ipvec<cs::csint>(p, b);
+            }
+        ),
+        py::arg("p"),
+        py::arg("b")
     );
     m.def("inv_permute", &cs::inv_permute);
+
     m.def("scipy_from_coo", &scipy_from_coo);
     m.def("scipy_from_csc", &scipy_from_csc);
     m.def("csc_from_scipy", &csc_from_scipy);
     // m.def("coo_from_scipy", &coo_from_scipy);  // TODO
+
     m.def("residual_norm",
         [](const py::object& A_scipy,
            const std::vector<double>& x,

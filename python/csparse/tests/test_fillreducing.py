@@ -18,6 +18,14 @@ from scipy import linalg as la
 from scipy import sparse
 from scipy.sparse import linalg as spla
 
+try:
+    from sksparse.amd import amd
+    from sksparse.cholmod import symbfact
+    from sksparse.colamd import symamd
+    HAS_AMD = True
+except ImportError:
+    HAS_AMD = False
+
 import csparse
 
 from .helpers import (
@@ -45,26 +53,37 @@ def test_amd(A, request):
     k = np.random.default_rng().integers(N)
     A = A.todok()
     A[:, k] = 1.0
-
-    # TODO
-    # * scipy AMD ordering? Use sparse.splu(A, permc_spec='MMD_ATA')?
-    # * symbfact to compute lnz
+    A = A.tocsc()
 
     p = csparse.amd(A, order='APlusAT')
 
     assert is_valid_permutation(p)
 
-    if request.config.getoption('--make-figures'):
-        C = A + A.T + sparse.eye_array(N)
+    if HAS_AMD:
+        try:
+            p_sk = amd(A)
+        except Exception:
+            p_sk = symamd(A)
 
-        fig, axs = plt.subplots(num=1, ncols=2, clear=True)
+    # Compute lnz of each permutation
+    C = A + A.T + sparse.eye_array(N)
+    Cp = C[p[:, np.newaxis], p]
+    Cp_sk = C[p_sk[:, np.newaxis], p_sk]
+
+    lnz = csparse.chol_colcounts(Cp).sum()
+    lnz_sk = symbfact(Cp_sk)[0].sum()  # first output is column counts of L
+    print(f"{N = :4d}, lnz: {lnz:6d}, {lnz_sk:6d}")
+
+    if request.config.getoption('--make-figures'):
+        fig, axs = plt.subplots(num=1, ncols=3, clear=True)
 
         axs[0].spy(C, markersize=1)
-        axs[1].spy(C[p][:, p], markersize=1)
-        # TODO scipy ordering?
+        axs[1].spy(Cp, markersize=1)
+        axs[2].spy(Cp_sk, markersize=1)
 
         axs[0].set_title('C = A + A.T + I')
         axs[1].set_title('AMD Reordered C')
+        axs[2].set_title('sksparse AMD Reordered C')
 
         fig_dir = Path('test_figures/test_amd_random')
         fig_dir.mkdir(parents=True, exist_ok=True)

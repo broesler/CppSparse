@@ -772,7 +772,7 @@ PYBIND11_MODULE(csparse, m)
             }
         ),
         py::arg("L"),
-        py::arg("b")
+        py::arg("B")
     );
 
     m.def(
@@ -786,52 +786,13 @@ PYBIND11_MODULE(csparse, m)
             }
         ),
         py::arg("U"),
-        py::arg("b")
+        py::arg("B")
     );
 
-    m.def(
-        "ltsolve",
-        make_dense_solver(
-            [](const cs::CSCMatrix& L, const std::vector<double>& B) {
-                return cs::ltsolve(L, B);
-            }
-        ),
-        py::arg("L"),
-        py::arg("b")
-    );
-
-    m.def(
-        "utsolve",
-        make_dense_solver(
-            [](const cs::CSCMatrix& U, const std::vector<double>& B) {
-                return cs::utsolve(U, B);
-            }
-        ),
-        py::arg("U"),
-        py::arg("b")
-    );
-
-    m.def(
-        "lsolve_opt",
-        make_dense_solver(
-            [](const cs::CSCMatrix& L, const std::vector<double>& B) {
-                return cs::lsolve_opt(L, B);
-            }
-        ),
-        py::arg("L"),
-        py::arg("b")
-    );
-
-    m.def(
-        "usolve_opt",
-        make_dense_solver(
-            [](const cs::CSCMatrix& U, const std::vector<double>& B) {
-                return cs::usolve_opt(U, B);
-            }
-        ),
-        py::arg("U"),
-        py::arg("b")
-    );
+    m.def("ltsolve", make_dense_solver(&cs::ltsolve), py::arg("L"), py::arg("B"));
+    m.def("utsolve", make_dense_solver(&cs::utsolve), py::arg("U"), py::arg("B"));
+    m.def("lsolve_opt", make_dense_solver(&cs::lsolve_opt), py::arg("L"), py::arg("B"));
+    m.def("usolve_opt", make_dense_solver(&cs::usolve_opt), py::arg("U"), py::arg("B"));
 
     //--------------------------------------------------------------------------
     //      Full Matrix Solvers
@@ -856,7 +817,7 @@ PYBIND11_MODULE(csparse, m)
             }
         ),
         py::arg("A"),
-        py::arg("b"),
+        py::arg("B"),
         py::arg("order")="APlusAT"  // CSparse default is "APlusAT"
     );
 
@@ -880,7 +841,7 @@ PYBIND11_MODULE(csparse, m)
             }
         ),
         py::arg("A"),
-        py::arg("b"),
+        py::arg("B"),
         py::arg("order")="ATA"  // CSparse default is "ATA"
     );
 
@@ -908,7 +869,7 @@ PYBIND11_MODULE(csparse, m)
             }
         ),
         py::arg("A"),
-        py::arg("b"),
+        py::arg("B"),
         py::arg("order")="ATANoDenseRows",  // CSparse default is "ATANoDenseRows"
         py::arg("tol")=1.0,
         py::arg("ir_steps")=0
@@ -924,7 +885,7 @@ PYBIND11_MODULE(csparse, m)
             }
         ),
         py::arg("A"),
-        py::arg("b")
+        py::arg("B")
     );
 
 }  // PYBIND11_MODULE

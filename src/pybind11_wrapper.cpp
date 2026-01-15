@@ -428,9 +428,9 @@ PYBIND11_MODULE(csparse, m)
     // -------------------------------------------------------------------------
     //         General Functions
     // -------------------------------------------------------------------------
-    m.def("gaxpy",         wrap_vector_func(&cs::gaxpy));
-    m.def("gatxpy",        wrap_vector_func(&cs::gatxpy));
-    m.def("sym_gaxpy",     wrap_vector_func(&cs::sym_gaxpy));
+    m.def("gaxpy",         make_vector_func(&cs::gaxpy));
+    m.def("gatxpy",        make_vector_func(&cs::gatxpy));
+    m.def("sym_gaxpy",     make_vector_func(&cs::sym_gaxpy));
     m.def("gaxpy_row",     wrap_gaxpy_mat(&cs::gaxpy_row));
     m.def("gaxpy_col",     wrap_gaxpy_mat(&cs::gaxpy_col));
     m.def("gaxpy_block",   wrap_gaxpy_mat(&cs::gaxpy_block));

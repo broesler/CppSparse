@@ -229,15 +229,17 @@ cs::CSCMatrix csc_from_scipy(const py::object& obj);
  * @return a lambda function that takes a `scipy.sparse.sparray` and 
  *         forwards the rest of the arguments to the wrapped function.
  */
-template <typename... Args>
-auto wrap_vector_func(
-    std::vector<double>(*func)(const cs::CSCMatrix& A, Args...)
-)
+template <typename Func>
+auto make_vector_func(Func&& func)
 {
-    return [func](const py::object& A_scipy, Args... args) {
+    return [func = std::forward<Func>(func)](
+        const py::object& A_scipy,
+        const std::vector<double>& x,
+        const std::vector<double>& y
+    ) {
         cs::CSCMatrix A = csc_from_scipy(A_scipy);
-        std::vector<double> x = func(A, std::forward<Args>(args)...);
-        return py::cast(x);
+        std::vector<double> z = func(A, x, y);
+        return py::cast(z);
     };
 }
 

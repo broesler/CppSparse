@@ -59,31 +59,37 @@ def test_amd(A, request):
 
     assert is_valid_permutation(p)
 
+    # Compute lnz of the permuted matrix
+    C = A + A.T + sparse.eye_array(N)
+    Cp = C[p[:, np.newaxis], p]
+
+    lnz = csparse.chol_colcounts(Cp).sum()
+
     if HAS_AMD:
         try:
             p_sk = amd(A)
         except Exception:
             p_sk = symamd(A)
 
-    # Compute lnz of each permutation
-    C = A + A.T + sparse.eye_array(N)
-    Cp = C[p[:, np.newaxis], p]
-    Cp_sk = C[p_sk[:, np.newaxis], p_sk]
-
-    lnz = csparse.chol_colcounts(Cp).sum()
-    lnz_sk = symbfact(Cp_sk)[0].sum()  # first output is column counts of L
-    print(f"{N = :4d}, lnz: {lnz:6d}, {lnz_sk:6d}")
+        Cp_sk = C[p_sk[:, np.newaxis], p_sk]
+        lnz_sk = symbfact(Cp_sk)[0].sum()  # first output is column counts of L
+        print(f"{N = :4d}, lnz: {lnz:6d}, {lnz_sk:6d}")
+    else:
+        print(f"{N = :4d}, lnz: {lnz:6d}")
 
     if request.config.getoption('--make-figures'):
-        fig, axs = plt.subplots(num=1, ncols=3, clear=True)
+        ncols = 3 if HAS_AMD else 2
+        fig, axs = plt.subplots(num=1, ncols=ncols, clear=True)
 
         axs[0].spy(C, markersize=1)
         axs[1].spy(Cp, markersize=1)
-        axs[2].spy(Cp_sk, markersize=1)
 
         axs[0].set_title('C = A + A.T + I')
         axs[1].set_title('AMD Reordered C')
-        axs[2].set_title('sksparse AMD Reordered C')
+
+        if HAS_AMD:
+            axs[2].spy(Cp_sk, markersize=1)
+            axs[2].set_title('sksparse AMD Reordered C')
 
         fig_dir = Path('test_figures/test_amd_random')
         fig_dir.mkdir(parents=True, exist_ok=True)

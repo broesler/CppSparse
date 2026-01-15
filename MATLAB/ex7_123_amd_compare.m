@@ -13,21 +13,6 @@
 %
 %===============================================================================
 
-% TODO
-% - create solution for exercise 7.2 
-%   - colamd(A)
-%   - colamd2(A)
-%   - cs_amd(A, 2) == csparse.amd(A, order='ATANoDenseRows')
-% - merge exercise 7.3 script `amd_ATA_compare.m`
-%   - amd(A' * A)
-%   - amd2(A' * A)
-%   - cs_amd(A, 3) == csparse.amd(A, order='ATA')
-% - For all 3 exercises, either take matrices from the SuiteSparse collection,
-%   or create random ones with arbitrary dense rows/columns.
-% - For 7.2 and 7.3, matrix need not be symmetric, so use `sprand` instead of
-%   `sprandsym`. We could also try non-square matrices.
-
-
 clear;
 
 SAVE_FIGS = true;

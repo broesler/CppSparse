@@ -246,7 +246,6 @@ class TestTrisolveCholesky(BaseSuiteSparsePlot):
         cls.b = rng.random(N)
 
         # Get the permutation from AMD
-        # TODO symamd? not in python
         p = csparse.amd(cls.A, order=cls.order)
 
         # Reorder the matrix

@@ -167,7 +167,7 @@ def dmspy(A, *, colored=True, seed=0, ax=None, **kwargs):
     Nb = r.size - 1
 
     # Plot the result
-    S = A[p][:, q]
+    S = A[p[:, np.newaxis], q]
 
     if colored:
         ax, cb = cspy(S, ax=ax, **kwargs)
@@ -229,7 +229,7 @@ def ccspy(A, *, colored=True, seed=0, ax=None, **kwargs):
 
     # Find the strongly connected components
     p, q, r, s = scc_perm(A)
-    S = A[p][:, q]
+    S = A[p[:, np.newaxis], q]
 
     Nb = r.size - 1
 

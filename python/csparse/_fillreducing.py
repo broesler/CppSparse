@@ -199,7 +199,7 @@ def edge_separator(A):
     The edge-separator `s` splits the graph of `A` into two parts `a` and `b`
     of roughly equal size.
 
-    The edge separator is the set of entries in `A[a][:, b]`.
+    The edge separator is the set of entries in `A[a[:, np.newaxis], b]`.
 
     Parameters
     ----------
@@ -222,9 +222,10 @@ def node_from_edge_sep(A, a, b):
     See: Davis, §7.6, `cs_sep`.
 
     The inputs `a` and `b` are a partition of `[0, N)`, thus the edges in
-    `A[a][:, b]` are an edge separator of `A`. `sep` returns `s`, the node
-    separator, consisting of a *node cover* of the edges of `A[a][:, b]`; `a_s`
-    and `b_s`, the sets `a` and `b` with `s` removed.
+    `A[a[:, np.newaxis], b]` are an edge separator of `A`. `sep` returns `s`,
+    the node separator, consisting of a *node cover* of the edges of
+    `A[a[:, np.newaxis], b]`; `a_s` and `b_s`, the sets `a` and `b` with `s`
+    removed.
 
     Parameters
     ----------
@@ -240,7 +241,7 @@ def node_from_edge_sep(A, a, b):
     a_s, b_s : ndarray of int
         The sets `a` and `b` with `s` removed.
     """
-    p, q, r, s, cc, rr = dmperm(A[a][:, b])
+    p, q, r, s, cc, rr = dmperm(A[a[:, np.newaxis], b])
     s = np.r_[a[p[:rr[1]]], b[q[cc[2]:cc[4]]]]
     w = np.ones(A.shape[1]).astype(bool)
     w[s] = False
@@ -307,8 +308,8 @@ def nested_dissection(A):
         s, a, b = node_separator(A)
 
         # Recursively compute the nested dissection ordering
-        a = a[nested_dissection(A[a][:, a])]
-        b = b[nested_dissection(A[b][:, b])]
+        a = a[nested_dissection(A[a[:, np.newaxis], a])]
+        b = b[nested_dissection(A[b[:, np.newaxis], b])]
 
         # Concatenate the permutations
         p = np.r_[a, b, s]
@@ -483,7 +484,7 @@ def _lu_solve_btf(C, b, r, s, **kwargs):  # noqa:PLR0913
 def scc_perm(A):
     """Compute the strongly connected components of a directed graph.
 
-    The function finds a permutation such that `A[p][:, q]` is block upper
+    The function finds a permutation such that `A[p[:, np.newaxis], q]` is block upper
     triangular (if `A` is square). In this case, `r=s`, `p=q`, and the `k`th
     diagonal block is given by `A(t, t)`, where `t = r[k]:r[k]+1`. The diagonal
     of `A` is ignored. Each block is one strognly connected component of `A`.

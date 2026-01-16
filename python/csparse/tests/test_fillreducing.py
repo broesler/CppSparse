@@ -150,7 +150,7 @@ class TestAMD(BaseSuiteSparsePlot):
         if self.make_figures:
             C = self.A + self.A.T + sparse.eye_array(self.N)
             self.axs[0, 0].spy(C, markersize=1)
-            self.axs[0, 1].spy(C[p][:, p], markersize=1)
+            self.axs[0, 1].spy(C[p[:, np.newaxis], p], markersize=1)
 
             self.axs[0, 0].set_title('C = A + A.T + I')
             self.axs[0, 1].set_title('AMD Reordered C')
@@ -235,7 +235,7 @@ class TestDMPerm(BaseSuiteSparsePlot):
         assert cc[4] == A.shape[1]
 
         # Permute the matrix into blocks
-        C = A[p][:, q]
+        C = A[p[:, np.newaxis], q]
 
         # Check each block
         for i in range(3):
@@ -294,7 +294,7 @@ class TestSCC(BaseSuiteSparsePlot):
 
         if self.make_figures:
             self.axs[0].set_title('Dulmage-Mendelsohn')
-            csparse.cspy(S[p][:, q], colorbar=False, ax=self.axs[0])
+            csparse.cspy(S[p[:, np.newaxis], q], colorbar=False, ax=self.axs[0])
 
             for i in range(Nk):
                 csparse.drawbox(
@@ -306,7 +306,7 @@ class TestSCC(BaseSuiteSparsePlot):
                 )
 
             self.axs[1].set_title('SCC Permutation')
-            csparse.cspy(S[ps][:, ps], colorbar=False, ax=self.axs[1])
+            csparse.cspy(S[ps[:, np.newaxis], ps], colorbar=False, ax=self.axs[1])
 
             for i in range(Nk):
                 csparse.drawbox(
@@ -362,8 +362,8 @@ class TestFiedler(BaseSuiteSparsePlot):
         # Evaluate the profile metric for symmetric matrices
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
-            r_profile = csparse.profile(A[pr][:, pr])
-            f_profile = csparse.profile(A[pf][:, pf])
+            r_profile = csparse.profile(A[pr[:, np.newaxis], pr])
+            f_profile = csparse.profile(A[pf[:, np.newaxis], pf])
             print(f"{A.shape}, "
                   f"RCM profile: {r_profile}, "
                   f"Fiedler profile: {f_profile}")
@@ -372,8 +372,8 @@ class TestFiedler(BaseSuiteSparsePlot):
             Ab = A.astype(bool)
             Ab = Ab + Ab.T
             self.axs[0].spy(Ab, markersize=1)
-            self.axs[1].spy(Ab[pr][:, pr], markersize=1)
-            self.axs[2].spy(Ab[pf][:, pf], markersize=1)
+            self.axs[1].spy(Ab[pr[:, np.newaxis], pr], markersize=1)
+            self.axs[2].spy(Ab[pf[:, np.newaxis], pf], markersize=1)
 
             self.axs[0].set_title('Original A')
             self.axs[1].set_title('RCM')
@@ -424,8 +424,8 @@ class TestNestedDissection(BaseSuiteSparsePlot):
         # Evaluate the profile metric
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
-            r_profile = csparse.profile(A[pr][:, pr])
-            f_profile = csparse.profile(A[pn][:, pn])
+            r_profile = csparse.profile(A[pr[:, np.newaxis], pr])
+            f_profile = csparse.profile(A[pn[:, np.newaxis], pn])
             print(f"{A.shape}, "
                   f"RCM profile: {r_profile}, "
                   f"ND profile: {f_profile}")
@@ -434,8 +434,8 @@ class TestNestedDissection(BaseSuiteSparsePlot):
             Ab = A.astype(bool)
             Ab = Ab + Ab.T
             self.axs[0].spy(Ab, markersize=1)
-            self.axs[1].spy(Ab[pr][:, pr], markersize=1)
-            self.axs[2].spy(Ab[pn][:, pn], markersize=1)
+            self.axs[1].spy(Ab[pr[:, np.newaxis], pr], markersize=1)
+            self.axs[2].spy(Ab[pn[:, np.newaxis], pn], markersize=1)
 
             self.axs[0].set_title('Original A')
             self.axs[1].set_title('RCM')

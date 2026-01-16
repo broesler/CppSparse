@@ -53,7 +53,7 @@ Q = csparse.apply_qright(V, beta, p)
 # -----------------------------------------------------------------------------
 # Permute the rows of A_dense here with QRres.p_inv to get the
 # same V and beta as the csparse.qr function.
-Apq = A_dense[p][:, q]
+Apq = A_dense[p[:, np.newaxis], q]
 
 (Qraw, tau), Rraw = la.qr(Apq, mode='raw')
 Q_, R_ = la.qr(Apq)
@@ -102,7 +102,7 @@ Qr = csparse.apply_qright(Vr, beta_r, pr)  # (M, M)
 Qrt = csparse.apply_qtleft(Vr, beta_r, pr).T  # (M, M)
 
 # Get the scipy version
-Arp = Ar_dense[pr][:, q]
+Arp = Ar_dense[pr[:, np.newaxis], q]
 # Arp = Ar_dense[:, q]
 Qr_, Rr_ = la.qr(Arp)
 

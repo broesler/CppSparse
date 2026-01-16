@@ -66,7 +66,7 @@ def test_cholesky_interface(order, use_postorder):
     assert_allclose(L.toarray(), Ll.toarray())
     assert_allclose(Ll.toarray(), Lr.toarray())
 
-    assert_allclose((L @ L.T).toarray(), A[p][:, p].toarray(), atol=ATOL)
+    assert_allclose((L @ L.T).toarray(), A[p[:, np.newaxis], p].toarray(), atol=ATOL)
 
 
 @pytest.mark.parametrize("chol_func", PYTHON_CHOL_FUNCS)
@@ -249,7 +249,7 @@ class TestTrisolveCholesky(BaseSuiteSparsePlot):
         p = csparse.amd(cls.A, order=cls.order)
 
         # Reorder the matrix
-        cls.C = cls.A[p][:, p]
+        cls.C = cls.A[p[:, np.newaxis], p]
         cls.κ = csparse.cond1est(cls.C)
         print(f"cond1est: {cls.κ:.4e} ({cls.problem.name})")
 
@@ -303,12 +303,12 @@ class TestTrisolveCholesky(BaseSuiteSparsePlot):
         res = csparse.chol(self.A, order=self.order)
         L3 = res.L
         p3 = res.p
-        C3 = self.A[p3][:, p3]
+        C3 = self.A[p3[:, np.newaxis], p3]
         L4 = sparse.csc_array(la.cholesky(C3.toarray(), lower=True))
         if self.make_figures:
             self.axs[0, 2].spy(L4, markersize=1)
             self.axs[1, 2].spy(L3, markersize=1)
-            self.axs[0, 2].set_title("chol(A[p][:, p])")
+            self.axs[0, 2].set_title("chol(A[p[:, np.newaxis], p])")
         assert_allclose(L3.toarray(), L4.toarray(), atol=1e-8 * self.κ)
 
 
@@ -385,7 +385,7 @@ def test_rowcnt(problem, order):
 
     # Permute the matrix using AMD (or Natural order)
     p = csparse.amd(A, order=order)
-    A = A[p][:, p]
+    A = A[p[:, np.newaxis], p]
 
     # Make sure A is positive definite
     A = A + A.T + N * sparse.eye_array(N)

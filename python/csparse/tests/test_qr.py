@@ -110,7 +110,7 @@ def test_csparse_qr(shape_cat, case_name, A, order):
 
     # ---------- scipy QR
     # Apply the row permutation to A_dense
-    Apq = A_dense[p][:, q]
+    Apq = A_dense[p[:, np.newaxis], q]
     (Qraw, tau), Rraw = la.qr(Apq, mode='raw')
     Q_, R_ = la.qr(Apq)
     # Handle case when M < N

@@ -97,7 +97,7 @@ class TestCholLUSolve(BaseSuiteSparseTest):
             if is_symmetric:
                 p = csparse.amd(A, order='APlusAT')
                 try:
-                    la.cholesky(A[p][:, p].toarray(), lower=True)
+                    la.cholesky(A[p[:, np.newaxis], p].toarray(), lower=True)
                     is_spd = True
                 except la.LinAlgError:
                     print("`A` is not symmetric positive definite.")
@@ -108,7 +108,7 @@ class TestCholLUSolve(BaseSuiteSparseTest):
             cls.C = A @ A.T + N * sparse.eye_array(N)
             p = csparse.amd(cls.C, order='APlusAT')
             try:
-                la.cholesky(cls.C[p][:, p].toarray(), lower=True)
+                la.cholesky(cls.C[p[:, np.newaxis], p].toarray(), lower=True)
             except la.LinAlgError:
                 pytest.skip("`C` is not symmetric positive definite.")
 

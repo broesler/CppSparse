@@ -53,7 +53,7 @@ def test_lu_interface(order):
     # Test the LU decomposition with the default order
     L, U, p, q = csparse.lu(Ac, order=order)
 
-    assert_allclose((L @ U).toarray(), A[p][:, q], atol=ATOL)
+    assert_allclose((L @ U).toarray(), A[p[:, np.newaxis], q], atol=ATOL)
 
 
 def lu_helper(A, lu_func):
@@ -210,14 +210,14 @@ class TestLU(BaseSuiteSparsePlot):
             self.axs[row, 3].spy(U, markersize=1)
 
         assert_allclose(
-            (L_ @ U_)[p_][:, q_].toarray(),
+            (L_ @ U_)[p_[:, np.newaxis], q_].toarray(),
             A.toarray(),
             atol=1e-6
         )
 
         assert_allclose(
             (L @ U).toarray(),
-            A[p][:, q].toarray(),
+            A[p[:, np.newaxis], q].toarray(),
             atol=1e-6
         )
 

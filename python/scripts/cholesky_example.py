@@ -30,7 +30,7 @@ R = csparse.chol_up(A, lower=True)
 # Get the elimination tree and post order it
 parent = csparse.etree(Ac)
 p = csparse.post(parent)
-Rp = la.cholesky(A[p][:, p], lower=True)
+Rp = la.cholesky(A[p[:, np.newaxis], p], lower=True)
 
 # post-ordering does not change nnz
 assert (sparse.csc_array(R).nnz == sparse.csc_array(Rp).nnz)
@@ -56,7 +56,7 @@ np.testing.assert_allclose(L.indices, Ls.indices)
 np.testing.assert_allclose(L.toarray(), Ll.toarray())
 np.testing.assert_allclose(Ll.toarray(), Lr.toarray())
 
-np.testing.assert_allclose((L @ L.T).toarray(), A[p][:, p], atol=1e-14)
+np.testing.assert_allclose((L @ L.T).toarray(), A[p[:, np.newaxis], p], atol=1e-14)
 
 # Try to solve Ax = b to test numpy array of float input
 b = np.ones(M) + np.arange(M) / M

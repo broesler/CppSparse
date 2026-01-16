@@ -113,7 +113,7 @@ allclose(Ld[pd] @ Ud, A)
 try:
     L, U, p, q = csparse.lu(As, order='Natural')
 
-    allclose((L @ U).toarray(), A[p][:, q])
+    allclose((L @ U).toarray(), A[p[:, np.newaxis], q])
     # np.testing.assert_allclose(p, pd)  # not necessarily identical!
 
 except Exception as e:
@@ -130,7 +130,7 @@ try:
     p_, L_, U_, q_ = lu.perm_r, lu.L, lu.U, lu.perm_c
 
     np.testing.assert_allclose(p_, csparse.inv_permute(p))  # not always true!
-    allclose((L_ @ U_)[p_][:, q_].toarray(), As.toarray())
+    allclose((L_ @ U_)[p_[:, np.newaxis], q_].toarray(), As.toarray())
     allclose(Ld, L_.toarray())  # not necessarily identical!
     allclose(Ud, U_.toarray())
 

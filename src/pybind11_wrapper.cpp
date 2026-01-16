@@ -78,7 +78,6 @@ PYBIND11_MODULE(csparse, m)
             )pbdoc"
         );
 
-    // TODO bind the solve methods
     py::class_<cs::CholResult>(m, "CholResult",
         R"pbdoc(
         A data structure to represent the result of a Cholesky factorization.
@@ -99,7 +98,92 @@ PYBIND11_MODULE(csparse, m)
                 cs::inv_permute(res.p_inv)
             );
             return py::make_iterator(result);
-        });
+        })
+        .def("solve",
+            [](const cs::CholResult& self, const std::vector<double>& b) {
+                std::vector<double> x(b);  // copy b to x
+                self.solve(x);
+                return x;
+            },
+            py::arg("b"),
+            R"pbdoc(
+            Solve the linear system Ax = b using the Cholesky factorization.
+
+            Parameters
+            ----------
+            b : (N,) np.ndarray
+                The right-hand side vector.
+
+            Returns
+            -------
+            x : (N,) np.ndarray
+                The solution vector.
+            )pbdoc"
+        )
+        .def("lsolve",
+            [](
+                const cs::CholResult& self,
+                const py::object& b_obj,
+                const std::vector<cs::csint>& parent
+            ) {
+                cs::CSCMatrix b = csc_from_scipy(b_obj);
+                auto [xi, x] = self.lsolve(b, parent);
+                return x;
+            },
+            py::arg("b"),
+            py::arg("parent")=std::vector<cs::csint>{},
+            R"pbdoc(
+            Solve `Lx = b` with sparse RHS `b`, where `L` is a lower-triangular
+            Cholesky factor.
+
+            Parameters
+            ----------
+            b : (N, 1) CSCMatrix
+                A sparse RHS vector, stored as a CSCMatrix.
+            parent : array_like of int, optional
+                The parent vector of the elimination tree of `L`. If not given,
+                the function will compute it from `L`.
+
+            Returns
+            -------
+            xi : list of int
+                The row indices of the non-zero entries in x.
+            x : (N,) np.ndarray
+                The solution vector, stored as a dense vector.
+            )pbdoc"
+        )
+        .def("ltsolve",
+            [](
+                const cs::CholResult& self,
+                const py::object& b_obj,
+                const std::vector<cs::csint>& parent
+            ) {
+                cs::CSCMatrix b = csc_from_scipy(b_obj);
+                auto [xi, x] = self.ltsolve(b, parent);
+                return x;
+            },
+            py::arg("b"),
+            py::arg("parent")=std::vector<cs::csint>{},
+            R"pbdoc(
+            Solve `L^T x = b` with sparse RHS `b`, where `L` is
+            a lower-triangular Cholesky factor.
+
+            Parameters
+            ----------
+            b : (N, 1) CSCMatrix
+                A sparse RHS vector, stored as a CSCMatrix.
+            parent : array_like of int, optional
+                The parent vector of the elimination tree of `L`. If not given,
+                the function will compute it from `L`.
+
+            Returns
+            -------
+            xi : list of int
+                The row indices of the non-zero entries in x.
+            x : (N,) np.ndarray
+                The solution vector, stored as a dense vector.
+            )pbdoc"
+        );
 
     // TODO bind the solve methods
     py::class_<cs::QRResult>(m, "QRResult",

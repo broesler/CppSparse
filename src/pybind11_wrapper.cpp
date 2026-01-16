@@ -596,6 +596,31 @@ PYBIND11_MODULE(csparse, m)
         .def_property_readonly("has_canonical_format", &cs::CSCMatrix::has_canonical_format)
         .def_property_readonly("is_symmetric", &cs::CSCMatrix::is_symmetric)
         .def_property_readonly("is_triangular", &cs::CSCMatrix::is_triangular)
+        .def_property_readonly("structural_symmetry", &cs::CSCMatrix::structural_symmetry,
+            R"pbdoc(
+            Compute the structural symmetry of the matrix.
+
+            The structural symmetry is defined as:
+
+            .. math::
+                \operatorname{sym}(S) = \frac{|(S \land S^{\top})|}{|S|},
+
+            where :math:`S = A - \operatorname{diag}(A)` (off-diagonal elements
+            only).
+
+            In Scipy:
+
+            .. code-block:: python
+
+              S = A - sparse.diags_array(A.diagonal())
+              sym = (S * S.T).nnz / S.nnz
+
+            Returns
+            -------
+            float in [0, 1]
+                The structural symmetry of the matrix.
+            )pbdoc"
+        )
         //
         .def("__call__", py::overload_cast<cs::csint, cs::csint>(&cs::CSCMatrix::operator(), py::const_))
         .def("__getitem__",

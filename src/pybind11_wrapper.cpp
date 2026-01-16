@@ -185,7 +185,6 @@ PYBIND11_MODULE(csparse, m)
             )pbdoc"
         );
 
-    // TODO bind the solve methods
     py::class_<cs::QRResult>(m, "QRResult",
         R"pbdoc(
         A data structure to represent the result of a QR factorization.
@@ -219,7 +218,51 @@ PYBIND11_MODULE(csparse, m)
 		        qr.q
             );
             return py::make_iterator(result);
-        });
+        })
+        .def("solve",
+            [](const cs::QRResult& self, const std::vector<double>& b) {
+                cs::csint N = self.R.shape()[1];
+                std::vector<double> x(N);  // create output vector
+                self.solve(b, x);
+                return x;
+            },
+            py::arg("b"),
+            R"pbdoc(
+            Solve the linear system `Ax = b` using QR factorization.
+
+            Parameters
+            ----------
+            b : (M,) np.ndarray
+                The right-hand side vector.
+
+            Returns
+            -------
+            x : (N,) np.ndarray
+                The solution vector.
+            )pbdoc"
+        )
+        .def("tsolve",
+            [](const cs::QRResult& self, const std::vector<double>& b) {
+                cs::csint M2 = self.V.shape()[0];
+                std::vector<double> x(M2);  // create output vector
+                self.tsolve(b, x);
+                return x;
+            },
+            py::arg("b"),
+            R"pbdoc(
+            Solve the linear system :math:`A^{\top} x = b` using QR factorization.
+
+            Parameters
+            ----------
+            b : (N,) np.ndarray
+                The right-hand side vector.
+
+            Returns
+            -------
+            x : (M,) np.ndarray
+                The solution vector.
+            )pbdoc"
+        );
 
     py::class_<cs::LUResult>(m, "LUResult",
         R"pbdoc(

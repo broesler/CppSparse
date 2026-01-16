@@ -105,5 +105,55 @@ cs::CSCMatrix csc_from_scipy(const py::object& obj)
 }
 
 
+cs::COOMatrix coo_from_scipy(const py::object& obj)
+{
+    py::object A;
+
+    // Check if it's already a coo_array, or convertible to one
+    if (py::hasattr(obj, "tocoo")) {
+        A = obj.attr("tocoo")(); // Convert to COO if not already
+    } else {
+        throw std::runtime_error("Input object is not convertible to a "
+            "SciPy COO matrix (missing .tocoo() method).");
+    }
+
+    // Verify it has the expected attributes
+    if (!py::hasattr(A, "data") ||
+        !py::hasattr(A, "row") ||
+        !py::hasattr(A, "col") ||
+        !py::hasattr(A, "shape"))
+    {
+        throw std::runtime_error("Converted object is not a valid "
+                "SciPy COO matrix (missing data, row, col, or shape).");
+    }
+
+    try {
+        // Cast SciPy attributes to py::array_t and then to std::vector
+        // Our std::vector type caster will handle the numpy.ndarray -> std::vector conversion automatically.
+        auto data = A.attr("data").cast<std::vector<double>>();
+        auto row = A.attr("row").cast<std::vector<cs::csint>>();
+        auto col = A.attr("col").cast<std::vector<cs::csint>>();
+
+        // Get shape
+        auto shape = A.attr("shape").cast<cs::Shape>();
+
+        // Construct the C++ COOMatrix using the loaded data
+        // The 'value' member is the target COOMatrix object
+        return cs::COOMatrix(data, row, col, shape);
+
+    } catch (const py::cast_error& e) {
+        std::cerr << "Error in SciPy COO to C++ COOMatrix cast: "
+            << e.what() << std::endl;
+        throw e;
+
+    } catch (const py::error_already_set& e) {
+        std::cerr << "Python error in SciPy COO to C++ COOMatrix cast: "
+            << e.what() << std::endl;
+        PyErr_Print();  // print Python traceback
+        throw e;
+    }
+}
+
+
 /*==============================================================================
  *============================================================================*/

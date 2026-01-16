@@ -217,6 +217,15 @@ py::object scipy_from_csc(const cs::CSCMatrix& A);
 cs::CSCMatrix csc_from_scipy(const py::object& obj);
 
 
+/** Convert a scipy.sparse.sparray to a COOMatrix.
+ *
+ * @param A  the scipy.sparse.sparray to convert
+ *
+ * @return a COOMatrix with the same data as the scipy.sparse.sparray
+ */
+cs::COOMatrix coo_from_scipy(const py::object& obj);
+
+
 /** Wrap a function to convert a scipy.sparse.sparray on input. 
  *
  * This function takes a function that operates on a CSCMatrix as the first

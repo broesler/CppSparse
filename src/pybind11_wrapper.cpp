@@ -221,7 +221,6 @@ PYBIND11_MODULE(csparse, m)
             return py::make_iterator(result);
         });
 
-    // TODO bind the solve methods
     py::class_<cs::LUResult>(m, "LUResult",
         R"pbdoc(
         A data structure to represent the result of an LU factorization.
@@ -250,7 +249,50 @@ PYBIND11_MODULE(csparse, m)
                 lu.q
             );
             return py::make_iterator(result);
-        });
+        })
+        .def("solve",
+            [](const cs::LUResult& self, const std::vector<double>& b) {
+                std::vector<double> x(b);  // copy b to x
+                self.solve(x);
+                return x;
+            },
+            py::arg("b"),
+            R"pbdoc(
+            Solve the linear system `Ax = b` using the LU factorization.
+
+            Parameters
+            ----------
+            b : (M,) np.ndarray
+                The right-hand side vector.
+
+            Returns
+            -------
+            x : (N,) np.ndarray
+                The solution vector.
+            )pbdoc"
+        )
+        .def("tsolve",
+            [](const cs::LUResult& self, const std::vector<double>& b) {
+                std::vector<double> x(b);  // copy b to x
+                self.tsolve(x);
+                return x;
+            },
+            py::arg("b"),
+            R"pbdoc(
+            Solve the linear system :math:`A^{\top} x = b` using the LU
+            factorization.
+
+            Parameters
+            ----------
+            b : (N,) np.ndarray
+                The right-hand side vector.
+
+            Returns
+            -------
+            x : (M,) np.ndarray
+                The solution vector.
+            )pbdoc"
+        );
 
     // Bind the MaxMatch struct
     py::class_<cs::MaxMatch>(m, "MaxMatch",

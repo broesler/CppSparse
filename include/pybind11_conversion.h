@@ -86,8 +86,10 @@ struct type_caster<std::vector<T>> {
                 }
 
                 // Assign data directly into the buffer
-                value.assign(static_cast<T*>(buf_info.ptr),
-                                static_cast<T*>(buf_info.ptr) + buf_info.shape[0]);
+                value.assign(
+                    static_cast<T*>(buf_info.ptr),
+                    static_cast<T*>(buf_info.ptr) + buf_info.shape[0]
+                );
 
                 return true;
 
@@ -107,7 +109,7 @@ struct type_caster<std::vector<T>> {
         if (py::isinstance<py::list>(src)) {
             try {
                 // Iterate through the list and cast each item individually
-                py::list py_list = src.cast<py::list>();
+                auto py_list = src.cast<py::list>();
                 value.clear();
                 value.reserve(py::len(py_list));
                 for (auto item : py_list) {
@@ -305,8 +307,8 @@ auto make_gaxpy_matrix_func(Func&& func)
         X_np = X_np.attr("reshape")(-1, py::arg("order")=order);
         Y_np = Y_np.attr("reshape")(-1, py::arg("order")=order);
 
-        std::vector<double> X = X_np.cast<std::vector<double>>();
-        std::vector<double> Y = Y_np.cast<std::vector<double>>();
+        auto X = X_np.cast<std::vector<double>>();
+        auto Y = Y_np.cast<std::vector<double>>();
 
         std::vector<double> Z = func(A, X, Y);
 
@@ -336,11 +338,11 @@ py::object permute_impl_(
 )
 {
     try {
-        std::vector<double> b = b_obj.cast<std::vector<double>>();
+        auto b = b_obj.cast<std::vector<double>>();
         return py::cast(func_double(p, b));
     } catch (const py::cast_error&) {
         try {
-            std::vector<cs::csint> b = b_obj.cast<std::vector<cs::csint>>();
+            auto b = b_obj.cast<std::vector<cs::csint>>();
             return py::cast(func_int(p, b));
         } catch (const py::cast_error&) {
             throw py::type_error("Input must be a vector of doubles or integers.");
@@ -387,7 +389,7 @@ py::object solver_dense_impl_(
     // Flatten b to 1D column-major
     b_np = b_np.attr("reshape")(-1, py::arg("order")="F");
 
-    std::vector<double> B = b_np.cast<std::vector<double>>();
+    auto B = b_np.cast<std::vector<double>>();
 
     // Solve the system with the unpacked args
     std::vector<double> X = dense_solver(A, B, std::forward<Args>(solver_args)...);

@@ -80,16 +80,16 @@ cs::CSCMatrix csc_from_scipy(const py::object& obj)
     try {
         // Cast SciPy attributes to py::array_t and then to std::vector
         // Our std::vector type caster will handle the numpy.ndarray -> std::vector conversion automatically.
-        std::vector<double> data = A.attr("data").cast<std::vector<double>>();
-        std::vector<cs::csint> indices = A.attr("indices").cast<std::vector<cs::csint>>();
-        std::vector<cs::csint> indptr = A.attr("indptr").cast<std::vector<cs::csint>>();
+        auto data = A.attr("data").cast<std::vector<double>>();
+        auto indices = A.attr("indices").cast<std::vector<cs::csint>>();
+        auto indptr = A.attr("indptr").cast<std::vector<cs::csint>>();
 
         // Get shape
-        auto [M, N] = A.attr("shape").cast<std::tuple<cs::csint, cs::csint>>();
+        auto shape = A.attr("shape").cast<cs::Shape>();
 
         // Construct the C++ CSCMatrix using the loaded data
         // The 'value' member is the target CSCMatrix object
-        return cs::CSCMatrix(data, indices, indptr, {M, N});
+        return cs::CSCMatrix(data, indices, indptr, shape);
 
     } catch (const py::cast_error& e) {
         std::cerr << "Error in SciPy CSC to C++ CSCMatrix cast: "

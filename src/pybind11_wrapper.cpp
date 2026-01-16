@@ -846,11 +846,11 @@ PYBIND11_MODULE(csparse, m)
         //
         // Convert these "p_inv" arguments to "p" for python interface to
         // match the CSparse MATLAB interface.
-        .def("permute", 
+        .def("permute",
             [](const cs::CSCMatrix& self,
                const std::vector<cs::csint> p,
                const std::vector<cs::csint> q,
-               bool values=true) 
+               bool values=true)
             {
                 return self.permute(cs::inv_permute(p), q, values);
             },
@@ -873,7 +873,7 @@ PYBIND11_MODULE(csparse, m)
                 If False, do not copy the numerical values, only the row indices.
             )pbdoc"
         )
-        .def("symperm", 
+        .def("symperm",
             [](const cs::CSCMatrix& self,
                const std::vector<cs::csint> p,
                bool values=true)
@@ -898,7 +898,7 @@ PYBIND11_MODULE(csparse, m)
             )pbdoc"
         )
         .def("permute_transpose",
-            [](const cs::CSCMatrix& self, 
+            [](const cs::CSCMatrix& self,
                const std::vector<cs::csint> p,
                const std::vector<cs::csint> q,
                bool values=true)
@@ -924,7 +924,7 @@ PYBIND11_MODULE(csparse, m)
                 If False, do not copy the numerical values, only the row indices.
             )pbdoc"
         )
-        .def("permute_rows", 
+        .def("permute_rows",
             [](const cs::CSCMatrix& self,
                const std::vector<cs::csint> p,
                bool values=true)
@@ -968,7 +968,7 @@ PYBIND11_MODULE(csparse, m)
         .def("norm", &cs::CSCMatrix::norm,
             R"pbdoc(
             Compute the 1-norm of the matrix (maximum column sum).
-            
+
             The 1-norm is defined as:
 
             .. math::
@@ -1043,7 +1043,7 @@ PYBIND11_MODULE(csparse, m)
                 The extracted submatrix.
             )pbdoc"
         )
-        .def("scatter", 
+        .def("scatter",
             [](const cs::CSCMatrix& self, const cs::csint k) {
                 std::vector<double> x(self.shape()[0]);  // (M,)
                 if (k < 0 || k >= self.shape()[1]) {
@@ -1055,7 +1055,6 @@ PYBIND11_MODULE(csparse, m)
             py::arg("k"),
             "Scatter the k-th column of the matrix into a dense vector."
         )
-        // TODO .def("structural_symmetry")
         .def("add_empty_top", &cs::CSCMatrix::add_empty_top,
             "Add empty rows to the top of the matrix."
         )
@@ -1128,7 +1127,7 @@ PYBIND11_MODULE(csparse, m)
     //--------------------------------------------------------------------------
     //        Utility Functions
     //--------------------------------------------------------------------------
-    m.def("pvec", 
+    m.def("pvec",
         make_pvec_wrapper(
             [](const std::vector<cs::csint>& p, const std::vector<double>& b) {
                 return cs::pvec<double>(p, b);
@@ -1644,7 +1643,7 @@ PYBIND11_MODULE(csparse, m)
     //--------------------------------------------------------------------------
     //      Solve functions
     //--------------------------------------------------------------------------
-    m.def("reach", 
+    m.def("reach",
         [](const py::object& A_scipy, const py::object& b_scipy) {
             const cs::CSCMatrix A = csc_from_scipy(A_scipy);
             const cs::CSCMatrix b = csc_from_scipy(b_scipy);
@@ -1684,8 +1683,8 @@ PYBIND11_MODULE(csparse, m)
             The row indices that are reachable.
         )pbdoc"
     );
-    
-    m.def("reach_r", 
+
+    m.def("reach_r",
         [](const py::object& A_scipy, const py::object& b_scipy) {
             const cs::CSCMatrix A = csc_from_scipy(A_scipy);
             const cs::CSCMatrix b = csc_from_scipy(b_scipy);
@@ -2007,7 +2006,7 @@ PYBIND11_MODULE(csparse, m)
         )pbdoc"
     );
 
-    m.def("spsolve", 
+    m.def("spsolve",
         make_simple_solver(
             [](const cs::CSCMatrix& A, const std::vector<double>& B) {
                 return cs::spsolve(A, B);

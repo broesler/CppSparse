@@ -5,21 +5,21 @@
 #   Author: Bernie Roesler
 #
 """
-csparse: A Python wrapper for the CSparse++ library.
+csparse: A Python wrapper for the C++Sparse library.
 
 This module provides bindings for sparse matrix operations using pybind11.
 
-Example usage:
+Example usage::
+
     import csparse
     rows = [0, 1, 2, 0, 1, 2, 0, 2]
     cols = [0, 0, 0, 1, 1, 1, 2, 2]
     vals = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
-    A = csparse.CSparse(rows, cols, vals, 3, 3)
+    A = csparse.COOMatrix(rows, cols, vals, (3, 3)).tocsc()
     print(A)
 
 Author: Bernie Roesler
 Date: 2025-02-14
-Version: 0.1
 """
 # =============================================================================
 

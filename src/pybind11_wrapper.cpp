@@ -384,8 +384,12 @@ PYBIND11_MODULE(csparse, m)
         .def_readonly("q", &cs::DMPermResult::q)
         .def_readonly("r", &cs::DMPermResult::r)
         .def_readonly("s", &cs::DMPermResult::s)
-        .def_property_readonly("cc", [](const cs::DMPermResult& res) { return array_to_numpy(res.cc); })
-        .def_property_readonly("rr", [](const cs::DMPermResult& res) { return array_to_numpy(res.rr); })
+        .def_property_readonly("cc",
+            [](const cs::DMPermResult& self) { return array_to_numpy(self.cc); }
+        )
+        .def_property_readonly("rr",
+            [](const cs::DMPermResult& self) { return array_to_numpy(self.rr); }
+        )
         .def_readonly("Nb", &cs::DMPermResult::Nb)
         .def("__iter__", [](const cs::DMPermResult& res) {
             py::object result = py::make_tuple(

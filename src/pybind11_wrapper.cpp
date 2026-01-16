@@ -287,7 +287,11 @@ PYBIND11_MODULE(csparse, m)
             py::arg("col"),
             py::arg("shape")=cs::Shape{0, 0}
         )
-        .def(py::init<const cs::Shape&, cs::csint>())
+        .def(py::init<const cs::Shape&, cs::csint>(),
+            py::arg("shape"),
+            py::arg("nzmax")=0
+        )
+        //
         .def_static("from_file", &cs::COOMatrix::from_file, py::arg("filename"))
         .def_static("random",
             &cs::COOMatrix::random,
@@ -484,13 +488,45 @@ PYBIND11_MODULE(csparse, m)
     //--------------------------------------------------------------------------
     //        CSCMatrix class
     //--------------------------------------------------------------------------
-    py::class_<cs::CSCMatrix>(m, "CSCMatrix")
+    py::class_<cs::CSCMatrix>(m, "CSCMatrix",
+        R"pbdoc(
+        A class to represent a sparse matrix in Compressed Sparse Column (CSC) format.
+
+        Attributes
+        ----------
+        data : (nnz,) np.array of float
+            The non-zero values of the matrix.
+        indices : (nnz,) np.array of int
+            The row indices of the non-zero values.
+        indptr : (N+1,) np.array of int
+            The column pointer indices.
+        nnz : int
+            The number of non-zero elements in the matrix.
+        nzmax : int
+            The maximum number of non-zero elements allocated.
+        shape : 2-tuple
+            The shape of the matrix.
+        has_sorted_indices : bool
+            True if the row indices within each column are sorted.
+        has_canonical_format : bool
+            True if the matrix is in canonical format (sorted row indices, no
+            duplicate entries, no explicit zeros).
+        is_symmetric : bool
+            True if the matrix is numerically symmetric.
+        is_triangular : int
+            -1 if the matrix is lower triangular, 1 if upper triangular, 0 otherwise.
+        )pbdoc"
+    )
         .def(py::init<>())
         .def(py::init<
             const std::vector<double>&,
             const std::vector<cs::csint>&,
             const std::vector<cs::csint>&,
-            const cs::Shape&>()
+            const cs::Shape&>(),
+            py::arg("data"),
+            py::arg("indices"),
+            py::arg("indptr"),
+            py::arg("shape")=cs::Shape{0, 0}
         )
         .def(py::init<const cs::Shape&, cs::csint, bool>(),
             py::arg("shape"),
@@ -518,13 +554,42 @@ PYBIND11_MODULE(csparse, m)
         .def_property_readonly("indices", &cs::CSCMatrix::indices)
         .def_property_readonly("data", &cs::CSCMatrix::data)
         //
-        .def("dropzeros", &cs::CSCMatrix::dropzeros)
-        .def("droptol", &cs::CSCMatrix::droptol, py::arg("tol")=1e-15)
-        .def("to_canonical", &cs::CSCMatrix::to_canonical)
+        .def("dropzeros", &cs::CSCMatrix::dropzeros,
+            "Remove explicit zero entries from the matrix."
+        )
+        .def("droptol", &cs::CSCMatrix::droptol, py::arg("tol")=1e-15,
+            R"pbdoc(
+            Remove entries with absolute value within the specified tolerance of zero.
+
+            Parameters
+            ----------
+            tol : float, optional
+                The tolerance against which to compare the absolute value of the
+                matrix entries.
+            )pbdoc"
+        )
+        .def("to_canonical", &cs::CSCMatrix::to_canonical,
+            R"pbdoc(
+            Convert the matrix to canonical format in-place.
+
+            The row indices are guaranteed to be sorted, no duplicates are
+            allowed, and no numerically zero entries are allowed.
+
+            This function takes O(M + N + nnz) time.
+            )pbdoc"
+        )
         .def("toscipy",
             [](const cs::CSCMatrix& self) {
                 return scipy_from_csc(self);
-            }
+            },
+            R"pbdoc(
+            Convert the CSC matrix to a SciPy sparse matrix.
+
+            Returns
+            -------
+            scipy.sparse.csc_matrix
+                The equivalent SciPy CSC sparse matrix.
+            )pbdoc"
         )
         //
         .def_property_readonly("has_sorted_indices", &cs::CSCMatrix::has_sorted_indices)
@@ -555,43 +620,203 @@ PYBIND11_MODULE(csparse, m)
             }
         )
         //
-        .def("assign", py::overload_cast
-                        <cs::csint, cs::csint, double>(&cs::CSCMatrix::assign))
-        .def("assign", py::overload_cast<
-                        const std::vector<cs::csint>&,
-                        const std::vector<cs::csint>&,
-                        const std::vector<double>&>(&cs::CSCMatrix::assign))
-        .def("assign", py::overload_cast<
-                        const std::vector<cs::csint>&,
-                        const std::vector<cs::csint>&,
-                        const cs::CSCMatrix&>(&cs::CSCMatrix::assign))
+        .def("assign",
+            py::overload_cast<cs::csint, cs::csint, double>(&cs::CSCMatrix::assign),
+            R"pbdoc(
+            Assign a value to a specific element in the matrix.
+
+            This function takes O(log M) time if the columns are sorted, and O(M) time
+            otherwise.
+
+            Parameters
+            ----------
+            i, j : int
+                The row and column indices of the element to access.
+            v : float
+                The value to be assigned.
+            )pbdoc"
+        )
+        .def("assign",
+            py::overload_cast<
+                const std::vector<cs::csint>&,
+                const std::vector<cs::csint>&,
+                const std::vector<double>&
+            >(&cs::CSCMatrix::assign),
+            R"pbdoc(
+            Assign a dense matrix to the CSCMatrix at the specified locations.
+
+            Parameters
+            ----------
+            rows, cols : (N,) array_like of int
+                The row and column indices of the elements to access.
+            C : (N,) array_like of float
+                The dense matrix to be assigned, in column-major order.
+            )pbdoc"
+        )
+        .def("assign",
+            py::overload_cast<
+                const std::vector<cs::csint>&,
+                const std::vector<cs::csint>&,
+                const cs::CSCMatrix&
+            >(&cs::CSCMatrix::assign),
+            R"pbdoc(
+            Assign a sparse matrix to the CSCMatrix at the specified locations.
+
+            Parameters
+            ----------
+            rows, cols : (N,) array_like of int
+                The row and column indices of the elements to access.
+            C : CSCMatrix
+                The sparse matrix to be assigned.
+            )pbdoc"
+        )
         //
-        .def("tocoo", &cs::CSCMatrix::tocoo)
-        .def("to_dense_vector", &cs::CSCMatrix::to_dense_vector, py::arg("order")='F')
-        .def("toarray", &sparse_to_ndarray<cs::CSCMatrix>, py::arg("order")='C')
+        .def("tocoo", &cs::CSCMatrix::tocoo,
+            R"pbdoc(
+            Convert the CSC matrix to a coordinate (triplet) format matrix.
+
+            Returns
+            -------
+            COOMatrix
+                A copy of the `CSCMatrix` in COO (triplet) format.
+            )pbdoc"
+        )
+        .def("to_dense_vector", &cs::CSCMatrix::to_dense_vector,
+            py::arg("order")='F',
+            R"pbdoc(
+            Convert the CSC matrix to a dense vector.
+
+            Parameters
+            ----------
+            order : {'C', 'F'}, optional
+                The order of the array, either 'C' for row-major or 'F' for
+                column-major order.
+
+            Returns
+            -------
+            np.ndarray
+                A dense array representation of the matrix.
+
+            See Also
+            --------
+            toarray : Convert the CSC matrix to a dense array.
+            )pbdoc"
+        )
+        .def("toarray", &sparse_to_ndarray<cs::CSCMatrix>,
+            py::arg("order")='C',
+            R"pbdoc(
+            Convert the CSC matrix to a dense vector.
+
+            Parameters
+            ----------
+            order : {'C', 'F'}, optional
+                The order of the array, either 'C' for row-major or 'F' for
+                column-major order.
+
+            Returns
+            -------
+            np.ndarray
+                A dense array representation of the matrix.
+
+            See Also
+            --------
+            toarray : Convert the CSC matrix to a dense array.
+            )pbdoc"
+        )
         //
-        .def("transpose", &cs::CSCMatrix::transpose, py::kw_only(), py::arg("values")=true)
-        .def_property_readonly("T", &cs::CSCMatrix::T)
+        .def("transpose", &cs::CSCMatrix::transpose,
+            py::kw_only(),
+            py::arg("values")=true,
+            R"pbdoc(
+            Transpose the CSC matrix.
+
+            Parameters
+            ----------
+            values : bool, optional
+                If False, do not copy the numerical values, only the row indices.
+            )pbdoc"
+        )
+        .def_property_readonly("T", &cs::CSCMatrix::T, "Alias of `transpose()`.")
         //
-        .def("sort", &cs::CSCMatrix::sort)
-        .def("tsort", &cs::CSCMatrix::tsort)
-        .def("qsort", &cs::CSCMatrix::qsort)
+        .def("sort", &cs::CSCMatrix::sort,
+            R"pbdoc(
+            Sort rows and columns in-place using two transposes, but more
+            efficiently than calling `transpose` twice.
+            )pbdoc"
+        )
+        .def("tsort", &cs::CSCMatrix::tsort,
+            "Sort rows and columns in a copy via two transposes."
+        )
+        .def("qsort", &cs::CSCMatrix::qsort,
+            "Sort rows and columns in place using std::sort (quicksort)."
+        )
         //
-        .def("band", py::overload_cast<cs::csint, cs::csint>
-                        (&cs::CSCMatrix::band, py::const_))
+        .def("band",
+            py::overload_cast<cs::csint, cs::csint>(&cs::CSCMatrix::band, py::const_),
+            R"pbdoc(
+            Keep any entries within the specified band, in-place.
+
+            Parameters
+            ----------
+            kl, ku  : int
+                The lower and upper diagonals within which to keep entries. The
+                main diagonal is 0, with sub-diagonals < 0, and super-diagonals
+                > 0.
+            )pbdoc"
+        )
         //
-        .def("scale", &cs::CSCMatrix::scale)
+        .def("scale", &cs::CSCMatrix::scale,
+            "Scale the rows and/or columns of the matrix in-place."
+        )
         //
         .def("__mul__", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_), py::is_operator())
         .def("__rmul__", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_), py::is_operator())
-        .def("dot", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
-        .def("dot", py::overload_cast<std::span<const double>>(&cs::CSCMatrix::dot, py::const_))
-        .def("dot", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
+        .def("dot",
+            py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_),
+            py::arg("other"),
+            R"pbdoc(
+            Compute the dot product of the CSC matrix with a scalar, dense vector,
+            or another CSC matrix.
+
+            Parameters
+            ----------
+            other : float, np.ndarray, or CSCMatrix
+                The scalar, dense vector, or CSC matrix to multiply.
+
+            Returns
+            -------
+            float, np.ndarray or CSCMatrix
+                The result of the dot product. Type matches the input type.
+            )pbdoc"
+        )
+        .def("dot",
+            py::overload_cast<std::span<const double>>(&cs::CSCMatrix::dot, py::const_),
+            py::arg("other")
+        )
+        .def("dot",
+            py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_),
+            py::arg("other")
+        )
         .def("__matmul__", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
         .def("__matmul__", py::overload_cast<std::span<const double>>(&cs::CSCMatrix::dot, py::const_))
         .def("__matmul__", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
         //
-        .def("add", &cs::CSCMatrix::add)
+        .def("add", &cs::CSCMatrix::add,
+            py::arg("B"),
+            R"pbdoc(
+            Add another CSC matrix to this matrix.
+
+            Parameters
+            ----------
+            B : CSCMatrix
+                The matrix to add.
+
+            Returns
+            -------
+            CSCMatrix
+                A new CSCMatrix representing the sum of the two matrices.
+            )pbdoc"
+        )
         .def("__add__", &cs::CSCMatrix::add)
         //
         // Convert these "p_inv" arguments to "p" for python interface to
@@ -604,7 +829,24 @@ PYBIND11_MODULE(csparse, m)
             {
                 return self.permute(cs::inv_permute(p), q, values);
             },
-            py::arg("p"), py::arg("q"), py::kw_only(), py::arg("values")=true
+            py::arg("p"),
+            py::arg("q"),
+            py::kw_only(),
+            py::arg("values")=true,
+            R"pbdoc(
+            Permute the rows and columns of a copy of the matrix.
+
+            Equivalent to calling ``A[p[:, np.newaxis], q]`` in NumPy notation.
+
+            Parameters
+            ----------
+            p : (M,) array_like of int
+                The row permutation vector.
+            q : (N,) array_like of int
+                The column permutation vector.
+            values : bool, optional
+                If False, do not copy the numerical values, only the row indices.
+            )pbdoc"
         )
         .def("symperm", 
             [](const cs::CSCMatrix& self,
@@ -613,7 +855,22 @@ PYBIND11_MODULE(csparse, m)
             {
                 return self.symperm(cs::inv_permute(p), values);
             },
-            py::arg("p"), py::kw_only(), py::arg("values")=true
+            py::arg("p"),
+            py::kw_only(),
+            py::arg("values")=true,
+            R"pbdoc(
+            Symmetrically permute the rows and columns of a copy of the matrix.
+
+            Equivalent to calling ``A.permute(p, p)``,
+            or ``A[p[:, np.newaxis], p]`` in NumPy notation.
+
+            Parameters
+            ----------
+            p : (M,) array_like of int
+                The symmetric permutation vector.
+            values : bool, optional
+                If False, do not copy the numerical values, only the row indices.
+            )pbdoc"
         )
         .def("permute_transpose",
             [](const cs::CSCMatrix& self, 
@@ -623,7 +880,24 @@ PYBIND11_MODULE(csparse, m)
             {
                 return self.permute_transpose(cs::inv_permute(p), q, values);
             },
-            py::arg("p"), py::arg("q"), py::kw_only(), py::arg("values")=true
+            py::arg("p"),
+            py::arg("q"),
+            py::kw_only(),
+            py::arg("values")=true,
+            R"pbdoc(
+            Permute the rows and columns of the transpose of the matrix.
+
+            Equivalent to calling ``A.T[p[:, np.newaxis], q]`` in NumPy notation.
+
+            Parameters
+            ----------
+            p : (N,) array_like of int
+                The row permutation vector.
+            q : (M,) array_like of int
+                The column permutation vector.
+            values : bool, optional
+                If False, do not copy the numerical values, only the row indices.
+            )pbdoc"
         )
         .def("permute_rows", 
             [](const cs::CSCMatrix& self,
@@ -632,23 +906,153 @@ PYBIND11_MODULE(csparse, m)
             {
                 return self.permute_rows(cs::inv_permute(p), values);
             },
-            py::arg("p"), py::kw_only(), py::arg("values")=true
+            py::arg("p"),
+            py::kw_only(),
+            py::arg("values")=true,
+            R"pbdoc(
+            Permute the rows of a copy of the matrix.
+
+            Equivalent to calling ``A[p[:, np.newaxis], :]`` in NumPy notation.
+
+            Parameters
+            ----------
+            p : (M,) array_like of int
+                The row permutation vector.
+            values : bool, optional
+                If False, do not copy the numerical values, only the row indices.
+            )pbdoc"
         )
         .def("permute_cols", &cs::CSCMatrix::permute_cols,
-             py::arg("q"), py::kw_only(), py::arg("values")=true)
+             py::arg("q"),
+             py::kw_only(),
+             py::arg("values")=true,
+             R"pbdoc(
+            Permute the columns of a copy of the matrix.
+
+            Equivalent to calling ``A[:, q]`` in NumPy notation.
+
+            Parameters
+            ----------
+            q : (N,) array_like of int
+                The column permutation vector.
+            values : bool, optional
+                If False, do not copy the numerical values, only the row indices.
+            )pbdoc"
+        )
         //
-        .def("norm", &cs::CSCMatrix::norm)
-        .def("fronorm", &cs::CSCMatrix::fronorm)
+        .def("norm", &cs::CSCMatrix::norm,
+            R"pbdoc(
+            Compute the 1-norm of the matrix (maximum column sum).
+            
+            The 1-norm is defined as:
+
+            .. math::
+                \|A\|_1 = \max_j \sum_{i=1}^{m} |a_{ij}|.
+
+            Returns
+            -------
+            float
+                The 1-norm of the matrix.
+            )pbdoc"
+        )
+        .def("fronorm", &cs::CSCMatrix::fronorm,
+            R"pbdoc(
+            Compute the Frobenius norm of the matrix.
+
+            The Frobenius norm is defined as:
+
+            .. math::
+                \|A\|_F =
+                \( \sum_{i=1}^{m} \sum_{j=1}^{n} |a_{ij}|^2 \)^{\frac{1}{2}}.
+
+            Returns
+            -------
+            float
+                The Frobenius norm of the matrix.
+            )pbdoc"
+        )
         //
-        .def("slice", &cs::CSCMatrix::slice)
-        .def("index", &cs::CSCMatrix::index)
-        .def("add_empty_top", &cs::CSCMatrix::add_empty_top)
-        .def("add_empty_bottom", &cs::CSCMatrix::add_empty_bottom)
-        .def("add_empty_left", &cs::CSCMatrix::add_empty_left)
-        .def("add_empty_right", &cs::CSCMatrix::add_empty_right)
+        .def("slice", &cs::CSCMatrix::slice,
+            py::arg("i_start"),
+            py::arg("i_end"),
+            py::arg("j_start"),
+            py::arg("j_end"),
+            R"pbdoc(
+            Extract a submatrix given row and column index ranges.
+
+            Equivalent to calling ``A[i_start:i_end, j_start:j_end]`` in NumPy
+            notation.
+
+            Parameters
+            ----------
+            i_start, i_end : int
+                The starting (inclusive) and ending (exclusive) row indices.
+            j_start, j_end : int
+                The starting (inclusive) and ending (exclusive) column indices.
+
+            Returns
+            -------
+            res : (i_end - i_start, j_end - j_start) CSCMatrix
+                The extracted submatrix.
+            )pbdoc"
+        )
+        .def("index", &cs::CSCMatrix::index,
+            py::arg("rows"),
+            py::arg("cols"),
+            R"pbdoc(
+            Extract a submatrix given row and column index arrays.
+
+            Equivalent to calling ``A[rows[:, np.newaxis], cols]`` in NumPy
+            notation.
+
+            Parameters
+            ----------
+            rows : (Mr,) array_like of int
+                The row indices.
+            cols : (Nc,) array_like of int
+                The column indices.
+
+            Returns
+            -------
+            res : (Mr, Nc) CSCMatrix
+                The extracted submatrix.
+            )pbdoc"
+        )
+        // TODO .def("scatter")
+        // TODO .def("structural_symmetry")
+        .def("add_empty_top", &cs::CSCMatrix::add_empty_top,
+            "Add empty rows to the top of the matrix."
+        )
+        .def("add_empty_bottom", &cs::CSCMatrix::add_empty_bottom,
+            "Add empty rows to the bottom of the matrix."
+        )
+        .def("add_empty_left", &cs::CSCMatrix::add_empty_left,
+            "Add empty columns to the left of the matrix."
+        )
+        .def("add_empty_right", &cs::CSCMatrix::add_empty_right,
+            "Add empty columns to the right of the matrix."
+        )
         //
-        .def("sum_rows", &cs::CSCMatrix::sum_rows)
-        .def("sum_cols", &cs::CSCMatrix::sum_cols)
+        .def("sum_rows", &cs::CSCMatrix::sum_rows,
+            R"pbdoc(
+            Compute the sum of each row in the matrix.
+
+            Returns
+            -------
+            (M,) np.ndarray
+                A dense array containing the sum of each row.
+            )pbdoc"
+        )
+        .def("sum_cols", &cs::CSCMatrix::sum_cols,
+            R"pbdoc(
+            Compute the sum of each column in the matrix.
+
+            Returns
+            -------
+            (N,) np.ndarray
+                A dense array containing the sum of each column.
+            )pbdoc"
+        )
         //
         .def("__repr__", [](const cs::CSCMatrix& A) {
             return A.to_string(false);  // don't print all elements
@@ -1105,12 +1509,12 @@ PYBIND11_MODULE(csparse, m)
     );
 
     m.def("maxtrans_r",
-        [] (const py::object& A_scipy) {
+        [] (const py::object& A_scipy, cs::csint seed=0) {
             const cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::csint seed = 0;  // unused, but required by interface
             return cs::detail::maxtrans_r(A, seed);
         },
         py::arg("A"),
+        py::arg("seed")=0,
         R"pbdoc(
         Compute a maximum transversal of a sparse matrix using a recursive
         algorithm.

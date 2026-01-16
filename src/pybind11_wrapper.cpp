@@ -1018,7 +1018,18 @@ PYBIND11_MODULE(csparse, m)
                 The extracted submatrix.
             )pbdoc"
         )
-        // TODO .def("scatter")
+        .def("scatter", 
+            [](const cs::CSCMatrix& self, const cs::csint k) {
+                std::vector<double> x(self.shape()[0]);  // (M,)
+                if (k < 0 || k >= self.shape()[1]) {
+                    throw py::index_error("Column index out of bounds.");
+                }
+                self.scatter(k, x);
+                return x;
+            },
+            py::arg("k"),
+            "Scatter the k-th column of the matrix into a dense vector."
+        )
         // TODO .def("structural_symmetry")
         .def("add_empty_top", &cs::CSCMatrix::add_empty_top,
             "Add empty rows to the top of the matrix."

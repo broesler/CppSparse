@@ -992,12 +992,12 @@ std::vector<double> chol_solve(
 //         QR Factorization Solvers
 // -----------------------------------------------------------------------------
 void QRResult::solve(
-    size_t M2,
     std::span<const double> b,
     std::span<double> x
 ) const
 {
     // Solve P^T Q R E x = b
+    csint M2 = V.shape()[0];
     std::vector<double> w(M2);
     ipvec<double>(p_inv, b, w);  // permute b -> E b -> w = Eb
     apply_qtleft(V, beta, w);    // y = Q^T E b -> w = y
@@ -1007,12 +1007,12 @@ void QRResult::solve(
 
 
 void QRResult::tsolve(
-    size_t M2,
     std::span<const double> b,
     std::span<double> x
 ) const
 {
     // Solve P^T R^T Q^T E x = b
+    csint M2 = V.shape()[0];
     std::vector<double> w(M2);
     pvec<double>(q, b, w);      // permute b -> E b -> w = Eb
     utsolve_inplace(R, w);      // y = R^T \ E b -> w = y
@@ -1060,10 +1060,10 @@ QRSolveResult qr_solve(
 
         if (M >= N) {
             // Compute the least-squares solution
-            res.solve(S.m2, B_k, X_k);
+            res.solve(B_k, X_k);
         } else {
             // Compute the minimum-norm solution
-            res.tsolve(S.m2, B_k, X_k);
+            res.tsolve(B_k, X_k);
         }
     }
 
@@ -1117,10 +1117,10 @@ QRSolveResult qr_solve(
 
         if (M >= N) {
             // Compute the least-squares solution
-            res.solve(S.m2, B_k, X_k);
+            res.solve(B_k, X_k);
         } else {
             // Compute the minimum-norm solution
-            res.tsolve(S.m2, B_k, X_k);
+            res.tsolve(B_k, X_k);
         }
     }
 

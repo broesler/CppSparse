@@ -55,12 +55,10 @@ struct QRResult {
     * If A is tall (m >= n), compute the least-squares solution.
     * If A is wide (m < n), compute the minimum-norm solution.
     *
-    * @param M2  the size of the workspace, typically `SymbolicQR.m2`
     * @param b  the right-hand side vector
     * @param x[out]  the output solution vector
     */
     void solve(
-        size_t M2,
         std::span<const double> b,
         std::span<double> x
     ) const;
@@ -70,12 +68,10 @@ struct QRResult {
     * Assume A is wide (m < n), and compute the minimum-norm solution by solving
     * A^T X = B.
     *
-    * @param M2  the size of the workspace, typically `SymbolicQR.m2`
     * @param b  the right-hand side vector
     * @param x[out]  the solution vector
     */
     void tsolve(
-        size_t M2,
         std::span<const double> b,
         std::span<double> x
     ) const;

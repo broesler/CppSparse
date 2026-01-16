@@ -1269,29 +1269,165 @@ PYBIND11_MODULE(csparse, m)
     // -------------------------------------------------------------------------
     //         Example Matrices
     // -------------------------------------------------------------------------
-    m.def("davis_example_small", []() { return scipy_from_coo(cs::davis_example_small()); });
-    m.def("davis_example_chol", []() { return scipy_from_csc(cs::davis_example_chol()); });
+    m.def("davis_example_small",
+        []() { return scipy_from_coo(cs::davis_example_small()); },
+        R"pbdoc(
+        Define the 4x4 matrix from Davis Equation (2.1) [p 7--8].
+
+        .. code-block:: python
+
+            A = [[4.5,   0, 3.2,   0],
+                 [3.1, 2.9,   0, 0.9],
+                 [  0, 1.7,   3,   0],
+                 [3.5, 0.4,   0,   1]]
+
+        See: Davis, Timothy A. "Direct Methods for Sparse Linear Systems",
+             Eqn (2.1), p. 7--8.
+
+        Returns
+        -------
+        coo_array
+            A 4x4 matrix in COO format.
+        )pbdoc"
+    );
+    m.def("davis_example_chol",
+        []() { return scipy_from_csc(cs::davis_example_chol()); },
+        R"pbdoc(
+        Define the 11x11 matrix in Davis, Figure 4.2, p 39.
+
+        This matrix is sparse and symmetric positive definite. We arbitrarily assign
+        the diagonal to the 0-based index values + 10, and the off-diagonals to 1.
+
+        .. code-block:: python
+
+            A = [[10,  0,  0,  0,  0,  1,  1,  0,  0,  0,  0],
+                 [ 0, 11,  1,  0,  0,  0,  0,  1,  0,  0,  0],
+                 [ 0,  1, 12,  0,  0,  0,  0,  0,  0,  1,  1],
+                 [ 0,  0,  0, 13,  0,  1,  0,  0,  0,  1,  0],
+                 [ 0,  0,  0,  0, 14,  0,  0,  1,  0,  0,  1],
+                 [ 1,  0,  0,  1,  0, 15,  0,  0,  1,  1,  0],
+                 [ 1,  0,  0,  0,  0,  0, 16,  0,  0,  0,  1],
+                 [ 0,  1,  0,  0,  1,  0,  0, 17,  0,  1,  1],
+                 [ 0,  0,  0,  0,  0,  1,  0,  0, 18,  0,  0],
+                 [ 0,  0,  1,  1,  0,  1,  0,  1,  0, 19,  1],
+                 [ 0,  0,  1,  0,  1,  0,  1,  1,  0,  1, 20]]
+
+        See: Davis, Timothy A. "Direct Methods for Sparse Linear Systems",
+             Figure 4.2, p 39.
+
+        Returns
+        -------
+        csc_array
+            An 11x11 matrix in CSC format.
+        )pbdoc"
+    );
     m.def("davis_example_qr",
         [](double add_diag=0.0, bool random_vals=false) {
             return scipy_from_csc(cs::davis_example_qr(add_diag, random_vals));
         },
         py::arg("add_diag")=0.0,
-        py::arg("random_vals")=false
+        py::arg("random_vals")=false,
+        R"pbdoc(
+        Define the 8x8 matrix in Davis, Figure 5.1, p 74.
+
+        This matrix is sparse, unsymmetric positive definite. We arbitrarily assign
+        the diagonal to the 1-based index values (except 8), and off-diagonals to 1.
+
+        .. code-block:: python
+
+            A = [[1., 0., 0., 1., 0., 0., 1., 0.],
+                 [0., 2., 1., 0., 0., 0., 1., 0.],
+                 [0., 0., 3., 1., 0., 0., 0., 0.],
+                 [1., 0., 0., 4., 0., 0., 1., 0.],
+                 [0., 0., 0., 0., 5., 1., 0., 0.],
+                 [0., 0., 0., 0., 1., 6., 0., 1.],
+                 [0., 1., 1., 0., 0., 0., 7., 1.],
+                 [0., 0., 0., 0., 1., 1., 1., 0.]]
+
+        See: Davis, Timothy A. "Direct Methods for Sparse Linear Systems",
+             Figure 5.1, p 74.
+
+        Parameters
+        ----------
+        add_diag : float
+            If non-zero, add this value to the diagonal of the matrix. Can be
+            used to make the matrix positive definite.
+        random_vals : bool
+            If True, randomize the non-zero values in the matrix, before adding
+            to the diagonal.
+
+        Returns
+        -------
+        csc_array
+            An 8x8 matrix in CSC format.
+        )pbdoc"
     );
-    m.def("davis_example_amd", []() { return scipy_from_csc(cs::davis_example_amd()); });
+    m.def("davis_example_amd",
+        []() { return scipy_from_csc(cs::davis_example_amd()); },
+        R"pbdoc(
+        Build the 10 x 10 symmetric, positive definite AMD example matrix.
+
+        .. code-block:: python
+
+            A = [[10.,  0.,  0.,  1.,  0.,  1.,  0.,  0.,  0.,  0.],
+                 [ 0., 11.,  0.,  0.,  1.,  1.,  0.,  0.,  1.,  0.],
+                 [ 0.,  0., 12.,  0.,  1.,  1.,  1.,  0.,  0.,  0.],
+                 [ 1.,  0.,  0., 13.,  0.,  0.,  1.,  1.,  0.,  0.],
+                 [ 0.,  1.,  1.,  0., 14.,  0.,  1.,  0.,  1.,  0.],
+                 [ 1.,  1.,  1.,  0.,  0., 15.,  0.,  0.,  0.,  0.],
+                 [ 0.,  0.,  1.,  1.,  1.,  0., 16.,  1.,  1.,  1.],
+                 [ 0.,  0.,  0.,  1.,  0.,  0.,  1., 17.,  1.,  1.],
+                 [ 0.,  1.,  0.,  0.,  1.,  0.,  1.,  1., 18.,  1.],
+                 [ 0.,  0.,  0.,  0.,  0.,  0.,  1.,  1.,  1., 19.]]
+
+        See: Davis, Figure 7.1, p 101.
+
+        Returns
+        -------
+        csc_array
+            The 10x10 matrix in CSC format.
+        )pbdoc"
+    );
 
     // -------------------------------------------------------------------------
     //         General Functions
     // -------------------------------------------------------------------------
-    m.def("gaxpy",         make_vector_func(&cs::gaxpy));
-    m.def("gatxpy",        make_vector_func(&cs::gatxpy));
-    m.def("sym_gaxpy",     make_vector_func(&cs::sym_gaxpy));
-    m.def("gaxpy_row",     make_gaxpy_matrix_func<false>(&cs::gaxpy_row));
-    m.def("gaxpy_col",     make_gaxpy_matrix_func(&cs::gaxpy_col));
-    m.def("gaxpy_block",   make_gaxpy_matrix_func(&cs::gaxpy_block));
-    m.def("gatxpy_row",    make_gaxpy_matrix_func<false>(&cs::gatxpy_row));
-    m.def("gatxpy_col",    make_gaxpy_matrix_func(&cs::gatxpy_col));
-    m.def("gatxpy_block",  make_gaxpy_matrix_func(&cs::gatxpy_block));
+    m.def("gaxpy", make_vector_func(&cs::gaxpy),
+        "Perform the sparse matrix-vector operation `z = Ax + y`."
+    );
+    m.def("gatxpy", make_vector_func(&cs::gatxpy),
+        R"pbdoc(Perform the sparse matrix-vector operation :math:`z = A^{\top} x + y`.)pbdoc"
+    );
+    m.def("sym_gaxpy", make_vector_func(&cs::sym_gaxpy),
+        "Perform the sparse matrix-vector operation `z = Ax + y`, assuming `A` is symmetric."
+    );
+    m.def("gaxpy_row", make_gaxpy_matrix_func<false>(&cs::gaxpy_row),
+        R"pbdoc(Perform the sparse matrix-matrix operation `Z = AX + Y`, where
+        `X` and `Y` are dense matrices in row-major format.)pbdoc"
+    );
+    m.def("gaxpy_col", make_gaxpy_matrix_func(&cs::gaxpy_col),
+        R"pbdoc(Perform the sparse matrix-matrix operation `Z = AX + Y`, where
+        `X` and `Y` are dense matrices in column-major format.)pbdoc"
+    );
+    m.def("gaxpy_block", make_gaxpy_matrix_func(&cs::gaxpy_block),
+        R"pbdoc(Perform the sparse matrix-matrix operation `Z = AX + Y`, where
+        `X` and `Y` are dense matrices in column-major format.)pbdoc"
+    );
+    m.def("gatxpy_row", make_gaxpy_matrix_func<false>(&cs::gatxpy_row),
+        R"pbdoc(Perform the sparse matrix-matrix operation
+        :math:`Z = A^{\top} X + Y`, where `X` and `Y` are dense matrices in
+        row-major format.)pbdoc"
+    );
+    m.def("gatxpy_col", make_gaxpy_matrix_func(&cs::gatxpy_col),
+        R"pbdoc(Perform the sparse matrix-matrix operation
+        :math:`Z = A^{\top} X + Y`, where `X` and `Y` are dense matrices in
+        column-major format.)pbdoc"
+    );
+    m.def("gatxpy_block", make_gaxpy_matrix_func(&cs::gatxpy_block),
+        R"pbdoc(Perform the sparse matrix-matrix operation
+        :math:`Z = A^{\top} X + Y`, where `X` and `Y` are dense matrices in
+        column-major format.)pbdoc"
+    );
 
     //--------------------------------------------------------------------------
     //        Utility Functions
@@ -1306,7 +1442,24 @@ PYBIND11_MODULE(csparse, m)
             }
         ),
         py::arg("p"),
-        py::arg("b")
+        py::arg("b"),
+        R"pbdoc(
+        Permute a vector according to the permutation vector `p`.
+
+        Equivalent to `b[p]` in NumPy notation.
+
+        Parameters
+        ----------
+        p : (N,) array_like of int
+            The permutation vector.
+        b : (N,) array_like
+            The vector to be permuted.
+
+        Returns
+        -------
+        np.ndarray
+            The permuted vector.
+        )pbdoc"
     );
     m.def("ipvec",
         make_pvec_wrapper(
@@ -1318,14 +1471,46 @@ PYBIND11_MODULE(csparse, m)
             }
         ),
         py::arg("p"),
-        py::arg("b")
-    );
-    m.def("inv_permute", &cs::inv_permute);
+        py::arg("b"),
+        R"pbdoc(
+        Inversely permute a vector according to the permutation vector `p`.
 
-    m.def("scipy_from_coo", &scipy_from_coo);
-    m.def("scipy_from_csc", &scipy_from_csc);
-    m.def("csc_from_scipy", &csc_from_scipy);
-    m.def("coo_from_scipy", &coo_from_scipy);
+        Equivalent to `b[np.argsort(p)]` or `b[p] = b` in NumPy notation.
+
+        Parameters
+        ----------
+        p : (N,) array_like of int
+            The permutation vector.
+        b : (N,) array_like
+            The vector to be inversely permuted.
+
+        Returns
+        -------
+        np.ndarray
+            The inversely permuted vector.
+        )pbdoc"
+    );
+    m.def("inv_permute", &cs::inv_permute,
+        R"pbdoc(Invert a permutation vector.
+
+        Equivalent to `np.argsort(p)` in NumPy notation.
+
+        Parameters
+        ----------
+        p : (N,) array_like of int
+            The permutation vector.
+
+        Returns
+        -------
+        np.ndarray
+            The inverted permutation vector.
+        )pbdoc"
+    );
+
+    m.def("scipy_from_coo", &scipy_from_coo, "Convert a COOMatrix to a SciPy `csc_array`.");
+    m.def("scipy_from_csc", &scipy_from_csc, "Convert a CSCMatrix to a SciPy `coo_array`.");
+    m.def("csc_from_scipy", &csc_from_scipy, "Convert a SciPy sparse matrix to a CSCMatrix.");
+    m.def("coo_from_scipy", &coo_from_scipy, "Convert a SciPy sparse matrix to a COOMatrix.");
 
     m.def("residual_norm",
         [](const py::object& A_scipy,
@@ -1336,7 +1521,26 @@ PYBIND11_MODULE(csparse, m)
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
             return cs::residual_norm(A, x, b, resid);
         },
-        py::arg("A"), py::arg("x"), py::arg("b")
+        py::arg("A"),
+        py::arg("x"),
+        py::arg("b"),
+        R"pbdoc(
+        Compute the residual norm :math:`\|Ax - b\|_2`.
+
+        Parameters
+        ----------
+        A : (M, N) CSCMatrix
+            The sparse matrix.
+        x : (N,) array_like of float
+            The solution vector.
+        b : (M,) array_like of float
+            The right-hand side vector.
+
+        Returns
+        -------
+        float
+            The residual 2-norm, :math:`\|Ax - b\|_2`.
+        )pbdoc"
     );
 
     //--------------------------------------------------------------------------

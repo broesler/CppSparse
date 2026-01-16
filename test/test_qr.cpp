@@ -590,7 +590,7 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
         CHECK(sym_res.beta.empty());
 
         // sym_res does not include the last N - M columns of R
-        auto res_indptr = std::span(res.R.indptr().data(), M + 1);
+        auto res_indptr = std::span(res.R.indptr()).subspan(0, M + 1);
         CHECK_THAT(sym_res.R.indptr(), RangeEquals(res_indptr));
 
         // NOTE hstack sorts the indices, whereas qr/symbolic_qr does not, so we
@@ -598,7 +598,7 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
         //   * remove sorting from hstack
         //   * check the unordered sets of indices (not as robust)
         //   * sort the indices of sym_res.R (for testing only)
-        auto res_indices = std::span(res.R.indices().data(), sym_res.R.nnz());
+        auto res_indices = std::span(res.R.indices()).subspan(0, sym_res.R.nnz());
         sym_res.R.sort();  // sort columns in-place
         CHECK_THAT(sym_res.R.indices(), RangeEquals(res_indices));
 

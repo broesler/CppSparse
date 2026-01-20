@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 # =============================================================================
-#     File: trisolve_perf.py
+#     File: ex3.8_trisolve_perf.py
 #  Created: 2025-01-11 10:57
 #   Author: Bernie Roesler
 #
-"""Plot the triangular solve performance data."""
+"""
+Plot the triangular solve performance data.
+
+See: Davis, Exercise 3.8.
+"""
 # =============================================================================
 
 import timeit

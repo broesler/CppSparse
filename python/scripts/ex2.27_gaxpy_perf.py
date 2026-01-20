@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 # =============================================================================
-#     File: gaxpy_perf.py
+#     File: ex2.27_gaxpy_perf.py
 #  Created: 2025-01-07 12:49
 #   Author: Bernie Roesler
 #
-"""Create and plot the gaxpy performance data."""
+"""
+Create and plot the gaxpy performance data.
+
+See: Davis, Exercise 2.27.
+"""
 # =============================================================================
 
 import timeit

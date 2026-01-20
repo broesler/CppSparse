@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 # =============================================================================
-#     File: sort_indices_perf.py
+#     File: ex2.8_sort_indices_perf.py
 #  Created: 2025-10-13 13:12
 #   Author: Bernie Roesler
 #
-"""Test and plot the performance of sorting the indices of a sparse matrix."""
+"""
+Test and plot the performance of sorting the indices of a sparse matrix.
+
+See: Davis, Exercise 2.8.
+"""
 # =============================================================================
 
 import timeit
@@ -18,7 +22,6 @@ import seaborn as sns
 from tqdm import tqdm
 
 import csparse
-
 
 SAVE_FIGS = True
 

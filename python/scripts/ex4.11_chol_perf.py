@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 # =============================================================================
-#     File: chol_perf.py
+#     File: ex4.11_chol_perf.py
 #  Created: 2025-02-10 21:34
 #   Author: Bernie Roesler
 #
-"""Compare the performance of the Cholesky decomposition methods."""
+"""Compare the performance of the Cholesky decomposition methods.
+
+See: Davis, Exercises 4.11 and 4.12.
+"""
 # =============================================================================
 
 import re

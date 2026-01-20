@@ -417,7 +417,7 @@ def _cholmod_counts(A, ATA):
     assert_array_equal(post, post_)
 
     # Get the column counts of L
-    counts_ = cholmod.symbfact(A, kind=kind)[0]
+    counts_ = cholmod.symbfact(A, kind=kind).count
 
     counts = csparse.chol_colcounts(A, ATA=ATA)
     assert_array_equal(counts, counts_)

@@ -72,7 +72,7 @@ def test_amd(A, request):
             p_sk = symamd(A)
 
         Cp_sk = C[p_sk[:, np.newaxis], p_sk]
-        lnz_sk = symbfact(Cp_sk)[0].sum()  # first output is column counts of L
+        lnz_sk = symbfact(Cp_sk).count.sum()
         print(f"{N = :4d}, lnz: {lnz:6d}, {lnz_sk:6d}")
     else:
         print(f"{N = :4d}, lnz: {lnz:6d}")

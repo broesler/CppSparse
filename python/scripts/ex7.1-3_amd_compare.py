@@ -94,9 +94,9 @@ else:
 
         # Compute the nnz in the LU factorization as a quality metric
         quality_funcs = {
-            "amd": lambda A, p: symbfact(A[p[:, np.newaxis], p])[0].sum(),
+            "amd": lambda A, p: symbfact(A[p[:, np.newaxis], p]).count.sum(),
             "colamd": colamd_quality,
-            "amd_ATA": lambda A, q: symbfact(A[:, q], kind="col")[0].sum(),
+            "amd_ATA": lambda A, q: symbfact(A[:, q], kind="col").count.sum(),
         }
 
         for package, funcs in tqdm(amd_funcs.items(), leave=False):

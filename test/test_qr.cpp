@@ -28,9 +28,9 @@ namespace cs {
 TEST_CASE("Householder Reflection", "[house]")
 {
     SECTION("Unit x") {
-        std::vector<double> x = {1, 0, 0};
+        std::vector<double> x{1, 0, 0};
 
-        std::vector<double> expect_v = {1, 0, 0};
+        std::vector<double> expect_v{1, 0, 0};
         double expect_beta = 0.0;
         double expect_s = 1.0;
 
@@ -48,9 +48,9 @@ TEST_CASE("Householder Reflection", "[house]")
     }
 
     SECTION("Negative unit x") {
-        std::vector<double> x = {-1, 0, 0};
+        std::vector<double> x{-1, 0, 0};
 
-        std::vector<double> expect_v = {1, 0, 0};
+        std::vector<double> expect_v{1, 0, 0};
         double expect_beta = 0.0;
         double expect_s = -1.0;
 
@@ -68,10 +68,10 @@ TEST_CASE("Householder Reflection", "[house]")
     }
 
     SECTION("Arbitrary x, x[0] > 0") {
-        std::vector<double> x = {3, 4};  // norm(x) == 5
+        std::vector<double> x{3, 4};  // norm(x) == 5
 
         // These are the *unscaled* values from Octave
-        // std::vector<double> expect_v = {8, 4};
+        // std::vector<double> expect_v{8, 4};
         // double expect_beta = 0.025;
         //
         // To get the scaled values, we need to multiply beta by v(1)**2, and
@@ -109,8 +109,8 @@ TEST_CASE("Householder Reflection", "[house]")
 
         // Apply the vector
         // Hx = [±norm(x), 0, 0]
-        std::vector<double> expect = {-5, 0}; // LAPACK
-        // std::vector<double> expect = {5, 0};  // Davis
+        std::vector<double> expect{-5, 0}; // LAPACK
+        // std::vector<double> expect{5, 0};  // Davis
 
         // Use column 0 of V to apply the Householder reflection
         CSCMatrix V = COOMatrix(H.v, {0, 1}, {0, 0}).tocsc();
@@ -120,7 +120,7 @@ TEST_CASE("Householder Reflection", "[house]")
     }
 
     SECTION("Arbitrary x, x[0] < 0") {
-        std::vector<double> x = {-3, 4};  // norm(x) == 5
+        std::vector<double> x{-3, 4};  // norm(x) == 5
 
         // These are the values from python's scipy.linalg.qr (via LAPACK):
         std::vector<double> expect_v {1, -0.5};
@@ -134,7 +134,7 @@ TEST_CASE("Householder Reflection", "[house]")
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
 
         // Apply the vector
-        std::vector<double> expect = {5, 0}; // LAPACK or Davis
+        std::vector<double> expect{5, 0}; // LAPACK or Davis
 
         CSCMatrix V = COOMatrix(H.v, {0, 1}, {0, 0}).tocsc();
         std::vector<double> Hx = happly(V, 0, H.beta, x);
@@ -163,7 +163,7 @@ TEST_CASE("QR factorization of the Identity Matrix", "[qr][identity]")
     SymbolicQR S = sqr(I, order);
 
     SECTION("Symbolic analysis") {
-        std::vector<csint> expect_identity = {0, 1, 2, 3, 4, 5, 6, 7};
+        std::vector<csint> expect_identity{0, 1, 2, 3, 4, 5, 6, 7};
         CHECK(S.p_inv == expect_identity);
         CHECK(S.q == expect_identity);
         CHECK(S.parent == std::vector<csint>(N, -1));
@@ -191,10 +191,10 @@ TEST_CASE("Symbolic QR Decomposition of Square, Non-symmetric A", "[qr][M == N][
     csint N = A.shape()[1];  // == 8
 
     // See etree in Figure 5.1, p 74
-    std::vector<csint> parent = {3, 2, 3, 6, 5, 6, 7, -1};
+    std::vector<csint> parent{3, 2, 3, 6, 5, 6, 7, -1};
 
-    std::vector<csint> expect_leftmost = {0, 1, 2, 0, 4, 4, 1, 4};
-    std::vector<csint> expect_p_inv = {0, 1, 3, 7, 4, 5, 2, 6};  // cs_qr MATLAB
+    std::vector<csint> expect_leftmost{0, 1, 2, 0, 4, 4, 1, 4};
+    std::vector<csint> expect_p_inv{0, 1, 3, 7, 4, 5, 2, 6};  // cs_qr MATLAB
 
     SECTION("find_leftmost") {
         REQUIRE(find_leftmost(A) == expect_leftmost);
@@ -212,7 +212,7 @@ TEST_CASE("Symbolic QR Decomposition of Square, Non-symmetric A", "[qr][M == N][
     }
 
     SECTION("Symbolic analysis") {
-        std::vector<csint> expect_q = {0, 1, 2, 3, 4, 5, 6, 7};  // natural
+        std::vector<csint> expect_q{0, 1, 2, 3, 4, 5, 6, 7};  // natural
         std::vector<csint> expect_parent = parent;
 
         SymbolicQR S = sqr(A, AMDOrder::Natural);
@@ -387,10 +387,10 @@ TEST_CASE("Symbolic QR factorization of overdetermined matrix M > N", "[qr][M > 
     CHECK(A.shape() == Shape {M, N});
 
     // See etree in Figure 5.1, p 74
-    std::vector<csint> parent = {3, 2, 3, -1, -1};
+    std::vector<csint> parent{3, 2, 3, -1, -1};
 
-    std::vector<csint> expect_leftmost = {0, 1, 2, 0, 4, 4, 1, 4};
-    std::vector<csint> expect_p_inv = {0, 1, 3, 5, 4, 6, 2, 7};
+    std::vector<csint> expect_leftmost{0, 1, 2, 0, 4, 4, 1, 4};
+    std::vector<csint> expect_p_inv{0, 1, 3, 5, 4, 6, 2, 7};
 
     SECTION("find_leftmost") {
         REQUIRE(find_leftmost(A) == expect_leftmost);
@@ -408,7 +408,7 @@ TEST_CASE("Symbolic QR factorization of overdetermined matrix M > N", "[qr][M > 
     }
 
     SECTION("Symbolic analysis") {
-        std::vector<csint> expect_q = {0, 1, 2, 3, 4};  // natural
+        std::vector<csint> expect_q{0, 1, 2, 3, 4};  // natural
         std::vector<csint> expect_parent = parent;
 
         SymbolicQR S = sqr(A);
@@ -502,9 +502,9 @@ TEST_CASE("Symbolic QR Factorization of Underdetermined Matrix M < N", "[qr][M <
     CHECK(A.shape() == Shape {M, N});
 
     // See etree in Figure 5.1, p 74
-    std::vector<csint> parent = {3, 2, 3, -1, -1};
-    std::vector<csint> expect_leftmost = {0, 1, 2, 0, 4};
-    std::vector<csint> expect_p_inv = {0, 1, 2, 3, 4};  // natural
+    std::vector<csint> parent{3, 2, 3, -1, -1};
+    std::vector<csint> expect_leftmost{0, 1, 2, 0, 4};
+    std::vector<csint> expect_p_inv{0, 1, 2, 3, 4};  // natural
 
     SECTION("find_leftmost") {
         REQUIRE(find_leftmost(A) == expect_leftmost);
@@ -523,7 +523,7 @@ TEST_CASE("Symbolic QR Factorization of Underdetermined Matrix M < N", "[qr][M <
     }
 
     SECTION("Symbolic analysis") {
-        std::vector<csint> expect_q = {0, 1, 2, 3, 4};  // natural
+        std::vector<csint> expect_q{0, 1, 2, 3, 4};  // natural
         std::vector<csint> expect_parent = parent;
 
         SymbolicQR S = sqr(A);

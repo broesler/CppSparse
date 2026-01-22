@@ -48,12 +48,12 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
             std::vector<csint>  {0, 1, 1}
         ).tocsc();
 
-        std::vector<double> x = {1, 2};
-        std::vector<double> y = {1, 2, 3};
+        std::vector<double> x{1, 2};
+        std::vector<double> y{1, 2, 3};
 
         // A @ x + y
-        std::vector<double> expect_Ax   = {1, 2, 4};
-        std::vector<double> expect_Axpy = {2, 4, 7};
+        std::vector<double> expect_Ax  {1, 2, 4};
+        std::vector<double> expect_Axpy{2, 4, 7};
 
         multiply_test(A, x, y, expect_Ax, expect_Axpy);
     }
@@ -65,12 +65,12 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
             std::vector<csint>  {0, 1, 2}
         ).compress();
 
-        std::vector<double> x = {1, 2, 3};
-        std::vector<double> y = {9, 6, 1};
+        std::vector<double> x{1, 2, 3};
+        std::vector<double> y{9, 6, 1};
 
         // A @ x + y
-        std::vector<double> expect_Ax   = {1, 4, 9};
-        std::vector<double> expect_Axpy = {10, 10, 10};
+        std::vector<double> expect_Ax  {1, 4, 9};
+        std::vector<double> expect_Axpy{10, 10, 10};
 
         multiply_test(A, x, y, expect_Ax, expect_Axpy);
         check_vectors_allclose(sym_gaxpy(A, x, y),  expect_Axpy, tol);
@@ -80,12 +80,12 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
         COOMatrix Ac = davis_example_small();
         CSCMatrix A = Ac.compress();
 
-        std::vector<double> x = {1, 2, 3, 4};
-        std::vector<double> y = {1, 1, 1, 1};
+        std::vector<double> x{1, 2, 3, 4};
+        std::vector<double> y{1, 1, 1, 1};
 
         // A @ x + y
-        std::vector<double> expect_Ax   = {14.1, 12.5, 12.4,  8.3};
-        std::vector<double> expect_Axpy = {15.1, 13.5, 13.4,  9.3};
+        std::vector<double> expect_Ax  {14.1, 12.5, 12.4,  8.3};
+        std::vector<double> expect_Axpy{15.1, 13.5, 13.4,  9.3};
 
         multiply_test(A, x, y, expect_Ax, expect_Axpy);
 
@@ -96,16 +96,16 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
 
     SECTION("An arbitrary symmetric matrix.") {
         // See Davis pp 7-8, Eqn (2.1)
-        std::vector<csint>  i = {  0,   1,   3,   0,   1,   2,   1,   2,   0,   3};
-        std::vector<csint>  j = {  0,   0,   0,   1,   1,   1,   2,   2,   3,   3};
-        std::vector<double> v = {4.5, 3.1, 3.5, 3.1, 2.9, 1.7, 1.7, 3.0, 3.5, 1.0};
+        std::vector<csint>  i{  0,   1,   3,   0,   1,   2,   1,   2,   0,   3};
+        std::vector<csint>  j{  0,   0,   0,   1,   1,   1,   2,   2,   3,   3};
+        std::vector<double> v{4.5, 3.1, 3.5, 3.1, 2.9, 1.7, 1.7, 3.0, 3.5, 1.0};
         CSCMatrix A = COOMatrix(v, i, j).compress();
 
-        std::vector<double> x = {1, 2, 3, 4};
-        std::vector<double> y = {1, 1, 1, 1};
+        std::vector<double> x{1, 2, 3, 4};
+        std::vector<double> y{1, 1, 1, 1};
 
         // A @ x + y
-        std::vector<double> expect_Axpy = {25.7, 15.0, 13.4,  8.5};
+        std::vector<double> expect_Axpy{25.7, 15.0, 13.4,  8.5};
 
         check_vectors_allclose(sym_gaxpy(A, x, y), expect_Axpy, tol);
     }
@@ -117,7 +117,7 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
     CSCMatrix A = davis_example_small().compress();
 
     SECTION("Identity op") {
-        std::vector<double> I = {
+        std::vector<double> I{
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
@@ -136,7 +136,7 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
         std::vector<double> A_dense = A.to_dense_vector();
 
         // A.T @ A + A in column-major format
-        std::vector<double> expect = {
+        std::vector<double> expect{
             46.61, 13.49, 14.4 ,  9.79,
             10.39, 14.36,  6.8 ,  3.41,
             17.6 ,  5.1 , 22.24,  0.0 ,
@@ -158,7 +158,7 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
         std::vector<double> A_dense = A.to_dense_vector('C');
 
         // A.T @ A + A in row-major format
-        std::vector<double> expect = {
+        std::vector<double> expect{
             46.61, 10.39, 17.6 ,  6.29,
             13.49, 14.36,  5.1 ,  3.91,
             14.4 ,  6.8 , 22.24,  0.0 ,
@@ -178,7 +178,7 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
         std::vector<double> A_dense = A.to_dense_vector();
 
         // Ab @ Ac + A in column-major format
-        std::vector<double> expect = {
+        std::vector<double> expect{
             24.75, 26.04,  5.27, 20.49,
              5.44, 11.31, 11.73,  1.56,
             27.2 ,  9.92, 12.0 , 11.2 ,
@@ -197,7 +197,7 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
         std::vector<double> A_dense = A.to_dense_vector('C');
 
         // Ab @ Ac + A in row-major format
-        std::vector<double> expect = {
+        std::vector<double> expect{
             24.75,  5.44, 27.2 ,  0.0 ,
             26.04, 11.31,  9.92,  3.51,
              5.27, 11.73, 12.0 ,  1.53,
@@ -407,7 +407,7 @@ TEST_CASE("Exercise 2.4: Scale rows and columns", "[ex2.4][math][scale]")
     CSCMatrix A = davis_example_small().compress();
 
     // Diagonals of R and C to compute RAC
-    std::vector<double> r = {1, 2, 3, 4},
+    std::vector<double> r{1, 2, 3, 4},
                         c = {1.0, 0.5, 0.25, 0.125};
 
     // expect_RAC = array([[ 4.5  ,  0.   ,  0.8  ,  0.   ],
@@ -415,9 +415,9 @@ TEST_CASE("Exercise 2.4: Scale rows and columns", "[ex2.4][math][scale]")
     //                     [ 0.   ,  2.55 ,  2.25 ,  0.   ],
     //                     [14.   ,  0.8  ,  0.   ,  0.5  ]])
 
-    std::vector<csint> expect_i = {0, 1, 3, 1, 2, 3, 0, 2, 1, 3};
-    std::vector<csint> expect_j = {0, 0, 0, 1, 1, 1, 2, 2, 3, 3};
-    std::vector<double> expect_v = {4.5, 6.2, 14.0, 2.9, 2.55, 0.8, 0.8, 2.25, 0.225, 0.5};
+    std::vector<csint> expect_i{0, 1, 3, 1, 2, 3, 0, 2, 1, 3};
+    std::vector<csint> expect_j{0, 0, 0, 1, 1, 1, 2, 2, 3, 3};
+    std::vector<double> expect_v{4.5, 6.2, 14.0, 2.9, 2.55, 0.8, 0.8, 2.25, 0.225, 0.5};
     CSCMatrix expect_RAC = COOMatrix(expect_v, expect_i, expect_j).compress();
 
     CSCMatrix RAC = A.scale(r, c);
@@ -567,12 +567,12 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
     SECTION("M < N, N > K") {
         A = A.slice(0, 3, 0, 4);  // 3 x 4
 
-        std::vector<double> X = {
+        std::vector<double> X{
             1, 2, 3, 4,
             2, 4, 6, 8
         };  // 4 x 2 in column-major format
 
-        std::vector<double> expect = {
+        std::vector<double> expect{
             14.1, 12.5, 12.4,
             28.2, 25. , 24.8
         };  // 3 x 2 in column-major format
@@ -585,7 +585,7 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
     SECTION("M < N, N < K") {
         A = A.slice(0, 3, 0, 4);  // 3 x 4
 
-        std::vector<double> X = {
+        std::vector<double> X{
             1, 2,   3,  4,
             2, 4,   6,  8,
             3, 6,   9, 12,
@@ -593,7 +593,7 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
             5, 10, 15, 20
         };  // 4 x 5 in column-major format
 
-        std::vector<double> expect = {
+        std::vector<double> expect{
             14.1, 12.5, 12.4,
             28.2, 25.0, 24.8,
             42.3, 37.5, 37.2,
@@ -609,7 +609,7 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
     SECTION("M > N, N < K") {
         A = A.slice(0, 4, 0, 3);  // 4 x 3
 
-        std::vector<double> X = {
+        std::vector<double> X{
             1, 2,   3,
             2, 4,   6,
             3, 6,   9,
@@ -617,7 +617,7 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
             5, 10, 15,
         };  // 3 x 5 in column-major format
 
-        std::vector<double> expect = {
+        std::vector<double> expect{
             14.1,  8.9, 12.4,  4.3,
             28.2, 17.8, 24.8,  8.6,
             42.3, 26.7, 37.2, 12.9,
@@ -633,12 +633,12 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
     SECTION("M > N, N > K") {
         A = A.slice(0, 4, 0, 3);  // 4 x 3
 
-        std::vector<double> X = {
+        std::vector<double> X{
             1, 2,   3,
             2, 4,   6,
         };  // 3 x 2 in column-major format
 
-        std::vector<double> expect = {
+        std::vector<double> expect{
             14.1,  8.9, 12.4,  4.3,
             28.2, 17.8, 24.8,  8.6,
         };  // 4 x 2 in column-major format

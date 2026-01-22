@@ -24,17 +24,17 @@ namespace cs {
 
 TEST_CASE("Vector Operators", "[vector][ops]")
 {
-    std::vector<double> a = {1, 2, 3};
+    std::vector<double> a{1, 2, 3};
 
     SECTION("Scale a vector") {
-        std::vector<double> expect = {2, 4, 6};
+        std::vector<double> expect{2, 4, 6};
 
         REQUIRE((2 * a) == expect);
         REQUIRE((a * 2) == expect);
     }
 
     SECTION("Add two vectors") {
-        std::vector<double> b = {4, 5, 6};
+        std::vector<double> b{4, 5, 6};
 
         REQUIRE((a + b) == std::vector<double>{5, 7, 9});
     }
@@ -44,7 +44,7 @@ TEST_CASE("Vector Operators", "[vector][ops]")
     }
 
     SECTION("Subtract two vectors") {
-        std::vector<double> b = {4, 5, 6};
+        std::vector<double> b{4, 5, 6};
 
         REQUIRE((a - b) == std::vector<double>{-3, -3, -3});
     }
@@ -53,8 +53,8 @@ TEST_CASE("Vector Operators", "[vector][ops]")
 
 TEST_CASE("Vector permutations", "[vector][perm]")
 {
-    std::vector<double> b = {0, 1, 2, 3, 4};
-    std::vector<csint> p = {2, 0, 1, 4, 3};
+    std::vector<double> b{0, 1, 2, 3, 4};
+    std::vector<csint> p{2, 0, 1, 4, 3};
 
     REQUIRE(pvec(p, b) == std::vector<double>{2, 0, 1, 4, 3});
     REQUIRE(ipvec(p, b) == std::vector<double>{1, 2, 0, 4, 3});
@@ -68,7 +68,7 @@ TEST_CASE("Random permutation", "[vector][randperm]")
 {
     csint N = 10;
     csint seed;
-    std::vector<csint> expect_p = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    std::vector<csint> expect_p{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
     SECTION("Identity permutation") {
         seed = 0;
@@ -93,7 +93,7 @@ TEST_CASE("Random permutation", "[vector][randperm]")
 
 TEST_CASE("Vector norms", "[vector][norm]")
 {
-    std::vector<double> v = {3, -4};
+    std::vector<double> v{3, -4};
 
     SECTION("L0 norm") {
         REQUIRE(norm(v, 0) == 2);

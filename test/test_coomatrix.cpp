@@ -48,9 +48,9 @@ TEST_CASE("COOMatrix Constructors", "[COOMatrix][constructor]")
 
     SECTION("From (v, i, j) literals") {
         // See Davis pp 7-8, Eqn (2.1)
-        std::vector<csint>  i = {2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
-        std::vector<csint>  j = {2,    0,    3,    2,    1,    0,    1,    3,    0,    1};
-        std::vector<double> v = {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7};
+        std::vector<csint>  i{2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
+        std::vector<csint>  j{2,    0,    3,    2,    1,    0,    1,    3,    0,    1};
+        std::vector<double> v{3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7};
         COOMatrix A {v, i, j};
 
         CHECK(A.nnz() == 10);
@@ -129,9 +129,9 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
     }
 
     SECTION("Exercise 2.5: Insert a dense submatrix") {
-        std::vector<csint> rows = {2, 3, 4};
-        std::vector<csint> cols = {4, 5, 6};
-        std::vector<double> vals = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+        std::vector<csint> rows{2, 3, 4};
+        std::vector<csint> cols{4, 5, 6};
+        std::vector<double> vals{1, 2, 3, 4, 5, 6, 7, 8, 9};
 
         A.insert(rows, cols, vals);
 
@@ -160,7 +160,7 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
     }
 
     SECTION("Conversion to dense array: Column-major") {
-        std::vector<double> expect = {
+        std::vector<double> expect{
             4.5, 3.1, 0.0, 3.5,
             0.0, 2.9, 1.7, 0.4,
             3.2, 0.0, 3.0, 0.0,
@@ -172,7 +172,7 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
     }
 
     SECTION("Conversion to dense array: Row-major") {
-        std::vector<double> expect = {
+        std::vector<double> expect{
             4.5, 0.0, 3.2, 0.0,
             3.1, 2.9, 0.0, 0.9,
             0.0, 1.7, 3.0, 0.0,

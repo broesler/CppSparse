@@ -22,9 +22,9 @@ namespace cs {
 // 4 x 4 non-symmetric example. Davis, pp 7-8, Eqn (2.1)
 COOMatrix davis_example_small()
 {
-    std::vector<csint>  i = {2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
-    std::vector<csint>  j = {2,    0,    3,    2,    1,    0,    1,    3,    0,    1};
-    std::vector<double> v = {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7};
+    std::vector<csint>  i{2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
+    std::vector<csint>  j{2,    0,    3,    2,    1,    0,    1,    3,    0,    1};
+    std::vector<double> v{3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7};
     return COOMatrix {v, i, j};
 }
 
@@ -35,8 +35,8 @@ CSCMatrix davis_example_chol()
     csint N = 11;  // total number of rows and columns
 
     // Only off-diagonal elements
-    std::vector<csint> rows = {5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10};
-    std::vector<csint> cols = {0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9};
+    std::vector<csint> rows{5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10};
+    std::vector<csint> cols{0, 0, 1, 1, 2,  2, 3, 3, 4,  4, 5, 5,  6, 7,  7,  9};
     std::vector<double> vals(rows.size(), 1.0);
 
     // Values for the lower triangle
@@ -58,9 +58,9 @@ CSCMatrix davis_example_chol()
 CSCMatrix davis_example_qr(double add_diag, bool random_vals)
 {
     // Define the test matrix A (See Davis, Figure 5.1, p 74)
-    std::vector<csint> rows = {0, 1, 2, 3, 4, 5, 6,
+    std::vector<csint> rows{0, 1, 2, 3, 4, 5, 6,
                                3, 6, 1, 6, 0, 2, 5, 7, 4, 7, 0, 1, 3, 7, 5, 6};
-    std::vector<csint> cols = {0, 1, 2, 3, 4, 5, 6,
+    std::vector<csint> cols{0, 1, 2, 3, 4, 5, 6,
                                0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7};
 
     std::vector<double> vals(rows.size());
@@ -106,9 +106,9 @@ CSCMatrix davis_example_amd()
     csint N = 10;  // total number of rows (and columns)
 
     // Only off-diagonal elements
-    std::vector<csint> rows = {0, 3, 5, 1, 4, 5, 8, 2, 4, 5, 6, 3, 6, 7, 
+    std::vector<csint> rows{0, 3, 5, 1, 4, 5, 8, 2, 4, 5, 6, 3, 6, 7, 
                                4, 6, 8, 5, 6, 7, 8, 9, 7, 8, 9, 8, 9, 9};
-    std::vector<csint> cols = {0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3,
+    std::vector<csint> cols{0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3,
                                4, 4, 4, 5, 6, 6, 6, 6, 7, 7, 7, 8, 8, 9};
     std::vector<double> vals(rows.size(), 1.0);
 

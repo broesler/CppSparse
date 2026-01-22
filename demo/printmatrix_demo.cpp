@@ -34,9 +34,9 @@ int main()
     //              0         0    0.7071         0
 
     // Define the diagonal
-    std::vector<csint> i = {0, 1, 2, 3, 1, 0, 0, 3, 2, 2, 1, 4};
-    std::vector<csint> j = {0, 1, 2, 3, 0, 3, 1, 1, 3, 1, 2, 2};
-    std::vector<double> v = {
+    std::vector<csint> i{0, 1, 2, 3, 1, 0, 0, 3, 2, 2, 1, 4};
+    std::vector<csint> j{0, 1, 2, 3, 0, 3, 1, 1, 3, 1, 2, 2};
+    std::vector<double> v{
         1, 2, 3, 4,
         INFINITY, -INFINITY, NAN,
         pi, -exp(1), exp(3), exp(7), sqrt(2) / 2

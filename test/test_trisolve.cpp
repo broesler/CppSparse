@@ -32,10 +32,10 @@ TEST_CASE("Triangular solve with dense RHS", "[trisolve_dense]")
 
     const CSCMatrix U = L.T();
 
-    const std::vector<double> expect = {1, 1, 1};
+    const std::vector<double> expect{1, 1, 1};
 
     SECTION("Forward solve L x = b") {
-        const std::vector<double> b = {1, 5, 15};  // row sums of L
+        const std::vector<double> b{1, 5, 15};  // row sums of L
         const std::vector<double> x = lsolve(L, b);
 
         REQUIRE(x.size() == expect.size());
@@ -43,7 +43,7 @@ TEST_CASE("Triangular solve with dense RHS", "[trisolve_dense]")
     }
 
     SECTION("Backsolve L.T x = b") {
-        const std::vector<double> b = {7, 8, 6};  // row sums of L.T == col sums of L
+        const std::vector<double> b{7, 8, 6};  // row sums of L.T == col sums of L
         const std::vector<double> x = ltsolve(L, b);
 
         REQUIRE(x.size() == expect.size());
@@ -51,7 +51,7 @@ TEST_CASE("Triangular solve with dense RHS", "[trisolve_dense]")
     }
 
     SECTION("Backsolve U x = b") {
-        const std::vector<double> b = {7, 8, 6};  // row sums of L.T == col sums of L
+        const std::vector<double> b{7, 8, 6};  // row sums of L.T == col sums of L
         const std::vector<double> x = usolve(U, b);
 
         REQUIRE(x.size() == expect.size());
@@ -59,7 +59,7 @@ TEST_CASE("Triangular solve with dense RHS", "[trisolve_dense]")
     }
 
     SECTION("Forward solve U.T x = b") {
-        const std::vector<double> b = {1, 5, 15};  // row sums of L
+        const std::vector<double> b{1, 5, 15};  // row sums of L
         const std::vector<double> x = utsolve(U, b);
 
         REQUIRE(x.size() == expect.size());
@@ -73,8 +73,8 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
     csint N = 14;  // size of L
 
     // Define a lower-triangular matrix L with arbitrary non-zeros
-    std::vector<csint> rows = {2, 3, 4, 6, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 11, 11, 12, 12, 12, 12, 13, 13};
-    std::vector<csint> cols = {0, 1, 2, 1, 2, 4, 1, 3, 5, 5, 6, 7,  6,  9,  8, 10,  8,  9, 10, 11,  9, 12};
+    std::vector<csint> rows{2, 3, 4, 6, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 11, 11, 12, 12, 12, 12, 13, 13};
+    std::vector<csint> cols{0, 1, 2, 1, 2, 4, 1, 3, 5, 5, 6, 7,  6,  9,  8, 10,  8,  9, 10, 11,  9, 12};
 
     // Add the diagonals
     std::vector<csint> diags(N);
@@ -95,7 +95,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
         // Assign non-zeros to rows 3 and 5 in column 0
         csint j = 3;
         B.assign(j, 0, 1.0);
-        std::vector<csint> expect = {13, 12, 11, 8, 3};  // reversed in stack
+        std::vector<csint> expect{13, 12, 11, 8, 3};  // reversed in stack
 
         SECTION("Non-recursive") {
             std::vector<char> marked(N, false);
@@ -126,7 +126,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
     SECTION("Reachability from a single node") {
         // Assign non-zeros to rows 3 and 5 in column 0
         B.assign(3, 0, 1.0);
-        std::vector<csint> expect = {3, 8, 11, 12, 13};
+        std::vector<csint> expect{3, 8, 11, 12, 13};
 
         SECTION("Non-recursive") {
             std::vector<csint> xi;
@@ -146,7 +146,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
     SECTION("Reachability from multiple nodes") {
         // Assign non-zeros to rows 3 and 5 in column 0
         B.assign(3, 0, 1.0).assign(5, 0, 1.0).to_canonical();
-        std::vector<csint> expect = {5, 9, 10, 3, 8, 11, 12, 13};
+        std::vector<csint> expect{5, 9, 10, 3, 8, 11, 12, 13};
 
         SECTION("Non-recursive") {
             std::vector<csint> xi;
@@ -165,7 +165,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
 
     SECTION("spsolve Lx = b with dense RHS") {
         // Create RHS from sums of rows of L, so that x == ones(N)
-        std::vector<double> b = {1., 1., 2., 2., 2., 1., 2., 3., 4., 4., 3., 3., 5., 3.};
+        std::vector<double> b{1., 1., 2., 2., 2., 1., 2., 3., 4., 4., 3., 3., 5., 3.};
         for (int i = 0; i < N; i++) {
             B.assign(i, 0, b[i]);
         }
@@ -181,7 +181,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
         // RHS is just B with non-zeros in the first column
         B.assign(3, 0, 1.0);
 
-        std::vector<double> expect = { 0.,  0.,  0.,  1.,  0.,  0.,  0.,  0., -1.,  0.,  0.,  1.,  0.,  0.};
+        std::vector<double> expect{ 0.,  0.,  0.,  1.,  0.,  0.,  0.,  0., -1.,  0.,  0.,  1.,  0.,  0.};
 
         // Use structured bindings to unpack the result
         SparseSolution sol(N);
@@ -194,7 +194,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
         // RHS is just B with non-zeros in the first column
         B.assign(3, 0, 1.0);
 
-        std::vector<double> expect = {0., -1.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.};
+        std::vector<double> expect{0., -1.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.};
 
         SparseSolution sol(N);
         spsolve(U, B, 0, sol, {}, false);
@@ -246,8 +246,8 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
     // matrix to make them more sparse and see if the permutation order is still
     // correct.
 
-    const std::vector<csint> p = {5, 3, 0, 1, 4, 2};
-    const std::vector<csint> q = {1, 4, 0, 2, 5, 3};
+    const std::vector<csint> p{5, 3, 0, 1, 4, 2};
+    const std::vector<csint> q{1, 4, 0, 2, 5, 3};
 
     // Permute the rows (non-canonical form works too)
     const CSCMatrix PL = L.permute_rows(inv_permute(p)).to_canonical();
@@ -261,10 +261,10 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
     const CSCMatrix PLQ = L.permute(inv_permute(p), q).to_canonical();
     const CSCMatrix PUQ = U.permute(inv_permute(p), q).to_canonical();
 
-    const std::vector<double> expect_x = {1, 2, 3, 4, 5, 6};
+    const std::vector<double> expect_x{1, 2, 3, 4, 5, 6};
 
     SECTION("Find diagonals of permuted L") {
-        std::vector<csint> expect = {2, 8, 14, 16, 19, 20};
+        std::vector<csint> expect{2, 8, 14, 16, 19, 20};
         std::vector<csint> p_diags = find_lower_diagonals(PL);
         CHECK(p_diags == expect);
 
@@ -278,7 +278,7 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
     }
 
     SECTION("Find diagonals of permuted U") {
-        std::vector<csint> expect = {0, 2, 5, 6, 13, 15};
+        std::vector<csint> expect{0, 2, 5, 6, 13, 15};
         std::vector<csint> p_diags = find_upper_diagonals(PU);
         CHECK(p_diags == expect);
 

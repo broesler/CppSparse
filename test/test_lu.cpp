@@ -57,7 +57,7 @@ TEST_CASE("Symbolic LU Factorization of Square Matrix", "[lu][M == N][symbolic]"
     const CSCMatrix A = davis_example_qr(10);
     auto [M, N] = A.shape();
 
-    std::vector<csint> expect_q = {0, 1, 2, 3, 4, 5, 6, 7};
+    std::vector<csint> expect_q{0, 1, 2, 3, 4, 5, 6, 7};
 
     SECTION("Symbolic Factorization") {
         AMDOrder order = AMDOrder::Natural;
@@ -107,7 +107,7 @@ TEST_CASE("Numeric LU Factorization of Square Matrix", "[lu][M == N][numeric]")
     bool row_perm = GENERATE(true, false);
     CAPTURE(order, row_perm);  // track which order and row_perm are being used
 
-    std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+    std::vector<csint> p{5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
     std::vector<csint> p_inv = inv_permute(p);
 
     if (row_perm) {
@@ -158,7 +158,7 @@ TEST_CASE("Solve Ax = b with LU", "[lu_solve]")
     const CSCMatrix A = davis_example_qr(10).to_canonical();
 
     // Create RHS for A x = b
-    const std::vector<double> expect = {1, 2, 3, 4, 5, 6, 7, 8};
+    const std::vector<double> expect{1, 2, 3, 4, 5, 6, 7, 8};
     const std::vector<double> b = A * expect;
 
     AMDOrder order = AMDOrder::Natural;
@@ -173,7 +173,7 @@ TEST_CASE("Solve Ax = b with LU", "[lu_solve]")
     SECTION("Row-Permuted A") {
         // Permuting the rows of A requires permuting the columns of b, but the
         // solution vector will *not* be permuted.
-        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        std::vector<csint> p{5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
         std::vector<csint> p_inv = inv_permute(p);
 
         Ap = A.permute_rows(p_inv);
@@ -207,7 +207,7 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU", "[ex6.1][lu_tsolve]")
     const CSCMatrix A = davis_example_qr(10).to_canonical();
 
     // Create RHS for A^T x = b
-    const std::vector<double> expect = {1, 2, 3, 4, 5, 6, 7, 8};
+    const std::vector<double> expect{1, 2, 3, 4, 5, 6, 7, 8};
     const std::vector<double> b = A.T() * expect;
 
     bool row_perm = false;
@@ -222,7 +222,7 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU", "[ex6.1][lu_tsolve]")
 
     SECTION("Row-Permuted A") {
         row_perm = true;
-        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        std::vector<csint> p{5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
         p_inv = inv_permute(p);
         Ap = A.permute_rows(p_inv);
     }
@@ -384,7 +384,7 @@ TEST_CASE("Exercise 6.4: relu", "[ex6.4][relu]")
 
     SECTION("permuted") {
         // Permute the rows of A to test pivoting
-        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        std::vector<csint> p{5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
         std::vector<csint> p_inv = inv_permute(p);
 
         // Permute the rows of A and B to test pivoting
@@ -429,7 +429,7 @@ void run_lu_singular_test(
     CAPTURE(order, permute_rows, structural);
 
     if (permute_rows) {
-        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        std::vector<csint> p{5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
         A = A.permute_rows(inv_permute(p));
     }
 
@@ -739,7 +739,7 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13][ilu]")
         CSCMatrix Ap = A;
 
         // Permute the rows of A to test pivoting
-        std::vector<csint> p = {5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
+        std::vector<csint> p{5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
         std::vector<csint> p_inv = inv_permute(p);
 
         SECTION("Full LU (tolerance = 0)") {

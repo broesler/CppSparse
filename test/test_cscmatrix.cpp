@@ -32,9 +32,9 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
     CSCMatrix C = A.compress();  // unsorted columns
 
     SECTION("Attributes") {
-        std::vector<csint> indptr_expect  = {  0,             3,             6,        8,  10};
-        std::vector<csint> indices_expect = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
-        std::vector<double> data_expect   = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
+        std::vector<csint> indptr_expect {  0,             3,             6,        8,  10};
+        std::vector<csint> indices_expect{  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
+        std::vector<double> data_expect  {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
 
         REQUIRE(C.nnz() == 10);
         REQUIRE(C.nzmax() >= 10);
@@ -142,9 +142,9 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
 
         auto sort_test = [](const CSCMatrix& Cs) {
             Shape shape_expect = {4, 5};
-            std::vector<csint> indptr_expect  = {  0,             3,             6,        8,       10, 11};
-            std::vector<csint> indices_expect = {  0,   1,   3,   1,   2,   3,   0,   2,   1,   3,   0};
-            std::vector<double> data_expect   = {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0, 1.6};
+            std::vector<csint> indptr_expect {  0,             3,             6,        8,       10, 11};
+            std::vector<csint> indices_expect{  0,   1,   3,   1,   2,   3,   0,   2,   1,   3,   0};
+            std::vector<double> data_expect  {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0, 1.6};
 
             CHECK(Cs.shape() == shape_expect);
             CHECK(Cs.has_sorted_indices());
@@ -221,9 +221,9 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
 
 TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
 {
-    std::vector<csint> indptr_expect  = {  0,               3,                 6,        8,  10};
-    std::vector<csint> indices_expect = {  0,   1,     3,   1,     2,   3,     0,   2,   1,   3};
-    std::vector<double> data_expect   = {4.5, 3.1, 103.5, 2.9, 101.7, 0.4, 103.2, 3.0, 0.9, 1.0};
+    std::vector<csint> indptr_expect {  0,               3,                 6,        8,  10};
+    std::vector<csint> indices_expect{  0,   1,     3,   1,     2,   3,     0,   2,   1,   3};
+    std::vector<double> data_expect  {4.5, 3.1, 103.5, 2.9, 101.7, 0.4, 103.2, 3.0, 0.9, 1.0};
 
     COOMatrix A = (
         davis_example_small()  // unsorted matrix
@@ -307,7 +307,7 @@ TEST_CASE("Indexing", "[CSCMatrix][operator()]")
     auto [M, N] = A.shape();
 
     // Define the expected matrix
-    std::vector<double> dense_column_major = {
+    std::vector<double> dense_column_major{
         4.5, 3.1, 0.0, 3.5,
         0.0, 2.9, 1.7, 0.4,
         3.2, 0.0, 3.0, 0.0,
@@ -318,15 +318,15 @@ TEST_CASE("Indexing", "[CSCMatrix][operator()]")
     // actually we'd like to check the precise structure of the matrix to ensure
     // that we have found/inserted elements correctly.
 
-    // std::vector<csint> indptr_expect = {0, 3, 6, 8, 10};
+    // std::vector<csint> indptr_expect{0, 3, 6, 8, 10};
 
     // Non-canonical form
-    // std::vector<csint> indices_expect = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
-    // std::vector<double> data_expect   = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
+    // std::vector<csint> indices_expect{  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
+    // std::vector<double> data_expect  {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
 
     // Canonical form
-    // std::vector<csint> indices_expect = {  0,   1,   3,   1,   2,   3,   0,   2,   1,   3};
-    // std::vector<double> data_expect   = {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0};
+    // std::vector<csint> indices_expect{  0,   1,   3,   1,   2,   3,   0,   2,   1,   3};
+    // std::vector<double> data_expect  {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0};
 
     bool is_canonical = GENERATE(true, false);
     CAPTURE(is_canonical);
@@ -444,9 +444,9 @@ TEST_CASE("Exercise 2.2: Conversion to COOMatrix") {
 
     auto convert_test = [](const COOMatrix& A) {
         // Columns are sorted, but not rows
-        std::vector<csint>  expect_i = {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
-        std::vector<csint>  expect_j = {  0,   0,   0,   1,   1,   1,   2,   2,   3,   3};
-        std::vector<double> expect_v = {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
+        std::vector<csint>  expect_i{  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
+        std::vector<csint>  expect_j{  0,   0,   0,   1,   1,   1,   2,   2,   3,   3};
+        std::vector<double> expect_v{3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
 
         REQUIRE(A.nnz() == 10);
         REQUIRE(A.nzmax() >= 10);
@@ -470,9 +470,9 @@ TEST_CASE("Exercise 2.2: Conversion to COOMatrix") {
 
 TEST_CASE("Exercise 2.13: is_symmetric.", "[ex2.13]")
 {
-    std::vector<csint>  i = {0, 1, 2};
-    std::vector<csint>  j = {0, 1, 2};
-    std::vector<double> v = {1, 2, 3};
+    std::vector<csint>  i{0, 1, 2};
+    std::vector<csint>  j{0, 1, 2};
+    std::vector<double> v{1, 2, 3};
 
     SECTION("Diagonal matrix") {
         CSCMatrix A = COOMatrix(v, i, j).tocsc();
@@ -523,8 +523,8 @@ TEST_CASE("Matrix permutation", "[permute]")
     CSCMatrix A = davis_example_small().compress();
 
     SECTION("No-op") {
-        std::vector<csint> p = {0, 1, 2, 3};
-        std::vector<csint> q = {0, 1, 2, 3};
+        std::vector<csint> p{0, 1, 2, 3};
+        std::vector<csint> q{0, 1, 2, 3};
 
         CSCMatrix C = A.permute(inv_permute(p), q);
 
@@ -534,8 +534,8 @@ TEST_CASE("Matrix permutation", "[permute]")
     }
 
     SECTION("Row permutation") {
-        std::vector<csint> p = {1, 0, 2, 3};
-        std::vector<csint> q = {0, 1, 2, 3};
+        std::vector<csint> p{1, 0, 2, 3};
+        std::vector<csint> q{0, 1, 2, 3};
 
         // See Davis pp 7-8, Eqn (2.1)
         CSCMatrix expect = COOMatrix(
@@ -551,8 +551,8 @@ TEST_CASE("Matrix permutation", "[permute]")
     }
 
     SECTION("Column permutation") {
-        std::vector<csint> p = {0, 1, 2, 3};
-        std::vector<csint> q = {1, 0, 2, 3};
+        std::vector<csint> p{0, 1, 2, 3};
+        std::vector<csint> q{1, 0, 2, 3};
 
         // See Davis pp 7-8, Eqn (2.1)
         CSCMatrix expect = COOMatrix(
@@ -568,8 +568,8 @@ TEST_CASE("Matrix permutation", "[permute]")
     }
 
     SECTION("Both row and column permutation") {
-        std::vector<csint> p = {3, 0, 2, 1};
-        std::vector<csint> q = {2, 1, 3, 0};
+        std::vector<csint> p{3, 0, 2, 1};
+        std::vector<csint> q{2, 1, 3, 0};
 
         // See Davis pp 7-8, Eqn (2.1)
         CSCMatrix expect = COOMatrix(
@@ -602,7 +602,7 @@ TEST_CASE("Matrix permutation", "[permute]")
          .assign(3, 1, 0.0)
          .dropzeros();
 
-        std::vector<csint> p = {3, 0, 2, 1};
+        std::vector<csint> p{3, 0, 2, 1};
 
         // See Davis pp 7-8, Eqn (2.1)
         CSCMatrix expect = COOMatrix(
@@ -629,8 +629,8 @@ TEST_CASE("Exercise 2.26: permuted transpose", "[ex2.26][permute_transpose]")
     CSCMatrix A = davis_example_small().compress();
 
     SECTION("Non-permuted transpose") {
-        std::vector<csint> p = {0, 1, 2, 3};
-        std::vector<csint> q = {0, 1, 2, 3};
+        std::vector<csint> p{0, 1, 2, 3};
+        std::vector<csint> q{0, 1, 2, 3};
 
         CSCMatrix expect = A.T();
         CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
@@ -639,8 +639,8 @@ TEST_CASE("Exercise 2.26: permuted transpose", "[ex2.26][permute_transpose]")
     }
 
     SECTION("Row-permuted transpose") {
-        std::vector<csint> p = {3, 0, 1, 2};
-        std::vector<csint> q = {0, 1, 2, 3};
+        std::vector<csint> p{3, 0, 1, 2};
+        std::vector<csint> q{0, 1, 2, 3};
 
         // See Davis pp 7-8, Eqn (2.1)
         CSCMatrix expect = COOMatrix(
@@ -655,8 +655,8 @@ TEST_CASE("Exercise 2.26: permuted transpose", "[ex2.26][permute_transpose]")
     }
 
     SECTION("Column-permuted transpose") {
-        std::vector<csint> p = {0, 1, 2, 3};
-        std::vector<csint> q = {3, 0, 1, 2};
+        std::vector<csint> p{0, 1, 2, 3};
+        std::vector<csint> q{3, 0, 1, 2};
 
         // See Davis pp 7-8, Eqn (2.1)
         CSCMatrix expect = COOMatrix(
@@ -671,8 +671,8 @@ TEST_CASE("Exercise 2.26: permuted transpose", "[ex2.26][permute_transpose]")
     }
 
     SECTION("Permuted transpose") {
-        std::vector<csint> p = {3, 0, 2, 1};
-        std::vector<csint> q = {2, 1, 3, 0};
+        std::vector<csint> p{3, 0, 2, 1};
+        std::vector<csint> q{2, 1, 3, 0};
 
         // See Davis pp 7-8, Eqn (2.1)
         CSCMatrix expect = COOMatrix(
@@ -707,8 +707,8 @@ TEST_CASE("Exercise 2.15: Band function", "[ex2.15][band]")
 
         COOMatrix Ab = A.band(kl, ku).tocoo();
 
-        std::vector<csint> expect_rows = {0, 1, 2, 3, 4, 5};
-        std::vector<csint> expect_cols = {0, 1, 2, 3, 4, 5};
+        std::vector<csint> expect_rows{0, 1, 2, 3, 4, 5};
+        std::vector<csint> expect_cols{0, 1, 2, 3, 4, 5};
         std::vector<double> expect_data(expect_rows.size(), 1);
 
         CHECK(Ab.nnz() == N);
@@ -725,8 +725,8 @@ TEST_CASE("Exercise 2.15: Band function", "[ex2.15][band]")
         // std::cout << Ab;
         COOMatrix Ab = A.band(kl, ku).tocoo();
 
-        std::vector<csint> expect_rows = {0, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 2, 3, 4, 5, 3, 4, 5};
-        std::vector<csint> expect_cols = {0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5};
+        std::vector<csint> expect_rows{0, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 2, 3, 4, 5, 3, 4, 5};
+        std::vector<csint> expect_cols{0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5};
         std::vector<double> expect_data(expect_rows.size(), 1);
 
         CHECK(Ab.nnz() == 27);
@@ -743,14 +743,14 @@ TEST_CASE("Exercise 2.16: CSC to/from dense", "[ex2.16][fromdense][todense]")
     COOMatrix A = davis_example_small();
     CSCMatrix C = A.compress();  // non-canonical
 
-    std::vector<double> dense_column_major = {
+    std::vector<double> dense_column_major{
         4.5, 3.1, 0.0, 3.5,
         0.0, 2.9, 1.7, 0.4,
         3.2, 0.0, 3.0, 0.0,
         0.0, 0.9, 0.0, 1.0
     };
 
-    std::vector<double> dense_row_major = {
+    std::vector<double> dense_row_major{
         4.5, 0.0, 3.2, 0.0,
         3.1, 2.9, 0.0, 0.9,
         0.0, 1.7, 3.0, 0.0,
@@ -784,22 +784,22 @@ TEST_CASE("Extract a diagonal", "[diagonal]")
     CSCMatrix A = davis_example_small().tocsc();
 
     SECTION("Main diagonal") {
-        std::vector<double> expect = {4.5, 2.9, 3.0, 1.0};
+        std::vector<double> expect{4.5, 2.9, 3.0, 1.0};
         REQUIRE(A.diagonal() == expect);
     }
 
     SECTION("Super-diagonal") {
-        std::vector<double> expect = {3.2, 0.9};
+        std::vector<double> expect{3.2, 0.9};
         REQUIRE(A.diagonal(2) == expect);
     }
 
     SECTION("Sub-diagonal") {
-        std::vector<double> expect = {3.1, 1.7, 0.0};
+        std::vector<double> expect{3.1, 1.7, 0.0};
         REQUIRE(A.diagonal(-1) == expect);
     }
 
     SECTION("Out-of-bounds diagonal") {
-        std::vector<double> expect = {};
+        std::vector<double> expect{};
         REQUIRE(A.diagonal(5) == expect);
         REQUIRE(A.diagonal(-9) == expect);
     }
@@ -1073,7 +1073,7 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
     {
         // Test both ways of assigning to a single element
         enum AssignmentMethod { AssignMethod, OperatorMethod };
-        std::vector<AssignmentMethod> methods_to_test = { AssignMethod, OperatorMethod };
+        std::vector<AssignmentMethod> methods_to_test{ AssignMethod, OperatorMethod };
 
         for (const auto& method : methods_to_test) {
             CSCMatrix A = A_in;  // Copy the original matrix for each test
@@ -1171,11 +1171,11 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
     SECTION("Multiple assignment") {
         CSCMatrix A = davis_example_small().tocsc();
 
-        std::vector<csint> rows = {2, 0};
-        std::vector<csint> cols = {0, 3, 2};
+        std::vector<csint> rows{2, 0};
+        std::vector<csint> cols{0, 3, 2};
 
         SECTION("Dense assignment") {
-            std::vector<double> vals = {100, 101, 102, 103, 104, 105};
+            std::vector<double> vals{100, 101, 102, 103, 104, 105};
 
             A.assign(rows, cols, vals);
 
@@ -1290,7 +1290,7 @@ TEST_CASE("Sum the rows and columns of a matrix", "[sum_rows][sum_cols]")
     CSCMatrix A = davis_example_small().tocsc();
 
     SECTION("Sum the rows") {
-        std::vector<double> expect = {7.7, 6.9, 4.7, 4.9};
+        std::vector<double> expect{7.7, 6.9, 4.7, 4.9};
 
         std::vector<double> sums = A.sum_rows();
 
@@ -1299,7 +1299,7 @@ TEST_CASE("Sum the rows and columns of a matrix", "[sum_rows][sum_cols]")
     }
 
     SECTION("Sum the columns") {
-        std::vector<double> expect = {11.1,  5.0,  6.2,  1.9};
+        std::vector<double> expect{11.1,  5.0,  6.2,  1.9};
 
         std::vector<double> sums = A.sum_cols();
 

@@ -146,7 +146,7 @@ TEST_CASE("QR Solution", "[qrsol]")
         res = qr_solve(A, b, order);  // (M - k, N)
 
         // Actual expect (python and MATLAB)
-        const std::vector<double> min_norm_x = {
+        const std::vector<double> min_norm_x{
             3.2222222222222143,
             3.1111111111111125,
             3.                ,
@@ -251,7 +251,7 @@ TEMPLATE_TEST_CASE(
         }
 
         // Actual expect_x la.lstsq(A.toarray(), b)
-        const std::vector<double> min_norm_x = {
+        const std::vector<double> min_norm_x{
              3.2222222222222143,  3.1111111111111125,  3.                ,  4.000000000000004 ,  5.961538461538462 ,  1.192307692307692 ,  4.7777777777777715,  0.,
              9.444444444444414 , 10.222222222222229 , 10.999999999999996 , 12.000000000000016 , 15.192307692307692 ,  3.0384615384615374, 14.55555555555553  ,  0.,
             15.666666666666636 , 17.333333333333343 , 19.                , 20.000000000000018 , 24.423076923076923 ,  4.884615384615383 , 24.33333333333331  ,  0.
@@ -280,7 +280,7 @@ TEST_CASE("LU Solution", "[lusol]") {
 
     const std::vector<double> b = A * expect;
 
-    const std::vector<double> piv_tols = {0.0, 1e-3, 1.0};
+    const std::vector<double> piv_tols{0.0, 1e-3, 1.0};
 
     for (const auto& piv_tol : piv_tols) {
         CAPTURE(piv_tol);
@@ -402,8 +402,8 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Triangular", "[spsolve-tri]", RhsCombination
     std::vector<double> expect_x(N * K);
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
-    const std::vector<csint> p = {3, 0, 1, 2};
-    const std::vector<csint> q = {1, 2, 0, 3};
+    const std::vector<csint> p{3, 0, 1, 2};
+    const std::vector<csint> q{1, 2, 0, 3};
 
     auto solve_and_check = [&](const CSCMatrix& A) {
         std::vector<double> b = A * expect_x;

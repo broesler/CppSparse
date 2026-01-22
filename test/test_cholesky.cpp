@@ -36,8 +36,8 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
     // CHECK(A.has_canonical_format());
 
     SECTION("Elimination Tree") {
-        std::vector<csint> expect_A = {5, 2, 7, 5, 7, 6, 8, 9, 9, 10, -1};
-        std::vector<csint> expect_ATA = {3, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1};
+        std::vector<csint> expect_A{5, 2, 7, 5, 7, 6, 8, 9, 9, 10, -1};
+        std::vector<csint> expect_ATA{3, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1};
         REQUIRE(etree(A) == expect_A);
         REQUIRE(etree(A, true) == expect_ATA);
         REQUIRE(etree(A.T() * A) == etree(A, true));
@@ -46,7 +46,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
     SECTION("Reachability of Elimination Tree") {
         // Map defines the row subtrees.
         // See Davis Figure 4.4, p 40.
-        std::map<csint, std::vector<csint>> expect_map = {
+        std::map<csint, std::vector<csint>> expect_map{
             {0, {}},
             {1, {}},
             {2, {1}},
@@ -71,7 +71,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
 
     SECTION("Post-order of Elimination Tree") {
         std::vector<csint> parent = etree(A);
-        std::vector<csint> expect = {1, 2, 4, 7, 0, 3, 5, 6, 8, 9, 10};
+        std::vector<csint> expect{1, 2, 4, 7, 0, 3, 5, 6, 8, 9, 10};
         std::vector<csint> postorder = post(parent);
         REQUIRE(postorder == expect);
     }
@@ -79,7 +79,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
     SECTION("Reachability of Post-ordered Elimination Tree") {
         // Map defines the post-ordered row subtrees.
         // See Davis Figure 4.8, p 49.
-        std::map<csint, std::vector<csint>> expect_map = {
+        std::map<csint, std::vector<csint>> expect_map{
             {0, {}},
             {1, {0}},
             {2, {}},
@@ -109,8 +109,8 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
     }
 
     SECTION("First descendants and levels") {
-        std::vector<csint> expect_firsts = {4, 0, 0, 5, 2, 4, 4, 0, 4, 0, 0};
-        std::vector<csint> expect_levels = {5, 4, 3, 5, 3, 4, 3, 2, 2, 1, 0};
+        std::vector<csint> expect_firsts{4, 0, 0, 5, 2, 4, 4, 0, 4, 0, 0};
+        std::vector<csint> expect_levels{5, 4, 3, 5, 3, 4, 3, 2, 2, 1, 0};
         std::vector<csint> parent = etree(A);
         auto [firsts, levels] = firstdesc(parent, post(parent));
         REQUIRE(firsts == expect_firsts);
@@ -118,17 +118,17 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
     }
 
     SECTION("Rowcounts of L") {
-        std::vector<csint> expect = {1, 1, 2, 1, 1, 3, 3, 4, 3, 7, 7};
+        std::vector<csint> expect{1, 1, 2, 1, 1, 3, 3, 4, 3, 7, 7};
         REQUIRE(chol_rowcounts(A) == expect);
     }
 
     SECTION("Column counts of L") {
-        std::vector<csint> expect = {3, 3, 4, 3, 3, 4, 4, 3, 3, 2, 1};
+        std::vector<csint> expect{3, 3, 4, 3, 3, 4, 4, 3, 3, 2, 1};
         REQUIRE(chol_colcounts(A) == expect);
     }
 
     SECTION("Column counts of L from A^T A") {
-        std::vector<csint> expect = {7, 6, 8, 8, 7, 6, 5, 4, 3, 2, 1};
+        std::vector<csint> expect{7, 6, 8, 8, 7, 6, 5, 4, 3, 2, 1};
         REQUIRE(chol_colcounts(A.T() * A) == expect);
         REQUIRE(chol_colcounts(A, true) == expect);
     }

@@ -94,7 +94,7 @@ std::vector<csint> ereach(
             }
 
             // Push path onto output stack
-            std::copy(s.rbegin(), s.rend(), std::back_inserter(xi));
+            std::copy(s.crbegin(), s.crend(), std::back_inserter(xi));
             s.clear();
         }
     }

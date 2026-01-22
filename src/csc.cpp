@@ -239,12 +239,12 @@ bool CSCMatrix::_test_sorted() const
 std::pair<bool, csint> CSCMatrix::binary_search_(csint i, csint j) const
 {
     // Binary search for t <= i
-    auto start = i_.begin() + p_[j];
-    auto end = i_.begin() + p_[j+1];
+    auto start = i_.cbegin() + p_[j];
+    auto end = i_.cbegin() + p_[j+1];
     auto t = std::lower_bound(start, end, i);
     // Check that we actually found the index t == i
     bool found = (t != end && *t == i);
-    csint k = std::distance(i_.begin(), t);
+    csint k = std::distance(i_.cbegin(), t);
     return {found, k};
 }
 
@@ -526,8 +526,8 @@ CSCMatrix& CSCMatrix::qsort()
         idx.resize(len);
 
         // Copy the row indices and values into the workspace
-        std::copy_n(i_.begin() + p, len, w.begin());
-        std::copy_n(v_.begin() + p, len, x.begin());
+        std::copy_n(i_.cbegin() + p, len, w.begin());
+        std::copy_n(v_.cbegin() + p, len, x.begin());
         std::iota(idx.begin(), idx.end(), 0);
 
         // argsort the rows to get indices
@@ -1682,8 +1682,8 @@ CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
         C.p_[A.N_ + j] = B.p_[j] + A.nnz();
     }
 
-    std::copy(B.i_.begin(), B.i_.end(), C.i_.begin() + A.nnz());
-    std::copy(B.v_.begin(), B.v_.end(), C.v_.begin() + A.nnz());
+    std::copy(B.i_.cbegin(), B.i_.cend(), C.i_.begin() + A.nnz());
+    std::copy(B.v_.cbegin(), B.v_.cend(), C.v_.begin() + A.nnz());
 
     C.p_[C.N_] = A.nnz() + B.nnz();
 

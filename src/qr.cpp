@@ -230,7 +230,7 @@ SymbolicQR sqr(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 
     // column counts of the Cholesky factor of C^T C
     std::vector<csint> cp = counts(C, S.parent, postorder, CTC);
-    S.rnz = std::accumulate(cp.begin(), cp.end(), 0);
+    S.rnz = std::accumulate(cp.cbegin(), cp.cend(), 0);
 
     S.leftmost = find_leftmost(C);
     vcount(C, S);  // compute p_inv, vnz, m2
@@ -285,7 +285,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
             }
 
             // Push path onto "output" stack
-            std::copy(s.rbegin(), s.rend(), std::back_inserter(t));
+            std::copy(s.crbegin(), s.crend(), std::back_inserter(t));
 
             i = S.p_inv[A.i_[p]];     // i = permuted row of A(:, col)
             x[i] = A.v_[p];           // x(i) = A(:, col)
@@ -316,7 +316,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
 
         // [v, beta, s] = house(x) == house(V[p1:vnz, k])
         Householder h = house(std::span(V.v_).subspan(p1, vnz - p1));
-        std::copy(h.v.begin(), h.v.end(), V.v_.begin() + p1);
+        std::copy(h.v.cbegin(), h.v.cend(), V.v_.begin() + p1);
         beta[k] = h.beta;
         R.i_[rnz] = k;      // R(k, k) = -sign(x[0]) * norm(x)
         R.v_[rnz++] = h.s;
@@ -384,7 +384,7 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
             }
 
             // Push path onto "output" stack
-            std::copy(s.rbegin(), s.rend(), std::back_inserter(t));
+            std::copy(s.crbegin(), s.crend(), std::back_inserter(t));
 
             i = S.p_inv[A.i_[p]];     // i = permuted row of A(:, col)
 
@@ -465,7 +465,7 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
         // [v, beta, s] = house(x) == house(V[:, k])
         auto V_k = std::span(V.v_).subspan(V.p_[k], V.p_[k+1] - V.p_[k]);
         Householder h = house(V_k);
-        std::copy(h.v.begin(), h.v.end(), V.v_.begin() + V.p_[k]);
+        std::copy(h.v.cbegin(), h.v.cend(), V.v_.begin() + V.p_[k]);
         beta[k] = h.beta;
         R.v_[R.p_[k+1] - 1] = h.s;  // R(k, k) = -sign(x[0]) * norm(x)
     }

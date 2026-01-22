@@ -508,7 +508,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
     }
 
     // Only return the first N elements of P
-    return std::vector<csint>(P.begin(), P.begin() + N);
+    return std::vector<csint>(P.cbegin(), P.cbegin() + N);
 }
 
 
@@ -681,7 +681,7 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
         return jimatch;
     }
 
-    csint m2 = std::accumulate(w.begin(), w.end(), 0);  // count non-empty rows
+    csint m2 = std::accumulate(w.cbegin(), w.cend(), 0);  // count non-empty rows
 
     // transpose if needed
     const CSCMatrix C = (m2 < n2) ? A.transpose(false) : A;
@@ -897,7 +897,7 @@ static void gather_scatter(
     for (csint k = 0; k < nc; k++) {
         temp[k] = source[ps[k] + offset];
     }
-    std::copy(temp.begin(), temp.begin() + nc, source.begin() + offset);
+    std::copy(temp.cbegin(), temp.cbegin() + nc, source.begin() + offset);
 }
 
 

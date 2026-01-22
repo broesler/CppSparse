@@ -50,7 +50,7 @@ COOMatrix::COOMatrix(
             M_ = 0;  // no rows
         } else {
             // Infer from the given indices
-            M_ = *std::max_element(i_.begin(), i_.end()) + 1;
+            M_ = *std::max_element(i_.cbegin(), i_.cend()) + 1;
         }
     }
 
@@ -61,7 +61,7 @@ COOMatrix::COOMatrix(
             N_ = 0;  // no columns
         } else {
             // Infer from the given indices
-            N_ = *std::max_element(j_.begin(), j_.end()) + 1;
+            N_ = *std::max_element(j_.cbegin(), j_.cend()) + 1;
         }
     }
 
@@ -78,7 +78,7 @@ COOMatrix::COOMatrix(
     // Check for any i or j out of bounds
     if (shape[0] && !i_.empty()) {  // shape was given as input, not inferred
         assert(M_ == shape[0]);
-        csint max_i = *std::max_element(i_.begin(), i_.end());
+        csint max_i = *std::max_element(i_.cbegin(), i_.cend());
         if (max_i >= M_) {
             throw std::runtime_error(
                 std::format("Row index out of bounds: {} >= {}", max_i, M_)
@@ -88,7 +88,7 @@ COOMatrix::COOMatrix(
 
     if (shape[1] && !j_.empty()) {  // shape was given as input, not inferred
         assert(N_ == shape[1]);
-        csint max_j = *std::max_element(j_.begin(), j_.end());
+        csint max_j = *std::max_element(j_.cbegin(), j_.cend());
         if (max_j >= N_) {
             throw std::runtime_error(
                 std::format("Column index out of bounds: {} >= {}", max_j, N_)

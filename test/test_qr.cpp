@@ -41,7 +41,7 @@ TEST_CASE("Householder Reflection", "[house]")
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
 
         // Apply the reflection
-        CSCMatrix V = COOMatrix(H.v, {0, 1, 2}, {0, 0, 0}).tocsc();
+        CSCMatrix V = COOMatrix{H.v, {0, 1, 2}, {0, 0, 0}}.tocsc();
         std::vector<double> Hx = happly(V, 0, H.beta, x);
 
         check_vectors_allclose(Hx, x, tol);
@@ -61,7 +61,7 @@ TEST_CASE("Householder Reflection", "[house]")
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
 
         // Apply the reflection
-        CSCMatrix V = COOMatrix(H.v, {0, 1, 2}, {0, 0, 0}).tocsc();
+        CSCMatrix V = COOMatrix{H.v, {0, 1, 2}, {0, 0, 0}}.tocsc();
         std::vector<double> Hx = happly(V, 0, H.beta, x);
 
         check_vectors_allclose(Hx, x, tol);
@@ -113,7 +113,7 @@ TEST_CASE("Householder Reflection", "[house]")
         // std::vector<double> expect{5, 0};  // Davis
 
         // Use column 0 of V to apply the Householder reflection
-        CSCMatrix V = COOMatrix(H.v, {0, 1}, {0, 0}).tocsc();
+        CSCMatrix V = COOMatrix{H.v, {0, 1}, {0, 0}}.tocsc();
         std::vector<double> Hx = happly(V, 0, H.beta, x);
 
         check_vectors_allclose(Hx, expect, tol);
@@ -136,7 +136,7 @@ TEST_CASE("Householder Reflection", "[house]")
         // Apply the vector
         std::vector<double> expect{5, 0}; // LAPACK or Davis
 
-        CSCMatrix V = COOMatrix(H.v, {0, 1}, {0, 0}).tocsc();
+        CSCMatrix V = COOMatrix{H.v, {0, 1}, {0, 0}}.tocsc();
         std::vector<double> Hx = happly(V, 0, H.beta, x);
 
         check_vectors_allclose(Hx, expect, tol);
@@ -151,7 +151,7 @@ TEST_CASE("QR factorization of the Identity Matrix", "[qr][identity]")
     std::iota(rows.begin(), rows.end(), 0);
     std::vector<double> vals(N, 1.0);
 
-    CSCMatrix I = COOMatrix(vals, rows, rows).tocsc();
+    CSCMatrix I = COOMatrix{vals, rows, rows}.tocsc();
 
     AMDOrder order = GENERATE(
         AMDOrder::Natural,
@@ -249,7 +249,7 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][n
     std::vector<csint> idx(N);
     std::iota(idx.begin(), idx.end(), 0);
     std::vector<double> vals(N, 1.0);
-    CSCMatrix I = COOMatrix(vals, idx, idx).tocsc();
+    CSCMatrix I = COOMatrix{vals, idx, idx}.tocsc();
 
     SECTION("Numeric Factorization") {
         CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
@@ -360,7 +360,7 @@ TEST_CASE("Square, rank-deficient A", "[qr][rank-deficient][numeric]")
     std::vector<csint> idx(M2);
     std::iota(idx.begin(), idx.end(), 0);
     std::vector<double> vals(M2, 1.0);
-    CSCMatrix I = COOMatrix(vals, idx, idx).tocsc();
+    CSCMatrix I = COOMatrix{vals, idx, idx}.tocsc();
 
     REQUIRE(res.V.shape() == Shape {M2, N});
     REQUIRE(res.R.shape() == Shape {M2, N});
@@ -449,7 +449,7 @@ TEST_CASE("Numeric QR factorization of overdetermined matrix M > N", "[qr][M > N
     std::vector<csint> idx(M);
     std::iota(idx.begin(), idx.end(), 0);
     std::vector<double> vals(M, 1.0);
-    CSCMatrix I = COOMatrix(vals, idx, idx).tocsc();
+    CSCMatrix I = COOMatrix{vals, idx, idx}.tocsc();
 
     SECTION("Numeric factorization") {
         CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
@@ -569,7 +569,7 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
     std::vector<csint> idx(M2);
     std::iota(idx.begin(), idx.end(), 0);
     std::vector<double> vals(M2, 1.0);
-    CSCMatrix I = COOMatrix(vals, idx, idx).tocsc();
+    CSCMatrix I = COOMatrix{vals, idx, idx}.tocsc();
 
     SECTION("Numeric factorization") {
         CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();

@@ -40,7 +40,7 @@ CSCMatrix davis_example_chol()
     std::vector<double> vals(rows.size(), 1.0);
 
     // Values for the lower triangle
-    CSCMatrix L = COOMatrix(vals, rows, cols, {N, N}).tocsc();
+    CSCMatrix L = COOMatrix{vals, rows, cols, {N, N}}.tocsc();
 
     // Create the symmetric matrix A
     CSCMatrix A = L + L.T();
@@ -113,7 +113,7 @@ CSCMatrix davis_example_amd()
     std::vector<double> vals(rows.size(), 1.0);
 
     // Values for the lower triangle
-    CSCMatrix L = COOMatrix(vals, rows, cols, {N, N}).tocsc();
+    CSCMatrix L = COOMatrix{vals, rows, cols, {N, N}}.tocsc();
 
     // Create the symmetric matrix A
     CSCMatrix A = L + L.T();
@@ -130,21 +130,21 @@ CSCMatrix davis_example_amd()
 // Build matrices with sorted columns for internal testing
 CSCMatrix E_mat()
 {
-    return COOMatrix(
+    return COOMatrix{
         std::vector<double> {1, -2, 1, 1},  // vals
         std::vector<csint>  {0,  1, 1, 2},  // rows
         std::vector<csint>  {0,  0, 1, 2}   // cols
-    ).tocsc();
+    }.tocsc();
 }
 
 
 CSCMatrix A_mat()
 {
-    return COOMatrix(
+    return COOMatrix{
         std::vector<double> {2, 4, -2, 1, -6, 7, 1, 2},  // vals
         std::vector<csint>  {0, 1,  2, 0,  1, 2, 0, 2},  // rows
         std::vector<csint>  {0, 0,  0, 1,  1, 1, 2, 2}   // cols
-    ).tocsc();
+    }.tocsc();
 }
 
 

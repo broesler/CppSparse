@@ -423,7 +423,7 @@ double& CSCMatrix::insert_(csint i, csint j, double v, csint p)
  *     Format Operations
  *----------------------------------------------------------------------------*/
 // Exercise 2.2
-COOMatrix CSCMatrix::tocoo() const { return COOMatrix(*this); }
+COOMatrix CSCMatrix::tocoo() const { return COOMatrix{*this}; }
 
 
 // Exercise 2.16

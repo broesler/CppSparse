@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
     std::vector<csint> W_cols(W_rows.size());  // all zeros for column vector
 
     // Construct the sparse vector
-    CSCMatrix W = COOMatrix(W_vals, W_rows, W_cols, {N, 1}).tocsc();
+    CSCMatrix W = COOMatrix{W_vals, W_rows, W_cols, {N, 1}}.tocsc();
 
     // Perform the update
     t = tic();

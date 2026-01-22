@@ -89,7 +89,7 @@ cs::CSCMatrix csc_from_scipy(const py::object& obj)
 
         // Construct the C++ CSCMatrix using the loaded data
         // The 'value' member is the target CSCMatrix object
-        return cs::CSCMatrix(data, indices, indptr, shape);
+        return cs::CSCMatrix{data, indices, indptr, shape};
 
     } catch (const py::cast_error& e) {
         std::cerr << "Error in SciPy CSC to C++ CSCMatrix cast: "
@@ -139,7 +139,7 @@ cs::COOMatrix coo_from_scipy(const py::object& obj)
 
         // Construct the C++ COOMatrix using the loaded data
         // The 'value' member is the target COOMatrix object
-        return cs::COOMatrix(data, row, col, shape);
+        return cs::COOMatrix{data, row, col, shape};
 
     } catch (const py::cast_error& e) {
         std::cerr << "Error in SciPy COO to C++ COOMatrix cast: "

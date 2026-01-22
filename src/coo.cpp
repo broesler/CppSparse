@@ -201,7 +201,7 @@ COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
     std::ranges::generate(values.begin(), values.end(), [&rng, &value_dist]() { return value_dist(rng); });
 
     // Build the matrix
-    return COOMatrix(values, row_idx, col_idx, {M, N});
+    return COOMatrix{values, row_idx, col_idx, {M, N}};
 }
 
 
@@ -314,7 +314,7 @@ CSCMatrix COOMatrix::compress() const
 
 
 // Exercise 2.9
-CSCMatrix COOMatrix::tocsc() const { return CSCMatrix(*this); }
+CSCMatrix COOMatrix::tocsc() const { return CSCMatrix{*this}; }
 
 
 std::vector<double> COOMatrix::to_dense_vector(const char order) const
@@ -345,7 +345,7 @@ std::vector<double> COOMatrix::to_dense_vector(const char order) const
 // Exercise 2.6
 COOMatrix COOMatrix::transpose() const
 {
-    return COOMatrix(this->v_, this->j_, this->i_, {this->N_, this->M_});
+    return COOMatrix{this->v_, this->j_, this->i_, {this->N_, this->M_}};
 }
 
 

@@ -80,7 +80,7 @@ TEMPLATE_TEST_CASE(
     if constexpr (std::is_same_v<TestType, DenseRHS>) {
         x = chol_solve(A, b, order);  // solve Ax = b
     } else {
-        x = chol_solve(A, CSCMatrix(b, {M, K}), order);
+        x = chol_solve(A, CSCMatrix{b, {M, K}}, order);
     }
 
     // Check that Ax = b
@@ -197,7 +197,7 @@ TEMPLATE_TEST_CASE(
         if constexpr (std::is_same_v<TestType, DenseRHS>) {
             res = qr_solve(A, b, order);
         } else {
-            res = qr_solve(A, CSCMatrix(b, {M, K}), order);
+            res = qr_solve(A, CSCMatrix{b, {M, K}}, order);
         }
 
         // Check that Ax = b
@@ -228,7 +228,7 @@ TEMPLATE_TEST_CASE(
         if constexpr (std::is_same_v<TestType, DenseRHS>) {
             res = qr_solve(A, b, order);
         } else {
-            res = qr_solve(A, CSCMatrix(b, {M, K}), order);
+            res = qr_solve(A, CSCMatrix{b, {M, K}}, order);
         }
 
         // Check that Ax = b
@@ -247,7 +247,7 @@ TEMPLATE_TEST_CASE(
         if constexpr (std::is_same_v<TestType, DenseRHS>) {
             res = qr_solve(A, b, order);
         } else {
-            res = qr_solve(A, CSCMatrix(b, {M - k, K}), order);
+            res = qr_solve(A, CSCMatrix{b, {M - k, K}}, order);
         }
 
         // Actual expect_x la.lstsq(A.toarray(), b)
@@ -364,7 +364,7 @@ TEMPLATE_TEST_CASE(
     if constexpr (std::is_same_v<TestType, DenseRHS>) {
         x = lu_solve(A, b, order);
     } else {
-        x = lu_solve(A, CSCMatrix(b, {M, K}), order);
+        x = lu_solve(A, CSCMatrix{b, {M, K}}, order);
     }
 
     // Check that Ax = b
@@ -411,7 +411,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Triangular", "[spsolve-tri]", RhsCombination
         if constexpr (std::is_same_v<RhsType, DenseRHS>) {
             x = spsolve(A, b);
         } else {
-            x = spsolve(A, CSCMatrix(b, {M, K}));
+            x = spsolve(A, CSCMatrix{b, {M, K}});
         }
         check_vectors_allclose(x, expect_x, solve_tol);
     };
@@ -478,7 +478,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Cholesky", "[spsolve-chol]", CholeskyCombina
     if constexpr (std::is_same_v<RhsType, DenseRHS>) {
         x = spsolve(A, b);
     } else {
-        x = spsolve(A, CSCMatrix(b, {M, K}));
+        x = spsolve(A, CSCMatrix{b, {M, K}});
     }
 
     check_vectors_allclose(x, expect_x, solve_tol);
@@ -510,7 +510,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: LU Symmetric", "[spsolve-lu-sym]", RhsCombin
     if constexpr (std::is_same_v<RhsType, DenseRHS>) {
         x = spsolve(A, b);
     } else {
-        x = spsolve(A, CSCMatrix(b, {M, K}));
+        x = spsolve(A, CSCMatrix{b, {M, K}});
     }
 
     check_vectors_allclose(x, expect_x, solve_tol);
@@ -541,7 +541,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: LU Unsymmetric", "[spsolve-lu-unsym]", RhsCo
     if constexpr (std::is_same_v<RhsType, DenseRHS>) {
         x = spsolve(A, b);
     } else {
-        x = spsolve(A, CSCMatrix(b, {M, K}));
+        x = spsolve(A, CSCMatrix{b, {M, K}});
     }
 
     check_vectors_allclose(x, expect_x, solve_tol);
@@ -569,7 +569,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: QR", "[spsolve-qr]", RhsCombinations)
         if constexpr (std::is_same_v<RhsType, DenseRHS>) {
             x = spsolve(A, b);
         } else {
-            x = spsolve(A, CSCMatrix(b, {M, K}));
+            x = spsolve(A, CSCMatrix{b, {M, K}});
         }
 
         check_vectors_allclose(x, expect_x, solve_tol);
@@ -594,7 +594,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: QR", "[spsolve-qr]", RhsCombinations)
         if constexpr (std::is_same_v<RhsType, DenseRHS>) {
             x = spsolve(A, b);
         } else {
-            x = spsolve(A, CSCMatrix(b, {M, K}));
+            x = spsolve(A, CSCMatrix{b, {M, K}});
         }
 
         check_vectors_allclose(x, expect_x, solve_tol);
@@ -610,7 +610,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: QR", "[spsolve-qr]", RhsCombinations)
         if constexpr (std::is_same_v<RhsType, DenseRHS>) {
             x = spsolve(A, b);
         } else {
-            x = spsolve(A, CSCMatrix(b, {M - k, K}));
+            x = spsolve(A, CSCMatrix{b, {M - k, K}});
         }
 
         // Actual expect_x (python and MATLAB)

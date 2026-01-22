@@ -24,11 +24,11 @@ namespace cs {
 
 TEST_CASE("Triangular solve with dense RHS", "[trisolve_dense]")
 {
-    const CSCMatrix L = COOMatrix(
+    const CSCMatrix L = COOMatrix{
         std::vector<double> {1, 2, 3, 4, 5, 6},
         std::vector<csint>  {0, 1, 1, 2, 2, 2},
         std::vector<csint>  {0, 0, 1, 0, 1, 2}
-    ).tocsc();
+    }.tocsc();
 
     const CSCMatrix U = L.T();
 
@@ -85,7 +85,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
     // All values are 1
     std::vector<double> vals(rows.size(), 1);
 
-    CSCMatrix L = COOMatrix(vals, rows, cols).tocsc();
+    CSCMatrix L = COOMatrix{vals, rows, cols}.tocsc();
     CSCMatrix U = L.T();
 
     // Define the rhs matrix B
@@ -235,7 +235,7 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
         }
     }
 
-    const CSCMatrix A = CSCMatrix(A_vals, {N, N});
+    const CSCMatrix A = CSCMatrix{A_vals, {N, N}};
 
     // Un-permuted matrices
     const CSCMatrix L = A.band(-N, 0);

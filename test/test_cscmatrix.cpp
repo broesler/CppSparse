@@ -475,19 +475,19 @@ TEST_CASE("Exercise 2.13: is_symmetric.", "[ex2.13]")
     std::vector<double> v{1, 2, 3};
 
     SECTION("Diagonal matrix") {
-        CSCMatrix A = COOMatrix(v, i, j).tocsc();
+        CSCMatrix A = COOMatrix{v, i, j}.tocsc();
         REQUIRE(A.is_symmetric());
     }
 
     SECTION("Non-symmetric matrix with off-diagonals") {
-        CSCMatrix A = COOMatrix(v, i, j)
+        CSCMatrix A = COOMatrix{v, i, j}
                        .insert(0, 1, 1.0)
                        .tocsc();
         REQUIRE_FALSE(A.is_symmetric());
     }
 
     SECTION("Symmetric matrix with off-diagonals") {
-        CSCMatrix A = COOMatrix(v, i, j)
+        CSCMatrix A = COOMatrix{v, i, j}
                        .insert(0, 1, 1.0)
                        .insert(1, 0, 1.0)
                        .tocsc();
@@ -538,11 +538,11 @@ TEST_CASE("Matrix permutation", "[permute]")
         std::vector<csint> q{0, 1, 2, 3};
 
         // See Davis pp 7-8, Eqn (2.1)
-        CSCMatrix expect = COOMatrix(
+        CSCMatrix expect = COOMatrix{
             std::vector<double> {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7},
             std::vector<csint>  {2,    0,    3,    1,    0,    3,    3,    0,    1,    2},
             std::vector<csint>  {2,    0,    3,    2,    1,    0,    1,    3,    0,    1}
-        ).tocsc();
+        }.tocsc();
 
         CSCMatrix C = A.permute(inv_permute(p), q);
 
@@ -555,11 +555,11 @@ TEST_CASE("Matrix permutation", "[permute]")
         std::vector<csint> q{1, 0, 2, 3};
 
         // See Davis pp 7-8, Eqn (2.1)
-        CSCMatrix expect = COOMatrix(
+        CSCMatrix expect = COOMatrix{
             std::vector<double> {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7},
             std::vector<csint>  {2,    1,    3,    0,    1,    3,    3,    1,    0,    2},
             std::vector<csint>  {2,    1,    3,    2,    0,    1,    0,    3,    1,    0}
-        ).tocsc();
+        }.tocsc();
 
         CSCMatrix C = A.permute(inv_permute(p), q);
 
@@ -572,11 +572,11 @@ TEST_CASE("Matrix permutation", "[permute]")
         std::vector<csint> q{2, 1, 3, 0};
 
         // See Davis pp 7-8, Eqn (2.1)
-        CSCMatrix expect = COOMatrix(
+        CSCMatrix expect = COOMatrix{
             std::vector<double> {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7},
             std::vector<csint>  {2,    3,    0,    1,    3,    0,    0,    3,    1,    2},
             std::vector<csint>  {0,    3,    2,    0,    1,    3,    1,    2,    3,    1}
-        ).tocsc();
+        }.tocsc();
 
         std::vector<csint> p_inv = inv_permute(p);
         CSCMatrix C = A.permute(p_inv, q);
@@ -605,11 +605,11 @@ TEST_CASE("Matrix permutation", "[permute]")
         std::vector<csint> p{3, 0, 2, 1};
 
         // See Davis pp 7-8, Eqn (2.1)
-        CSCMatrix expect = COOMatrix(
+        CSCMatrix expect = COOMatrix{
             std::vector<double> {3.0,  1.0,  3.2,  2.9,  0.9,  4.5},
             std::vector<csint>  {2,    0,    1,    3,    0,    1},
             std::vector<csint>  {2,    0,    2,    3,    3,    1}
-        ).tocsc();
+        }.tocsc();
 
         CSCMatrix C = A.symperm(inv_permute(p));
 
@@ -643,11 +643,11 @@ TEST_CASE("Exercise 2.26: permuted transpose", "[ex2.26][permute_transpose]")
         std::vector<csint> q{0, 1, 2, 3};
 
         // See Davis pp 7-8, Eqn (2.1)
-        CSCMatrix expect = COOMatrix(
+        CSCMatrix expect = COOMatrix{
             std::vector<double> {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7},
             std::vector<csint>  {3,    2,    0,    1,    2,    0,    0,    2,    1,    3},
             std::vector<csint>  {2,    0,    3,    2,    1,    0,    1,    3,    0,    1}
-        ).tocsc().T();
+        }.tocsc().T();
 
         CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
@@ -659,11 +659,11 @@ TEST_CASE("Exercise 2.26: permuted transpose", "[ex2.26][permute_transpose]")
         std::vector<csint> q{3, 0, 1, 2};
 
         // See Davis pp 7-8, Eqn (2.1)
-        CSCMatrix expect = COOMatrix(
+        CSCMatrix expect = COOMatrix{
             std::vector<double> {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7},
             std::vector<csint>  {2,    1,    3,    0,    1,    3,    3,    1,    0,    2},
             std::vector<csint>  {3,    1,    0,    3,    2,    1,    2,    0,    1,    2}
-        ).tocsc().T();
+        }.tocsc().T();
 
         CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
@@ -675,11 +675,11 @@ TEST_CASE("Exercise 2.26: permuted transpose", "[ex2.26][permute_transpose]")
         std::vector<csint> q{2, 1, 3, 0};
 
         // See Davis pp 7-8, Eqn (2.1)
-        CSCMatrix expect = COOMatrix(
+        CSCMatrix expect = COOMatrix{
             std::vector<double> {3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7},
             std::vector<csint>  {2,    3,    0,    1,    3,    0,    0,    3,    1,    2},
             std::vector<csint>  {0,    3,    2,    0,    1,    3,    1,    2,    3,    1}
-        ).tocsc().T();
+        }.tocsc().T();
 
         CSCMatrix C = A.permute_transpose(inv_permute(p), inv_permute(q));
 
@@ -942,22 +942,22 @@ TEST_CASE("Exercise 2.22: Concatentation", "[ex2.22][hstack][vstack]")
     CSCMatrix A = A_mat();
 
     SECTION("Horizontal concatenation") {
-        CSCMatrix expect = COOMatrix(
+        CSCMatrix expect = COOMatrix{
             std::vector<double> {1, -2, 1, 1, 2, 4, -2, 1, -6, 7,  1, 2},
             std::vector<csint>  {0,  1, 1, 2, 0, 1,  2, 0,  1, 2,  0, 2},
             std::vector<csint>  {0,  0, 1, 2, 3, 3,  3, 4,  4, 4,  5, 5}
-        ).tocsc();
+        }.tocsc();
 
         CSCMatrix C = hstack(E, A);
         check_sparse_allclose(C, expect);
     }
 
     SECTION("Vertical concatenation") {
-        CSCMatrix expect = COOMatrix(
+        CSCMatrix expect = COOMatrix{
             std::vector<double> {1, -2, 1, 1, 2, 4, -2, 1, -6, 7,  1, 2},
             std::vector<csint>  {0,  1, 1, 2, 3, 4,  5, 3,  4, 5,  3, 5},
             std::vector<csint>  {0,  0, 1, 2, 0, 0,  0, 1,  1, 1,  2, 2}
-        ).tocsc();
+        }.tocsc();
 
         CSCMatrix C = vstack(E, A);
         check_sparse_allclose(C, expect);
@@ -972,33 +972,33 @@ TEST_CASE("Exercise 2.23: Slicing", "[ex2.23][slice]")
     auto [M, N] = A.shape();
 
     SECTION("Row slicing") {
-        CSCMatrix expect = COOMatrix(
+        CSCMatrix expect = COOMatrix{
             std::vector<double> {3.1, 2.9, 1.7, 3.0, 0.9},
             std::vector<csint>  {  0,   0,   1,   1,   0},
             std::vector<csint>  {  0,   1,   1,   2,   3}
-        ).tocsc();
+        }.tocsc();
 
         CSCMatrix C = A.slice(1, 3, 0, A.shape()[1]);
         check_sparse_allclose(C, expect);
     }
 
     SECTION("Column slicing") {
-        CSCMatrix expect = COOMatrix(
+        CSCMatrix expect = COOMatrix{
             std::vector<double> {2.9, 1.7, 0.4, 3.2, 3.0},
             std::vector<csint>  {  1,   2,   3,   0,   2},
             std::vector<csint>  {  0,   0,   0,   1,   1}
-        ).tocsc();
+        }.tocsc();
 
         CSCMatrix C = A.slice(0, A.shape()[0], 1, 3);
         check_sparse_allclose(C, expect);
     }
 
     SECTION("Row and column slicing") {
-        CSCMatrix expect = COOMatrix(
+        CSCMatrix expect = COOMatrix{
             std::vector<double> {2.9, 1.7, 3.0, 0.9},
             std::vector<csint>  {  0,   1,   1,   0},
             std::vector<csint>  {  0,   0,   1,   2}
-        ).tocsc();
+        }.tocsc();
 
         CSCMatrix C = A.slice(1, 3, 1, 4);
         check_sparse_allclose(C, expect);
@@ -1026,11 +1026,11 @@ TEST_CASE("Exercise 2.24: Non-contiguous indexing", "[ex2.24][index]")
     SECTION("Indexing without duplicates") {
         CSCMatrix C = A.index({2, 0}, {0, 3, 2});
 
-        CSCMatrix expect = COOMatrix(
+        CSCMatrix expect = COOMatrix{
             std::vector<double> {4.5, 3.2, 3.0},
             std::vector<csint>  {  1,   1,   0},
             std::vector<csint>  {  0,   2,   2}
-        ).tocsc();
+        }.tocsc();
 
         check_sparse_allclose(C, expect);
     }
@@ -1038,11 +1038,11 @@ TEST_CASE("Exercise 2.24: Non-contiguous indexing", "[ex2.24][index]")
     SECTION("Indexing with duplicate rows") {
         CSCMatrix C = A.index({2, 0, 1, 1}, {0, 3, 2});
 
-        CSCMatrix expect = COOMatrix(
+        CSCMatrix expect = COOMatrix{
             std::vector<double> {4.5, 3.1, 3.1, 0.9, 0.9, 3.2, 3.0},
             std::vector<csint>  {  1,   2,   3,   2,   3,   1,   0},
             std::vector<csint>  {  0,   0,   0,   1,   1,   2,   2}
-        ).tocsc();
+        }.tocsc();
 
         check_sparse_allclose(C, expect);
     }
@@ -1050,11 +1050,11 @@ TEST_CASE("Exercise 2.24: Non-contiguous indexing", "[ex2.24][index]")
     SECTION("Indexing with duplicate columns") {
         CSCMatrix C = A.index({2, 0}, {0, 3, 2, 0});
 
-        CSCMatrix expect = COOMatrix(
+        CSCMatrix expect = COOMatrix{
             std::vector<double> {4.5, 3.2, 3.0, 4.5},
             std::vector<csint>  {  1,   1,   0,   1},
             std::vector<csint>  {  0,   2,   2,   3}
-        ).tocsc();
+        }.tocsc();
 
         check_sparse_allclose(C, expect);
     }
@@ -1192,12 +1192,12 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
         }
 
         SECTION("Sparse assignment") {
-            const CSCMatrix C = CSCMatrix(
+            const CSCMatrix C = CSCMatrix{
                 std::vector<double> {100, 101, 102, 103, 104, 105},
                 std::vector<csint> {0, 1, 0, 1, 0, 1},
                 std::vector<csint> {0, 2, 4, 6},
                 Shape{2, 3}
-            );
+            };
 
             A.assign(rows, cols, C);
 

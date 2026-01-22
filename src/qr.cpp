@@ -304,7 +304,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
             x[i] = 0;
             if (S.parent[i] == k) {
                 // Scatter the non-zero pattern without changing the values
-                vnz = V.scatter(i, 0, w, std::nullopt, k, V, vnz, false);
+                vnz = V.scatter(i, 0, w, {}, k, V, vnz, false);
             }
         }
 
@@ -399,7 +399,7 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
             R.i_[rnz++] = i;  // R(i, k)
             if (S.parent[i] == k) {
                 // Scatter the non-zero pattern without changing the values
-                vnz = V.scatter(i, 0, w, std::nullopt, k, V, vnz, values);
+                vnz = V.scatter(i, 0, w, {}, k, V, vnz, values);
             }
         }
 

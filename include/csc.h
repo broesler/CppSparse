@@ -705,7 +705,7 @@ public:
         csint j,
         double beta,
         std::vector<csint>& w,
-        OptionalVectorRef<double> x_ref,
+        std::span<double> x,
         csint mark,
         CSCMatrix& C,
         csint nz,
@@ -970,7 +970,7 @@ public:
         const CSCMatrix& B,
         csint k,
         SparseSolution& sol,
-        OptionalVectorRef<csint> p_inv_ref,
+        std::span<const csint> p_inv,
         bool lower
     );
 
@@ -979,7 +979,7 @@ public:
         const CSCMatrix& B,
         csint k,
         std::vector<csint>& xi,
-        OptionalVectorRef<csint> p_inv_ref
+        std::span<const csint> p_inv
     );
 
     friend void dfs(
@@ -989,7 +989,7 @@ public:
         std::vector<csint>& xi,
         std::vector<csint>& pstack,
         std::vector<csint>& rstack,
-        OptionalVectorRef<csint> p_inv_ref
+        std::span<const csint> p_inv
     );
 
     friend std::vector<csint> detail::reach_r(

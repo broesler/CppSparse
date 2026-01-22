@@ -20,9 +20,6 @@ namespace cs {
 using csint = std::int32_t;
 using Shape = std::array<csint, 2>;
 
-template <typename T>
-using OptionalVectorRef = std::optional<std::reference_wrapper<std::vector<T>>>;
-
 // Need full enum class definition for default arguments
 enum class AMDOrder
 {

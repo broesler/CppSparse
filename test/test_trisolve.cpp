@@ -12,7 +12,6 @@
 
 #include <algorithm>  // reverse
 #include <numeric>    // iota
-#include <optional>   // nullopt
 #include <vector>
 
 #include "csparse.h"
@@ -198,7 +197,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
         std::vector<double> expect = {0., -1.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.};
 
         SparseSolution sol(N);
-        spsolve(U, B, 0, sol, std::nullopt, false);
+        spsolve(U, B, 0, sol, {}, false);
 
         REQUIRE(sol.x == expect);
     }

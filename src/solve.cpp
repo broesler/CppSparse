@@ -573,7 +573,7 @@ void spsolve(
     const CSCMatrix& B,
     csint k,
     SparseSolution& sol,
-    OptionalVectorRef<csint> p_inv_ref,
+    std::span<const csint> p_inv,
     bool lower
 )
 {
@@ -582,14 +582,14 @@ void spsolve(
     std::fill(x.begin(), x.end(), 0.0);            // clear x
 
     // Populate xi with the non-zero indices of x
-    reach(A, B, k, xi, p_inv_ref);
+    reach(A, B, k, xi, p_inv);
 
     B.scatter(k, x);  // scatter B(:, k) into x
 
     // Solve Lx = b_k or Ux = b_k
     for (auto& j : xi) {  // x(j) is nonzero
         // j maps to col J of G
-        csint J = p_inv_ref.has_value() ? p_inv_ref.value().get()[j] : j;
+        csint J = p_inv.empty() ? j : p_inv[j];
         if (J < 0) {
             continue;  // x(j) is not in the pattern of G
         }
@@ -609,7 +609,7 @@ void reach(
     const CSCMatrix& B,
     csint k,
     std::vector<csint>& xi,
-    OptionalVectorRef<csint> p_inv_ref
+    std::span<const csint> p_inv
 )
 {
     std::vector<char> marked(A.M_, false);
@@ -623,7 +623,7 @@ void reach(
     for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
         csint j = B.i_[p];  // consider nonzero B(j, k)
         if (!marked[j]) {
-            dfs(A, j, marked, xi, pstack, rstack, p_inv_ref);
+            dfs(A, j, marked, xi, pstack, rstack, p_inv);
         }
     }
 
@@ -639,7 +639,7 @@ void dfs(
     std::vector<csint>& xi,
     std::vector<csint>& pstack,
     std::vector<csint>& rstack,
-    OptionalVectorRef<csint> p_inv_ref
+    std::span<const csint> p_inv
 )
 {
     // Ensure the stacks are reserved and cleared
@@ -655,7 +655,7 @@ void dfs(
     while (!rstack.empty()) {
         j = rstack.back();  // get j from the top of the recursion stack
         // j maps to col jnew of G
-        csint jnew = p_inv_ref.has_value() ? p_inv_ref.value().get()[j] : j;
+        csint jnew = p_inv.empty() ? j : p_inv[j];
 
         if (!marked[j]) {
             marked[j] = true;  // mark node j as visited

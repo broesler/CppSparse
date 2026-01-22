@@ -10,7 +10,6 @@
 #ifndef _CSPARSE_SOLVE_H_
 #define _CSPARSE_SOLVE_H_
 
-#include <optional>
 #include <span>
 #include <vector>
 
@@ -118,7 +117,7 @@ std::vector<double> trisolve_sparse(const CSCMatrix& L, const CSCMatrix& B)
 
     for (csint k = 0; k < K; k++) {
         auto X_k = X_span.subspan(k * Nx, Nx);
-        spsolve(L, B, k, sol, std::nullopt, Lower);
+        spsolve(L, B, k, sol, {}, Lower);
         for (auto& i : sol.xi) {
             X_k[i] = sol.x[i];
         }
@@ -475,7 +474,7 @@ void spsolve(
     const CSCMatrix& B,
     csint k,
     SparseSolution& sol,
-    OptionalVectorRef<csint> p_inv_ref=std::nullopt,
+    std::span<const csint> p_inv = {},
     bool lower=true
 );
 
@@ -539,7 +538,7 @@ void reach(
     const CSCMatrix& B,
     csint k,
     std::vector<csint>& xi,
-    OptionalVectorRef<csint> p_inv_ref=std::nullopt
+    std::span<const csint> p_inv = {}
 );
 
 
@@ -565,7 +564,7 @@ void dfs(
     std::vector<csint>& xi,
     std::vector<csint>& pstack,
     std::vector<csint>& rstack,
-    OptionalVectorRef<csint> p_inv_ref=std::nullopt
+    std::span<const csint> p_inv = {}
 );
 
 

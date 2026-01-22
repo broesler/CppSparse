@@ -13,7 +13,6 @@
 #include <algorithm>  // reverse
 #include <map>
 #include <numeric>    // iota
-#include <optional>   // nullopt
 #include <random>
 #include <utility>    // as_const
 #include <vector>

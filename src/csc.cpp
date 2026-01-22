@@ -1388,7 +1388,7 @@ csint CSCMatrix::scatter(
     csint j,
     double beta,
     std::vector<csint>& w,
-    OptionalVectorRef<double> x_ref,
+    std::span<double> x,
     csint mark,
     CSCMatrix& C,
     csint nz,
@@ -1396,7 +1396,7 @@ csint CSCMatrix::scatter(
 ) const
 {
     // Check if x is passed as a reference
-    bool values = !v_.empty() && (x_ref.has_value() && !x_ref.value().get().empty());
+    bool values = !v_.empty() && !x.empty();
 
     // Exercise 2.19
     if (fs) {
@@ -1406,7 +1406,6 @@ csint CSCMatrix::scatter(
             w[i] = mark;             // i is new entry in column j
             C.i_[nz++] = i;          // add i to sparsity pattern of C(:, j)
             if (values) {
-                std::vector<double>& x = x_ref.value().get();
                 x[i] = beta * v_[p];   // x = beta * A(i, j)
             }
         }
@@ -1419,12 +1418,10 @@ csint CSCMatrix::scatter(
                 w[i] = mark;             // i is new entry in column j
                 C.i_[nz++] = i;          // add i to pattern of C(:, j)
                 if (values) {
-                    std::vector<double>& x = x_ref.value().get();
                     x[i] = beta * v_[p];   // x = beta * A(i, j)
                 }
             } else {
                 if (values) {
-                    std::vector<double>& x = x_ref.value().get();
                     x[i] += beta * v_[p];  // i exists in C(:, j) already
                 }
             }

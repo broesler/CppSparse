@@ -80,7 +80,7 @@ CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense)
         case AMDOrder::Natural:
             // NOTE should never get here since amd returns early, but if it
             // does, return the original matrix without values
-            C = CSCMatrix {{}, A.indices(), A.indptr(), A.shape()};
+            C = CSCMatrix{{}, A.indices(), A.indptr(), A.shape()};
             break;
         case AMDOrder::APlusAT:
             if (M != N) {

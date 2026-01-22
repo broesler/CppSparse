@@ -41,7 +41,7 @@ TEST_CASE("Build Graph", "[amd][build_graph]")
 
     SECTION("Natural") {
         order = AMDOrder::Natural;
-        expect_C = CSCMatrix {{}, A.indices(), A.indptr(), A.shape()};
+        expect_C = CSCMatrix{{}, A.indices(), A.indptr(), A.shape()};
     }
 
     SECTION("A + A^T") {
@@ -54,7 +54,7 @@ TEST_CASE("Build Graph", "[amd][build_graph]")
 
         if (dense == 0) {
             // Drop all rows
-            A = CSCMatrix {A.shape()};
+            A = CSCMatrix{A.shape()};
         } else if (dense == 4) {
             // Remove some rows (manual count of row_nnz > 4)
             for (csint i : {4, 6, 7, 8}) {

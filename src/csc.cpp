@@ -1446,8 +1446,8 @@ void CSCMatrix::scatter(csint k, std::span<double> x) const
  *         Permutations 
  *----------------------------------------------------------------------------*/
 CSCMatrix CSCMatrix::permute(
-    const std::vector<csint>& p_inv,
-    const std::vector<csint>& q,
+    std::span<const csint> p_inv,
+    std::span<const csint> q,
     bool values
 ) const
 {
@@ -1456,13 +1456,14 @@ CSCMatrix CSCMatrix::permute(
 
     for (csint k = 0; k < N_; k++) {
         C.p_[k] = nz;                   // column k of C is column q[k] of A
-        csint j = q[k];
+        csint j = q.empty() ? k : q[k];
 
         for (csint t = p_[j]; t < p_[j+1]; t++) {
             if (values) {
                 C.v_[nz] = v_[t];       // row i of A is row p_inv[i] of C
             }
-            C.i_[nz++] = p_inv[i_[t]];
+            csint i = i_[t];
+            C.i_[nz++] = p_inv.empty() ? i : p_inv[i];
         }
     }
 
@@ -1472,23 +1473,19 @@ CSCMatrix CSCMatrix::permute(
 }
 
 
-CSCMatrix CSCMatrix::permute_rows(const std::vector<csint>& p_inv, bool values) const
+CSCMatrix CSCMatrix::permute_rows(std::span<const csint> p_inv, bool values) const
 {
-    std::vector<csint> q(N_);
-    std::iota(q.begin(), q.end(), 0);  // identity permutation
-    return permute(p_inv, q, values);
+    return permute(p_inv, {}, values);
 }
 
 
-CSCMatrix CSCMatrix::permute_cols(const std::vector<csint>& q, bool values) const
+CSCMatrix CSCMatrix::permute_cols(std::span<const csint> q, bool values) const
 {
-    std::vector<csint> p_inv(M_);
-    std::iota(p_inv.begin(), p_inv.end(), 0);  // identity permutation
-    return permute(p_inv, q, values);
+    return permute({}, q, values);
 }
 
 
-CSCMatrix CSCMatrix::symperm(const std::vector<csint>& p_inv, bool values) const
+CSCMatrix CSCMatrix::symperm(std::span<const csint> p_inv, bool values) const
 {
     assert(M_ == N_);  // matrix must be square. Symmetry not checked.
 
@@ -1497,7 +1494,7 @@ CSCMatrix CSCMatrix::symperm(const std::vector<csint>& p_inv, bool values) const
 
     // Count entries in each column of C
     for (csint j = 0; j < N_; j++) {
-        csint j2 = p_inv[j];  // column j of A is column j2 of C
+        csint j2 = p_inv.empty() ? j : p_inv[j];  // column j of A is column j2 of C
 
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             csint i = i_[p];
@@ -1505,7 +1502,7 @@ CSCMatrix CSCMatrix::symperm(const std::vector<csint>& p_inv, bool values) const
             if (i > j)
                 continue;   // skip lower triangular part of A
 
-            csint i2 = p_inv[i];    // row i of A is row i2 of C
+            csint i2 = p_inv.empty() ? i : p_inv[i];    // row i of A is row i2 of C
             w[std::max(i2, j2)]++;  // column count of C
         }
     }
@@ -1515,7 +1512,7 @@ CSCMatrix CSCMatrix::symperm(const std::vector<csint>& p_inv, bool values) const
     w = C.p_;  // copy back into workspace
 
     for (csint j = 0; j < N_; j++) {
-        csint j2 = p_inv[j];  // column j of A is column j2 of C
+        csint j2 = p_inv.empty() ? j : p_inv[j];  // column j of A is column j2 of C
 
         for (csint p = p_[j]; p < p_[j+1]; p++) {
             csint i = i_[p];
@@ -1523,7 +1520,7 @@ CSCMatrix CSCMatrix::symperm(const std::vector<csint>& p_inv, bool values) const
             if (i > j)
                 continue;   // skip lower triangular part of A
 
-            csint i2 = p_inv[i];  // row i of A is row i2 of C
+            csint i2 = p_inv.empty() ? i : p_inv[i];  // row i of A is row i2 of C
             csint q = w[std::max(i2, j2)]++;
             C.i_[q] = std::min(i2, j2);
             if (values) {
@@ -1538,8 +1535,8 @@ CSCMatrix CSCMatrix::symperm(const std::vector<csint>& p_inv, bool values) const
 
 // Exercise 2.26
 CSCMatrix CSCMatrix::permute_transpose(
-    const std::vector<csint>& p_inv,
-    const std::vector<csint>& q_inv,
+    std::span<const csint> p_inv,
+    std::span<const csint> q_inv,
     bool values
 ) const
 {
@@ -1547,8 +1544,11 @@ CSCMatrix CSCMatrix::permute_transpose(
     CSCMatrix C({N_, M_}, nnz(), values);  // output
 
     // Compute number of elements in each permuted row (aka column of C)
-    for (csint p = 0; p < nnz(); p++)
-        w[p_inv[i_[p]]]++;
+    for (csint p = 0; p < nnz(); p++) {
+        csint i = i_[p];
+        csint idx = p_inv.empty() ? i : p_inv[i];
+        w[idx]++;
+    }
 
     std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
@@ -1556,8 +1556,10 @@ CSCMatrix CSCMatrix::permute_transpose(
     // place A(i, j) as C(j, i) (permuted)
     for (csint j = 0; j < N_; j++) {
         for (csint p = p_[j]; p < p_[j+1]; p++) {
-            csint t = w[p_inv[i_[p]]]++;
-            C.i_[t] = q_inv[j];
+            csint i = i_[p];
+            csint idx = p_inv.empty() ? i : p_inv[i];
+            csint t = w[idx]++;
+            C.i_[t] = q_inv.empty() ? j : q_inv[j];
             if (values) {
                 C.v_[t] = v_[p];
             }

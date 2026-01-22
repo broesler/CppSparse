@@ -31,7 +31,7 @@ public:
     //--------------------------------------------------------------------------
     //        Constructors
     //--------------------------------------------------------------------------
-    COOMatrix();  // NOTE need default since we have others
+    COOMatrix() = default;  // NOTE need default since we have others
 
     // Do not need other "Rule of Five" since we have no pointers
     // COOMatrix(const COOMatrix&);

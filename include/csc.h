@@ -51,7 +51,7 @@ public:
     //--------------------------------------------------------------------------
     //        Constructors
     //--------------------------------------------------------------------------
-    CSCMatrix();
+    CSCMatrix() = default;
 
     // We need this virtual destructor since realloc is a virtual function.
     // It is only needed for the pybind11 interface.

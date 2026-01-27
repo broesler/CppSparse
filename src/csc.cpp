@@ -11,11 +11,7 @@
 #include <cassert>
 #include <cmath>       // fabs
 #include <format>
-#include <functional>  // reference_wrapper
-#include <new>         // bad_alloc
 #include <numeric>     // partial_sum, iota
-#include <optional>    // optional
-#include <ranges>      // views::reverse
 #include <stdexcept>
 #include <sstream>
 #include <string>

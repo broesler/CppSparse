@@ -311,7 +311,7 @@ std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b)
  * @throws PermutedTriangularMatrixError if L is not a permuted lower triangular
  * matrix.
  */
-std::vector<double> lsolve_rows(const CSCMatrix& L, const std::vector<double>& b);
+std::vector<double> lsolve_rows(const CSCMatrix& L, std::span<const double> b);
 
 
 /** Solve Ux = b with a row-permuted U. The permutation is unknown.
@@ -326,7 +326,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& L, const std::vector<double>& b
  * @throws PermutedTriangularMatrixError if U is not a permuted upper triangular
  * matrix.
  */
-std::vector<double> usolve_rows(const CSCMatrix& U, const std::vector<double>& b);
+std::vector<double> usolve_rows(const CSCMatrix& U, std::span<const double> b);
 
 
 /** Solve Lx = b with a column-permuted L. The permutation is unknown.
@@ -341,7 +341,7 @@ std::vector<double> usolve_rows(const CSCMatrix& U, const std::vector<double>& b
  * @throws PermutedTriangularMatrixError if L is not a permuted lower triangular
  * matrix.
  */
-std::vector<double> lsolve_cols(const CSCMatrix& L, const std::vector<double>& b);
+std::vector<double> lsolve_cols(const CSCMatrix& L, std::span<const double> b);
 
 
 /** Solve Ux = b with a column-permuted U. The permutation is unknown.
@@ -356,7 +356,7 @@ std::vector<double> lsolve_cols(const CSCMatrix& L, const std::vector<double>& b
  * #throws PermutedTriangularMatrixError if U is not a permuted upper triangular
  * matrix.
  */
-std::vector<double> usolve_cols(const CSCMatrix& U, const std::vector<double>& b);
+std::vector<double> usolve_cols(const CSCMatrix& U, std::span<const double> b);
 
 
 /** Find the diagonal indices of a row-permuted lower triangular matrix.
@@ -422,7 +422,7 @@ void tri_solve_perm_inplace(
  * @throws PermutedTriangularMatrixError if A is not a permuted triangular
  * matrix.
  */
-std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>& B);
+std::vector<double> tri_solve_perm(const CSCMatrix& A, std::span<const double> B);
 std::vector<double> tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B);
 
 
@@ -514,7 +514,7 @@ std::vector<csint> reach_r(const CSCMatrix& A, const CSCMatrix& B);
 std::vector<csint>& dfs_r(
     const CSCMatrix& A,
     csint j,
-    std::vector<char>& marked,
+    std::span<char> marked,
     std::vector<csint>& xi
 );
 
@@ -560,7 +560,7 @@ void reach(
 void dfs(
     const CSCMatrix& A,
     csint j,
-    std::vector<char>& marked,
+    std::span<char> marked,
     std::vector<csint>& xi,
     std::vector<csint>& pstack,
     std::vector<csint>& rstack,

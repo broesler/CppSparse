@@ -11,6 +11,7 @@
 #define _CSPARSE_TYPES_H_
 
 #include <cstdint>
+#include <span>
 #include <vector>
 
 
@@ -62,7 +63,7 @@ std::vector<csint> reach_r(const CSCMatrix& A, const CSCMatrix& B);
 std::vector<csint>& dfs_r(
     const CSCMatrix& A,
     csint j,
-    std::vector<char>& marked,
+    std::span<char> marked,
     std::vector<csint>& xi
 );
 

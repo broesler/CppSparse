@@ -1050,10 +1050,10 @@ public:
     friend void lsolve_inplace_opt(const CSCMatrix& A, std::span<double> x);
     friend void usolve_inplace_opt(const CSCMatrix& A, std::span<double> x);
 
-    friend std::vector<double> lsolve_rows(const CSCMatrix& A, const std::vector<double>& b);
-    friend std::vector<double> usolve_rows(const CSCMatrix& A, const std::vector<double>& b);
-    friend std::vector<double> lsolve_cols(const CSCMatrix& A, const std::vector<double>& b);
-    friend std::vector<double> usolve_cols(const CSCMatrix& A, const std::vector<double>& b);
+    friend std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b);
+    friend std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b);
+    friend std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b);
+    friend std::vector<double> usolve_cols(const CSCMatrix& A, std::span<const double> b);
 
     friend std::vector<csint> find_lower_diagonals(const CSCMatrix& A);
     friend std::vector<csint> find_upper_diagonals(const CSCMatrix& A);
@@ -1087,7 +1087,7 @@ public:
     friend void dfs(
         const CSCMatrix& A,
         csint j,
-        std::vector<char>& marked,
+        std::span<char> marked,
         std::vector<csint>& xi,
         std::vector<csint>& pstack,
         std::vector<csint>& rstack,
@@ -1102,7 +1102,7 @@ public:
     friend std::vector<csint>& detail::dfs_r(
         const CSCMatrix& A,
         csint j,
-        std::vector<char>& marked,
+        std::span<char> marked,
         std::vector<csint>& xi
     );
 

@@ -187,7 +187,7 @@ std::vector<csint> find_lower_diagonals(const CSCMatrix& A)
 
 
 // Exercise 3.3
-std::vector<double> lsolve_rows(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
 {
     if (A.M_ != A.N_) {
         throw std::invalid_argument("Matrix must be square.");
@@ -214,7 +214,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, const std::vector<double>& b
 
     // Second (forward) pass to solve the system PL x = b -> L x = P^T b
     std::vector<double> x(A.N_);
-    std::vector<double> b_work = b;
+    std::vector<double> b_work(b.begin(), b.end());
 
     // Perform the permuted forward solve
     for (csint j = 0; j < A.N_; ++j) {
@@ -239,7 +239,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, const std::vector<double>& b
 
 
 // Exercise 3.5
-std::vector<double> lsolve_cols(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b)
 {
     if (A.M_ != A.N_) {
         throw std::invalid_argument("Matrix must be square.");
@@ -276,7 +276,7 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, const std::vector<double>& b
 
     // Second (forward) pass to solve the system LQ x = b
     std::vector<double> x(A.N_);
-    std::vector<double> b_work = b;
+    std::vector<double> b_work(b.begin(), b.end());
 
     // Perform the permuted forward solve
     for (const auto& j : q_inv) {
@@ -333,7 +333,7 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
 
 
 // Exercise 3.4
-std::vector<double> usolve_rows(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b)
 {
     if (A.M_ != A.N_) {
         throw std::invalid_argument("Matrix must be square.");
@@ -360,7 +360,7 @@ std::vector<double> usolve_rows(const CSCMatrix& A, const std::vector<double>& b
 
     // Second (forward) pass to solve the system PU x = b -> U x = P^T b
     std::vector<double> x(A.N_);
-    std::vector<double> b_work = b;
+    std::vector<double> b_work(b.begin(), b.end());
 
     // Perform the permuted backward solve
     for (csint j = A.N_ - 1; j >= 0; j--) {
@@ -383,7 +383,7 @@ std::vector<double> usolve_rows(const CSCMatrix& A, const std::vector<double>& b
 }
 
 
-std::vector<double> usolve_cols(const CSCMatrix& A, const std::vector<double>& b)
+std::vector<double> usolve_cols(const CSCMatrix& A, std::span<const double> b)
 {
     if (A.M_ != A.N_) {
         throw std::invalid_argument("Matrix must be square.");
@@ -420,7 +420,7 @@ std::vector<double> usolve_cols(const CSCMatrix& A, const std::vector<double>& b
 
     // Second (forward) pass to solve the system UQ x = b
     std::vector<double> x(A.N_);
-    std::vector<double> b_work = b;
+    std::vector<double> b_work(b.begin(), b.end());
 
     // Perform the permuted backward solve
     for (const auto& j : std::views::reverse(q_inv)) {
@@ -540,7 +540,7 @@ void tri_solve_perm_inplace(
 }
 
 
-std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>& B)
+std::vector<double> tri_solve_perm(const CSCMatrix& A, std::span<const double> B)
 {
     auto [M, N] = A.shape();
     csint MxK = static_cast<csint>(B.size());
@@ -560,7 +560,7 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>
 
     csint K = MxK / M;               // number of RHS columns
     std::vector<double> X(N * K);    // solution vector
-    std::vector<double> B_work = B;  // copy the RHS vector
+    std::vector<double> B_work(B.begin(), B.end());  // copy the RHS vector
 
     std::span<double> X_span(X);
     std::span<double> B_work_span(B_work);
@@ -685,7 +685,7 @@ void reach(
 void dfs(
     const CSCMatrix& A,
     csint j,
-    std::vector<char>& marked,
+    std::span<char> marked,
     std::vector<csint>& xi,
     std::vector<csint>& pstack,
     std::vector<csint>& rstack,
@@ -759,7 +759,7 @@ std::vector<csint> reach_r(const CSCMatrix& A, const CSCMatrix& B)
 std::vector<csint>& dfs_r(
     const CSCMatrix& A,
     csint j,
-    std::vector<char>& marked,
+    std::span<char> marked,
     std::vector<csint>& xi
 )
 {

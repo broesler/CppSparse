@@ -79,16 +79,14 @@ int main(int argc, char* argv[])
     csint p0 = L.indptr()[k];    // index reference for W
     csint p1 = L.indptr()[k+1];  // index reference for W
 
-    std::vector<csint> W_rows(L.indices().begin() + p0,
-                              L.indices().begin() + p1);
+    std::vector<csint> W_rows(L.indices().begin() + p0, L.indices().begin() + p1);
 
     // Create a random vector of values the same size as W_rows
     std::default_random_engine rng(1);
     std::uniform_real_distribution<double> unif(0.0, 1.0);
 
     std::vector<double> W_vals(W_rows.size());
-    std::generate(W_vals.begin(), W_vals.end(),
-                  [&]() { return unif(rng) * s; });
+    std::generate(W_vals.begin(), W_vals.end(), [&]() { return unif(rng) * s; });
 
     std::vector<csint> W_cols(W_rows.size());  // all zeros for column vector
 

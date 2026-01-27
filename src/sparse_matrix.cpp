@@ -69,7 +69,7 @@ std::string SparseMatrix::make_format_string_() const
 void SparseMatrix::print_dense(int precision, bool suppress, std::ostream& os) const
 {
     auto order = DenseOrder::ColMajor;  // default Fortran-style column-major order
-    const std::vector<double> A = to_dense_vector(order);
+    const auto A = to_dense_vector(order);
     auto [M, N] = shape();
 
     if (A.size() != static_cast<size_t>(M * N)) {

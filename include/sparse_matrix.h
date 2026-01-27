@@ -114,23 +114,17 @@ public:
 
 
 // Exercise 2.10
-inline std::vector<double> operator*(
-    const SparseMatrix& A,
-    std::span<const double> x
-)
+inline auto operator*(const SparseMatrix& A, std::span<const double> x)
 {
     return A.dot(x); 
 }
+
 
 // Exercise 2.10 (overload for exact match with vector inputs)
-inline std::vector<double> operator*(
-    const SparseMatrix& A,
-    const std::vector<double>& x
-)
+inline auto operator*(const SparseMatrix& A, const std::vector<double>& x)
 {
     return A.dot(x); 
 }
-
 
 
 // inline since it's defined in the header

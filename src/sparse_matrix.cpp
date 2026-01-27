@@ -62,7 +62,7 @@ std::string SparseMatrix::make_format_string_() const
     // Leading space aligns for "-" signs
     const std::string fmt = use_scientific ? " .4e" : " .4g";
 
-    return "({0:>{1}d}, {2:>{3}d}): {4:" + fmt + "}";
+    return std::format("({{0:>{{1}}d}}, {{2:>{{3}}d}}): {{4:{}}}", fmt);
 }
 
 

@@ -134,14 +134,14 @@ COOMatrix COOMatrix::from_file(const std::string& filename)
     std::ifstream file(filename);
 
     if (!file.is_open()) {
-        throw std::runtime_error("Could not open file: " + filename);
+        throw std::runtime_error(std::format("Could not open file: {}", filename));
     }
 
     try {
         return from_stream(file);
     } catch (const std::runtime_error& e) {
         throw std::runtime_error(
-            "Error reading file: " + filename + "\n" + e.what()
+            std::format("Error reading file: {}\n{}", filename, e.what())
         );
     }
 }

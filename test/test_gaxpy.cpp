@@ -544,16 +544,16 @@ TEST_CASE("Add sparse column vectors", "[math][add_scaled]")
     }
 
     SECTION("Exercise 2.21: Saxpy") {
-        std::vector<csint> expect_w(M);
+        std::vector<char> expect_w(M);
         for (auto i : expect.indices()) {
-            expect_w[i] = 1;
+            expect_w[i] = true;
         }
 
         // Initialize workspaces
-        std::vector<csint> w(M);
+        std::vector<char> w(M);
         std::vector<double> x(M);
 
-        w = saxpy(a, b, w, x);
+        saxpy(a, b, w, x);
 
         REQUIRE(w == expect_w);
     }

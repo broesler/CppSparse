@@ -1024,7 +1024,10 @@ TEST_CASE("Exercise 2.24: Non-contiguous indexing", "[ex2.24][index]")
     CSCMatrix A = davis_example_small().tocsc();
 
     SECTION("Indexing without duplicates") {
-        CSCMatrix C = A.index({2, 0}, {0, 3, 2});
+        CSCMatrix C = A.index(
+            std::vector<csint>{2, 0},
+            std::vector<csint>{0, 3, 2}
+        );
 
         CSCMatrix expect = COOMatrix{
             std::vector<double> {4.5, 3.2, 3.0},
@@ -1036,7 +1039,10 @@ TEST_CASE("Exercise 2.24: Non-contiguous indexing", "[ex2.24][index]")
     }
 
     SECTION("Indexing with duplicate rows") {
-        CSCMatrix C = A.index({2, 0, 1, 1}, {0, 3, 2});
+        CSCMatrix C = A.index(
+            std::vector<csint>{2, 0, 1, 1},
+            std::vector<csint>{0, 3, 2}
+        );
 
         CSCMatrix expect = COOMatrix{
             std::vector<double> {4.5, 3.1, 3.1, 0.9, 0.9, 3.2, 3.0},
@@ -1048,7 +1054,10 @@ TEST_CASE("Exercise 2.24: Non-contiguous indexing", "[ex2.24][index]")
     }
 
     SECTION("Indexing with duplicate columns") {
-        CSCMatrix C = A.index({2, 0}, {0, 3, 2, 0});
+        CSCMatrix C = A.index(
+            std::vector<csint>{2, 0},
+            std::vector<csint>{0, 3, 2, 0}
+        );
 
         CSCMatrix expect = COOMatrix{
             std::vector<double> {4.5, 3.2, 3.0, 4.5},

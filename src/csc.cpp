@@ -29,14 +29,14 @@ namespace cs {
  *----------------------------------------------------------------------------*/
 
 CSCMatrix::CSCMatrix(
-    const std::vector<double>& data,
-    const std::vector<csint>& indices,
-    const std::vector<csint>& indptr,
+    std::span<const double> data,
+    std::span<const csint> indices,
+    std::span<const csint> indptr,
     const Shape& shape
-    )
-    : v_(data),
-      i_(indices),
-      p_(indptr),
+)
+    : v_(data.begin(), data.end()),
+      i_(indices.begin(), indices.end()),
+      p_(indptr.begin(), indptr.end()),
       M_(shape[0]),
       N_(shape[1])
 {}
@@ -68,7 +68,7 @@ CSCMatrix::CSCMatrix(const COOMatrix& A) : CSCMatrix(A.compress())
 
 // Exercise 2.16
 CSCMatrix::CSCMatrix(
-    const std::vector<double>& A,
+    std::span<const double> A,
     const Shape& shape,
     const DenseOrder order
 ) : M_(shape[0]),
@@ -354,9 +354,9 @@ CSCMatrix& CSCMatrix::assign(csint i, csint j, double v)
 
 // Exercise 2.25
 CSCMatrix& CSCMatrix::assign(
-    const std::vector<csint>& rows,
-    const std::vector<csint>& cols,
-    const std::vector<double>& C
+    std::span<const csint> rows,
+    std::span<const csint> cols,
+    std::span<const double> C
 )
 {
     if (C.size() != rows.size() * cols.size()) {
@@ -376,8 +376,8 @@ CSCMatrix& CSCMatrix::assign(
 
 
 CSCMatrix& CSCMatrix::assign(
-    const std::vector<csint>& rows,
-    const std::vector<csint>& cols,
+    std::span<const csint> rows,
+    std::span<const csint> cols,
     const CSCMatrix& C
 )
 {
@@ -766,8 +766,8 @@ double CSCMatrix::structural_symmetry() const
 template <bool Transpose = false>
 static void gaxpy_check_(
     const CSCMatrix& A,
-    const std::vector<double>& X,
-    const std::vector<double>& Y
+    std::span<const double> X,
+    std::span<const double> Y
 )
 {
     // (M, N) * (N, K) + (M, K) = (M, K) if Transpose = false
@@ -803,13 +803,13 @@ static void gaxpy_check_(
 
 std::vector<double> gaxpy(
     const CSCMatrix& A,
-    const std::vector<double>& x,
-    const std::vector<double>& y
+    std::span<const double> x,
+    std::span<const double> y
 )
 {
     gaxpy_check_(A, x, y);
 
-    std::vector<double> out = y;  // copy the input vector
+    std::vector<double> out(y.begin(), y.end());  // copy the input vector
 
     for (csint j = 0; j < A.N_; ++j) {
         for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
@@ -824,13 +824,13 @@ std::vector<double> gaxpy(
 // Exercise 2.1
 std::vector<double> gatxpy(
     const CSCMatrix& A,
-    const std::vector<double>& x,
-    const std::vector<double>& y
+    std::span<const double> x,
+    std::span<const double> y
 )
 {
     gaxpy_check_<true>(A, x, y);
 
-    std::vector<double> out = y;  // copy the input vector
+    std::vector<double> out(y.begin(), y.end());  // copy the input vector
 
     for (csint j = 0; j < A.N_; ++j) {
         for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
@@ -845,8 +845,8 @@ std::vector<double> gatxpy(
 // Exercise 2.3
 std::vector<double> sym_gaxpy(
     const CSCMatrix& A,
-    const std::vector<double>& x,
-    const std::vector<double>& y
+    std::span<const double> x,
+    std::span<const double> y
 )
 {
     if (A.M_ != A.N_) {
@@ -855,7 +855,7 @@ std::vector<double> sym_gaxpy(
 
     gaxpy_check_(A, x, y);
 
-    std::vector<double> out = y;  // copy the input vector
+    std::vector<double> out(y.begin(), y.end());  // copy the input vector
 
     for (csint j = 0; j < A.N_; ++j) {
         for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
@@ -880,13 +880,13 @@ std::vector<double> sym_gaxpy(
 // Exercise 2.27
 std::vector<double> gaxpy_col(
     const CSCMatrix& A,
-    const std::vector<double>& X,
-    const std::vector<double>& Y
+    std::span<const double> X,
+    std::span<const double> Y
 )
 {
     gaxpy_check_(A, X, Y);
 
-    std::vector<double> out = Y;  // copy the input matrix
+    std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / A.N_;  // number of columns in X
 
@@ -913,13 +913,13 @@ std::vector<double> gaxpy_col(
 // Exercise 2.27
 std::vector<double> gaxpy_block(
     const CSCMatrix& A,
-    const std::vector<double>& X,
-    const std::vector<double>& Y
+    std::span<const double> X,
+    std::span<const double> Y
 )
 {
     gaxpy_check_(A, X, Y);
 
-    std::vector<double> out = Y;  // copy the input matrix
+    std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / A.N_;  // number of columns in X
 
@@ -952,13 +952,13 @@ std::vector<double> gaxpy_block(
 // Exercise 2.27
 std::vector<double> gaxpy_row(
     const CSCMatrix& A,
-    const std::vector<double>& X,
-    const std::vector<double>& Y
+    std::span<const double> X,
+    std::span<const double> Y
 )
 {
     gaxpy_check_(A, X, Y);
 
-    std::vector<double> out = Y;  // copy the input matrix
+    std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / A.N_;  // number of columns in X
 
@@ -985,13 +985,13 @@ std::vector<double> gaxpy_row(
 // Exercise 2.28
 std::vector<double> gatxpy_col(
     const CSCMatrix& A,
-    const std::vector<double>& X,
-    const std::vector<double>& Y
+    std::span<const double> X,
+    std::span<const double> Y
 )
 {
     gaxpy_check_<true>(A, X, Y);
 
-    std::vector<double> out = Y;  // copy the input matrix
+    std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / A.M_;  // number of columns in X
 
@@ -1013,13 +1013,13 @@ std::vector<double> gatxpy_col(
 // Exercise 2.28
 std::vector<double> gatxpy_block(
     const CSCMatrix& A,
-    const std::vector<double>& X,
-    const std::vector<double>& Y
+    std::span<const double> X,
+    std::span<const double> Y
 )
 {
     gaxpy_check_<true>(A, X, Y);
 
-    std::vector<double> out = Y;  // copy the input matrix
+    std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / A.M_;  // number of columns in X
 
@@ -1047,13 +1047,13 @@ std::vector<double> gatxpy_block(
 // Exercise 2.28
 std::vector<double> gatxpy_row(
     const CSCMatrix& A,
-    const std::vector<double>& X,
-    const std::vector<double>& Y
+    std::span<const double> X,
+    std::span<const double> Y
 )
 {
     gaxpy_check_<true>(A, X, Y);
 
-    std::vector<double> out = Y;  // copy the input matrix
+    std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / A.M_;  // number of columns in X
 
@@ -1073,7 +1073,7 @@ std::vector<double> gatxpy_row(
 
 
 // Exercise 2.4
-CSCMatrix CSCMatrix::scale(const std::vector<double>& r, const std::vector<double> c) const
+CSCMatrix CSCMatrix::scale(std::span<const double> r, std::span<const double> c) const
 {
     if (static_cast<csint>(r.size()) != M_) {
         throw std::invalid_argument(
@@ -1378,11 +1378,11 @@ CSCMatrix add_scaled(
 
 
 // Exercise 2.21
-std::vector<csint> saxpy(
+void saxpy(
     const CSCMatrix& a,
     const CSCMatrix& b,
-    std::vector<csint>& w,
-    std::vector<double>& x
+    std::span<char> w,
+    std::span<double> x
     )
 {
     if (a.shape() != b.shape()) {
@@ -1395,21 +1395,19 @@ std::vector<csint> saxpy(
 
     for (csint p = 0; p < a.nnz(); ++p) {
         csint i = a.i_[p];
-        w[i] = 1;        // mark as non-zero
-        x[i] = a.v_[p];  // copy x into w
+        w[i] = true;     // mark as non-zero
+        x[i] = a.v_[p];  // copy a into x
     }
 
     for (csint p = 0; p < b.nnz(); ++p) {
         csint i = b.i_[p];
-        if (w[i] == 0) {
-            w[i] = 1;         // mark as non-zero
+        if (w[i] == false) {
+            w[i] = true;      // mark as non-zero
             x[i] = b.v_[p];   // copy b into w
         } else {
             x[i] += b.v_[p];  // add b to x
         }
     }
-
-    return w;
 }
 
 
@@ -1441,7 +1439,7 @@ CSCMatrix operator-(const CSCMatrix& A) {
 csint CSCMatrix::scatter(
     csint j,
     double beta,
-    std::vector<csint>& w,
+    std::span<csint> w,
     std::span<double> x,
     csint mark,
     CSCMatrix& C,
@@ -1861,8 +1859,8 @@ CSCMatrix CSCMatrix::slice(
 
 // Exercise 2.24
 CSCMatrix CSCMatrix::index(
-    const std::vector<csint>& rows,
-    const std::vector<csint>& cols
+    std::span<const csint> rows,
+    std::span<const csint> cols
     ) const
 {
     csint M = rows.size();

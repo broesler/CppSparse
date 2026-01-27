@@ -44,8 +44,9 @@ protected:
     virtual void write_elems_(std::stringstream& ss, csint start, csint end) const = 0;
 
 public:
-    /// Virtual destructor: essential for base classes when using polymorphism.
-    virtual ~SparseMatrix();
+    /// Virtual destructor: essential for base classes when using polymorphism,
+    /// aka via a function like "auto func(const SparseMatrix& A)".
+    virtual ~SparseMatrix() noexcept = default;
 
     virtual csint nnz() const = 0;    // number of non-zeros
     virtual csint nzmax() const = 0;  // maximum number of non-zeros

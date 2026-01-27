@@ -29,17 +29,23 @@ public:
     friend class CSCMatrix;
 
     //--------------------------------------------------------------------------
-    //        Constructors
+    //         Default Constructor, Copy/Move, Destructor
     //--------------------------------------------------------------------------
     COOMatrix() = default;  // NOTE need default since we have others
 
-    // Do not need other "Rule of Five" since we have no pointers
-    // COOMatrix(const COOMatrix&);
-    // COOMatrix& operator=(COOMatrix);
-    // COOMatrix(COOMatrix&&);
-    // ~COOMatrix();
-    // friend void swap(COOMatrix&, COOMatrix&);
+    // Copy/move constructors and assignment operators
+    COOMatrix(const COOMatrix& other) = default;
+    COOMatrix& operator=(const COOMatrix& other) = default;
 
+    COOMatrix(COOMatrix&& other) noexcept = default;
+    COOMatrix& operator=(COOMatrix&& other) noexcept = default;
+
+    // Destructor
+    virtual ~COOMatrix() noexcept = default;
+
+    //--------------------------------------------------------------------------
+    //        Constructors
+    //--------------------------------------------------------------------------
     /** Construct a COOMatrix from arrays of values and coordinates.
      *
      * The entries are *not* sorted in any order, and duplicates are allowed. Any

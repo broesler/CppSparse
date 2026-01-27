@@ -19,10 +19,6 @@
 namespace cs {
 
 
-// default destructor
-SparseMatrix::~SparseMatrix() = default;
-
-
 std::string SparseMatrix::to_string(bool verbose, csint threshold) const
 {
     auto [M, N] = shape();

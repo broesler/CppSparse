@@ -49,14 +49,23 @@ public:
     using KeepFunc = std::function<bool(csint i, csint j, double Aij)>;
 
     //--------------------------------------------------------------------------
-    //        Constructors
+    //         Default Constructor, Copy/Move, Destructor
     //--------------------------------------------------------------------------
     CSCMatrix() = default;
 
-    // We need this virtual destructor since realloc is a virtual function.
-    // It is only needed for the pybind11 interface.
-    virtual ~CSCMatrix() = default;
+    // Copy/move constructors and assignment operators
+    CSCMatrix(const CSCMatrix& other) = default;                 // copy constructor
+    CSCMatrix& operator=(const CSCMatrix& other) = default;      // copy assignment
 
+    CSCMatrix(CSCMatrix&& other) noexcept = default;             // move constructor
+    CSCMatrix& operator=(CSCMatrix&& other) noexcept = default;  // move assignment
+
+    // Destructor
+    virtual ~CSCMatrix() noexcept = default;
+
+    //--------------------------------------------------------------------------
+    //        Constructors
+    //--------------------------------------------------------------------------
     /** Construct a CSCMatrix from arrays of values and coordinates.
      *
      * The entries are *not* sorted in any order, and duplicates are allowed. Any
@@ -127,7 +136,7 @@ public:
      * @param nzmax  maximum number of non-zeros. If `nzmax <= A.nzmax()`,
      *        then `nzmax` will be set to `A.nnz()`.
      */
-    virtual void realloc(csint nzmax=0);
+    virtual void realloc(csint nzmax=0);  // virtual for override in testing
 
     // --------------------------------------------------------------------------
     //          Accessors

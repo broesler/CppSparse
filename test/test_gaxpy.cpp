@@ -155,7 +155,7 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
     }
 
     SECTION("Arbitrary square matrix in row-major format") {
-        std::vector<double> A_dense = A.to_dense_vector('C');
+        std::vector<double> A_dense = A.to_dense_vector(DenseOrder::RowMajor);
 
         // A.T @ A + A in row-major format
         std::vector<double> expect{
@@ -193,8 +193,8 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
 
     SECTION("Non-square matrix in row-major format.") {
         CSCMatrix Ab = A.slice(0, 4, 0, 3);  // {4, 3}
-        std::vector<double> Ac_dense = A.slice(0, 3, 0, 4).to_dense_vector('C');
-        std::vector<double> A_dense = A.to_dense_vector('C');
+        std::vector<double> Ac_dense = A.slice(0, 3, 0, 4).to_dense_vector(DenseOrder::RowMajor);
+        std::vector<double> A_dense = A.to_dense_vector(DenseOrder::RowMajor);
 
         // Ab @ Ac + A in row-major format
         std::vector<double> expect{

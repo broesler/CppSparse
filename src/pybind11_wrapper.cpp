@@ -565,7 +565,12 @@ PYBIND11_MODULE(csparse, m)
                 The equivalent SciPy COO sparse matrix.
             )pbdoc"
         )
-        .def("to_dense_vector", &cs::COOMatrix::to_dense_vector, py::arg("order")='F',
+        .def("to_dense_vector",
+            [](const cs::CSCMatrix& self, const char order_) {
+                auto order = denseorder_from_char(order_);
+                return self.to_dense_vector(order);
+            },
+            py::arg("order")='F',
             R"pbdoc(
             Convert the COO matrix to a dense vector.
 
@@ -708,7 +713,16 @@ PYBIND11_MODULE(csparse, m)
             py::arg("values")=true
         )
         .def(py::init<const cs::COOMatrix&>())
-        .def(py::init<const std::vector<double>&, const cs::Shape&, const char>(),
+        .def(py::init(
+                [](
+                    const std::vector<double>& A,
+                    const cs::Shape& shape,
+                    const char order_
+                ) {
+                    auto order = denseorder_from_char(order_);
+                    return cs::CSCMatrix(A, shape, order);
+                }
+            ),
             py::arg("A"),
             py::arg("shape"),
             py::arg("order")='F'
@@ -879,7 +893,11 @@ PYBIND11_MODULE(csparse, m)
                 A copy of the `CSCMatrix` in COO (triplet) format.
             )pbdoc"
         )
-        .def("to_dense_vector", &cs::CSCMatrix::to_dense_vector,
+        .def("to_dense_vector",
+            [](const cs::CSCMatrix& self, const char order_) {
+                auto order = denseorder_from_char(order_);
+                return self.to_dense_vector(order);
+            },
             py::arg("order")='F',
             R"pbdoc(
             Convert the CSC matrix to a dense vector.
@@ -900,8 +918,7 @@ PYBIND11_MODULE(csparse, m)
             toarray : Convert the CSC matrix to a dense array.
             )pbdoc"
         )
-        .def("toarray", &sparse_to_ndarray<cs::CSCMatrix>,
-            py::arg("order")='C',
+        .def("toarray", &sparse_to_ndarray<cs::CSCMatrix>, py::arg("order")='C',
             R"pbdoc(
             Convert the CSC matrix to a dense vector.
 

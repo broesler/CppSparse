@@ -339,19 +339,19 @@ CSCMatrix COOMatrix::compress() const
 CSCMatrix COOMatrix::tocsc() const { return CSCMatrix{*this}; }
 
 
-std::vector<double> COOMatrix::to_dense_vector(const char order) const
+std::vector<double> COOMatrix::to_dense_vector(const DenseOrder order) const
 {
     std::vector<double> arr(M_ * N_, 0.0);
     csint idx;
 
     for (csint k = 0; k < nnz(); ++k) {
         // Column- vs row-major order
-        if (order == 'F') {
+        if (order == DenseOrder::ColMajor) {
             idx = i_[k] + j_[k] * M_;
-        } else if (order == 'C') {
+        } else if (order == DenseOrder::RowMajor) {
             idx = j_[k] + i_[k] * N_;
         } else {
-            throw std::invalid_argument("Invalid order argument. Use 'F' or 'C'.");
+            throw std::invalid_argument("Invalid order argument.");
         }
 
         arr[idx] = v_[k];

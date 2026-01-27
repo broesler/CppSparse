@@ -11,7 +11,6 @@
 #define _CSPARSE_TYPES_H_
 
 #include <cstdint>
-#include <optional>
 #include <vector>
 
 
@@ -21,6 +20,12 @@ using csint = std::int32_t;
 using Shape = std::array<csint, 2>;
 
 // Need full enum class definition for default arguments
+enum class DenseOrder
+{
+    RowMajor,  // C-style row-major order
+    ColMajor   // Fortran-style column-major order
+};
+
 enum class AMDOrder
 {
     Natural,         // Natural ordering (no-op)

@@ -70,7 +70,7 @@ CSCMatrix::CSCMatrix(const COOMatrix& A) : CSCMatrix(A.compress())
 CSCMatrix::CSCMatrix(
     const std::vector<double>& A,
     const Shape& shape,
-    const char order
+    const DenseOrder order
 ) : M_(shape[0]),
     N_(shape[1])
 {
@@ -84,10 +84,6 @@ CSCMatrix::CSCMatrix(
         );
     }
 
-    if (order != 'C' && order != 'F') {
-        throw std::invalid_argument("Order must be 'C' or 'F'.");
-    }
-
     // Allocate memory
     v_.reserve(A.size());
     i_.reserve(A.size());
@@ -98,13 +94,8 @@ CSCMatrix::CSCMatrix(
     for (csint j = 0; j < N_; ++j) {
         p_.push_back(nz);
 
-        double val;
         for (csint i = 0; i < M_; ++i) {
-            if (order == 'F') {
-                val = A[i + j * M_];  // linear index for column-major order
-            } else {
-                val = A[j + i * N_];  // linear index for row-major order
-            }
+            auto val = (order == DenseOrder::ColMajor) ? A[i + j * M_] : A[j + i * N_];
 
             // Only store non-zeros
             if (val != 0.0) {
@@ -444,7 +435,7 @@ COOMatrix CSCMatrix::tocoo() const { return COOMatrix{*this}; }
 
 
 // Exercise 2.16
-std::vector<double> CSCMatrix::to_dense_vector(const char order) const
+std::vector<double> CSCMatrix::to_dense_vector(const DenseOrder order) const
 {
     std::vector<double> A(M_ * N_, 0.0);
     csint idx;
@@ -452,12 +443,12 @@ std::vector<double> CSCMatrix::to_dense_vector(const char order) const
     for (csint j = 0; j < N_; ++j) {
         for (csint p = p_[j]; p < p_[j+1]; ++p) {
             // Column- vs row-major order
-            if (order == 'F') {
+            if (order == DenseOrder::ColMajor) {
                 idx = i_[p] + j * M_;
-            } else if (order == 'C') {
+            } else if (order == DenseOrder::RowMajor) {
                 idx = j + i_[p] * N_;
             } else {
-                throw std::invalid_argument("Invalid order argument. Use 'F' or 'C'.");
+                throw std::invalid_argument("Invalid order argument.");
             }
 
             if (v_.empty()) {

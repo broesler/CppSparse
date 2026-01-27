@@ -68,7 +68,7 @@ std::string SparseMatrix::make_format_string_() const
 
 void SparseMatrix::print_dense(int precision, bool suppress, std::ostream& os) const
 {
-    const char order = 'F';  // default to Fortran-style column-major order
+    auto order = DenseOrder::ColMajor;  // default Fortran-style column-major order
     const std::vector<double> A = to_dense_vector(order);
     auto [M, N] = shape();
 
@@ -97,7 +97,7 @@ void SparseMatrix::print_dense(int precision, bool suppress, std::ostream& os) c
     for (csint i = 0; i < M; ++i) {
         os << indent;
         for (csint j = 0; j < N; ++j) {
-            csint idx = (order == 'F') ? (i + j*M) : (i*N + j);
+            csint idx = (order == DenseOrder::ColMajor) ? (i + j*M) : (i*N + j);
             double val = A[idx];
 
             if (val == 0.0 || (suppress && std::fabs(val) < suppress_tol)) {

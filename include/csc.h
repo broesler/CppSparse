@@ -119,15 +119,15 @@ public:
      *
      * @param A  a dense matrix in column-major form
      * @param shape  the dimensions of the matrix
-     * @param order  the order of the dense matrix, either 'F'
-     *        (column-major) or 'C' (row-major).
+     * @param order  the order of the dense matrix, either DenseOrder::RowMajor
+     *        or DenseOrder::ColMajor
      *
      * @return C a compressed sparse column version of the matrix
      */
     CSCMatrix(
         const std::vector<double>& A,
         const Shape& shape,
-        const char order='F'
+        const DenseOrder order = DenseOrder::ColMajor
     );
 
     /** Reallocate a CSCMatrix to a new number of non-zeros.
@@ -377,7 +377,9 @@ public:
      *
      * @return a copy of the matrix as a dense column-major array.
      */
-    virtual std::vector<double> to_dense_vector(const char order='F') const override;
+    virtual std::vector<double> to_dense_vector(
+        const DenseOrder order = DenseOrder::ColMajor
+    ) const override;
 
     /** Convert a CSCMatrix to a double if it is a 1x1 matrix.
      *

@@ -168,7 +168,7 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
         };
 
         REQUIRE(A.to_dense_vector() == expect);
-        REQUIRE(A.to_dense_vector('F') == expect);
+        REQUIRE(A.to_dense_vector(DenseOrder::ColMajor) == expect);
     }
 
     SECTION("Conversion to dense array: Row-major") {
@@ -179,7 +179,7 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
             3.5, 0.4, 0.0, 1.0
         };
 
-        REQUIRE(A.to_dense_vector('C') == expect);
+        REQUIRE(A.to_dense_vector(DenseOrder::RowMajor) == expect);
     }
 
     SECTION("Generate random matrix") {

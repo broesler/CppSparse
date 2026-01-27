@@ -193,12 +193,14 @@ public:
      *
      * The array is in column-major order, like Fortran.
      *
-     * @param order  the order of the array, either 'C' or 'F' for row-major or
-     *        column-major order.
+     * @param order  the order of the array, either DenseOrder::RowMajor or
+     *        DenseOrder::ColMajor (default).
      *
      * @return a copy of the matrix as a dense array.
      */
-    virtual std::vector<double> to_dense_vector(const char order='F') const override;
+    virtual std::vector<double> to_dense_vector(
+        const DenseOrder order = DenseOrder::ColMajor
+    ) const override;
 
     //--------------------------------------------------------------------------
     //        Math Operations

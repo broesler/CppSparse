@@ -12,6 +12,7 @@
 
 #include <array>
 #include <iostream>
+#include <format>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
@@ -24,6 +25,22 @@
 #include "csparse.h"
 
 namespace py = pybind11;
+
+
+/** Convert a char to a DenseOrder enum.
+ *
+ * @param order  the char to convert ('C' or 'F')
+ *
+ * @return the DenseOrder enum
+ */
+inline auto denseorder_from_char(const char order)
+{
+    if (order == 'C') { return cs::DenseOrder::RowMajor; }
+    if (order == 'F') { return cs::DenseOrder::ColMajor; }
+    throw std::runtime_error(
+        std::format("Invalid DenseOrder specified: {}.", order)
+    );
+}
 
 
 /** Convert a string to an AMDOrder enum.
@@ -152,10 +169,12 @@ inline py::array_t<T> array_to_numpy(const std::array<T, N>& arr)
  * @return a NumPy array with the same data as the matrix
  */
 template <typename T>
-auto sparse_to_ndarray(const T& self, const char order)
+auto sparse_to_ndarray(const T& self, const char order_)
 {
-    // Get the matrix in dense column-major order
-    std::vector<double> v = self.to_dense_vector('C');
+    const auto order = denseorder_from_char(order_);
+
+    // Get the matrix in dense row-major order
+    std::vector<double> v = self.to_dense_vector(order);
     auto [M, N] = self.shape();
 
     // Create a NumPy array with specified dimensions
@@ -167,12 +186,12 @@ auto sparse_to_ndarray(const T& self, const char order)
 
     // Calculate strides based on order
     std::vector<ssize_t> strides;
-    if (order == 'C') { // C-style (row-major)
+    if (order == cs::DenseOrder::RowMajor) { // C-style (row-major)
         strides = {
             static_cast<ssize_t>(N * sizeof(double)),
             sizeof(double)
         };
-    } else if (order == 'F') { // Fortran-style (column-major)
+    } else if (order == cs::DenseOrder::ColMajor) { // Fortran-style (column-major)
         strides = {
             sizeof(double),
             static_cast<ssize_t>(M * sizeof(double))

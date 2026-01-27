@@ -758,12 +758,12 @@ TEST_CASE("Exercise 2.16: CSC to/from dense", "[ex2.16][fromdense][todense]")
     };
 
     SECTION("From Dense Column-major") {
-        CSCMatrix B {dense_column_major, {4, 4}, 'F'};
+        CSCMatrix B {dense_column_major, {4, 4}, DenseOrder::ColMajor};
         check_sparse_allclose(B, C);
     }
 
     SECTION("From Dense Row-major") {
-        CSCMatrix B {dense_row_major, {4, 4}, 'C'};
+        CSCMatrix B {dense_row_major, {4, 4}, DenseOrder::RowMajor};
         check_sparse_allclose(B, C);
     }
 
@@ -773,8 +773,8 @@ TEST_CASE("Exercise 2.16: CSC to/from dense", "[ex2.16][fromdense][todense]")
     }
 
     SECTION("To Dense Row-major") {
-        REQUIRE(A.tocsc().to_dense_vector('C') == dense_row_major);  // canonical form
-        REQUIRE(C.to_dense_vector('C') == dense_row_major);          // non-canonical form
+        REQUIRE(A.tocsc().to_dense_vector(DenseOrder::RowMajor) == dense_row_major);  // canonical form
+        REQUIRE(C.to_dense_vector(DenseOrder::RowMajor) == dense_row_major);          // non-canonical form
     }
 }
 

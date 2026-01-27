@@ -239,8 +239,8 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
             REQUIRE(M == E.shape()[0]);
             REQUIRE(N == A.shape()[1]);
 
-            for (csint i = 0; i < M; i++) {
-                for (csint j = 0; j < N; j++) {
+            for (csint i = 0; i < M; ++i) {
+                for (csint j = 0; j < N; ++j) {
                     REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
                 }
             }
@@ -394,8 +394,8 @@ TEST_CASE("Scale a sparse matrix by a constant", "[math][scale]")
     // Operator overloading
     CSCMatrix C = 0.1 * A;
 
-    for (csint i = 0; i < M; i++) {
-        for (csint j = 0; j < N; j++) {
+    for (csint i = 0; i < M; ++i) {
+        for (csint j = 0; j < N; ++j) {
             REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
         }
     }
@@ -424,8 +424,8 @@ TEST_CASE("Exercise 2.4: Scale rows and columns", "[ex2.4][math][scale]")
 
     auto [M, N] = A.shape();
 
-    for (csint i = 0; i < M; i++) {
-        for (csint j = 0; j < N; j++) {
+    for (csint i = 0; i < M; ++i) {
+        for (csint j = 0; j < N; ++j) {
             REQUIRE_THAT(RAC(i, j), WithinAbs(expect_RAC(i, j), tol));
         }
     }
@@ -536,8 +536,8 @@ TEST_CASE("Add sparse column vectors", "[math][add_scaled]")
 
         REQUIRE(C.shape() == a.shape());
 
-        for (csint i = 0; i < M; i++) {
-            for (csint j = 0; j < N; j++) {
+        for (csint i = 0; i < M; ++i) {
+            for (csint j = 0; j < N; ++j) {
                 REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
             }
         }

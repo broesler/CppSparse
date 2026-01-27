@@ -37,7 +37,7 @@ void check_canonical_allclose(
     CHECK(A.indptr() == expect.indptr());
     CHECK(A.indices() == expect.indices());
     if (values) {
-        for (csint p = 0; p < A.nnz(); p++) {
+        for (csint p = 0; p < A.nnz(); ++p) {
             CAPTURE(p);
             CHECK_THAT(A.data()[p], WithinAbs(expect.data()[p], tol));
         }
@@ -61,8 +61,8 @@ void check_noncanonical_allclose(
         // Need to check all elements of the matrix because operator() combines
         // duplicate entries, whereas just going through the non-zeros of one
         // matrix does not combine those duplicates.
-        for (csint i = 0; i < M; i++) {
-            for (csint j = 0; j < N; j++) {
+        for (csint i = 0; i < M; ++i) {
+            for (csint j = 0; j < N; ++j) {
                 // Capture the values for comparison on failure
                 double A_val = A(i, j);
                 double expect_val = expect(i, j);
@@ -108,7 +108,7 @@ void check_vectors_allclose(
 )
 {
     REQUIRE(a.size() == b.size());
-    for (int i = 0; i < static_cast<csint>(a.size()); i++) {
+    for (int i = 0; i < static_cast<csint>(a.size()); ++i) {
         CAPTURE(i, a[i], b[i]);
         CHECK_THAT(a[i], WithinAbs(b[i], tol));
     }

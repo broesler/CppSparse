@@ -58,7 +58,7 @@ TEST_CASE("Build Graph", "[amd][build_graph]")
         } else if (dense == 4) {
             // Remove some rows (manual count of row_nnz > 4)
             for (csint i : {4, 6, 7, 8}) {
-                for (csint j = 0; j < N; j++) {
+                for (csint j = 0; j < N; ++j) {
                     A(i, j) = 0.0;
                 }
             }
@@ -224,8 +224,8 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
 
     SECTION("Square, Rank-deficient (zero rows)") {
         // Zero-out some rows
-        for (csint i = 2; i < 5; i++) {
-            for (csint j = 0; j < N; j++) {
+        for (csint i = 2; i < 5; ++i) {
+            for (csint j = 0; j < N; ++j) {
                 A(i, j) = 0.0;
             }
         }
@@ -238,8 +238,8 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
 
     SECTION("Square, Rank-deficient (zero columns)") {
         // Zero-out some columns
-        for (csint j = 2; j < 5; j++) {
-            for (csint i = 0; i < M; i++) {
+        for (csint j = 2; j < 5; ++j) {
+            for (csint i = 0; i < M; ++i) {
                 A(i, j) = 0.0;
             }
         }
@@ -273,8 +273,8 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
         A = A.slice(0, M - 3, 0, N);
 
         // Zero out some rows
-        for (csint i = 2; i < 5; i++) {
-            for (csint j = 0; j < N; j++) {
+        for (csint i = 2; i < 5; ++i) {
+            for (csint j = 0; j < N; ++j) {
                 A(i, j) = 0.0;
             }
         }
@@ -290,8 +290,8 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
         A = A.slice(0, M, 0, N - 3);
 
         // Zero out some columns
-        for (csint j = 2; j < 5; j++) {
-            for (csint i = 0; i < M; i++) {
+        for (csint j = 2; j < 5; ++j) {
+            for (csint i = 0; i < M; ++i) {
                 A(i, j) = 0.0;
             }
         }
@@ -330,13 +330,13 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
     }
 
     // Check that the matchings are valid
-    for (csint i = 0; i < A.shape()[0]; i++) {
+    for (csint i = 0; i < A.shape()[0]; ++i) {
         if (res.jmatch[i] >= 0) {
             CHECK(res.imatch[res.jmatch[i]] == i);
         }
     }
 
-    for (csint j = 0; j < A.shape()[1]; j++) {
+    for (csint j = 0; j < A.shape()[1]; ++j) {
         if (res.imatch[j] >= 0) {
             CHECK(res.jmatch[res.imatch[j]] == j);
         }
@@ -361,8 +361,8 @@ TEST_CASE("Strongly Connected Components", "[scc]")
 
     SECTION("Zero Rows") {
         // Zero out some rows
-        for (csint i = 2; i < 5; i++) {
-            for (csint j = 0; j < N; j++) {
+        for (csint i = 2; i < 5; ++i) {
+            for (csint j = 0; j < N; ++j) {
                 A(i, j) = 0.0;
             }
         }
@@ -410,8 +410,8 @@ TEST_CASE("Dulmage-Mendelsohn Permutation", "[dmperm]")
 
     SECTION("Zero Rows") {
         // Zero out some rows
-        for (csint i = 2; i < 5; i++) {
-            for (csint j = 0; j < N; j++) {
+        for (csint i = 2; i < 5; ++i) {
+            for (csint j = 0; j < N; ++j) {
                 A(i, j) = 0.0;
             }
         }

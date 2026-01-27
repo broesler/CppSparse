@@ -104,7 +104,7 @@ Problem Problem::from_matrix(const COOMatrix& T, double droptol)
 
     // Compute the RHS
     std::vector<double> b(M);
-    for (csint i = 0; i < M; i++) {
+    for (csint i = 0; i < M; ++i) {
         b[i] = 1.0 + (double) i / M;
     }
 

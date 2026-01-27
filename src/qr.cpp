@@ -31,7 +31,7 @@ Householder house(std::span<const double> x)
     std::vector<double> v(x.begin(), x.end());  // copy x into v
 
     // sigma is the sum of squares of all elements *except* the first
-    for (csint i = 1; i < static_cast<csint>(v.size()); i++) {
+    for (csint i = 1; i < static_cast<csint>(v.size()); ++i) {
         sigma += v[i] * v[i];
     }
 
@@ -54,7 +54,7 @@ Householder house(std::span<const double> x)
         beta = (s - alpha) / s;
 
         v[0] = 1;
-        for (csint i = 1; i < static_cast<csint>(v.size()); i++) {
+        for (csint i = 1; i < static_cast<csint>(v.size()); ++i) {
             v[i] /= (alpha - s);
         }
 
@@ -92,14 +92,14 @@ std::vector<double>& happly(
     double tau = 0.0;
 
     // tau = v^T x
-    for (csint p = V.p_[j]; p < V.p_[j+1]; p++) {
+    for (csint p = V.p_[j]; p < V.p_[j+1]; ++p) {
         tau += V.v_[p] * x[V.i_[p]];
     }
 
     tau *= beta;  // tau = beta * v^T x
 
     // Hx = x - v*tau
-    for (csint p = V.p_[j]; p < V.p_[j+1]; p++) {
+    for (csint p = V.p_[j]; p < V.p_[j+1]; ++p) {
         x[V.i_[p]] -= V.v_[p] * tau;
     }
 
@@ -112,7 +112,7 @@ std::vector<csint> find_leftmost(const CSCMatrix& A)
     std::vector<csint> leftmost(A.M_, -1);
 
     for (csint k = A.N_ - 1; k >= 0; k--) {
-        for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
+        for (csint p = A.p_[k]; p < A.p_[k+1]; ++p) {
             leftmost[A.i_[p]] = k;  // leftmost[i] = min(find(A(i, :)))
         }
     }
@@ -151,7 +151,7 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
 
     // List k contains all rows that belong to V(:, k)
     csint k;  // declare outside loop for final row permutation
-    for (k = 0; k < N; k++) {          // find row permutation and nnz(V)
+    for (k = 0; k < N; ++k) {          // find row permutation and nnz(V)
         csint i = head[k];             // remove row i from queue k
         S.vnz++;                       // count V(k, k) as nonzero
         if (i < 0) {
@@ -173,7 +173,7 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
         }
     }
 
-    for (csint i = 0; i < M; i++) {    // assign any unordered rows to last k
+    for (csint i = 0; i < M; ++i) {    // assign any unordered rows to last k
         if (S.p_inv[i] < 0) {
             S.p_inv[i] = k++;
         }
@@ -263,7 +263,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     csint vnz = 0,
           rnz = 0;
 
-    for (csint k = 0; k < Nv; k++) {
+    for (csint k = 0; k < Nv; ++k) {
         R.p_[k] = rnz;    // R[:, k] starts here
         V.p_[k] = vnz;    // V[:, k] starts here
         csint p1 = vnz;   // save start of V(:, k)
@@ -274,7 +274,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
         csint col = S.q[k];  // permuted column of A
 
         // find R[:, k] pattern
-        for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {
+        for (csint p = A.p_[col]; p < A.p_[col+1]; ++p) {
             csint i = S.leftmost[A.i_[p]];  // i = min(find(A(i, q)))
 
             s.clear();
@@ -309,7 +309,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
         }
 
         // gather V(:, k) = x
-        for (csint p = p1; p < vnz; p++) {
+        for (csint p = p1; p < vnz; ++p) {
             V.v_[p] = x[V.i_[p]];
             x[V.i_[p]] = 0;  // clear x
         }
@@ -331,7 +331,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
         // Compute the remaining columns of R: append Q^T A[:, M:] to R
         R = hstack(R, apply_qtleft(V, beta, S.p_inv, A.slice(0, M, M, N)));
         // Append the remaining columns of A onto q
-        for (csint k = M; k < N; k++) {
+        for (csint k = M; k < N; ++k) {
             q.push_back(k);
         }
     }
@@ -364,7 +364,7 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
     csint vnz = 0,
           rnz = 0;
 
-    for (csint k = 0; k < Nv; k++) {
+    for (csint k = 0; k < Nv; ++k) {
         R.p_[k] = rnz;    // R[:, k] starts here
         V.p_[k] = vnz;    // V[:, k] starts here
         w[k] = k;         // add V(k, k) to pattern of V
@@ -373,7 +373,7 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
         t.clear();
         csint col = S.q[k];  // permuted column of A
         // find R[:, k] pattern
-        for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {
+        for (csint p = A.p_[col]; p < A.p_[col+1]; ++p) {
             csint i = S.leftmost[A.i_[p]];  // i = min(find(A(i, q)))
 
             s.clear();
@@ -439,17 +439,17 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
     std::vector<double> x(M2);  // dense vector
 
     // Compute V and R
-    for (csint k = 0; k < Nv; k++) {
+    for (csint k = 0; k < Nv; ++k) {
         csint col = res.q[k];  // permuted column of A
 
         // R[:, k] pattern known. Scatter A[:, col] into x
-        for (csint p = A.p_[col]; p < A.p_[col+1]; p++) {
+        for (csint p = A.p_[col]; p < A.p_[col+1]; ++p) {
             csint i = res.p_inv[A.i_[p]];  // i = permuted row of A(:, col)
             x[i] = A.v_[p];                // x(i) = A(:, col)
         }
 
         // for each i in pattern of R[:, k] (R(i, k) is non-zero)
-        for (csint p = R.p_[k]; p < R.p_[k+1] - 1; p++) {
+        for (csint p = R.p_[k]; p < R.p_[k+1] - 1; ++p) {
             csint i = R.i_[p];             // R(i, k)
             x = happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
             R.v_[p] = x[i];                // R(i, k) = x(i)
@@ -457,7 +457,7 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
         }
 
         // gather V(:, k) = x
-        for (csint p = V.p_[k]; p < V.p_[k+1]; p++) {
+        for (csint p = V.p_[k]; p < V.p_[k+1]; ++p) {
             V.v_[p] = x[V.i_[p]];
             x[V.i_[p]] = 0;  // clear x
         }
@@ -474,7 +474,7 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
         // Compute the remaining columns of R
         R = hstack(R, apply_qtleft(V, beta, res.p_inv, A.slice(0, M, M, N)));
         // Append the remaining columns of A onto q
-        for (csint k = M; k < N; k++) {
+        for (csint k = M; k < N; ++k) {
             res.q.push_back(k);
         }
     }
@@ -501,7 +501,7 @@ void apply_qtleft(
 )
 {
     csint N = V.shape()[1];
-    for (csint j = 0; j < N; j++) {
+    for (csint j = 0; j < N; ++j) {
         x = happly(V, j, beta[j], x);
     }
 }
@@ -530,7 +530,7 @@ CSCMatrix apply_qtleft(
     csint nz = 0;
 
     // Apply the Householder reflectors to each column of Y
-    for (csint k = 0; k < NY; k++) {
+    for (csint k = 0; k < NY; ++k) {
         if (nz + M > C.nzmax()) {
             C.realloc(2 * C.nzmax() + M);
         }
@@ -538,7 +538,7 @@ CSCMatrix apply_qtleft(
         C.p_[k] = nz;  // column j of C starts here
 
         // Scatter X(:, k) into x
-        for (csint p = X.p_[k]; p < X.p_[k+1]; p++) {
+        for (csint p = X.p_[k]; p < X.p_[k+1]; ++p) {
             x[X.i_[p]] = X.v_[p];
         }
 
@@ -546,7 +546,7 @@ CSCMatrix apply_qtleft(
         apply_qtleft(V, beta, x);
 
         // Gather x into X(:, k)
-        for (csint i = 0; i < M; i++) {
+        for (csint i = 0; i < M; ++i) {
             if (x[i] != 0) {
                 C.i_[nz] = i;
                 C.v_[nz++] = x[i];

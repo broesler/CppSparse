@@ -77,7 +77,7 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
     csint lnz = 0,
           unz = 0;
 
-    for (csint k = 0; k < N; k++) {  // Compute L[:, k] and U[:, k]
+    for (csint k = 0; k < N; ++k) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
         L.p_[k] = lnz;  // L[:, k] starts here
         U.p_[k] = unz;  // U[:, k] starts here
@@ -141,7 +141,7 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
     U.p_[N] = unz;
 
     // permute row indices of L for final p_inv
-    for (csint p = 0; p < lnz; p++) {
+    for (csint p = 0; p < lnz; ++p) {
         L.i_[p] = p_inv[L.i_[p]];
     }
 
@@ -215,7 +215,7 @@ static void make_valid_permutation(std::vector<csint>& p_inv)
 
     // Find all missing values
     std::vector<csint> missing;
-    for (csint i = 0; i < M; i++) {
+    for (csint i = 0; i < M; ++i) {
         if (!marked[i]) {
             missing.push_back(i);
         }
@@ -269,7 +269,7 @@ LUResult lu(
           unz = 0;
     bool is_singular = false;
 
-    for (csint k = 0; k < N; k++) {  // Compute L[:, k] and U[:, k]
+    for (csint k = 0; k < N; ++k) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
         if (k < M) {
             L.p_[k] = lnz;  // L[:, k] starts here
@@ -395,7 +395,7 @@ LUResult lu(
     }
 
     // permute row indices of L for final p_inv
-    for (csint p = 0; p < lnz; p++) {
+    for (csint p = 0; p < lnz; ++p) {
         L.i_[p] = p_inv[L.i_[p]];
     }
 
@@ -425,7 +425,7 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     // The indices of L have already been permuted to the p_inv ordering by
     // the previous call to cs::lu(), so un-permute them here.
     const std::vector<csint> R_p = inv_permute(R.p_inv);
-    for (csint p = 0; p < L.nnz(); p++) {
+    for (csint p = 0; p < L.nnz(); ++p) {
         L.i_[p] = R_p[L.i_[p]];
     }
 
@@ -434,7 +434,7 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     csint lnz = 0,
           unz = 0;
 
-    for (csint k = 0; k < N; k++) {  // Compute L[:, k] and U[:, k]
+    for (csint k = 0; k < N; ++k) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
         // Solve Lx = A[:, col], where col is the permuted column
         spsolve(L, A, S.q[k], sol, p_inv);  // x = L \ A[:, col]
@@ -461,7 +461,7 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     }
 
     // Permute the row indices of L back to the original
-    for (csint p = 0; p < lnz; p++) {
+    for (csint p = 0; p < lnz; ++p) {
         L.i_[p] = p_inv[L.i_[p]];
     }
 
@@ -488,7 +488,7 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
     csint lnz = 0,
           unz = 0;
 
-    for (csint k = 0; k < N; k++) {  // Compute L[:, k] and U[k, :]
+    for (csint k = 0; k < N; ++k) {  // Compute L[:, k] and U[k, :]
         L.p_[k] = lnz;   // L[:, k] starts here
         UT.p_[k] = unz;  // U[k, :] starts here
 
@@ -520,7 +520,7 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
         //   => looping over all j values is actually the most efficient way to
         //      do this operation.
         CSCMatrix L_col = L.slice(k, k+1, 0, k).T();  // == L[k, :k].T
-        for (csint j = k; j < N; j++) {
+        for (csint j = k; j < N; ++j) {
             double lu_dot = 0.0;
             if (k > 0) {
                 CSCMatrix U_col = UT.slice(j, j+1, 0, k).T();  // == U[:k, j]
@@ -543,7 +543,7 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
         // Compute the rest of the column
         // L[k+1:n, k] = (A[k+1:n, k] - L[k+1:n, :k] @ U[:k, k]) / U[k, k]
         CSCMatrix U_col = UT.slice(k, k+1, 0, k).T();  // == U[:k, k]
-        for (csint i = k+1; i < N; i++) {
+        for (csint i = k+1; i < N; ++i) {
             double lu_dot = 0.0;
             if (k > 0) {
                 CSCMatrix L_col = L.slice(i, i+1, 0, k).T();  // == L[i, :k].T
@@ -610,7 +610,7 @@ LUResult ilutp(
     csint lnz = 0,
           unz = 0;
 
-    for (csint k = 0; k < N; k++) {  // Compute L[:, k] and U[:, k]
+    for (csint k = 0; k < N; ++k) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
         L.p_[k] = lnz;  // L[:, k] starts here
         U.p_[k] = unz;  // U[:, k] starts here
@@ -687,7 +687,7 @@ LUResult ilutp(
     L.p_[N] = lnz;
     U.p_[N] = unz;
     // permute row indices of L for final p_inv
-    for (csint p = 0; p < lnz; p++) {
+    for (csint p = 0; p < lnz; ++p) {
         L.i_[p] = p_inv[L.i_[p]];
     }
     L.realloc();  // trim excess storage
@@ -719,7 +719,7 @@ LUResult ilu_nofill(
     csint lnz = 0,
           unz = 0;
 
-    for (csint k = 0; k < N; k++) {  // Compute L[:, k] and U[:, k]
+    for (csint k = 0; k < N; ++k) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
         L.p_[k] = lnz;  // L[:, k] starts here
         U.p_[k] = unz;  // U[:, k] starts here
@@ -731,7 +731,7 @@ LUResult ilu_nofill(
         spsolve(L, A, col, sol, p_inv);  // x = L \ A[:, col]
 
         // Scatter the pattern of A[:, col] into w
-        for (csint p = A.p_[col]; p < A.p_[col + 1]; p++) {
+        for (csint p = A.p_[col]; p < A.p_[col + 1]; ++p) {
             w[A.i_[p]] = k;  // mark the pattern of A[:, col]
         }
 

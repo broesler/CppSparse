@@ -31,8 +31,8 @@ std::vector<csint> etree(const CSCMatrix& A, bool ata)
         prev = std::vector<csint>(A.M_, -1);
     }
 
-    for (csint k = 0; k < A.N_; k++) {
-        for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
+    for (csint k = 0; k < A.N_; ++k) {
+        for (csint p = A.p_[k]; p < A.p_[k+1]; ++p) {
             csint i = ata ? prev[A.i_[p]] : A.i_[p];  // A(i, k) is nonzero
             while (i != -1 && i < k) {      // only use upper triangular of A
                 csint inext = ancestor[i];  // traverse up to the root
@@ -58,7 +58,7 @@ csint etree_height(const std::vector<csint>& parent)
     assert(!parent.empty());
 
     csint height = 0;
-    for (csint i = 0; i < static_cast<csint>(parent.size()); i++) {
+    for (csint i = 0; i < static_cast<csint>(parent.size()); ++i) {
         csint h = 0;
         for (csint p = i; p != -1; p = parent[p]) {
             h++;
@@ -83,7 +83,7 @@ std::vector<csint> ereach(
 
     marked[k] = true;  // mark node k as visited
 
-    for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
+    for (csint p = A.p_[k]; p < A.p_[k+1]; ++p) {
         csint i = A.i_[p];  // A(i, k) is nonzero
         if (i <= k) {     // only consider upper triangular part of A
             // Traverse up the etree
@@ -119,7 +119,7 @@ std::vector<csint> ereach_post(
 
     marked[k] = true;  // mark node k as visited
 
-    for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
+    for (csint p = A.p_[k]; p < A.p_[k+1]; ++p) {
         csint i = A.i_[p];  // A(i, k) is nonzero
         csint A_i_size = static_cast<csint>(A.i_.size());
         csint i2 = p < (A_i_size - 1) ? A.i_[p+1] : A_i_size;  // next row index
@@ -149,7 +149,7 @@ std::vector<csint> ereach_queue(
 
     marked[k] = true;  // mark node k as visited
 
-    for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
+    for (csint p = A.p_[k]; p < A.p_[k+1]; ++p) {
         csint i = A.i_[p];  // A(i, k) is nonzero
         if (i <= k) {     // only consider upper triangular part of A
             // Traverse up the etree
@@ -188,7 +188,7 @@ std::vector<csint> post(const std::vector<csint>& parent)
     }
 
     // Search from each root
-    for (csint j = 0; j < N; j++) {
+    for (csint j = 0; j < N; ++j) {
         if (parent[j] == -1) {  // only search from roots
             tdfs(j, head, next, postorder);
         }
@@ -236,7 +236,7 @@ FirstDesc firstdesc(
     std::vector<csint> first(N, -1);
     std::vector<csint> level(N);
 
-    for (csint k = 0; k < N; k++) {
+    for (csint k = 0; k < N; ++k) {
         csint i = postorder[k];  // node i of etree is kth postordered node
         csint len = 0;      // traverse from i to root
         csint r = i;
@@ -277,7 +277,7 @@ std::vector<csint> rowcnt(
     auto [first, level] = firstdesc(parent, postorder);
 
     for (const auto& j : postorder) {  // j is the kth node in postorder
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
             csint i = A.i_[p];  // A(i, j) is nonzero, consider ith row subtree
             auto [q, jleaf] = least_common_ancestor(i, j, first, maxfirst, prevleaf, ancestor);
             if (jleaf != LeafStatus::NotLeaf) {
@@ -351,14 +351,14 @@ void init_ata(
     std::vector<csint> w(N);
 
     // Invert postorder
-    for (csint k = 0; k < N; k++) {
+    for (csint k = 0; k < N; ++k) {
         w[post[k]] = k;
     }
 
     // Find the first non-zero row index in each column
-    for (csint i = 0; i < M; i++) {
+    for (csint i = 0; i < M; ++i) {
         csint k = N;
-        for (csint p = AT.p_[i]; p < AT.p_[i+1]; p++) {
+        for (csint p = AT.p_[i]; p < AT.p_[i+1]; ++p) {
             k = std::min(k, w[AT.i_[p]]);
         }
         next[i] = head[k];  // place row i in linked list k
@@ -388,7 +388,7 @@ std::vector<csint> counts(
     std::iota(ancestor.begin(), ancestor.end(), 0);
 
     // Compute first descendent of each node in the tree
-    for (csint k = 0; k < A.N_; k++) {
+    for (csint k = 0; k < A.N_; ++k) {
         csint j = postorder[k];  // node j of etree is kth postordered node
         delta[j] = (first[j] == -1) ? 1 : 0;  // delta[j] = 1 if j is a leaf
         while (j != -1 && first[j] == -1) {
@@ -404,7 +404,7 @@ std::vector<csint> counts(
         init_ata(AT, postorder, head, next);
     }
 
-    for (csint k = 0; k < A.N_; k++) {
+    for (csint k = 0; k < A.N_; ++k) {
         csint j = postorder[k];  // node j of etree is kth postordered node
         if (parent[j] != -1) {
             delta[parent[j]]--;  // j is not a root
@@ -412,7 +412,7 @@ std::vector<csint> counts(
 
         // J = j for LL' = A case, otherwise traverse the linked list
         for (csint J = ata ? head[k] : j; J != -1; J = ata ? next[J] : -1) {
-            for (csint p = AT.p_[J]; p < AT.p_[J+1]; p++) {
+            for (csint p = AT.p_[J]; p < AT.p_[J+1]; ++p) {
                 csint i = AT.i_[p];  // AT(i, j) is nonzero
                 auto [q, jleaf] = least_common_ancestor(i, j, first, maxfirst, prevleaf, ancestor);
                 if (jleaf != LeafStatus::NotLeaf) {
@@ -431,7 +431,7 @@ std::vector<csint> counts(
     }
 
     // sum up the counts for each child
-    for (csint j = 0; j < A.N_; j++) {
+    for (csint j = 0; j < A.N_; ++j) {
         if (parent[j] != -1) {
             delta[parent[j]] += delta[j];
         }
@@ -517,7 +517,7 @@ CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S)
     L.p_ = S.cp;  // column pointers for L
 
     // Compute L(:, k) for L*L' = C
-    for (csint k = 0; k < N; k++) {
+    for (csint k = 0; k < N; ++k) {
         // pattern of L(k, :) (order doesn't matter)
         for (const auto& j : ereach_queue(C, k, S.parent)) {
             L.i_[c[j]++] = k;  // store L(k, j) in column j
@@ -549,13 +549,13 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
     L.p_ = S.cp;  // column pointers for L
 
     // Compute L(k, :) for L*L' = C in up-looking order
-    for (csint k = 0; k < N; k++) {
+    for (csint k = 0; k < N; ++k) {
         //--- Nonzero pattern of L(k, :) ---------------------------------------
         x[k] = 0.0;  // x(0:k) is now zero
 
         // scatter C into x = full(triu(C(:,k)))
         // C does not have to be in sorted order (d = x[k] gets the diagonal)
-        for (csint p = C.p_[k]; p < C.p_[k+1]; p++) {
+        for (csint p = C.p_[k]; p < C.p_[k+1]; ++p) {
             csint i = C.i_[p];
             if (i <= k) {
                 x[i] = C.v_[p];
@@ -573,7 +573,7 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
             double lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 
-            for (csint p = L.p_[i] + 1; p < c[i]; p++) {
+            for (csint p = L.p_[i] + 1; p < c[i]; ++p) {
                 x[L.i_[p]] -= L.v_[p] * lki;    // x -= L(i, :) * L(k, i)
             }
 
@@ -627,11 +627,11 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
     const CSCMatrix C = A.permute(S.p_inv, inv_permute(S.p_inv));
 
     // Compute L(:, k) for L*L' = C in left-looking order
-    for (csint k = 0; k < N; k++) {
+    for (csint k = 0; k < N; ++k) {
         // scatter [ a22 | --- a32 --- ].T into x
         //            k    k+1  ...  N
         // x := full(tril(C(:, k))) == full(triu(C(k, :)))
-        for (csint p = C.p_[k]; p < C.p_[k+1]; p++) {
+        for (csint p = C.p_[k]; p < C.p_[k+1]; ++p) {
             csint i = C.i_[p];
             if (i >= k) {  // only take lower triangular
                 x[i] = C.v_[p];
@@ -658,7 +658,7 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
             //  L.i_ and L.v_[c[j] ... L.p_[j+1]-1]
             //
             double lkj = L.v_[c[j]];  // cache L(k, j)
-            for (csint p = c[j]++; p < L.p_[j+1]; p++) {
+            for (csint p = c[j]++; p < L.p_[j+1]; ++p) {
                 x[L.i_[p]] -= L.v_[p] * lkj;
             }
         }
@@ -669,7 +669,7 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
         x[k] = 0.0;  // clear x for k + 1st iteration
 
         // Compute the rest of the column L[k+1:, k] = x[k+1:] / L[k, k]
-        for (csint p = c[k]; p < L.p_[k+1]; p++) {
+        for (csint p = c[k]; p < L.p_[k+1]; ++p) {
             csint i = L.i_[p];
             L.v_[p] = x[i] / Lkk;
             x[i] = 0.0;  // clear x for k + 1st iteration
@@ -703,12 +703,12 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
     L.p_ = S.cp;  // column pointers for L
 
     // Compute L(:, k) for L*L' = C
-    for (csint k = 0; k < N; k++) {
+    for (csint k = 0; k < N; ++k) {
         //--- Nonzero pattern of L(k, :) ---------------------------------------
         x[k] = 0.0;  // x(0:k) is now zero
 
         // scatter C into x = full(triu(C(:,k)))
-        for (csint p = C.p_[k]; p < C.p_[k+1]; p++) {
+        for (csint p = C.p_[k]; p < C.p_[k+1]; ++p) {
             csint i = C.i_[p];
             if (i <= k) {
                 x[i] = C.v_[p];
@@ -726,7 +726,7 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
             double lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 
-            for (csint p = L.p_[i] + 1; p < c[i]; p++) {
+            for (csint p = L.p_[i] + 1; p < c[i]; ++p) {
                 x[L.i_[p]] -= L.v_[p] * lki;    // x -= L(i, :) * L(k, i)
             }
 
@@ -776,7 +776,7 @@ CSCMatrix& chol_update(
     // Find the minimum row index in the update vector
     csint p = C.p_[0];
     csint f = C.i_[p];
-    for (; p < C.p_[1]; p++) {
+    for (; p < C.p_[1]; ++p) {
         f = std::min(f, C.i_[p]);
         w[C.i_[p]] = C.v_[p];   // also scatter C into w
     }
@@ -794,7 +794,7 @@ CSCMatrix& chol_update(
         γ = σ * α / (β2 * β);
         L.v_[p] = δ * L.v_[p] + (update ? (γ * w[j]) : 0.0);
         β = β2;
-        for (p++; p < L.p_[j+1]; p++) {
+        for (p++; p < L.p_[j+1]; ++p) {
             double w1 = w[L.i_[p]];
             double w2 = w1 - α * L.v_[p];
             w[L.i_[p]] = w2;
@@ -820,10 +820,10 @@ CholCounts chol_etree_counts(const CSCMatrix& A)
     // we don't have to reset a bool array each time.
     std::vector<csint> flag(N, -1);  // workspace
 
-    for (csint k = 0; k < N; k++) {
+    for (csint k = 0; k < N; ++k) {
         flag[k] = k;  // mark node k as visited
         // Compute T_k from T_{k-1} by finding the children of node k
-        for (csint p = A.p_[k]; p < A.p_[k+1]; p++) {
+        for (csint p = A.p_[k]; p < A.p_[k+1]; ++p) {
             // For each nonzero in the strict upper triangular part of A,
             // follow path from node i to the root of the etree, or flagged node
             for (csint i = A.i_[p]; i < k && flag[i] != k; i = parent[i]) {
@@ -865,13 +865,13 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
     L.p_ = C_tril.indptr();  // column pointers for L (same pattern as A)
 
     // Compute L(k, :) for L*L' = C in up-looking order
-    for (csint k = 0; k < N; k++) {
+    for (csint k = 0; k < N; ++k) {
         //--- Nonzero pattern of L(k, :) ---------------------------------------
         x[k] = 0.0;  // x(0:k) is now zero
 
         // scatter C into x = full(triu(C(:,k)))
         // C does not have to be in sorted order (d = x[k] gets the diagonal)
-        for (csint p = C.p_[k]; p < C.p_[k+1]; p++) {
+        for (csint p = C.p_[k]; p < C.p_[k+1]; ++p) {
             csint i = C.i_[p];
             if (i <= k) {
                 x[i] = C.v_[p];
@@ -895,7 +895,7 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
             double lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 
-            for (csint p = L.p_[i] + 1; p < c[i]; p++) {
+            for (csint p = L.p_[i] + 1; p < c[i]; ++p) {
                 x[L.i_[p]] -= L.v_[p] * lki;    // x -= L(i, :) * L(k, i)
             }
 
@@ -952,13 +952,13 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
     L.p_ = S.cp;  // column pointers for L
 
     // Compute L(k, :) for L*L' = C in up-looking order
-    for (csint k = 0; k < N; k++) {
+    for (csint k = 0; k < N; ++k) {
         //--- Nonzero pattern of L(k, :) ---------------------------------------
         x[k] = 0.0;  // x(0:k) is now zero
 
         // scatter C into x = full(triu(C(:,k)))
         // C does not have to be in sorted order (d = x[k] gets the diagonal)
-        for (csint p = C.p_[k]; p < C.p_[k+1]; p++) {
+        for (csint p = C.p_[k]; p < C.p_[k+1]; ++p) {
             csint i = C.i_[p];
             if (i <= k) {
                 x[i] = C.v_[p];
@@ -1001,7 +1001,7 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
             double lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 
-            for (csint p = L.p_[i] + 1; p < c[i]; p++) {
+            for (csint p = L.p_[i] + 1; p < c[i]; ++p) {
                 x[L.i_[p]] -= L.v_[p] * lki;    // x -= L(i, :) * L(k, i)
             }
 

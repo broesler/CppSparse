@@ -214,7 +214,7 @@ TEMPLATE_TEST_CASE(
 
         // Take only the first N - k rows of expect_x
         csint Nmk = N - k;
-        for (csint j = 0; j < K; j++) {
+        for (csint j = 0; j < K; ++j) {
             auto read_start = expect_x.begin() + j * N;
             auto write_start = expect_x.begin() + j * Nmk;
             std::move(read_start, read_start + Nmk, write_start);
@@ -582,7 +582,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: QR", "[spsolve-qr]", RhsCombinations)
 
         // Take only the first N - k rows of expect_x
         csint Nmk = N - k;
-        for (csint j = 0; j < K; j++) {
+        for (csint j = 0; j < K; ++j) {
             auto read_start = expect_x.begin() + j * N;
             auto write_start = expect_x.begin() + j * Nmk;
             std::move(read_start, read_start + Nmk, write_start);

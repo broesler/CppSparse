@@ -295,7 +295,7 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3][lu_colpiv]")
         SECTION("Single zero column") {
             // Remove a column to test the column pivoting
             csint k = 3;
-            for (csint i = 0; i < M; i++) {
+            for (csint i = 0; i < M; ++i) {
                 A(i, k) = 0.0;
             }
             A.dropzeros();
@@ -306,7 +306,7 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3][lu_colpiv]")
         SECTION("Multiple zero columns") {
             // Remove a column to test the column pivoting
             for (const auto& k : {2, 3, 5}) {
-                for (csint i = 0; i < M; i++) {
+                for (csint i = 0; i < M; ++i) {
                     A(i, k) = 0.0;
                 }
             }
@@ -329,7 +329,7 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3][lu_colpiv]")
             // Scale down a column to test the column pivoting
             csint k = 3;
             double A_kk = A(k, k);
-            for (csint i = 0; i < M; i++) {
+            for (csint i = 0; i < M; ++i) {
                 A(i, k) *= 0.95 * col_tol / A_kk;
             }
 
@@ -340,7 +340,7 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3][lu_colpiv]")
             // Scale down multiple columns
             for (const auto& k : {2, 3, 5}) {
                 double A_kk = A(k, k);
-                for (csint i = 0; i < M; i++) {
+                for (csint i = 0; i < M; ++i) {
                     A(i, k) *= 0.95 * col_tol / A_kk;
                 }
             }
@@ -448,7 +448,7 @@ TEST_CASE("Exercise 6.5: LU with Single pair of linearly dependent columns", "[e
 {
     run_lu_singular_test(
         [](CSCMatrix& A, csint M, [[maybe_unused]] csint N) {
-            for (csint i = 0; i < M; i++) {
+            for (csint i = 0; i < M; ++i) {
                 A(i, 3) = 2 * A(i, 5);
             }
         }
@@ -460,7 +460,7 @@ TEST_CASE("Exercise 6.5: LU with Two pairs of linearly dependent columns", "[ex6
 {
     run_lu_singular_test(
         [](CSCMatrix& A, csint M, [[maybe_unused]] csint N) {
-            for (csint i = 0; i < M; i++) {
+            for (csint i = 0; i < M; ++i) {
                 // These two sets create a zero row:
                 // A(i, 3) = 2 * A(i, 5);
                 // A(i, 2) = 3 * A(i, 4);
@@ -477,7 +477,7 @@ TEST_CASE("Exercise 6.5: LU with Single pair of linearly dependent rows", "[ex6.
 {
     run_lu_singular_test(
         [](CSCMatrix& A, [[maybe_unused]] csint M, csint N) {
-            for (csint j = 0; j < N; j++) {
+            for (csint j = 0; j < N; ++j) {
                 A(3, j) = 2 * A(5, j);
             }
         }
@@ -489,7 +489,7 @@ TEST_CASE("Exercise 6.5: LU with Two pairs of linearly dependent rows", "[ex6.5]
 {
     run_lu_singular_test(
         [](CSCMatrix& A, [[maybe_unused]] csint M, csint N) {
-            for (csint j = 0; j < N; j++) {
+            for (csint j = 0; j < N; ++j) {
                 A(3, j) = 2 * A(5, j);
                 A(2, j) = 3 * A(4, j);
             }
@@ -502,7 +502,7 @@ TEST_CASE("Exercise 6.5: LU with Single zero column", "[ex6.5][lu_singular]")
 {
     run_lu_singular_test(
         [](CSCMatrix& A, csint M, [[maybe_unused]] csint N) {
-            for (csint i = 0; i < M; i++) {
+            for (csint i = 0; i < M; ++i) {
                 A(i, 3) = 0.0;
             }
         }
@@ -514,7 +514,7 @@ TEST_CASE("Exercise 6.5: LU with Multiple zero columns", "[ex6.5][lu_singular]")
 {
     run_lu_singular_test(
         [](CSCMatrix& A, csint M, [[maybe_unused]] csint N) {
-            for (csint i = 0; i < M; i++) {
+            for (csint i = 0; i < M; ++i) {
                 for (const auto& j : {2, 3, 5}) {
                     A(i, j) = 0.0;
                 }
@@ -528,7 +528,7 @@ TEST_CASE("Exercise 6.5: LU with Single zero row", "[ex6.5][lu_singular]")
 {
     run_lu_singular_test(
         [](CSCMatrix& A, [[maybe_unused]] csint M, csint N) {
-            for (csint j = 0; j < N; j++) {
+            for (csint j = 0; j < N; ++j) {
                 A(3, j) = 0.0;
             }
         }
@@ -541,7 +541,7 @@ TEST_CASE("Exercise 6.5: LU with Multiple zero rows", "[ex6.5][lu_singular]")
     run_lu_singular_test(
         [](CSCMatrix& A, [[maybe_unused]] csint M, csint N) {
             for (const auto& i : {2, 3, 5}) {
-                for (csint j = 0; j < N; j++) {
+                for (csint j = 0; j < N; ++j) {
                     A(i, j) = 0.0;
                 }
             }
@@ -604,7 +604,7 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
         LowMemoryMatrix(Shape shape, csint fail_thresh)
             : CSCMatrix(shape), fail_thresh_(fail_thresh)
         {
-            for (csint i = 0; i < shape[0]; i++) {
+            for (csint i = 0; i < shape[0]; ++i) {
                 assign(i, i, 1.0);
             }
         }
@@ -771,7 +771,7 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13][ilu]")
 
             REQUIRE(ires.L.nnz() == N);
             REQUIRE(ires.U.nnz() == N);
-            for (csint i = 0; i < N; i++) {
+            for (csint i = 0; i < N; ++i) {
                 CHECK(ires.L(i, i) == 1.0);
                 CHECK_THAT(ires.U(i, i), WithinAbs(A(i, i), tol));
             }

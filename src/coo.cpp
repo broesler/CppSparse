@@ -119,8 +119,8 @@ COOMatrix::COOMatrix(const CSCMatrix& A)
     N_ = A.N_;
     // Get all elements in column order
     csint nz = 0;
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+    for (csint j = 0; j < N_; ++j) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
             i_[nz] = A.i_[p];
             j_[nz] = j;
             v_[nz++] = A.v_[p];
@@ -261,11 +261,11 @@ COOMatrix& COOMatrix::insert(
     csint max_row_idx = 0, 
           max_col_idx = 0;
 
-    for (csint i = 0; i < N; i++) {
+    for (csint i = 0; i < N; ++i) {
         csint row = rows[i];  // cache value
         max_row_idx = std::max(max_row_idx, row);
 
-        for (csint j = 0; j < N; j++) {
+        for (csint j = 0; j < N; ++j) {
             csint col = cols[j];  // cache value
             max_col_idx = std::max(max_col_idx, col);
             // Insert the indices and value
@@ -293,14 +293,14 @@ CSCMatrix COOMatrix::compress() const
     std::vector<csint> w(N_);  // workspace
 
     // Compute number of elements in each column
-    for (csint k = 0; k < nnz_; k++)
+    for (csint k = 0; k < nnz_; ++k)
         w[j_[k]]++;
 
     // Column pointers are the cumulative sum, starting with 0
     std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
-    for (csint k = 0; k < nnz_; k++) {
+    for (csint k = 0; k < nnz_; ++k) {
         // A(i, j) is the pth entry in the CSC matrix
         csint p = w[j_[k]]++;  // "pointer" to the current element's column
         C.i_[p] = i_[k];
@@ -322,7 +322,7 @@ std::vector<double> COOMatrix::to_dense_vector(const char order) const
     std::vector<double> arr(M_ * N_, 0.0);
     csint idx;
 
-    for (csint k = 0; k < nnz(); k++) {
+    for (csint k = 0; k < nnz(); ++k) {
         // Column- vs row-major order
         if (order == 'F') {
             idx = i_[k] + j_[k] * M_;
@@ -358,7 +358,7 @@ std::vector<double> COOMatrix::dot(std::span<const double> x) const
     assert(N_ == static_cast<csint>(x.size()));
     std::vector<double> out(x.size());
 
-    for (csint p = 0; p < nnz(); p++) {
+    for (csint p = 0; p < nnz(); ++p) {
         out[i_[p]] += v_[p] * x[j_[p]];
     }
 
@@ -377,7 +377,7 @@ void COOMatrix::write_elems_(std::stringstream& ss, csint start, csint end) cons
 
     const std::string format_string = make_format_string_();
 
-    for (csint k = start; k < end; k++) {
+    for (csint k = start; k < end; ++k) {
         ss << std::vformat(
             format_string,
             std::make_format_args(

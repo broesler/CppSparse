@@ -40,7 +40,7 @@ std::vector<double> operator+(
 
     std::vector<double> out(a.size());
 
-    for (size_t i = 0; i < a.size(); i++) {
+    for (size_t i = 0; i < a.size(); ++i) {
         out[i] = a[i] + b[i];
     }
 
@@ -52,7 +52,7 @@ std::vector<double> operator-(const std::vector<double>& a)
 {
     std::vector<double> out(a.size());
 
-    for (size_t i = 0; i < a.size(); i++) {
+    for (size_t i = 0; i < a.size(); ++i) {
         out[i] = -a[i];
     }
 
@@ -70,7 +70,7 @@ std::vector<double> operator-(
 
     std::vector<double> out(a.size());
 
-    for (size_t i = 0; i < a.size(); i++) {
+    for (size_t i = 0; i < a.size(); ++i) {
         out[i] = a[i] - b[i];
     }
 
@@ -111,7 +111,7 @@ std::span<double> operator+=(
 {
     assert(a.size() == b.size());
 
-    for (size_t i = 0; i < a.size(); i++) {
+    for (size_t i = 0; i < a.size(); ++i) {
         a[i] += b[i];
     }
 
@@ -127,7 +127,7 @@ std::vector<csint> inv_permute(const std::vector<csint>& p)
 {
     std::vector<csint> out(p.size());
 
-    for (size_t k = 0; k < p.size(); k++)
+    for (size_t k = 0; k < p.size(); ++k)
         out[p[k]] = k;
 
     return out;

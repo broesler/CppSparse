@@ -100,8 +100,8 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
             REQUIRE(M == C_T.shape()[1]);
             REQUIRE(N == C_T.shape()[0]);
 
-            for (csint i = 0; i < M; i++) {
-                for (csint j = 0; j < N; j++) {
+            for (csint i = 0; i < M; ++i) {
+                for (csint j = 0; j < N; ++j) {
                     double C_val = C(i, j);
                     double C_T_val = C_T(j, i);
                     CAPTURE(i, j, C_val, C_T_val);
@@ -272,8 +272,8 @@ TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
         std::vector<double> data = C.data();
         csint N = C.shape()[1];
 
-        for (csint j = 0; j < N; j++) {
-            for (csint p = indptr[j]; p < indptr[j+1]; p++) {
+        for (csint j = 0; j < N; ++j) {
+            for (csint p = indptr[j]; p < indptr[j+1]; ++p) {
                 REQUIRE(C(indices[p], j) == data[p]);
             }
         }
@@ -291,7 +291,7 @@ TEST_CASE("Insertion", "[CSCMatrix][operator()][insert]")
     CHECK(C.shape() == Shape{N, 1});
 
     // Insert values into the matrix
-    for (csint i = 0; i < N; i++) {
+    for (csint i = 0; i < N; ++i) {
         C(i, 0) = static_cast<double>(i);
     }
 
@@ -1181,8 +1181,8 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
 
             csint rows_size = static_cast<csint>(rows.size());
             csint cols_size = static_cast<csint>(cols.size());
-            for (csint i = 0; i < rows_size; i++) {
-                for (csint j = 0; j < cols_size; j++) {
+            for (csint i = 0; i < rows_size; ++i) {
+                for (csint j = 0; j < cols_size; ++j) {
                     double A_val = A(rows[i], cols[j]);
                     double expect_val = vals[i + j * rows_size];
                     CAPTURE(i, j, A_val, expect_val);
@@ -1203,8 +1203,8 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
 
             csint rows_size = static_cast<csint>(rows.size());
             csint cols_size = static_cast<csint>(cols.size());
-            for (csint i = 0; i < rows_size; i++) {
-                for (csint j = 0; j < cols_size; j++) {
+            for (csint i = 0; i < rows_size; ++i) {
+                for (csint j = 0; j < cols_size; ++j) {
                     double A_val = A(rows[i], cols[j]);
                     double expect_val = C(i, j);
                     CAPTURE(i, j, A_val, expect_val);

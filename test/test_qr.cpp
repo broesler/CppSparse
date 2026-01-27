@@ -312,7 +312,7 @@ TEST_CASE("Square, rank-deficient A", "[qr][rank-deficient][numeric]")
     SECTION("Single Zero Row") {
         // Zero out an arbitrary row to make A rank-deficient
         csint k = 3;
-        for (csint j = 0; j < N; j++) {
+        for (csint j = 0; j < N; ++j) {
             A.assign(k, j, 0.0);
         }
         A = A.to_canonical();
@@ -321,7 +321,7 @@ TEST_CASE("Square, rank-deficient A", "[qr][rank-deficient][numeric]")
     SECTION("Single Zero Column") {
         // Zero out an arbitrary row to make A rank-deficient
         csint k = 3;
-        for (csint i = 0; i < M; i++) {
+        for (csint i = 0; i < M; ++i) {
             A.assign(i, k, 0.0);
         }
         A = A.to_canonical();
@@ -330,7 +330,7 @@ TEST_CASE("Square, rank-deficient A", "[qr][rank-deficient][numeric]")
     SECTION("Multiple Zero Rows") {
         // Zero out an arbitrary row to make A rank-deficient
         for (const auto& k : {2, 3, 5}) {
-            for (csint j = 0; j < N; j++) {
+            for (csint j = 0; j < N; ++j) {
                 A.assign(k, j, 0.0);
             }
         }
@@ -340,7 +340,7 @@ TEST_CASE("Square, rank-deficient A", "[qr][rank-deficient][numeric]")
     SECTION("Multiple Zero Columns") {
         // Zero out an arbitrary row to make A rank-deficient
         for (const auto& k : {2, 3, 5}) {
-            for (csint i = 0; i < M; i++) {
+            for (csint i = 0; i < M; ++i) {
                 A.assign(i, k, 0.0);
             }
         }

@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     // Check matrix structure
     csint sprank = D.rr[3];
     csint ns = 0;  // number of singletons
-    for (csint k = 0; k < D.Nb; k++)
+    for (csint k = 0; k < D.Nb; ++k)
     {
         ns += ((D.r[k+1] == D.r[k] + 1) && (D.s[k+1] == D.s[k] + 1));
     }

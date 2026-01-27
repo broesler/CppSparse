@@ -46,7 +46,7 @@ CSCMatrix davis_example_chol()
     CSCMatrix A = L + L.T();
 
     // Set the diagonal to ensure positive definiteness
-    for (csint i = 0; i < N; i++) {
+    for (csint i = 0; i < N; ++i) {
         A.assign(i, i, i + 10);
     }
 
@@ -90,7 +90,7 @@ CSCMatrix davis_example_qr(double add_diag, bool random_vals)
 
     // Set the diagonal
     if (add_diag) {
-        for (csint i = 0; i < 8; i++) {
+        for (csint i = 0; i < 8; ++i) {
             A.insert(i, i, add_diag);  // duplicates will be added
         }
     }
@@ -119,7 +119,7 @@ CSCMatrix davis_example_amd()
     CSCMatrix A = L + L.T();
 
     // Set the diagonal to ensure positive definiteness
-    for (csint i = 0; i < N; i++) {
+    for (csint i = 0; i < N; ++i) {
         A.assign(i, i, i + 10);
     }
 

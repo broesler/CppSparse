@@ -30,9 +30,9 @@ namespace cs {
  *----------------------------------------------------------------------------*/
 void lsolve_inplace(const CSCMatrix& L, std::span<double> x)
 {
-    for (csint j = 0; j < L.N_; j++) {
+    for (csint j = 0; j < L.N_; ++j) {
         x[j] /= L.v_[L.p_[j]];
-        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
+        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; ++p) {
             x[L.i_[p]] -= L.v_[p] * x[j];
         }
     }
@@ -54,7 +54,7 @@ std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& B)
 void ltsolve_inplace(const CSCMatrix& L, std::span<double> x)
 {
     for (csint j = L.N_ - 1; j >= 0; j--) {
-        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
+        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; ++p) {
             x[j] -= L.v_[p] * x[L.i_[p]];
         }
         x[j] /= L.v_[L.p_[j]];
@@ -72,7 +72,7 @@ void usolve_inplace(const CSCMatrix& U, std::span<double> x)
 {
     for (csint j = U.N_ - 1; j >= 0; j--) {
         x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
-        for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
+        for (csint p = U.p_[j]; p < U.p_[j+1] - 1; ++p) {
             x[U.i_[p]] -= U.v_[p] * x[j];
         }
     }
@@ -93,8 +93,8 @@ std::vector<double> usolve(const CSCMatrix& U, const CSCMatrix& B)
 
 void utsolve_inplace(const CSCMatrix& U, std::span<double> x)
 {
-    for (csint j = 0; j < U.N_; j++) {
-        for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
+    for (csint j = 0; j < U.N_; ++j) {
+        for (csint p = U.p_[j]; p < U.p_[j+1] - 1; ++p) {
             x[j] -= U.v_[p] * x[U.i_[p]];
         }
         x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
@@ -111,12 +111,12 @@ std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& B)
 // Exercise 3.8
 void lsolve_inplace_opt(const CSCMatrix& L, std::span<double> x)
 {
-    for (csint j = 0; j < L.N_; j++) {
+    for (csint j = 0; j < L.N_; ++j) {
         double& x_val = x[j];  // cache reference to value
         // Exercise 3.8: improve performance by checking for zeros
         if (x_val != 0) {
             x_val /= L.v_[L.p_[j]];
-            for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
+            for (csint p = L.p_[j] + 1; p < L.p_[j+1]; ++p) {
                 x[L.i_[p]] -= L.v_[p] * x_val;
             }
         }
@@ -137,7 +137,7 @@ void usolve_inplace_opt(const CSCMatrix& U, std::span<double> x)
         double& x_val = x[j];  // cache reference to value
         if (x_val != 0) {
             x_val /= U.v_[U.p_[j+1] - 1];  // diagonal entry
-            for (csint p = U.p_[j]; p < U.p_[j+1] - 1; p++) {
+            for (csint p = U.p_[j]; p < U.p_[j+1] - 1; ++p) {
                 x[U.i_[p]] -= U.v_[p] * x_val;
             }
         }
@@ -162,7 +162,7 @@ std::vector<csint> find_lower_diagonals(const CSCMatrix& A)
     for (csint j = A.N_ - 1; j >= 0; j--) {
         csint N_unmarked = 0;
 
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
             csint i = A.i_[p];
             // Mark the rows viewed so far
             if (!marked[i]) {
@@ -196,7 +196,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, const std::vector<double>& b
 
     // Compute the row permutation vector
     std::vector<csint> p_inv(A.N_);
-    for (csint j = 0; j < A.N_; j++) {
+    for (csint j = 0; j < A.N_; ++j) {
         p_inv[j] = A.i_[p_diags[j]];
     }
 
@@ -205,7 +205,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, const std::vector<double>& b
     std::vector<double> b_work = b;
 
     // Perform the permuted forward solve
-    for (csint j = 0; j < A.N_; j++) {
+    for (csint j = 0; j < A.N_; ++j) {
         csint i = p_inv[j];        // permuted row index
         csint d = p_diags[j];      // pointer to the diagonal entry
         double x_val = b_work[i];  // cache diagonal value
@@ -214,7 +214,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, const std::vector<double>& b
             x_val /= A.v_[d];  // solve for x[d]
             x[j] = x_val;      // store solution in correct position
             // update the off-diagonals
-            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
                 if (p != d) {
                     b_work[A.i_[p]] -= A.v_[p] * x_val;
                 }
@@ -235,7 +235,7 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, const std::vector<double>& b
     // First O(N) pass to find the diagonal entries
     // Assume that the first entry in each column has the smallest row index
     std::vector<csint> p_diags(A.N_, -1);
-    for (csint j = 0; j < A.N_; j++) {
+    for (csint j = 0; j < A.N_; ++j) {
         if (p_diags[j] == -1) {
             p_diags[j] = A.p_[j];  // pointer to the diagonal entry
         } else {
@@ -248,7 +248,7 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, const std::vector<double>& b
 
     // Compute the column permutation vector
     std::vector<csint> q_inv(A.N_);
-    for (csint i = 0; i < A.N_; i++) {
+    for (csint i = 0; i < A.N_; ++i) {
         q_inv[A.i_[p_diags[i]]] = i;
     }
 
@@ -265,7 +265,7 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, const std::vector<double>& b
         if (x_val != 0) {
             x_val /= A.v_[d];  // solve for x[A.i_[d]]
             x[j] = x_val;      // store solution in correct position
-            for (csint p = A.p_[j]+1; p < A.p_[j+1]; p++) {
+            for (csint p = A.p_[j]+1; p < A.p_[j+1]; ++p) {
                 b_work[A.i_[p]] -= A.v_[p] * x_val;  // update the off-diagonals
             }
         }
@@ -283,10 +283,10 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
     std::vector<char> marked(U.N_, false);  // workspace
     std::vector<csint> p_diags(U.N_);  // diagonal indicies (inverse permutation)
 
-    for (csint j = 0; j < U.N_; j++) {
+    for (csint j = 0; j < U.N_; ++j) {
         csint N_unmarked = 0;
 
-        for (csint p = U.p_[j]; p < U.p_[j+1]; p++) {
+        for (csint p = U.p_[j]; p < U.p_[j+1]; ++p) {
             csint i = U.i_[p];
             // Mark the rows viewed so far
             if (!marked[i]) {
@@ -320,7 +320,7 @@ std::vector<double> usolve_rows(const CSCMatrix& A, const std::vector<double>& b
 
     // Compute the row permutation vector
     std::vector<csint> p_inv(A.N_);
-    for (csint i = 0; i < A.N_; i++) {
+    for (csint i = 0; i < A.N_; ++i) {
         p_inv[i] = A.i_[p_diags[i]];
     }
 
@@ -337,7 +337,7 @@ std::vector<double> usolve_rows(const CSCMatrix& A, const std::vector<double>& b
         if (x_val != 0) {
             x_val /= A.v_[d];  // solve for x[d]
             x[j] = x_val;      // store solution in correct position
-            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
                 if (p != d) {
                     b_work[A.i_[p]] -= A.v_[p] * x_val;  // update the off-diagonals
                 }
@@ -357,7 +357,7 @@ std::vector<double> usolve_cols(const CSCMatrix& A, const std::vector<double>& b
     // First O(N) pass to find the diagonal entries
     // Assume that the last entry in each column has the largest row index
     std::vector<csint> p_diags(A.N_, -1);
-    for (csint j = 0; j < A.N_; j++) {
+    for (csint j = 0; j < A.N_; ++j) {
         if (p_diags[j] == -1) {
             p_diags[j] = A.p_[j+1] - 1;  // pointer to the diagonal entry
         } else {
@@ -370,7 +370,7 @@ std::vector<double> usolve_cols(const CSCMatrix& A, const std::vector<double>& b
 
     // Compute the column permutation vector
     std::vector<csint> q_inv(A.N_);
-    for (csint i = 0; i < A.N_; i++) {
+    for (csint i = 0; i < A.N_; ++i) {
         q_inv[A.i_[p_diags[i]]] = i;
     }
 
@@ -387,7 +387,7 @@ std::vector<double> usolve_cols(const CSCMatrix& A, const std::vector<double>& b
         if (x_val != 0) {
             x_val /= A.v_[d];  // solve for x[A.i_[d]]
             x[j] = x_val;      // store solution in correct position
-            for (csint p = A.p_[j]; p < A.p_[j+1] - 1; p++) {
+            for (csint p = A.p_[j]; p < A.p_[j+1] - 1; ++p) {
                 b_work[A.i_[p]] -= A.v_[p] * x_val;  // update the off-diagonals
             }
         }
@@ -406,8 +406,8 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
     std::vector<csint> r(A.N_, 0);
     std::vector<csint> z(A.N_, 0);  // z[i] is XORed with each column j in row i
 
-    for (csint j = 0; j < A.N_; j++) {
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+    for (csint j = 0; j < A.N_; ++j) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
             r[A.i_[p]]++;
             z[A.i_[p]] ^= j;
         }
@@ -417,7 +417,7 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
     std::vector<csint> singles;
     singles.reserve(A.N_);
 
-    for (csint i = 0; i < A.N_; i++) {
+    for (csint i = 0; i < A.N_; ++i) {
         if (r[i] == 1) {
             singles.push_back(i);
         }
@@ -428,7 +428,7 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
     std::vector<csint> q_inv(A.N_, -1);
     std::vector<csint> p_diags(A.N_, -1);
 
-    for (csint k = 0; k < A.N_; k++) {
+    for (csint k = 0; k < A.N_; ++k) {
         // Take a singleton row
         if (singles.empty()) {
             throw PermutedTriangularMatrixError(
@@ -445,7 +445,7 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
         q_inv[k] = j;
 
         // Decrement each row count, and update the set vector
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
             csint t = A.i_[p];
             if (--r[t] == 1) {
                 singles.push_back(t);
@@ -473,7 +473,7 @@ void tri_solve_perm_inplace(
     auto [p_inv, q_inv, p_diags] = tri_perm;
 
     // Solve the system (PTQ) x = b => T (Q x) = (P^T b)
-    for (csint k = 0; k < A.N_; k++) {
+    for (csint k = 0; k < A.N_; ++k) {
         csint i = p_inv[k];    // permuted row
         csint j = q_inv[k];    // permuted column
         csint d = p_diags[k];  // pointer to the diagonal entry
@@ -484,7 +484,7 @@ void tri_solve_perm_inplace(
             x_val /= A.v_[d];  // diagonal entry
             x[j] = x_val;
             // Update off-diagonals
-            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
                 if (p != d) {
                     b[A.i_[p]] -= A.v_[p] * x_val;
                 }
@@ -520,7 +520,7 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const std::vector<double>
     std::span<double> B_work_span(B_work);
 
     // Solve each column of the system
-    for (csint k = 0; k < K; k++) {
+    for (csint k = 0; k < K; ++k) {
         auto B_work_k = B_work_span.subspan(k * M, M);
         auto X_k = X_span.subspan(k * N, N);
         tri_solve_perm_inplace(A, tri_perm, B_work_k, X_k);
@@ -554,7 +554,7 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B)
     std::vector<double> B_k(M);  // single dense RHS column
 
     // Solve each column of the system
-    for (csint k = 0; k < K; k++) {
+    for (csint k = 0; k < K; ++k) {
         auto X_k = X_span.subspan(k * N, N);
 
         // Scatter B[:, k] into B_k
@@ -597,7 +597,7 @@ void spsolve(
         xj /= A.v_[lower ? A.p_[J] : A.p_[J+1] - 1];    // x(j) /= G(j, j)
         csint p = lower ? A.p_[J] + 1 : A.p_[J];        // lower: L(j,j) 1st entry
         csint q = lower ? A.p_[J+1]   : A.p_[J+1] - 1;  // up: U(j,j) last entry
-        for (; p < q; p++) {
+        for (; p < q; ++p) {
             x[A.i_[p]] -= A.v_[p] * xj;              // x[i] -= G(i, j) * x[j]
         }
     }
@@ -620,7 +620,7 @@ void reach(
     pstack.reserve(A.N_);
     rstack.reserve(A.N_);
 
-    for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
+    for (csint p = B.p_[k]; p < B.p_[k+1]; ++p) {
         csint j = B.i_[p];  // consider nonzero B(j, k)
         if (!marked[j]) {
             dfs(A, j, marked, xi, pstack, rstack, p_inv);
@@ -666,7 +666,7 @@ void dfs(
         csint q = (jnew < 0) ? 0 : A.p_[jnew+1];
 
         // examine all neighbors of j
-        for (csint p = pstack.back(); p < q; p++) {
+        for (csint p = pstack.back(); p < q; ++p) {
             csint i = A.i_[p];        // consider neighbor node i
             if (!marked[i]) {
                 pstack.back() = p;    // pause dfs of node j
@@ -693,7 +693,7 @@ std::vector<csint> reach_r(const CSCMatrix& A, const CSCMatrix& B)
     std::vector<csint> xi;
     xi.reserve(A.N_);
 
-    for (csint p = B.p_[0]; p < B.p_[1]; p++) {
+    for (csint p = B.p_[0]; p < B.p_[1]; ++p) {
         csint j = B.i_[p];  // consider nonzero B(j, 0)
         if (!marked[j]) {
             dfs_r(A, j, marked, xi);
@@ -715,7 +715,7 @@ std::vector<csint>& dfs_r(
 {
     marked[j] = true;  // mark node j as visited
 
-    for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+    for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
         csint i = A.i_[p];  // consider neighbor node i
         if (!marked[i]) {
             dfs_r(A, i, marked, xi);  // dfs recursively from i
@@ -759,7 +759,7 @@ std::vector<csint> topological_order(
     xi.reserve(N);
 
     // Search up the tree for each non-zero in b
-    for (csint p = b.p_[0]; p < b.p_[1]; p++) {
+    for (csint p = b.p_[0]; p < b.p_[1]; ++p) {
         csint i = b.i_[p];
 
         // Traverse up the elimination tree
@@ -793,7 +793,7 @@ void CholResult::lsolve_(
     for (const auto& j : xi) {
         double& x_val = x[j];  // cache diagonal value
         x_val /= L.v_[L.p_[j]];
-        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
+        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; ++p) {
             x[L.i_[p]] -= L.v_[p] * x_val;
         }
     }
@@ -807,7 +807,7 @@ void CholResult::ltsolve_(
 {
     for (const auto& j : xi) {
         double& x_val = x[j];  // cache diagonal value
-        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; p++) {
+        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; ++p) {
             x_val -= L.v_[p] * x[L.i_[p]];
         }
         x_val /= L.v_[L.p_[j]];
@@ -828,7 +828,7 @@ void CholResult::solve(
 
     // // scatter permuted b -> w = Pb
     // assert(k < B.N_);
-    // for (csint p = B.p_[k]; p < B.p_[k+1]; p++) {
+    // for (csint p = B.p_[k]; p < B.p_[k+1]; ++p) {
     //     w[p_inv[B.i_[p]]] = B.v_[p];
     // }
 
@@ -877,7 +877,7 @@ SparseSolution CholResult::lsolve_impl_(
         // Inspect L to get the parent vector, since it has sorted indices
         assert(L.has_sorted_indices());
         parent.assign(N, -1);
-        for (csint j = 0; j < N-1; j++) {  // skip the last row (only diagonal)
+        for (csint j = 0; j < N-1; ++j) {  // skip the last row (only diagonal)
             parent[j] = L.i_[L.p_[j]+1];   // first off-diagonal element
         }
     }
@@ -942,7 +942,7 @@ std::vector<double> chol_solve(
     std::span<double> X_span(X);
 
     // Exercise 8.7/8.9: solve each column of the system
-    for (csint k = 0; k < K; k++) {
+    for (csint k = 0; k < K; ++k) {
         auto X_k = X_span.subspan(k * N, N);
         res.solve(X_k);
     }
@@ -979,7 +979,7 @@ std::vector<double> chol_solve(
     std::span<double> X_span(X);
 
     // Solve each column of the system
-    for (csint k = 0; k < K; k++) {
+    for (csint k = 0; k < K; ++k) {
         auto X_k = X_span.subspan(k * N, N);
         res.solve(B, k, S.parent, X_k);
     }
@@ -1053,7 +1053,7 @@ QRSolveResult qr_solve(
     std::span<double> X_span(X);
     std::span<const double> B_span(B);
 
-    for (csint k = 0; k < K; k++) {
+    for (csint k = 0; k < K; ++k) {
         // Solve for each RHS column
         auto B_k = B_span.subspan(k * M, M);
         auto X_k = X_span.subspan(k * N, N);
@@ -1108,7 +1108,7 @@ QRSolveResult qr_solve(
 
     std::vector<double> B_k(M);
 
-    for (csint k = 0; k < K; k++) {
+    for (csint k = 0; k < K; ++k) {
         // Solve for each RHS column
         auto X_k = X_span.subspan(k * N, N);
         std::fill(B_k.begin(), B_k.end(), 0.0);
@@ -1219,7 +1219,7 @@ std::vector<double> lu_solve(
     }
 
     // Solve for each RHS column
-    for (csint k = 0; k < K; k++) {
+    for (csint k = 0; k < K; ++k) {
         // Create a view into the k-th columns of B and X
         auto B_k = B_span.subspan(k * M, M);
         auto X_k = X_span.subspan(k * N, N);
@@ -1228,7 +1228,7 @@ std::vector<double> lu_solve(
         res.solve(X_k);
 
         // Exercise 8.5: Iterative refinement
-        for (csint i = 0; i < ir_steps; i++) {
+        for (csint i = 0; i < ir_steps; ++i) {
             r = B_k - A * X_k;     // r = b - Ax
             res.solve(r);  // solve Ad = r
             X_k += r;              // x += d
@@ -1276,7 +1276,7 @@ std::vector<double> lu_solve(
     }
 
     // Solve for each RHS column
-    for (csint k = 0; k < K; k++) {
+    for (csint k = 0; k < K; ++k) {
         // Create a view into the k-th column of X
         auto X_k = X_span.subspan(k * N, N);
 
@@ -1291,7 +1291,7 @@ std::vector<double> lu_solve(
         res.solve(X_k);
 
         // Exercise 8.5: Iterative refinement
-        for (csint i = 0; i < ir_steps; i++) {
+        for (csint i = 0; i < ir_steps; ++i) {
             r = B_k - A * X_k;     // r = b - Ax
             res.solve(r);  // solve Ad = r
             X_k += r;              // x += d
@@ -1364,7 +1364,7 @@ double norm1est_inv(const LUResult& res)
     csint jold = -1;
 
     // Estimate the 1-norm
-    for (csint k = 0; k < 5; k++) {
+    for (csint k = 0; k < 5; ++k) {
         if (k > 0) {
             // j is the first index where |x| == max(|x|) (infinity norm)
             csint j = min_argmaxabs(x);
@@ -1391,7 +1391,7 @@ double norm1est_inv(const LUResult& res)
 
         // s elements are in {-1, 1}
         std::fill(s.begin(), s.end(), 1.0);
-        for (csint p = 0; p < N; p++) {
+        for (csint p = 0; p < N; ++p) {
             if (x[p] < 0) {
                 s[p] = -1.0;
             }
@@ -1423,7 +1423,7 @@ double cond1est(const CSCMatrix& A)
     LUResult res = lu(A, S);
 
     // Compute the 1-norm estimate
-    for (csint i = 0; i < N; i++) {
+    for (csint i = 0; i < N; ++i) {
         if (res.U(i, i) == 0) {
             return std::numeric_limits<double>::infinity();
         }

@@ -87,11 +87,11 @@ CSCMatrix::CSCMatrix(
 
     csint nz = 0;  // count number of non-zeros
 
-    for (csint j = 0; j < N_; j++) {
+    for (csint j = 0; j < N_; ++j) {
         p_.push_back(nz);
 
         double val;
-        for (csint i = 0; i < M_; i++) {
+        for (csint i = 0; i < M_; ++i) {
             if (order == 'F') {
                 val = A[i + j * M_];  // linear index for column-major order
             } else {
@@ -172,8 +172,8 @@ bool CSCMatrix::is_symmetric() const
         return false;
     }
 
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+    for (csint j = 0; j < N_; ++j) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             csint i = i_[p];
 
             if (i == j)
@@ -198,8 +198,8 @@ csint CSCMatrix::is_triangular() const
     bool is_upper = true;
     bool is_lower = true;
 
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+    for (csint j = 0; j < N_; ++j) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             csint i = i_[p];
 
             if (i > j) {
@@ -216,9 +216,9 @@ csint CSCMatrix::is_triangular() const
 
 bool CSCMatrix::_test_sorted() const
 {
-    for (csint j = 0; j < N_; j++) {
+    for (csint j = 0; j < N_; ++j) {
         // Check that the column is sorted
-        for (csint p = p_[j]; p < p_[j+1] - 1; p++) {
+        for (csint p = p_[j]; p < p_[j+1] - 1; ++p) {
             if (i_[p] > i_[p + 1]) {
                 return false;
             }
@@ -262,7 +262,7 @@ CSCMatrix::GetItemResult CSCMatrix::get_item_(csint i, csint j) const
             } else {
                 // Sum duplicate entries, k points to the first entry
                 csint i_size = static_cast<csint>(i_.size());;
-                for (csint p = k; p < i_size && i_[p] == i; p++) {
+                for (csint p = k; p < i_size && i_[p] == i; ++p) {
                     v += v_[p];
                 }
             }
@@ -271,7 +271,7 @@ CSCMatrix::GetItemResult CSCMatrix::get_item_(csint i, csint j) const
         // NOTE this code assumes that columns are *not* sorted, and that
         // duplicate entries may exist, so it will search through *every*
         // element in a column.
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             if (i_[p] == i) {
                 if (!found) {
                     found = true;
@@ -306,7 +306,7 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
             if (!has_canonical_format_) {
                 // Duplicates may exist, so zero them out
                 csint i_size = static_cast<csint>(i_.size());
-                for (csint p = k + 1; p < i_size && i_[p] == i; p++) {
+                for (csint p = k + 1; p < i_size && i_[p] == i; ++p) {
                     v_[p] = 0.0;
                 }
             }
@@ -320,7 +320,7 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
         csint k;
         bool found = false;
 
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             if (i_[p] == i) {
                 if (!found) {
                     k = p;  // store the minimum index of the element
@@ -366,8 +366,8 @@ CSCMatrix& CSCMatrix::assign(
 
     csint rows_size = static_cast<csint>(rows.size());
     csint cols_size = static_cast<csint>(cols.size());
-    for (csint i = 0; i < rows_size; i++) {
-        for (csint j = 0; j < cols_size; j++) {
+    for (csint i = 0; i < rows_size; ++i) {
+        for (csint j = 0; j < cols_size; ++j) {
             set_item_(rows[i], cols[j], C[i + j * rows_size]);
         }
     }
@@ -387,8 +387,8 @@ CSCMatrix& CSCMatrix::assign(
     assert(C.M_ == rows_size);
     assert(C.N_ == cols_size);
 
-    for (csint j = 0; j < cols_size; j++) {
-        for (csint p = C.p_[j]; p < C.p_[j+1]; p++) {
+    for (csint j = 0; j < cols_size; ++j) {
+        for (csint p = C.p_[j]; p < C.p_[j+1]; ++p) {
             csint i = C.i_[p];
             (*this)(rows[i], cols[j]) = C.v_[p];
         }
@@ -404,7 +404,7 @@ double& CSCMatrix::insert_(csint i, csint j, double v, csint p)
     v_.insert(v_.begin() + p, v);
 
     // Increment all subsequent pointers
-    for (csint k = j + 1; k < static_cast<csint>(p_.size()); k++) {
+    for (csint k = j + 1; k < static_cast<csint>(p_.size()); ++k) {
         p_[k]++;
     }
 
@@ -425,8 +425,8 @@ std::vector<double> CSCMatrix::to_dense_vector(const char order) const
     std::vector<double> A(M_ * N_, 0.0);
     csint idx;
 
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+    for (csint j = 0; j < N_; ++j) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             // Column- vs row-major order
             if (order == 'F') {
                 idx = i_[p] + j * M_;
@@ -456,15 +456,15 @@ CSCMatrix CSCMatrix::transpose(bool values) const
     CSCMatrix C({N_, M_}, nnz(), values);  // output
 
     // Compute number of elements in each row
-    for (csint p = 0; p < nnz(); p++)
+    for (csint p = 0; p < nnz(); ++p)
         w[i_[p]]++;
 
     // Row pointers are the cumulative sum of the counts, starting with 0.
     std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+    for (csint j = 0; j < N_; ++j) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             // place A(i, j) as C(j, i)
             csint q = w[i_[p]]++;
             C.i_[q] = j;
@@ -496,7 +496,7 @@ CSCMatrix& CSCMatrix::qsort()
 {
     // Find maximum column size
     csint max_len = 0;
-    for (csint j = 0; j < N_; j++) {
+    for (csint j = 0; j < N_; ++j) {
         max_len = std::max(max_len, p_[j+1] - p_[j]);
     }
 
@@ -508,7 +508,7 @@ CSCMatrix& CSCMatrix::qsort()
     x.reserve(max_len);
     idx.reserve(max_len);
 
-    for (csint j = 0; j < N_; j++) {
+    for (csint j = 0; j < N_; ++j) {
         // Pointers to the rows
         csint p = p_[j];
         csint len = p_[j+1] - p;
@@ -531,7 +531,7 @@ CSCMatrix& CSCMatrix::qsort()
         );
 
         // Re-assign the values
-        for (csint i = 0; i < len; i++) {
+        for (csint i = 0; i < len; ++i) {
             i_[p + i] = w[idx[i]];
             v_[p + i] = x[idx[i]];
         }
@@ -554,15 +554,15 @@ CSCMatrix& CSCMatrix::sort()
     CSCMatrix C({N_, M_}, nnz(), values);  // intermediate transpose
 
     // Compute number of elements in each row
-    for (csint p = 0; p < nnz(); p++)
+    for (csint p = 0; p < nnz(); ++p)
         w[i_[p]]++;
 
     // Row pointers are the cumulative sum of the counts, starting with 0.
     std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+    for (csint j = 0; j < N_; ++j) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             // place A(i, j) as C(j, i)
             csint q = w[i_[p]]++;
             C.i_[q] = j;
@@ -576,8 +576,8 @@ CSCMatrix& CSCMatrix::sort()
     // Copy column counts to avoid repeat work
     w = p_;
 
-    for (csint j = 0; j < C.N_; j++) {
-        for (csint p = C.p_[j]; p < C.p_[j+1]; p++) {
+    for (csint j = 0; j < C.N_; ++j) {
+        for (csint p = C.p_[j]; p < C.p_[j+1]; ++p) {
             // place C(i, j) as A(j, i)
             csint q = w[C.i_[p]]++;
             i_[q] = j;
@@ -598,9 +598,9 @@ CSCMatrix& CSCMatrix::sum_duplicates()
     csint nz = 0;  // count actual number of non-zeros (excluding dups)
     std::vector<csint> w(M_, -1);                      // row i not yet seen
 
-    for (csint j = 0; j < N_; j++) {
+    for (csint j = 0; j < N_; ++j) {
         csint q = nz;                                  // column j will start at q
-        for (csint p = p_[j]; p < p_[j + 1]; p++) {
+        for (csint p = p_[j]; p < p_[j + 1]; ++p) {
             csint i = i_[p];                          // A(i, j) is nonzero
             if (w[i] >= q) {
                 v_[w[i]] += v_[p];                   // A(i, j) is a duplicate
@@ -625,10 +625,10 @@ CSCMatrix& CSCMatrix::fkeep(KeepFunc fk)
     csint nz = 0;  // count actual number of non-zeros
     bool values = !v_.empty();
 
-    for (csint j = 0; j < N_; j++) {
+    for (csint j = 0; j < N_; ++j) {
         csint p = p_[j];  // get current location of column j
         p_[j] = nz;       // record new location of column j
-        for (; p < p_[j+1]; p++) {
+        for (; p < p_[j+1]; ++p) {
             if (fk(i_[p], j, values ? v_[p] : 1.0)) {
                 if (values) {
                     v_[nz] = v_[p];  // keep A(i, j)
@@ -703,7 +703,7 @@ std::vector<double> CSCMatrix::diagonal(csint k) const
 
     std::vector<double> diag(K);
 
-    for (csint i = 0; i < K; i++) {
+    for (csint i = 0; i < K; ++i) {
         auto [row, col] = (k < 0) ? std::pair{i - k, i} : std::pair{i, i + k};
         diag[i] = get_item_(row, col).value;
     }
@@ -721,8 +721,8 @@ double CSCMatrix::structural_symmetry() const
     csint nnz_AAT = 0;
     csint nnz_A = 0;
 
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+    for (csint j = 0; j < N_; ++j) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             csint i = i_[p];
 
             // Count all off-diagonal elements in A
@@ -792,8 +792,8 @@ std::vector<double> gaxpy(
 
     std::vector<double> out = y;  // copy the input vector
 
-    for (csint j = 0; j < A.N_; j++) {
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+    for (csint j = 0; j < A.N_; ++j) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
             out[A.i_[p]] += A.v_[p] * x[j];
         }
     }
@@ -813,8 +813,8 @@ std::vector<double> gatxpy(
 
     std::vector<double> out = y;  // copy the input vector
 
-    for (csint j = 0; j < A.N_; j++) {
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+    for (csint j = 0; j < A.N_; ++j) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
             out[j] += A.v_[p] * x[A.i_[p]];
         }
     }
@@ -838,8 +838,8 @@ std::vector<double> sym_gaxpy(
 
     std::vector<double> out = y;  // copy the input vector
 
-    for (csint j = 0; j < A.N_; j++) {
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+    for (csint j = 0; j < A.N_; ++j) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
             csint i = A.i_[p];
 
             if (i > j)
@@ -872,14 +872,14 @@ std::vector<double> gaxpy_col(
     csint K = X.size() / A.N_;  // number of columns in X
 
     // For each column of X
-    for (csint k = 0; k < K; k++) {
+    for (csint k = 0; k < K; ++k) {
         // Compute one column of Y (see gaxpy)
-        for (csint j = 0; j < A.N_; j++) {
+        for (csint j = 0; j < A.N_; ++j) {
             double x_val = X[j + k * A.N_];  // cache value
 
             // Only compute if x_val is non-zero
             if (x_val != 0.0) {
-                for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+                for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
                     // Indexing in column-major order
                     out[A.i_[p] + k * A.M_] += A.v_[p] * x_val;
                 }
@@ -907,17 +907,17 @@ std::vector<double> gaxpy_block(
     const csint BLOCK_SIZE = 32;  // block size for column operations
 
     // For each column of X
-    for (csint k = 0; k < K; k++) {
+    for (csint k = 0; k < K; ++k) {
         // Take a block of columns
         for (csint j_start = 0; j_start < A.N_; j_start += BLOCK_SIZE) {
             csint j_end = std::min(j_start + BLOCK_SIZE, A.N_);
             // Compute one column of Y (see gaxpy)
-            for (csint j = j_start; j < j_end; j++) {
+            for (csint j = j_start; j < j_end; ++j) {
                 double x_val = X[j + k * A.N_];  // cache value
 
                 // Only compute if x_val is non-zero
                 if (x_val != 0.0) {
-                    for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+                    for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
                         // Indexing in column-major order
                         out[A.i_[p] + k * A.M_] += A.v_[p] * x_val;
                     }
@@ -944,14 +944,14 @@ std::vector<double> gaxpy_row(
     csint K = X.size() / A.N_;  // number of columns in X
 
     // For each column of X
-    for (csint k = 0; k < K; k++) {
+    for (csint k = 0; k < K; ++k) {
         // Compute one column of Y (see gaxpy)
-        for (csint j = 0; j < A.N_; j++) {
+        for (csint j = 0; j < A.N_; ++j) {
             double x_val = X[k + j * K];  // cache value (row-major indexing)
 
             // Only compute if x_val is non-zero
             if (x_val != 0.0) {
-                for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+                for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
                     // Indexing in row-major order
                     out[k + A.i_[p] * K] += A.v_[p] * x_val;
                 }
@@ -977,10 +977,10 @@ std::vector<double> gatxpy_col(
     csint K = X.size() / A.M_;  // number of columns in X
 
     // For each column of X
-    for (csint k = 0; k < K; k++) {
+    for (csint k = 0; k < K; ++k) {
         // Compute one column of Y (see gaxpy)
-        for (csint j = 0; j < A.N_; j++) {
-            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+        for (csint j = 0; j < A.N_; ++j) {
+            for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
                 // Indexing in column-major order
                 out[j + k * A.N_] += A.v_[p] * X[A.i_[p] + k * A.M_];
             }
@@ -1007,13 +1007,13 @@ std::vector<double> gatxpy_block(
     const csint BLOCK_SIZE = 32;  // block size for column operations
 
     // For each column of X
-    for (csint k = 0; k < K; k++) {
+    for (csint k = 0; k < K; ++k) {
         // Take a block of columns
         for (csint j_start = 0; j_start < A.N_; j_start += BLOCK_SIZE) {
             csint j_end = std::min(j_start + BLOCK_SIZE, A.N_);
             // Compute one column of Y (see gaxpy)
-            for (csint j = j_start; j < j_end; j++) {
-                for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+            for (csint j = j_start; j < j_end; ++j) {
+                for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
                     // Indexing in column-major order
                     out[j + k * A.N_] += A.v_[p] * X[A.i_[p] + k * A.M_];
                 }
@@ -1039,10 +1039,10 @@ std::vector<double> gatxpy_row(
     csint K = X.size() / A.M_;  // number of columns in X
 
     // For each column of X
-    for (csint k = 0; k < K; k++) {
+    for (csint k = 0; k < K; ++k) {
         // Compute one column of Y (see gaxpy)
-        for (csint j = 0; j < A.N_; j++) {
-            for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+        for (csint j = 0; j < A.N_; ++j) {
+            for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
                 // Indexing in row-major order
                 out[k + j * K] += A.v_[p] * X[k + A.i_[p] * K];
             }
@@ -1061,8 +1061,8 @@ CSCMatrix CSCMatrix::scale(const std::vector<double>& r, const std::vector<doubl
 
     CSCMatrix out(*this);
 
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+    for (csint j = 0; j < N_; ++j) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             out.v_[p] *= r[i_[p]] * c[j];
         }
     }
@@ -1089,10 +1089,10 @@ std::vector<double> CSCMatrix::dot(std::span<const double> X) const
 
     std::vector<double> out(M_ * K);
 
-    for (csint k = 0; k < K; k++) {
+    for (csint k = 0; k < K; ++k) {
         // Compute one column of output
-        for (csint j = 0; j < N_; j++) {
-            for (csint p = p_[j]; p < p_[j+1]; p++) {
+        for (csint j = 0; j < N_; ++j) {
+            for (csint p = p_[j]; p < p_[j+1]; ++p) {
                 csint idx = i_[p] + k * M_;  // column-major input/output order
                 csint jdx =     j + k * N_;
                 out[idx] += v_[p] * X[jdx];
@@ -1134,7 +1134,7 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
 
     bool fs = true;  // Exercise 2.19 -- first call to scatter
 
-    for (csint j = 0; j < N; j++) {
+    for (csint j = 0; j < N; ++j) {
         if (nz + M > C.nzmax()) {
             C.realloc(2 * C.nzmax() + M);  // double the size of C
         }
@@ -1142,7 +1142,7 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
         C.p_[j] = nz;  // column j of C starts here
 
         // Compute x = A @ B[:, j]
-        for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
+        for (csint p = B.p_[j]; p < B.p_[j+1]; ++p) {
             // Compute x += A[:, B.i_[p]] * B.v_[p]
             nz = scatter(B.i_[p], values ? B.v_[p] : 1, w, x, j+1, C, nz, fs);
             fs = false;
@@ -1150,7 +1150,7 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
 
         // Gather values into the correct locations in C
         if (values) {
-            for (csint p = C.p_[j]; p < nz; p++) {
+            for (csint p = C.p_[j]; p < nz; ++p) {
                 C.v_[p] = x[C.i_[p]];
             }
         }
@@ -1177,12 +1177,12 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
     // Compute nnz(A*B) by counting non-zeros in each column of C
     csint nz_C = 0;
 
-    for (csint j = 0; j < N; j++) {
+    for (csint j = 0; j < N; ++j) {
         csint mark = j + 1;
-        for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
+        for (csint p = B.p_[j]; p < B.p_[j+1]; ++p) {
             // Scatter, but without x or C
             csint k = B.i_[p];  // B(k, j) is non-zero
-            for (csint pa = p_[k]; pa < p_[k+1]; pa++) {
+            for (csint pa = p_[k]; pa < p_[k+1]; ++pa) {
                 csint i = i_[pa];     // A(i, k) is non-zero
                 if (w[i] < mark) {
                     w[i] = mark;     // i is new entry in column k
@@ -1202,18 +1202,18 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
     csint nz = 0;  // track total number of non-zeros in C
     bool fs = true;  // first call to scatter
 
-    for (csint j = 0; j < N; j++) {
+    for (csint j = 0; j < N; ++j) {
         C.p_[j] = nz;  // column j of C starts here
 
         // Compute x = A @ B[:, j]
-        for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
+        for (csint p = B.p_[j]; p < B.p_[j+1]; ++p) {
             // Compute x += A[:, B.i_[p]] * B.v_[p]
             nz = scatter(B.i_[p], B.v_[p], w, x, j+1, C, nz, fs);
             fs = false;
         }
 
         // Gather values into the correct locations in C
-        for (csint p = C.p_[j]; p < nz; p++) {
+        for (csint p = C.p_[j]; p < nz; ++p) {
             C.v_[p] = x[C.i_[p]];
         }
     }
@@ -1253,12 +1253,12 @@ double CSCMatrix::vecdot(const CSCMatrix& y) const
         std::vector<double> w(M_);  // workspace
 
         // Expand this vector
-        for (csint p = 0; p < nnz(); p++) {
+        for (csint p = 0; p < nnz(); ++p) {
             w[i_[p]] = v_[p];
         }
 
         // Multiply by non-zero entries in y and sum
-        for (csint q = 0; q < y.nnz(); q++) {
+        for (csint q = 0; q < y.nnz(); ++q) {
             csint i = y.i_[q];
             if (w[i] != 0) {
                 z += w[i] * y.v_[q];
@@ -1299,7 +1299,7 @@ CSCMatrix add_scaled(
     csint nz = 0;    // track total number of non-zeros in C
     bool fs = true;  // Exercise 2.19 -- first call to scatter
 
-    for (csint j = 0; j < N; j++) {
+    for (csint j = 0; j < N; ++j) {
         C.p_[j] = nz;  // column j of C starts here
         nz = A.scatter(j, alpha, w, x, j+1, C, nz, fs);  // alpha * A(:, j)
         fs = false;
@@ -1307,7 +1307,7 @@ CSCMatrix add_scaled(
 
         // Gather results into the correct column of C
         if (values) {
-            for (csint p = C.p_[j]; p < nz; p++) {
+            for (csint p = C.p_[j]; p < nz; ++p) {
                 C.v_[p] = x[C.i_[p]];
             }
         }
@@ -1332,13 +1332,13 @@ std::vector<csint> saxpy(
     assert(a.shape() == b.shape());
     assert((a.N_ == 1) && (b.N_ == 1));  // both must be column vectors
 
-    for (csint p = 0; p < a.nnz(); p++) {
+    for (csint p = 0; p < a.nnz(); ++p) {
         csint i = a.i_[p];
         w[i] = 1;        // mark as non-zero
         x[i] = a.v_[p];  // copy x into w
     }
 
-    for (csint p = 0; p < b.nnz(); p++) {
+    for (csint p = 0; p < b.nnz(); ++p) {
         csint i = b.i_[p];
         if (w[i] == 0) {
             w[i] = 1;         // mark as non-zero
@@ -1394,7 +1394,7 @@ csint CSCMatrix::scatter(
     // Exercise 2.19
     if (fs) {
         // If it's the first call, we can just copy the (scaled) column
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             csint i = i_[p];       // A(i, j) is non-zero
             w[i] = mark;             // i is new entry in column j
             C.i_[nz++] = i;          // add i to sparsity pattern of C(:, j)
@@ -1405,7 +1405,7 @@ csint CSCMatrix::scatter(
     } else {
         // Original scatter
         // Otherwise, we need to accumulate the values
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             csint i = i_[p];           // A(i, j) is non-zero
             if (w[i] < mark) {
                 w[i] = mark;             // i is new entry in column j
@@ -1429,7 +1429,7 @@ void CSCMatrix::scatter(csint k, std::span<double> x) const
 {
     assert(static_cast<csint>(x.size()) == M_);
     assert(k >= 0 && k < N_);
-    for (csint p = p_[k]; p < p_[k+1]; p++) {
+    for (csint p = p_[k]; p < p_[k+1]; ++p) {
         x[i_[p]] += v_[p];  // accumulate duplicate entries
     }
 }
@@ -1447,11 +1447,11 @@ CSCMatrix CSCMatrix::permute(
     CSCMatrix C({M_, N_}, nnz(), values);
     csint nz = 0;
 
-    for (csint k = 0; k < N_; k++) {
+    for (csint k = 0; k < N_; ++k) {
         C.p_[k] = nz;                   // column k of C is column q[k] of A
         csint j = q.empty() ? k : q[k];
 
-        for (csint t = p_[j]; t < p_[j+1]; t++) {
+        for (csint t = p_[j]; t < p_[j+1]; ++t) {
             if (values) {
                 C.v_[nz] = v_[t];       // row i of A is row p_inv[i] of C
             }
@@ -1486,10 +1486,10 @@ CSCMatrix CSCMatrix::symperm(std::span<const csint> p_inv, bool values) const
     std::vector<csint> w(N_);  // workspace for column counts
 
     // Count entries in each column of C
-    for (csint j = 0; j < N_; j++) {
+    for (csint j = 0; j < N_; ++j) {
         csint j2 = p_inv.empty() ? j : p_inv[j];  // column j of A is column j2 of C
 
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             csint i = i_[p];
 
             if (i > j)
@@ -1504,10 +1504,10 @@ CSCMatrix CSCMatrix::symperm(std::span<const csint> p_inv, bool values) const
     std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
-    for (csint j = 0; j < N_; j++) {
+    for (csint j = 0; j < N_; ++j) {
         csint j2 = p_inv.empty() ? j : p_inv[j];  // column j of A is column j2 of C
 
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             csint i = i_[p];
 
             if (i > j)
@@ -1537,7 +1537,7 @@ CSCMatrix CSCMatrix::permute_transpose(
     CSCMatrix C({N_, M_}, nnz(), values);  // output
 
     // Compute number of elements in each permuted row (aka column of C)
-    for (csint p = 0; p < nnz(); p++) {
+    for (csint p = 0; p < nnz(); ++p) {
         csint i = i_[p];
         csint idx = p_inv.empty() ? i : p_inv[i];
         w[idx]++;
@@ -1547,8 +1547,8 @@ CSCMatrix CSCMatrix::permute_transpose(
     w = C.p_;  // copy back into workspace
 
     // place A(i, j) as C(j, i) (permuted)
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+    for (csint j = 0; j < N_; ++j) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             csint i = i_[p];
             csint idx = p_inv.empty() ? i : p_inv[i];
             csint t = w[idx]++;
@@ -1567,10 +1567,10 @@ double CSCMatrix::norm() const
 {
     double the_norm = 0;
 
-    for (csint j = 0; j < N_; j++) {
+    for (csint j = 0; j < N_; ++j) {
         double s = 0;
 
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             s += std::fabs(v_[p]);
         }
 
@@ -1623,8 +1623,8 @@ bool CSCMatrix::is_valid(const bool sorted, const bool values) const
 
     // See also: `scipy.sparse._compressed._cs_matrix.check_format` 
     //  for O(1) and O(|A|) checks.
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+    for (csint j = 0; j < N_; ++j) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             csint i = i_[p];
 
             if (i < 0 || i > M_) {
@@ -1648,7 +1648,7 @@ bool CSCMatrix::is_valid(const bool sorted, const bool values) const
         // At this point, matrix is valid up to column j
         // Check for duplicates in the column
         if (sorted) {
-            for (csint p = p_[j]; p < p_[j+1]-1; p++) {
+            for (csint p = p_[j]; p < p_[j+1]-1; ++p) {
                 if (i_[p] == i_[p+1]) {
                     throw std::runtime_error("Duplicate entries exist!");
                 }
@@ -1671,7 +1671,7 @@ CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
     C.realloc(A.nnz() + B.nnz());
 
     // Copy the second matrix
-    for (csint j = 0; j < B.N_; j++) {
+    for (csint j = 0; j < B.N_; ++j) {
         C.p_[A.N_ + j] = B.p_[j] + A.nnz();
     }
 
@@ -1698,18 +1698,18 @@ CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
 
     csint nz = 0;
 
-    for (csint j = 0; j < C.N_; j++) {
+    for (csint j = 0; j < C.N_; ++j) {
         C.p_[j] = nz;  // column j of C starts here
 
         // Copy column j from the first matrix
-        for (csint p = A.p_[j]; p < A.p_[j+1]; p++) {
+        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
             C.i_[nz] = A.i_[p];
             C.v_[nz] = A.v_[p];
             nz++;
         }
 
         // Copy column j from the second matrix
-        for (csint p = B.p_[j]; p < B.p_[j+1]; p++) {
+        for (csint p = B.p_[j]; p < B.p_[j+1]; ++p) {
             C.i_[A.p_[j+1] + p] = A.M_ + B.i_[p];
             C.v_[A.p_[j+1] + p] = B.v_[p];
             nz++;
@@ -1737,10 +1737,10 @@ CSCMatrix CSCMatrix::slice(
 
     csint nz = 0;
 
-    for (csint j = j_start; j < j_end; j++) {
+    for (csint j = j_start; j < j_end; ++j) {
         C.p_[j - j_start] = nz;  // column j of C starts here
 
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             csint i = i_[p];
 
             if ((i >= i_start) && (i < i_end)) {
@@ -1775,11 +1775,11 @@ CSCMatrix CSCMatrix::index(
 
     csint nz = 0;
 
-    for (csint j = 0; j < N; j++) {
+    for (csint j = 0; j < N; ++j) {
         C.p_[j] = nz;  // column j of C starts here
 
         // Iterate over `rows` and find the corresponding indices in `i_`.
-        for (csint k = 0; k < M; k++) {
+        for (csint k = 0; k < M; ++k) {
             double val = (*this)(rows[k], cols[j]);
             if (val != 0) {
                 C.i_[nz] = k;
@@ -1843,8 +1843,8 @@ std::vector<double> CSCMatrix::sum_rows() const
 {
     std::vector<double> out(M_, 0.0);
 
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+    for (csint j = 0; j < N_; ++j) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             out[i_[p]] += v_[p];
         }
     }
@@ -1857,8 +1857,8 @@ std::vector<double> CSCMatrix::sum_cols() const
 {
     std::vector<double> out(N_, 0.0);
 
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j+1]; p++) {
+    for (csint j = 0; j < N_; ++j) {
+        for (csint p = p_[j]; p < p_[j+1]; ++p) {
             out[j] += v_[p];
         }
     }
@@ -1879,8 +1879,8 @@ void CSCMatrix::write_elems_(std::stringstream& ss, csint start, csint end) cons
     int col_width = std::to_string(N_ - 1).size();
 
     csint n = 0;  // number of elements printed
-    for (csint j = 0; j < N_; j++) {
-        for (csint p = p_[j]; p < p_[j + 1]; p++) {
+    for (csint j = 0; j < N_; ++j) {
+        for (csint p = p_[j]; p < p_[j + 1]; ++p) {
             if ((n >= start) && (n < end)) {
                 ss << std::vformat(
                     format_string,

@@ -166,7 +166,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
     SECTION("spsolve Lx = b with dense RHS") {
         // Create RHS from sums of rows of L, so that x == ones(N)
         std::vector<double> b{1., 1., 2., 2., 2., 1., 2., 3., 4., 4., 3., 3., 5., 3.};
-        for (int i = 0; i < N; i++) {
+        for (int i = 0; i < N; ++i) {
             B.assign(i, 0, b[i]);
         }
         std::vector<double> expect(N, 1.0);
@@ -228,8 +228,8 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
 
     std::vector<double> A_vals(N * N);
 
-    for (csint i = 0; i < N; i++) {
-        for (csint j = 0; j < N; j++) {
+    for (csint i = 0; i < N; ++i) {
+        for (csint j = 0; j < N; ++j) {
             // column-major order, values are "indices" 11, 12, ..., 66
             A_vals[N*j + i] = static_cast<double>(10 * (i + 1) + j + 1);
         }

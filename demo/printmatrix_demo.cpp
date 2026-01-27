@@ -50,14 +50,14 @@ int main()
     A.print_dense();
 
     std::cout << "---------- Scale a column extra large:" << std::endl;
-    for (csint i = 0; i < M; i++) {
+    for (csint i = 0; i < M; ++i) {
         A(i, 2) *= 1e10;
     }
     A = A.to_canonical();
     A.print_dense();
 
     std::cout << "---------- Scale a column extra small:" << std::endl;
-    for (csint i = 0; i < M; i++) {
+    for (csint i = 0; i < M; ++i) {
         A(i, 2) *= 1e-20;
     }
     A = A.to_canonical();

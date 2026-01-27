@@ -36,7 +36,14 @@ std::vector<double> operator+(
     std::span<const double> b
 )
 {
-    assert(a.size() == b.size());
+    if (a.size() != b.size()) {
+        throw std::invalid_argument(
+            std::format(
+                "Vector size mismatch for addition: size a = {}, size b = {}",
+                a.size(), b.size()
+            )
+        );
+    }
 
     std::vector<double> out(a.size());
 
@@ -66,7 +73,14 @@ std::vector<double> operator-(
     std::span<const double> b
 )
 {
-    assert(a.size() == b.size());
+    if (a.size() != b.size()) {
+        throw std::invalid_argument(
+            std::format(
+                "Vector size mismatch for subtraction: size a = {}, size b = {}",
+                a.size(), b.size()
+            )
+        );
+    }
 
     std::vector<double> out(a.size());
 
@@ -109,7 +123,14 @@ std::span<double> operator+=(
     std::span<const double> b
 )
 {
-    assert(a.size() == b.size());
+    if (a.size() != b.size()) {
+        throw std::invalid_argument(
+            std::format(
+                "Vector size mismatch for addition: size a = {}, size b = {}",
+                a.size(), b.size()
+            )
+        );
+    }
 
     for (size_t i = 0; i < a.size(); ++i) {
         a[i] += b[i];

@@ -66,11 +66,25 @@ COOMatrix::COOMatrix(
     }
 
     // Check that all vectors are the same size
-    assert(i_.size() == j_.size());
+    if (i_.size() != j_.size()) {
+        throw std::runtime_error(
+            std::format(
+                "Index vectors must be the same size: "
+                "row size = {}, column size = {}",
+                i_.size(), j_.size()
+            )
+        );
+    }
 
     // Allow v_ to be empty for symbolic computation
-    if (!v_.empty()) {
-        assert(v_.size() == i_.size());
+    if (!v_.empty() && (v_.size() != i_.size())) {
+        throw std::runtime_error(
+            std::format(
+                "Value vector size must match index vector sizes: "
+                "value size = {}, index size = {}",
+                v_.size(), i_.size()
+            )
+        );
     }
 
     assert(M_ >= 0 && N_ >= 0);
@@ -224,7 +238,15 @@ const std::vector<double>& COOMatrix::data() const { return v_; }
 // cs_entry
 COOMatrix& COOMatrix::insert(csint i, csint j, double v)
 {
-    assert((i >= 0) && (j >= 0));
+    if ((i < 0) || (j < 0)) {
+        throw std::invalid_argument(
+            std::format(
+                "Row and column indices must be non-negative. "
+                "Got ({}, {}).",
+                i, j
+            )
+        );
+    }
 
     i_.push_back(i);
     j_.push_back(j);
@@ -355,7 +377,16 @@ COOMatrix COOMatrix::T() const { return this->transpose(); }
 // Exercise 2.10
 std::vector<double> COOMatrix::dot(std::span<const double> x) const
 {
-    assert(N_ == static_cast<csint>(x.size()));
+    if (static_cast<csint>(x.size()) != N_) {
+        throw std::invalid_argument(
+            std::format(
+                "Matrix-vector size mismatch: "
+                "vector size = {}, matrix columns = {}",
+                x.size(), N_ 
+            )
+        );
+    }
+
     std::vector<double> out(x.size());
 
     for (csint p = 0; p < nnz(); ++p) {

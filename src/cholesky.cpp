@@ -261,9 +261,23 @@ std::vector<csint> rowcnt(
     const std::vector<csint>& postorder
 )
 {
-    assert(A.M_ == A.N_);
-    assert(static_cast<csint>(parent.size()) == A.N_);
-    assert(parent.size() == postorder.size());
+    if (A.M_ != A.N_) {
+        throw std::invalid_argument(
+            std::format("Matrix must be square. Got {} x {}.", A.M_, A.N_)
+        );
+    }
+
+    if (static_cast<csint>(parent.size()) != A.N_) {
+        throw std::invalid_argument(
+            "Parent vector size must match number of columns in A."
+        );
+    };
+
+    if (parent.size() != postorder.size()) {
+        throw std::invalid_argument(
+            "Parent and postorder vectors must be the same size."
+        );
+    };
 
     // Count of nonzeros in each row of L
     std::vector<csint> rowcount(A.N_, 1);   // count the diagonal to start
@@ -761,8 +775,21 @@ CSCMatrix& chol_update(
     const std::vector<csint>& parent
 )
 {
-    assert(L.shape()[0] == C.shape()[0]);
-    assert(C.shape()[1] == 1);  // C must be a column vector
+    if (L.shape()[0] != C.shape()[0]) {
+        throw std::invalid_argument(
+            std::format(
+                "L and C must have the same number of rows."
+                "Got {} and {}.",
+                L.shape()[0], C.shape()[0]
+            )
+        );
+    }
+
+    if (C.shape()[1] != 1) {  // C must be a column vector
+        throw std::invalid_argument(
+            std::format("C must be a column vector. Got {} columns.", C.shape()[1])
+        );
+    }
 
     double α,
            β = 1.0,

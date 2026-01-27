@@ -74,7 +74,15 @@ CSCMatrix::CSCMatrix(
 ) : M_(shape[0]),
     N_(shape[1])
 {
-    assert(static_cast<csint>(A.size()) == (M_ * N_));  // ensure input is valid
+    if (static_cast<csint>(A.size()) != (M_ * N_)) {
+        throw std::invalid_argument(
+            std::format(
+                "Input array size does not match given shape: "
+                "array size = {}, shape = ({}, {})",
+                A.size(), M_, N_
+            )
+        );
+    }
 
     if (order != 'C' && order != 'F') {
         throw std::invalid_argument("Order must be 'C' or 'F'.");
@@ -382,10 +390,26 @@ CSCMatrix& CSCMatrix::assign(
     const CSCMatrix& C
 )
 {
-    [[maybe_unused]] csint rows_size = static_cast<csint>(rows.size());
+    csint rows_size = static_cast<csint>(rows.size());
     csint cols_size = static_cast<csint>(cols.size());
-    assert(C.M_ == rows_size);
-    assert(C.N_ == cols_size);
+
+    if (C.M_ != rows_size) {
+        throw std::invalid_argument(
+            std::format(
+                "rows must have same number of rows as C. Got {} and {}.",
+                rows_size, C.M_
+            )
+        );
+    }
+
+    if (C.N_ != cols_size) {
+        throw std::invalid_argument(
+            std::format(
+                "cols must have same number of columns as C. Got {} and {}.",
+                cols_size, C.N_
+            )
+        );
+    }
 
     for (csint j = 0; j < cols_size; ++j) {
         for (csint p = C.p_[j]; p < C.p_[j+1]; ++p) {
@@ -675,7 +699,9 @@ CSCMatrix& CSCMatrix::droptol(double tol)
 // Exercise 2.15
 CSCMatrix& CSCMatrix::band(const csint kl, const csint ku)
 {
-    assert(kl <= ku);
+    if (kl > ku) {
+        throw std::invalid_argument("kl must be less than or equal to ku.");
+    }
     return fkeep(
         [=](csint i, csint j, [[maybe_unused]] double Aij) {
             return (i <= (j - kl)) && (i >= (j - ku));
@@ -686,7 +712,9 @@ CSCMatrix& CSCMatrix::band(const csint kl, const csint ku)
 
 CSCMatrix CSCMatrix::band(const csint kl, const csint ku) const
 {
-    assert(kl <= ku);
+    if (kl > ku) {
+        throw std::invalid_argument("kl must be less than or equal to ku.");
+    }
     CSCMatrix C(*this);
     return C.band(kl, ku);
 }
@@ -1056,8 +1084,25 @@ std::vector<double> gatxpy_row(
 // Exercise 2.4
 CSCMatrix CSCMatrix::scale(const std::vector<double>& r, const std::vector<double> c) const
 {
-    assert(static_cast<csint>(r.size()) == M_);
-    assert(static_cast<csint>(c.size()) == N_);
+    if (static_cast<csint>(r.size()) != M_) {
+        throw std::invalid_argument(
+            std::format(
+                "Row scaling vector size must match number of matrix rows."
+                "Got {} and {}.",
+                r.size(), M_
+            )
+        );
+    }
+
+    if (static_cast<csint>(c.size()) != N_) {
+        throw std::invalid_argument(
+            std::format(
+                "Column scaling vector size must match number of matrix columns."
+                "Got {} and {}.",
+                c.size(), N_
+            )
+        );
+    }
 
     CSCMatrix out(*this);
 
@@ -1116,7 +1161,12 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
 {
     auto [M, Ka] = shape();
     auto [Kb, N] = B.shape();
-    assert(Ka == Kb);
+
+    if (Ka != Kb) {
+        throw std::invalid_argument(
+            std::format("Inner matrix dimensions do not agree. Got {} and {}.", Ka, Kb)
+        );
+    }
 
     bool values = !v_.empty() && !B.v_.empty();
 
@@ -1169,7 +1219,11 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
 {
     auto [M, Ka] = shape();
     auto [Kb, N] = B.shape();
-    assert(Ka == Kb);
+    if (Ka != Kb) {
+        throw std::invalid_argument(
+            std::format("Inner matrix dimensions do not agree. Got {} and {}.", Ka, Kb)
+        );
+    }
 
     // Allocate workspace
     std::vector<csint> w(M);
@@ -1229,8 +1283,16 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
 // Exercise 2.18
 double CSCMatrix::vecdot(const CSCMatrix& y) const
 {
-    assert((N_ == 1) && (y.N_ == 1));  // both must be column vectors
-    assert(M_ == y.M_);
+    if ((N_ != 1) || (y.N_ != 1)) {
+        throw std::invalid_argument("Both inputs must be column vectors.");
+    }
+
+    if (M_ != y.M_) {
+        throw std::invalid_argument(
+            std::format("Vector lengths must match. Got {} and {}.", M_, y.M_)
+        );
+    }
+
     double z = 0.0;
 
     if (has_sorted_indices_ && y.has_sorted_indices_) {
@@ -1282,7 +1344,10 @@ CSCMatrix add_scaled(
     double beta=1.0
     )
 {
-    assert(A.shape() == B.shape());
+    if (A.shape() != B.shape()) {
+        throw std::invalid_argument("Matrix dimensions do not agree.");
+    }
+
     auto [M, N] = A.shape();
 
     bool values = !A.v_.empty() && !B.v_.empty();
@@ -1329,8 +1394,13 @@ std::vector<csint> saxpy(
     std::vector<double>& x
     )
 {
-    assert(a.shape() == b.shape());
-    assert((a.N_ == 1) && (b.N_ == 1));  // both must be column vectors
+    if (a.shape() != b.shape()) {
+        throw std::invalid_argument("Matrix dimensions do not agree.");
+    }
+
+    if ((a.N_ != 1) || (b.N_ != 1)) {
+        throw std::invalid_argument("Both inputs must be column vectors.");
+    }
 
     for (csint p = 0; p < a.nnz(); ++p) {
         csint i = a.i_[p];
@@ -1427,8 +1497,22 @@ csint CSCMatrix::scatter(
 
 void CSCMatrix::scatter(csint k, std::span<double> x) const
 {
-    assert(static_cast<csint>(x.size()) == M_);
-    assert(k >= 0 && k < N_);
+    if (static_cast<csint>(x.size()) != M_) {
+        throw std::invalid_argument(
+            std::format(
+                "Input vector size must match number of matrix rows."
+                "Got {} and {}.",
+                x.size(), M_
+            )
+        );
+    }
+    
+    if (k < 0 || k >= N_) {
+        throw std::out_of_range(
+            std::format("Column index k = {} is out of range [0, {}).", k, N_)
+        );
+    }
+
     for (csint p = p_[k]; p < p_[k+1]; ++p) {
         x[i_[p]] += v_[p];  // accumulate duplicate entries
     }
@@ -1480,7 +1564,9 @@ CSCMatrix CSCMatrix::permute_cols(std::span<const csint> q, bool values) const
 
 CSCMatrix CSCMatrix::symperm(std::span<const csint> p_inv, bool values) const
 {
-    assert(M_ == N_);  // matrix must be square. Symmetry not checked.
+    if (M_ != N_) {  // matrix must be square. Symmetry not checked.
+        throw std::invalid_argument("Matrix must be square.");
+    }
 
     CSCMatrix C({N_, N_}, nnz(), values);
     std::vector<csint> w(N_);  // workspace for column counts
@@ -1663,7 +1749,9 @@ bool CSCMatrix::is_valid(const bool sorted, const bool values) const
 // Exercise 2.22
 CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
 {
-    assert(A.M_ == B.M_);
+    if (A.M_ != B.M_) {
+        throw std::invalid_argument("Matrix row dimensions do not agree.");
+    }
 
     // Copy the first matrix
     CSCMatrix C = A;
@@ -1692,7 +1780,9 @@ CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
 // Exercise 2.22
 CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
 {
-    assert(A.N_ == B.N_);
+    if (A.N_ != B.N_) {
+        throw std::invalid_argument("Matrix column dimensions do not agree.");
+    }
 
     CSCMatrix C({A.M_ + B.M_, A.N_}, A.nnz() + B.nnz());
 
@@ -1730,8 +1820,23 @@ CSCMatrix CSCMatrix::slice(
     const csint j_end
     ) const
 {
-    assert((i_start >= 0) && (i_end <= M_) && (i_start <= i_end));
-    assert((j_start >= 0) && (j_end <= N_) && (j_start <= j_end));
+    if ((i_start < 0) || (i_end > M_) || (i_start > i_end)) {
+        throw std::out_of_range(
+            std::format(
+                "Row slice [{}, {}) is out of range [0, {}].",
+                i_start, i_end, M_
+            )
+        );
+    }
+
+    if ((j_start < 0) || (j_end > N_) || (j_start > j_end)) {
+        throw std::out_of_range(
+            std::format(
+                "Column slice [{}, {}) is out of range [0, {}].",
+                j_start, j_end, N_
+            )
+        );
+    }
 
     CSCMatrix C({i_end - i_start, j_end - j_start}, nnz());
 

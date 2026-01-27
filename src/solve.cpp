@@ -154,7 +154,9 @@ std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b)
 // Exercise 3.3
 std::vector<csint> find_lower_diagonals(const CSCMatrix& A)
 {
-    assert(A.M_ == A.N_);
+    if (A.M_ != A.N_) {
+        throw std::invalid_argument("Matrix must be square.");
+    }
 
     std::vector<char> marked(A.N_, false);  // workspace
     std::vector<csint> p_diags(A.N_);       // diagonal indicies (inverse permutation)
@@ -187,8 +189,18 @@ std::vector<csint> find_lower_diagonals(const CSCMatrix& A)
 // Exercise 3.3
 std::vector<double> lsolve_rows(const CSCMatrix& A, const std::vector<double>& b)
 {
-    assert(A.M_ == A.N_);
-    assert(A.M_ == static_cast<csint>(b.size()));
+    if (A.M_ != A.N_) {
+        throw std::invalid_argument("Matrix must be square.");
+    }
+
+    if (A.M_ != static_cast<csint>(b.size())) {
+        throw std::invalid_argument(
+            std::format(
+                "Matrix and vector size mismatch: {} vs. {}",
+                A.M_, b.size()
+            )
+        );
+    }
 
     // First (backward) pass to find diagonal entries
     // p_diags is a vector of pointers to the diagonal entries
@@ -229,8 +241,18 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, const std::vector<double>& b
 // Exercise 3.5
 std::vector<double> lsolve_cols(const CSCMatrix& A, const std::vector<double>& b)
 {
-    assert(A.M_ == A.N_);
-    assert(A.M_ == static_cast<csint>(b.size()));
+    if (A.M_ != A.N_) {
+        throw std::invalid_argument("Matrix must be square.");
+    }
+
+    if (A.M_ != static_cast<csint>(b.size())) {
+        throw std::invalid_argument(
+            std::format(
+                "Matrix and vector size mismatch: {} vs. {}",
+                A.M_, b.size()
+            )
+        );
+    }
 
     // First O(N) pass to find the diagonal entries
     // Assume that the first entry in each column has the smallest row index
@@ -278,7 +300,9 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, const std::vector<double>& b
 // Exercise 3.4
 std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
 {
-    assert(U.M_ == U.N_);
+    if (U.M_ != U.N_) {
+        throw std::invalid_argument("Matrix must be square.");
+    }
 
     std::vector<char> marked(U.N_, false);  // workspace
     std::vector<csint> p_diags(U.N_);  // diagonal indicies (inverse permutation)
@@ -311,8 +335,18 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
 // Exercise 3.4
 std::vector<double> usolve_rows(const CSCMatrix& A, const std::vector<double>& b)
 {
-    assert(A.M_ == A.N_);
-    assert(A.M_ == static_cast<csint>(b.size()));
+    if (A.M_ != A.N_) {
+        throw std::invalid_argument("Matrix must be square.");
+    }
+
+    if (A.M_ != static_cast<csint>(b.size())) {
+        throw std::invalid_argument(
+            std::format(
+                "Matrix and vector size mismatch: {} vs. {}",
+                A.M_, b.size()
+            )
+        );
+    }
 
     // First (backward) pass to find diagonal entries
     // p_diags is a vector of pointers to the diagonal entries
@@ -351,8 +385,18 @@ std::vector<double> usolve_rows(const CSCMatrix& A, const std::vector<double>& b
 
 std::vector<double> usolve_cols(const CSCMatrix& A, const std::vector<double>& b)
 {
-    assert(A.M_ == A.N_);
-    assert(A.M_ == static_cast<csint>(b.size()));
+    if (A.M_ != A.N_) {
+        throw std::invalid_argument("Matrix must be square.");
+    }
+
+    if (A.M_ != static_cast<csint>(b.size())) {
+        throw std::invalid_argument(
+            std::format(
+                "Matrix and vector size mismatch: {} vs. {}",
+                A.M_, b.size()
+            )
+        );
+    }
 
     // First O(N) pass to find the diagonal entries
     // Assume that the last entry in each column has the largest row index
@@ -400,7 +444,9 @@ std::vector<double> usolve_cols(const CSCMatrix& A, const std::vector<double>& b
 // Exercise 3.7
 TriPerm find_tri_permutation(const CSCMatrix& A)
 {
-    assert(A.M_ == A.N_);
+    if (A.M_ != A.N_) {
+        throw std::invalid_argument("Matrix must be square.");
+    }
 
     // Create a vector of row counts and corresponding set vector
     std::vector<csint> r(A.N_, 0);
@@ -578,7 +624,11 @@ void spsolve(
 )
 {
     auto& [xi, x] = sol;
-    assert(static_cast<csint>(x.size()) >= A.M_);  // ensure x has been allocated
+
+    if (static_cast<csint>(x.size()) < A.M_) {
+        throw std::runtime_error("SparseSolution x vector not allocated!");
+    }
+
     std::fill(x.begin(), x.end(), 0.0);            // clear x
 
     // Populate xi with the non-zero indices of x
@@ -870,12 +920,14 @@ SparseSolution CholResult::lsolve_impl_(
     auto& [xi, x] = sol;
 
     // Scatter b into x
-    assert(b.N_ == 1);
+    if (b.N_ != 1) {
+        throw std::runtime_error("RHS matrix must have a single column!");
+    }
     b.scatter(0, x);
 
     if (parent.empty()) {
         // Inspect L to get the parent vector, since it has sorted indices
-        assert(L.has_sorted_indices());
+        assert(L.has_sorted_indices_);
         parent.assign(N, -1);
         for (csint j = 0; j < N-1; ++j) {  // skip the last row (only diagonal)
             parent[j] = L.i_[L.p_[j]+1];   // first off-diagonal element

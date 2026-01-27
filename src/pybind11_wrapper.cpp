@@ -1647,7 +1647,7 @@ PYBIND11_MODULE(csparse, m)
             bool use_postorder=false
         ) {
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::AMDOrder order_enum = amdorder_from_string(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
             return cs::chol(A, S);
         },
@@ -1674,7 +1674,7 @@ PYBIND11_MODULE(csparse, m)
             bool use_postorder=false
         ) {
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::AMDOrder order_enum = amdorder_from_string(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
             // TODO Fill the values with 1.0 for the symbolic factorization?
             // cs::CSCMatrix L = cs::symbolic_cholesky(A, S);
@@ -1707,7 +1707,7 @@ PYBIND11_MODULE(csparse, m)
             bool use_postorder=false
         ) {
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::AMDOrder order_enum = amdorder_from_string(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
             cs::CholResult res = cs::symbolic_cholesky(A, S);
             res.L = cs::leftchol(A, S, res.L);
@@ -1739,7 +1739,7 @@ PYBIND11_MODULE(csparse, m)
             bool use_postorder=false
         ) {
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::AMDOrder order_enum = amdorder_from_string(order);
             cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
             cs::CholResult res = cs::symbolic_cholesky(A, S);
             res.L = cs::rechol(A, S, res.L);
@@ -1803,7 +1803,7 @@ PYBIND11_MODULE(csparse, m)
             bool use_postorder=false
         ) {
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::AMDOrder order_enum = amdorder_from_string(order);
             cs::SymbolicQR S = cs::sqr(A, order_enum, use_postorder);
             return cs::qr(A, S);
         },
@@ -1834,7 +1834,7 @@ PYBIND11_MODULE(csparse, m)
             double alpha=1.0
         ) {
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::AMDOrder order_enum = amdorder_from_string(order);
             cs::SymbolicLU S = cs::slu(A, order_enum, qr_bound, alpha);
             return py::make_tuple(S.lnz, S.unz, py::cast(S.q));
         },
@@ -1868,7 +1868,7 @@ PYBIND11_MODULE(csparse, m)
             double tol=1.0
         ) {
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::AMDOrder order_enum = amdorder_from_string(order);
             cs::SymbolicLU S = cs::slu(A, order_enum);
             return cs::lu(A, S, tol);
         },
@@ -1899,7 +1899,7 @@ PYBIND11_MODULE(csparse, m)
             const std::string& order="Natural"
         ) {
             cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::AMDOrder order_enum = amdorder_from_string(order);
             return cs::amd(A, order_enum);
         },
         py::arg("A"),

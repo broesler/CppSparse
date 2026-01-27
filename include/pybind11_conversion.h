@@ -49,13 +49,15 @@ inline auto denseorder_from_char(const char order)
  *
  * @return the AMDOrder enum
  */
-inline cs::AMDOrder string_to_amdorder(const std::string& order)
+inline cs::AMDOrder amdorder_from_string(const std::string& order)
 {
     if (order == "Natural") { return cs::AMDOrder::Natural; }
     if (order == "APlusAT") { return cs::AMDOrder::APlusAT; }
     if (order == "ATANoDenseRows") { return cs::AMDOrder::ATANoDenseRows; }
     if (order == "ATA") { return cs::AMDOrder::ATA; }
-    throw std::runtime_error("Invalid AMDOrder specified.");
+    throw std::runtime_error(
+        std::format("Invalid AMDOrder specified: {}.", order)
+    );
 }
 
 
@@ -492,7 +494,7 @@ py::object solver_impl_(
                 [](const std::string& ord, [[maybe_unused]] auto&&... rest) { return ord; },
                 std::forward_as_tuple(args...)
             );
-            cs::AMDOrder order_enum = string_to_amdorder(order);
+            cs::AMDOrder order_enum = amdorder_from_string(order);
 
             // Get remaining arguments as a tuple
             auto remaining = std::apply(

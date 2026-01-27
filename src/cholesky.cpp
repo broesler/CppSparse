@@ -61,7 +61,7 @@ csint etree_height(const std::vector<csint>& parent)
     for (csint i = 0; i < static_cast<csint>(parent.size()); ++i) {
         csint h = 0;
         for (csint p = i; p != -1; p = parent[p]) {
-            h++;
+            ++h;
         }
         height = std::max(height, h);
     }
@@ -243,7 +243,7 @@ FirstDesc firstdesc(
         while (r != -1 && first[r] == -1) {
             first[r] = k;
             r = parent[r];
-            len++;
+            ++len;
         }
         len += (r == -1) ? -1 : level[r];  // r is root of tree or end of path
         for (csint s = i; s != r; s = parent[s]) {

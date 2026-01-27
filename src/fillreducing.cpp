@@ -183,13 +183,13 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
         csint d = degree[i];
         if (d == 0) {
             elen[i] = -2;  // node i is empty
-            nel++;
+            ++nel;
             C.p_[i] = -1;  // i is a root of the assembly tree
             w[i] = 0;
         } else if (d > dense) {  // node i is dense
             nv[i] = 0;     // absorb i into element n
             elen[i] = -1;  // node i is dead
-            nel++;
+            ++nel;
             C.p_[i] = flip(N);
             nv[N]++;
         } else {
@@ -212,7 +212,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
             if (k != -1) {
                 break;
             }
-            mindeg++;
+            ++mindeg;
         }
 
         if (next[k] != -1) {
@@ -434,7 +434,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
                 }
 
                 i = next[i];
-                mark++;
+                ++mark;
             }
         }  // supernode detection
 
@@ -982,21 +982,21 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
 
     // Leading coarse block A(R1, [C0 C1])
     if (D.cc[2] > 0) {
-        nb2++;
+        ++nb2;
     }
 
     // Coarse block A(R2, C2)
     for (csint k = 0; k< nb1; ++k) {
         D.r[nb2] = rs[k] + D.rr[1];  // A(R2, C2) splits into nb1 fine blocks
         D.s[nb2] = rs[k] + D.cc[2];
-        nb2++;
+        ++nb2;
     }
 
     // Trailing coarse block A([R3 R0], C3)
     if (D.rr[2] < M) {
         D.r[nb2] = D.rr[2];
         D.s[nb2] = D.cc[3];
-        nb2++;
+        ++nb2;
     }
 
     D.r[nb2] = M;

@@ -345,7 +345,7 @@ LUResult lu(
                 csint v = std::move(q[k]);
                 q.erase(q.begin() + k);
                 q.push_back(v);
-                K++;            // count small pivots
+                ++K;            // count small pivots
                 unz = pre_unz;  // reset unz to the last entry in U
                 k--;            // decrement k to recompute this column of output
                 continue;

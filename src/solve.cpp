@@ -168,7 +168,7 @@ std::vector<csint> find_lower_diagonals(const CSCMatrix& A)
             if (!marked[i]) {
                 marked[i] = true;
                 p_diags[j] = p;
-                N_unmarked++;
+                ++N_unmarked;
             }
         }
 
@@ -292,7 +292,7 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
             if (!marked[i]) {
                 marked[i] = true;
                 p_diags[j] = p;
-                N_unmarked++;
+                ++N_unmarked;
             }
         }
 
@@ -1476,7 +1476,7 @@ std::vector<double> spsolve_impl_(const CSCMatrix& A, const RHSType& B)
             continue;
         }
 
-        nnz_diag++;  // count non-zeros
+        ++nnz_diag;  // count non-zeros
                      //
         if (!first_seen) {
             diag_sign = (v > 0) ? 1 : -1;

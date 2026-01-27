@@ -102,7 +102,7 @@ CSCMatrix::CSCMatrix(
             if (val != 0.0) {
                 i_.push_back(i);
                 v_.push_back(val);
-                nz++;
+                ++nz;
             }
         }
     }
@@ -727,7 +727,7 @@ double CSCMatrix::structural_symmetry() const
 
             // Count all off-diagonal elements in A
             if (i != j) {
-                nnz_A++;
+                ++nnz_A;
             }
 
             // Count paired off-diagonal elements
@@ -1186,7 +1186,7 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
                 csint i = i_[pa];     // A(i, k) is non-zero
                 if (w[i] < mark) {
                     w[i] = mark;     // i is new entry in column k
-                    nz_C++;         // count non-zeros in C, but don't compute
+                    ++nz_C;         // count non-zeros in C, but don't compute
                 }
             }
         }
@@ -1243,9 +1243,9 @@ double CSCMatrix::vecdot(const CSCMatrix& y) const
             if (i == j) {
                 z += v_[p++] * y.v_[q++];
             } else if (i < j) {
-                p++;
+                ++p;
             } else {  // (j < i)
-                q++;
+                ++q;
             }
         }
 
@@ -1705,14 +1705,14 @@ CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
         for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
             C.i_[nz] = A.i_[p];
             C.v_[nz] = A.v_[p];
-            nz++;
+            ++nz;
         }
 
         // Copy column j from the second matrix
         for (csint p = B.p_[j]; p < B.p_[j+1]; ++p) {
             C.i_[A.p_[j+1] + p] = A.M_ + B.i_[p];
             C.v_[A.p_[j+1] + p] = B.v_[p];
-            nz++;
+            ++nz;
         }
     }
 
@@ -1746,7 +1746,7 @@ CSCMatrix CSCMatrix::slice(
             if ((i >= i_start) && (i < i_end)) {
                 C.i_[nz] = i - i_start;
                 C.v_[nz] = v_[p];
-                nz++;
+                ++nz;
             }
         }
     }
@@ -1784,7 +1784,7 @@ CSCMatrix CSCMatrix::index(
             if (val != 0) {
                 C.i_[nz] = k;
                 C.v_[nz] = val;
-                nz++;
+                ++nz;
             }
         }
     }
@@ -1895,7 +1895,7 @@ void CSCMatrix::write_elems_(std::stringstream& ss, csint start, csint end) cons
                     ss << "\n";
                 }
             }
-            n++;
+            ++n;
         }
     }
 }

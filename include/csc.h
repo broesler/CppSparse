@@ -97,7 +97,7 @@ public:
      * @param nzmax integer capacity of space to reserve for non-zeros
      * @param values if `true`, allocate space for the values array
      */
-    CSCMatrix(const Shape& shape, csint nzmax=0, bool values=true);
+    explicit CSCMatrix(const Shape& shape, csint nzmax=0, bool values=true);
 
     /** Convert a coordinate format matrix to a compressed sparse column matrix in
      * canonical format.

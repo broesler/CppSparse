@@ -73,7 +73,7 @@ public:
      * @param shape  the dimensions of the matrix
      * @param nzmax  integer capacity of space to reserve for non-zeros
      */
-    COOMatrix(const Shape& shape, csint nzmax=0);
+    explicit COOMatrix(const Shape& shape, csint nzmax=0);
 
     /** Convert a CSCMatrix to a COOMatrix, like Matlab's `find`.
      *
@@ -82,7 +82,7 @@ public:
      * @param A a CSCMatrix.
      * @return C the equivalent matrix in triplet form.
      */
-    COOMatrix(const CSCMatrix& A);               // Exercise 2.2, Matlab's find
+    explicit COOMatrix(const CSCMatrix& A);  // Exercise 2.2, Matlab's find
 
     /** Read a COOMatrix matrix from a file.
      *

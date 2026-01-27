@@ -50,9 +50,6 @@ CSCMatrix::CSCMatrix(const Shape& shape, csint nzmax, bool values)
 {
     if (values) {
         v_.resize(nzmax);
-    } else {
-        v_.resize(0);
-        v_.shrink_to_fit();
     }
 }
 
@@ -124,11 +121,11 @@ void CSCMatrix::realloc(csint nzmax)
     csint Z = (nzmax <= 0) ? p_[N_] : nzmax;
 
     try {
-        p_.resize(N_ + 1);  // always contains N_ columns + nz
-        i_.resize(Z);
-        if (!v_.empty()) {
-            v_.resize(Z);
-        }
+    p_.resize(N_ + 1);  // always contains N_ columns + nz
+    i_.resize(Z);
+    if (!v_.empty()) {
+        v_.resize(Z);
+    }
     } catch (const std::bad_alloc& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         std::cerr << "Failed to allocate memory for CSCMatrix." << std::endl;

@@ -62,9 +62,9 @@ public:
      * @return a new COOMatrix object
      */
     COOMatrix(
-        const std::vector<double>& vals,
-        const std::vector<csint>& rows,
-        const std::vector<csint>& cols,
+        std::span<const double> vals,
+        std::span<const csint> rows,
+        std::span<const csint> cols,
         const Shape shape=Shape{0, 0}
     );
 
@@ -167,9 +167,9 @@ public:
      * @see cs_entry Davis p 12.
      */
     COOMatrix& insert(
-        const std::vector<csint>& i,
-        const std::vector<csint>& j,
-        const std::vector<double>& C
+        std::span<const csint> i,
+        std::span<const csint> j,
+        std::span<const double> C
     );
 
     //--------------------------------------------------------------------------

@@ -41,7 +41,11 @@ TEST_CASE("Householder Reflection", "[house]")
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
 
         // Apply the reflection
-        CSCMatrix V = COOMatrix{H.v, {0, 1, 2}, {0, 0, 0}}.tocsc();
+        CSCMatrix V = COOMatrix{
+            H.v,
+            std::vector<csint>{0, 1, 2},
+            std::vector<csint>{0, 0, 0}
+        }.tocsc();
         std::vector<double> Hx = happly(V, 0, H.beta, x);
 
         check_vectors_allclose(Hx, x, tol);
@@ -61,7 +65,11 @@ TEST_CASE("Householder Reflection", "[house]")
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
 
         // Apply the reflection
-        CSCMatrix V = COOMatrix{H.v, {0, 1, 2}, {0, 0, 0}}.tocsc();
+        CSCMatrix V = COOMatrix{
+            H.v,
+            std::vector<csint>{0, 1, 2},
+            std::vector<csint>{0, 0, 0}
+        }.tocsc();
         std::vector<double> Hx = happly(V, 0, H.beta, x);
 
         check_vectors_allclose(Hx, x, tol);
@@ -113,7 +121,11 @@ TEST_CASE("Householder Reflection", "[house]")
         // std::vector<double> expect{5, 0};  // Davis
 
         // Use column 0 of V to apply the Householder reflection
-        CSCMatrix V = COOMatrix{H.v, {0, 1}, {0, 0}}.tocsc();
+        CSCMatrix V = COOMatrix{
+            H.v,
+            std::vector<csint>{0, 1},
+            std::vector<csint>{0, 0}
+        }.tocsc();
         std::vector<double> Hx = happly(V, 0, H.beta, x);
 
         check_vectors_allclose(Hx, expect, tol);
@@ -136,7 +148,11 @@ TEST_CASE("Householder Reflection", "[house]")
         // Apply the vector
         std::vector<double> expect{5, 0}; // LAPACK or Davis
 
-        CSCMatrix V = COOMatrix{H.v, {0, 1}, {0, 0}}.tocsc();
+        CSCMatrix V = COOMatrix{
+            H.v, 
+            std::vector<csint>{0, 1},
+            std::vector<csint>{0, 0}
+        }.tocsc();
         std::vector<double> Hx = happly(V, 0, H.beta, x);
 
         check_vectors_allclose(Hx, expect, tol);

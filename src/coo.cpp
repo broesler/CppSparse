@@ -34,13 +34,13 @@ namespace cs {
  *----------------------------------------------------------------------------*/
 
 COOMatrix::COOMatrix(
-    const std::vector<double>& vals,
-    const std::vector<csint>& rows,
-    const std::vector<csint>& cols,
+    std::span<const double> vals,
+    std::span<const csint> rows,
+    std::span<const csint> cols,
     const Shape shape
-) : v_(vals),
-    i_(rows),
-    j_(cols)
+) : v_(vals.begin(), vals.end()),
+    i_(rows.begin(), rows.end()),
+    j_(cols.begin(), cols.end())
 {
     // Initialize M and N
     if (shape[0] > 0) {
@@ -264,9 +264,9 @@ COOMatrix& COOMatrix::insert(csint i, csint j, double v)
 
 // Exercise 2.5
 COOMatrix& COOMatrix::insert(
-    const std::vector<csint>& rows,
-    const std::vector<csint>& cols,
-    const std::vector<double>& C
+    std::span<const csint> rows,
+    std::span<const csint> cols,
+    std::span<const double> C
 )
 {
     if (rows.size() != cols.size()) {

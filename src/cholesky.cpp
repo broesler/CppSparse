@@ -73,7 +73,7 @@ csint etree_height(const std::vector<csint>& parent)
 std::vector<csint> ereach(
     const CSCMatrix& A,
     csint k,
-    const std::vector<csint>& parent
+    std::span<const csint> parent
 )
 {
     std::vector<char> marked(A.M_, false);  // workspace
@@ -108,7 +108,7 @@ std::vector<csint> ereach(
 std::vector<csint> ereach_post(
     const CSCMatrix& A,
     csint k,
-    const std::vector<csint>& parent
+    std::span<const csint> parent
 )
 {
     assert(A.has_sorted_indices_);
@@ -140,7 +140,7 @@ std::vector<csint> ereach_post(
 std::vector<csint> ereach_queue(
     const CSCMatrix& A,
     csint k,
-    const std::vector<csint>& parent
+    std::span<const csint> parent
 )
 {
     std::vector<char> marked(A.M_, false);  // workspace
@@ -226,8 +226,8 @@ void tdfs(
 
 
 FirstDesc firstdesc(
-    const std::vector<csint>& parent,
-    const std::vector<csint>& postorder
+    std::span<const csint> parent,
+    std::span<const csint> postorder
 )
 {
     assert(parent.size() == postorder.size());
@@ -257,8 +257,8 @@ FirstDesc firstdesc(
 
 std::vector<csint> rowcnt(
     const CSCMatrix& A,
-    const std::vector<csint>& parent,
-    const std::vector<csint>& postorder
+    std::span<const csint> parent,
+    std::span<const csint> postorder
 )
 {
     if (A.M_ != A.N_) {
@@ -354,7 +354,7 @@ LCAStatus least_common_ancestor(
 
 void init_ata(
     const CSCMatrix& AT,
-    const std::vector<csint>& post,
+    std::span<const csint> post,
     std::vector<csint>& head,
     std::vector<csint>& next
 )
@@ -383,8 +383,8 @@ void init_ata(
 
 std::vector<csint> counts(
     const CSCMatrix& A,
-    const std::vector<csint>& parent,
-    const std::vector<csint>& postorder,
+    std::span<const csint> parent,
+    std::span<const csint> postorder,
     bool ata
 )
 {
@@ -772,7 +772,7 @@ CSCMatrix& chol_update(
     CSCMatrix& L,
     bool update,
     const CSCMatrix& C,
-    const std::vector<csint>& parent
+    std::span<const csint> parent
 )
 {
     if (L.shape()[0] != C.shape()[0]) {

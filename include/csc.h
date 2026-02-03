@@ -1111,41 +1111,42 @@ public:
     //--------------------------------------------------------------------------
     friend std::vector<csint> etree(const CSCMatrix& A, bool ata);
 
+    // TODO refactor vector -> span.
     friend std::vector<csint> ereach(
         const CSCMatrix& A,
         csint k,
-        const std::vector<csint>& parent
+        std::span<const csint> parent
     );
 
     friend std::vector<csint> ereach_post(
         const CSCMatrix& A,
         csint k,
-        const std::vector<csint>& parent
+        std::span<const csint> parent
     );
 
     friend std::vector<csint> ereach_queue(
         const CSCMatrix& A,
         csint k,
-        const std::vector<csint>& parent
+        std::span<const csint> parent
     );
 
     friend std::vector<csint> rowcnt(
         const CSCMatrix& A,
-        const std::vector<csint>& parent,
-        const std::vector<csint>& postorder
+        std::span<const csint> parent,
+        std::span<const csint> postorder
     );
 
     friend void init_ata(
         const CSCMatrix& AT,
-        const std::vector<csint>& post,
+        std::span<const csint> post,
         std::vector<csint>& head,
         std::vector<csint>& next
     );
 
     friend std::vector<csint> counts(
         const CSCMatrix& A,
-        const std::vector<csint>& parent,
-        const std::vector<csint>& postorder,
+        std::span<const csint> parent,
+        std::span<const csint> postorder,
         bool ata
     );
 
@@ -1166,14 +1167,14 @@ public:
         CSCMatrix& L,
         bool update,
         const CSCMatrix& w,
-        const std::vector<csint>& parent
+        std::span<const csint> parent
     );
 
     friend CholCounts chol_etree_counts(const CSCMatrix& A);
 
     friend std::vector<csint> topological_order(
         const CSCMatrix& b,
-        const std::vector<csint>& parent,
+        std::span<const csint> parent,
         bool forward
     );
 

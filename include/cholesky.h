@@ -209,8 +209,8 @@ void tdfs(
  * @return level  the level of each node in the tree
  */
 FirstDesc firstdesc(
-    const std::vector<csint>& parent,
-    const std::vector<csint>& postorder
+    std::span<const csint> parent,
+    std::span<const csint> postorder
 );
 
 
@@ -277,7 +277,7 @@ csint etree_height(const std::vector<csint>& parent);
 std::vector<csint> ereach(
     const CSCMatrix& A,
     csint k,
-    const std::vector<csint>& parent
+    std::span<const csint> parent
 );
 
 
@@ -296,7 +296,7 @@ std::vector<csint> ereach(
 std::vector<csint> ereach_post(
     const CSCMatrix& A,
     csint k,
-    const std::vector<csint>& parent
+    std::span<const csint> parent
 );
 
 
@@ -312,7 +312,7 @@ std::vector<csint> ereach_post(
 std::vector<csint> ereach_queue(
     const CSCMatrix& A,
     csint k,
-    const std::vector<csint>& parent
+    std::span<const csint> parent
 );
 
 
@@ -326,8 +326,8 @@ std::vector<csint> ereach_queue(
  */
 std::vector<csint> rowcnt(
     const CSCMatrix& A,
-    const std::vector<csint>& parent,
-    const std::vector<csint>& postorder
+    std::span<const csint> parent,
+    std::span<const csint> postorder
 );
 
 
@@ -340,7 +340,7 @@ std::vector<csint> rowcnt(
  */
 void init_ata(
     const CSCMatrix& AT,
-    const std::vector<csint>& post,
+    std::span<const csint> post,
     std::vector<csint>& head,
     std::vector<csint>& next
 );
@@ -357,8 +357,8 @@ void init_ata(
  */
 std::vector<csint> counts(
     const CSCMatrix& A,
-    const std::vector<csint>& parent,
-    const std::vector<csint>& postorder,
+    std::span<const csint> parent,
+    std::span<const csint> postorder,
     bool ata=false
 );
 
@@ -497,7 +497,7 @@ CSCMatrix& chol_update(
     CSCMatrix& L,
     bool update,
     const CSCMatrix& C,
-    const std::vector<csint>& parent
+    std::span<const csint> parent
 );
 
 

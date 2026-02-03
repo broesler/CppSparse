@@ -117,7 +117,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
             std::vector<csint> xi;
             xi.reserve(N);
 
-            xi = detail::dfs_r(L, j, marked, xi);
+            detail::dfs_r(L, j, marked, xi);
 
             REQUIRE(xi == expect);
         }

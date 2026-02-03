@@ -266,8 +266,8 @@ auto make_vector_func(Func&& func)
 {
     return [func = std::forward<Func>(func)](
         const py::object& A_scipy,
-        const std::vector<double>& x,
-        const std::vector<double>& y
+        std::span<const double> x,
+        std::span<const double> y
     ) {
         cs::CSCMatrix A = csc_from_scipy(A_scipy);
         std::vector<double> z = func(A, x, y);

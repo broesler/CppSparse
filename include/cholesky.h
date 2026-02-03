@@ -177,7 +177,7 @@ public:
  *
  * @return post  the post-order of the elimination tree
  */
-std::vector<csint> post(const std::vector<csint>& parent);
+std::vector<csint> post(std::span<const csint> parent);
 
 
 /** Depth-first search in a tree.
@@ -189,8 +189,8 @@ std::vector<csint> post(const std::vector<csint>& parent);
  */
 void tdfs(
     csint j,
-    std::vector<csint>& head,
-    const std::vector<csint>& next,
+    std::span<csint> head,
+    std::span<const csint> next,
     std::vector<csint>& postorder
 );
 
@@ -233,10 +233,10 @@ FirstDesc firstdesc(
 LCAStatus least_common_ancestor(
     csint i,
     csint j,
-    const std::vector<csint>& first,
-    std::vector<csint>& maxfirst,
-    std::vector<csint>& prevleaf,
-    std::vector<csint>& ancestor
+    std::span<const csint> first,
+    std::span<csint> maxfirst,
+    std::span<csint> prevleaf,
+    std::span<csint> ancestor
 );
 
 
@@ -262,7 +262,7 @@ std::vector<csint> etree(const CSCMatrix& A, bool ata=false);
  *
  * @return height  the height of the elimination tree
  */
-csint etree_height(const std::vector<csint>& parent);
+csint etree_height(std::span<const csint> parent);
 
 
 /** Compute the reachability set for the *k*th row of *L*, the Cholesky faxtcor

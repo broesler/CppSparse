@@ -53,7 +53,7 @@ std::vector<csint> etree(const CSCMatrix& A, bool ata)
 
 
 // Exercise 4.6
-csint etree_height(const std::vector<csint>& parent)
+csint etree_height(std::span<const csint> parent)
 {
     assert(!parent.empty());
 
@@ -165,7 +165,7 @@ std::vector<csint> ereach_queue(
 }
 
 
-std::vector<csint> post(const std::vector<csint>& parent)
+std::vector<csint> post(std::span<const csint> parent)
 {
     const csint N = parent.size();
 
@@ -203,8 +203,8 @@ std::vector<csint> post(const std::vector<csint>& parent)
 
 void tdfs(
     csint j,
-    std::vector<csint>& head,
-    const std::vector<csint>& next,
+    std::span<csint> head,
+    std::span<const csint> next,
     std::vector<csint>& postorder
 )
 {
@@ -312,10 +312,10 @@ std::vector<csint> rowcnt(
 LCAStatus least_common_ancestor(
     csint i,
     csint j,
-    const std::vector<csint>& first,
-    std::vector<csint>& maxfirst,
-    std::vector<csint>& prevleaf,
-    std::vector<csint>& ancestor
+    std::span<const csint> first,
+    std::span<csint> maxfirst,
+    std::span<csint> prevleaf,
+    std::span<csint> ancestor
 )
 {
     LeafStatus jleaf;

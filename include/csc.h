@@ -1099,7 +1099,7 @@ public:
         const CSCMatrix& B
     );
 
-    friend std::vector<csint>& detail::dfs_r(
+    friend void detail::dfs_r(
         const CSCMatrix& A,
         csint j,
         std::span<char> marked,

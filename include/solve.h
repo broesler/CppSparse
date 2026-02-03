@@ -506,12 +506,10 @@ std::vector<csint> reach_r(const CSCMatrix& A, const CSCMatrix& B);
  * @param marked  a boolean vector of length `N` that marks visited nodes
  * @param[in,out] xi  the row indices of the non-zero entries in `x`. This
  *       vector is used as a stack to store the output. It should not be
- *       initialized, other than by a previous call to `dfs`.
- * @param pstack  memory for the pause stack, reserved to length `N`.
- *
- * @return xi  a reference to the row indices of the non-zero entries in `x`.
+ *       initialized, other than by a previous call to `dfs`. On output,
+ *       a reference to the row indices of the non-zero entries in `x`.
  */
-std::vector<csint>& dfs_r(
+void dfs_r(
     const CSCMatrix& A,
     csint j,
     std::span<char> marked,

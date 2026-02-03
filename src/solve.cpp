@@ -756,7 +756,7 @@ std::vector<csint> reach_r(const CSCMatrix& A, const CSCMatrix& B)
 }
 
 
-std::vector<csint>& dfs_r(
+void dfs_r(
     const CSCMatrix& A,
     csint j,
     std::span<char> marked,
@@ -773,8 +773,6 @@ std::vector<csint>& dfs_r(
     }
 
     xi.push_back(j);  // push unvisited neighbor onto stack
-
-    return xi;
 }
 
 }  // namespace detail

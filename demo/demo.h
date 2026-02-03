@@ -80,8 +80,8 @@ CSCMatrix make_sym(const CSCMatrix& A);
  */
 double residual_norm(
     const CSCMatrix& A,
-    const std::vector<double>& x,
-    const std::vector<double>& b,
+    std::span<const double> x,
+    std::span<const double> b,
     std::vector<double>& resid
 );
 

@@ -82,11 +82,11 @@ Householder house(std::span<const double> x)
 }
 
 
-std::vector<double>& happly(
+void happly(
     const CSCMatrix& V,
 	csint j,
 	double beta,
-	std::vector<double>& x
+	std::span<double> x
 )
 {
     double tau = 0.0;
@@ -102,8 +102,6 @@ std::vector<double>& happly(
     for (csint p = V.p_[j]; p < V.p_[j+1]; ++p) {
         x[V.i_[p]] -= V.v_[p] * tau;
     }
-
-    return x;
 }
 
 
@@ -298,7 +296,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
 
         // for each i in pattern of R[:, k] (R(i, k) is non-zero)
         for (csint i : t | std::views::reverse) {
-            x = happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
+            happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
             R.i_[rnz] = i;                 // R(i, k) = x(i)
             R.v_[rnz++] = x[i];
             x[i] = 0;
@@ -451,7 +449,7 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
         // for each i in pattern of R[:, k] (R(i, k) is non-zero)
         for (csint p = R.p_[k]; p < R.p_[k+1] - 1; ++p) {
             csint i = R.i_[p];             // R(i, k)
-            x = happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
+            happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
             R.v_[p] = x[i];                // R(i, k) = x(i)
             x[i] = 0;
         }
@@ -483,34 +481,34 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 
 void apply_qleft(
     const CSCMatrix& V,
-    const std::vector<double>& beta,
-    std::vector<double>& x
+    std::span<const double> beta,
+    std::span<double> x
 )
 {
     csint N = V.shape()[1];
     for (csint j = N - 1; j >= 0; j--) {
-        x = happly(V, j, beta[j], x);
+        happly(V, j, beta[j], x);
     }
 }
 
 
 void apply_qtleft(
     const CSCMatrix& V,
-    const std::vector<double>& beta,
-    std::vector<double>& x
+    std::span<const double> beta,
+    std::span<double> x
 )
 {
     csint N = V.shape()[1];
     for (csint j = 0; j < N; ++j) {
-        x = happly(V, j, beta[j], x);
+        happly(V, j, beta[j], x);
     }
 }
 
 
 CSCMatrix apply_qtleft(
     const CSCMatrix& V,
-    const std::vector<double>& beta,
-    const std::vector<csint>& p_inv,
+    std::span<const double> beta,
+    std::span<const csint> p_inv,
     const CSCMatrix& Y
 )
 {

@@ -46,7 +46,8 @@ TEST_CASE("Householder Reflection", "[house]")
             std::vector<csint>{0, 1, 2},
             std::vector<csint>{0, 0, 0}
         }.tocsc();
-        std::vector<double> Hx = happly(V, 0, H.beta, x);
+        std::vector<double> Hx = x;  // copy x
+        happly(V, 0, H.beta, Hx);    // apply "x" -> Hx
 
         check_vectors_allclose(Hx, x, tol);
     }
@@ -70,7 +71,8 @@ TEST_CASE("Householder Reflection", "[house]")
             std::vector<csint>{0, 1, 2},
             std::vector<csint>{0, 0, 0}
         }.tocsc();
-        std::vector<double> Hx = happly(V, 0, H.beta, x);
+        std::vector<double> Hx = x;
+        happly(V, 0, H.beta, Hx);
 
         check_vectors_allclose(Hx, x, tol);
     }
@@ -126,7 +128,8 @@ TEST_CASE("Householder Reflection", "[house]")
             std::vector<csint>{0, 1},
             std::vector<csint>{0, 0}
         }.tocsc();
-        std::vector<double> Hx = happly(V, 0, H.beta, x);
+        std::vector<double> Hx = x;
+        happly(V, 0, H.beta, Hx);
 
         check_vectors_allclose(Hx, expect, tol);
     }
@@ -153,7 +156,8 @@ TEST_CASE("Householder Reflection", "[house]")
             std::vector<csint>{0, 1},
             std::vector<csint>{0, 0}
         }.tocsc();
-        std::vector<double> Hx = happly(V, 0, H.beta, x);
+        std::vector<double> Hx = x;
+        happly(V, 0, H.beta, Hx);
 
         check_vectors_allclose(Hx, expect, tol);
     }

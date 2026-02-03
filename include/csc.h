@@ -1111,7 +1111,6 @@ public:
     //--------------------------------------------------------------------------
     friend std::vector<csint> etree(const CSCMatrix& A, bool ata);
 
-    // TODO refactor vector -> span.
     friend std::vector<csint> ereach(
         const CSCMatrix& A,
         csint k,
@@ -1181,11 +1180,11 @@ public:
     //--------------------------------------------------------------------------
     //        QR Decomposition
     //--------------------------------------------------------------------------
-    friend std::vector<double>& happly(
+    friend void happly(
         const CSCMatrix& V,
         csint j,
         double beta,
-        std::vector<double>& x
+        std::span<double> x
     );
 
     friend std::vector<csint> find_leftmost(const CSCMatrix& A);
@@ -1194,10 +1193,11 @@ public:
     friend QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S);
     friend QRResult qr(const CSCMatrix& A, const SymbolicQR& S);
     friend void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res);
+
     friend CSCMatrix apply_qtleft(
         const CSCMatrix& V,
-        const std::vector<double>& beta,
-        const std::vector<csint>& p_inv,
+        std::span<const double> beta,
+        std::span<const csint> p_inv,
         const CSCMatrix& Y
     );
 

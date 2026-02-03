@@ -121,15 +121,13 @@ Householder house(std::span<const double> x);
  * @param j  the column index of the Householder vector in `V`
  * @param beta  the scaling factor
  * @param[in,out] x  the dense vector to which to apply the reflection. This
- *        vector will be overwritten with the result.
- *
- * @return Hx  the result of applying the Householder reflection to `x`
+ *        vector will be overwritten with the result, Hx.
  */
-std::vector<double>& happly(
+void happly(
     const CSCMatrix& V,
 	csint j,
 	double beta,
-	std::vector<double>& x
+	std::span<double> x
 );
 
 
@@ -267,8 +265,8 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res);
  */
 void apply_qleft(
     const CSCMatrix& V,
-    const std::vector<double>& beta,
-    std::vector<double>& x
+    std::span<const double> beta,
+    std::span<double> x
 );
 
 
@@ -287,8 +285,8 @@ void apply_qleft(
  */
 void apply_qtleft(
     const CSCMatrix& V,
-    const std::vector<double>& beta,
-    std::vector<double>& x
+    std::span<const double> beta,
+    std::span<double> x
 );
 
 
@@ -310,8 +308,8 @@ void apply_qtleft(
  */
 CSCMatrix apply_qtleft(
     const CSCMatrix& V,
-    const std::vector<double>& beta,
-    const std::vector<csint>& p_inv,
+    std::span<const double> beta,
+    std::span<const csint> p_inv,
     const CSCMatrix& Y
 );
 

@@ -516,12 +516,12 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
 void augment(
     csint k,
     const CSCMatrix& A,
-    std::vector<csint>& jmatch,
-    std::vector<csint>& cheap,
-    std::vector<csint>& w,
-    std::vector<csint>& js,
-    std::vector<csint>& is,
-    std::vector<csint>& ps
+    std::span<csint> jmatch,
+    std::span<csint> cheap,
+    std::span<csint> w,
+    std::span<csint> js,
+    std::span<csint> is,
+    std::span<csint> ps
 )
 {
     bool found = false;
@@ -588,9 +588,9 @@ namespace detail {
 bool augment_r(
     csint k,
     const CSCMatrix& A,
-    std::vector<csint>& jmatch,
-    std::vector<csint>& cheap,
-    std::vector<csint>& w,
+    std::span<csint> jmatch,
+    std::span<csint> cheap,
+    std::span<csint> w,
     csint j
 )
 {
@@ -791,11 +791,11 @@ SCCResult scc(const CSCMatrix& A)
 void bfs(
     const CSCMatrix& A,
     csint N,
-    std::vector<csint>& wi,
-    std::vector<csint>& wj,
-    std::vector<csint>& queue,
-    const std::vector<csint>& imatch,
-    const std::vector<csint>& jmatch,
+    std::span<csint> wi,
+    std::span<csint> wj,
+    std::span<csint> queue,
+    std::span<const csint> imatch,
+    std::span<const csint> jmatch,
     csint mark
 )
 {
@@ -845,10 +845,10 @@ void bfs(
 
 static void matched(
     csint N,
-    const std::vector<csint>& wj,
-    const std::vector<csint>& imatch,
-    std::vector<csint>& p,
-    std::vector<csint>& q,
+    std::span<const csint> wj,
+    std::span<const csint> imatch,
+    std::span<csint> p,
+    std::span<csint> q,
     std::array<csint, 5>& cc,
     std::array<csint, 5>& rr,
     csint set,
@@ -870,8 +870,8 @@ static void matched(
 
 static void unmatched(
     csint M,
-    const std::vector<csint>& wi,
-    std::vector<csint>& p,
+    std::span<const csint> wi,
+    std::span<csint> p,
     std::array<csint, 5>& rr,
     csint set
 )
@@ -887,9 +887,9 @@ static void unmatched(
 
 
 static void gather_scatter(
-    std::vector<csint>& source,
-    std::vector<csint>& temp,
-    const std::vector<csint>& ps,
+    std::span<csint> source,
+    std::span<csint> temp,
+    std::span<const csint> ps,
     csint nc,
     csint offset
 )
@@ -897,7 +897,7 @@ static void gather_scatter(
     for (csint k = 0; k < nc; ++k) {
         temp[k] = source[ps[k] + offset];
     }
-    std::copy(temp.cbegin(), temp.cbegin() + nc, source.begin() + offset);
+    std::copy(temp.begin(), temp.begin() + nc, source.begin() + offset);
 }
 
 

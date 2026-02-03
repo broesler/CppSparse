@@ -1238,9 +1238,9 @@ public:
     friend bool detail::augment_r(
         csint k,
         const CSCMatrix& A,
-        std::vector<csint>& jmatch,
-        std::vector<csint>& cheap,
-        std::vector<csint>& w,
+        std::span<csint> jmatch,
+        std::span<csint> cheap,
+        std::span<csint> w,
         csint j
     );
 
@@ -1248,12 +1248,12 @@ public:
     friend void augment(
         csint k,
         const CSCMatrix& A,
-        std::vector<csint>& jmatch,
-        std::vector<csint>& cheap,
-        std::vector<csint>& w,
-        std::vector<csint>& js,
-        std::vector<csint>& is,
-        std::vector<csint>& ps
+        std::span<csint> jmatch,
+        std::span<csint> cheap,
+        std::span<csint> w,
+        std::span<csint> js,
+        std::span<csint> is,
+        std::span<csint> ps
     );
 
     friend SCCResult scc(const CSCMatrix& A);
@@ -1261,11 +1261,11 @@ public:
     friend void bfs(
         const CSCMatrix& A,
         csint N,
-        std::vector<csint>& wi,
-        std::vector<csint>& wj,
-        std::vector<csint>& queue,
-        const std::vector<csint>& imatch,
-        const std::vector<csint>& jmatch,
+        std::span<csint> wi,
+        std::span<csint> wj,
+        std::span<csint> queue,
+        std::span<const csint> imatch,
+        std::span<const csint> jmatch,
         csint mark
     );
 

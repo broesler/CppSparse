@@ -70,9 +70,9 @@ std::vector<csint>& dfs_r(
 bool augment_r(
     csint k,
     const CSCMatrix& A,
-    std::vector<csint>& jmatch,
-    std::vector<csint>& cheap,
-    std::vector<csint>& w,
+    std::span<csint> jmatch,
+    std::span<csint> cheap,
+    std::span<csint> w,
     csint j
 );
 

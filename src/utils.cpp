@@ -55,7 +55,7 @@ std::vector<double> operator+(
 }
 
 /** Unary minus operator for a vector */
-std::vector<double> operator-(const std::vector<double>& a)
+std::vector<double> operator-(std::span<const double> a)
 {
     std::vector<double> out(a.size());
 
@@ -93,9 +93,9 @@ std::vector<double> operator-(
 
 
 /** Scale a vector by a scalar */
-std::vector<double> operator*(const double c, const std::vector<double>& vec)
+std::vector<double> operator*(const double c, std::span<const double> vec)
 {
-    std::vector<double> out(vec);
+    std::vector<double> out(vec.begin(), vec.end());
     for (auto& x : out) {
         x *= c;
     }
@@ -103,13 +103,13 @@ std::vector<double> operator*(const double c, const std::vector<double>& vec)
 }
 
 
-std::vector<double> operator*(const std::vector<double>& vec, const double c)
+std::vector<double> operator*(std::span<const double> vec, const double c)
 {
     return c * vec;
 }
 
 
-std::vector<double>& operator*=(std::vector<double>& vec, const double c)
+std::span<double> operator*=(std::span<double> vec, const double c)
 {
     for (auto& x : vec) {
         x *= c;
@@ -144,7 +144,7 @@ std::span<double> operator+=(
  *          Vector Functions
  *----------------------------------------------------------------------------*/
 
-std::vector<csint> inv_permute(const std::vector<csint>& p)
+std::vector<csint> inv_permute(std::span<const csint> p)
 {
     std::vector<csint> out(p.size());
 

@@ -32,16 +32,13 @@ std::vector<double> operator-(
     std::span<const double> b
 );
 
-std::vector<double> operator-(const std::vector<double>& a);
+std::vector<double> operator-(std::span<const double> a);
 
-std::span<double> operator+=(
-    std::span<double> a,
-    std::span<const double> b
-);
+std::span<double> operator+=(std::span<double> a, std::span<const double> b);
 
-std::vector<double> operator*(const double c, const std::vector<double>& x);
-std::vector<double> operator*(const std::vector<double>& x, const double c);
-std::vector<double>& operator*=(std::vector<double>& x, const double c);
+std::vector<double> operator*(const double c, std::span<const double> x);
+std::vector<double> operator*(std::span<const double> x, const double c);
+std::span<double> operator*=(std::span<double> x, const double c);
 
 
 /** Compute the norm of a vector.
@@ -66,7 +63,7 @@ double norm(std::span<const double> x, const double ord=2.0);
  *
  * @return pinv  inverse permutation vector
  */
-std::vector<csint> inv_permute(const std::vector<csint>& p);
+std::vector<csint> inv_permute(std::span<const csint> p);
 
 
 /** Compute \f$ x = Pb \f$ where P is a permutation matrix, represented as
@@ -152,7 +149,7 @@ std::vector<csint> randperm(csint N, csint seed=0);
 /** Print a std::vector. */
 template <typename T>
 void print_vec(
-    const std::vector<T>& vec,
+    std::span<const T> vec,
     std::ostream& os=std::cout,
     const std::string end="\n"
 )
@@ -170,7 +167,7 @@ void print_vec(
 
 /** Print a std::vector to an output stream. */
 template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
+std::ostream& operator<<(std::ostream& os, std::span<const T> vec)
 {
     print_vec(vec, os, "");
     return os;

@@ -71,7 +71,7 @@ namespace detail {
 template <typename InplaceTriSolve>
 std::vector<double> trisolve_dense(
     const CSCMatrix& L,
-    const std::vector<double>& B,
+    std::span<const double> B,
     InplaceTriSolve inplace_solver
 )
 {
@@ -82,9 +82,9 @@ std::vector<double> trisolve_dense(
         throw std::runtime_error("RHS vector size is not a multiple of matrix rows!");
     }
 
-    csint K = MxK / M;            // number of RHS columns
-    std::vector<double> X = B;    // NOTE only works if M >= N
-    std::span<double> X_span(X);  // view onto X
+    csint K = MxK / M;                          // number of RHS columns
+    std::vector<double> X(B.begin(), B.end());  // NOTE only works if M >= N
+    std::span<double> X_span(X);                // view onto X
 
     for (csint k = 0; k < K; k++) {
         auto X_k = X_span.subspan(k * N, N);
@@ -152,7 +152,7 @@ void lsolve_inplace(const CSCMatrix& L, std::span<double> x);
  *
  * @return x  the solution matrix, in column-major order.
  */
-std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& B);
+std::vector<double> lsolve(const CSCMatrix& L, std::span<const double> B);
 std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& B);
 
 
@@ -179,7 +179,7 @@ void ltsolve_inplace(const CSCMatrix& L, std::span<double> x);
  *
  * @return x  the solution vector
  */
-std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& b);
+std::vector<double> ltsolve(const CSCMatrix& L, std::span<const double> b);
 
 
 /** Backsolve an upper-triangular system \f$ Ux = b \f$.
@@ -205,7 +205,7 @@ void usolve_inplace(const CSCMatrix& U, std::span<double> x);
  *
  * @return x  the solution vector
  */
-std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& b);
+std::vector<double> usolve(const CSCMatrix& U, std::span<const double> B);
 std::vector<double> usolve(const CSCMatrix& U, const CSCMatrix& B);
 
 
@@ -232,7 +232,7 @@ void utsolve_inplace(const CSCMatrix& U, std::span<double> x);
  *
  * @return x  the solution vector
  */
-std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& b);
+std::vector<double> utsolve(const CSCMatrix& U, std::span<const double> b);
 
 
 /** Forward solve a lower-triangular system \f$ Lx = b \f$, but
@@ -264,7 +264,7 @@ void lsolve_inplace_opt(const CSCMatrix& A, std::span<double> x);
  *
  * @return x  the solution vector
  */
-std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b);
+std::vector<double> lsolve_opt(const CSCMatrix& L, std::span<const double> b);
 
 
 /** Backsolve an upper-triangular system \f$ Ux = b \f$, but optimized for cache
@@ -296,7 +296,7 @@ void usolve_inplace_opt(const CSCMatrix& A, std::span<double> x);
  *
  * @return x  the solution vector
  */
-std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b);
+std::vector<double> usolve_opt(const CSCMatrix& U, std::span<const double> b);
 
 
 /** Solve Lx = b with a row-permuted L. The permutation is unknown.
@@ -585,7 +585,7 @@ void dfs(
  */
 std::vector<csint> topological_order(
     const CSCMatrix& b,
-    const std::vector<csint>& parent,
+    std::span<const csint> parent,
     bool forward=true
 );
 
@@ -602,7 +602,7 @@ std::vector<csint> topological_order(
  */
 std::vector<double> chol_solve(
     const CSCMatrix& A,
-    const std::vector<double>& B,
+    std::span<const double> B,
     AMDOrder order=AMDOrder::Natural
 );
 
@@ -648,7 +648,7 @@ std::vector<double> chol_solve(
  */
 QRSolveResult qr_solve(
     const CSCMatrix& A,
-    const std::vector<double>& B,
+    std::span<const double> B,
     AMDOrder order=AMDOrder::Natural
 );
 
@@ -697,7 +697,7 @@ QRSolveResult qr_solve(
  */
 std::vector<double> lu_solve(
     const CSCMatrix& A,
-    const std::vector<double>& B,
+    std::span<const double> B,
     AMDOrder order=AMDOrder::Natural,
     double tol=1.0,
     csint ir_steps=0
@@ -740,7 +740,7 @@ std::vector<double> lu_solve(
  */
 std::vector<double> lu_tsolve(
     const CSCMatrix& A,
-    const std::vector<double>& b,
+    std::span<const double> b,
     AMDOrder order=AMDOrder::Natural,
     double tol=1.0
 );
@@ -784,7 +784,7 @@ double cond1est(const CSCMatrix& A);
  *
  * @return x (N, K) the dense solution matrix
  */
-std::vector<double> spsolve(const CSCMatrix& A, const std::vector<double>& B);
+std::vector<double> spsolve(const CSCMatrix& A, std::span<const double> B);
 
 
 /** Solve a sparse linear system Ax = b.

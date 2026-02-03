@@ -39,7 +39,7 @@ void lsolve_inplace(const CSCMatrix& L, std::span<double> x)
 }
 
 
-std::vector<double> lsolve(const CSCMatrix& L, const std::vector<double>& B)
+std::vector<double> lsolve(const CSCMatrix& L, std::span<const double> B)
 {
     return detail::trisolve_dense(L, B, lsolve_inplace);
 }
@@ -62,7 +62,7 @@ void ltsolve_inplace(const CSCMatrix& L, std::span<double> x)
 }
 
 
-std::vector<double> ltsolve(const CSCMatrix& L, const std::vector<double>& B)
+std::vector<double> ltsolve(const CSCMatrix& L, std::span<const double> B)
 {
     return detail::trisolve_dense(L, B, ltsolve_inplace);
 }
@@ -79,7 +79,7 @@ void usolve_inplace(const CSCMatrix& U, std::span<double> x)
 }
 
 
-std::vector<double> usolve(const CSCMatrix& U, const std::vector<double>& B)
+std::vector<double> usolve(const CSCMatrix& U, std::span<const double> B)
 {
     return detail::trisolve_dense(U, B, usolve_inplace);
 }
@@ -102,7 +102,7 @@ void utsolve_inplace(const CSCMatrix& U, std::span<double> x)
 }
 
 
-std::vector<double> utsolve(const CSCMatrix& U, const std::vector<double>& B)
+std::vector<double> utsolve(const CSCMatrix& U, std::span<const double> B)
 {
     return detail::trisolve_dense(U, B, utsolve_inplace);
 }
@@ -124,7 +124,7 @@ void lsolve_inplace_opt(const CSCMatrix& L, std::span<double> x)
 }
 
 
-std::vector<double> lsolve_opt(const CSCMatrix& L, const std::vector<double>& b)
+std::vector<double> lsolve_opt(const CSCMatrix& L, std::span<const double> b)
 {
     return detail::trisolve_dense(L, b, lsolve_inplace_opt);
 }
@@ -145,7 +145,7 @@ void usolve_inplace_opt(const CSCMatrix& U, std::span<double> x)
 }
 
 
-std::vector<double> usolve_opt(const CSCMatrix& U, const std::vector<double>& b)
+std::vector<double> usolve_opt(const CSCMatrix& U, std::span<const double> b)
 {
     return detail::trisolve_dense(U, b, usolve_inplace_opt);
 }
@@ -796,7 +796,7 @@ void CholResult::solve(std::span<double> b) const
 
 std::vector<csint> topological_order(
     const CSCMatrix& b,
-    const std::vector<csint>& parent,
+    std::span<const csint> parent,
     bool forward
 )
 {
@@ -969,7 +969,7 @@ SparseSolution CholResult::ltsolve(
 
 std::vector<double> chol_solve(
     const CSCMatrix& A,
-    const std::vector<double>& B,
+    std::span<const double> B,
     AMDOrder order
 )
 {
@@ -990,7 +990,7 @@ std::vector<double> chol_solve(
     SymbolicChol S = schol(A, order);
     CholResult res = chol(A, S);
 
-    std::vector<double> X = B;  // solution matrix
+    std::vector<double> X(B.begin(), B.end());  // solution matrix
     std::span<double> X_span(X);
 
     // Exercise 8.7/8.9: solve each column of the system
@@ -1075,7 +1075,7 @@ void QRResult::tsolve(
 
 QRSolveResult qr_solve(
     const CSCMatrix& A,
-    const std::vector<double>& B,
+    std::span<const double> B,
     AMDOrder order
 )
 {
@@ -1237,7 +1237,7 @@ void LUResult::tsolve(std::span<double> b) const
 // Exercise 6.1
 std::vector<double> lu_solve(
     const CSCMatrix& A,
-    const std::vector<double>& B,
+    std::span<const double> B,
     AMDOrder order,
     double tol,
     csint ir_steps
@@ -1259,7 +1259,7 @@ std::vector<double> lu_solve(
     const SymbolicLU S = slu(A, order);
     const LUResult res = lu(A, S, tol);
 
-    std::vector<double> X = B;  // solution matrix
+    std::vector<double> X(B.begin(), B.end());  // solution matrix
     std::span<const double> B_span(B);
     std::span<double> X_span(X);
 
@@ -1357,7 +1357,7 @@ std::vector<double> lu_solve(
 // Exercise 6.1
 std::vector<double> lu_tsolve(
     const CSCMatrix& A,
-    const std::vector<double>& b,
+    std::span<const double> b,
     AMDOrder order,
     double tol
 )
@@ -1369,7 +1369,7 @@ std::vector<double> lu_tsolve(
     // Compute the numeric factorization
     SymbolicLU S = slu(A, order);
     LUResult res = lu(A, S, tol);
-    std::vector<double> x = b;
+    std::vector<double> x(b.begin(), b.end());
     res.tsolve(x);
 
     return x;
@@ -1492,7 +1492,7 @@ std::vector<double> spsolve_impl_(const CSCMatrix& A, const RHSType& B)
 {
     auto [M, N] = A.shape();
 
-    if constexpr (std::is_same_v<RHSType, std::vector<double>>) {
+    if constexpr (std::is_same_v<RHSType, std::span<const double>>) {
         csint MxK = static_cast<csint>(B.size());
 
         if (MxK % M != 0) {
@@ -1632,9 +1632,9 @@ std::vector<double> spsolve_impl_(const CSCMatrix& A, const RHSType& B)
 }
 
 
-std::vector<double> spsolve(const CSCMatrix& A, const std::vector<double> & B)
+std::vector<double> spsolve(const CSCMatrix& A, std::span<const double> B)
 {
-    return spsolve_impl_<std::vector<double>>(A, B);
+    return spsolve_impl_<std::span<const double>>(A, B);
 }
 
 

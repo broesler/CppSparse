@@ -28,22 +28,22 @@ TEST_CASE("COOMatrix Constructors", "[COOMatrix][constructor]")
 
         CHECK(A.nnz() == 0);
         CHECK(A.nzmax() == 0);
-        CHECK(A.shape() == Shape {0, 0});
+        CHECK(A.shape() == Shape{0, 0});
     }
 
     SECTION("Make new from given shape") {
-        COOMatrix A {{56, 37}};
+        COOMatrix A{{56, 37}};
         CHECK(A.nnz() == 0);
         CHECK(A.nzmax() == 0);
-        CHECK(A.shape() == Shape {56, 37});
+        CHECK(A.shape() == Shape{56, 37});
     }
 
     SECTION("Allocate new from shape and nzmax") {
         int nzmax = 1e4;
-        COOMatrix A {{56, 37}, nzmax};
+        COOMatrix A{{56, 37}, nzmax};
         CHECK(A.nnz() == 0);
         CHECK(A.nzmax() >= nzmax);
-        CHECK(A.shape() == Shape {56, 37});
+        CHECK(A.shape() == Shape{56, 37});
     }
 
     SECTION("From (v, i, j) literals") {
@@ -51,7 +51,7 @@ TEST_CASE("COOMatrix Constructors", "[COOMatrix][constructor]")
         std::vector<csint>  i{2,    1,    3,    0,    1,    3,    3,    1,    0,    2};
         std::vector<csint>  j{2,    0,    3,    2,    1,    0,    1,    3,    0,    1};
         std::vector<double> v{3.0,  3.1,  1.0,  3.2,  2.9,  3.5,  0.4,  0.9,  4.5,  1.7};
-        COOMatrix A {v, i, j};
+        COOMatrix A{v, i, j};
 
         CHECK(A.nnz() == 10);
         CHECK(A.nzmax() >= 10);

@@ -882,7 +882,7 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
     // Get structure of "lower" tri of C (may be stored as upper only)
     const CSCMatrix C_tril = C.band(0, N).T();
 
-    CSCMatrix L {{N, N}, C_tril.nnz()};  // allocate result
+    CSCMatrix L{{N, N}, C_tril.nnz()};  // allocate result
 
     // Workspaces
     std::vector<csint> c(C_tril.indptr());  // column pointers for L

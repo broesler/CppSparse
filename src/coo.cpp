@@ -227,7 +227,7 @@ csint COOMatrix::nzmax() const { return i_.capacity(); }
 
 Shape COOMatrix::shape() const
 {
-    return Shape {M_, N_};
+    return Shape{M_, N_};
 }
 
 const std::vector<csint>& COOMatrix::row() const { return i_; }
@@ -311,7 +311,7 @@ CSCMatrix COOMatrix::compress() const
 {
     csint nnz_ = nnz();
     bool values = !v_.empty();
-    CSCMatrix C {{M_, N_}, nnz_, values};
+    CSCMatrix C{{M_, N_}, nnz_, values};
     std::vector<csint> w(N_);  // workspace
 
     // Compute number of elements in each column

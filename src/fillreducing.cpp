@@ -168,7 +168,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
                        nv(N+1, 1),      // node i is just 1 node
                        w(N+1, 1),       // node i is alive
                        elen(N+1),       // Ek of node i is empty
-                       degree {len};    // degree of node i
+                       degree{len} ;    // degree of node i
 
     csint lemax = 0;
     csint mark = wclear(0, 0, w, N);  // clear w

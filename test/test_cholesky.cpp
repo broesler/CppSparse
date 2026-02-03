@@ -208,7 +208,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         std::default_random_engine rng(56);
         std::uniform_real_distribution<double> unif(0.0, 1.0);
 
-        COOMatrix w {{L.shape()[0], 1}};
+        COOMatrix w{{L.shape()[0], 1}};
 
         for (csint p = L.indptr()[k]; p < L.indptr()[k + 1]; ++p) {
             w.insert(L.indices()[p], 0, unif(rng));
@@ -267,7 +267,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         const std::vector<double> b_vals = L * expect;
 
         // Create the sparse RHS matrix
-        CSCMatrix b {b_vals, {N, 1}};
+        CSCMatrix b{b_vals, {N, 1}};
 
         // Solve Lx = b
         auto [xi, x] = res.lsolve(b, S.parent);
@@ -308,7 +308,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         const std::vector<double> b_vals = L.T() * expect;
 
         // Create the sparse RHS matrix
-        CSCMatrix b {b_vals, {N, 1}};
+        CSCMatrix b{b_vals, {N, 1}};
 
         // Solve Lx = b
         auto [xi, x] = res.ltsolve(b, S.parent);

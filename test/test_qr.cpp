@@ -101,11 +101,11 @@ TEST_CASE("Householder Reflection", "[house]")
         // The relevant LAPACK routines are DGEQRF, DLARFG
 
         // These are the values from python's scipy.linalg.qr (via LAPACK):
-        std::vector<double> expect_v {1, 0.5};
+        std::vector<double> expect_v{1, 0.5};
         double expect_beta = 1.6;
 
         // These are the values from Davis/Golub & Van Loan:
-        // std::vector<double> expect_v {1, -2};
+        // std::vector<double> expect_v{1, -2};
         // double expect_beta = 0.4;
 
         // s is the 2-norm of x == x.T @ x
@@ -138,7 +138,7 @@ TEST_CASE("Householder Reflection", "[house]")
         std::vector<double> x{-3, 4};  // norm(x) == 5
 
         // These are the values from python's scipy.linalg.qr (via LAPACK):
-        std::vector<double> expect_v {1, -0.5};
+        std::vector<double> expect_v{1, -0.5};
         double expect_beta = 1.6;
         double expect_s = 5;
 
@@ -382,12 +382,12 @@ TEST_CASE("Square, rank-deficient A", "[qr][rank-deficient][numeric]")
     std::vector<double> vals(M2, 1.0);
     CSCMatrix I = COOMatrix{vals, idx, idx}.tocsc();
 
-    REQUIRE(res.V.shape() == Shape {M2, N});
-    REQUIRE(res.R.shape() == Shape {M2, N});
+    REQUIRE(res.V.shape() == Shape{M2, N});
+    REQUIRE(res.R.shape() == Shape{M2, N});
 
     CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
 
-    REQUIRE(Q.shape() == Shape {M2, M2});
+    REQUIRE(Q.shape() == Shape{M2, M2});
 
     CSCMatrix QR = (Q * res.R).slice(0, M, 0, N).droptol(tol).to_canonical();
     CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
@@ -404,7 +404,7 @@ TEST_CASE("Symbolic QR factorization of overdetermined matrix M > N", "[qr][M > 
     csint N = 5;
     CSCMatrix A = davis_example_qr().slice(0, M, 0, N);
 
-    CHECK(A.shape() == Shape {M, N});
+    CHECK(A.shape() == Shape{M, N});
 
     // See etree in Figure 5.1, p 74
     std::vector<csint> parent{3, 2, 3, -1, -1};
@@ -452,7 +452,7 @@ TEST_CASE("Numeric QR factorization of overdetermined matrix M > N", "[qr][M > N
     csint N = 5;
     CSCMatrix A = davis_example_qr().slice(0, M, 0, N);
 
-    CHECK(A.shape() == Shape {M, N});
+    CHECK(A.shape() == Shape{M, N});
 
     // CSparse only uses 2 possible orders for QR factorization:
     AMDOrder order = GENERATE(
@@ -519,7 +519,7 @@ TEST_CASE("Symbolic QR Factorization of Underdetermined Matrix M < N", "[qr][M <
     csint M = 5;
     csint N = 8;
     CSCMatrix A = davis_example_qr().slice(0, M, 0, N);
-    CHECK(A.shape() == Shape {M, N});
+    CHECK(A.shape() == Shape{M, N});
 
     // See etree in Figure 5.1, p 74
     std::vector<csint> parent{3, 2, 3, -1, -1};
@@ -566,7 +566,7 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
     csint M = 5;
     csint N = 8;
     CSCMatrix A = davis_example_qr().slice(0, M, 0, N);
-    CHECK(A.shape() == Shape {M, N});
+    CHECK(A.shape() == Shape{M, N});
 
     // CSparse only uses 2 possible orders for QR factorization:
     AMDOrder order = GENERATE(

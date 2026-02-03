@@ -42,7 +42,7 @@ int main()
         pi, -exp(1), exp(3), exp(7), sqrt(2) / 2
     };
 
-    COOMatrix Ac {v, i, j, {M, N}};
+    COOMatrix Ac{v, i, j, {M, N}};
 
     CSCMatrix A = Ac.tocsc();
     

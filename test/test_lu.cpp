@@ -370,7 +370,7 @@ TEST_CASE("Exercise 6.4: relu", "[ex6.4][relu]")
     for (auto& x : B_data) {
         x += 1;
     }
-    CSCMatrix B {B_data, A.indices(), A.indptr(), A.shape()};
+    CSCMatrix B{B_data, A.indices(), A.indptr(), A.shape()};
 
     CSCMatrix Ap, Bp;
     std::vector<csint> expect_p;
@@ -660,7 +660,7 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
 
     SECTION("Test without failure: Single Request") {
         thresh = 1000;  // min_request < max_request < threshold
-        LowMemoryMatrix L {Shape {N, N}, thresh};
+        LowMemoryMatrix L{Shape{N, N}, thresh};
 
         csint original_nzmax = L.nzmax();
 
@@ -671,7 +671,7 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
 
     SECTION("Test without failure: Multiple Requests") {
         thresh = 200;  // min_request < threshold < max_request
-        LowMemoryMatrix L {Shape {N, N}, thresh};
+        LowMemoryMatrix L{Shape{N, N}, thresh};
 
         csint original_nzmax = L.nzmax();
 
@@ -696,7 +696,7 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
 
     SECTION("Test with failure") {
         thresh = 75;  // threshold < min_request < max_request
-        LowMemoryMatrix L {Shape {N, N}, thresh};
+        LowMemoryMatrix L{Shape{N, N}, thresh};
 
         // --- Redirect std::cerr to capture the error message ---
         // Save the original cerr buffer

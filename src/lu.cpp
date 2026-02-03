@@ -412,8 +412,8 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     auto [M, N] = A.shape();
 
     // Copy result matrices without values
-    CSCMatrix L {std::vector<double>(R.L.nnz()), R.L.i_, R.L.p_, R.L.shape()};
-    CSCMatrix U {std::vector<double>(R.U.nnz()), R.U.i_, R.U.p_, R.U.shape()};
+    CSCMatrix L{std::vector<double>(R.L.nnz()), R.L.i_, R.L.p_, R.L.shape()};
+    CSCMatrix U{std::vector<double>(R.U.nnz()), R.U.i_, R.U.p_, R.U.shape()};
 
     // Initialize row permutation vector
     // NOTE we need this initialization because the -1 values are used in

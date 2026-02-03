@@ -32,7 +32,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
     CSCMatrix C = A.compress();  // unsorted columns
 
     SECTION("Attributes") {
-        std::vector<csint> indptr_expect {  0,             3,             6,        8,  10};
+        std::vector<csint> indptr_expect{  0,             3,             6,        8,  10};
         std::vector<csint> indices_expect{  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
         std::vector<double> data_expect  {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
 
@@ -142,7 +142,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
 
         auto sort_test = [](const CSCMatrix& Cs) {
             Shape shape_expect = {4, 5};
-            std::vector<csint> indptr_expect {  0,             3,             6,        8,       10, 11};
+            std::vector<csint> indptr_expect{  0,             3,             6,        8,       10, 11};
             std::vector<csint> indices_expect{  0,   1,   3,   1,   2,   3,   0,   2,   1,   3,   0};
             std::vector<double> data_expect  {4.5, 3.1, 3.5, 2.9, 1.7, 0.4, 3.2, 3.0, 0.9, 1.0, 1.6};
 
@@ -221,7 +221,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
 
 TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
 {
-    std::vector<csint> indptr_expect {  0,               3,                 6,        8,  10};
+    std::vector<csint> indptr_expect{  0,               3,                 6,        8,  10};
     std::vector<csint> indices_expect{  0,   1,     3,   1,     2,   3,     0,   2,   1,   3};
     std::vector<double> data_expect  {4.5, 3.1, 103.5, 2.9, 101.7, 0.4, 103.2, 3.0, 0.9, 1.0};
 
@@ -260,7 +260,7 @@ TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
     REQUIRE_FALSE(C.is_symmetric());
 
     SECTION("Constructor") {
-        CSCMatrix B {A};
+        CSCMatrix B{A};
         REQUIRE(C.indptr() == B.indptr());
         REQUIRE(C.indices() == B.indices());
         REQUIRE(C.data() == B.data());
@@ -457,7 +457,7 @@ TEST_CASE("Exercise 2.2: Conversion to COOMatrix") {
     };
 
     SECTION("As constructor") {
-        COOMatrix A {C};  // via constructor
+        COOMatrix A{C};  // via constructor
         convert_test(A);
     }
 
@@ -699,7 +699,7 @@ TEST_CASE("Exercise 2.15: Band function", "[ex2.15][band]")
     csint N = 6;
     csint nnz = N*N;
 
-    CSCMatrix A {std::vector<double>(nnz, 1), {N, N}};  // (N, N) of ones
+    CSCMatrix A{std::vector<double>(nnz, 1), {N, N}};  // (N, N) of ones
 
     SECTION("Main diagonal") {
         int kl = 0,
@@ -758,12 +758,12 @@ TEST_CASE("Exercise 2.16: CSC to/from dense", "[ex2.16][fromdense][todense]")
     };
 
     SECTION("From Dense Column-major") {
-        CSCMatrix B {dense_column_major, {4, 4}, DenseOrder::ColMajor};
+        CSCMatrix B{dense_column_major, {4, 4}, DenseOrder::ColMajor};
         check_sparse_allclose(B, C);
     }
 
     SECTION("From Dense Row-major") {
-        CSCMatrix B {dense_row_major, {4, 4}, DenseOrder::RowMajor};
+        CSCMatrix B{dense_row_major, {4, 4}, DenseOrder::RowMajor};
         check_sparse_allclose(B, C);
     }
 
@@ -1005,13 +1005,13 @@ TEST_CASE("Exercise 2.23: Slicing", "[ex2.23][slice]")
     }
 
     SECTION("Empty row") {
-        CSCMatrix expect {{M, 0}, 0};
+        CSCMatrix expect{{M, 0}, 0};
         CSCMatrix C = A.slice(0, M, 0, 0);
         check_sparse_allclose(C, expect);
     }
 
     SECTION("Empty column") {
-        CSCMatrix expect {{0, N}, 0};
+        CSCMatrix expect{{0, N}, 0};
         CSCMatrix C = A.slice(0, 0, 0, N);
         check_sparse_allclose(C, expect);
     }

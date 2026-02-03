@@ -89,7 +89,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
     CSCMatrix U = L.T();
 
     // Define the rhs matrix B
-    CSCMatrix B {Shape {N, 1}};
+    CSCMatrix B{Shape{N, 1}};
 
     SECTION("dfs from a single node") {
         // Assign non-zeros to rows 3 and 5 in column 0

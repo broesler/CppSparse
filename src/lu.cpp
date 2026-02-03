@@ -202,7 +202,7 @@ void lu_realloc(CSCMatrix& R, csint k, bool lower)
  *
  * @param p_inv  the permutation vector
  */
-static void make_valid_permutation(std::vector<csint>& p_inv)
+static void make_valid_permutation(std::span<csint> p_inv)
 {
     csint M = p_inv.size();
 

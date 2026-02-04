@@ -180,7 +180,7 @@ std::vector<csint> post(std::span<const csint> parent)
     std::vector<csint> next(N);
 
     // Traverse nodes in reverse order
-    for (csint j = N - 1; j >= 0; j--) {
+    for (csint j = N - 1; j >= 0; --j) {
         if (parent[j] != -1) {           // only operate on non-roots
             next[j] = head[parent[j]];   // add j to list of its parent
             head[parent[j]] = j;

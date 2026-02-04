@@ -53,7 +53,7 @@ std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& B)
 
 void ltsolve_inplace(const CSCMatrix& L, std::span<double> x)
 {
-    for (csint j = L.N_ - 1; j >= 0; j--) {
+    for (csint j = L.N_ - 1; j >= 0; --j) {
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; ++p) {
             x[j] -= L.v_[p] * x[L.i_[p]];
         }
@@ -70,7 +70,7 @@ std::vector<double> ltsolve(const CSCMatrix& L, std::span<const double> B)
 
 void usolve_inplace(const CSCMatrix& U, std::span<double> x)
 {
-    for (csint j = U.N_ - 1; j >= 0; j--) {
+    for (csint j = U.N_ - 1; j >= 0; --j) {
         x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
         for (csint p = U.p_[j]; p < U.p_[j+1] - 1; ++p) {
             x[U.i_[p]] -= U.v_[p] * x[j];
@@ -133,7 +133,7 @@ std::vector<double> lsolve_opt(const CSCMatrix& L, std::span<const double> b)
 // Exercise 3.8
 void usolve_inplace_opt(const CSCMatrix& U, std::span<double> x)
 {
-    for (csint j = U.N_ - 1; j >= 0; j--) {
+    for (csint j = U.N_ - 1; j >= 0; --j) {
         double& x_val = x[j];  // cache reference to value
         if (x_val != 0) {
             x_val /= U.v_[U.p_[j+1] - 1];  // diagonal entry
@@ -161,7 +161,7 @@ std::vector<csint> find_lower_diagonals(const CSCMatrix& A)
     std::vector<char> marked(A.N_, false);  // workspace
     std::vector<csint> p_diags(A.N_);       // diagonal indicies (inverse permutation)
 
-    for (csint j = A.N_ - 1; j >= 0; j--) {
+    for (csint j = A.N_ - 1; j >= 0; --j) {
         csint N_unmarked = 0;
 
         for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
@@ -363,7 +363,7 @@ std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b)
     std::vector<double> b_work(b.begin(), b.end());
 
     // Perform the permuted backward solve
-    for (csint j = A.N_ - 1; j >= 0; j--) {
+    for (csint j = A.N_ - 1; j >= 0; --j) {
         csint i = p_inv[j];        // permuted row index
         csint d = p_diags[j];      // pointer to the diagonal entry
         double x_val = b_work[i];  // cache diagonal value
@@ -1386,7 +1386,7 @@ static inline csint min_argmaxabs(const std::vector<double>& x)
     csint j = N;         // minimum index
     double max_val = 0;  // maximum absolute value
 
-    for (csint i = N-1; i >= 0; i--) {
+    for (csint i = N-1; i >= 0; --i) {
         double mval = std::fabs(x[i]);
         if (i < j && mval > max_val) {
             max_val = mval;

@@ -109,7 +109,7 @@ std::vector<csint> find_leftmost(const CSCMatrix& A)
 {
     std::vector<csint> leftmost(A.M_, -1);
 
-    for (csint k = A.N_ - 1; k >= 0; k--) {
+    for (csint k = A.N_ - 1; k >= 0; --k) {
         for (csint p = A.p_[k]; p < A.p_[k+1]; ++p) {
             leftmost[A.i_[p]] = k;  // leftmost[i] = min(find(A(i, :)))
         }
@@ -133,7 +133,7 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
     S.p_inv.assign(M + N, -1);  // initialize permutation vector
 
     // Initialize the linked lists for each row with their leftmost index
-    for (csint i = M-1; i >= 0; i--) {  // scan rows in reverse order
+    for (csint i = M-1; i >= 0; --i) {  // scan rows in reverse order
         csint k = S.leftmost[i];
         if (k != -1) {                  // row i is not empty
             if (nque[k]++ == 0) {
@@ -486,7 +486,7 @@ void apply_qleft(
 )
 {
     csint N = V.shape()[1];
-    for (csint j = N - 1; j >= 0; j--) {
+    for (csint j = N - 1; j >= 0; --j) {
         happly(V, j, beta[j], x);
     }
 }

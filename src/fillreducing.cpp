@@ -480,7 +480,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
     std::fill(head.begin(), head.end(), -1);
 
     // Place unordered nodes in lists
-    for (csint j = N; j >= 0; j--) {
+    for (csint j = N; j >= 0; --j) {
         if (nv[j] > 0) {
             continue;  // skip if j is an element
         }
@@ -489,7 +489,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
     }
 
     // Place elements in lists
-    for (csint e = N; e >= 0; e--) {
+    for (csint e = N; e >= 0; --e) {
         if (nv[e] <= 0) {
             continue;  // skip unless e is an element
         }
@@ -568,12 +568,12 @@ void augment(
         }
 
         if (p == A.p_[j+1]) {
-            head--;                   // node j is done; pop from stack
+            --head;                   // node j is done; pop from stack
         }
     }
 
     if (found) {
-        for (csint p = head; p >= 0; p--) {
+        for (csint p = head; p >= 0; --p) {
             jmatch[is[p]] = js[p];    // augment the match
         }
     }

@@ -165,11 +165,20 @@ void print_vec(
 }
 
 
-/** Print a std::vector to an output stream. */
+/** Print a std::span to an output stream. */
 template <typename T>
 std::ostream& operator<<(std::ostream& os, std::span<const T> vec)
 {
     print_vec(vec, os, "");
+    return os;
+}
+
+
+/** Print a std::vector to an output stream. */
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T> vec)
+{
+    print_vec(std::span{vec}, os, "");
     return os;
 }
 

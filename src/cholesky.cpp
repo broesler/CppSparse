@@ -31,7 +31,7 @@ std::vector<csint> etree(const CSCMatrix& A, bool ata)
         prev = std::vector<csint>(A.M_, -1);
     }
 
-    for (auto k : A.column_range_()) {
+    for (auto k : A.column_range()) {
         for (csint p = A.p_[k]; p < A.p_[k+1]; ++p) {
             csint i = ata ? prev[A.i_[p]] : A.i_[p];  // A(i, k) is nonzero
             while (i != -1 && i < k) {      // only use upper triangular of A
@@ -402,7 +402,7 @@ std::vector<csint> counts(
     std::iota(ancestor.begin(), ancestor.end(), 0);
 
     // Compute first descendent of each node in the tree
-    for (auto k : A.column_range_()) {
+    for (auto k : A.column_range()) {
         csint j = postorder[k];  // node j of etree is kth postordered node
         delta[j] = (first[j] == -1) ? 1 : 0;  // delta[j] = 1 if j is a leaf
         while (j != -1 && first[j] == -1) {
@@ -418,7 +418,7 @@ std::vector<csint> counts(
         init_ata(AT, postorder, head, next);
     }
 
-    for (auto k : A.column_range_()) {
+    for (auto k : A.column_range()) {
         csint j = postorder[k];  // node j of etree is kth postordered node
         if (parent[j] != -1) {
             delta[parent[j]]--;  // j is not a root
@@ -445,7 +445,7 @@ std::vector<csint> counts(
     }
 
     // sum up the counts for each child
-    for (auto j : A.column_range_()) {
+    for (auto j : A.column_range()) {
         if (parent[j] != -1) {
             delta[parent[j]] += delta[j];
         }

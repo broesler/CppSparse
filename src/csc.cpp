@@ -91,7 +91,7 @@ CSCMatrix::CSCMatrix(
 
     csint nz = 0;  // count number of non-zeros
 
-    for (auto j : column_range_()) {
+    for (auto j : column_range()) {
         p_.push_back(nz);
 
         for (csint i = 0; i < M_; ++i) {
@@ -171,8 +171,8 @@ bool CSCMatrix::is_symmetric() const
         return false;
     }
 
-    for (auto j : column_range_()) {
-        for (auto [i, v] : column_(j)) {
+    for (auto j : column_range()) {
+        for (auto [i, v] : column(j)) {
             if (i == j)
                 continue;  // skip diagonal
 
@@ -195,8 +195,8 @@ csint CSCMatrix::is_triangular() const
     bool is_upper = true;
     bool is_lower = true;
 
-    for (auto j : column_range_()) {
-        for (auto i : row_indices_(j)) {
+    for (auto j : column_range()) {
+        for (auto i : row_indices(j)) {
             if (i > j) {
                 is_upper = false;
             } else if (i < j) {
@@ -211,7 +211,7 @@ csint CSCMatrix::is_triangular() const
 
 bool CSCMatrix::_test_sorted() const
 {
-    for (auto j : column_range_()) {
+    for (auto j : column_range()) {
         // Check that the column is sorted
         for (csint p = p_[j]; p < p_[j+1] - 1; ++p) {
             if (i_[p] > i_[p+1]) {
@@ -266,7 +266,7 @@ CSCMatrix::GetItemResult CSCMatrix::get_item_(csint i, csint j) const
         // NOTE this code assumes that columns are *not* sorted, and that
         // duplicate entries may exist, so it will search through *every*
         // element in a column.
-        for (auto p : indptr_range_(j)) {
+        for (auto p : indptr_range(j)) {
             if (i_[p] == i) {
                 if (!found) {
                     found = true;
@@ -315,7 +315,7 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
         csint k;
         bool found = false;
 
-        for (auto p : indptr_range_(j)) {
+        for (auto p : indptr_range(j)) {
             if (i_[p] == i) {
                 if (!found) {
                     k = p;  // store the minimum index of the element
@@ -436,8 +436,8 @@ std::vector<double> CSCMatrix::to_dense_vector(const DenseOrder order) const
     std::vector<double> A(M_ * N_, 0.0);
     csint idx;
 
-    for (auto j : column_range_()) {
-        for (auto [i, v] : column_(j)) {
+    for (auto j : column_range()) {
+        for (auto [i, v] : column(j)) {
             // Column- vs row-major order
             if (order == DenseOrder::ColMajor) {
                 idx = i + j * M_;
@@ -474,8 +474,8 @@ CSCMatrix CSCMatrix::transpose(bool values) const
     std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
-    for (auto j : column_range_()) {
-        for (auto [i, v] : column_(j)) {
+    for (auto j : column_range()) {
+        for (auto [i, v] : column(j)) {
             // place A(i, j) as C(j, i)
             csint q = w[i]++;
             C.i_[q] = j;
@@ -507,7 +507,7 @@ CSCMatrix& CSCMatrix::qsort()
 {
     // Find maximum column size
     csint max_len = 0;
-    for (auto j : column_range_()) {
+    for (auto j : column_range()) {
         max_len = std::max(max_len, p_[j+1] - p_[j]);
     }
 
@@ -519,7 +519,7 @@ CSCMatrix& CSCMatrix::qsort()
     x.reserve(max_len);
     idx.reserve(max_len);
 
-    for (auto j : column_range_()) {
+    for (auto j : column_range()) {
         // Pointers to the rows
         csint p = p_[j];
         csint len = p_[j+1] - p;
@@ -572,8 +572,8 @@ CSCMatrix& CSCMatrix::sort()
     std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
-    for (auto j : column_range_()) {
-        for (auto [i, v] : column_(j)) {
+    for (auto j : column_range()) {
+        for (auto [i, v] : column(j)) {
             // place A(i, j) as C(j, i)
             csint q = w[i]++;
             C.i_[q] = j;
@@ -587,8 +587,8 @@ CSCMatrix& CSCMatrix::sort()
     // Copy column counts to avoid repeat work
     w = p_;
 
-    for (auto j : C.column_range_()) {
-        for (auto [Ci, Cv] : C.column_(j)) {
+    for (auto j : C.column_range()) {
+        for (auto [Ci, Cv] : C.column(j)) {
             // place C(i, j) as A(j, i)
             csint q = w[Ci]++;
             i_[q] = j;
@@ -609,7 +609,7 @@ CSCMatrix& CSCMatrix::sum_duplicates()
     csint nz = 0;  // count actual number of non-zeros (excluding dups)
     std::vector<csint> w(M_, -1);                      // row i not yet seen
 
-    for (auto j : column_range_()) {
+    for (auto j : column_range()) {
         csint q = nz;                                  // column j will start at q
         for (csint p = p_[j]; p < p_[j + 1]; ++p) {
             csint i = i_[p];                          // A(i, j) is nonzero
@@ -636,7 +636,7 @@ CSCMatrix& CSCMatrix::fkeep(KeepFunc fk)
     csint nz = 0;  // count actual number of non-zeros
     bool values = !v_.empty();
 
-    for (auto j : column_range_()) {
+    for (auto j : column_range()) {
         csint p = p_[j];  // get current location of column j
         p_[j] = nz;       // record new location of column j
         for (; p < p_[j+1]; ++p) {
@@ -736,8 +736,8 @@ double CSCMatrix::structural_symmetry() const
     csint nnz_AAT = 0;
     csint nnz_A = 0;
 
-    for (auto j : column_range_()) {
-        for (auto i : row_indices_(j)) {
+    for (auto j : column_range()) {
+        for (auto i : row_indices(j)) {
             // Count all off-diagonal elements in A
             if (i != j) {
                 ++nnz_A;
@@ -805,7 +805,7 @@ std::vector<double> gaxpy(
 
     std::vector<double> out(y.begin(), y.end());  // copy the input vector
 
-    for (auto j : A.column_range_()) {
+    for (auto j : A.column_range()) {
         for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
             out[A.i_[p]] += A.v_[p] * x[j];
         }
@@ -826,7 +826,7 @@ std::vector<double> gatxpy(
 
     std::vector<double> out(y.begin(), y.end());  // copy the input vector
 
-    for (auto j : A.column_range_()) {
+    for (auto j : A.column_range()) {
         for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
             out[j] += A.v_[p] * x[A.i_[p]];
         }
@@ -851,7 +851,7 @@ std::vector<double> sym_gaxpy(
 
     std::vector<double> out(y.begin(), y.end());  // copy the input vector
 
-    for (auto j : A.column_range_()) {
+    for (auto j : A.column_range()) {
         for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
             csint i = A.i_[p];
 
@@ -887,7 +887,7 @@ std::vector<double> gaxpy_col(
     // For each column of X
     for (csint k = 0; k < K; ++k) {
         // Compute one column of Y (see gaxpy)
-        for (auto j : A.column_range_()) {
+        for (auto j : A.column_range()) {
             double x_val = X[j + k * A.N_];  // cache value
 
             // Only compute if x_val is non-zero
@@ -959,7 +959,7 @@ std::vector<double> gaxpy_row(
     // For each column of X
     for (csint k = 0; k < K; ++k) {
         // Compute one column of Y (see gaxpy)
-        for (auto j : A.column_range_()) {
+        for (auto j : A.column_range()) {
             double x_val = X[k + j * K];  // cache value (row-major indexing)
 
             // Only compute if x_val is non-zero
@@ -992,7 +992,7 @@ std::vector<double> gatxpy_col(
     // For each column of X
     for (csint k = 0; k < K; ++k) {
         // Compute one column of Y (see gaxpy)
-        for (auto j : A.column_range_()) {
+        for (auto j : A.column_range()) {
             for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
                 // Indexing in column-major order
                 out[j + k * A.N_] += A.v_[p] * X[A.i_[p] + k * A.M_];
@@ -1054,7 +1054,7 @@ std::vector<double> gatxpy_row(
     // For each column of X
     for (csint k = 0; k < K; ++k) {
         // Compute one column of Y (see gaxpy)
-        for (auto j : A.column_range_()) {
+        for (auto j : A.column_range()) {
             for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
                 // Indexing in row-major order
                 out[k + j * K] += A.v_[p] * X[k + A.i_[p] * K];
@@ -1091,8 +1091,8 @@ CSCMatrix CSCMatrix::scale(std::span<const double> r, std::span<const double> c)
 
     CSCMatrix out(*this);
 
-    for (auto j : column_range_()) {
-        for (auto p : indptr_range_(j)) {
+    for (auto j : column_range()) {
+        for (auto p : indptr_range(j)) {
             out.v_[p] *= r[i_[p]] * c[j];
         }
     }
@@ -1121,8 +1121,8 @@ std::vector<double> CSCMatrix::dot(std::span<const double> X) const
 
     for (csint k = 0; k < K; ++k) {
         // Compute one column of output
-        for (auto j : column_range_()) {
-            for (auto [i, v] : column_(j)) {
+        for (auto j : column_range()) {
+            for (auto [i, v] : column(j)) {
                 csint idx = i + k * M_;  // column-major input/output order
                 csint jdx = j + k * N_;
                 out[idx] += v * X[jdx];
@@ -1177,7 +1177,7 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
         C.p_[j] = nz;  // column j of C starts here
 
         // Compute x = A @ B[:, j]
-        for (auto [Bi, Bv] : B.column_(j)) {
+        for (auto [Bi, Bv] : B.column(j)) {
             // Compute x += A[:, B.i_[p]] * B.v_[p]
             nz = scatter(Bi, values ? Bv : 1, w, x, j+1, C, nz, fs);
             fs = false;
@@ -1449,7 +1449,7 @@ csint CSCMatrix::scatter(
     // Exercise 2.19
     if (fs) {
         // If it's the first call, we can just copy the (scaled) column
-        for (auto [i, v] : column_(j)) {  // A(i, j) is non-zero
+        for (auto [i, v] : column(j)) {  // A(i, j) is non-zero
             w[i] = mark;          // i is new entry in column j
             C.i_[nz++] = i;       // add i to sparsity pattern of C(:, j)
             if (values) {
@@ -1459,7 +1459,7 @@ csint CSCMatrix::scatter(
     } else {
         // Original scatter
         // Otherwise, we need to accumulate the values
-        for (auto [i, v] : column_(j)) {  // A(i, j) is non-zero
+        for (auto [i, v] : column(j)) {  // A(i, j) is non-zero
             if (w[i] < mark) {
                 w[i] = mark;           // i is new entry in column j
                 C.i_[nz++] = i;        // add i to pattern of C(:, j)
@@ -1514,7 +1514,7 @@ CSCMatrix CSCMatrix::permute(
     CSCMatrix C({M_, N_}, nnz(), values);
     csint nz = 0;
 
-    for (auto k : column_range_()) {
+    for (auto k : column_range()) {
         C.p_[k] = nz;                   // column k of C is column q[k] of A
         csint j = q.empty() ? k : q[k];
 
@@ -1555,10 +1555,10 @@ CSCMatrix CSCMatrix::symperm(std::span<const csint> p_inv, bool values) const
     std::vector<csint> w(N_);  // workspace for column counts
 
     // Count entries in each column of C
-    for (auto j : column_range_()) {
+    for (auto j : column_range()) {
         csint j2 = p_inv.empty() ? j : p_inv[j];  // column j of A is column j2 of C
 
-        for (auto i : row_indices_(j)) {
+        for (auto i : row_indices(j)) {
             if (i > j) {
                 continue;   // skip lower triangular part of A
             }
@@ -1572,10 +1572,10 @@ CSCMatrix CSCMatrix::symperm(std::span<const csint> p_inv, bool values) const
     std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
-    for (auto j : column_range_()) {
+    for (auto j : column_range()) {
         csint j2 = p_inv.empty() ? j : p_inv[j];  // column j of A is column j2 of C
 
-        for (auto [i, v] : column_(j)) {
+        for (auto [i, v] : column(j)) {
             if (i > j) {
                 continue;   // skip lower triangular part of A
             }
@@ -1614,8 +1614,8 @@ CSCMatrix CSCMatrix::permute_transpose(
     w = C.p_;  // copy back into workspace
 
     // place A(i, j) as C(j, i) (permuted)
-    for (auto j : column_range_()) {
-        for (auto [i, v] : column_(j)) {
+    for (auto j : column_range()) {
+        for (auto [i, v] : column(j)) {
             csint idx = p_inv.empty() ? i : p_inv[i];
             csint t = w[idx]++;
             C.i_[t] = q_inv.empty() ? j : q_inv[j];
@@ -1633,10 +1633,10 @@ double CSCMatrix::norm() const
 {
     double the_norm = 0;
 
-    for (auto j : column_range_()) {
+    for (auto j : column_range()) {
         double s = 0;
 
-        for (auto v : col_values_(j)) {
+        for (auto v : col_values(j)) {
             s += std::fabs(v);
         }
 
@@ -1689,8 +1689,8 @@ bool CSCMatrix::is_valid(const bool sorted, const bool values) const
 
     // See also: `scipy.sparse._compressed._cs_matrix.check_format` 
     //  for O(1) and O(|A|) checks.
-    for (auto j : column_range_()) {
-        for (auto p : indptr_range_(j)) {
+    for (auto j : column_range()) {
+        for (auto p : indptr_range(j)) {
             csint i = i_[p];
 
             if (i < 0 || i > M_) {
@@ -1739,7 +1739,7 @@ CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
     C.realloc(A.nnz() + B.nnz());
 
     // Copy the second matrix
-    for (auto j : B.column_range_()) {
+    for (auto j : B.column_range()) {
         C.p_[A.N_ + j] = B.p_[j] + A.nnz();
     }
 
@@ -1768,7 +1768,7 @@ CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
 
     csint nz = 0;
 
-    for (auto j : C.column_range_()) {
+    for (auto j : C.column_range()) {
         C.p_[j] = nz;  // column j of C starts here
 
         // Copy column j from the first matrix
@@ -1825,7 +1825,7 @@ CSCMatrix CSCMatrix::slice(
     for (csint j = j_start; j < j_end; ++j) {
         C.p_[j - j_start] = nz;  // column j of C starts here
 
-        for (auto [i, v] : column_(j)) {
+        for (auto [i, v] : column(j)) {
             if ((i >= i_start) && (i < i_end)) {
                 C.i_[nz] = i - i_start;
                 C.v_[nz] = v;
@@ -1926,8 +1926,8 @@ std::vector<double> CSCMatrix::sum_rows() const
 {
     std::vector<double> out(M_, 0.0);
 
-    for (auto j : column_range_()) {
-        for (auto [i, v] : column_(j)) {
+    for (auto j : column_range()) {
+        for (auto [i, v] : column(j)) {
             out[i] += v;
         }
     }
@@ -1940,8 +1940,8 @@ std::vector<double> CSCMatrix::sum_cols() const
 {
     std::vector<double> out(N_, 0.0);
 
-    for (auto j : column_range_()) {
-        for (auto v : col_values_(j)) {
+    for (auto j : column_range()) {
+        for (auto v : col_values(j)) {
             out[j] += v;
         }
     }
@@ -1962,8 +1962,8 @@ void CSCMatrix::write_elems_(std::stringstream& ss, csint start, csint end) cons
     int col_width = std::to_string(N_ - 1).size();
 
     csint n = 0;  // number of elements printed
-    for (auto j : column_range_()) {
-        for (auto [i, v] : column_(j)) {
+    for (auto j : column_range()) {
+        for (auto [i, v] : column(j)) {
             if ((n >= start) && (n < end)) {
                 ss << std::vformat(
                     format_string,

@@ -77,7 +77,7 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
     csint lnz = 0,
           unz = 0;
 
-    for (csint k = 0; k < N; ++k) {  // Compute L[:, k] and U[:, k]
+    for (auto k : L.column_range()) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
         L.p_[k] = lnz;  // L[:, k] starts here
         U.p_[k] = unz;  // U[:, k] starts here
@@ -434,7 +434,7 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     csint lnz = 0,
           unz = 0;
 
-    for (csint k = 0; k < N; ++k) {  // Compute L[:, k] and U[:, k]
+    for (auto k : A.column_range()) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
         // Solve Lx = A[:, col], where col is the permuted column
         spsolve(L, A, S.q[k], sol, p_inv);  // x = L \ A[:, col]
@@ -488,7 +488,7 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
     csint lnz = 0,
           unz = 0;
 
-    for (csint k = 0; k < N; ++k) {  // Compute L[:, k] and U[k, :]
+    for (auto k : A.column_range()) {  // Compute L[:, k] and U[k, :]
         L.p_[k] = lnz;   // L[:, k] starts here
         UT.p_[k] = unz;  // U[k, :] starts here
 
@@ -610,7 +610,7 @@ LUResult ilutp(
     csint lnz = 0,
           unz = 0;
 
-    for (csint k = 0; k < N; ++k) {  // Compute L[:, k] and U[:, k]
+    for (auto k : A.column_range()) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
         L.p_[k] = lnz;  // L[:, k] starts here
         U.p_[k] = unz;  // U[:, k] starts here
@@ -719,7 +719,7 @@ LUResult ilu_nofill(
     csint lnz = 0,
           unz = 0;
 
-    for (csint k = 0; k < N; ++k) {  // Compute L[:, k] and U[:, k]
+    for (auto k : A.column_range()) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
         L.p_[k] = lnz;  // L[:, k] starts here
         U.p_[k] = unz;  // U[:, k] starts here

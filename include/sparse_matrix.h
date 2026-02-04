@@ -22,15 +22,6 @@ namespace cs {
 
 class SparseMatrix {
 protected:
-    /** Return a range for iterating over the columns.
-     *
-     * @return a range 0, 1, ..., N-1 where N is the number of columns.
-     */
-    auto column_range_() const {
-        const auto [M, N] = shape();
-        return std::views::iota(0, N);
-    }
-
     /** Return the format description of the matrix. */
     virtual std::string_view get_format_desc_() const = 0;
 
@@ -63,6 +54,15 @@ public:
     virtual Shape shape() const = 0;  // the dimensions of the matrix
 
     virtual const std::vector<double>& data() const = 0;  // numerical values
+
+    /** Return a range for iterating over the columns.
+     *
+     * @return a range 0, 1, ..., N-1 where N is the number of columns.
+     */
+    auto column_range() const {
+        const auto [M, N] = shape();
+        return std::views::iota(0, N);
+    }
 
     /// Matrix-vector right-multiply (see cs_multiply)
     virtual std::vector<double> dot(std::span<const double> x) const = 0;

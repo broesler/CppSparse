@@ -155,8 +155,8 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
     // --- Allocate result + workspaces ----------------------------------------
     std::vector<csint> len(N + 1);
 
-    for (csint k = 0; k < N; ++k) {
-        len[k] = C.p_[k+1] - C.p_[k];  // length of adjacency list
+    for (auto k : C.column_range()) {
+        len[k] = C.col_length(k);  // length of adjacency list
     }
 
     len[N] = 0;
@@ -179,7 +179,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
     // --- Initialize degree lists ---------------------------------------------
     csint nel = 0;  // number of empty nodes
 
-    for (csint i = 0; i < N; ++i) {
+    for (auto i : C.column_range()) {
         csint d = degree[i];
         if (d == 0) {
             elen[i] = -2;  // node i is empty
@@ -226,7 +226,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
 
         // --- Garbage collection ----------------------------------------------
         if (elenk > 0 && cnz + mindeg >= C.nzmax()) {
-            for (csint j = 0; j < N; ++j) {
+            for (auto j : C.column_range()) {
                 csint p = C.p_[j];
                 if (p >= 0) {           // j is a live node or element
                     C.p_[j] = C.i_[p];  // save first entry of object
@@ -473,7 +473,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
     }  // while selecting pivots
 
     // --- Postordering --------------------------------------------------------
-    for (csint i = 0; i < N; ++i) {
+    for (auto i : C.column_range()) {
         C.p_[i] = flip(C.p_[i]);  // fix assembly tree
     }
 
@@ -639,7 +639,7 @@ MaxMatch maxtrans_r(const CSCMatrix& A, [[maybe_unused]] csint seed)
     std::vector<csint> w(N, -1),  // mark all nodes as unvisited
                        cheap(A.p_);  // cheap assignment
 
-    for (csint k = 0; k < N; ++k) {
+    for (auto k : A.column_range()) {
         augment_r(k, A, jmatch, cheap, w, k);
     }
     
@@ -667,11 +667,11 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
     csint k = 0;
     csint n2 = 0;
 
-    for (csint j = 0; j < N; ++j) {
+    for (auto j : A.column_range()) {
         n2 += (A.p_[j] < A.p_[j+1]);
-        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
-            w[A.i_[p]] = 1;
-            k += (j == A.i_[p]);  // count entries already on diagonal
+        for (auto i : A.row_indices(j)) {
+            w[i] = 1;
+            k += (j == i);  // count entries already on diagonal
         }
     }
 
@@ -705,7 +705,7 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
     std::vector<csint> q = randperm(N, seed);  // random permutation of columns
 
     // augment the path, starting at column q[k]
-    for (csint k = 0; k < N; ++k) {
+    for (auto k : C.column_range()) {
         augment(q[k], C, jmatch, cheap, w, js, is, ps);
     }
 
@@ -742,7 +742,7 @@ SCCResult scc(const CSCMatrix& A)
     rstack.reserve(N);
 
     // ----- DFS through all of A
-    for (csint i = 0; i < N; ++i) {
+    for (auto i : A.column_range()) {
         if (!marked[i]) {
             dfs(A, i, marked, xi, pstack, rstack);
         }
@@ -778,7 +778,7 @@ SCCResult scc(const CSCMatrix& A)
 
     // Sort the indices of each block
     std::vector<csint> rcopy = D.r;  // pointers to start of blocks
-    for (csint i = 0; i < N; ++i) {
+    for (auto i : A.column_range()) {
         D.p[rcopy[Blk[i]]++] = i;
     }
 

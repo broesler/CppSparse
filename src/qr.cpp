@@ -498,8 +498,7 @@ void apply_qtleft(
     std::span<double> x
 )
 {
-    csint N = V.shape()[1];
-    for (csint j = 0; j < N; ++j) {
+    for (auto j : V.column_range()) {
         happly(V, j, beta[j], x);
     }
 }
@@ -528,7 +527,7 @@ CSCMatrix apply_qtleft(
     csint nz = 0;
 
     // Apply the Householder reflectors to each column of Y
-    for (csint k = 0; k < NY; ++k) {
+    for (auto k : Y.column_range()) {
         if (nz + M > C.nzmax()) {
             C.realloc(2 * C.nzmax() + M);
         }
@@ -536,9 +535,7 @@ CSCMatrix apply_qtleft(
         C.p_[k] = nz;  // column j of C starts here
 
         // Scatter X(:, k) into x
-        for (csint p = X.p_[k]; p < X.p_[k+1]; ++p) {
-            x[X.i_[p]] = X.v_[p];
-        }
+        X.scatter(k, x);
 
         // Apply Householder reflection to x
         apply_qtleft(V, beta, x);

@@ -14,6 +14,7 @@
 #include <functional>
 #include <iostream>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <sstream>
@@ -1273,6 +1274,40 @@ public:
     friend CSCMatrix operator-(const CSCMatrix& A);
 
 protected:
+    /** Return the number of non-zeros in column j. */
+    csint col_length_(csint j) const
+    {
+        return p_[j+1] - p_[j];
+    }
+
+    /** Return a span over the row indices of column j. */
+    auto row_indices_(csint j) const
+    {
+        return std::span(i_).subspan(p_[j], col_length_(j));
+    }
+
+    /** Return a span over the values of column j. */
+    auto col_values_(csint j) const
+    {
+        return std::span(v_).subspan(p_[j], col_length_(j));
+    }
+
+    /** Return an iterator over the index "pointers" of column j. */
+    auto indptr_range_(csint j) const
+    {
+        return std::views::iota(p_[j], p_[j+1]);
+    }
+
+    /** Return an iterator over the indices and values of column j. */
+    auto column_(csint j) const
+    {
+        return indptr_range_(j) | std::views::transform(
+            [this](csint p) {
+                return std::pair{i_[p], !v_.empty() ? v_[p] : 0.0};
+            }
+        );
+    }
+
     /** Return the format description of the matrix. */
     virtual std::string_view get_format_desc_() const override
     {

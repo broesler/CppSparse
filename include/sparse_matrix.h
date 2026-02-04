@@ -11,6 +11,7 @@
 #define _CSPARSE_SPARSE_MATRIX_H_
 
 #include <iostream>
+#include <ranges>
 #include <span>
 #include <vector>
 
@@ -21,6 +22,15 @@ namespace cs {
 
 class SparseMatrix {
 protected:
+    /** Return a range for iterating over the columns.
+     *
+     * @return a range 0, 1, ..., N-1 where N is the number of columns.
+     */
+    auto column_range_() const {
+        const auto [M, N] = shape();
+        return std::views::iota(0, N);
+    }
+
     /** Return the format description of the matrix. */
     virtual std::string_view get_format_desc_() const = 0;
 

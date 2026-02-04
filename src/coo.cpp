@@ -133,7 +133,7 @@ COOMatrix::COOMatrix(const CSCMatrix& A)
     N_ = A.N_;
     // Get all elements in column order
     csint nz = 0;
-    for (csint j = 0; j < N_; ++j) {
+    for (auto j : column_range_()) {
         for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
             i_[nz] = A.i_[p];
             j_[nz] = j;

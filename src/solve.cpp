@@ -30,7 +30,7 @@ namespace cs {
  *----------------------------------------------------------------------------*/
 void lsolve_inplace(const CSCMatrix& L, std::span<double> x)
 {
-    for (csint j = 0; j < L.N_; ++j) {
+    for (auto j : L.column_range_()) {
         x[j] /= L.v_[L.p_[j]];
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; ++p) {
             x[L.i_[p]] -= L.v_[p] * x[j];
@@ -93,7 +93,7 @@ std::vector<double> usolve(const CSCMatrix& U, const CSCMatrix& B)
 
 void utsolve_inplace(const CSCMatrix& U, std::span<double> x)
 {
-    for (csint j = 0; j < U.N_; ++j) {
+    for (auto j : U.column_range_()) {
         for (csint p = U.p_[j]; p < U.p_[j+1] - 1; ++p) {
             x[j] -= U.v_[p] * x[U.i_[p]];
         }
@@ -111,7 +111,7 @@ std::vector<double> utsolve(const CSCMatrix& U, std::span<const double> B)
 // Exercise 3.8
 void lsolve_inplace_opt(const CSCMatrix& L, std::span<double> x)
 {
-    for (csint j = 0; j < L.N_; ++j) {
+    for (auto j : L.column_range_()) {
         double& x_val = x[j];  // cache reference to value
         // Exercise 3.8: improve performance by checking for zeros
         if (x_val != 0) {
@@ -208,7 +208,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
 
     // Compute the row permutation vector
     std::vector<csint> p_inv(A.N_);
-    for (csint j = 0; j < A.N_; ++j) {
+    for (auto j : A.column_range_()) {
         p_inv[j] = A.i_[p_diags[j]];
     }
 
@@ -217,7 +217,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
     std::vector<double> b_work(b.begin(), b.end());
 
     // Perform the permuted forward solve
-    for (csint j = 0; j < A.N_; ++j) {
+    for (auto j : A.column_range_()) {
         csint i = p_inv[j];        // permuted row index
         csint d = p_diags[j];      // pointer to the diagonal entry
         double x_val = b_work[i];  // cache diagonal value
@@ -257,7 +257,7 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b)
     // First O(N) pass to find the diagonal entries
     // Assume that the first entry in each column has the smallest row index
     std::vector<csint> p_diags(A.N_, -1);
-    for (csint j = 0; j < A.N_; ++j) {
+    for (auto j : A.column_range_()) {
         if (p_diags[j] == -1) {
             p_diags[j] = A.p_[j];  // pointer to the diagonal entry
         } else {
@@ -270,7 +270,7 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b)
 
     // Compute the column permutation vector
     std::vector<csint> q_inv(A.N_);
-    for (csint i = 0; i < A.N_; ++i) {
+    for (auto i : A.column_range_()) {
         q_inv[A.i_[p_diags[i]]] = i;
     }
 
@@ -307,7 +307,7 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
     std::vector<char> marked(U.N_, false);  // workspace
     std::vector<csint> p_diags(U.N_);  // diagonal indicies (inverse permutation)
 
-    for (csint j = 0; j < U.N_; ++j) {
+    for (auto j : U.column_range_()) {
         csint N_unmarked = 0;
 
         for (csint p = U.p_[j]; p < U.p_[j+1]; ++p) {
@@ -354,7 +354,7 @@ std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b)
 
     // Compute the row permutation vector
     std::vector<csint> p_inv(A.N_);
-    for (csint i = 0; i < A.N_; ++i) {
+    for (auto i : A.column_range_()) {
         p_inv[i] = A.i_[p_diags[i]];
     }
 
@@ -401,7 +401,7 @@ std::vector<double> usolve_cols(const CSCMatrix& A, std::span<const double> b)
     // First O(N) pass to find the diagonal entries
     // Assume that the last entry in each column has the largest row index
     std::vector<csint> p_diags(A.N_, -1);
-    for (csint j = 0; j < A.N_; ++j) {
+    for (auto j : A.column_range_()) {
         if (p_diags[j] == -1) {
             p_diags[j] = A.p_[j+1] - 1;  // pointer to the diagonal entry
         } else {
@@ -414,7 +414,7 @@ std::vector<double> usolve_cols(const CSCMatrix& A, std::span<const double> b)
 
     // Compute the column permutation vector
     std::vector<csint> q_inv(A.N_);
-    for (csint i = 0; i < A.N_; ++i) {
+    for (auto i : A.column_range_()) {
         q_inv[A.i_[p_diags[i]]] = i;
     }
 
@@ -452,7 +452,7 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
     std::vector<csint> r(A.N_, 0);
     std::vector<csint> z(A.N_, 0);  // z[i] is XORed with each column j in row i
 
-    for (csint j = 0; j < A.N_; ++j) {
+    for (auto j : A.column_range_()) {
         for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
             r[A.i_[p]]++;
             z[A.i_[p]] ^= j;
@@ -463,7 +463,7 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
     std::vector<csint> singles;
     singles.reserve(A.N_);
 
-    for (csint i = 0; i < A.N_; ++i) {
+    for (auto i : A.column_range_()) {
         if (r[i] == 1) {
             singles.push_back(i);
         }
@@ -474,7 +474,7 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
     std::vector<csint> q_inv(A.N_, -1);
     std::vector<csint> p_diags(A.N_, -1);
 
-    for (csint k = 0; k < A.N_; ++k) {
+    for (auto k : A.column_range_()) {
         // Take a singleton row
         if (singles.empty()) {
             throw PermutedTriangularMatrixError(
@@ -519,7 +519,7 @@ void tri_solve_perm_inplace(
     auto [p_inv, q_inv, p_diags] = tri_perm;
 
     // Solve the system (PTQ) x = b => T (Q x) = (P^T b)
-    for (csint k = 0; k < A.N_; ++k) {
+    for (auto k : A.column_range_()) {
         csint i = p_inv[k];    // permuted row
         csint j = q_inv[k];    // permuted column
         csint d = p_diags[k];  // pointer to the diagonal entry

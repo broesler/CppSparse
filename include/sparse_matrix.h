@@ -64,6 +64,15 @@ public:
         return std::views::iota(0, N);
     }
 
+    /** Return a range for iterating over the rows.
+     *
+     * @return a range 0, 1, ..., N-1 where N is the number of columns.
+     */
+    auto row_range() const {
+        const auto [M, N] = shape();
+        return std::views::iota(0, M);
+    }
+
     /// Matrix-vector right-multiply (see cs_multiply)
     virtual std::vector<double> dot(std::span<const double> x) const = 0;
 

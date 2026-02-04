@@ -365,7 +365,7 @@ void init_ata(
     std::vector<csint> w(N);
 
     // Invert postorder
-    for (csint k = 0; k < N; ++k) {
+    for (auto k : AT.row_range()) {
         w[post[k]] = k;
     }
 

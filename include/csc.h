@@ -200,6 +200,26 @@ public:
         );
     }
 
+    /** Return an mutable iterator over the indices and values of column j. */
+    auto column(csint j)
+    {
+        return indptr_range(j) | std::views::transform(
+            [this](csint p) {
+                return std::tuple<const csint&, double&>{i_[p], v_[p]};
+            }
+        );
+    }
+
+    /** Return a mutable iterator over the pointers, indices and values of column j. */
+    auto enum_column(csint j)
+    {
+        return indptr_range(j) | std::views::transform(
+            [this](csint p) {
+                return std::tuple<csint, const csint&, double&>{p, i_[p], v_[p]};
+            }
+        );
+    }
+
     /** Convert a CSCMatrix to canonical format in-place.
      *
      * The columns are guaranteed to be sorted, no duplicates are allowed, and no

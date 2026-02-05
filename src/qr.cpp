@@ -456,14 +456,13 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
         }
 
         // gather V(:, k) = x
-        // TODO mutable auto& [i, v] : V.column(k)
-        for (auto p : V.indptr_range(k)) {
-            V.v_[p] = x[V.i_[p]];
-            x[V.i_[p]] = 0;  // clear x
+        for (auto [i, v] : V.column(k)) {
+            v = x[i];
+            x[i] = 0;  // clear x
         }
 
         // [v, beta, s] = house(x) == house(V[:, k])
-        auto V_k = std::span(V.v_).subspan(V.p_[k], V.p_[k+1] - V.p_[k]);
+        auto V_k = std::span(V.v_).subspan(V.p_[k], V.col_length(k));
         Householder h = house(V_k);
         std::copy(h.v.cbegin(), h.v.cend(), V.v_.begin() + V.p_[k]);
         beta[k] = h.beta;

@@ -315,13 +315,13 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
         csint k;
         bool found = false;
 
-        for (auto p : indptr_range(j)) {
-            if (i_[p] == i) {
+        for (auto [p, ip, vp] : enum_column(j)) {
+            if (ip == i) {
                 if (!found) {
                     k = p;  // store the minimum index of the element
                     found = true;
                 } else {
-                    v_[p] = 0;  // zero out duplicates
+                    vp = 0;  // zero out duplicates
                 }
             }
         }

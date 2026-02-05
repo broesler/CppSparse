@@ -92,7 +92,7 @@ CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense)
             // Drop dense columns from AT (i.e., rows from A)
             csint q = 0;
 
-            for (csint j = 0; j < M; ++j) {
+            for (auto j : AT.column_range()) {
                 csint p = AT.p_[j];  // column j of AT starts here
                 AT.p_[j] = q;        // new column j starts here
 
@@ -636,15 +636,15 @@ MaxMatch maxtrans_r(const CSCMatrix& A, [[maybe_unused]] csint seed)
     MaxMatch jimatch(M, N, -1);  // allocate result
     auto& [jmatch, imatch] = jimatch;  // reference to jmatch and imatch
 
-    std::vector<csint> w(N, -1),  // mark all nodes as unvisited
-                       cheap(A.p_);  // cheap assignment
+    std::vector<csint> w(N, -1),           // mark all nodes as unvisited
+                       cheap(A.indptr());  // cheap assignment
 
     for (auto k : A.column_range()) {
         augment_r(k, A, jmatch, cheap, w, k);
     }
     
     // imatch is the inverse of jmatch
-    for (csint i = 0; i < M; ++i) {
+    for (auto i : A.row_range()) {
         if (jmatch[i] >= 0) {
             imatch[jmatch[i]] = i;
         }
@@ -668,7 +668,7 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
     csint n2 = 0;
 
     for (auto j : A.column_range()) {
-        n2 += (A.p_[j] < A.p_[j+1]);
+        n2 += (A.col_length(j) > 0);
         for (auto i : A.row_indices(j)) {
             w[i] = 1;
             k += (j == i);  // count entries already on diagonal
@@ -685,8 +685,7 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
 
     // transpose if needed
     const CSCMatrix C = (m2 < n2) ? A.transpose(false) : A;
-    M = C.M_;
-    N = C.N_;
+    std::tie(M, N) = C.shape();
 
     // If we transposed, we need to swap the imatch and jmatch vectors
     std::vector<csint>& jmatch = (m2 < n2) ? jimatch.imatch : jimatch.jmatch;
@@ -696,10 +695,10 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
     w.resize(N);
     std::fill(w.begin(), w.end(), -1);  // mark all nodes as unvisited
 
-    std::vector<csint> cheap(C.p_),  // cheap assignment
-                       is(N),        // row indices stack
-                       js(N),        // col indices stack
-                       ps(N);        // pause stack for DFS in augment
+    std::vector<csint> cheap(C.indptr()),  // cheap assignment
+                       is(N),              // row indices stack
+                       js(N),              // col indices stack
+                       ps(N);              // pause stack for DFS in augment
 
     // randperm can help with worst-case behavior O(|A|N), see Davis, p 118.
     std::vector<csint> q = randperm(N, seed);  // random permutation of columns
@@ -710,7 +709,7 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
     }
 
     std::fill(imatch.begin(), imatch.end(), -1);  // find row match
-    for (csint i = 0; i < M; ++i) {
+    for (auto i : C.row_range()) {
         if (jmatch[i] >= 0) {
             imatch[jmatch[i]] = i;
         }
@@ -820,9 +819,7 @@ void bfs(
     while (head < tail) {
         csint j = queue[head++];  // get j from front of queue
 
-        for (csint p = C.p_[j]; p < C.p_[j+1]; ++p) {
-            csint i = C.i_[p];     // consider row i
-
+        for (auto i : C.row_indices(j)) {
             if (wi[i] >= 0) {
                 continue;          // skip if i is marked
             }

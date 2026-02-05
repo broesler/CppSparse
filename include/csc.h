@@ -1019,7 +1019,6 @@ public:
     friend CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense);
     friend std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order);
 
-    friend MaxMatch detail::maxtrans_r(const CSCMatrix& A, csint seed);
     friend bool detail::augment_r(
         csint k,
         const CSCMatrix& A,
@@ -1029,7 +1028,6 @@ public:
         csint j
     );
 
-    friend MaxMatch maxtrans(const CSCMatrix& A, csint seed);
     friend void augment(
         csint k,
         const CSCMatrix& A,
@@ -1041,18 +1039,7 @@ public:
         std::span<csint> ps
     );
 
-    friend SCCResult scc(const CSCMatrix& A);
     friend DMPermResult dmperm(const CSCMatrix& A, csint seed);
-    friend void bfs(
-        const CSCMatrix& A,
-        csint N,
-        std::span<csint> wi,
-        std::span<csint> wj,
-        std::span<csint> queue,
-        std::span<const csint> imatch,
-        std::span<const csint> jmatch,
-        csint mark
-    );
 
     // Unary minus operator
     friend CSCMatrix operator-(const CSCMatrix& A);

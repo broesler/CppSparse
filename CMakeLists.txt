@@ -10,8 +10,8 @@ cmake_minimum_required(VERSION 3.31)  # Or higher
 
 project(CSparse LANGUAGES CXX)
 
-# Ensure C++20 standard
-set(CMAKE_CXX_STANDARD 20)
+# Ensure C++23 standard
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)  # Use strict standard compliance
 

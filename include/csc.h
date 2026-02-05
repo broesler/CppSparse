@@ -642,6 +642,8 @@ public:
 
     /** Add two matrices (and optionally scale them) `C = alpha * A + beta * B`.
      *
+     * See: Davis, Section 2.9, `cs_add`, and Exercise 2.21 `cs_saxpy`.
+     *
      * @note This function may *not* return a matrix with sorted columns!
      *
      * @param A, B  the CSC matrices
@@ -654,23 +656,6 @@ public:
         const CSCMatrix& B,
         double alpha,
         double beta
-    );
-
-    /** Add two sparse column vectors \f$ z = x + y \f$.
-     *
-     * See: Davis, Exercise 2.21
-     *
-     * @param x[in,out], y[in,out] two column vectors stored as a CSCMatrix. The
-     *        number of columns in each argument must be 1.
-     * @param w[out]  workspace vector of length M. On output, contains non-zeros
-     *        where `x` was updated.
-     * @param x[out]  dense vector of length M to accumulate the result.
-     */
-    friend void saxpy(
-        const CSCMatrix& a,
-        const CSCMatrix& b,
-        std::span<char> w,
-        std::span<double> x
     );
 
     /** Compute `x += beta * A(:, j)`.
@@ -1397,6 +1382,25 @@ std::vector<double> gatxpy_block(
     const CSCMatrix& A,
     std::span<const double> X,
     std::span<const double> Y
+);
+
+
+/** Add two sparse column vectors \f$ x = a + b \f$.
+ *
+ * See: Davis, Exercise 2.21
+ *
+ * @param a, b two column vectors stored as a CSCMatrix. The number of columns
+ *        in each argument must be 1.
+ * @param w[out]  pre-allocated workspace vector of length M. On output,
+ *        contains non-zeros where `x` was updated.
+ * @param x[out]  pre-allocated dense vector of length M to accumulate the
+ *        result.
+ */
+void saxpy(
+    const CSCMatrix& a,
+    const CSCMatrix& b,
+    std::span<char> w,
+    std::span<double> x
 );
 
 

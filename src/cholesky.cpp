@@ -126,10 +126,12 @@ std::vector<csint> ereach_post(
 
     marked[k] = true;  // mark node k as visited
 
-    for (auto p : A.indptr_range(k)) {
-        csint i = A.i_[p];  // A(i, k) is nonzero
-        csint i2 = p < (A.nnz() - 1) ? A.i_[p+1] : A.nnz();  // next row index
-        if (i <= k) {     // only consider upper triangular part of A
+    auto indices = A.row_indices(k);
+
+    for (size_t idx = 0; idx < indices.size(); ++idx) {
+        csint i = indices[idx];  // A(i, k) is nonzero
+        csint i2 = (idx + 1) < indices.size() ? indices[idx + 1] : A.nnz();  // next row index
+        if (i <= k) {  // only consider upper triangular part of A
             // Traverse up the etree i -> a = lca(i1, i2)
             while (i < i2 && i != -1 && !marked[i]) {
                 xi.push_back(i);   // L(k, i) is nonzero

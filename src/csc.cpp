@@ -1097,8 +1097,8 @@ CSCMatrix CSCMatrix::scale(std::span<const double> r, std::span<const double> c)
     CSCMatrix out(*this);
 
     for (auto j : column_range()) {
-        for (auto p : indptr_range(j)) {
-            out.v_[p] *= r[i_[p]] * c[j];
+        for (auto [p, i] : enum_row_indices(j)) {
+            out.v_[p] *= r[i] * c[j];
         }
     }
 

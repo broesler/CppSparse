@@ -166,7 +166,7 @@ std::vector<csint> find_lower_diagonals(const CSCMatrix& A)
     for (auto j : A.column_range() | std::views::reverse) {
         csint N_unmarked = 0;
 
-        for (auto [p, i] : std::views::zip(A.indptr_range(j), A.row_indices(j))) {
+        for (auto [p, i] : A.enum_row_indices(j)) {
             // Mark the rows viewed so far
             if (!marked[i]) {
                 marked[i] = true;
@@ -313,7 +313,7 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
     for (auto j : U.column_range()) {
         csint N_unmarked = 0;
 
-        for (auto [p, i] : std::views::zip(U.indptr_range(j), U.row_indices(j))) {
+        for (auto [p, i] : U.enum_row_indices(j)) {
             // Mark the rows viewed so far
             if (!marked[i]) {
                 marked[i] = true;
@@ -494,7 +494,7 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
         q_inv[k] = j;
 
         // Decrement each row count, and update the set vector
-        for (auto [p, t] : std::views::zip(A.indptr_range(j), A.row_indices(j))) {
+        for (auto [p, t] : A.enum_row_indices(j)) {
             if (--r[t] == 1) {
                 singles.push_back(t);
             }

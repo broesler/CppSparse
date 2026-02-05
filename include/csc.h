@@ -175,6 +175,12 @@ public:
     }
 
     /** Return an iterator over the indices and values of column j. */
+    auto enum_row_indices(csint j) const
+    {
+        return std::views::zip(indptr_range(j), row_indices(j));
+    }
+
+    /** Return an iterator over the indices and values of column j. */
     auto column(csint j) const
     {
         return indptr_range(j) | std::views::transform(

@@ -266,13 +266,13 @@ CSCMatrix::GetItemResult CSCMatrix::get_item_(csint i, csint j) const
         // NOTE this code assumes that columns are *not* sorted, and that
         // duplicate entries may exist, so it will search through *every*
         // element in a column.
-        for (auto p : indptr_range(j)) {
-            if (i_[p] == i) {
+        for (auto [p, ip, vp] : enum_column(j)) {
+            if (ip == i) {
                 if (!found) {
                     found = true;
                     k = p;  // store the minimum index of the element
                 }
-                v += v_[p];  // sum duplicate entries
+                v += vp;  // sum duplicate entries
             }
         }
     }

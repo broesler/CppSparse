@@ -227,9 +227,9 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
             x_val /= A.v_[d];  // solve for x[d]
             x[j] = x_val;      // store solution in correct position
             // update the off-diagonals
-            for (auto p : A.indptr_range(j)) {
+            for (auto [p, i, v] : A.enum_column(j)) {
                 if (p != d) {
-                    b_work[A.i_[p]] -= A.v_[p] * x_val;
+                    b_work[i] -= v * x_val;
                 }
             }
         }
@@ -532,9 +532,9 @@ void tri_solve_perm_inplace(
             x_val /= A.v_[d];  // diagonal entry
             x[j] = x_val;
             // Update off-diagonals
-            for (auto p : A.indptr_range(j)) {
+            for (auto [p, i, v] : A.enum_column(j)) {
                 if (p != d) {
-                    b[A.i_[p]] -= A.v_[p] * x_val;
+                    b[i] -= v * x_val;
                 }
             }
         }

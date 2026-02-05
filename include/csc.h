@@ -174,7 +174,7 @@ public:
         return std::views::iota(p_[j], p_[j+1]);
     }
 
-    /** Return an iterator over the indices and values of column j. */
+    /** Return an iterator over the pointers and indices of column j. */
     auto enum_row_indices(csint j) const
     {
         return std::views::zip(indptr_range(j), row_indices(j));
@@ -186,6 +186,16 @@ public:
         return indptr_range(j) | std::views::transform(
             [this](csint p) {
                 return std::pair{i_[p], !v_.empty() ? v_[p] : 0.0};
+            }
+        );
+    }
+
+    /** Return an iterator over the pointers, indices and values of column j. */
+    auto enum_column(csint j) const
+    {
+        return indptr_range(j) | std::views::transform(
+            [this](csint p) {
+                return std::tuple{p, i_[p], !v_.empty() ? v_[p] : 0.0};
             }
         );
     }

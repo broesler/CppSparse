@@ -1144,46 +1144,6 @@ public:
     //--------------------------------------------------------------------------
     //        Cholesky Decomposition
     //--------------------------------------------------------------------------
-    friend std::vector<csint> etree(const CSCMatrix& A, bool ata);
-
-    friend std::vector<csint> ereach(
-        const CSCMatrix& A,
-        csint k,
-        std::span<const csint> parent
-    );
-
-    friend std::vector<csint> ereach_post(
-        const CSCMatrix& A,
-        csint k,
-        std::span<const csint> parent
-    );
-
-    friend std::vector<csint> ereach_queue(
-        const CSCMatrix& A,
-        csint k,
-        std::span<const csint> parent
-    );
-
-    friend std::vector<csint> rowcnt(
-        const CSCMatrix& A,
-        std::span<const csint> parent,
-        std::span<const csint> postorder
-    );
-
-    friend void init_ata(
-        const CSCMatrix& AT,
-        std::span<const csint> post,
-        std::vector<csint>& head,
-        std::vector<csint>& next
-    );
-
-    friend std::vector<csint> counts(
-        const CSCMatrix& A,
-        std::span<const csint> parent,
-        std::span<const csint> postorder,
-        bool ata
-    );
-
     friend CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S);
 
     friend CholResult chol(const CSCMatrix& A, const SymbolicChol& S);
@@ -1202,14 +1162,6 @@ public:
         bool update,
         const CSCMatrix& w,
         std::span<const csint> parent
-    );
-
-    friend CholCounts chol_etree_counts(const CSCMatrix& A);
-
-    friend std::vector<csint> topological_order(
-        const CSCMatrix& b,
-        std::span<const csint> parent,
-        bool forward
     );
 
     //--------------------------------------------------------------------------

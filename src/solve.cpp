@@ -798,18 +798,19 @@ std::vector<csint> topological_order(
     bool forward
 )
 {
-    assert(b.N_ == 1);
-    csint N = b.M_;
+    auto [M, N] = b.shape();
 
-    std::vector<char> marked(N, false);
+    if (N != 1) {
+        throw std::invalid_argument("RHS matrix must have a single column!");
+    }
+
+    std::vector<char> marked(M, false);
     std::vector<csint> s, xi;
-    s.reserve(N);
-    xi.reserve(N);
+    s.reserve(M);
+    xi.reserve(M);
 
     // Search up the tree for each non-zero in b
-    for (csint p = b.p_[0]; p < b.p_[1]; ++p) {
-        csint i = b.i_[p];
-
+    for (auto i : b.row_indices(0)) {
         // Traverse up the elimination tree
         while (i != -1 && !marked[i]) {
             s.push_back(i);

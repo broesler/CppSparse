@@ -1385,23 +1385,21 @@ void saxpy(
         throw std::invalid_argument("Matrix dimensions do not agree.");
     }
 
-    if ((a.N_ != 1) || (b.N_ != 1)) {
+    if ((a.shape()[1] != 1) || (b.shape()[1] != 1)) {
         throw std::invalid_argument("Both inputs must be column vectors.");
     }
 
-    for (csint p = 0; p < a.nnz(); ++p) {
-        csint i = a.i_[p];
-        w[i] = true;     // mark as non-zero
-        x[i] = a.v_[p];  // copy a into x
+    for (auto [i, v] : a.column(0)) {
+        w[i] = true;  // mark as non-zero
+        x[i] = v;     // copy a into x
     }
 
-    for (csint p = 0; p < b.nnz(); ++p) {
-        csint i = b.i_[p];
+    for (auto [i, v] : b.column(0)) {
         if (w[i] == false) {
-            w[i] = true;      // mark as non-zero
-            x[i] = b.v_[p];   // copy b into w
+            w[i] = true;  // mark as non-zero
+            x[i] = v;     // copy b into w
         } else {
-            x[i] += b.v_[p];  // add b to x
+            x[i] += v;    // add b to x
         }
     }
 }

@@ -982,16 +982,6 @@ public:
     //--------------------------------------------------------------------------
     //        QR Decomposition
     //--------------------------------------------------------------------------
-    friend void happly(
-        const CSCMatrix& V,
-        csint j,
-        double beta,
-        std::span<double> x
-    );
-
-    friend std::vector<csint> find_leftmost(const CSCMatrix& A);
-    friend void vcount(const CSCMatrix& A, SymbolicQR& S);
-
     friend QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S);
     friend QRResult qr(const CSCMatrix& A, const SymbolicQR& S);
     friend void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res);

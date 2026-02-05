@@ -92,26 +92,27 @@ void happly(
     double tau = 0.0;
 
     // tau = v^T x
-    for (csint p = V.p_[j]; p < V.p_[j+1]; ++p) {
-        tau += V.v_[p] * x[V.i_[p]];
+    for (auto [i, v] : V.column(j)) {
+        tau += v * x[i];
     }
 
     tau *= beta;  // tau = beta * v^T x
 
     // Hx = x - v*tau
-    for (csint p = V.p_[j]; p < V.p_[j+1]; ++p) {
-        x[V.i_[p]] -= V.v_[p] * tau;
+    for (auto [i, v] : V.column(j)) {
+        x[i] -= v * tau;
     }
 }
 
 
 std::vector<csint> find_leftmost(const CSCMatrix& A)
 {
-    std::vector<csint> leftmost(A.M_, -1);
+    auto [M, N] = A.shape();
+    std::vector<csint> leftmost(M, -1);
 
-    for (csint k = A.N_ - 1; k >= 0; --k) {
-        for (csint p = A.p_[k]; p < A.p_[k+1]; ++p) {
-            leftmost[A.i_[p]] = k;  // leftmost[i] = min(find(A(i, :)))
+    for (csint k = N - 1; k >= 0; --k) {
+        for (auto i : A.row_indices(k)) {
+            leftmost[i] = k;  // leftmost[i] = min(find(A(i, :)))
         }
     }
 
@@ -121,10 +122,10 @@ std::vector<csint> find_leftmost(const CSCMatrix& A)
 
 void vcount(const CSCMatrix& A, SymbolicQR& S)
 {
-    assert(static_cast<csint>(S.leftmost.size()) == A.M_);
-    assert(static_cast<csint>(S.parent.size()) == A.N_);
-
     auto [M, N] = A.shape();
+    assert(static_cast<csint>(S.leftmost.size()) == M);
+    assert(static_cast<csint>(S.parent.size()) == N);
+
     std::vector<csint> next(M),      // the next row index
                        head(N, -1),  // the first row index in each column
                        tail(N, -1),  // the last row index in each column
@@ -272,8 +273,8 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
         csint col = S.q[k];  // permuted column of A
 
         // find R[:, k] pattern
-        for (csint p = A.p_[col]; p < A.p_[col+1]; ++p) {
-            csint i = S.leftmost[A.i_[p]];  // i = min(find(A(i, q)))
+        for (auto [Ai, Av] : A.column(col)) {
+            csint i = S.leftmost[Ai];  // i = min(find(A(i, q)))
 
             s.clear();
             while (w[i] != k) {  // traverse up to k
@@ -285,8 +286,8 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
             // Push path onto "output" stack
             std::copy(s.crbegin(), s.crend(), std::back_inserter(t));
 
-            i = S.p_inv[A.i_[p]];     // i = permuted row of A(:, col)
-            x[i] = A.v_[p];           // x(i) = A(:, col)
+            i = S.p_inv[Ai];     // i = permuted row of A(:, col)
+            x[i] = Av;           // x(i) = A(:, col)
 
             if (i > k && w[i] < k) {  // pattern of V(:, k) = x(k+1:m)
                 V.i_[vnz++] = i;      // add i to pattern of V(:, k)
@@ -371,8 +372,8 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
         t.clear();
         csint col = S.q[k];  // permuted column of A
         // find R[:, k] pattern
-        for (csint p = A.p_[col]; p < A.p_[col+1]; ++p) {
-            csint i = S.leftmost[A.i_[p]];  // i = min(find(A(i, q)))
+        for (auto Ai : A.row_indices(col)) {
+            csint i = S.leftmost[Ai];  // i = min(find(A(i, q)))
 
             s.clear();
             while (w[i] != k) {  // traverse up to k
@@ -384,7 +385,7 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
             // Push path onto "output" stack
             std::copy(s.crbegin(), s.crend(), std::back_inserter(t));
 
-            i = S.p_inv[A.i_[p]];     // i = permuted row of A(:, col)
+            i = S.p_inv[Ai];     // i = permuted row of A(:, col)
 
             if (i > k && w[i] < k) {  // pattern of V(:, k)
                 V.i_[vnz++] = i;      // add i to pattern of V(:, k)
@@ -441,9 +442,9 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
         csint col = res.q[k];  // permuted column of A
 
         // R[:, k] pattern known. Scatter A[:, col] into x
-        for (csint p = A.p_[col]; p < A.p_[col+1]; ++p) {
-            csint i = res.p_inv[A.i_[p]];  // i = permuted row of A(:, col)
-            x[i] = A.v_[p];                // x(i) = A(:, col)
+        for (auto [Ai, Av] : A.column(col)) {
+            csint i = res.p_inv[Ai];  // i = permuted row of A(:, col)
+            x[i] = Av;                // x(i) = A(:, col)
         }
 
         // for each i in pattern of R[:, k] (R(i, k) is non-zero)
@@ -455,7 +456,8 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
         }
 
         // gather V(:, k) = x
-        for (csint p = V.p_[k]; p < V.p_[k+1]; ++p) {
+        // TODO mutable auto& [i, v] : V.column(k)
+        for (auto p : V.indptr_range(k)) {
             V.v_[p] = x[V.i_[p]];
             x[V.i_[p]] = 0;  // clear x
         }
@@ -485,8 +487,7 @@ void apply_qleft(
     std::span<double> x
 )
 {
-    csint N = V.shape()[1];
-    for (csint j = N - 1; j >= 0; --j) {
+    for (auto j : V.column_range() | std::views::reverse) {
         happly(V, j, beta[j], x);
     }
 }

@@ -731,8 +731,8 @@ LUResult ilu_nofill(
         spsolve(L, A, col, sol, p_inv);  // x = L \ A[:, col]
 
         // Scatter the pattern of A[:, col] into w
-        for (csint p = A.p_[col]; p < A.p_[col + 1]; ++p) {
-            w[A.i_[p]] = k;  // mark the pattern of A[:, col]
+        for (auto i : A.row_indices(col)) {
+            w[i] = k;  // mark the pattern of A[:, col]
         }
 
         // --- Find pivot ------------------------------------------------------

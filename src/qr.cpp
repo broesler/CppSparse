@@ -172,7 +172,7 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
         }
     }
 
-    for (csint i = 0; i < M; ++i) {    // assign any unordered rows to last k
+    for (auto i : A.row_range()) {    // assign any unordered rows to last k
         if (S.p_inv[i] < 0) {
             S.p_inv[i] = k++;
         }
@@ -542,7 +542,7 @@ CSCMatrix apply_qtleft(
         apply_qtleft(V, beta, x);
 
         // Gather x into X(:, k)
-        for (csint i = 0; i < M; ++i) {
+        for (auto i : X.row_range()) {
             if (x[i] != 0) {
                 C.i_[nz] = i;
                 C.v_[nz++] = x[i];

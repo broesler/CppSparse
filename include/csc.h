@@ -930,11 +930,6 @@ public:
     friend std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b);
     friend std::vector<double> usolve_cols(const CSCMatrix& A, std::span<const double> b);
 
-    friend std::vector<csint> find_lower_diagonals(const CSCMatrix& A);
-    friend std::vector<csint> find_upper_diagonals(const CSCMatrix& A);
-
-    friend TriPerm find_tri_permutation(const CSCMatrix& A);
-
     friend void tri_solve_perm_inplace(
         const CSCMatrix& A,
         const TriPerm& tri_perm,
@@ -951,14 +946,6 @@ public:
         bool lower
     );
 
-    friend void reach(
-        const CSCMatrix& A,
-        const CSCMatrix& B,
-        csint k,
-        std::vector<csint>& xi,
-        std::span<const csint> p_inv
-    );
-
     friend void dfs(
         const CSCMatrix& A,
         csint j,
@@ -967,18 +954,6 @@ public:
         std::vector<csint>& pstack,
         std::vector<csint>& rstack,
         std::span<const csint> p_inv
-    );
-
-    friend std::vector<csint> detail::reach_r(
-        const CSCMatrix& A,
-        const CSCMatrix& B
-    );
-
-    friend void detail::dfs_r(
-        const CSCMatrix& A,
-        csint j,
-        std::span<char> marked,
-        std::vector<csint>& xi
     );
 
     //--------------------------------------------------------------------------

@@ -154,18 +154,19 @@ std::vector<double> usolve_opt(const CSCMatrix& U, std::span<const double> b)
 // Exercise 3.3
 std::vector<csint> find_lower_diagonals(const CSCMatrix& A)
 {
-    if (A.M_ != A.N_) {
+    auto [M, N] = A.shape();
+
+    if (M != N) {
         throw std::invalid_argument("Matrix must be square.");
     }
 
-    std::vector<char> marked(A.N_, false);  // workspace
-    std::vector<csint> p_diags(A.N_);       // diagonal indicies (inverse permutation)
+    std::vector<char> marked(N, false);  // workspace
+    std::vector<csint> p_diags(N);       // diagonal indicies (inverse permutation)
 
-    for (csint j = A.N_ - 1; j >= 0; --j) {
+    for (auto j : A.column_range() | std::views::reverse) {
         csint N_unmarked = 0;
 
-        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
-            csint i = A.i_[p];
+        for (auto [p, i] : std::views::zip(A.indptr_range(j), A.row_indices(j))) {
             // Mark the rows viewed so far
             if (!marked[i]) {
                 marked[i] = true;
@@ -226,7 +227,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
             x_val /= A.v_[d];  // solve for x[d]
             x[j] = x_val;      // store solution in correct position
             // update the off-diagonals
-            for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
+            for (auto p : A.indptr_range(j)) {
                 if (p != d) {
                     b_work[A.i_[p]] -= A.v_[p] * x_val;
                 }
@@ -300,18 +301,19 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b)
 // Exercise 3.4
 std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
 {
-    if (U.M_ != U.N_) {
+    auto [M, N] = U.shape();
+
+    if (M != N) {
         throw std::invalid_argument("Matrix must be square.");
     }
 
-    std::vector<char> marked(U.N_, false);  // workspace
-    std::vector<csint> p_diags(U.N_);  // diagonal indicies (inverse permutation)
+    std::vector<char> marked(N, false);  // workspace
+    std::vector<csint> p_diags(N);       // diagonal indicies (inverse permutation)
 
     for (auto j : U.column_range()) {
         csint N_unmarked = 0;
 
-        for (csint p = U.p_[j]; p < U.p_[j+1]; ++p) {
-            csint i = U.i_[p];
+        for (auto [p, i] : std::views::zip(U.indptr_range(j), U.row_indices(j))) {
             // Mark the rows viewed so far
             if (!marked[i]) {
                 marked[i] = true;
@@ -444,24 +446,25 @@ std::vector<double> usolve_cols(const CSCMatrix& A, std::span<const double> b)
 // Exercise 3.7
 TriPerm find_tri_permutation(const CSCMatrix& A)
 {
-    if (A.M_ != A.N_) {
+    auto [M, N] = A.shape();
+    if (M != N) {
         throw std::invalid_argument("Matrix must be square.");
     }
 
     // Create a vector of row counts and corresponding set vector
-    std::vector<csint> r(A.N_, 0);
-    std::vector<csint> z(A.N_, 0);  // z[i] is XORed with each column j in row i
+    std::vector<csint> r(N, 0);
+    std::vector<csint> z(N, 0);  // z[i] is XORed with each column j in row i
 
     for (auto j : A.column_range()) {
-        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
-            r[A.i_[p]]++;
-            z[A.i_[p]] ^= j;
+        for (auto i : A.row_indices(j)) {
+            r[i]++;
+            z[i] ^= j;
         }
     }
 
     // Create a list of singleton row indices
     std::vector<csint> singles;
-    singles.reserve(A.N_);
+    singles.reserve(N);
 
     for (auto i : A.column_range()) {
         if (r[i] == 1) {
@@ -470,9 +473,9 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
     }
 
     // Iterate through the columns to get the permutation vectors
-    std::vector<csint> p_inv(A.N_, -1);
-    std::vector<csint> q_inv(A.N_, -1);
-    std::vector<csint> p_diags(A.N_, -1);
+    std::vector<csint> p_inv(N, -1);
+    std::vector<csint> q_inv(N, -1);
+    std::vector<csint> p_diags(N, -1);
 
     for (auto k : A.column_range()) {
         // Take a singleton row
@@ -491,8 +494,7 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
         q_inv[k] = j;
 
         // Decrement each row count, and update the set vector
-        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
-            csint t = A.i_[p];
+        for (auto [p, t] : std::views::zip(A.indptr_range(j), A.row_indices(j))) {
             if (--r[t] == 1) {
                 singles.push_back(t);
             }
@@ -530,7 +532,7 @@ void tri_solve_perm_inplace(
             x_val /= A.v_[d];  // diagonal entry
             x[j] = x_val;
             // Update off-diagonals
-            for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
+            for (auto p : A.indptr_range(j)) {
                 if (p != d) {
                     b[A.i_[p]] -= A.v_[p] * x_val;
                 }
@@ -648,7 +650,7 @@ void spsolve(
         csint p = lower ? A.p_[J] + 1 : A.p_[J];        // lower: L(j,j) 1st entry
         csint q = lower ? A.p_[J+1]   : A.p_[J+1] - 1;  // up: U(j,j) last entry
         for (; p < q; ++p) {
-            x[A.i_[p]] -= A.v_[p] * xj;              // x[i] -= G(i, j) * x[j]
+            x[A.i_[p]] -= A.v_[p] * xj;                 // x[i] -= G(i, j) * x[j]
         }
     }
 }
@@ -662,16 +664,16 @@ void reach(
     std::span<const csint> p_inv
 )
 {
-    std::vector<char> marked(A.M_, false);
+    auto [M, N] = A.shape();
+    std::vector<char> marked(M, false);
     std::vector<csint> pstack,  // pause and recursion stacks
                        rstack;
     xi.clear();
-    xi.reserve(A.N_);
-    pstack.reserve(A.N_);
-    rstack.reserve(A.N_);
+    xi.reserve(N);
+    pstack.reserve(N);
+    rstack.reserve(N);
 
-    for (csint p = B.p_[k]; p < B.p_[k+1]; ++p) {
-        csint j = B.i_[p];  // consider nonzero B(j, k)
+    for (auto j : B.row_indices(k)) {  // consider nonzero B(j, k)
         if (!marked[j]) {
             dfs(A, j, marked, xi, pstack, rstack, p_inv);
         }
@@ -739,12 +741,12 @@ namespace detail {
 
 std::vector<csint> reach_r(const CSCMatrix& A, const CSCMatrix& B)
 {
-    std::vector<char> marked(A.M_, false);
+    auto [M, N] = A.shape();
+    std::vector<char> marked(M, false);
     std::vector<csint> xi;
-    xi.reserve(A.N_);
+    xi.reserve(N);
 
-    for (csint p = B.p_[0]; p < B.p_[1]; ++p) {
-        csint j = B.i_[p];  // consider nonzero B(j, 0)
+    for (auto j : B.row_indices(0)) {  // consider nonzero B(j, 0)
         if (!marked[j]) {
             dfs_r(A, j, marked, xi);
         }
@@ -765,8 +767,7 @@ void dfs_r(
 {
     marked[j] = true;  // mark node j as visited
 
-    for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
-        csint i = A.i_[p];  // consider neighbor node i
+    for (auto i : A.row_indices(j)) {  // consider neighbor node i
         if (!marked[i]) {
             dfs_r(A, i, marked, xi);  // dfs recursively from i
         }

@@ -573,151 +573,6 @@ public:
     //--------------------------------------------------------------------------
     //        Math Operations
     //--------------------------------------------------------------------------
-    /** Matrix-vector multiply `y = Ax + y`.
-     *
-     * @param A  a CSC matrix
-     * @param x  a dense multiplying vector
-     * @param y  a dense adding vector which will be used for the output
-     *
-     * @return y a copy of the updated vector
-     */
-    friend std::vector<double> gaxpy(
-        const CSCMatrix& A,
-        std::span<const double> x,
-        std::span<const double> y
-    );
-
-    /** Matrix transpose-vector multiply `y = A.T x + y`.
-     *
-     * See: Davis, Exercise 2.1. Compute \f$ A^T x + y \f$ without explicitly
-     * computing the transpose.
-     *
-     * @param A  a CSC matrix
-     * @param x  a dense multiplying vector
-     * @param y[in,out]  a dense adding vector which will be used for the output
-     *
-     * @return y a copy of the updated vector
-     */
-    friend std::vector<double> gatxpy(
-        const CSCMatrix& A,
-        std::span<const double> x,
-        std::span<const double> y
-    );
-
-    /** Matrix-vector multiply `y = Ax + y` symmetric A (\f$ A = A^T \f$).
-     *
-     * See: Davis, Exercise 2.3.
-     *
-     * @param A  a CSC matrix
-     * @param x  a dense multiplying vector
-     * @param y  a dense adding vector which will be used for the output
-     *
-     * @return y a copy of the updated vector
-     */
-    friend std::vector<double> sym_gaxpy(
-        const CSCMatrix& A,
-        std::span<const double> x,
-        std::span<const double> y
-    );
-
-    /** Matrix multiply `Y = AX + Y` column-major dense matrices `X` and `Y`.
-     *
-     * See: Davis, Exercise 2.27(a).
-     *
-     * @param A  a CSC matrix
-     * @param X  a dense multiplying matrix in column-major order
-     * @param[in,out] Y  a dense adding matrix which will be used for the output
-     *
-     * @return Y a copy of the updated matrix
-     */
-    friend std::vector<double> gaxpy_col(
-        const CSCMatrix& A,
-        std::span<const double> X,
-        std::span<const double> Y
-    );
-
-    /** Matrix multiply `Y = AX + Y` for row-major dense matrices `X` and `Y`.
-     *
-     * See: Davis, Exercise 2.27(b).
-     *
-     * @param A  a CSC matrix
-     * @param X  a dense multiplying matrix in row-major order
-     * @param[in,out] Y  a dense adding matrix which will be used for the output
-     *
-     * @return Y a copy of the updated matrix
-     */
-    friend std::vector<double> gaxpy_row(
-        const CSCMatrix& A,
-        std::span<const double> X,
-        std::span<const double> Y
-    );
-
-    /** Matrix multiply `Y = AX + Y` column-major dense matrices `X` and
-     * `Y`, but operate on blocks of columns.
-     *
-     * See: Davis, Exercise 2.27(c).
-     *
-     * @param A  a CSC matrix
-     * @param X  a dense multiplying matrix in column-major order
-     * @param[in,out] Y  a dense adding matrix which will be used for the output
-     *
-     * @return Y a copy of the updated matrix
-     */
-    friend std::vector<double> gaxpy_block(
-        const CSCMatrix& A,
-        std::span<const double> X,
-        std::span<const double> Y
-    );
-
-    /** Matrix multiply `Y = A.T X + Y` column-major dense matrices `X` and `Y`.
-     *
-     * See: Davis, Exercise 2.28(a).
-     *
-     * @param A  a CSC matrix
-     * @param X  a dense multiplying matrix in column-major order
-     * @param[in,out] Y  a dense adding matrix which will be used for the output
-     *
-     * @return Y a copy of the updated matrix
-     */
-    friend std::vector<double> gatxpy_col(
-        const CSCMatrix& A,
-        std::span<const double> X,
-        std::span<const double> Y
-    );
-
-    /** Matrix multiply `Y = A.T X + Y` for row-major dense matrices `X` and `Y`.
-     *
-     * See: Davis, Exercise 2.27(b).
-     *
-     * @param A  a CSC matrix
-     * @param X  a dense multiplying matrix in row-major order
-     * @param[in,out] Y  a dense adding matrix which will be used for the output
-     *
-     * @return Y a copy of the updated matrix
-     */
-    friend std::vector<double> gatxpy_row(
-        const CSCMatrix& A,
-        std::span<const double> X,
-        std::span<const double> Y
-    );
-
-    /** Matrix multiply `Y = A.T X + Y` column-major dense matrices `X` and
-     * `Y`, but operate on blocks of columns.
-     *
-     * See: Davis, Exercise 2.28(c).
-     *
-     * @param A  a CSC matrix
-     * @param X  a dense multiplying matrix in column-major order
-     * @param[in,out] Y  a dense adding matrix which will be used for the output
-     *
-     * @return Y a copy of the updated matrix
-     */
-    friend std::vector<double> gatxpy_block(
-        const CSCMatrix& A,
-        std::span<const double> X,
-        std::span<const double> Y
-    );
-
     /** Scale the rows and columns of a matrix by \f$ A = RAC \f$, where *R* and *C*
      * are diagonal matrices.
      *
@@ -1389,6 +1244,160 @@ CSCMatrix operator-(const CSCMatrix& A);
 CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B);
 CSCMatrix operator*(const CSCMatrix& A, const double c);
 CSCMatrix operator*(const double c, const CSCMatrix& A);
+
+
+/** Matrix-vector multiply `y = Ax + y`.
+ *
+ * @param A  a CSC matrix
+ * @param x  a dense multiplying vector
+ * @param y  a dense adding vector which will be used for the output
+ *
+ * @return y a copy of the updated vector
+ */
+std::vector<double> gaxpy(
+    const CSCMatrix& A,
+    std::span<const double> x,
+    std::span<const double> y
+);
+
+
+/** Matrix transpose-vector multiply `y = A.T x + y`.
+ *
+ * See: Davis, Exercise 2.1. Compute \f$ A^T x + y \f$ without explicitly
+ * computing the transpose.
+ *
+ * @param A  a CSC matrix
+ * @param x  a dense multiplying vector
+ * @param y[in,out]  a dense adding vector which will be used for the output
+ *
+ * @return y a copy of the updated vector
+ */
+std::vector<double> gatxpy(
+    const CSCMatrix& A,
+    std::span<const double> x,
+    std::span<const double> y
+);
+
+
+/** Matrix-vector multiply `y = Ax + y` symmetric A (\f$ A = A^T \f$).
+ *
+ * See: Davis, Exercise 2.3.
+ *
+ * @param A  a CSC matrix
+ * @param x  a dense multiplying vector
+ * @param y  a dense adding vector which will be used for the output
+ *
+ * @return y a copy of the updated vector
+ */
+std::vector<double> sym_gaxpy(
+    const CSCMatrix& A,
+    std::span<const double> x,
+    std::span<const double> y
+);
+
+
+/** Matrix multiply `Y = AX + Y` column-major dense matrices `X` and `Y`.
+ *
+ * See: Davis, Exercise 2.27(a).
+ *
+ * @param A  a CSC matrix
+ * @param X  a dense multiplying matrix in column-major order
+ * @param[in,out] Y  a dense adding matrix which will be used for the output
+ *
+ * @return Y a copy of the updated matrix
+ */
+std::vector<double> gaxpy_col(
+    const CSCMatrix& A,
+    std::span<const double> X,
+    std::span<const double> Y
+);
+
+
+/** Matrix multiply `Y = AX + Y` for row-major dense matrices `X` and `Y`.
+ *
+ * See: Davis, Exercise 2.27(b).
+ *
+ * @param A  a CSC matrix
+ * @param X  a dense multiplying matrix in row-major order
+ * @param[in,out] Y  a dense adding matrix which will be used for the output
+ *
+ * @return Y a copy of the updated matrix
+ */
+std::vector<double> gaxpy_row(
+    const CSCMatrix& A,
+    std::span<const double> X,
+    std::span<const double> Y
+);
+
+
+/** Matrix multiply `Y = AX + Y` column-major dense matrices `X` and
+ * `Y`, but operate on blocks of columns.
+ *
+ * See: Davis, Exercise 2.27(c).
+ *
+ * @param A  a CSC matrix
+ * @param X  a dense multiplying matrix in column-major order
+ * @param[in,out] Y  a dense adding matrix which will be used for the output
+ *
+ * @return Y a copy of the updated matrix
+ */
+std::vector<double> gaxpy_block(
+    const CSCMatrix& A,
+    std::span<const double> X,
+    std::span<const double> Y
+);
+
+
+/** Matrix multiply `Y = A.T X + Y` column-major dense matrices `X` and `Y`.
+ *
+ * See: Davis, Exercise 2.28(a).
+ *
+ * @param A  a CSC matrix
+ * @param X  a dense multiplying matrix in column-major order
+ * @param[in,out] Y  a dense adding matrix which will be used for the output
+ *
+ * @return Y a copy of the updated matrix
+ */
+std::vector<double> gatxpy_col(
+    const CSCMatrix& A,
+    std::span<const double> X,
+    std::span<const double> Y
+);
+
+
+/** Matrix multiply `Y = A.T X + Y` for row-major dense matrices `X` and `Y`.
+ *
+ * See: Davis, Exercise 2.27(b).
+ *
+ * @param A  a CSC matrix
+ * @param X  a dense multiplying matrix in row-major order
+ * @param[in,out] Y  a dense adding matrix which will be used for the output
+ *
+ * @return Y a copy of the updated matrix
+ */
+std::vector<double> gatxpy_row(
+    const CSCMatrix& A,
+    std::span<const double> X,
+    std::span<const double> Y
+);
+
+
+/** Matrix multiply `Y = A.T X + Y` column-major dense matrices `X` and
+ * `Y`, but operate on blocks of columns.
+ *
+ * See: Davis, Exercise 2.28(c).
+ *
+ * @param A  a CSC matrix
+ * @param X  a dense multiplying matrix in column-major order
+ * @param[in,out] Y  a dense adding matrix which will be used for the output
+ *
+ * @return Y a copy of the updated matrix
+ */
+std::vector<double> gatxpy_block(
+    const CSCMatrix& A,
+    std::span<const double> X,
+    std::span<const double> Y
+);
 
 
 }  // namespace cs

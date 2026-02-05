@@ -806,8 +806,8 @@ std::vector<double> gaxpy(
     std::vector<double> out(y.begin(), y.end());  // copy the input vector
 
     for (auto j : A.column_range()) {
-        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
-            out[A.i_[p]] += A.v_[p] * x[j];
+        for (auto [i, v] : A.column(j)) {
+            out[i] += v * x[j];
         }
     }
 
@@ -827,8 +827,8 @@ std::vector<double> gatxpy(
     std::vector<double> out(y.begin(), y.end());  // copy the input vector
 
     for (auto j : A.column_range()) {
-        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
-            out[j] += A.v_[p] * x[A.i_[p]];
+        for (auto [i, v] : A.column(j)) {
+            out[j] += v * x[i];
         }
     }
 
@@ -843,7 +843,8 @@ std::vector<double> sym_gaxpy(
     std::span<const double> y
 )
 {
-    if (A.M_ != A.N_) {
+    auto [M, N] = A.shape();
+    if (M != N) {
         throw std::invalid_argument("A must be square.");
     }
 
@@ -852,18 +853,16 @@ std::vector<double> sym_gaxpy(
     std::vector<double> out(y.begin(), y.end());  // copy the input vector
 
     for (auto j : A.column_range()) {
-        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
-            csint i = A.i_[p];
-
+        for (auto [i, v] : A.column(j)) {
             if (i > j)
                 continue;  // skip lower triangular
 
             // Add the upper triangular elements
-            out[i] += A.v_[p] * x[j];
+            out[i] += v * x[j];
 
             // If off-diagonal, also add the symmetric element
             if (i < j)
-                out[j] += A.v_[p] * x[i];
+                out[j] += v * x[i];
         }
     }
 
@@ -880,21 +879,22 @@ std::vector<double> gaxpy_col(
 {
     gaxpy_check_(A, X, Y);
 
+    auto [M, N] = A.shape();
     std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
-    csint K = X.size() / A.N_;  // number of columns in X
+    csint K = X.size() / N;  // number of columns in X
 
     // For each column of X
     for (csint k = 0; k < K; ++k) {
         // Compute one column of Y (see gaxpy)
         for (auto j : A.column_range()) {
-            double x_val = X[j + k * A.N_];  // cache value
+            double x_val = X[j + k * N];  // cache value
 
             // Only compute if x_val is non-zero
             if (x_val != 0.0) {
-                for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
+                for (auto [i, v] : A.column(j)) {
                     // Indexing in column-major order
-                    out[A.i_[p] + k * A.M_] += A.v_[p] * x_val;
+                    out[i + k * M] += v * x_val;
                 }
             }
         }
@@ -913,26 +913,27 @@ std::vector<double> gaxpy_block(
 {
     gaxpy_check_(A, X, Y);
 
+    auto [M, N] = A.shape();
     std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
-    csint K = X.size() / A.N_;  // number of columns in X
+    csint K = X.size() / N;  // number of columns in X
 
     const csint BLOCK_SIZE = 32;  // block size for column operations
 
     // For each column of X
     for (csint k = 0; k < K; ++k) {
         // Take a block of columns
-        for (csint j_start = 0; j_start < A.N_; j_start += BLOCK_SIZE) {
-            csint j_end = std::min(j_start + BLOCK_SIZE, A.N_);
+        for (csint j_start = 0; j_start < N; j_start += BLOCK_SIZE) {
+            csint j_end = std::min(j_start + BLOCK_SIZE, N);
             // Compute one column of Y (see gaxpy)
             for (csint j = j_start; j < j_end; ++j) {
-                double x_val = X[j + k * A.N_];  // cache value
+                double x_val = X[j + k * N];  // cache value
 
                 // Only compute if x_val is non-zero
                 if (x_val != 0.0) {
-                    for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
+                    for (auto [i, v] : A.column(j)) {
                         // Indexing in column-major order
-                        out[A.i_[p] + k * A.M_] += A.v_[p] * x_val;
+                        out[i + k * M] += v * x_val;
                     }
                 }
             }
@@ -952,9 +953,10 @@ std::vector<double> gaxpy_row(
 {
     gaxpy_check_(A, X, Y);
 
+    auto [M, N] = A.shape();
     std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
-    csint K = X.size() / A.N_;  // number of columns in X
+    csint K = X.size() / N;  // number of columns in X
 
     // For each column of X
     for (csint k = 0; k < K; ++k) {
@@ -964,9 +966,9 @@ std::vector<double> gaxpy_row(
 
             // Only compute if x_val is non-zero
             if (x_val != 0.0) {
-                for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
+                for (auto [i, v] : A.column(j)) {
                     // Indexing in row-major order
-                    out[k + A.i_[p] * K] += A.v_[p] * x_val;
+                    out[k + i * K] += v * x_val;
                 }
             }
         }
@@ -985,17 +987,18 @@ std::vector<double> gatxpy_col(
 {
     gaxpy_check_<true>(A, X, Y);
 
+    auto [M, N] = A.shape();
     std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
-    csint K = X.size() / A.M_;  // number of columns in X
+    csint K = X.size() / M;  // number of columns in X
 
     // For each column of X
     for (csint k = 0; k < K; ++k) {
         // Compute one column of Y (see gaxpy)
         for (auto j : A.column_range()) {
-            for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
+            for (auto [i, v] : A.column(j)) {
                 // Indexing in column-major order
-                out[j + k * A.N_] += A.v_[p] * X[A.i_[p] + k * A.M_];
+                out[j + k * N] += v * X[i + k * M];
             }
         }
     }
@@ -1013,22 +1016,23 @@ std::vector<double> gatxpy_block(
 {
     gaxpy_check_<true>(A, X, Y);
 
+    auto [M, N] = A.shape();
     std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
-    csint K = X.size() / A.M_;  // number of columns in X
+    csint K = X.size() / M;  // number of columns in X
 
     const csint BLOCK_SIZE = 32;  // block size for column operations
 
     // For each column of X
     for (csint k = 0; k < K; ++k) {
         // Take a block of columns
-        for (csint j_start = 0; j_start < A.N_; j_start += BLOCK_SIZE) {
-            csint j_end = std::min(j_start + BLOCK_SIZE, A.N_);
+        for (csint j_start = 0; j_start < N; j_start += BLOCK_SIZE) {
+            csint j_end = std::min(j_start + BLOCK_SIZE, N);
             // Compute one column of Y (see gaxpy)
             for (csint j = j_start; j < j_end; ++j) {
-                for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
+                for (auto [i, v] : A.column(j)) {
                     // Indexing in column-major order
-                    out[j + k * A.N_] += A.v_[p] * X[A.i_[p] + k * A.M_];
+                    out[j + k * N] += v * X[i + k * M];
                 }
             }
         }
@@ -1047,17 +1051,18 @@ std::vector<double> gatxpy_row(
 {
     gaxpy_check_<true>(A, X, Y);
 
+    auto [M, N] = A.shape();
     std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
-    csint K = X.size() / A.M_;  // number of columns in X
+    csint K = X.size() / M;  // number of columns in X
 
     // For each column of X
     for (csint k = 0; k < K; ++k) {
         // Compute one column of Y (see gaxpy)
         for (auto j : A.column_range()) {
-            for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
+            for (auto [i, v] : A.column(j)) {
                 // Indexing in row-major order
-                out[k + j * K] += A.v_[p] * X[k + A.i_[p] * K];
+                out[k + j * K] += v * X[k + i * K];
             }
         }
     }

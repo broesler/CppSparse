@@ -32,7 +32,7 @@ COOMatrix davis_example_small()
 // 11 x 11 symmetric, positive definite Cholesky example. Davis, Fig 4.2, p 39.
 CSCMatrix davis_example_chol()
 {
-    csint N = 11;  // total number of rows and columns
+    constexpr csint N = 11;  // total number of rows and columns
 
     // Only off-diagonal elements
     std::vector<csint> rows{5, 6, 2, 7, 9, 10, 5, 9, 7, 10, 8, 9, 10, 9, 10, 10};
@@ -46,7 +46,7 @@ CSCMatrix davis_example_chol()
     CSCMatrix A = L + L.T();
 
     // Set the diagonal to ensure positive definiteness
-    for (csint i = 0; i < N; ++i) {
+    for (auto i : A.column_range()) {
         A.assign(i, i, i + 10);
     }
 
@@ -57,6 +57,8 @@ CSCMatrix davis_example_chol()
 // 8 x 8, non-symmetric QR example. Davis, Figure 5.1, p 74.
 CSCMatrix davis_example_qr(double add_diag, bool random_vals)
 {
+    constexpr csint N = 8;  // total number of rows and columns
+
     // Define the test matrix A (See Davis, Figure 5.1, p 74)
     std::vector<csint> rows{0, 1, 2, 3, 4, 5, 6,
                                3, 6, 1, 6, 0, 2, 5, 7, 4, 7, 0, 1, 3, 7, 5, 6};
@@ -76,9 +78,9 @@ CSCMatrix davis_example_qr(double add_diag, bool random_vals)
         );
     } else {
         // Label the diagonal elements 1..7, skipping the 8th
-        std::iota(vals.begin(), vals.begin() + 7, 1.0);
+        std::iota(vals.begin(), vals.begin() + (N - 1), 1.0);
         // All non-diagonal values set to 1.0
-        std::fill(vals.begin() + 7, vals.end(), 1.0);
+        std::fill(vals.begin() + (N - 1), vals.end(), 1.0);
     }
 
     COOMatrix A(vals, rows, cols);
@@ -90,7 +92,7 @@ CSCMatrix davis_example_qr(double add_diag, bool random_vals)
 
     // Set the diagonal
     if (add_diag) {
-        for (csint i = 0; i < 8; ++i) {
+        for (csint i = 0; i < N; ++i) {
             A.insert(i, i, add_diag);  // duplicates will be added
         }
     }
@@ -103,7 +105,7 @@ CSCMatrix davis_example_qr(double add_diag, bool random_vals)
 // 10 x 10 symmetric, positive definite AMD example. Davis, Figure 7.1, p 101.
 CSCMatrix davis_example_amd()
 {
-    csint N = 10;  // total number of rows (and columns)
+    constexpr csint N = 10;  // total number of rows (and columns)
 
     // Only off-diagonal elements
     std::vector<csint> rows{0, 3, 5, 1, 4, 5, 8, 2, 4, 5, 6, 3, 6, 7, 
@@ -119,7 +121,7 @@ CSCMatrix davis_example_amd()
     CSCMatrix A = L + L.T();
 
     // Set the diagonal to ensure positive definiteness
-    for (csint i = 0; i < N; ++i) {
+    for (auto i : A.column_range()) {
         A.assign(i, i, i + 10);
     }
 

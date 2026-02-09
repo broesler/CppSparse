@@ -25,7 +25,6 @@ namespace cs {
 TEST_CASE("Build Graph", "[amd][build_graph]")
 {
     CSCMatrix A = davis_example_amd();
-    auto [M, N] = A.shape();
 
     // Number of entries required for a dense row
     csint dense = GENERATE(
@@ -58,7 +57,7 @@ TEST_CASE("Build Graph", "[amd][build_graph]")
         } else if (dense == 4) {
             // Remove some rows (manual count of row_nnz > 4)
             for (csint i : {4, 6, 7, 8}) {
-                for (csint j = 0; j < N; ++j) {
+                for (auto j : A.column_range()) {
                     A(i, j) = 0.0;
                 }
             }
@@ -225,7 +224,7 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
     SECTION("Square, Rank-deficient (zero rows)") {
         // Zero-out some rows
         for (csint i = 2; i < 5; ++i) {
-            for (csint j = 0; j < N; ++j) {
+            for (auto j : A.column_range()) {
                 A(i, j) = 0.0;
             }
         }
@@ -239,7 +238,7 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
     SECTION("Square, Rank-deficient (zero columns)") {
         // Zero-out some columns
         for (csint j = 2; j < 5; ++j) {
-            for (csint i = 0; i < M; ++i) {
+            for (auto i : A.row_range()) {
                 A(i, j) = 0.0;
             }
         }
@@ -274,7 +273,7 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
 
         // Zero out some rows
         for (csint i = 2; i < 5; ++i) {
-            for (csint j = 0; j < N; ++j) {
+            for (auto j : A.column_range()) {
                 A(i, j) = 0.0;
             }
         }
@@ -291,7 +290,7 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
 
         // Zero out some columns
         for (csint j = 2; j < 5; ++j) {
-            for (csint i = 0; i < M; ++i) {
+            for (auto i : A.row_range()) {
                 A(i, j) = 0.0;
             }
         }
@@ -362,7 +361,7 @@ TEST_CASE("Strongly Connected Components", "[scc]")
     SECTION("Zero Rows") {
         // Zero out some rows
         for (csint i = 2; i < 5; ++i) {
-            for (csint j = 0; j < N; ++j) {
+            for (auto j : A.column_range()) {
                 A(i, j) = 0.0;
             }
         }
@@ -411,7 +410,7 @@ TEST_CASE("Dulmage-Mendelsohn Permutation", "[dmperm]")
     SECTION("Zero Rows") {
         // Zero out some rows
         for (csint i = 2; i < 5; ++i) {
-            for (csint j = 0; j < N; ++j) {
+            for (auto j : A.column_range()) {
                 A(i, j) = 0.0;
             }
         }

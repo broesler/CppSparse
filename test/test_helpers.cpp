@@ -55,14 +55,12 @@ void check_noncanonical_allclose(
     REQUIRE(A.nnz() == expect.nnz());
     REQUIRE(A.shape() == expect.shape());
 
-    auto [M, N] = A.shape();
-
     if (values) {
         // Need to check all elements of the matrix because operator() combines
         // duplicate entries, whereas just going through the non-zeros of one
         // matrix does not combine those duplicates.
-        for (csint i = 0; i < M; ++i) {
-            for (csint j = 0; j < N; ++j) {
+        for (auto i : A.row_range()) {
+            for (auto j : A.column_range()) {
                 // Capture the values for comparison on failure
                 double A_val = A(i, j);
                 double expect_val = expect(i, j);

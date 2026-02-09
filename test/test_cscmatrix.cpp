@@ -97,11 +97,10 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
             auto [M, N] = C.shape();
 
             REQUIRE(C.nnz() == C_T.nnz());
-            REQUIRE(M == C_T.shape()[1]);
-            REQUIRE(N == C_T.shape()[0]);
+            REQUIRE(C_T.shape() == Shape{N, M});
 
-            for (csint i = 0; i < M; ++i) {
-                for (csint j = 0; j < N; ++j) {
+            for (auto i : C.row_range()) {
+                for (auto j : C.column_range()) {
                     double C_val = C(i, j);
                     double C_T_val = C_T(j, i);
                     CAPTURE(i, j, C_val, C_T_val);
@@ -270,9 +269,8 @@ TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
         std::vector<csint> indptr = C.indptr();
         std::vector<csint> indices = C.indices();
         std::vector<double> data = C.data();
-        csint N = C.shape()[1];
 
-        for (csint j = 0; j < N; ++j) {
+        for (auto j : C.column_range()) {
             for (csint p = indptr[j]; p < indptr[j+1]; ++p) {
                 REQUIRE(C(indices[p], j) == data[p]);
             }
@@ -291,7 +289,7 @@ TEST_CASE("Insertion", "[CSCMatrix][operator()][insert]")
     CHECK(C.shape() == Shape{N, 1});
 
     // Insert values into the matrix
-    for (csint i = 0; i < N; ++i) {
+    for (auto i : C.row_range()) {
         C(i, 0) = static_cast<double>(i);
     }
 

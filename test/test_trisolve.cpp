@@ -235,7 +235,7 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
         }
     }
 
-    const CSCMatrix A = CSCMatrix{A_vals, {N, N}};
+    const CSCMatrix A{A_vals, {N, N}};
 
     // Un-permuted matrices
     const CSCMatrix L = A.band(-N, 0);

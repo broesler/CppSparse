@@ -153,7 +153,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
 
     SECTION("Numeric factorization of non-positive definite matrix") {
         // Decrease the diagonal to make A non-positive definite
-        for (csint i = 0; i < N; ++i) {
+        for (auto i : A.column_range()) {
             A.assign(i, i, 1.0);
         }
         SymbolicChol S = schol(A, AMDOrder::Natural);
@@ -490,7 +490,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
                 const CSCMatrix L = icholt(A, S, drop_tol).L;
                 const CSCMatrix LLT = (L * L.T()).droptol().to_canonical();
                 CHECK(L.nnz() == N);
-                for (csint k = 0; k < N; ++k) {
+                for (auto k : L.column_range()) {
                     CHECK_THAT(LLT(k, k), WithinAbs(A(k, k), tol));
                 }
             }

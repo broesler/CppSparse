@@ -239,8 +239,8 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
             REQUIRE(M == E.shape()[0]);
             REQUIRE(N == A.shape()[1]);
 
-            for (csint i = 0; i < M; ++i) {
-                for (csint j = 0; j < N; ++j) {
+            for (auto i : C.row_range()) {
+                for (auto j : C.column_range()) {
                     REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
                 }
             }
@@ -389,16 +389,10 @@ TEST_CASE("Scale a sparse matrix by a constant", "[math][scale]")
         i, j
     }.compress();
 
-    auto [M, N] = A.shape();
-
     // Operator overloading
     CSCMatrix C = 0.1 * A;
 
-    for (csint i = 0; i < M; ++i) {
-        for (csint j = 0; j < N; ++j) {
-            REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
-        }
-    }
+    check_noncanonical_allclose(C, expect);
 }
 
 
@@ -422,13 +416,7 @@ TEST_CASE("Exercise 2.4: Scale rows and columns", "[ex2.4][math][scale]")
 
     CSCMatrix RAC = A.scale(r, c);
 
-    auto [M, N] = A.shape();
-
-    for (csint i = 0; i < M; ++i) {
-        for (csint j = 0; j < N; ++j) {
-            REQUIRE_THAT(RAC(i, j), WithinAbs(expect_RAC(i, j), tol));
-        }
-    }
+    check_noncanonical_allclose(RAC, expect_RAC);
 }
 
 
@@ -533,14 +521,8 @@ TEST_CASE("Add sparse column vectors", "[math][add_scaled]")
 
     SECTION("Operator") {
         CSCMatrix C = a + b;
-
         REQUIRE(C.shape() == a.shape());
-
-        for (csint i = 0; i < M; ++i) {
-            for (csint j = 0; j < N; ++j) {
-                REQUIRE_THAT(C(i, j), WithinAbs(expect(i, j), tol));
-            }
-        }
+        check_noncanonical_allclose(C, expect);
     }
 
     SECTION("Exercise 2.21: Saxpy") {

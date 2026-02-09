@@ -94,9 +94,9 @@ void SparseMatrix::print_dense(int precision, bool suppress, std::ostream& os) c
 
     const std::string indent(1, ' ');
 
-    for (csint i = 0; i < M; ++i) {
+    for (auto i : row_range()) {
         os << indent;
-        for (csint j = 0; j < N; ++j) {
+        for (auto j : column_range()) {
             csint idx = (order == DenseOrder::ColMajor) ? (i + j*M) : (i*N + j);
             double val = A[idx];
 

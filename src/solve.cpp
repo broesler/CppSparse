@@ -505,7 +505,7 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
         }
     }
 
-    return {p_inv, q_inv, p_diags};
+    return {.p_inv = p_inv, .q_inv = q_inv, .p_diags = p_diags};
 }
 
 
@@ -1122,7 +1122,7 @@ QRSolveResult qr_solve(
     // Compute the residual
     std::vector<double> R = B - A * X;
 
-    return QRSolveResult{X, R, norm(R, 2)};
+    return {.x = X, .r = R, .rnorm = norm(R, 2)};
 }
 
 
@@ -1179,7 +1179,7 @@ QRSolveResult qr_solve(
     // Compute the residual
     std::vector<double> R = B.to_dense_vector() - A * X;
 
-    return QRSolveResult{X, R, norm(R, 2)};
+    return {.x = X, .r = R, .rnorm = norm(R, 2)};
 }
 
 

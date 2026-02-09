@@ -215,7 +215,7 @@ COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
     std::ranges::generate(values.begin(), values.end(), [&rng, &value_dist]() { return value_dist(rng); });
 
     // Build the matrix
-    return COOMatrix{values, row_idx, col_idx, {M, N}};
+    return {values, row_idx, col_idx, {M, N}};
 }
 
 
@@ -224,11 +224,7 @@ COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
  *----------------------------------------------------------------------------*/
 csint COOMatrix::nnz() const { return i_.size(); }
 csint COOMatrix::nzmax() const { return i_.capacity(); }
-
-Shape COOMatrix::shape() const
-{
-    return Shape{M_, N_};
-}
+Shape COOMatrix::shape() const { return {M_, N_}; }
 
 const std::vector<csint>& COOMatrix::row() const { return i_; }
 const std::vector<csint>& COOMatrix::col() const { return j_; }
@@ -367,7 +363,7 @@ std::vector<double> COOMatrix::to_dense_vector(const DenseOrder order) const
 // Exercise 2.6
 COOMatrix COOMatrix::transpose() const
 {
-    return COOMatrix{this->v_, this->j_, this->i_, {this->N_, this->M_}};
+    return {this->v_, this->j_, this->i_, {this->N_, this->M_}};
 }
 
 

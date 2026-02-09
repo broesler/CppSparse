@@ -148,7 +148,7 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
     L.realloc();  // trim excess storage
     U.realloc();
 
-    return {L, U, p_inv, S.q};
+    return {.L = L, .U = U, .p_inv = p_inv, .q = S.q};
 }
 
 
@@ -402,7 +402,7 @@ LUResult lu(
     L.realloc();  // trim excess storage
     U.realloc();
 
-    return {L, U, p_inv, q};
+    return {.L = L, .U = U, .p_inv = p_inv, .q = q};
 }
 
 
@@ -465,7 +465,7 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
         L.i_[p] = p_inv[L.i_[p]];
     }
 
-    return {L, U, p_inv, S.q};
+    return {.L = L, .U = U, .p_inv = p_inv, .q = S.q};
 }
 
 
@@ -579,7 +579,7 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
     L.has_canonical_format_ = true;
     UT.has_canonical_format_ = true;
 
-    return {L, UT.T(), p_inv, S.q};
+    return {.L = L, .U = UT.T(), .p_inv = p_inv, .q = S.q};
 }
 
 
@@ -693,7 +693,7 @@ LUResult ilutp(
     L.realloc();  // trim excess storage
     U.realloc();
 
-    return {L, U, p_inv, S.q};
+    return {.L = L, .U = U, .p_inv = p_inv, .q = S.q};
 }
 
 
@@ -774,7 +774,7 @@ LUResult ilu_nofill(
     L.realloc();  // trim excess storage
     U.realloc();
 
-    return {L, U, p_inv, S.q};
+    return {.L = L, .U = U, .p_inv = p_inv, .q = S.q};
 }
 
 

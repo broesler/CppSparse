@@ -259,7 +259,7 @@ FirstDesc firstdesc(
         }
     }
 
-    return {first, level};
+    return {.first = first, .level = level};
 }
 
 
@@ -332,7 +332,7 @@ LCAStatus least_common_ancestor(
 
     // See "skeleton" function in Davis, p 48.
     if (i <= j || first[j] <= maxfirst[i]) {  // j is not a leaf
-        return {-1, LeafStatus::NotLeaf};
+        return {.q = -1, .jleaf = LeafStatus::NotLeaf};
     }
 
     maxfirst[i] = first[j];         // update max first[j] seen so far
@@ -341,7 +341,7 @@ LCAStatus least_common_ancestor(
     jleaf = (jprev == -1) ? LeafStatus::FirstLeaf : LeafStatus::SubsequentLeaf;
 
     if (jleaf == LeafStatus::FirstLeaf) {
-        return {i, jleaf};  // if j is the first leaf, q = root of ith subtree
+        return {.q = i, .jleaf = jleaf};  // if j is the first leaf, q = root of ith subtree
     }
 
     // Traverse up to the root of the subtree to find q
@@ -358,7 +358,7 @@ LCAStatus least_common_ancestor(
         s = sparent;
     }
 
-    return {q, jleaf};  // least common ancestor of j_prev and j
+    return {.q = q, .jleaf = jleaf};  // least common ancestor of j_prev and j
 }
 
 
@@ -555,7 +555,7 @@ CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S)
     L.has_sorted_indices_ = true;
     L.has_canonical_format_ = true;
 
-    return {L, S.p_inv};
+    return {.L = L, .p_inv = S.p_inv};
 }
 
 
@@ -628,7 +628,7 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
     L.has_sorted_indices_ = true;
     L.has_canonical_format_ = true;
 
-    return {L, S.p_inv};
+    return {.L = L, .p_inv = S.p_inv};
 }
 
 
@@ -875,7 +875,7 @@ CholCounts chol_etree_counts(const CSCMatrix& A)
         }
     }
 
-    return {parent, row_counts, col_counts};
+    return {.parent = parent, .row_counts = row_counts, .col_counts = col_counts};
 }
 
 
@@ -961,7 +961,7 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
     L.has_sorted_indices_ = true;
     L.has_canonical_format_ = true;
 
-    return {L, S.p_inv};
+    return {.L = L, .p_inv = S.p_inv};
 }
 
 
@@ -1074,7 +1074,7 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
     L.has_sorted_indices_ = true;
     L.has_canonical_format_ = true;
 
-    return {L, S.p_inv};
+    return {.L = L, .p_inv = S.p_inv};
 }
 
 

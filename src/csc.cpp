@@ -142,7 +142,7 @@ void CSCMatrix::realloc(csint nzmax)
  *----------------------------------------------------------------------------*/
 csint CSCMatrix::nnz() const { return i_.size(); }
 csint CSCMatrix::nzmax() const { return i_.capacity(); }
-Shape CSCMatrix::shape() const { return Shape{M_, N_}; }
+Shape CSCMatrix::shape() const { return {M_, N_}; }
 
 const std::vector<csint>& CSCMatrix::indices() const { return i_; }
 const std::vector<csint>& CSCMatrix::indptr() const { return p_; }
@@ -281,7 +281,7 @@ CSCMatrix::GetItemResult CSCMatrix::get_item_(csint i, csint j) const
         k = p_[j];  // insert at the beginning of the column
     }
 
-    return {v, found, k};
+    return {.value = v, .found = found, .index = k};
 }
 
 

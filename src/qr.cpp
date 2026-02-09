@@ -78,7 +78,7 @@ Householder house(std::span<const double> x)
         // }
     }
 
-    return {v, beta, s};
+    return {.v = v, .beta = beta, .s = s};
 }
 
 
@@ -335,7 +335,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
         }
     }
 
-    return {V, beta, R, S.p_inv, q};
+    return {.V = V, .beta = beta, .R = R, .p_inv = S.p_inv, .q = q};
 }
 
 
@@ -408,7 +408,7 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
     R.p_[Nv] = rnz;  // finalize R
     V.p_[Nv] = vnz;  // finalize V
 
-    return {V, {}, R, S.p_inv, S.q};
+    return {.V = V, .beta = {}, .R = R, .p_inv = S.p_inv, .q = S.q};
 }
 
 

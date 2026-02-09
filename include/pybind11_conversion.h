@@ -62,6 +62,7 @@ inline cs::AMDOrder amdorder_from_string(const std::string& order)
 
 
 namespace pybind11::detail {
+
 // -----------------------------------------------------------------------------
 //         Custom Type Caster for std::vector<T> <=> py::array_t<T>
 // -----------------------------------------------------------------------------
@@ -266,8 +267,8 @@ auto make_vector_func(Func&& func)
 {
     return [func = std::forward<Func>(func)](
         const py::object& A_scipy,
-        std::span<const double> x,
-        std::span<const double> y
+        const std::vector<double>& x,
+        const std::vector<double>& y
     ) {
         cs::CSCMatrix A = csc_from_scipy(A_scipy);
         std::vector<double> z = func(A, x, y);

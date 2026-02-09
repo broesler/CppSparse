@@ -850,9 +850,9 @@ PYBIND11_MODULE(csparse, m)
         )
         .def("assign",
             py::overload_cast<
-                const std::vector<cs::csint>&,
-                const std::vector<cs::csint>&,
-                const std::vector<double>&
+                std::span<const cs::csint>,
+                std::span<const cs::csint>,
+                std::span<const double>
             >(&cs::CSCMatrix::assign),
             R"pbdoc(
             Assign a dense matrix to the CSCMatrix at the specified locations.
@@ -867,8 +867,8 @@ PYBIND11_MODULE(csparse, m)
         )
         .def("assign",
             py::overload_cast<
-                const std::vector<cs::csint>&,
-                const std::vector<cs::csint>&,
+                std::span<const cs::csint>,
+                std::span<const cs::csint>,
                 const cs::CSCMatrix&
             >(&cs::CSCMatrix::assign),
             R"pbdoc(
@@ -1038,8 +1038,8 @@ PYBIND11_MODULE(csparse, m)
         // match the CSparse MATLAB interface.
         .def("permute",
             [](const cs::CSCMatrix& self,
-               const std::vector<cs::csint> p,
-               const std::vector<cs::csint> q,
+               const std::vector<cs::csint>& p,
+               const std::vector<cs::csint>& q,
                bool values=true)
             {
                 return self.permute(cs::inv_permute(p), q, values);
@@ -1065,7 +1065,7 @@ PYBIND11_MODULE(csparse, m)
         )
         .def("symperm",
             [](const cs::CSCMatrix& self,
-               const std::vector<cs::csint> p,
+               const std::vector<cs::csint>& p,
                bool values=true)
             {
                 return self.symperm(cs::inv_permute(p), values);
@@ -1089,8 +1089,8 @@ PYBIND11_MODULE(csparse, m)
         )
         .def("permute_transpose",
             [](const cs::CSCMatrix& self,
-               const std::vector<cs::csint> p,
-               const std::vector<cs::csint> q,
+               const std::vector<cs::csint>& p,
+               const std::vector<cs::csint>& q,
                bool values=true)
             {
                 return self.permute_transpose(cs::inv_permute(p), q, values);
@@ -1116,7 +1116,7 @@ PYBIND11_MODULE(csparse, m)
         )
         .def("permute_rows",
             [](const cs::CSCMatrix& self,
-               const std::vector<cs::csint> p,
+               const std::vector<cs::csint>& p,
                bool values=true)
             {
                 return self.permute_rows(cs::inv_permute(p), values);
@@ -1511,7 +1511,10 @@ PYBIND11_MODULE(csparse, m)
             The inversely permuted vector.
         )pbdoc"
     );
-    m.def("inv_permute", &cs::inv_permute,
+    m.def("inv_permute",
+        [](const std::vector<cs::csint>& p) {
+            return cs::inv_permute(p);
+        },
         R"pbdoc(Invert a permutation vector.
 
         Equivalent to `np.argsort(p)` in NumPy notation.
@@ -1587,7 +1590,11 @@ PYBIND11_MODULE(csparse, m)
         )pbdoc"
     );
 
-    m.def("post", &cs::post, py::arg("parent"),
+    m.def("post",
+        [](const std::vector<cs::csint>& parent) {
+            return cs::post(parent);
+        },
+        py::arg("parent"),
         R"pbdoc(
         Compute the postordering of an elimination tree.
 

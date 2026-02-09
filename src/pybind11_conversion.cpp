@@ -28,12 +28,10 @@ py::object scipy_from_coo(const cs::COOMatrix& A)
     auto col = py::cast(A.col());
 
     // Create the SciPy coo_array
-    py::object scipy_coo_array = sparse.attr("coo_array")(
+    return sparse.attr("coo_array")(
         py::make_tuple(data, py::make_tuple(row, col)),
         py::arg("shape") = A.shape()
     );
-
-    return scipy_coo_array;
 }
 
 
@@ -46,12 +44,10 @@ py::object scipy_from_csc(const cs::CSCMatrix& A)
     auto indptr = py::cast(A.indptr());
 
     // Create the SciPy CSC matrix
-    py::object scipy_csc_array = sparse.attr("csc_array")(
+    return sparse.attr("csc_array")(
         py::make_tuple(data, indices, indptr),
         py::arg("shape") = A.shape()
     );
-
-    return scipy_csc_array;
 }
 
 
@@ -89,7 +85,7 @@ cs::CSCMatrix csc_from_scipy(const py::object& obj)
 
         // Construct the C++ CSCMatrix using the loaded data
         // The 'value' member is the target CSCMatrix object
-        return cs::CSCMatrix{data, indices, indptr, shape};
+        return {data, indices, indptr, shape};
 
     } catch (const py::cast_error& e) {
         std::cerr << "Error in SciPy CSC to C++ CSCMatrix cast: "
@@ -139,7 +135,7 @@ cs::COOMatrix coo_from_scipy(const py::object& obj)
 
         // Construct the C++ COOMatrix using the loaded data
         // The 'value' member is the target COOMatrix object
-        return cs::COOMatrix{data, row, col, shape};
+        return {data, row, col, shape};
 
     } catch (const py::cast_error& e) {
         std::cerr << "Error in SciPy COO to C++ COOMatrix cast: "

@@ -126,7 +126,7 @@ PYBIND11_MODULE(csparse, m)
                 const py::object& b_obj,
                 const std::vector<cs::csint>& parent
             ) {
-                cs::CSCMatrix b = csc_from_scipy(b_obj);
+                const auto b = csc_from_scipy(b_obj);
                 auto [xi, x] = self.lsolve(b, parent);
                 return x;
             },
@@ -158,7 +158,7 @@ PYBIND11_MODULE(csparse, m)
                 const py::object& b_obj,
                 const std::vector<cs::csint>& parent
             ) {
-                cs::CSCMatrix b = csc_from_scipy(b_obj);
+                const auto b = csc_from_scipy(b_obj);
                 auto [xi, x] = self.ltsolve(b, parent);
                 return x;
             },
@@ -221,7 +221,7 @@ PYBIND11_MODULE(csparse, m)
         })
         .def("solve",
             [](const cs::QRResult& self, const std::vector<double>& b) {
-                cs::csint N = self.R.shape()[1];
+                auto N = self.R.shape()[1];
                 std::vector<double> x(N);  // create output vector
                 self.solve(b, x);
                 return x;
@@ -243,7 +243,7 @@ PYBIND11_MODULE(csparse, m)
         )
         .def("tsolve",
             [](const cs::QRResult& self, const std::vector<double>& b) {
-                cs::csint M2 = self.V.shape()[0];
+                auto M2 = self.V.shape()[0];
                 std::vector<double> x(M2);  // create output vector
                 self.tsolve(b, x);
                 return x;
@@ -295,7 +295,7 @@ PYBIND11_MODULE(csparse, m)
         })
         .def("solve",
             [](const cs::LUResult& self, const std::vector<double>& b) {
-                std::vector<double> x(b);  // copy b to x
+                auto x(b);  // copy b to x
                 self.solve(x);
                 return x;
             },
@@ -316,7 +316,7 @@ PYBIND11_MODULE(csparse, m)
         )
         .def("tsolve",
             [](const cs::LUResult& self, const std::vector<double>& b) {
-                std::vector<double> x(b);  // copy b to x
+                auto x(b);  // copy b to x
                 self.tsolve(x);
                 return x;
             },
@@ -498,7 +498,7 @@ PYBIND11_MODULE(csparse, m)
         .def_property_readonly("nzmax", &cs::COOMatrix::nzmax)
         .def_property_readonly("shape",
             [](const cs::COOMatrix& A) {
-                cs::Shape s = A.shape();
+                auto s = A.shape();
                 return std::make_tuple(s[0], s[1]);
             }
         )
@@ -732,7 +732,7 @@ PYBIND11_MODULE(csparse, m)
         .def_property_readonly("nzmax", &cs::CSCMatrix::nzmax)
         .def_property_readonly("shape",
             [](const cs::CSCMatrix& A) {
-                cs::Shape s = A.shape();
+                const auto s = A.shape();
                 return std::make_tuple(s[0], s[1]);
             }
         )
@@ -1542,7 +1542,7 @@ PYBIND11_MODULE(csparse, m)
            const std::vector<double>& b
         ) {
             std::vector<double> resid;
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            const auto A = csc_from_scipy(A_scipy);
             return cs::residual_norm(A, x, b, resid);
         },
         py::arg("A"),
@@ -1573,7 +1573,7 @@ PYBIND11_MODULE(csparse, m)
     // ---------- Cholesky decomposition
     m.def("etree",
         [] (const py::object& A_scipy, bool ata=false) {
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            const auto A = csc_from_scipy(A_scipy);
             return cs::etree(A, ata);
         },
         py::arg("A"),
@@ -1611,7 +1611,7 @@ PYBIND11_MODULE(csparse, m)
             const std::vector<cs::csint>& parent,
             const std::vector<cs::csint>& post
         ) {
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            const auto A = csc_from_scipy(A_scipy);
             return cs::rowcnt(A, parent, post);
         },
         py::arg("A"), py::arg("parent"), py::arg("post"),
@@ -1631,7 +1631,7 @@ PYBIND11_MODULE(csparse, m)
 
     m.def("chol_colcounts",
         [] (const py::object& A_scipy, bool ata=false) {
-            const cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            const auto A = csc_from_scipy(A_scipy);
             return cs::chol_colcounts(A, ata);
         },
         py::arg("A"), py::arg("ATA")=false,
@@ -1653,9 +1653,9 @@ PYBIND11_MODULE(csparse, m)
             const std::string& order="Natural",
             bool use_postorder=false
         ) {
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = amdorder_from_string(order);
-            cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
+            const auto A = csc_from_scipy(A_scipy);
+            auto order_enum = amdorder_from_string(order);
+            const auto S = cs::schol(A, order_enum, use_postorder);
             return cs::chol(A, S);
         },
         py::arg("A"), py::arg("order")="Natural", py::arg("use_postorder")=false,
@@ -1680,9 +1680,9 @@ PYBIND11_MODULE(csparse, m)
             const std::string& order="Natural",
             bool use_postorder=false
         ) {
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = amdorder_from_string(order);
-            cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
+            const auto A = csc_from_scipy(A_scipy);
+            auto order_enum = amdorder_from_string(order);
+            const auto S = cs::schol(A, order_enum, use_postorder);
             // TODO Fill the values with 1.0 for the symbolic factorization?
             // cs::CSCMatrix L = cs::symbolic_cholesky(A, S);
             // std::fill(L.v_.begin(), L.v_.end(), 1.0);
@@ -1713,10 +1713,10 @@ PYBIND11_MODULE(csparse, m)
             const std::string& order="Natural",
             bool use_postorder=false
         ) {
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = amdorder_from_string(order);
-            cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
-            cs::CholResult res = cs::symbolic_cholesky(A, S);
+            const auto A = csc_from_scipy(A_scipy);
+            auto order_enum = amdorder_from_string(order);
+            const auto S = cs::schol(A, order_enum, use_postorder);
+            auto res = cs::symbolic_cholesky(A, S);
             res.L = cs::leftchol(A, S, res.L);
             return res;
         },
@@ -1745,10 +1745,10 @@ PYBIND11_MODULE(csparse, m)
             const std::string& order="Natural",
             bool use_postorder=false
         ) {
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = amdorder_from_string(order);
-            cs::SymbolicChol S = cs::schol(A, order_enum, use_postorder);
-            cs::CholResult res = cs::symbolic_cholesky(A, S);
+            const auto A = csc_from_scipy(A_scipy);
+            auto order_enum = amdorder_from_string(order);
+            const auto S = cs::schol(A, order_enum, use_postorder);
+            auto res = cs::symbolic_cholesky(A, S);
             res.L = cs::rechol(A, S, res.L);
             return res;
         },
@@ -1809,9 +1809,9 @@ PYBIND11_MODULE(csparse, m)
             const std::string& order="Natural",
             bool use_postorder=false
         ) {
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = amdorder_from_string(order);
-            cs::SymbolicQR S = cs::sqr(A, order_enum, use_postorder);
+            const auto A = csc_from_scipy(A_scipy);
+            auto order_enum = amdorder_from_string(order);
+            const auto S = cs::sqr(A, order_enum, use_postorder);
             return cs::qr(A, S);
         },
         py::arg("A"),
@@ -1840,9 +1840,9 @@ PYBIND11_MODULE(csparse, m)
             bool qr_bound=false,
             double alpha=1.0
         ) {
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = amdorder_from_string(order);
-            cs::SymbolicLU S = cs::slu(A, order_enum, qr_bound, alpha);
+            const auto A = csc_from_scipy(A_scipy);
+            auto order_enum = amdorder_from_string(order);
+            const auto S = cs::slu(A, order_enum, qr_bound, alpha);
             return py::make_tuple(S.lnz, S.unz, py::cast(S.q));
         },
         py::arg("A"),
@@ -1874,9 +1874,9 @@ PYBIND11_MODULE(csparse, m)
             const std::string& order="Natural",
             double tol=1.0
         ) {
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = amdorder_from_string(order);
-            cs::SymbolicLU S = cs::slu(A, order_enum);
+            const auto A = csc_from_scipy(A_scipy);
+            auto order_enum = amdorder_from_string(order);
+            const auto S = cs::slu(A, order_enum);
             return cs::lu(A, S, tol);
         },
         py::arg("A"),
@@ -1905,8 +1905,8 @@ PYBIND11_MODULE(csparse, m)
             const py::object& A_scipy,
             const std::string& order="Natural"
         ) {
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            cs::AMDOrder order_enum = amdorder_from_string(order);
+            const auto A = csc_from_scipy(A_scipy);
+            auto order_enum = amdorder_from_string(order);
             return cs::amd(A, order_enum);
         },
         py::arg("A"),
@@ -1946,7 +1946,7 @@ PYBIND11_MODULE(csparse, m)
 
     m.def("maxtrans_r",
         [] (const py::object& A_scipy, cs::csint seed=0) {
-            const cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            const auto A = csc_from_scipy(A_scipy);
             return cs::detail::maxtrans_r(A, seed);
         },
         py::arg("A"),
@@ -1993,7 +1993,7 @@ PYBIND11_MODULE(csparse, m)
 
     m.def("dmperm",
         [] (const py::object& A_scipy, cs::csint seed=0) {
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            const auto A = csc_from_scipy(A_scipy);
             return cs::dmperm(A, seed);
         },
         py::arg("A"),
@@ -2021,7 +2021,7 @@ PYBIND11_MODULE(csparse, m)
 
     m.def("scc",
         [] (const py::object& A_scipy) {
-            cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            const auto A = csc_from_scipy(A_scipy);
             return cs::scc(A);
         },
         py::arg("A"),
@@ -2046,8 +2046,8 @@ PYBIND11_MODULE(csparse, m)
     //--------------------------------------------------------------------------
     m.def("reach",
         [](const py::object& A_scipy, const py::object& b_scipy) {
-            const cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            const cs::CSCMatrix b = csc_from_scipy(b_scipy);
+            const auto A = csc_from_scipy(A_scipy);
+            const auto b = csc_from_scipy(b_scipy);
 
             if (b.shape()[1] != 1) {
                 throw std::invalid_argument(
@@ -2087,8 +2087,8 @@ PYBIND11_MODULE(csparse, m)
 
     m.def("reach_r",
         [](const py::object& A_scipy, const py::object& b_scipy) {
-            const cs::CSCMatrix A = csc_from_scipy(A_scipy);
-            const cs::CSCMatrix b = csc_from_scipy(b_scipy);
+            const auto A = csc_from_scipy(A_scipy);
+            const auto b = csc_from_scipy(b_scipy);
 
             if (b.shape()[1] != 1) {
                 throw std::invalid_argument(

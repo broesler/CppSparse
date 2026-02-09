@@ -32,9 +32,9 @@ namespace cs {
 /** Define a helper function to test LU decomposition */
 LUResult lu_test(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural)
 {
-    SymbolicLU S = slu(A, order);
-    LUResult res = lu(A, S);
-    CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+    auto S = slu(A, order);
+    auto res = lu(A, S);
+    auto LU = (res.L * res.U).droptol().to_canonical();
 
     // Test that permutations are valid
     auto [M, N] = A.shape();
@@ -46,7 +46,7 @@ LUResult lu_test(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural)
     CHECK_THAT(res.p_inv, UnorderedEquals(row_perm));
     CHECK_THAT(res.q,     UnorderedEquals(col_perm));
 
-    CSCMatrix PAQ = A.permute(res.p_inv, res.q).to_canonical();
+    auto PAQ = A.permute(res.p_inv, res.q).to_canonical();
     check_sparse_allclose(LU, PAQ);
     return res;
 }
@@ -54,13 +54,13 @@ LUResult lu_test(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural)
 
 TEST_CASE("Symbolic LU Factorization of Square Matrix", "[lu][M == N][symbolic]")
 {
-    const CSCMatrix A = davis_example_qr(10);
+    const auto A = davis_example_qr(10);
     auto [M, N] = A.shape();
 
     std::vector<csint> expect_q{0, 1, 2, 3, 4, 5, 6, 7};
 
     SECTION("Symbolic Factorization") {
-        AMDOrder order = AMDOrder::Natural;
+        auto order = AMDOrder::Natural;
         csint expect_lnz = 0;
 
         SECTION("Natural") {
@@ -82,7 +82,7 @@ TEST_CASE("Symbolic LU Factorization of Square Matrix", "[lu][M == N][symbolic]"
             expect_lnz = 4 * A.nnz() + N;
         }
 
-        SymbolicLU S = slu(A, order);
+        auto S = slu(A, order);
 
         CHECK(S.q == expect_q);
         CHECK(S.lnz == expect_lnz);
@@ -93,22 +93,22 @@ TEST_CASE("Symbolic LU Factorization of Square Matrix", "[lu][M == N][symbolic]"
 
 TEST_CASE("Numeric LU Factorization of Square Matrix", "[lu][M == N][numeric]")
 {
-    CSCMatrix A = davis_example_qr(10);
-    CSCMatrix Ap = A;
+    auto A = davis_example_qr(10);
+    auto Ap = A;
     std::vector<csint> expect_p,
                        expect_q;
 
     // Cycle through each order and row permutation
-    AMDOrder order = GENERATE(
+    auto order = GENERATE(
         AMDOrder::Natural,
         AMDOrder::APlusAT,
         AMDOrder::ATANoDenseRows
     );
-    bool row_perm = GENERATE(true, false);
+    auto row_perm = GENERATE(true, false);
     CAPTURE(order, row_perm);  // track which order and row_perm are being used
 
     std::vector<csint> p{5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
-    std::vector<csint> p_inv = inv_permute(p);
+    auto p_inv = inv_permute(p);
 
     if (row_perm) {
         Ap = A.permute_rows(p_inv);
@@ -145,7 +145,7 @@ TEST_CASE("Numeric LU Factorization of Square Matrix", "[lu][M == N][numeric]")
     }
 
     // Test the factorization
-    LUResult res = lu_test(Ap, order);
+    auto res = lu_test(Ap, order);
 
     // Check the permutations
     CHECK(res.p_inv == inv_permute(expect_p));
@@ -155,13 +155,13 @@ TEST_CASE("Numeric LU Factorization of Square Matrix", "[lu][M == N][numeric]")
 
 TEST_CASE("Solve Ax = b with LU", "[lu_solve]")
 {
-    const CSCMatrix A = davis_example_qr(10).to_canonical();
+    const auto A = davis_example_qr(10).to_canonical();
 
     // Create RHS for A x = b
     const std::vector<double> expect{1, 2, 3, 4, 5, 6, 7, 8};
-    const std::vector<double> b = A * expect;
+    const auto b = A * expect;
 
-    AMDOrder order = AMDOrder::Natural;
+    auto order = AMDOrder::Natural;
     CSCMatrix Ap;
     std::vector<double> bp;
 
@@ -174,7 +174,7 @@ TEST_CASE("Solve Ax = b with LU", "[lu_solve]")
         // Permuting the rows of A requires permuting the columns of b, but the
         // solution vector will *not* be permuted.
         std::vector<csint> p{5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
-        std::vector<csint> p_inv = inv_permute(p);
+        auto p_inv = inv_permute(p);
 
         Ap = A.permute_rows(p_inv);
         bp = pvec(p, b);
@@ -189,12 +189,12 @@ TEST_CASE("Solve Ax = b with LU", "[lu_solve]")
     }
 
     // Solve the system
-    std::vector<double> x = lu_solve(Ap, bp, order);
+    auto x = lu_solve(Ap, bp, order);
 
     // Test overload
-    SymbolicLU S = slu(Ap, order);
-    LUResult res = lu(Ap, S);
-    std::vector<double> x_ov = bp;  // copy RHS
+    auto S = slu(Ap, order);
+    auto res = lu(Ap, S);
+    auto x_ov = bp;  // copy RHS
     res.solve(x_ov);        // solve Ax = b
 
     check_vectors_allclose(x, x_ov, tol);
@@ -204,14 +204,14 @@ TEST_CASE("Solve Ax = b with LU", "[lu_solve]")
 
 TEST_CASE("Exercise 6.1: Solve A^T x = b with LU", "[ex6.1][lu_tsolve]")
 {
-    const CSCMatrix A = davis_example_qr(10).to_canonical();
+    const auto A = davis_example_qr(10).to_canonical();
 
     // Create RHS for A^T x = b
     const std::vector<double> expect{1, 2, 3, 4, 5, 6, 7, 8};
-    const std::vector<double> b = A.T() * expect;
+    const auto b = A.T() * expect;
 
-    bool row_perm = false;
-    AMDOrder order = AMDOrder::Natural;
+    auto row_perm = false;
+    auto order = AMDOrder::Natural;
     CSCMatrix Ap;
 
     std::vector<csint> p_inv;
@@ -233,11 +233,11 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU", "[ex6.1][lu_tsolve]")
     }
 
     // Solve the system
-    std::vector<double> x = lu_tsolve(Ap, b, order);
+    auto x = lu_tsolve(Ap, b, order);
     // Test overload
-    SymbolicLU S = slu(Ap, order);
-    LUResult res = lu(Ap, S);
-    std::vector<double> x_ov = b;
+    auto S = slu(Ap, order);
+    auto res = lu(Ap, S);
+    auto x_ov = b;
     res.tsolve(x_ov);
 
     // Permuting the rows of A is the same as permuting the columns of A^T, so
@@ -255,7 +255,7 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU", "[ex6.1][lu_tsolve]")
 
 TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3][lu_colpiv]")
 {
-    CSCMatrix A = davis_example_qr(10);
+    auto A = davis_example_qr(10);
 
     double col_tol;
     std::vector<csint> expect_p,
@@ -271,12 +271,12 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3][lu_colpiv]")
         const std::vector<csint>& expect_p_inv,
         const std::vector<csint>& expect_q
     ) {
-        SymbolicLU S = slu(A);
+        auto S = slu(A);
         double tol = 1.0;  // the row pivot tolerance
-        LUResult res = lu(A, S, tol, col_tol);
+        auto res = lu(A, S, tol, col_tol);
 
-        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
-        CSCMatrix PAQ = A.permute(res.p_inv, res.q).to_canonical();
+        auto LU = (res.L * res.U).droptol().to_canonical();
+        auto PAQ = A.permute(res.p_inv, res.q).to_canonical();
 
         CHECK(res.p_inv == expect_p_inv);
         CHECK(res.q == expect_q);
@@ -350,7 +350,7 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3][lu_colpiv]")
 
     // Run the Tests
     expect_p = expect_q;  // diagonals are pivots
-    std::vector<csint> expect_p_inv = inv_permute(expect_p);
+    auto expect_p_inv = inv_permute(expect_p);
 
     lu_col_test(A, col_tol, expect_p_inv, expect_q);
 }
@@ -358,7 +358,7 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3][lu_colpiv]")
 
 TEST_CASE("Exercise 6.4: relu", "[ex6.4][relu]")
 {
-    CSCMatrix A = davis_example_qr(10);
+    auto A = davis_example_qr(10);
     auto [M, N] = A.shape();
 
     std::vector<csint> expect_q(N);
@@ -384,7 +384,7 @@ TEST_CASE("Exercise 6.4: relu", "[ex6.4][relu]")
     SECTION("permuted") {
         // Permute the rows of A to test pivoting
         std::vector<csint> p{5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
-        std::vector<csint> p_inv = inv_permute(p);
+        auto p_inv = inv_permute(p);
 
         // Permute the rows of A and B to test pivoting
         Ap = A.permute_rows(p_inv);
@@ -393,16 +393,16 @@ TEST_CASE("Exercise 6.4: relu", "[ex6.4][relu]")
     }
 
     // Compute LU = PA
-    SymbolicLU S = slu(Ap);
-    LUResult R = lu(Ap, S);
+    auto S = slu(Ap);
+    auto R = lu(Ap, S);
 
     // Compute the LU factorization of Bp using the pattern of LU = PA
-    LUResult res = relu(Bp, R, S);
+    auto res = relu(Bp, R, S);
 
-    CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
+    auto LU = (res.L * res.U).droptol().to_canonical();
 
     // Permute the rows of the input Bp to compare with LU
-    CSCMatrix PBp = Bp.permute_rows(res.p_inv).to_canonical();
+    auto PBp = Bp.permute_rows(res.p_inv).to_canonical();
 
     CHECK(res.q == expect_q);
     CHECK(res.p_inv == expect_p);
@@ -414,15 +414,15 @@ TEST_CASE("Exercise 6.4: relu", "[ex6.4][relu]")
 // Exercise 6.5: LU for square, singular matrices
 void run_lu_singular_test(auto matrix_modifier)
 {
-    CSCMatrix A = davis_example_qr(10).to_canonical();
+    auto A = davis_example_qr(10).to_canonical();
 
-    AMDOrder order = GENERATE(
+    auto order = GENERATE(
         AMDOrder::Natural,
         AMDOrder::APlusAT,
         AMDOrder::ATANoDenseRows
     );
-    bool permute_rows = GENERATE(true, false);
-    bool structural = GENERATE(true, false);
+    auto permute_rows = GENERATE(true, false);
+    auto structural = GENERATE(true, false);
     CAPTURE(order, permute_rows, structural);
 
     if (permute_rows) {
@@ -549,7 +549,7 @@ TEST_CASE("Exercise 6.5: LU with Multiple zero rows", "[ex6.5][lu_singular]")
 
 TEST_CASE("Exercise 6.6: LU Factorization of Rectangular Matrices", "[ex6.6][lu][M < N][M > N]")
 {
-    CSCMatrix A = davis_example_qr(10).to_canonical();
+    auto A = davis_example_qr(10).to_canonical();
     auto [M, N] = A.shape();
 
     csint r = 3;  // number of rows or columns to remove
@@ -568,12 +568,12 @@ TEST_CASE("Exercise 6.6: LU Factorization of Rectangular Matrices", "[ex6.6][lu]
 
 TEST_CASE("Exercise 6.7: Crout's method LU Factorization", "[ex6.7][crout]")
 {
-    const CSCMatrix A = davis_example_qr(10);
+    const auto A = davis_example_qr(10);
 
     SECTION("No pivoting") {
         // Compute the LU factorization of A using Crout's method
-        SymbolicLU S = slu(A);
-        LUResult res = lu_crout(A, S);
+        auto S = slu(A);
+        auto res = lu_crout(A, S);
 
         // std::cout << "A:" << std::endl;
         // A.print_dense();
@@ -582,8 +582,8 @@ TEST_CASE("Exercise 6.7: Crout's method LU Factorization", "[ex6.7][crout]")
         // std::cout << "U:" << std::endl;
         // res.U.print_dense();
 
-        CSCMatrix LU = (res.L * res.U).droptol().to_canonical();
-        CSCMatrix PA = A.permute_rows(res.p_inv).to_canonical();
+        auto LU = (res.L * res.U).droptol().to_canonical();
+        auto PA = A.permute_rows(res.p_inv).to_canonical();
 
         check_sparse_allclose(LU, PA);
     }
@@ -632,13 +632,13 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
     csint k = 3;    // arbitrary column index
     csint nnz = N;  // arbitrary, defined the class to assign diagonal
 
-    bool lower = GENERATE(true, false);
+    auto lower = GENERATE(true, false);
     CAPTURE(lower);
 
     csint max_request = 2 * nnz + N;
-    csint min_request = lower ? nnz + N - k : nnz + k + 1;
+    auto min_request = lower ? nnz + N - k : nnz + k + 1;
 
-    double diff = max_request - min_request;
+    auto diff = max_request - min_request;
     REQUIRE(diff > 0);
     csint max_total_requests = 1 + static_cast<csint>(std::log2(diff));
 
@@ -659,7 +659,7 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
         thresh = 1000;  // min_request < max_request < threshold
         LowMemoryMatrix L{Shape{N, N}, thresh};
 
-        csint original_nzmax = L.nzmax();
+        auto original_nzmax = L.nzmax();
 
         REQUIRE_NOTHROW(lu_realloc(L, k, lower));
         REQUIRE(L.nzmax() > original_nzmax);
@@ -670,13 +670,13 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
         thresh = 200;  // min_request < threshold < max_request
         LowMemoryMatrix L{Shape{N, N}, thresh};
 
-        csint original_nzmax = L.nzmax();
+        auto original_nzmax = L.nzmax();
 
         REQUIRE_NOTHROW(lu_realloc(L, k, lower));
 
         REQUIRE(L.nzmax() > original_nzmax);
 
-        std::vector<csint> requests = L.get_realloc_attempts();
+        auto requests = L.get_realloc_attempts();
 
         // std::cout << "--- Test without failure:" << std::endl;
         // if (lower) {
@@ -708,7 +708,7 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
         // Restore the original cerr buffer
         std::cerr.rdbuf(original_cerr);
 
-        std::vector<csint> requests = L.get_realloc_attempts();
+        auto requests = L.get_realloc_attempts();
 
         // std::cout << "--- Test with failure:" << std::endl;
         // if (lower) {
@@ -728,16 +728,16 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
 
 TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13][ilu]")
 {
-    const CSCMatrix A = davis_example_qr(10).to_canonical();
+    const auto A = davis_example_qr(10).to_canonical();
     auto [M, N] = A.shape();
 
     SECTION("ILUTP: Threshold with Pivoting") {
         // Default is no pivoting
-        CSCMatrix Ap = A;
+        auto Ap = A;
 
         // Permute the rows of A to test pivoting
         std::vector<csint> p{5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
-        std::vector<csint> p_inv = inv_permute(p);
+        auto p_inv = inv_permute(p);
 
         SECTION("Full LU (tolerance = 0)") {
             double drop_tol = 0.0;
@@ -746,10 +746,10 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13][ilu]")
                 Ap = A.permute_rows(p_inv);
             }
 
-            SymbolicLU S = slu(Ap);
-            LUResult res = lu(Ap, S);
-            LUResult ires = ilutp(Ap, S, drop_tol);
-            CSCMatrix iLU = (ires.L * ires.U).droptol().to_canonical();
+            auto S = slu(Ap);
+            auto res = lu(Ap, S);
+            auto ires = ilutp(Ap, S, drop_tol);
+            auto iLU = (ires.L * ires.U).droptol().to_canonical();
 
             check_sparse_allclose(res.L, ires.L);
             check_sparse_allclose(res.U, ires.U);
@@ -757,14 +757,14 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13][ilu]")
         }
 
         SECTION("Drop all non-digonal entries (tolerance = inf)") {
-            double drop_tol = std::numeric_limits<double>::infinity();
+            auto drop_tol = std::numeric_limits<double>::infinity();
 
             SECTION("With pivoting") {
                 Ap = A.permute_rows(p_inv);
             }
 
-            SymbolicLU S = slu(Ap);
-            LUResult ires = ilutp(Ap, S, drop_tol);
+            auto S = slu(Ap);
+            auto ires = ilutp(Ap, S, drop_tol);
 
             REQUIRE(ires.L.nnz() == N);
             REQUIRE(ires.U.nnz() == N);
@@ -781,10 +781,10 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13][ilu]")
                 Ap = A.permute_rows(p_inv);
             }
 
-            SymbolicLU S = slu(Ap);
-            LUResult res = lu(Ap, S);
-            LUResult ires = ilutp(Ap, S, drop_tol);
-            CSCMatrix iLU = (ires.L * ires.U).droptol().to_canonical();
+            auto S = slu(Ap);
+            auto res = lu(Ap, S);
+            auto ires = ilutp(Ap, S, drop_tol);
+            auto iLU = (ires.L * ires.U).droptol().to_canonical();
 
             csint expect_L_drops = 6;  // abs_drop_tol = 0.08
             csint expect_U_drops = 0;
@@ -800,13 +800,13 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13][ilu]")
 
     SECTION("ILU0: Zero-fill with no pivoting") {
         // Compute the LU factorization of A using the pattern of LU = A
-        const SymbolicLU S = slu(A);
-        const LUResult ires = ilu_nofill(A, S);
+        const auto S = slu(A);
+        const auto ires = ilu_nofill(A, S);
 
-        const CSCMatrix LU = (ires.L * ires.U).droptol().to_canonical();
+        const auto LU = (ires.L * ires.U).droptol().to_canonical();
 
         // L + U and A are *structurally* identical (no fill-in!)
-        const CSCMatrix LpU = (ires.L + ires.U).droptol().to_canonical();
+        const auto LpU = (ires.L + ires.U).droptol().to_canonical();
 
         CHECK(LpU.nnz() == A.nnz());
         CHECK(LpU.indices() == A.indices());
@@ -815,17 +815,17 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13][ilu]")
         // Test norm just on non-zero pattern of A
         // MATLAB >> norm(A - (L * U) * spones(A), "fro") / norm(A, "fro")
 
-        const CSCMatrix LU_Anz = LU.fkeep(
+        const auto LU_Anz = LU.fkeep(
             [A](csint i, csint j, [[maybe_unused]] double Aij) {
                 return A(i, j) != 0.0;
             }
         );
-        const CSCMatrix AmLU = (A - LU).droptol(tol).to_canonical();
+        const auto AmLU = (A - LU).droptol(tol).to_canonical();
 
         CHECK(AmLU.nnz() == 1);  // LU(6, 3) == 0.0705 , A(6, 3) == 0.0
 
-        double nz_norm = (A - LU_Anz).fronorm() / A.fronorm();
-        double norm = AmLU.fronorm() / A.fronorm();  // total norm
+        auto nz_norm = (A - LU_Anz).fronorm() / A.fronorm();
+        auto norm = AmLU.fronorm() / A.fronorm();  // total norm
 
         // std::cout << "   norm: " << std::format("{:6.4g}", norm) << std::endl;
 
@@ -838,24 +838,24 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13][ilu]")
 
 TEST_CASE("Exercise 6.15: 1-norm condition number estimate", "[ex6.15][norm1est][cond1est]")
 {
-    const CSCMatrix A = davis_example_qr(10).to_canonical();
+    const auto A = davis_example_qr(10).to_canonical();
 
     SECTION("Estimate 1-norm of A inverse") {
         // Compute the LU decomposition
-        SymbolicLU S = slu(A);
-        LUResult res = lu(A, S);
+        auto S = slu(A);
+        auto res = lu(A, S);
 
         double expect = 0.11537500551678347;  // MATLAB and python calcs
-        double exact_norm = A.norm();         // 1-norm == maximum column sum
+        auto exact_norm = A.norm();         // 1-norm == maximum column sum
 
-        double est_norm = norm1est_inv(res);
+        auto est_norm = norm1est_inv(res);
 
         CHECK(exact_norm >= est_norm);  // estimate is a lower bound
         REQUIRE_THAT(est_norm, WithinAbs(expect, tol));
     }
 
     SECTION("Estimate condition number of A") {
-        double kappa = cond1est(A);
+        auto kappa = cond1est(A);
         double expect = 2.422875115852452;  // MATLAB and python calcs
 
         REQUIRE_THAT(kappa, WithinAbs(expect, tol));

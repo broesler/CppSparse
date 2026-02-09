@@ -85,7 +85,7 @@ TEST_CASE("Random permutation", "[vector][randperm]")
         std::shuffle(expect_p.begin(), expect_p.end(), rng);
     }
 
-    std::vector<csint> p = randperm(N, seed);
+    auto p = randperm(N, seed);
 
     REQUIRE(p == expect_p);
 }

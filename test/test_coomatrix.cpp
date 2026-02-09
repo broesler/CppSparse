@@ -65,7 +65,7 @@ TEST_CASE("COOMatrix Constructors", "[COOMatrix][constructor]")
 
 TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
 {
-    COOMatrix A = davis_example_small();
+    auto A = davis_example_small();
 
     SECTION("Printing") {
         std::stringstream s;
@@ -141,8 +141,8 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
     }
 
     SECTION("Exercise 2.6: Tranpose") {
-        COOMatrix A_T = A.transpose();
-        COOMatrix A_TT = A.T();
+        auto A_T = A.transpose();
+        auto A_TT = A.T();
 
         REQUIRE(A_T.row() == A.col());
         REQUIRE(A_T.col() == A.row());
@@ -152,7 +152,7 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
     }
 
     SECTION("Read from a file") {
-        COOMatrix F = COOMatrix::from_file("./data/t1");
+        auto F = COOMatrix::from_file("./data/t1");
 
         REQUIRE(A.row() == F.row());
         REQUIRE(A.col() == F.col());
@@ -186,7 +186,7 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
         double density = 0.25;
         csint M = 5, N = 10;
         unsigned int seed = 56;  // seed for reproducibility
-        COOMatrix A = COOMatrix::random(M, N, density, seed);
+        auto A = COOMatrix::random(M, N, density, seed);
 
         REQUIRE(A.shape() == Shape{M, N});
         REQUIRE(A.nnz() == (csint)(density * M * N));

@@ -34,19 +34,19 @@ TEST_CASE("Householder Reflection", "[house]")
         double expect_beta = 0.0;
         double expect_s = 1.0;
 
-        Householder H = house(x);
+        auto H = house(x);
 
         check_vectors_allclose(H.v, expect_v, tol);
         CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
 
         // Apply the reflection
-        CSCMatrix V = COOMatrix{
+        auto V = COOMatrix{
             H.v,
             std::vector<csint>{0, 1, 2},
             std::vector<csint>{0, 0, 0}
         }.tocsc();
-        std::vector<double> Hx = x;  // copy x
+        auto Hx = x;  // copy x
         happly(V, 0, H.beta, Hx);    // apply "x" -> Hx
 
         check_vectors_allclose(Hx, x, tol);
@@ -59,19 +59,19 @@ TEST_CASE("Householder Reflection", "[house]")
         double expect_beta = 0.0;
         double expect_s = -1.0;
 
-        Householder H = house(x);
+        auto H = house(x);
 
         check_vectors_allclose(H.v, expect_v, tol);
         CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
         CHECK_THAT(H.s, WithinAbs(expect_s, tol));
 
         // Apply the reflection
-        CSCMatrix V = COOMatrix{
+        auto V = COOMatrix{
             H.v,
             std::vector<csint>{0, 1, 2},
             std::vector<csint>{0, 0, 0}
         }.tocsc();
-        std::vector<double> Hx = x;
+        auto Hx = x;
         happly(V, 0, H.beta, Hx);
 
         check_vectors_allclose(Hx, x, tol);
@@ -111,7 +111,7 @@ TEST_CASE("Householder Reflection", "[house]")
         // s is the 2-norm of x == x.T @ x
         double expect_s = -5;
 
-        Householder H = house(x);
+        auto H = house(x);
 
         check_vectors_allclose(H.v, expect_v, tol);
         CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
@@ -123,12 +123,12 @@ TEST_CASE("Householder Reflection", "[house]")
         // std::vector<double> expect{5, 0};  // Davis
 
         // Use column 0 of V to apply the Householder reflection
-        CSCMatrix V = COOMatrix{
+        auto V = COOMatrix{
             H.v,
             std::vector<csint>{0, 1},
             std::vector<csint>{0, 0}
         }.tocsc();
-        std::vector<double> Hx = x;
+        auto Hx = x;
         happly(V, 0, H.beta, Hx);
 
         check_vectors_allclose(Hx, expect, tol);
@@ -142,7 +142,7 @@ TEST_CASE("Householder Reflection", "[house]")
         double expect_beta = 1.6;
         double expect_s = 5;
 
-        Householder H = house(x);
+        auto H = house(x);
 
         check_vectors_allclose(H.v, expect_v, tol);
         CHECK_THAT(H.beta, WithinAbs(expect_beta, tol));
@@ -151,12 +151,12 @@ TEST_CASE("Householder Reflection", "[house]")
         // Apply the vector
         std::vector<double> expect{5, 0}; // LAPACK or Davis
 
-        CSCMatrix V = COOMatrix{
+        auto V = COOMatrix{
             H.v, 
             std::vector<csint>{0, 1},
             std::vector<csint>{0, 0}
         }.tocsc();
-        std::vector<double> Hx = x;
+        auto Hx = x;
         happly(V, 0, H.beta, Hx);
 
         check_vectors_allclose(Hx, expect, tol);
@@ -171,16 +171,16 @@ TEST_CASE("QR factorization of the Identity Matrix", "[qr][identity]")
     std::iota(rows.begin(), rows.end(), 0);
     std::vector<double> vals(N, 1.0);
 
-    CSCMatrix I = COOMatrix{vals, rows, rows}.tocsc();
+    auto I = COOMatrix{vals, rows, rows}.tocsc();
 
-    AMDOrder order = GENERATE(
+    auto order = GENERATE(
         AMDOrder::Natural,
         AMDOrder::APlusAT,
         AMDOrder::ATANoDenseRows,
         AMDOrder::ATA
     );
 
-    SymbolicQR S = sqr(I, order);
+    auto S = sqr(I, order);
 
     SECTION("Symbolic analysis") {
         std::vector<csint> expect_identity{0, 1, 2, 3, 4, 5, 6, 7};
@@ -196,7 +196,7 @@ TEST_CASE("QR factorization of the Identity Matrix", "[qr][identity]")
     SECTION("Numeric factorization") {
         std::vector<double> expect_beta(N, 0.0);
 
-        QRResult res = qr(I, S);
+        auto res = qr(I, S);
 
         check_sparse_allclose(res.V, I);
         check_vectors_allclose(res.beta, expect_beta, tol);
@@ -207,8 +207,8 @@ TEST_CASE("QR factorization of the Identity Matrix", "[qr][identity]")
 
 TEST_CASE("Symbolic QR Decomposition of Square, Non-symmetric A", "[qr][M == N][symbolic]")
 {
-    CSCMatrix A = davis_example_qr();
-    csint N = A.shape()[1];  // == 8
+    auto A = davis_example_qr();
+    auto N = A.shape()[1];  // == 8
 
     // See etree in Figure 5.1, p 74
     std::vector<csint> parent{3, 2, 3, 6, 5, 6, 7, -1};
@@ -233,9 +233,9 @@ TEST_CASE("Symbolic QR Decomposition of Square, Non-symmetric A", "[qr][M == N][
 
     SECTION("Symbolic analysis") {
         std::vector<csint> expect_q{0, 1, 2, 3, 4, 5, 6, 7};  // natural
-        std::vector<csint> expect_parent = parent;
+        auto expect_parent = parent;
 
-        SymbolicQR S = sqr(A, AMDOrder::Natural);
+        auto S = sqr(A, AMDOrder::Natural);
 
         CHECK(S.p_inv == expect_p_inv);
         CHECK(S.q == expect_q);
@@ -250,37 +250,37 @@ TEST_CASE("Symbolic QR Decomposition of Square, Non-symmetric A", "[qr][M == N][
 
 TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][numeric]")
 {
-    CSCMatrix A = davis_example_qr();
-    csint N = A.shape()[1];  // == 8
+    auto A = davis_example_qr();
+    auto N = A.shape()[1];  // == 8
     double tol = 1e-12;  // QR factorization is sensitive to numerical errors
 
     // CSparse only uses 2 possible orders for QR factorization:
-    AMDOrder order = GENERATE(
+    auto order = GENERATE(
         AMDOrder::Natural,
         AMDOrder::ATA
     );
     CAPTURE(order);
 
     // ---------- Factor the matrix
-    SymbolicQR S = sqr(A, order);
-    QRResult res = qr(A, S);
+    auto S = sqr(A, order);
+    auto res = qr(A, S);
 
     // Create the identity matrix for testing
     std::vector<csint> idx(N);
     std::iota(idx.begin(), idx.end(), 0);
     std::vector<double> vals(N, 1.0);
-    CSCMatrix I = COOMatrix{vals, idx, idx}.tocsc();
+    auto I = COOMatrix{vals, idx, idx}.tocsc();
 
     SECTION("Numeric Factorization") {
-        CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
-        CSCMatrix QR = (Q * res.R).droptol(tol).to_canonical();
-        CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
+        auto Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
+        auto QR = (Q * res.R).droptol(tol).to_canonical();
+        auto Aq = A.permute_cols(res.q).to_canonical();
 
         check_sparse_allclose(QR, Aq);
     }
 
     SECTION("Exercise 5.1: Symbolic factorization") {
-        QRResult sym_res = symbolic_qr(A, S);
+        auto sym_res = symbolic_qr(A, S);
 
         CHECK(sym_res.V.indptr() == res.V.indptr());
         CHECK(sym_res.V.indices() == res.V.indices());
@@ -297,24 +297,24 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][n
         // Compute the numeric factorization using the symbolic result
         reqr(A, S, res);
 
-        CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
-        CSCMatrix QR = (Q * res.R).droptol(tol).to_canonical();
-        CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
+        auto Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
+        auto QR = (Q * res.R).droptol(tol).to_canonical();
+        auto Aq = A.permute_cols(res.q).to_canonical();
 
         check_sparse_allclose(QR, Aq);
     }
 
     SECTION("Exercise 5.5: Use post-ordering") {
         // Compute the symbolic factorization with postordering
-        bool use_postorder = true;
-        SymbolicQR S = sqr(A, order, use_postorder);
-        QRResult res = qr(A, S);
+        auto use_postorder = true;
+        auto S = sqr(A, order, use_postorder);
+        auto res = qr(A, S);
 
         // The postordering of this matrix *is* the natural ordering.
         // TODO Find an example with a different postorder for testing
-        CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
-        CSCMatrix QR = (Q * res.R).droptol(tol).to_canonical();
-        CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
+        auto Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
+        auto QR = (Q * res.R).droptol(tol).to_canonical();
+        auto Aq = A.permute_cols(res.q).to_canonical();
 
         check_sparse_allclose(QR, Aq);
     }
@@ -323,11 +323,11 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][n
 
 TEST_CASE("Square, rank-deficient A", "[qr][rank-deficient][numeric]") 
 {
-    CSCMatrix A = davis_example_qr();
+    auto A = davis_example_qr();
     auto [M, N] = A.shape();
 
     // CSparse only uses 2 possible orders for QR factorization:
-    AMDOrder order = AMDOrder::Natural;
+    auto order = AMDOrder::Natural;
 
     SECTION("Single Zero Row") {
         // Zero out an arbitrary row to make A rank-deficient
@@ -367,30 +367,30 @@ TEST_CASE("Square, rank-deficient A", "[qr][rank-deficient][numeric]")
         A = A.to_canonical();
     }
 
-    SymbolicQR S = sqr(A, order);
-    QRResult res = qr(A, S);
+    auto S = sqr(A, order);
+    auto res = qr(A, S);
 
     // M2 - M is the number of dependent rows in the matrix
     // V and R will be size (M2, N), so Q will be (M2, M2), and QR (M2, N).
     // The last rows will just be zeros, so slice QR to (M, N) to match A.
 
-    csint M2 = res.V.shape()[0];
+    auto M2 = res.V.shape()[0];
 
     // Identity matrix for building Q
     std::vector<csint> idx(M2);
     std::iota(idx.begin(), idx.end(), 0);
     std::vector<double> vals(M2, 1.0);
-    CSCMatrix I = COOMatrix{vals, idx, idx}.tocsc();
+    auto I = COOMatrix{vals, idx, idx}.tocsc();
 
     REQUIRE(res.V.shape() == Shape{M2, N});
     REQUIRE(res.R.shape() == Shape{M2, N});
 
-    CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
+    auto Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
 
     REQUIRE(Q.shape() == Shape{M2, M2});
 
-    CSCMatrix QR = (Q * res.R).slice(0, M, 0, N).droptol(tol).to_canonical();
-    CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
+    auto QR = (Q * res.R).slice(0, M, 0, N).droptol(tol).to_canonical();
+    auto Aq = A.permute_cols(res.q).to_canonical();
 
     check_sparse_allclose(QR, Aq);
 }
@@ -402,7 +402,7 @@ TEST_CASE("Symbolic QR factorization of overdetermined matrix M > N", "[qr][M > 
     // except remove the last 2 columns
     csint M = 8;
     csint N = 5;
-    CSCMatrix A = davis_example_qr().slice(0, M, 0, N);
+    auto A = davis_example_qr().slice(0, M, 0, N);
 
     CHECK(A.shape() == Shape{M, N});
 
@@ -429,9 +429,9 @@ TEST_CASE("Symbolic QR factorization of overdetermined matrix M > N", "[qr][M > 
 
     SECTION("Symbolic analysis") {
         std::vector<csint> expect_q{0, 1, 2, 3, 4};  // natural
-        std::vector<csint> expect_parent = parent;
+        auto expect_parent = parent;
 
-        SymbolicQR S = sqr(A);
+        auto S = sqr(A);
 
         CHECK(S.p_inv == expect_p_inv);
         CHECK(S.q == expect_q);
@@ -450,37 +450,37 @@ TEST_CASE("Numeric QR factorization of overdetermined matrix M > N", "[qr][M > N
     // except remove the last 2 columns
     csint M = 8;
     csint N = 5;
-    CSCMatrix A = davis_example_qr().slice(0, M, 0, N);
+    auto A = davis_example_qr().slice(0, M, 0, N);
 
     CHECK(A.shape() == Shape{M, N});
 
     // CSparse only uses 2 possible orders for QR factorization:
-    AMDOrder order = GENERATE(
+    auto order = GENERATE(
         AMDOrder::Natural,
         AMDOrder::ATA
     );
     CAPTURE(order);
 
     // ---------- Factor the matrix 
-    SymbolicQR S = sqr(A, order);
-    QRResult res = qr(A, S);
+    auto S = sqr(A, order);
+    auto res = qr(A, S);
 
     // Create the identity matrix for testing
     std::vector<csint> idx(M);
     std::iota(idx.begin(), idx.end(), 0);
     std::vector<double> vals(M, 1.0);
-    CSCMatrix I = COOMatrix{vals, idx, idx}.tocsc();
+    auto I = COOMatrix{vals, idx, idx}.tocsc();
 
     SECTION("Numeric factorization") {
-        CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
-        CSCMatrix QR = (Q * res.R).droptol().to_canonical();
-        CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
+        auto Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
+        auto QR = (Q * res.R).droptol().to_canonical();
+        auto Aq = A.permute_cols(res.q).to_canonical();
 
         check_sparse_allclose(QR, Aq);
     }
 
     SECTION("Exercise 5.1: Symbolic factorization") {
-        QRResult sym_res = symbolic_qr(A, S);
+        auto sym_res = symbolic_qr(A, S);
 
         CHECK(sym_res.V.indptr() == res.V.indptr());
         CHECK(sym_res.V.indices() == res.V.indices());
@@ -492,14 +492,14 @@ TEST_CASE("Numeric QR factorization of overdetermined matrix M > N", "[qr][M > N
     }
 
     SECTION("Exercise 5.3: Re-QR factorization") {
-        QRResult res = symbolic_qr(A, S);
+        auto res = symbolic_qr(A, S);
 
         // Compute the numeric factorization using the symbolic result
         reqr(A, S, res);
 
-        CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
-        CSCMatrix QR = (Q * res.R).droptol().to_canonical();
-        CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
+        auto Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
+        auto QR = (Q * res.R).droptol().to_canonical();
+        auto Aq = A.permute_cols(res.q).to_canonical();
 
         check_sparse_allclose(QR, Aq);
     }
@@ -518,7 +518,7 @@ TEST_CASE("Symbolic QR Factorization of Underdetermined Matrix M < N", "[qr][M <
     // except remove the last 3 rows
     csint M = 5;
     csint N = 8;
-    CSCMatrix A = davis_example_qr().slice(0, M, 0, N);
+    auto A = davis_example_qr().slice(0, M, 0, N);
     CHECK(A.shape() == Shape{M, N});
 
     // See etree in Figure 5.1, p 74
@@ -544,9 +544,9 @@ TEST_CASE("Symbolic QR Factorization of Underdetermined Matrix M < N", "[qr][M <
 
     SECTION("Symbolic analysis") {
         std::vector<csint> expect_q{0, 1, 2, 3, 4};  // natural
-        std::vector<csint> expect_parent = parent;
+        auto expect_parent = parent;
 
-        SymbolicQR S = sqr(A);
+        auto S = sqr(A);
 
         CHECK(S.p_inv == expect_p_inv);
         CHECK(S.q == expect_q);
@@ -565,36 +565,36 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
     // except remove the last 3 rows
     csint M = 5;
     csint N = 8;
-    CSCMatrix A = davis_example_qr().slice(0, M, 0, N);
+    auto A = davis_example_qr().slice(0, M, 0, N);
     CHECK(A.shape() == Shape{M, N});
 
     // CSparse only uses 2 possible orders for QR factorization:
-    AMDOrder order = GENERATE(
+    auto order = GENERATE(
         AMDOrder::Natural,
         AMDOrder::ATA
     );
     CAPTURE(order);
 
     // ---------- Factor the matrix
-    SymbolicQR S = sqr(A, order);
-    QRResult res = qr(A, S);
+    auto S = sqr(A, order);
+    auto res = qr(A, S);
 
     // M2 - M is the number of dependent rows in the matrix
     // V and R will be size (M2, N), so Q will be (M2, M2), and QR (M2, N).
     // The last rows will just be zeros, so slice QR to (M, N) to match A.
 
-    csint M2 = res.V.shape()[0];
+    auto M2 = res.V.shape()[0];
 
     // Create the identity matrix for testing
     std::vector<csint> idx(M2);
     std::iota(idx.begin(), idx.end(), 0);
     std::vector<double> vals(M2, 1.0);
-    CSCMatrix I = COOMatrix{vals, idx, idx}.tocsc();
+    auto I = COOMatrix{vals, idx, idx}.tocsc();
 
     SECTION("Numeric factorization") {
-        CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
-        CSCMatrix QR = (Q * res.R).slice(0, M, 0, N).droptol(tol).to_canonical();
-        CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
+        auto Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
+        auto QR = (Q * res.R).slice(0, M, 0, N).droptol(tol).to_canonical();
+        auto Aq = A.permute_cols(res.q).to_canonical();
 
         check_sparse_allclose(QR, Aq);
     }
@@ -602,7 +602,7 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
     SECTION("Exercise 5.1: Symbolic factorization") {
         // NOTE symbolic_qr will only compute the factorization of A(:, :M) for
         // M < N, whereas `res` is the full factorization of A.
-        QRResult sym_res = symbolic_qr(A, S);
+        auto sym_res = symbolic_qr(A, S);
 
         CHECK(sym_res.V.indptr() == res.V.indptr());
         CHECK(sym_res.V.indices() == res.V.indices());
@@ -631,9 +631,9 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
         // Compute the numeric factorization using the symbolic result
         reqr(A, S, res);
 
-        CSCMatrix Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
-        CSCMatrix QR = (Q * res.R).slice(0, M, 0, N).droptol(tol).to_canonical();
-        CSCMatrix Aq = A.permute_cols(res.q).to_canonical();
+        auto Q = apply_qtleft(res.V, res.beta, res.p_inv, I).T();
+        auto QR = (Q * res.R).slice(0, M, 0, N).droptol(tol).to_canonical();
+        auto Aq = A.permute_cols(res.q).to_canonical();
 
         check_sparse_allclose(QR, Aq);
     }

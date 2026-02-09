@@ -92,7 +92,7 @@ COOMatrix::COOMatrix(
     // Check for any i or j out of bounds
     if (shape[0] && !i_.empty()) {  // shape was given as input, not inferred
         assert(M_ == shape[0]);
-        csint max_i = *std::max_element(i_.cbegin(), i_.cend());
+        auto max_i = *std::max_element(i_.cbegin(), i_.cend());
         if (max_i >= M_) {
             throw std::runtime_error(
                 std::format("Row index out of bounds: {} >= {}", max_i, M_)
@@ -102,7 +102,7 @@ COOMatrix::COOMatrix(
 
     if (shape[1] && !j_.empty()) {  // shape was given as input, not inferred
         assert(N_ == shape[1]);
-        csint max_j = *std::max_element(j_.cbegin(), j_.cend());
+        auto max_j = *std::max_element(j_.cbegin(), j_.cend());
         if (max_j >= N_) {
             throw std::runtime_error(
                 std::format("Column index out of bounds: {} >= {}", max_j, N_)
@@ -280,11 +280,11 @@ COOMatrix& COOMatrix::insert(
           max_col_idx = 0;
 
     for (csint i = 0; i < N; ++i) {
-        csint row = rows[i];  // cache value
+        auto row = rows[i];  // cache value
         max_row_idx = std::max(max_row_idx, row);
 
         for (csint j = 0; j < N; ++j) {
-            csint col = cols[j];  // cache value
+            auto col = cols[j];  // cache value
             max_col_idx = std::max(max_col_idx, col);
             // Insert the indices and value
             i_.push_back(row);
@@ -305,8 +305,8 @@ COOMatrix& COOMatrix::insert(
  *----------------------------------------------------------------------------*/
 CSCMatrix COOMatrix::compress() const 
 {
-    csint nnz_ = nnz();
-    bool values = !v_.empty();
+    auto nnz_ = nnz();
+    auto values = !v_.empty();
     CSCMatrix C{{M_, N_}, nnz_, values};
     std::vector<csint> w(N_);  // workspace
 
@@ -320,7 +320,7 @@ CSCMatrix COOMatrix::compress() const
 
     for (csint k = 0; k < nnz_; ++k) {
         // A(i, j) is the pth entry in the CSC matrix
-        csint p = w[j_[k]]++;  // "pointer" to the current element's column
+        auto p = w[j_[k]]++;  // "pointer" to the current element's column
         C.i_[p] = i_[k];
         if (values) {
             C.v_[p] = v_[k];

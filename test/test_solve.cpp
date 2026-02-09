@@ -30,10 +30,10 @@ struct SparseRHS {};
 
 TEST_CASE("Cholesky Solution", "[cholsol]")
 {
-    CSCMatrix A = davis_example_chol();
+    auto A = davis_example_chol();
     auto [M, N] = A.shape();
 
-    AMDOrder order = GENERATE(
+    auto order = GENERATE(
         AMDOrder::Natural,
         AMDOrder::APlusAT
     );
@@ -43,10 +43,10 @@ TEST_CASE("Cholesky Solution", "[cholsol]")
     std::vector<double> expect(N);
     std::iota(expect.begin(), expect.end(), 1);
 
-    const std::vector<double> b = A * expect;
+    const auto b = A * expect;
 
     // Solve Ax = b
-    std::vector<double> x = chol_solve(A, b, order);
+    auto x = chol_solve(A, b, order);
 
     // Check that Ax = b
     check_vectors_allclose(x, expect, solve_tol);
@@ -60,10 +60,10 @@ TEMPLATE_TEST_CASE(
     SparseRHS
 )
 {
-    CSCMatrix A = davis_example_chol();
+    auto A = davis_example_chol();
     auto [M, N] = A.shape();
 
-    AMDOrder order = GENERATE(
+    auto order = GENERATE(
         AMDOrder::Natural,
         AMDOrder::APlusAT
     );
@@ -74,7 +74,7 @@ TEMPLATE_TEST_CASE(
     std::vector<double> expect_x(N * K);
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
-    const std::vector<double> b = A * expect_x;
+    const auto b = A * expect_x;
     std::vector<double> x;
 
     if constexpr (std::is_same_v<TestType, DenseRHS>) {
@@ -90,10 +90,10 @@ TEMPLATE_TEST_CASE(
 
 TEST_CASE("QR Solution", "[qrsol]")
 {
-    CSCMatrix A = davis_example_qr();
+    auto A = davis_example_qr();
     auto [M, N] = A.shape();
 
-    AMDOrder order = GENERATE(
+    auto order = GENERATE(
         AMDOrder::Natural,
         AMDOrder::ATA
     );
@@ -171,10 +171,10 @@ TEMPLATE_TEST_CASE(
     SparseRHS
 )
 {
-    CSCMatrix A = davis_example_qr();
+    auto A = davis_example_qr();
     auto [M, N] = A.shape();
 
-    AMDOrder order = GENERATE(
+    auto order = GENERATE(
         AMDOrder::Natural,
         AMDOrder::ATA
     );
@@ -206,7 +206,7 @@ TEMPLATE_TEST_CASE(
     }
 
     SECTION("Over-determined") {
-        std::vector<double> expect_x = expect;  // copy the original expect
+        auto expect_x = expect;  // copy the original expect
 
         // Create a new matrix with more rows than columns
         csint k = 3;
@@ -264,10 +264,10 @@ TEMPLATE_TEST_CASE(
 }
 
 TEST_CASE("LU Solution", "[lusol]") {
-    CSCMatrix A = davis_example_qr();
+    auto A = davis_example_qr();
     auto [M, N] = A.shape();
 
-    AMDOrder order = GENERATE(
+    auto order = GENERATE(
         AMDOrder::Natural,
         AMDOrder::ATANoDenseRows,
         AMDOrder::ATA
@@ -278,7 +278,7 @@ TEST_CASE("LU Solution", "[lusol]") {
     std::vector<double> expect(N);
     std::iota(expect.begin(), expect.end(), 1);
 
-    const std::vector<double> b = A * expect;
+    const auto b = A * expect;
 
     const std::vector<double> piv_tols{0.0, 1e-3, 1.0};
 
@@ -286,7 +286,7 @@ TEST_CASE("LU Solution", "[lusol]") {
         CAPTURE(piv_tol);
 
         // Solve Ax = b
-        std::vector<double> x = lu_solve(A, b, order, piv_tol);
+        auto x = lu_solve(A, b, order, piv_tol);
 
         // Check that Ax = b
         check_vectors_allclose(x, expect, solve_tol);
@@ -296,11 +296,11 @@ TEST_CASE("LU Solution", "[lusol]") {
 
 TEST_CASE("LU with Iterative Refinement", "[lusol-ir]") {
     double add_diag = 0.0;
-    bool randomized = true;
-    CSCMatrix A = davis_example_qr(add_diag, randomized);
+    auto randomized = true;
+    auto A = davis_example_qr(add_diag, randomized);
     auto [M, N] = A.shape();
 
-    AMDOrder order = GENERATE(
+    auto order = GENERATE(
         AMDOrder::Natural,
         AMDOrder::ATANoDenseRows,
         AMDOrder::ATA
@@ -311,20 +311,20 @@ TEST_CASE("LU with Iterative Refinement", "[lusol-ir]") {
     std::vector<double> expect(N);
     std::iota(expect.begin(), expect.end(), 1);
 
-    const std::vector<double> b = A * expect;
+    const auto b = A * expect;
 
     // Solve Ax = b
     double piv_tol = 1e-3;
-    std::vector<double> x = lu_solve(A, b, order, piv_tol, 0);
-    std::vector<double> x_ir = lu_solve(A, b, order, piv_tol, 2);
+    auto x = lu_solve(A, b, order, piv_tol, 0);
+    auto x_ir = lu_solve(A, b, order, piv_tol, 2);
 
     // Check that Ax = b
     check_vectors_allclose(x, expect, 1e-12);
     check_vectors_allclose(x_ir, expect, 1e-12);
 
 #ifdef DEBUG
-    double r_norm = norm(b - A * x);
-    double r_ir_norm = norm(b - A * x_ir);
+    auto r_norm = norm(b - A * x);
+    auto r_ir_norm = norm(b - A * x_ir);
 
     std::cout << "\nIterative Refinement: " << std::endl;
     std::cout << "x    = " << x << std::endl;
@@ -342,10 +342,10 @@ TEMPLATE_TEST_CASE(
     SparseRHS
 )
 {
-    CSCMatrix A = davis_example_qr();
+    auto A = davis_example_qr();
     auto [M, N] = A.shape();
 
-    AMDOrder order = GENERATE(
+    auto order = GENERATE(
         AMDOrder::Natural,
         AMDOrder::ATANoDenseRows,
         AMDOrder::ATA
@@ -357,7 +357,7 @@ TEMPLATE_TEST_CASE(
     std::vector<double> expect_x(N * K);
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
-    const std::vector<double> b = A * expect_x;
+    const auto b = A * expect_x;
     std::vector<double> x;
 
     // Solve Ax = b
@@ -395,7 +395,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Triangular", "[spsolve-tri]", RhsCombination
     using RhsCountType = std::tuple_element_t<1, TestType>;
     constexpr csint K = RhsCountType::K;
 
-    CSCMatrix A = davis_example_small().tocsc();
+    auto A = davis_example_small().tocsc();
     auto [M, N] = A.shape();
 
     // Create RHS for Lx = b
@@ -406,7 +406,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Triangular", "[spsolve-tri]", RhsCombination
     const std::vector<csint> q{1, 2, 0, 3};
 
     auto solve_and_check = [&](const CSCMatrix& A) {
-        std::vector<double> b = A * expect_x;
+        auto b = A * expect_x;
         std::vector<double> x;
         if constexpr (std::is_same_v<RhsType, DenseRHS>) {
             x = spsolve(A, b);
@@ -418,24 +418,24 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Triangular", "[spsolve-tri]", RhsCombination
 
     // Triangular with non-zero diagonal
     SECTION("Lx = b") {
-        CSCMatrix L = A.band(-N, 0);
+        auto L = A.band(-N, 0);
         solve_and_check(L);
     }
 
     SECTION("Ux = b") {
-        CSCMatrix U = A.band(0, N);
+        auto U = A.band(0, N);
         solve_and_check(U);
     }
 
     SECTION("Permuted lower triangular") {
-        CSCMatrix L = A.band(-N, 0);
-        CSCMatrix PLQ = L.permute(inv_permute(p), q).to_canonical();
+        auto L = A.band(-N, 0);
+        auto PLQ = L.permute(inv_permute(p), q).to_canonical();
         solve_and_check(PLQ);
     }
 
     SECTION("Permuted upper triangular") {
-        CSCMatrix U = A.band(0, N);
-        CSCMatrix PUQ = U.permute(inv_permute(p), q).to_canonical();
+        auto U = A.band(0, N);
+        auto PUQ = U.permute(inv_permute(p), q).to_canonical();
         solve_and_check(PUQ);
     }
 }
@@ -460,14 +460,14 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Cholesky", "[spsolve-chol]", CholeskyCombina
     using ASignType = std::tuple_element_t<2, TestType>;
     constexpr csint K = RhsCountType::K;
 
-    CSCMatrix A = davis_example_chol();
+    auto A = davis_example_chol();
     auto [M, N] = A.shape();
 
     // Create RHS for Ax = b
     std::vector<double> expect_x(N * K);
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
-    std::vector<double> b = A * expect_x;
+    auto b = A * expect_x;
 
     if constexpr (std::is_same_v<ASignType, NegativeA>) {
         A = -A;
@@ -491,7 +491,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: LU Symmetric", "[spsolve-lu-sym]", RhsCombin
     using RhsCountType = std::tuple_element_t<1, TestType>;
     constexpr csint K = RhsCountType::K;
 
-    CSCMatrix A = davis_example_chol();
+    auto A = davis_example_chol();
     auto [M, N] = A.shape();
 
     // Change one element to make unsymmetric
@@ -504,7 +504,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: LU Symmetric", "[spsolve-lu-sym]", RhsCombin
     std::vector<double> expect_x(N * K);
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
-    const std::vector<double> b = A * expect_x;
+    const auto b = A * expect_x;
 
     std::vector<double> x;
     if constexpr (std::is_same_v<RhsType, DenseRHS>) {
@@ -523,7 +523,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: LU Unsymmetric", "[spsolve-lu-unsym]", RhsCo
     using RhsCountType = std::tuple_element_t<1, TestType>;
     constexpr csint K = RhsCountType::K;
 
-    CSCMatrix A = davis_example_chol();
+    auto A = davis_example_chol();
     auto [M, N] = A.shape();
 
     // Drop upper bands to make less symmetric (below 0.3 threshold)
@@ -535,7 +535,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: LU Unsymmetric", "[spsolve-lu-unsym]", RhsCo
     std::vector<double> expect_x(N * K);
     std::iota(expect_x.begin(), expect_x.end(), 1);
 
-    const std::vector<double> b = A * expect_x;
+    const auto b = A * expect_x;
 
     std::vector<double> x;
     if constexpr (std::is_same_v<RhsType, DenseRHS>) {
@@ -554,7 +554,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: QR", "[spsolve-qr]", RhsCombinations)
     using RhsCountType = std::tuple_element_t<1, TestType>;
     constexpr csint K = RhsCountType::K;
 
-    CSCMatrix A = davis_example_qr();
+    auto A = davis_example_qr();
     auto [M, N] = A.shape();
 
     // Create RHS for Ax = b

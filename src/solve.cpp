@@ -112,7 +112,7 @@ std::vector<double> utsolve(const CSCMatrix& U, std::span<const double> B)
 void lsolve_inplace_opt(const CSCMatrix& L, std::span<double> x)
 {
     for (auto j : L.column_range()) {
-        double& x_val = x[j];  // cache reference to value
+        auto& x_val = x[j];  // cache reference to value
         // Exercise 3.8: improve performance by checking for zeros
         if (x_val != 0) {
             x_val /= L.v_[L.p_[j]];
@@ -134,7 +134,7 @@ std::vector<double> lsolve_opt(const CSCMatrix& L, std::span<const double> b)
 void usolve_inplace_opt(const CSCMatrix& U, std::span<double> x)
 {
     for (csint j = U.N_ - 1; j >= 0; --j) {
-        double& x_val = x[j];  // cache reference to value
+        auto& x_val = x[j];  // cache reference to value
         if (x_val != 0) {
             x_val /= U.v_[U.p_[j+1] - 1];  // diagonal entry
             for (csint p = U.p_[j]; p < U.p_[j+1] - 1; ++p) {
@@ -205,7 +205,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
 
     // First (backward) pass to find diagonal entries
     // p_diags is a vector of pointers to the diagonal entries
-    std::vector<csint> p_diags = find_lower_diagonals(A);
+    auto p_diags = find_lower_diagonals(A);
 
     // Compute the row permutation vector
     std::vector<csint> p_inv(A.N_);
@@ -219,9 +219,9 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
 
     // Perform the permuted forward solve
     for (auto j : A.column_range()) {
-        csint i = p_inv[j];        // permuted row index
-        csint d = p_diags[j];      // pointer to the diagonal entry
-        double x_val = b_work[i];  // cache diagonal value
+        auto i = p_inv[j];        // permuted row index
+        auto d = p_diags[j];      // pointer to the diagonal entry
+        auto x_val = b_work[i];  // cache diagonal value
 
         if (x_val != 0) {
             x_val /= A.v_[d];  // solve for x[d]
@@ -281,9 +281,9 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b)
 
     // Perform the permuted forward solve
     for (const auto& j : q_inv) {
-        csint d = p_diags[j];      // pointer to the diagonal entry
-        csint i = A.i_[d];         // permuted row index
-        double x_val = b_work[i];  // cache diagonal value
+        auto d = p_diags[j];      // pointer to the diagonal entry
+        auto i = A.i_[d];         // permuted row index
+        auto x_val = b_work[i];  // cache diagonal value
 
         if (x_val != 0) {
             x_val /= A.v_[d];  // solve for x[A.i_[d]]
@@ -352,7 +352,7 @@ std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b)
 
     // First (backward) pass to find diagonal entries
     // p_diags is a vector of pointers to the diagonal entries
-    std::vector<csint> p_diags = find_upper_diagonals(A);
+    auto p_diags = find_upper_diagonals(A);
 
     // Compute the row permutation vector
     std::vector<csint> p_inv(A.N_);
@@ -366,9 +366,9 @@ std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b)
 
     // Perform the permuted backward solve
     for (csint j = A.N_ - 1; j >= 0; --j) {
-        csint i = p_inv[j];        // permuted row index
-        csint d = p_diags[j];      // pointer to the diagonal entry
-        double x_val = b_work[i];  // cache diagonal value
+        auto i = p_inv[j];        // permuted row index
+        auto d = p_diags[j];      // pointer to the diagonal entry
+        auto x_val = b_work[i];  // cache diagonal value
 
         if (x_val != 0) {
             x_val /= A.v_[d];  // solve for x[d]
@@ -426,9 +426,9 @@ std::vector<double> usolve_cols(const CSCMatrix& A, std::span<const double> b)
 
     // Perform the permuted backward solve
     for (const auto& j : std::views::reverse(q_inv)) {
-        csint d = p_diags[j];      // pointer to the diagonal entry
-        csint i = A.i_[d];         // permuted row index
-        double x_val = b_work[i];  // cache diagonal value
+        auto d = p_diags[j];      // pointer to the diagonal entry
+        auto i = A.i_[d];         // permuted row index
+        auto x_val = b_work[i];  // cache diagonal value
 
         if (x_val != 0) {
             x_val /= A.v_[d];  // solve for x[A.i_[d]]
@@ -485,9 +485,9 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
             );
         }
 
-        csint i = singles.back();
+        auto i = singles.back();
         singles.pop_back();
-        csint j = z[i];  // column index
+        auto j = z[i];  // column index
 
         // Update the permutations
         p_inv[k] = i;
@@ -522,12 +522,12 @@ void tri_solve_perm_inplace(
 
     // Solve the system (PTQ) x = b => T (Q x) = (P^T b)
     for (auto k : A.column_range()) {
-        csint i = p_inv[k];    // permuted row
-        csint j = q_inv[k];    // permuted column
-        csint d = p_diags[k];  // pointer to the diagonal entry
+        auto i = p_inv[k];    // permuted row
+        auto j = q_inv[k];    // permuted column
+        auto d = p_diags[k];  // pointer to the diagonal entry
 
         // Solve for x[j]
-        double x_val = b[i];
+        auto x_val = b[i];
         if (x_val != 0) {
             x_val /= A.v_[d];  // diagonal entry
             x[j] = x_val;
@@ -558,7 +558,7 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, std::span<const double> B
     }
 
     // Get the permutation vectors and check if A is permuted triangular
-    const TriPerm tri_perm = find_tri_permutation(A);
+    const auto tri_perm = find_tri_permutation(A);
 
     csint K = MxK / M;               // number of RHS columns
     std::vector<double> X(N * K);    // solution vector
@@ -594,7 +594,7 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B)
     }
 
     // Get the permutation vectors and check if A is permuted triangular
-    const TriPerm tri_perm = find_tri_permutation(A);
+    const auto tri_perm = find_tri_permutation(A);
 
     std::vector<double> X(N * K);    // solution vector
     std::span<double> X_span(X);
@@ -641,16 +641,16 @@ void spsolve(
     // Solve Lx = b_k or Ux = b_k
     for (auto& j : xi) {  // x(j) is nonzero
         // j maps to col J of G
-        csint J = p_inv.empty() ? j : p_inv[j];
+        auto J = p_inv.empty() ? j : p_inv[j];
         if (J < 0) {
             continue;  // x(j) is not in the pattern of G
         }
-        double& xj = x[j];                              // cache reference to value
-        xj /= A.v_[lower ? A.p_[J] : A.p_[J+1] - 1];    // x(j) /= G(j, j)
-        csint p = lower ? A.p_[J] + 1 : A.p_[J];        // lower: L(j,j) 1st entry
-        csint q = lower ? A.p_[J+1]   : A.p_[J+1] - 1;  // up: U(j,j) last entry
+        auto& xj = x[j];                             // cache reference to value
+        xj /= A.v_[lower ? A.p_[J] : A.p_[J+1] - 1];   // x(j) /= G(j, j)
+        auto p = lower ? A.p_[J] + 1 : A.p_[J];        // lower: L(j,j) 1st entry
+        auto q = lower ? A.p_[J+1]   : A.p_[J+1] - 1;  // up: U(j,j) last entry
         for (; p < q; ++p) {
-            x[A.i_[p]] -= A.v_[p] * xj;                 // x[i] -= G(i, j) * x[j]
+            x[A.i_[p]] -= A.v_[p] * xj;                // x[i] -= G(i, j) * x[j]
         }
     }
 }
@@ -707,7 +707,7 @@ void dfs(
     while (!rstack.empty()) {
         j = rstack.back();  // get j from the top of the recursion stack
         // j maps to col jnew of G
-        csint jnew = p_inv.empty() ? j : p_inv[j];
+        auto jnew = p_inv.empty() ? j : p_inv[j];
 
         if (!marked[j]) {
             marked[j] = true;  // mark node j as visited
@@ -719,7 +719,7 @@ void dfs(
 
         // examine all neighbors of j
         for (csint p = pstack.back(); p < q; ++p) {
-            csint i = A.i_[p];        // consider neighbor node i
+            auto i = A.i_[p];        // consider neighbor node i
             if (!marked[i]) {
                 pstack.back() = p;    // pause dfs of node j
                 rstack.push_back(i);  // start dfs at node i
@@ -841,7 +841,7 @@ void CholResult::lsolve_(
 ) const
 {
     for (const auto& j : xi) {
-        double& x_val = x[j];  // cache diagonal value
+        auto& x_val = x[j];  // cache diagonal value
         x_val /= L.v_[L.p_[j]];
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; ++p) {
             x[L.i_[p]] -= L.v_[p] * x_val;
@@ -856,7 +856,7 @@ void CholResult::ltsolve_(
 ) const
 {
     for (const auto& j : xi) {
-        double& x_val = x[j];  // cache diagonal value
+        auto& x_val = x[j];  // cache diagonal value
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; ++p) {
             x_val -= L.v_[p] * x[L.i_[p]];
         }
@@ -887,7 +887,7 @@ void CholResult::solve(
     // pvec<double>(p_inv, w, x);   // x = P P^T x
 
     // ----- Option 2: Solve as sparse column and scatter to dense at end
-    CSCMatrix b = B.slice(0, B.M_, k, k+1);  // get single column
+    auto b = B.slice(0, B.M_, k, k+1);  // get single column
 
     // Permute the rows in-place
     for (auto& i : b.i_) {
@@ -895,7 +895,7 @@ void CholResult::solve(
     }
 
     // Get the order of the nodes from the elimination tree
-    std::vector<csint> xi = topological_order(b, parent);
+    auto xi = topological_order(b, parent);
 
     // Scatter b into w
     std::vector<double> w(L.M_);  // workspace
@@ -915,7 +915,7 @@ SparseSolution CholResult::lsolve_impl_(
     std::vector<csint> parent
 ) const
 {
-    csint N = L.N_;
+    auto N = L.N_;
     SparseSolution sol(N);
     auto& [xi, x] = sol;
 
@@ -987,8 +987,8 @@ std::vector<double> chol_solve(
     csint K = MxK / M;  // number of RHS columns
 
     // Factorize the matrix once
-    SymbolicChol S = schol(A, order);
-    CholResult res = chol(A, S);
+    auto S = schol(A, order);
+    auto res = chol(A, S);
 
     std::vector<double> X(B.begin(), B.end());  // solution matrix
     std::span<double> X_span(X);
@@ -1024,8 +1024,8 @@ std::vector<double> chol_solve(
     }
 
     // Factorize the matrix once
-    SymbolicChol S = schol(A, order);
-    CholResult res = chol(A, S);
+    auto S = schol(A, order);
+    auto res = chol(A, S);
 
     std::vector<double> X(N * K);  // dense solution matrix
     std::span<double> X_span(X);
@@ -1049,7 +1049,7 @@ void QRResult::solve(
 ) const
 {
     // Solve P^T Q R E x = b
-    csint M2 = V.shape()[0];
+    auto M2 = V.shape()[0];
     std::vector<double> w(M2);
     ipvec<double>(p_inv, b, w);  // permute b -> E b -> w = Eb
     apply_qtleft(V, beta, w);    // y = Q^T E b -> w = y
@@ -1064,7 +1064,7 @@ void QRResult::tsolve(
 ) const
 {
     // Solve P^T R^T Q^T E x = b
-    csint M2 = V.shape()[0];
+    auto M2 = V.shape()[0];
     std::vector<double> w(M2);
     pvec<double>(q, b, w);      // permute b -> E b -> w = Eb
     utsolve_inplace(R, w);      // y = R^T \ E b -> w = y
@@ -1096,7 +1096,7 @@ QRSolveResult qr_solve(
         S = sqr(A, order);
         res = qr(A, S);
     } else {
-        CSCMatrix AT = A.transpose();
+        auto AT = A.transpose();
         S = sqr(AT, order);
         res = qr(AT, S);
     }
@@ -1120,7 +1120,7 @@ QRSolveResult qr_solve(
     }
 
     // Compute the residual
-    std::vector<double> R = B - A * X;
+    auto R = B - A * X;
 
     return {.x = X, .r = R, .rnorm = norm(R, 2)};
 }
@@ -1150,7 +1150,7 @@ QRSolveResult qr_solve(
         S = sqr(A, order);
         res = qr(A, S);
     } else {
-        CSCMatrix AT = A.transpose();
+        auto AT = A.transpose();
         S = sqr(AT, order);
         res = qr(AT, S);
     }
@@ -1177,7 +1177,7 @@ QRSolveResult qr_solve(
     }
 
     // Compute the residual
-    std::vector<double> R = B.to_dense_vector() - A * X;
+    auto R = B.to_dense_vector() - A * X;
 
     return {.x = X, .r = R, .rnorm = norm(R, 2)};
 }
@@ -1256,8 +1256,8 @@ std::vector<double> lu_solve(
 
     csint K = MxK / M;  // number of RHS columns
 
-    const SymbolicLU S = slu(A, order);
-    const LUResult res = lu(A, S, tol);
+    const auto S = slu(A, order);
+    const auto res = lu(A, S, tol);
 
     std::vector<double> X(B.begin(), B.end());  // solution matrix
     std::span<const double> B_span(B);
@@ -1314,8 +1314,8 @@ std::vector<double> lu_solve(
     }
 
     // Factor the matrix once
-    const SymbolicLU S = slu(A, order);
-    const LUResult res = lu(A, S, tol);
+    const auto S = slu(A, order);
+    const auto res = lu(A, S, tol);
 
     std::vector<double> X(N * K);  // dense solution matrix
     std::span<double> X_span(X);
@@ -1367,8 +1367,8 @@ std::vector<double> lu_tsolve(
     }
 
     // Compute the numeric factorization
-    SymbolicLU S = slu(A, order);
-    LUResult res = lu(A, S, tol);
+    auto S = slu(A, order);
+    auto res = lu(A, S, tol);
     std::vector<double> x(b.begin(), b.end());
     res.tsolve(x);
 
@@ -1385,11 +1385,11 @@ std::vector<double> lu_tsolve(
 static inline csint min_argmaxabs(const std::vector<double>& x)
 {
     csint N = x.size();
-    csint j = N;         // minimum index
+    auto j = N;         // minimum index
     double max_val = 0;  // maximum absolute value
 
     for (csint i = N-1; i >= 0; --i) {
-        double mval = std::fabs(x[i]);
+        auto mval = std::fabs(x[i]);
         if (i < j && mval > max_val) {
             max_val = mval;
             j = i;
@@ -1403,8 +1403,8 @@ static inline csint min_argmaxabs(const std::vector<double>& x)
 // Exercise 6.15
 double norm1est_inv(const LUResult& res)
 {
-    csint M = res.L.shape()[0];
-    csint N = res.U.shape()[1];
+    auto M = res.L.shape()[0];
+    auto N = res.U.shape()[1];
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");
@@ -1419,7 +1419,7 @@ double norm1est_inv(const LUResult& res)
     for (csint k = 0; k < 5; ++k) {
         if (k > 0) {
             // j is the first index where |x| == max(|x|) (infinity norm)
-            csint j = min_argmaxabs(x);
+            auto j = min_argmaxabs(x);
 
             if (j == jold) {
                 break;
@@ -1434,7 +1434,7 @@ double norm1est_inv(const LUResult& res)
         // Solve Ax = x
         res.solve(x);
 
-        double est_old = est;
+        auto est_old = est;
         est = norm(x, 1);
 
         if (k > 0 && est <= est_old) {
@@ -1471,8 +1471,8 @@ double cond1est(const CSCMatrix& A)
     }
 
     // Compute the LU factorization
-    SymbolicLU S = slu(A);
-    LUResult res = lu(A, S);
+    auto S = slu(A);
+    auto res = lu(A, S);
 
     // Compute the 1-norm estimate
     for (auto i : A.column_range()) {
@@ -1516,7 +1516,7 @@ std::vector<double> spsolve_impl_(const CSCMatrix& A, const RHSType& B)
     }
 
     // For square matrices, go through the decision tree
-    csint is_tri = A.is_triangular();
+    auto is_tri = A.is_triangular();
 
     // Check if diagonal is structurally non-zero
     int diag_sign = 0;   // -1: all neg, 0: mixed, 1: all pos
@@ -1570,7 +1570,7 @@ std::vector<double> spsolve_impl_(const CSCMatrix& A, const RHSType& B)
     }
 
     // General LU Solver
-    double sym = A.structural_symmetry();
+    auto sym = A.structural_symmetry();
     double diag_dens = static_cast<double>(nnz_diag) / N;
 
     // These thresholds are set in SuiteSparse/UMFPACK/Include/umfpack.h:311:

@@ -44,7 +44,7 @@ int main()
 
     COOMatrix Ac{v, i, j, {M, N}};
 
-    CSCMatrix A = Ac.tocsc();
+    auto A = Ac.tocsc();
     
     std::cout << "---------- Default:" << std::endl;
     A.print_dense();

@@ -34,15 +34,15 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    Problem prob = Problem::from_matrix(T, 1e-14);
+    auto prob = Problem::from_matrix(T, 1e-14);
 
     auto [M, N] = prob.A.shape();
-    double tol = prob.is_sym ? 0.001 : 1.0;  // partial pivoting tolerance
+    auto tol = prob.is_sym ? 0.001 : 1.0;  // partial pivoting tolerance
 
-    DMPermResult D = dmperm(prob.C, 1);      // randomized dmperm analysis
+    auto D = dmperm(prob.C, 1);      // randomized dmperm analysis
 
     // Check matrix structure
-    csint sprank = D.rr[3];
+    auto sprank = D.rr[3];
     csint ns = 0;  // number of singletons
     for (csint k = 0; k < D.Nb; ++k)
     {
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
         auto t = tic();
         prob.x = qr_solve(prob.C, prob.b, order).x;
         std::cout << std::format("time: {:.2e} ", toc(t));
-        double resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
+        auto resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
         std::cout << std::format("residual: {:8.2e}", resid) << std::endl;
     }
 
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
         auto t = tic();
         prob.x = lu_solve(prob.C, prob.b, order, tol);
         std::cout << std::format("time: {:.2e} ", toc(t));
-        double resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
+        auto resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
         std::cout << std::format("residual: {:8.2e}", resid) << std::endl;
     }
 
@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
         auto t = tic();
         prob.x = chol_solve(prob.C, prob.b, order);
         std::cout << std::format("time: {:.2e} ", toc(t));
-        double resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
+        auto resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
         std::cout << std::format("residual: {:8.2e}", resid) << std::endl;
     }
 

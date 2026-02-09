@@ -43,12 +43,12 @@ SymbolicLU slu(const CSCMatrix& A, AMDOrder order, bool qr_bound, double alpha)
     // Estimate non-zeros in L and U
     if ((order == AMDOrder::APlusAT) && (!qr_bound)) {
         // Exercise 6.10: symbolic Cholesky analysis
-        SymbolicChol S_chol = schol(A, AMDOrder::APlusAT);
+        auto S_chol = schol(A, AMDOrder::APlusAT);
         S.lnz = S.unz = S_chol.lnz;
     } else if (qr_bound) {
         // Exercise 8.6: use QR upper bound
         bool use_postorder = true;
-        SymbolicQR S_qr = sqr(A, order, use_postorder);
+        auto S_qr = sqr(A, order, use_postorder);
         S.lnz = S_qr.vnz;
         S.unz = S_qr.rnz;
     } else {
@@ -92,7 +92,7 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
         }
 
         // Solve Lx = A[:, k]
-        csint col = S.q[k];
+        auto col = S.q[k];
         spsolve(L, A, col, sol, p_inv);  // x = L \ A[:, col]
 
         // --- Find pivot ------------------------------------------------------
@@ -100,7 +100,7 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
         double a = -1;
         for (const auto& i : sol.xi) {
             if (p_inv[i] < 0) {  // row i is not yet pivotal
-                double t = std::fabs(sol.x[i]);
+                auto t = std::fabs(sol.x[i]);
                 if (t > a) {
                     a = t;  // largest pivot candidate so far
                     ipiv = i;
@@ -121,7 +121,7 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
         }
 
         // --- Divide by pivot -------------------------------------------------
-        double pivot = sol.x[ipiv];  // the chosen pivot
+        auto pivot = sol.x[ipiv];  // the chosen pivot
         p_inv[ipiv] = k;      // ipiv is the kth pivot row
         L.i_[lnz] = ipiv;  // first entry in L[:, k] is L(k, k) = 1
         L.v_[lnz++] = 1;
@@ -170,7 +170,7 @@ void lu_realloc(CSCMatrix& R, csint k, bool lower)
     csint nzmin = lower ? (R.nnz() + M - k) : (R.nnz() + k + 1);
 
     // Try the nzmax size, then halve the distance to nzmin until it works
-    csint size_req = nzmax;
+    auto size_req = nzmax;
     std::string err_msg;
 
     while (size_req > nzmin) {
@@ -253,7 +253,7 @@ LUResult lu(
     auto [M, N] = A.shape();
 
     // Exercise 6.6: modify to allow rectangular matrices
-    const csint min_MN = std::min(M, N);
+    const auto min_MN = std::min(M, N);
 
     // Allocate result matrices
     CSCMatrix L{{M, min_MN}, S.lnz};  // lower triangular matrix
@@ -262,7 +262,7 @@ LUResult lu(
     SparseSolution sol(M);            // workspace for triangular solves
 
     // Exercise 6.3: modify to allow column pivoting
-    std::vector<csint> q = S.q;  // column permutation vector
+    auto q = S.q;  // column permutation vector
     csint K = 0;  // count small pivots
 
     csint lnz = 0,
@@ -289,16 +289,16 @@ LUResult lu(
         }
 
         // Solve Lx = A[:, k]
-        csint col = q[k];
+        auto col = q[k];
         spsolve(L, A, col, sol, p_inv);  // x = L \ A[:, col]
 
         // --- Find pivot ------------------------------------------------------
-        csint pre_unz = unz;  // Exercise 6.3: store in case we pivot the column
+        auto pre_unz = unz;  // Exercise 6.3: store in case we pivot the column
         csint ipiv = -1;
         double a = -1;
         for (const auto& i : sol.xi) {
             if (p_inv[i] < 0) {  // row i is not yet pivotal
-                double t = std::fabs(sol.x[i]);
+                auto t = std::fabs(sol.x[i]);
                 if (t > a) {
                     a = t;  // largest pivot candidate so far
                     ipiv = i;
@@ -342,7 +342,7 @@ LUResult lu(
             // Exercise 6.3: column pivoting
             if ((std::fabs(pivot) < col_tol) && k < N - K) {
                 // pivot column to the end of the matrix, preserving the order
-                csint v = std::move(q[k]);
+                auto v = std::move(q[k]);
                 q.erase(q.begin() + k);
                 q.push_back(v);
                 ++K;            // count small pivots
@@ -424,7 +424,7 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     // NOTE might be a way to avoid permuting/re-permuting the row indices?
     // The indices of L have already been permuted to the p_inv ordering by
     // the previous call to cs::lu(), so un-permute them here.
-    const std::vector<csint> R_p = inv_permute(R.p_inv);
+    const auto R_p = inv_permute(R.p_inv);
     for (csint p = 0; p < L.nnz(); ++p) {
         L.i_[p] = R_p[L.i_[p]];
     }
@@ -441,7 +441,7 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
 
         // --- Find pivot ------------------------------------------------------
         // Use the (un-permuted) pivot from the symbolic factorization
-        csint ipiv = R_p[k];
+        auto ipiv = R_p[k];
         for (const auto& i : sol.xi) {
             if (p_inv[i] >= 0) {
                 U.v_[unz++] = sol.x[i];  // x(i) is the entry U(p_inv[i], k)
@@ -449,7 +449,7 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
         }
 
         // --- Divide by pivot -------------------------------------------------
-        double pivot = sol.x[ipiv];  // the chosen pivot
+        auto pivot = sol.x[ipiv];  // the chosen pivot
         p_inv[ipiv] = k;             // ipiv is the kth pivot row
         U.v_[unz++] = pivot;
         L.v_[lnz++] = 1;                         // L(k, k) = 1
@@ -519,15 +519,15 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
         //
         //   => looping over all j values is actually the most efficient way to
         //      do this operation.
-        CSCMatrix L_col = L.slice(k, k+1, 0, k).T();  // == L[k, :k].T
+        auto L_col = L.slice(k, k+1, 0, k).T();  // == L[k, :k].T
         for (csint j = k; j < N; ++j) {
             double lu_dot = 0.0;
             if (k > 0) {
-                CSCMatrix U_col = UT.slice(j, j+1, 0, k).T();  // == U[:k, j]
+                auto U_col = UT.slice(j, j+1, 0, k).T();  // == U[:k, j]
                 lu_dot = L_col.vecdot(U_col);
             }
 
-            double a = A(k, j) - lu_dot;
+            auto a = A(k, j) - lu_dot;
 
             if (std::fabs(a) > 0) {
                 UT.i_[unz] = j;
@@ -542,16 +542,16 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
 
         // Compute the rest of the column
         // L[k+1:n, k] = (A[k+1:n, k] - L[k+1:n, :k] @ U[:k, k]) / U[k, k]
-        CSCMatrix U_col = UT.slice(k, k+1, 0, k).T();  // == U[:k, k]
+        auto U_col = UT.slice(k, k+1, 0, k).T();  // == U[:k, k]
         for (csint i = k+1; i < N; ++i) {
             double lu_dot = 0.0;
             if (k > 0) {
-                CSCMatrix L_col = L.slice(i, i+1, 0, k).T();  // == L[i, :k].T
+                auto L_col = L.slice(i, i+1, 0, k).T();  // == L[i, :k].T
                 lu_dot = L_col.vecdot(U_col);
             }
 
-            double a = A(i, k) - lu_dot;
-            double pivot = UT.v_[UT.p_[k]];  // first element in col == UT(k, k);
+            auto a = A(i, k) - lu_dot;
+            auto pivot = UT.v_[UT.p_[k]];  // first element in col == UT(k, k);
 
             if (pivot == 0.0) {
                 throw std::runtime_error("Matrix is singular!");
@@ -625,7 +625,7 @@ LUResult ilutp(
         }
 
         // Solve Lx = A[:, k]
-        csint col = S.q[k];
+        auto col = S.q[k];
         spsolve(L, A, col, sol, p_inv);  // x = L \ A[:, col]
 
         // --- Find pivot ------------------------------------------------------
@@ -633,7 +633,7 @@ LUResult ilutp(
         double a = -1;
         for (const auto& i : sol.xi) {
             if (p_inv[i] < 0) {  // row i is not yet pivotal
-                double t = std::fabs(sol.x[i]);
+                auto t = std::fabs(sol.x[i]);
                 if (t > a) {
                     a = t;  // largest pivot candidate so far
                     ipiv = i;
@@ -646,7 +646,7 @@ LUResult ilutp(
                 // we add the diagonal U(k, k) after the loop. The only issue is
                 // the p_inv[ipiv] = k assignment, which needs to be done before
                 // the L update loop, but after the U update loop.
-                double x = sol.x[i];
+                auto x = sol.x[i];
                 if (std::fabs(x) > drop_tol) {
                     U.i_[unz] = p_inv[i];
                     U.v_[unz++] = x;
@@ -665,7 +665,7 @@ LUResult ilutp(
 
         // --- Divide by pivot -------------------------------------------------
         // TODO modify to allow singular matrices (see Exercise 6.5)
-        double pivot = sol.x[ipiv];  // the chosen pivot
+        auto pivot = sol.x[ipiv];  // the chosen pivot
         p_inv[ipiv] = k;             // ipiv is the kth pivot row
         L.i_[lnz] = ipiv;            // first entry in L[:, k] is L(k, k) = 1
         L.v_[lnz++] = 1;
@@ -674,7 +674,7 @@ LUResult ilutp(
 
         for (const auto& i : sol.xi) {          // L(k+1:n, k) = x / pivot
             if (p_inv[i] < 0) {                 // x(i) is an entry in L[:, k]
-                double x = sol.x[i] / pivot;
+                auto x = sol.x[i] / pivot;
                 if (std::fabs(x) > drop_tol) {  // ensure entry is large enough
                     L.i_[lnz] = i;              // save unpermuted row in L
                     L.v_[lnz++] = x;            // scale pivot column
@@ -727,7 +727,7 @@ LUResult ilu_nofill(
         // NOTE no need for reallocation!
 
         // Solve Lx = A[:, k]
-        csint col = S.q[k];
+        auto col = S.q[k];
         spsolve(L, A, col, sol, p_inv);  // x = L \ A[:, col]
 
         // Scatter the pattern of A[:, col] into w
@@ -738,7 +738,7 @@ LUResult ilu_nofill(
         // --- Find pivot ------------------------------------------------------
         // Use diagonal as pivot. MATLAB's ilu(type='nofill') errors when
         // there is a zero on the diagonal, and does not support pivoting.
-        csint ipiv = k;
+        auto ipiv = k;
         for (const auto& i : sol.xi) {
             if (p_inv[i] >= 0 && w[i] == k) {
                 // x(i) is the entry U(pinv[i], k) in the pattern of A[:, col]
@@ -748,7 +748,7 @@ LUResult ilu_nofill(
         }
 
         // --- Divide by pivot -------------------------------------------------
-        double pivot = sol.x[ipiv];  // the chosen pivot
+        auto pivot = sol.x[ipiv];  // the chosen pivot
 
         if (pivot == 0) {
             throw std::runtime_error("Matrix is singular!");

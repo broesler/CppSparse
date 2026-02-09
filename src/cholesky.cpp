@@ -34,9 +34,9 @@ std::vector<csint> etree(const CSCMatrix& A, bool ata)
 
     for (auto k : A.column_range()) {
         for (auto ip : A.row_indices(k)) {
-            csint i = ata ? prev[ip] : ip;  // A(i, k) is nonzero
+            auto i = ata ? prev[ip] : ip;  // A(i, k) is nonzero
             while (i != -1 && i < k) {      // only use upper triangular of A
-                csint inext = ancestor[i];  // traverse up to the root
+                auto inext = ancestor[i];  // traverse up to the root
                 ancestor[i] = k;            // path compression
                 if (inext == -1) {
                     parent[i] = k;          // no ancestor
@@ -129,7 +129,7 @@ std::vector<csint> ereach_post(
     auto indices = A.row_indices(k);
 
     for (size_t idx = 0; idx < indices.size(); ++idx) {
-        csint i = indices[idx];  // A(i, k) is nonzero
+        auto i = indices[idx];  // A(i, k) is nonzero
         csint i2 = (idx + 1) < indices.size() ? indices[idx + 1] : A.nnz();  // next row index
         if (i <= k) {  // only consider upper triangular part of A
             // Traverse up the etree i -> a = lca(i1, i2)
@@ -220,8 +220,8 @@ void tdfs(
     stack.push_back(j);              // place j on stack
 
     while (!stack.empty()) {
-        csint p = stack.back();      // p = top of stack
-        csint i = head[p];           // i = youngest child of p
+        auto p = stack.back();      // p = top of stack
+        auto i = head[p];           // i = youngest child of p
         if (i == -1) {
             stack.pop_back();        // p has no unordered children left
             postorder.push_back(p);  // node p is the kth node in postorder
@@ -245,9 +245,9 @@ FirstDesc firstdesc(
     std::vector<csint> level(N);
 
     for (csint k = 0; k < N; ++k) {
-        csint i = postorder[k];  // node i of etree is kth postordered node
+        auto i = postorder[k];  // node i of etree is kth postordered node
         csint len = 0;      // traverse from i to root
-        csint r = i;
+        auto r = i;
         while (r != -1 && first[r] == -1) {
             first[r] = k;
             r = parent[r];
@@ -336,7 +336,7 @@ LCAStatus least_common_ancestor(
     }
 
     maxfirst[i] = first[j];         // update max first[j] seen so far
-    csint jprev = prevleaf[i];      // jprev is the previous leaf of i
+    auto jprev = prevleaf[i];      // jprev is the previous leaf of i
     prevleaf[i] = j;                // j is now the previous leaf of i
     jleaf = (jprev == -1) ? LeafStatus::FirstLeaf : LeafStatus::SubsequentLeaf;
 
@@ -345,15 +345,15 @@ LCAStatus least_common_ancestor(
     }
 
     // Traverse up to the root of the subtree to find q
-    csint q = jprev;
+    auto q = jprev;
     while (q != ancestor[q]) {
         q = ancestor[q];
     }
 
     // Compress the path to the root
-    csint s = jprev;
+    auto s = jprev;
     while (s != q) {
-        csint sparent = ancestor[s];  // path compression
+        auto sparent = ancestor[s];  // path compression
         ancestor[s] = q;
         s = sparent;
     }
@@ -381,7 +381,7 @@ void init_ata(
 
     // Find the first non-zero row index in each column
     for (auto i : AT.column_range()) {
-        csint k = N;
+        auto k = N;
         for (auto ip : AT.row_indices(i)) {
             k = std::min(k, w[ip]);
         }
@@ -414,7 +414,7 @@ std::vector<csint> counts(
 
     // Compute first descendent of each node in the tree
     for (auto k : A.column_range()) {
-        csint j = postorder[k];  // node j of etree is kth postordered node
+        auto j = postorder[k];  // node j of etree is kth postordered node
         delta[j] = (first[j] == -1) ? 1 : 0;  // delta[j] = 1 if j is a leaf
         while (j != -1 && first[j] == -1) {
             first[j] = k;   // first descendant of j
@@ -423,14 +423,14 @@ std::vector<csint> counts(
     }
 
     // Operate on the transpose
-    CSCMatrix AT = A.transpose(false);  // do not copy values in the transpose
+    auto AT = A.transpose(false);  // do not copy values in the transpose
 
     if (ata) {
         init_ata(AT, postorder, head, next);
     }
 
     for (auto k : A.column_range()) {
-        csint j = postorder[k];  // node j of etree is kth postordered node
+        auto j = postorder[k];  // node j of etree is kth postordered node
         if (parent[j] != -1) {
             delta[parent[j]]--;  // j is not a root
         }
@@ -468,10 +468,10 @@ std::vector<csint> counts(
 std::vector<csint> chol_rowcounts(const CSCMatrix& A)
 {
     // Compute the elimination tree of A
-    std::vector<csint> parent = etree(A);
+    auto parent = etree(A);
 
     // Compute the post-order of the elimination tree
-    std::vector<csint> postorder = post(parent);
+    auto postorder = post(parent);
 
     // Count the number of non-zeros in each row of L
     return rowcnt(A, parent, postorder);
@@ -481,10 +481,10 @@ std::vector<csint> chol_rowcounts(const CSCMatrix& A)
 std::vector<csint> chol_colcounts(const CSCMatrix& A, bool ata)
 {
     // Compute the elimination tree of A
-    std::vector<csint> parent = etree(A, ata);
+    auto parent = etree(A, ata);
 
     // Compute the post-order of the elimination tree
-    std::vector<csint> postorder = post(parent);
+    auto postorder = post(parent);
 
     // Count the number of non-zeros in each column of L
     return counts(A, parent, postorder, ata);
@@ -505,9 +505,9 @@ SymbolicChol schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
     }
 
     // Find pattern of Cholesky factor
-    CSCMatrix C = A.symperm(S.p_inv, false);  // C = spones(triu(A(p, p)))
+    auto C = A.symperm(S.p_inv, false);  // C = spones(triu(A(p, p)))
     S.parent = etree(C);
-    std::vector<csint> postorder = post(S.parent);
+    auto postorder = post(S.parent);
 
     // Exercise 4.9
     if (use_postorder) {
@@ -518,7 +518,7 @@ SymbolicChol schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
         postorder = post(S.parent);     // should be identity for natural order
     }
 
-    std::vector<csint> c = counts(C, S.parent, postorder);
+    auto c = counts(C, S.parent, postorder);
 
     // Compute column pointers for L
     S.cp.resize(c.size() + 1);
@@ -536,7 +536,7 @@ CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S)
 
     std::vector<csint> c(S.cp);      // column pointers for L
 
-    const CSCMatrix C = A.symperm(S.p_inv);
+    const auto C = A.symperm(S.p_inv);
 
     L.p_ = S.cp;  // column pointers for L
 
@@ -568,7 +568,7 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
     std::vector<csint> c(S.cp);  // column pointers for L
     std::vector<double> x(N);    // sparse accumulator
 
-    const CSCMatrix C = A.symperm(S.p_inv);
+    const auto C = A.symperm(S.p_inv);
 
     L.p_ = S.cp;  // column pointers for L
 
@@ -585,7 +585,7 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
             }
         }
 
-        double d = x[k];  // d = C(k, k)
+        auto d = x[k];  // d = C(k, k)
         x[k] = 0.0;       // clear x for k + 1st iteration
 
         //--- Triangular Solve -------------------------------------------------
@@ -593,7 +593,7 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
         //   => L[k, :k] := x.T
         // ereach gives the pattern of L(k, :) in topological order
         for (const auto& i : ereach(C, k, S.parent)) {
-            double lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
+            auto lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 
             for (csint p = L.p_[i] + 1; p < c[i]; ++p) {
@@ -606,7 +606,7 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
             // We build L one *row* at a time, in topological order. All
             // i < k since they are reachable, so the diagonal is always the
             // first element in its column, and all other elements are in order.
-            csint p = c[i]++;
+            auto p = c[i]++;
             L.i_[p] = k;                        // store L(k, i) in column i
             L.v_[p] = lki;
         }
@@ -619,7 +619,7 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
         }
 
         // store L(k, k) = sqrt(d) in column k
-        csint p = c[k]++;
+        auto p = c[k]++;
         L.i_[p] = k;
         L.v_[p] = std::sqrt(d);
     }
@@ -640,14 +640,14 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
     assert(!L.data().empty());
     assert(L.has_sorted_indices_);
 
-    csint N = A.shape()[1];
+    auto N = A.shape()[1];
 
     // Workspaces
     std::vector<csint> c(S.cp);  // column pointers for L
     std::vector<double> x(N);    // sparse accumulator
 
     // Need the *lower* triangular part for a_{32}, so do a full permutation
-    const CSCMatrix C = A.permute(S.p_inv, inv_permute(S.p_inv));
+    const auto C = A.permute(S.p_inv, inv_permute(S.p_inv));
 
     // Compute L(:, k) for L*L' = C in left-looking order
     for (auto k : L.column_range()) {
@@ -679,20 +679,20 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
             // Row indices and values in L[k:, j] are stored in:
             //  L.i_ and L.v_[c[j] ... L.p_[j+1]-1]
             //
-            double lkj = L.v_[c[j]];  // cache L(k, j)
+            auto lkj = L.v_[c[j]];  // cache L(k, j)
             for (csint p = c[j]++; p < L.p_[j+1]; ++p) {
                 x[L.i_[p]] -= L.v_[p] * lkj;
             }
         }
 
         //--- Compute L[k:, k] -------------------------------------------------
-        double Lkk = std::sqrt(x[k]);
+        auto Lkk = std::sqrt(x[k]);
         L.v_[c[k]++] = Lkk;
         x[k] = 0.0;  // clear x for k + 1st iteration
 
         // Compute the rest of the column L[k+1:, k] = x[k+1:] / L[k, k]
         for (csint p = c[k]; p < L.p_[k+1]; ++p) {
-            csint i = L.i_[p];
+            auto i = L.i_[p];
             L.v_[p] = x[i] / Lkk;
             x[i] = 0.0;  // clear x for k + 1st iteration
         }
@@ -714,13 +714,13 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
     assert(!L.v_.empty());
     assert(L.has_sorted_indices_);
 
-    csint N = A.shape()[1];
+    auto N = A.shape()[1];
 
     // Workspaces
     std::vector<csint> c(S.cp);  // column pointers for L
     std::vector<double> x(N);    // sparse accumulator
 
-    const CSCMatrix C = A.symperm(S.p_inv);
+    const auto C = A.symperm(S.p_inv);
 
     L.p_ = S.cp;  // column pointers for L
 
@@ -736,7 +736,7 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
             }
         }
 
-        double d = x[k];  // d = C(k, k)
+        auto d = x[k];  // d = C(k, k)
         x[k] = 0.0;       // clear x for k + 1st iteration
 
         //--- Triangular Solve -------------------------------------------------
@@ -744,7 +744,7 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
         //   => L[k, :k] := x.T == l_{12}.T
         // ereach gives the pattern of L(k, :) in topological order
         for (const auto& i : ereach(C, k, S.parent)) {
-            double lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
+            auto lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 
             for (csint p = L.p_[i] + 1; p < c[i]; ++p) {
@@ -808,8 +808,8 @@ CSCMatrix& chol_update(
     std::vector<double> w(L.shape()[0]);  // sparse accumulator workspace
 
     // Find the minimum row index in the update vector
-    csint p = C.p_[0];
-    csint f = C.i_[p];
+    auto p = C.p_[0];
+    auto f = C.i_[p];
     for (; p < C.p_[1]; ++p) {
         f = std::min(f, C.i_[p]);
         w[C.i_[p]] = C.v_[p];   // also scatter C into w
@@ -829,8 +829,8 @@ CSCMatrix& chol_update(
         L.v_[p] = δ * L.v_[p] + (update ? (γ * w[j]) : 0.0);
         β = β2;
         for (p++; p < L.p_[j+1]; ++p) {
-            double w1 = w[L.i_[p]];
-            double w2 = w1 - α * L.v_[p];
+            auto w1 = w[L.i_[p]];
+            auto w2 = w1 - α * L.v_[p];
             w[L.i_[p]] = w2;
             L.v_[p] = δ * L.v_[p] + γ * (update ? w1 : w2);
         }
@@ -888,10 +888,10 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
         throw std::runtime_error("Matrix must be square!");
     }
 
-    const CSCMatrix C = A.symperm(S.p_inv);
+    const auto C = A.symperm(S.p_inv);
 
     // Get structure of "lower" tri of C (may be stored as upper only)
-    const CSCMatrix C_tril = C.band(0, N).T();
+    const auto C_tril = C.band(0, N).T();
 
     CSCMatrix L{{N, N}, C_tril.nnz()};  // allocate result
 
@@ -916,7 +916,7 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
             w[i] = k;
         }
 
-        double d = x[k];  // d = C(k, k)
+        auto d = x[k];  // d = C(k, k)
         x[k] = 0.0;       // clear x for k + 1st iteration
 
         //--- Triangular Solve -------------------------------------------------
@@ -929,7 +929,7 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
                 continue;
             }
 
-            double lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
+            auto lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 
             for (csint p = L.p_[i] + 1; p < c[i]; ++p) {
@@ -942,7 +942,7 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
             // We build L one *row* at a time, in topological order. All
             // i < k since they are reachable, so the diagonal is always the
             // first element in its column, and all other elements are in order.
-            csint p = c[i]++;
+            auto p = c[i]++;
             L.i_[p] = k;                        // store L(k, i) in column i
             L.v_[p] = lki;
         }
@@ -952,7 +952,7 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
             throw std::runtime_error("Matrix not positive definite!");
         }
 
-        csint p = c[k]++;
+        auto p = c[k]++;
         L.i_[p] = k;  // store L(k, k) = sqrt(d) in column k
         L.v_[p] = std::sqrt(d);
     }
@@ -984,7 +984,7 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
     std::vector<csint> c(S.cp);  // column pointers for L
     std::vector<double> x(N);    // sparse accumulator
 
-    const CSCMatrix C = A.symperm(S.p_inv);
+    const auto C = A.symperm(S.p_inv);
 
     L.p_ = S.cp;  // column pointers for L
 
@@ -1024,17 +1024,17 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
         // L factor based on their criteria gives a different result than
         // computing L = ichol(A, options).
 
-        double d = x[k];  // d = C(k, k)
+        auto d = x[k];  // d = C(k, k)
         x[k] = 0.0;       // clear x for k + 1st iteration
 
-        double abs_diag = std::fabs(d);  // store diagonal for drop_tol check
+        auto abs_diag = std::fabs(d);  // store diagonal for drop_tol check
 
         //--- Triangular Solve -------------------------------------------------
         // Solve L(0:k-1, 0:k-1) * x = C(0:k-1, k) == L[:k, :k] * x = C[:k, k]
         //   => L[k, :k] := x.T
         // ereach gives the pattern of L(k, :) in topological order
         for (const auto& i : ereach(C, k, S.parent)) {
-            double lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
+            auto lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 
             for (csint p = L.p_[i] + 1; p < c[i]; ++p) {
@@ -1049,7 +1049,7 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
                 d -= lki * lki;  // d -= L(k, i) * L(k, i)
 
                 // store L(k, i) in column i
-                csint p = c[i]++;
+                auto p = c[i]++;
                 L.i_[p] = k;
                 L.v_[p] = lki;
             }
@@ -1061,7 +1061,7 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
         }
 
         // store L(k, k) = sqrt(d) in column k
-        csint p = c[k]++;
+        auto p = c[k]++;
         L.i_[p] = k;
         L.v_[p] = std::sqrt(d);
     }

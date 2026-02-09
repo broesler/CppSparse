@@ -48,8 +48,8 @@ Householder house(std::span<const double> x)
         //---------- LAPACK DLARFG algorithm
         // consistent with scipy.linalg.qr(mode='raw') and MATLAB
         // LAPACK uses the notation: tau := beta, beta := s
-        double norm_x = std::sqrt(v[0] * v[0] + sigma);
-        double alpha = v[0];
+        auto norm_x = std::sqrt(v[0] * v[0] + sigma);
+        auto alpha = v[0];
         s = -sign(alpha) * norm_x;
         beta = (s - alpha) / s;
 
@@ -135,7 +135,7 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
 
     // Initialize the linked lists for each row with their leftmost index
     for (csint i = M-1; i >= 0; --i) {  // scan rows in reverse order
-        csint k = S.leftmost[i];
+        auto k = S.leftmost[i];
         if (k != -1) {                  // row i is not empty
             if (nque[k]++ == 0) {
                 tail[k] = i;            // first row in queue k
@@ -151,7 +151,7 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
     // List k contains all rows that belong to V(:, k)
     csint k;  // declare outside loop for final row permutation
     for (k = 0; k < N; ++k) {          // find row permutation and nnz(V)
-        csint i = head[k];             // remove row i from queue k
+        auto i = head[k];             // remove row i from queue k
         S.vnz++;                       // count V(k, k) as nonzero
         if (i < 0) {
             i = S.m2++;                // add a fictitious row
@@ -161,7 +161,7 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
             continue;
         }
         S.vnz += nque[k];              // nque[k] is nnz(V(k+1:m, k))
-        csint pa = S.parent[k];
+        auto pa = S.parent[k];
         if (pa != -1) {                // move all rows to parent of k
             if (nque[pa] == 0) {
                 tail[pa] = tail[k];
@@ -186,7 +186,7 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
 SymbolicQR sqr(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 {
     auto [M, N] = A.shape();
-    CSCMatrix C = A;
+    auto C = A;
 
     if (M < N) {
         C = A.slice(0, M, 0, M);  // slice to (M, M)
@@ -215,7 +215,7 @@ SymbolicQR sqr(const CSCMatrix& A, AMDOrder order, bool use_postorder)
     C = C.permute_cols(q, values);
 
     S.parent = etree(C, CTC);  // etree of C^T C, C = A[:, q]
-    std::vector<csint> postorder = post(S.parent);
+    auto postorder = post(S.parent);
 
     // Exercise 5.5 combine the postordering
     if (use_postorder) {
@@ -228,7 +228,7 @@ SymbolicQR sqr(const CSCMatrix& A, AMDOrder order, bool use_postorder)
     S.q = q;  // store the column permutation
 
     // column counts of the Cholesky factor of C^T C
-    std::vector<csint> cp = counts(C, S.parent, postorder, CTC);
+    auto cp = counts(C, S.parent, postorder, CTC);
     S.rnz = std::accumulate(cp.cbegin(), cp.cend(), 0);
 
     S.leftmost = find_leftmost(C);
@@ -242,9 +242,9 @@ SymbolicQR sqr(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
 {
     auto [M, N] = A.shape();
-    csint M2 = S.m2;  // if M < N, M2 = M
+    auto M2 = S.m2;  // if M < N, M2 = M
 
-    csint Nv = std::min(M, N);
+    auto Nv = std::min(M, N);
 
     // Allocate result matrices
     CSCMatrix V{{M2, Nv}, S.vnz};  // Householder vectors
@@ -265,16 +265,16 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     for (csint k = 0; k < Nv; ++k) {
         R.p_[k] = rnz;    // R[:, k] starts here
         V.p_[k] = vnz;    // V[:, k] starts here
-        csint p1 = vnz;   // save start of V(:, k)
+        auto p1 = vnz;   // save start of V(:, k)
         w[k] = k;         // add V(k, k) to pattern of V
         V.i_[vnz++] = k;  // V(k, k) is non-zero
 
         t.clear();
-        csint col = S.q[k];  // permuted column of A
+        auto col = S.q[k];  // permuted column of A
 
         // find R[:, k] pattern
         for (auto [Ai, Av] : A.column(col)) {
-            csint i = S.leftmost[Ai];  // i = min(find(A(i, q)))
+            auto i = S.leftmost[Ai];  // i = min(find(A(i, q)))
 
             s.clear();
             while (w[i] != k) {  // traverse up to k
@@ -314,7 +314,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
         }
 
         // [v, beta, s] = house(x) == house(V[p1:vnz, k])
-        Householder h = house(std::span(V.v_).subspan(p1, vnz - p1));
+        auto h = house(std::span(V.v_).subspan(p1, vnz - p1));
         std::copy(h.v.cbegin(), h.v.cend(), V.v_.begin() + p1);
         beta[k] = h.beta;
         R.i_[rnz] = k;      // R(k, k) = -sign(x[0]) * norm(x)
@@ -324,7 +324,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     R.p_[Nv] = rnz;  // finalize R
     V.p_[Nv] = vnz;  // finalize V
 
-    std::vector<csint> q = S.q;
+    auto q = S.q;
 
     if (M < N) {
         // Compute the remaining columns of R: append Q^T A[:, M:] to R
@@ -343,10 +343,10 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
 QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
 {
     auto [M, N] = A.shape();
-    csint M2 = S.m2;
+    auto M2 = S.m2;
 
     // Exercise 5.2: handle M < N
-    csint Nv = std::min(M, N);
+    auto Nv = std::min(M, N);
 
     // Allocate result matrices with no values
     bool values = false;
@@ -370,10 +370,10 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
         V.i_[vnz++] = k;  // V(k, k) is non-zero
 
         t.clear();
-        csint col = S.q[k];  // permuted column of A
+        auto col = S.q[k];  // permuted column of A
         // find R[:, k] pattern
         for (auto Ai : A.row_indices(col)) {
-            csint i = S.leftmost[Ai];  // i = min(find(A(i, q)))
+            auto i = S.leftmost[Ai];  // i = min(find(A(i, q)))
 
             s.clear();
             while (w[i] != k) {  // traverse up to k
@@ -416,13 +416,13 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
 void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 {
     auto [M, N] = A.shape();
-    csint M2 = S.m2;
+    auto M2 = S.m2;
 
-    csint Nv = std::min(M, N);
+    auto Nv = std::min(M, N);
 
     // Check that results have been allocated
-    CSCMatrix& V = res.V;
-    CSCMatrix& R = res.R;
+    auto& V = res.V;
+    auto& R = res.R;
     std::vector<double>& beta = res.beta;
 
     if (V.indices().empty() || R.indices().empty()) {
@@ -439,17 +439,17 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 
     // Compute V and R
     for (csint k = 0; k < Nv; ++k) {
-        csint col = res.q[k];  // permuted column of A
+        auto col = res.q[k];  // permuted column of A
 
         // R[:, k] pattern known. Scatter A[:, col] into x
         for (auto [Ai, Av] : A.column(col)) {
-            csint i = res.p_inv[Ai];  // i = permuted row of A(:, col)
+            auto i = res.p_inv[Ai];  // i = permuted row of A(:, col)
             x[i] = Av;                // x(i) = A(:, col)
         }
 
         // for each i in pattern of R[:, k] (R(i, k) is non-zero)
         for (csint p = R.p_[k]; p < R.p_[k+1] - 1; ++p) {
-            csint i = R.i_[p];             // R(i, k)
+            auto i = R.i_[p];             // R(i, k)
             happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
             R.v_[p] = x[i];                // R(i, k) = x(i)
             x[i] = 0;
@@ -463,7 +463,7 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 
         // [v, beta, s] = house(x) == house(V[:, k])
         auto V_k = std::span(V.v_).subspan(V.p_[k], V.col_length(k));
-        Householder h = house(V_k);
+        auto h = house(V_k);
         std::copy(h.v.cbegin(), h.v.cend(), V.v_.begin() + V.p_[k]);
         beta[k] = h.beta;
         R.v_[R.p_[k+1] - 1] = h.s;  // R(k, k) = -sign(x[0]) * norm(x)
@@ -514,7 +514,7 @@ CSCMatrix apply_qtleft(
     auto [M2, N] = V.shape();
     auto [M, NY] = Y.shape();
 
-    CSCMatrix X = Y;  // copy Y into X, work in-place
+    auto X = Y;  // copy Y into X, work in-place
     CSCMatrix C{{M, NY}, 2 * V.nnz()};  // allocate C for the result
 
     if (M2 > M) {

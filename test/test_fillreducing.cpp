@@ -24,10 +24,10 @@ namespace cs {
 
 TEST_CASE("Build Graph", "[amd][build_graph]")
 {
-    CSCMatrix A = davis_example_amd();
+    auto A = davis_example_amd();
 
     // Number of entries required for a dense row
-    csint dense = GENERATE(
+    auto dense = GENERATE(
         100,  // keep all rows
         0,    // drop all rows
         4     // drop some rows
@@ -35,8 +35,8 @@ TEST_CASE("Build Graph", "[amd][build_graph]")
     CAPTURE(dense);
 
     CSCMatrix expect_C;
-    AMDOrder order = AMDOrder::Natural;
-    bool values = false;
+    auto order = AMDOrder::Natural;
+    auto values = false;
 
     SECTION("Natural") {
         order = AMDOrder::Natural;
@@ -75,7 +75,7 @@ TEST_CASE("Build Graph", "[amd][build_graph]")
     // Remove diagonal elements
     expect_C.fkeep([] (csint i, csint j, [[maybe_unused]] double v) { return i != j; });
 
-    const CSCMatrix C = build_graph(A, order, dense);
+    const auto C = build_graph(A, order, dense);
 
     CHECK(C.data().empty());
     check_sparse_allclose(C, expect_C, values);
@@ -84,7 +84,7 @@ TEST_CASE("Build Graph", "[amd][build_graph]")
 
 TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
 {
-    const CSCMatrix A = davis_example_amd();
+    const auto A = davis_example_amd();
     auto [M, N] = A.shape();
     AMDOrder order;
     std::vector<csint> expect_p;
@@ -111,7 +111,7 @@ TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
         expect_p = {0, 3, 4, 5, 7, 8, 9, 1, 2, 6};
     }
 
-    std::vector<csint> p = amd(A, order);
+    auto p = amd(A, order);
     CHECK(p == expect_p);
 }
 
@@ -119,7 +119,7 @@ TEST_CASE("AMD with M < N", "[amd][M < N]")
 {
     csint M = 7;
     csint N = 10;
-    const CSCMatrix A = davis_example_amd().slice(0, M, 0, N);
+    const auto A = davis_example_amd().slice(0, M, 0, N);
 
     AMDOrder order;
     std::vector<csint> expect_p;
@@ -151,7 +151,7 @@ TEST_CASE("AMD with M < N", "[amd][M < N]")
             "Matrix must be square for APlusAT!"
         );
     } else {
-        std::vector<csint> p = amd(A, order);
+        auto p = amd(A, order);
         CHECK(p == expect_p);
     }
 }
@@ -161,7 +161,7 @@ TEST_CASE("AMD with M > N", "[amd][M > N]")
 {
     csint M = 10;
     csint N = 7;
-    const CSCMatrix A = davis_example_amd().slice(0, M, 0, N);
+    const auto A = davis_example_amd().slice(0, M, 0, N);
 
     AMDOrder order;
     std::vector<csint> expect_p;
@@ -193,7 +193,7 @@ TEST_CASE("AMD with M > N", "[amd][M > N]")
             "Matrix must be square for APlusAT!"
         );
     } else {
-        std::vector<csint> p = amd(A, order);
+        auto p = amd(A, order);
         CHECK(p == expect_p);
     }
 }
@@ -201,16 +201,16 @@ TEST_CASE("AMD with M > N", "[amd][M > N]")
 
 TEST_CASE("Maximum Matching", "[maxmatch]")
 {
-    CSCMatrix A = davis_example_amd();
+    auto A = davis_example_amd();
     auto [M, N] = A.shape();
 
-    bool recursive = GENERATE(true, false);
+    auto recursive = GENERATE(true, false);
     CAPTURE(recursive);
 
-    csint seed = GENERATE(-1, 0, 1);
+    auto seed = GENERATE(-1, 0, 1);
     CAPTURE(seed);
 
-    csint expect_rank = M;
+    auto expect_rank = M;
     std::vector<csint> expect_jmatch(M);
     std::vector<csint> expect_imatch(N);
 
@@ -309,17 +309,17 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
     }
 
     // Count number of non-negative entries in jmatch
-    csint row_rank = std::accumulate(
+    auto row_rank = std::accumulate(
         res.jmatch.begin(), res.jmatch.end(), 0,
         [](csint sum, csint i) { return sum + (i >= 0); }
     );
 
-    csint col_rank = std::accumulate(
+    auto col_rank = std::accumulate(
         res.imatch.begin(), res.imatch.end(), 0,
         [](csint sum, csint j) { return sum + (j >= 0); }
     );
 
-    csint sprank = std::min(row_rank, col_rank);
+    auto sprank = std::min(row_rank, col_rank);
 
     CHECK(sprank == expect_rank);
 
@@ -345,7 +345,7 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
 
 TEST_CASE("Strongly Connected Components", "[scc]")
 {
-    CSCMatrix A = davis_example_amd();
+    auto A = davis_example_amd();
     auto [M, N] = A.shape();
 
     csint expect_Nb = 0;
@@ -372,7 +372,7 @@ TEST_CASE("Strongly Connected Components", "[scc]")
         expect_r = {0, 7, 8, 9, 10};
     }
 
-    SCCResult D = scc(A);
+    auto D = scc(A);
 
     CHECK(D.p == expect_p);
     CHECK(D.r == expect_r);
@@ -382,10 +382,10 @@ TEST_CASE("Strongly Connected Components", "[scc]")
 
 TEST_CASE("Dulmage-Mendelsohn Permutation", "[dmperm]")
 {
-    CSCMatrix A = davis_example_amd();
+    auto A = davis_example_amd();
     auto [M, N] = A.shape();
 
-    csint seed = GENERATE(-1, 0, 1);
+    auto seed = GENERATE(-1, 0, 1);
     CAPTURE(seed);
 
     csint expect_Nb = 0;
@@ -425,7 +425,7 @@ TEST_CASE("Dulmage-Mendelsohn Permutation", "[dmperm]")
         expect_rr = {0, 7,  7,  7, 10};
     }
 
-    DMPermResult D = dmperm(A, seed);
+    auto D = dmperm(A, seed);
 
     if (seed == 0) {
         CHECK(D.p == expect_p);

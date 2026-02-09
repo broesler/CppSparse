@@ -22,7 +22,7 @@ namespace cs {
 std::string SparseMatrix::to_string(bool verbose, csint threshold) const
 {
     auto [M, N] = shape();
-    csint nnz_ = nnz();
+    auto nnz_ = nnz();
     std::stringstream ss;
 
     ss << std::format(
@@ -58,9 +58,9 @@ std::string SparseMatrix::make_format_string_() const
         }
     }
 
-    bool use_scientific = (abs_max < 1e-4 || abs_max > 1e4);
+    auto use_scientific = (abs_max < 1e-4 || abs_max > 1e4);
     // Leading space aligns for "-" signs
-    const std::string fmt = use_scientific ? " .4e" : " .4g";
+    const auto fmt = use_scientific ? " .4e" : " .4g";
 
     return std::format("({{0:>{{1}}d}}, {{2:>{{3}}d}}): {{4:{}}}", fmt);
 }
@@ -84,10 +84,10 @@ void SparseMatrix::print_dense(int precision, bool suppress, std::ostream& os) c
         }
     }
 
-    bool use_scientific = !suppress || (abs_max < 1e-4 || abs_max > 1e4);
+    auto use_scientific = !suppress || (abs_max < 1e-4 || abs_max > 1e4);
 
     // Compute column width
-    int width = use_scientific ? (9 + precision) : (6 + precision);
+    auto width = use_scientific ? (9 + precision) : (6 + precision);
     width = std::max(width, 5);  // enough for "nan", "-inf", etc.
 
     constexpr double suppress_tol = 1e-10;
@@ -98,7 +98,7 @@ void SparseMatrix::print_dense(int precision, bool suppress, std::ostream& os) c
         os << indent;
         for (auto j : column_range()) {
             csint idx = (order == DenseOrder::ColMajor) ? (i + j*M) : (i*N + j);
-            double val = A[idx];
+            auto val = A[idx];
 
             if (val == 0.0 || (suppress && std::fabs(val) < suppress_tol)) {
                 os << std::format("{:>{}}", "0", width);

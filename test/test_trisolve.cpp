@@ -24,19 +24,19 @@ namespace cs {
 
 TEST_CASE("Triangular solve with dense RHS", "[trisolve_dense]")
 {
-    const CSCMatrix L = COOMatrix{
+    const auto L = COOMatrix{
         std::vector<double> {1, 2, 3, 4, 5, 6},
         std::vector<csint>  {0, 1, 1, 2, 2, 2},
         std::vector<csint>  {0, 0, 1, 0, 1, 2}
     }.tocsc();
 
-    const CSCMatrix U = L.T();
+    const auto U = L.T();
 
     const std::vector<double> expect{1, 1, 1};
 
     SECTION("Forward solve L x = b") {
         const std::vector<double> b{1, 5, 15};  // row sums of L
-        const std::vector<double> x = lsolve(L, b);
+        const auto x = lsolve(L, b);
 
         REQUIRE(x.size() == expect.size());
         check_vectors_allclose(x, expect, tol);
@@ -44,7 +44,7 @@ TEST_CASE("Triangular solve with dense RHS", "[trisolve_dense]")
 
     SECTION("Backsolve L.T x = b") {
         const std::vector<double> b{7, 8, 6};  // row sums of L.T == col sums of L
-        const std::vector<double> x = ltsolve(L, b);
+        const auto x = ltsolve(L, b);
 
         REQUIRE(x.size() == expect.size());
         check_vectors_allclose(x, expect, tol);
@@ -52,7 +52,7 @@ TEST_CASE("Triangular solve with dense RHS", "[trisolve_dense]")
 
     SECTION("Backsolve U x = b") {
         const std::vector<double> b{7, 8, 6};  // row sums of L.T == col sums of L
-        const std::vector<double> x = usolve(U, b);
+        const auto x = usolve(U, b);
 
         REQUIRE(x.size() == expect.size());
         check_vectors_allclose(x, expect, tol);
@@ -60,7 +60,7 @@ TEST_CASE("Triangular solve with dense RHS", "[trisolve_dense]")
 
     SECTION("Forward solve U.T x = b") {
         const std::vector<double> b{1, 5, 15};  // row sums of L
-        const std::vector<double> x = utsolve(U, b);
+        const auto x = utsolve(U, b);
 
         REQUIRE(x.size() == expect.size());
         check_vectors_allclose(x, expect, tol);
@@ -85,8 +85,8 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
     // All values are 1
     std::vector<double> vals(rows.size(), 1);
 
-    CSCMatrix L = COOMatrix{vals, rows, cols}.tocsc();
-    CSCMatrix U = L.T();
+    auto L = COOMatrix{vals, rows, cols}.tocsc();
+    auto U = L.T();
 
     // Define the rhs matrix B
     CSCMatrix B{Shape{N, 1}};
@@ -137,7 +137,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
         }
 
         SECTION("Recursive") {
-            std::vector<csint> xi = detail::reach_r(L, B);
+            auto xi = detail::reach_r(L, B);
 
             REQUIRE(xi == expect);
         }
@@ -157,7 +157,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
         }
 
         SECTION("Recursive") {
-            std::vector<csint> xi = detail::reach_r(L, B);
+            auto xi = detail::reach_r(L, B);
 
             REQUIRE(xi == expect);
         }
@@ -238,8 +238,8 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
     const CSCMatrix A{A_vals, {N, N}};
 
     // Un-permuted matrices
-    const CSCMatrix L = A.band(-N, 0);
-    const CSCMatrix U = A.band(0, N);
+    const auto L = A.band(-N, 0);
+    const auto U = A.band(0, N);
 
     // TODO I am curious what happens when there is more than one singleton row
     // at a time in find_tri_permutation(). Try removing a few entries from each
@@ -250,26 +250,26 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
     const std::vector<csint> q{1, 4, 0, 2, 5, 3};
 
     // Permute the rows (non-canonical form works too)
-    const CSCMatrix PL = L.permute_rows(inv_permute(p)).to_canonical();
-    const CSCMatrix PU = U.permute_rows(inv_permute(p)).to_canonical();
+    const auto PL = L.permute_rows(inv_permute(p)).to_canonical();
+    const auto PU = U.permute_rows(inv_permute(p)).to_canonical();
 
     // Permute the columns (non-canonical form works too)
-    const CSCMatrix LQ = L.permute_cols(p).to_canonical();
-    const CSCMatrix UQ = U.permute_cols(p).to_canonical();
+    const auto LQ = L.permute_cols(p).to_canonical();
+    const auto UQ = U.permute_cols(p).to_canonical();
 
     // Permute both rows and columns
-    const CSCMatrix PLQ = L.permute(inv_permute(p), q).to_canonical();
-    const CSCMatrix PUQ = U.permute(inv_permute(p), q).to_canonical();
+    const auto PLQ = L.permute(inv_permute(p), q).to_canonical();
+    const auto PUQ = U.permute(inv_permute(p), q).to_canonical();
 
     const std::vector<double> expect_x{1, 2, 3, 4, 5, 6};
 
     SECTION("Find diagonals of permuted L") {
         std::vector<csint> expect{2, 8, 14, 16, 19, 20};
-        std::vector<csint> p_diags = find_lower_diagonals(PL);
+        auto p_diags = find_lower_diagonals(PL);
         CHECK(p_diags == expect);
 
         // Check that we can get the inverse permutation
-        std::vector<csint> p_inv = inv_permute(p);  // {2, 3, 5, 1, 4, 0};
+        auto p_inv = inv_permute(p);  // {2, 3, 5, 1, 4, 0};
         std::vector<csint> diags;
         for (const auto& p : p_diags) {
             diags.push_back(PL.indices()[p]);
@@ -279,11 +279,11 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
 
     SECTION("Find diagonals of permuted U") {
         std::vector<csint> expect{0, 2, 5, 6, 13, 15};
-        std::vector<csint> p_diags = find_upper_diagonals(PU);
+        auto p_diags = find_upper_diagonals(PU);
         CHECK(p_diags == expect);
 
         // Check that we can get the inverse permutation
-        std::vector<csint> p_inv = inv_permute(p);  // {2, 3, 5, 1, 4, 0};
+        auto p_inv = inv_permute(p);  // {2, 3, 5, 1, 4, 0};
         std::vector<csint> diags;
         for (const auto& p : p_diags) {
             diags.push_back(PU.indices()[p]);
@@ -292,15 +292,15 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
     }
 
     SECTION("Find diagonals of non-triangular matrix") {
-        const CSCMatrix A = davis_example_small().tocsc();
+        const auto A = davis_example_small().tocsc();
         REQUIRE_THROWS_AS(find_lower_diagonals(A), PermutedTriangularMatrixError);
         REQUIRE_THROWS_AS(find_upper_diagonals(A), PermutedTriangularMatrixError);
         REQUIRE_THROWS_AS(find_tri_permutation(A), PermutedTriangularMatrixError);
     }
 
     SECTION("Find permutation vectors of permuted L") {
-        std::vector<csint> expect_p = inv_permute(p);
-        std::vector<csint> expect_q = inv_permute(q);
+        auto expect_p = inv_permute(p);
+        auto expect_q = inv_permute(q);
 
         auto [p_inv, q_inv, p_diags] = find_tri_permutation(PLQ);
 
@@ -311,8 +311,8 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
     }
 
     SECTION("Find permutation vectors of permuted U") {
-        std::vector<csint> expect_p = inv_permute(p);
-        std::vector<csint> expect_q = inv_permute(q);
+        auto expect_p = inv_permute(p);
+        auto expect_q = inv_permute(q);
 
         // NOTE returns *reversed* vectors for an upper triangular matrix!!
         auto [p_inv, q_inv, p_diags] = find_tri_permutation(PUQ);
@@ -328,60 +328,60 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
     SECTION("Permuted P L x = b, with unknown P") {
         // Create RHS for Lx = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> b = PL * expect_x;
+        const auto b = PL * expect_x;
 
         // Solve PLx = b
-        const std::vector<double> x = lsolve_rows(PL, b);
+        const auto x = lsolve_rows(PL, b);
         check_vectors_allclose(x, expect_x, tol);
     }
 
     SECTION("Permuted L Q x = b, with unknown Q") {
         // Create RHS for Lx = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> b = LQ * expect_x;
+        const auto b = LQ * expect_x;
 
         // Solve L Q.T x = b
-        const std::vector<double> x = lsolve_cols(LQ, b);
+        const auto x = lsolve_cols(LQ, b);
         check_vectors_allclose(x, expect_x, tol);
     }
 
     SECTION("Permuted P U x = b, with unknown P") {
         // Create RHS for Ux = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> b = PU * expect_x;
+        const auto b = PU * expect_x;
 
         // Solve PUx = b
-        const std::vector<double> x = usolve_rows(PU, b);
+        const auto x = usolve_rows(PU, b);
         check_vectors_allclose(x, expect_x, tol);
     }
 
     SECTION("Permuted U Q x = b, with unknown Q") {
         // Create RHS for Ux = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> b = UQ * expect_x;
+        const auto b = UQ * expect_x;
 
         // Solve U Q.T x = b
-        const std::vector<double> x = usolve_cols(UQ, b);
+        const auto x = usolve_cols(UQ, b);
         check_vectors_allclose(x, expect_x, tol);
     }
 
     SECTION("Permuted P L Q x = b, with unknown P and Q") {
         // Create RHS for Lx = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> b = PLQ * expect_x;
+        const auto b = PLQ * expect_x;
 
         // Solve P L Q x = b
-        const std::vector<double> x = tri_solve_perm(PLQ, b);
+        const auto x = tri_solve_perm(PLQ, b);
         check_vectors_allclose(x, expect_x, tol);
     }
 
     SECTION("Permuted P U Q x = b, with unknown P and Q") {
         // Create RHS for Ux = b
         // Set b s.t. x == {1, 2, 3, 4, 5, 6} to see output permutation
-        const std::vector<double> b = PUQ * expect_x;
+        const auto b = PUQ * expect_x;
 
         // Solve P U Q x = b
-        std::vector<double> x = tri_solve_perm(PUQ, b);
+        auto x = tri_solve_perm(PUQ, b);
         check_vectors_allclose(x, expect_x, tol);
     }
 }

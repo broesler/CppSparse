@@ -40,10 +40,10 @@ CSCMatrix davis_example_chol()
     std::vector<double> vals(rows.size(), 1.0);
 
     // Values for the lower triangle
-    CSCMatrix L = COOMatrix{vals, rows, cols, {N, N}}.tocsc();
+    auto L = COOMatrix{vals, rows, cols, {N, N}}.tocsc();
 
     // Create the symmetric matrix A
-    CSCMatrix A = L + L.T();
+    auto A = L + L.T();
 
     // Set the diagonal to ensure positive definiteness
     for (auto i : A.column_range()) {
@@ -115,10 +115,10 @@ CSCMatrix davis_example_amd()
     std::vector<double> vals(rows.size(), 1.0);
 
     // Values for the lower triangle
-    CSCMatrix L = COOMatrix{vals, rows, cols, {N, N}}.tocsc();
+    auto L = COOMatrix{vals, rows, cols, {N, N}}.tocsc();
 
     // Create the symmetric matrix A
-    CSCMatrix A = L + L.T();
+    auto A = L + L.T();
 
     // Set the diagonal to ensure positive definiteness
     for (auto i : A.column_range()) {

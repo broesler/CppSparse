@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
     CSCMatrix A{T};
     std::cout << "A:\n" << A << "\n";
 
-    CSCMatrix AT = A.transpose();
+    auto AT = A.transpose();
     std::cout << "AT:\n" << AT << "\n";
 
     // Create an identity matrix
@@ -48,8 +48,8 @@ int main(int argc, char *argv[]) {
     CSCMatrix Eye{I};
 
     // Do some math
-    CSCMatrix C = A * AT;  // (M, N) * (N, M) = (M, M)
-    CSCMatrix D = C + Eye * C.norm();  // D = C + Eye * norm(C, 1)
+    auto C = A * AT;  // (M, N) * (N, M) = (M, M)
+    auto D = C + Eye * C.norm();  // D = C + Eye * norm(C, 1)
     std::cout << "D:\n" << D << "\n";
 
     return EXIT_SUCCESS;

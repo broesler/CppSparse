@@ -49,7 +49,7 @@ TimePoint tic() { return Clock::now(); }
 
 double toc(TimePoint start_time)
 {
-    TimePoint end_time = Clock::now();
+    auto end_time = Clock::now();
     auto duration = end_time - start_time;
     // Convert to a double
     std::chrono::duration<double> seconds = duration;
@@ -59,7 +59,7 @@ double toc(TimePoint start_time)
 
 CSCMatrix make_sym(const CSCMatrix& A)
 {
-    CSCMatrix AT = A.T();
+    auto AT = A.T();
     // Drop diagonal entries from AT
     AT.fkeep([](csint i, csint j, [[maybe_unused]] double aij) { return i != j; });
     return A + AT;
@@ -69,19 +69,19 @@ CSCMatrix make_sym(const CSCMatrix& A)
 // Get a problem from the input stream
 Problem Problem::from_matrix(const COOMatrix& T, double droptol)
 {
-    CSCMatrix A = T.tocsc();                   // convert to CSC format
+    auto A = T.tocsc();                   // convert to CSC format
     A.sum_duplicates();                        // sum up duplicates
-    csint is_sym = A.is_triangular();          // determine if A is symmetric
+    auto is_sym = A.is_triangular();          // determine if A is symmetric
     auto [M, N] = A.shape();
-    csint nz1 = A.nnz();
+    auto nz1 = A.nnz();
     A.dropzeros();                             // drop zero entries
-    csint nz2 = A.nnz();
+    auto nz2 = A.nnz();
 
     if (droptol > 0) {
         A.droptol(droptol);  // drop tiny entries (just to test)
     }
 
-    CSCMatrix C = is_sym ? make_sym(A) : A;  // C = A + triu(A,1)'
+    auto C = is_sym ? make_sym(A) : A;  // C = A + triu(A,1)'
 
     // Print title
     std::cout << std::format(
@@ -121,8 +121,8 @@ double residual_norm(
 {
     resid = A * x - b;
     constexpr double inf = std::numeric_limits<double>::infinity();
-    double norm_resid = norm(resid, inf);
-    double norm_denom = A.norm() * norm(x, inf) + norm(b, inf);
+    auto norm_resid = norm(resid, inf);
+    auto norm_denom = A.norm() * norm(x, inf) + norm(b, inf);
     return norm_resid / norm_denom;
 }
 

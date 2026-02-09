@@ -35,10 +35,10 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    Problem prob = Problem::from_matrix(T, 1e-14);
+    auto prob = Problem::from_matrix(T, 1e-14);
 
     auto [M, N] = prob.A.shape();
-    AMDOrder order = AMDOrder::APlusAT;  // AMD ordering for Cholesky
+    auto order = AMDOrder::APlusAT;  // AMD ordering for Cholesky
 
     if (!prob.is_sym) {
         std::cerr << "Matrix is not symmetric." << std::endl;
@@ -49,25 +49,25 @@ int main(int argc, char* argv[])
 
     // Symbolic Cholesky
     auto t = tic();
-    SymbolicChol S = schol(prob.C, order);
+    auto S = schol(prob.C, order);
     std::cout << std::format("symbolic chol time: {:8.2e}\n", toc(t));
 
     // Numeric Cholesky
     t = tic();
-    CSCMatrix L = chol(prob.C, S).L;
+    auto L = chol(prob.C, S).L;
     std::cout << std::format("numeric  chol time: {:8.2e}\n", toc(t));
 
     // Solve Ax = b part by part
     t = tic();
 
-    std::vector<double> Pb = ipvec(S.p_inv, prob.b);  // P*b
-    std::vector<double> y = lsolve(L, Pb);            // y = L \ Pb
-    std::vector<double> PTx = ltsolve(L, y);          // P^T x = L^T \ y
+    auto Pb = ipvec(S.p_inv, prob.b);  // P*b
+    auto y = lsolve(L, Pb);            // y = L \ Pb
+    auto PTx = ltsolve(L, y);          // P^T x = L^T \ y
     prob.x = pvec(S.p_inv, PTx);                      // x = P P^T x
 
     std::cout << std::format("solve    chol time: {:8.2e}\n", toc(t));
     std::cout << "original: ";
-    double resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
+    auto resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
     std::cout << std::format("residual: {:8.2e}", resid) << std::endl;
 
     // Construct W: W has the pattern of L[k:, k],
@@ -76,8 +76,8 @@ int main(int argc, char* argv[])
     double s = L(k, k);  // scale by the diagonal entry
 
     // Get the column indices of L
-    csint p0 = L.indptr()[k];    // index reference for W
-    csint p1 = L.indptr()[k+1];  // index reference for W
+    auto p0 = L.indptr()[k];    // index reference for W
+    auto p1 = L.indptr()[k+1];  // index reference for W
 
     std::vector<csint> W_rows(L.indices().begin() + p0, L.indices().begin() + p1);
 
@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
     std::vector<csint> W_cols(W_rows.size());  // all zeros for column vector
 
     // Construct the sparse vector
-    CSCMatrix W = COOMatrix{W_vals, W_rows, W_cols, {N, 1}}.tocsc();
+    auto W = COOMatrix{W_vals, W_rows, W_cols, {N, 1}}.tocsc();
 
     // Perform the update
     t = tic();
@@ -110,8 +110,8 @@ int main(int argc, char* argv[])
     std::cout << std::format("update:   time: {:8.2e} (incl solve) ", toc(t) + t1);
 
     // Check: E = C + (P'W)*(P'W)'
-    CSCMatrix PTW = W.permute_rows(inv_permute(S.p_inv));
-    CSCMatrix E = prob.C + PTW * PTW.T();
+    auto PTW = W.permute_rows(inv_permute(S.p_inv));
+    auto E = prob.C + PTW * PTW.T();
 
     resid = residual_norm(E, prob.x, prob.b, prob.resid);
     std::cout << std::format("residual: {:8.2e}", resid) << std::endl;

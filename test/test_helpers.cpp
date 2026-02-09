@@ -62,8 +62,8 @@ void check_noncanonical_allclose(
         for (auto i : A.row_range()) {
             for (auto j : A.column_range()) {
                 // Capture the values for comparison on failure
-                double A_val = A(i, j);
-                double expect_val = expect(i, j);
+                auto A_val = A(i, j);
+                auto expect_val = expect(i, j);
                 CAPTURE(i, j, A_val, expect_val);
                 REQUIRE_THAT(A_val, WithinAbs(expect_val, tol));
             }

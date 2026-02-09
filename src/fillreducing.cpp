@@ -74,7 +74,7 @@ CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense)
 
     auto [M, N] = A.shape();
     bool values = false;  // symbolic transposes
-    CSCMatrix AT = A.transpose(values);
+    auto AT = A.transpose(values);
 
     switch (order) {
         case AMDOrder::Natural:
@@ -93,7 +93,7 @@ CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense)
             csint q = 0;
 
             for (auto j : AT.column_range()) {
-                csint p = AT.p_[j];  // column j of AT starts here
+                auto p = AT.p_[j];  // column j of AT starts here
                 AT.p_[j] = q;        // new column j starts here
 
                 if (AT.p_[j+1] - p > dense) {
@@ -145,10 +145,10 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
     dense = std::min(N - 2, dense);
 
     // Create the working matrix, subsequent operations are done in-place
-    CSCMatrix C = build_graph(A, order, dense);
+    auto C = build_graph(A, order, dense);
 
     // Allocate elbow room for C
-    csint cnz = C.nnz();
+    auto cnz = C.nnz();
     csint t = cnz + cnz / 5 + 2 * N;
     C.realloc(t);
 
@@ -171,7 +171,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
                        degree{len} ;    // degree of node i
 
     csint lemax = 0;
-    csint mark = wclear(0, 0, w, N);  // clear w
+    auto mark = wclear(0, 0, w, N);  // clear w
     elen[N] = -2;  // N is a dead element
     C.p_[N] = -1;  // N is a root of assembly tree
     w[N] = 0;      // N is a dead element
@@ -180,7 +180,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
     csint nel = 0;  // number of empty nodes
 
     for (auto i : C.column_range()) {
-        csint d = degree[i];
+        auto d = degree[i];
         if (d == 0) {
             elen[i] = -2;  // node i is empty
             ++nel;
@@ -220,14 +220,14 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
         }
 
         head[mindeg] = next[k];  // remove k from degree list
-        csint elenk = elen[k];   // elenk = |Ek|
-        csint nvk = nv[k];       // # of nodes k represents
+        auto elenk = elen[k];   // elenk = |Ek|
+        auto nvk = nv[k];       // # of nodes k represents
         nel += nvk;              // nv[k] nodes of A eliminated
 
         // --- Garbage collection ----------------------------------------------
         if (elenk > 0 && cnz + mindeg >= C.nzmax()) {
             for (auto j : C.column_range()) {
-                csint p = C.p_[j];
+                auto p = C.p_[j];
                 if (p >= 0) {           // j is a live node or element
                     C.p_[j] = C.i_[p];  // save first entry of object
                     C.i_[p] = flip(j);  // first entry is now flip(j)
@@ -237,7 +237,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
             csint p = 0,
                   q = 0;
             while (p < cnz) {               // scan all of memory
-                csint j = flip(C.i_[p++]);  // found object j
+                auto j = flip(C.i_[p++]);  // found object j
                 if (j >= 0) {
                     C.i_[q] = C.p_[j];      // restore first entry of object
                     C.p_[j] = q++;          // new pointer to object j
@@ -253,9 +253,9 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
         // --- Construct new element -------------------------------------------
         csint dk = 0;
         nv[k] = -nvk;  // flag k as in Lk
-        csint p = C.p_[k];
-        csint pk1 = (elenk == 0) ? p : cnz;  // do in place if elen[k] == 0
-        csint pk2 = pk1;
+        auto p = C.p_[k];
+        auto pk1 = (elenk == 0) ? p : cnz;  // do in place if elen[k] == 0
+        auto pk2 = pk1;
 
         for (csint k1 = 1; k1 <= elenk + 1; ++k1) {
             csint e, pj, ln;
@@ -271,8 +271,8 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
             }
             
             for (csint k2 = 1; k2 <= ln; ++k2) {
-                csint i = C.i_[pj++];
-                csint nvi = nv[i];
+                auto i = C.i_[pj++];
+                auto nvi = nv[i];
                 if (nvi <= 0) {
                     continue;                 // node i dead, or seen
                 }
@@ -310,15 +310,15 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
         mark = wclear(mark, lemax, w, N);  // clear w if necessary
 
         for (csint pk = pk1; pk < pk2; ++pk) {   // scan 1 : find |Le \ Lk|
-            csint i = C.i_[pk];
-            csint eln = elen[i];
+            auto i = C.i_[pk];
+            auto eln = elen[i];
             if (eln <= 0) {
                 continue;                 // skip if elen[i] empty
             }
             csint nvi = -nv[i];          // nv[i] was negated
             csint wnvi = mark - nvi;
             for (csint p = C.p_[i]; p <= C.p_[i] + eln - 1; ++p) {  // scan Ei
-                csint e = C.i_[p];
+                auto e = C.i_[p];
                 if (w[e] >= mark) {
                     w[e] -= nvi;              // decrement |Le \ Lk|
                 } else if (w[e] != 0) {       // ensure e is a live element
@@ -329,15 +329,15 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
 
         // --- Degree Update ---------------------------------------------------
         for (csint pk = pk1; pk < pk2; ++pk) {  // scan2: degree update
-            csint i = C.i_[pk];
-            csint p1 = C.p_[i];
+            auto i = C.i_[pk];
+            auto p1 = C.p_[i];
             csint p2 = p1 + elen[i] - 1;
-            csint pn = p1;
+            auto pn = p1;
 
             csint h = 0;
             csint d = 0;
             for (csint p = p1; p <= p2; ++p) {  // scan Ei
-                csint e = C.i_[p];
+                auto e = C.i_[p];
                 if (w[e] != 0) {  // e is an unabsorbed element
                     csint dext = w[e] - mark;  // dext = |Le \ Lk|
                     if (dext > 0) {
@@ -352,12 +352,12 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
             }
 
             elen[i] = pn - p1 + 1;  // elen[i] = |Ei|
-            csint p3 = pn;
+            auto p3 = pn;
             csint p4 = p1 + len[i];
 
             for (csint p = p2 + 1; p < p4; ++p) {  // prune edges in Ai
-                csint j = C.i_[p];
-                csint nvj = nv[j];
+                auto j = C.i_[p];
+                auto nvj = nv[j];
                 if (nvj <= 0) {
                     continue;    // node j dead or in Lk
                 }
@@ -393,26 +393,26 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
 
         // --- Supernode detection ---------------------------------------------
         for (csint pk = pk1; pk < pk2; ++pk) {
-            csint i = C.i_[pk];
+            auto i = C.i_[pk];
             if (nv[i] >= 0) {
                 continue;  // skip if i is dead
             }
-            csint h = last[i];  // scan hash bucket of node i
+            auto h = last[i];  // scan hash bucket of node i
             i = hhead[h];
             hhead[h] = -1;  // hash bucket will be empty
             while (i != -1 && next[i] != -1) {
-                csint ln = len[i];
-                csint eln = elen[i];
+                auto ln = len[i];
+                auto eln = elen[i];
 
                 for (csint p = C.p_[i] + 1; p <= C.p_[i] + ln - 1; ++p) {
                     w[C.i_[p]] = mark;  // mark the nodes in i
                 }
 
-                csint jlast = i;
-                csint j = next[i];
+                auto jlast = i;
+                auto j = next[i];
 
                 while (j != -1) {  // compare i with all j
-                    bool ok = (len[j] == ln) && (elen[j] == eln);
+                    auto ok = (len[j] == ln) && (elen[j] == eln);
 
                     for (csint p = C.p_[j] + 1; ok && p <= C.p_[j] + ln - 1; ++p) {
                         if (w[C.i_[p]] != mark) {
@@ -441,7 +441,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
         // --- Finalize new element -------------------------------------------
         p = pk1;
         for (csint pk = pk1; pk < pk2; ++pk) {  // finalize Lk
-            csint i = C.i_[pk];
+            auto i = C.i_[pk];
             csint nvi = -nv[i];
             if (nvi <= 0) {
                 continue;                    // skip if i is dead
@@ -530,7 +530,7 @@ void augment(
 
     while (head >= 0) {
         // --- Start (or continue) depth-first-search at node j ----------------
-        csint j = js[head];      // get j from top of jstack
+        auto j = js[head];      // get j from top of jstack
         if (w[j] != k) {         // 1st time j visited for kth path
             w[j] = k;            // mark j as visited for kth path
             csint i = -1;
@@ -557,7 +557,7 @@ void augment(
         // --- Depth-first-search of neighbors of j ----------------------------
         csint p;
         for (p = ps[head]; p < A.p_[j+1]; ++p) {
-            csint i = A.i_[p];        // consider row i
+            auto i = A.i_[p];        // consider row i
             if (w[jmatch[i]] == k) {
                 continue;             // skip jmatch [i] if marked
             }
@@ -681,10 +681,10 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
         return jimatch;
     }
 
-    csint m2 = std::accumulate(w.cbegin(), w.cend(), 0);  // count non-empty rows
+    auto m2 = std::accumulate(w.cbegin(), w.cend(), 0);  // count non-empty rows
 
     // transpose if needed
-    const CSCMatrix C = (m2 < n2) ? A.transpose(false) : A;
+    const auto C = (m2 < n2) ? A.transpose(false) : A;
     std::tie(M, N) = C.shape();
 
     // If we transposed, we need to swap the imatch and jmatch vectors
@@ -701,7 +701,7 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
                        ps(N);              // pause stack for DFS in augment
 
     // randperm can help with worst-case behavior O(|A|N), see Davis, p 118.
-    std::vector<csint> q = randperm(N, seed);  // random permutation of columns
+    auto q = randperm(N, seed);  // random permutation of columns
 
     // augment the path, starting at column q[k]
     for (auto k : C.column_range()) {
@@ -732,7 +732,7 @@ SCCResult scc(const CSCMatrix& A)
 
     SCCResult D(M);  // allocate result
 
-    const CSCMatrix AT = A.transpose(false);  // symbolic transpose
+    const auto AT = A.transpose(false);  // symbolic transpose
 
     std::vector<char> marked(N, false);  // mark visited nodes
     std::vector<csint> xi, pstack, rstack;  // stacks for DFS
@@ -776,7 +776,7 @@ SCCResult scc(const CSCMatrix& A)
     }
 
     // Sort the indices of each block
-    std::vector<csint> rcopy = D.r;  // pointers to start of blocks
+    auto rcopy = D.r;  // pointers to start of blocks
     for (auto i : A.column_range()) {
         D.p[rcopy[Blk[i]]++] = i;
     }
@@ -813,11 +813,11 @@ void bfs(
         return;  // no unmatched nodes
     }
 
-    const CSCMatrix& C = (mark == 1) ? A : A.transpose(false);
+    const auto& C = (mark == 1) ? A : A.transpose(false);
 
     // BFS loop
     while (head < tail) {
-        csint j = queue[head++];  // get j from front of queue
+        auto j = queue[head++];  // get j from front of queue
 
         for (auto i : C.row_indices(j)) {
             if (wi[i] >= 0) {
@@ -825,7 +825,7 @@ void bfs(
             }
 
             wi[i] = mark;          // i in set R1 (C3 if transpose)
-            csint j2 = jmatch[i];  // transverse alternating path to j2
+            auto j2 = jmatch[i];  // transverse alternating path to j2
 
             if (wj[j2] >= 0) {
                 continue;          // skip if j2 is marked
@@ -852,7 +852,7 @@ static void matched(
     csint mark
 )
 {
-    csint kc = cc[set],
+    auto kc = cc[set],
           kr = rr[set-1];
     for (csint j = 0; j < N; ++j) {
         if (wj[j] == mark) {  // skip if j is not in C set
@@ -873,7 +873,7 @@ static void unmatched(
     csint set
 )
 {
-    csint kr = rr[set];
+    auto kr = rr[set];
     for (csint i = 0; i < M; ++i) {
         if (wi[i] == 0) {
             p[kr++] = i;
@@ -923,10 +923,10 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
     unmatched(M, wi, D.p, D.rr, 3);  // unmatched set R0
 
     // --- Fine decomposition --------------------------------------------------
-    std::vector<csint> p_inv = inv_permute(D.p);
+    auto p_inv = inv_permute(D.p);
 
     // C = A(p, q) will hold A(R2, C2)
-    CSCMatrix C = A.permute(p_inv, D.q, false);
+    auto C = A.permute(p_inv, D.q, false);
 
     // delete cols C0, C1, and C3 from C
     csint nc = D.cc[3] - D.cc[2];
@@ -947,7 +947,7 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
             }
         );
 
-        csint cnz = C.p_[nc];
+        auto cnz = C.p_[nc];
 
         if (D.rr[1] > 0) {
             for (csint k = 0; k < cnz; ++k) {
@@ -959,7 +959,7 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
     C.M_ = nc;  // update rows
 
     // Find strongly connected components
-    SCCResult strong_cc = scc(C);
+    auto strong_cc = scc(C);
 
     // --- Combine coarse and fine decompositions ------------------------------
     // C(scc.p, scc.p) is the permuted matrix
@@ -971,7 +971,7 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
     gather_scatter(D.p, wi, ps, nc, D.rr[1]);
 
     // Create the fine block partitions
-    csint nb1 = strong_cc.Nb;
+    auto nb1 = strong_cc.Nb;
     csint nb2 = 0;
 
     D.r[0] = 0;

@@ -42,7 +42,7 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
     };
 
     SECTION("A non-square matrix.") {
-        CSCMatrix A = COOMatrix{
+        auto A = COOMatrix{
             std::vector<double> {1, 1, 2},
             std::vector<csint>  {0, 1, 2},
             std::vector<csint>  {0, 1, 1}
@@ -59,7 +59,7 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
     }
 
     SECTION("A symmetric (diagonal) matrix.") {
-        CSCMatrix A = COOMatrix{
+        auto A = COOMatrix{
             std::vector<double> {1, 2, 3},
             std::vector<csint>  {0, 1, 2},
             std::vector<csint>  {0, 1, 2}
@@ -77,8 +77,8 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
     }
 
     SECTION("An arbitrary non-symmetric matrix.") {
-        COOMatrix Ac = davis_example_small();
-        CSCMatrix A = Ac.compress();
+        auto Ac = davis_example_small();
+        auto A = Ac.compress();
 
         std::vector<double> x{1, 2, 3, 4};
         std::vector<double> y{1, 1, 1, 1};
@@ -99,7 +99,7 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
         std::vector<csint>  i{  0,   1,   3,   0,   1,   2,   1,   2,   0,   3};
         std::vector<csint>  j{  0,   0,   0,   1,   1,   1,   2,   2,   3,   3};
         std::vector<double> v{4.5, 3.1, 3.5, 3.1, 2.9, 1.7, 1.7, 3.0, 3.5, 1.0};
-        CSCMatrix A = COOMatrix{v, i, j}.compress();
+        auto A = COOMatrix{v, i, j}.compress();
 
         std::vector<double> x{1, 2, 3, 4};
         std::vector<double> y{1, 1, 1, 1};
@@ -114,7 +114,7 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
 
 TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
 {
-    CSCMatrix A = davis_example_small().compress();
+    auto A = davis_example_small().compress();
 
     SECTION("Identity op") {
         std::vector<double> I{
@@ -126,14 +126,14 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
 
         std::vector<double> Z(16, 0);
 
-        CSCMatrix expect = A;
+        auto expect = A;
 
         check_sparse_allclose(CSCMatrix{gaxpy_col(A, I, Z), {4, 4}}, expect);
         check_sparse_allclose(CSCMatrix{gatxpy_col(A.T(), I, Z), {4, 4}}, expect);
     }
 
     SECTION("Arbitrary square matrix in column-major format") {
-        std::vector<double> A_dense = A.to_dense_vector();
+        auto A_dense = A.to_dense_vector();
 
         // A.T @ A + A in column-major format
         std::vector<double> expect{
@@ -143,10 +143,10 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
              6.29,  3.91,  0.0 ,  2.81
         };
 
-        std::vector<double> C_col = gaxpy_col(A.T(), A_dense, A_dense);
-        std::vector<double> C_block = gaxpy_block(A.T(), A_dense, A_dense);
-        std::vector<double> CT_col = gatxpy_col(A, A_dense, A_dense);
-        std::vector<double> CT_block = gatxpy_block(A, A_dense, A_dense);
+        auto C_col = gaxpy_col(A.T(), A_dense, A_dense);
+        auto C_block = gaxpy_block(A.T(), A_dense, A_dense);
+        auto CT_col = gatxpy_col(A, A_dense, A_dense);
+        auto CT_block = gatxpy_block(A, A_dense, A_dense);
 
         check_vectors_allclose(C_col, expect, tol);
         check_vectors_allclose(C_block, expect, tol);
@@ -155,7 +155,7 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
     }
 
     SECTION("Arbitrary square matrix in row-major format") {
-        std::vector<double> A_dense = A.to_dense_vector(DenseOrder::RowMajor);
+        auto A_dense = A.to_dense_vector(DenseOrder::RowMajor);
 
         // A.T @ A + A in row-major format
         std::vector<double> expect{
@@ -165,17 +165,17 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
              9.79,  3.41,  0.0 ,  2.81
         };
 
-        std::vector<double> C = gaxpy_row(A.T(), A_dense, A_dense);
-        std::vector<double> CT = gatxpy_row(A, A_dense, A_dense);
+        auto C = gaxpy_row(A.T(), A_dense, A_dense);
+        auto CT = gatxpy_row(A, A_dense, A_dense);
 
         check_vectors_allclose(C, expect, tol);
         check_vectors_allclose(CT, expect, tol);
     }
 
     SECTION("Non-square matrix in column-major format.") {
-        CSCMatrix Ab = A.slice(0, 4, 0, 3);  // {4, 3}
-        std::vector<double> Ac_dense = A.slice(0, 3, 0, 4).to_dense_vector();
-        std::vector<double> A_dense = A.to_dense_vector();
+        auto Ab = A.slice(0, 4, 0, 3);  // {4, 3}
+        auto Ac_dense = A.slice(0, 3, 0, 4).to_dense_vector();
+        auto A_dense = A.to_dense_vector();
 
         // Ab @ Ac + A in column-major format
         std::vector<double> expect{
@@ -192,9 +192,9 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
     }
 
     SECTION("Non-square matrix in row-major format.") {
-        CSCMatrix Ab = A.slice(0, 4, 0, 3);  // {4, 3}
-        std::vector<double> Ac_dense = A.slice(0, 3, 0, 4).to_dense_vector(DenseOrder::RowMajor);
-        std::vector<double> A_dense = A.to_dense_vector(DenseOrder::RowMajor);
+        auto Ab = A.slice(0, 4, 0, 3);  // {4, 3}
+        auto Ac_dense = A.slice(0, 3, 0, 4).to_dense_vector(DenseOrder::RowMajor);
+        auto A_dense = A.to_dense_vector(DenseOrder::RowMajor);
 
         // Ab @ Ac + A in row-major format
         std::vector<double> expect{
@@ -214,15 +214,15 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
 {
     SECTION("Square matrices") {
         // Build matrices with sorted columns
-        CSCMatrix E = E_mat();
-        CSCMatrix A = A_mat();
+        auto E = E_mat();
+        auto A = A_mat();
 
         // See: Strang, p 25
         // EA = [[ 2, 1, 1],
         //       [ 0,-8,-2],
         //       [-2, 7, 2]]
 
-        CSCMatrix expect = COOMatrix{
+        auto expect = COOMatrix{
             std::vector<double> {2, -2, 1, -8, 7, 1, -2, 2},  // vals
             std::vector<csint>  {0,  2, 0,  1, 2, 0,  1, 2},  // rows
             std::vector<csint>  {0,  0, 1,  1, 1, 2,  2, 2}   // cols
@@ -247,12 +247,12 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
         };
 
         SECTION("CSCMatrix::dot (aka cs_multiply)") {
-            CSCMatrix C = E * A;
+            auto C = E * A;
             multiply_test(C, E, A, expect);
         }
 
         SECTION("Dot_2x two-pass multiply") {
-            CSCMatrix C = E.dot_2x(A);
+            auto C = E.dot_2x(A);
             multiply_test(C, E, A, expect);
         }
     }
@@ -273,26 +273,26 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
         // array([[ 70,  80,  90],
         //        [158, 184, 210]])
 
-        CSCMatrix A = COOMatrix{
+        auto A = COOMatrix{
             std::vector<double> {1, 2, 3, 4, 5, 6, 7, 8},  // vals
             std::vector<csint>  {0, 0, 0, 0, 1, 1, 1, 1},  // rows
             std::vector<csint>  {0, 1, 2, 3, 0, 1, 2, 3}   // cols
         }.compress();
 
-        CSCMatrix B = COOMatrix{
+        auto B = COOMatrix{
             std::vector<double> {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12},  // vals
             std::vector<csint>  {0, 0, 0, 1, 1, 1, 2, 2, 2,  3,  3,  3},  // rows
             std::vector<csint>  {0, 1, 2, 0, 1, 2, 0, 1, 2,  0,  1,  2}   // cols
         }.compress();
 
-        CSCMatrix expect = COOMatrix{
+        auto expect = COOMatrix{
             std::vector<double> {70, 80, 90, 158, 184, 210},  // vals
             std::vector<csint>  { 0,  0,  0,   1,   1,   1},  // rows
             std::vector<csint>  { 0,  1,  2,   0,   1,   2}   // cols
         }.compress();
 
         SECTION("M < N") {
-            CSCMatrix C = A * B;
+            auto C = A * B;
             auto [M, N] = C.shape();
 
             REQUIRE(M == A.shape()[0]);
@@ -302,7 +302,7 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
         }
 
         SECTION("M > N") {
-            CSCMatrix CT = B.T() * A.T();
+            auto CT = B.T() * A.T();
             auto [N, M] = CT.shape();
 
             REQUIRE(M == A.shape()[0]);
@@ -313,26 +313,26 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
     }
 
     SECTION("Symbolic Multiply") {
-        CSCMatrix A = COOMatrix{
+        auto A = COOMatrix{
             std::vector<double> {},  // vals
             std::vector<csint>  {0, 0, 0, 0, 1, 1, 1, 1},  // rows
             std::vector<csint>  {0, 1, 2, 3, 0, 1, 2, 3}   // cols
         }.tocsc();
 
-        CSCMatrix B = COOMatrix{
+        auto B = COOMatrix{
             std::vector<double> {},  // vals
             std::vector<csint>  {0, 0, 0, 1, 1, 1, 2, 2, 2,  3,  3,  3},  // rows
             std::vector<csint>  {0, 1, 2, 0, 1, 2, 0, 1, 2,  0,  1,  2}   // cols
         }.tocsc();
 
-        CSCMatrix expect = COOMatrix{
+        auto expect = COOMatrix{
             std::vector<double> {},  // vals
             std::vector<csint>  { 0,  0,  0,   1,   1,   1},  // rows
             std::vector<csint>  { 0,  1,  2,   0,   1,   2}   // cols
         }.tocsc();
 
         // M < N
-        CSCMatrix C = A * B;
+        auto C = A * B;
         auto [M, N] = C.shape();
 
         REQUIRE(M == A.shape()[0]);
@@ -345,13 +345,13 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
 TEST_CASE("Exercise 2.18: Sparse Vector-Vector Multiply", "[ex2.18][math]")
 {
     // Sparse column vectors *without* sorting columns.
-    CSCMatrix x = COOMatrix{
+    auto x = COOMatrix{
         std::vector<double> {4.5, 3.1, 3.5, 2.9, 1.7, 0.4},
         std::vector<csint>  {0, 1, 3, 5, 6, 7},
         std::vector<csint>  (6, 0)
     }.compress();
 
-    CSCMatrix y = COOMatrix{
+    auto y = COOMatrix{
         std::vector<double> {3.2, 3.0, 0.9, 1.0},
         std::vector<csint>  {0, 2, 5, 7},
         std::vector<csint>  (4, 0)
@@ -379,18 +379,18 @@ TEST_CASE("Scale a sparse matrix by a constant", "[math][scale]")
     std::vector<csint> i{{0, 0, 0, 1, 1, 1}};  // rows
     std::vector<csint> j{{0, 1, 2, 0, 1, 2}};  // cols
 
-    CSCMatrix A = COOMatrix{
+    auto A = COOMatrix{
         std::vector<double> {1, 2, 3, 4, 5, 6},
         i, j
     }.compress();
 
-    CSCMatrix expect = COOMatrix{
+    auto expect = COOMatrix{
         std::vector<double> {0.1, 0.2, 0.3, 0.4, 0.5, 0.6},
         i, j
     }.compress();
 
     // Operator overloading
-    CSCMatrix C = 0.1 * A;
+    auto C = 0.1 * A;
 
     check_noncanonical_allclose(C, expect);
 }
@@ -398,7 +398,7 @@ TEST_CASE("Scale a sparse matrix by a constant", "[math][scale]")
 
 TEST_CASE("Exercise 2.4: Scale rows and columns", "[ex2.4][math][scale]")
 {
-    CSCMatrix A = davis_example_small().compress();
+    auto A = davis_example_small().compress();
 
     // Diagonals of R and C to compute RAC
     std::vector<double> r{1, 2, 3, 4},
@@ -412,9 +412,9 @@ TEST_CASE("Exercise 2.4: Scale rows and columns", "[ex2.4][math][scale]")
     std::vector<csint> expect_i{0, 1, 3, 1, 2, 3, 0, 2, 1, 3};
     std::vector<csint> expect_j{0, 0, 0, 1, 1, 1, 2, 2, 3, 3};
     std::vector<double> expect_v{4.5, 6.2, 14.0, 2.9, 2.55, 0.8, 0.8, 2.25, 0.225, 0.5};
-    CSCMatrix expect_RAC = COOMatrix{expect_v, expect_i, expect_j}.compress();
+    auto expect_RAC = COOMatrix{expect_v, expect_i, expect_j}.compress();
 
-    CSCMatrix RAC = A.scale(r, c);
+    auto RAC = A.scale(r, c);
 
     check_noncanonical_allclose(RAC, expect_RAC);
 }
@@ -440,30 +440,30 @@ TEST_CASE("Matrix-matrix addition.", "[math][add_scaled]")
     std::vector<csint> i{{0, 0, 0, 1, 1, 1}};  // rows
     std::vector<csint> j{{0, 1, 2, 0, 1, 2}};  // cols
 
-    CSCMatrix A = COOMatrix{
+    auto A = COOMatrix{
         std::vector<double> {1, 2, 3, 4, 5, 6},
         i, j
     }.compress();
 
-    CSCMatrix B = COOMatrix{
+    auto B = COOMatrix{
         std::vector<double> {1, 1, 1, 1, 1, 1},
         i, j
     }.compress();
 
     SECTION("Addition") {
-        CSCMatrix expect = COOMatrix{
+        auto expect = COOMatrix{
             std::vector<double> {9.1, 9.2, 9.3, 9.4, 9.5, 9.6},
             i, j
         }.compress();
 
         // Function definition
-        CSCMatrix Cf = add_scaled(A, B, 0.1, 9.0);
+        auto Cf = add_scaled(A, B, 0.1, 9.0);
 
         // Operator overloading
-        CSCMatrix C = 0.1 * A + 9.0 * B;
+        auto C = 0.1 * A + 9.0 * B;
         
         // Add method
-        CSCMatrix Cm = (0.1 * A).add(9.0 * B);
+        auto Cm = (0.1 * A).add(9.0 * B);
 
         check_sparse_allclose(C, expect);
         check_sparse_allclose(Cf, expect);
@@ -471,26 +471,26 @@ TEST_CASE("Matrix-matrix addition.", "[math][add_scaled]")
     }
 
     SECTION("Subtraction") {
-        CSCMatrix expect = COOMatrix{
+        auto expect = COOMatrix{
             std::vector<double> {0, 1, 2, 3, 4, 5},
             i, j
         }.compress();
 
         // Function definition
-        CSCMatrix Cf = add_scaled(A, B, 1.0, -1.0);
+        auto Cf = add_scaled(A, B, 1.0, -1.0);
 
         // Operator overloading
-        CSCMatrix C = A - B;
+        auto C = A - B;
 
         check_sparse_allclose(C, expect);
         check_sparse_allclose(Cf, expect);
     }
 
     SECTION("Symbolic Addition") {
-        CSCMatrix As = COOMatrix{std::vector<double> {}, i, j}.tocsc();
-        CSCMatrix expect = COOMatrix{std::vector<double> {}, i, j}.tocsc();
+        auto As = COOMatrix{std::vector<double> {}, i, j}.tocsc();
+        auto expect = COOMatrix{std::vector<double> {}, i, j}.tocsc();
 
-        CSCMatrix Cs = add_scaled(As, B, 1.0, 1.0);
+        auto Cs = add_scaled(As, B, 1.0, 1.0);
 
         check_sparse_allclose(Cs, expect, false);  // don't compare values
     }
@@ -499,19 +499,19 @@ TEST_CASE("Matrix-matrix addition.", "[math][add_scaled]")
 
 TEST_CASE("Add sparse column vectors", "[math][add_scaled]")
 {
-    CSCMatrix a = COOMatrix{
+    auto a = COOMatrix{
         std::vector<double> {4.5, 3.1, 3.5, 2.9, 0.4},
         std::vector<csint>  {0, 1, 3, 5, 7},
         std::vector<csint>  (5, 0)
     }.tocsc();
 
-    CSCMatrix b = COOMatrix{
+    auto b = COOMatrix{
         std::vector<double> {3.2, 3.0, 0.9, 1.0},
         std::vector<csint>  {0, 2, 5, 7},
         std::vector<csint>  (4, 0)
     }.tocsc();
 
-    CSCMatrix expect = COOMatrix{
+    auto expect = COOMatrix{
         std::vector<double> {7.7, 3.1, 3.0, 3.5, 3.8, 1.4},
         std::vector<csint>  {0, 1, 2, 3, 5, 7},
         std::vector<csint>  (6, 0)
@@ -520,7 +520,7 @@ TEST_CASE("Add sparse column vectors", "[math][add_scaled]")
     auto [M, N] = a.shape();
 
     SECTION("Operator") {
-        CSCMatrix C = a + b;
+        auto C = a + b;
         REQUIRE(C.shape() == a.shape());
         check_noncanonical_allclose(C, expect);
     }
@@ -544,7 +544,7 @@ TEST_CASE("Add sparse column vectors", "[math][add_scaled]")
 
 TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
 {
-    CSCMatrix A = davis_example_small().tocsc();
+    auto A = davis_example_small().tocsc();
 
     SECTION("M < N, N > K") {
         A = A.slice(0, 3, 0, 4);  // 3 x 4
@@ -559,7 +559,7 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
             28.2, 25. , 24.8
         };  // 3 x 2 in column-major format
 
-        std::vector<double> C = A * X;
+        auto C = A * X;
 
         check_vectors_allclose(C, expect, tol);
     }
@@ -583,7 +583,7 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
             70.5, 62.5, 62.0
         };  // 3 x 5 in column-major format
 
-        std::vector<double> C = A * X;
+        auto C = A * X;
 
         check_vectors_allclose(C, expect, tol);
     }
@@ -607,7 +607,7 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
             70.5, 44.5, 62.0, 21.5
         };  // 4 x 5 in column-major format
 
-        std::vector<double> C = A * X;
+        auto C = A * X;
 
         check_vectors_allclose(C, expect, tol);
     }
@@ -625,7 +625,7 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
             28.2, 17.8, 24.8,  8.6,
         };  // 4 x 2 in column-major format
 
-        std::vector<double> C = A * X;
+        auto C = A * X;
 
         check_vectors_allclose(C, expect, tol);
     }

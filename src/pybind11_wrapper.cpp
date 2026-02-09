@@ -720,7 +720,7 @@ PYBIND11_MODULE(csparse, m)
                     const char order_
                 ) {
                     auto order = denseorder_from_char(order_);
-                    return cs::CSCMatrix(A, shape, order);
+                    return cs::CSCMatrix{A, shape, order};
                 }
             ),
             py::arg("A"),
@@ -1777,8 +1777,8 @@ PYBIND11_MODULE(csparse, m)
             const py::object& C_scipy,
             const std::vector<cs::csint>& parent
         ) {
-            cs::CSCMatrix L = csc_from_scipy(L_scipy);
-            const cs::CSCMatrix C = csc_from_scipy(C_scipy);
+            auto L = csc_from_scipy(L_scipy);
+            const auto C = csc_from_scipy(C_scipy);
             return scipy_from_csc(cs::chol_update(L, update, C, parent));
         },
         py::arg("L"),
@@ -1970,7 +1970,7 @@ PYBIND11_MODULE(csparse, m)
 
     m.def("maxtrans",
         [] (const py::object& A_scipy, cs::csint seed=0) {
-            const cs::CSCMatrix A = csc_from_scipy(A_scipy);
+            const auto A = csc_from_scipy(A_scipy);
             return cs::maxtrans(A, seed);
         },
         py::arg("A"),

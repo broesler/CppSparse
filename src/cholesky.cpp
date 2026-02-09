@@ -532,7 +532,7 @@ SymbolicChol schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S)
 {
     auto [M, N] = A.shape();
-    CSCMatrix L({M, N}, S.lnz);        // allocate result
+    CSCMatrix L{{M, N}, S.lnz};        // allocate result
 
     std::vector<csint> c(S.cp);      // column pointers for L
 
@@ -562,7 +562,7 @@ CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S)
 CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
 {
     auto [M, N] = A.shape();
-    CSCMatrix L({M, N}, S.lnz);  // allocate result
+    CSCMatrix L{{M, N}, S.lnz};  // allocate result
 
     // Workspaces
     std::vector<csint> c(S.cp);  // column pointers for L
@@ -978,7 +978,7 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
         throw std::runtime_error("drop_tol must be non-negative!");
     }
 
-    CSCMatrix L({M, N}, S.lnz);  // allocate result
+    CSCMatrix L{{M, N}, S.lnz};  // allocate result
 
     // Workspaces
     std::vector<csint> c(S.cp);  // column pointers for L

@@ -83,7 +83,7 @@ CSCMatrix davis_example_qr(double add_diag, bool random_vals)
         std::fill(vals.begin() + (N - 1), vals.end(), 1.0);
     }
 
-    COOMatrix A(vals, rows, cols);
+    COOMatrix A{vals, rows, cols};
 
     // NOTE no need to include A[7, 7], we previously thought we needed to
     // include it even though it is numerically zero to keep structural full

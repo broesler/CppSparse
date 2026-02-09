@@ -69,8 +69,8 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
     }
 
     // Allocate result matrices
-    CSCMatrix L({N, N}, S.lnz);       // lower triangular matrix
-    CSCMatrix U({N, N}, S.unz);       // upper triangular matrix
+    CSCMatrix L{{N, N}, S.lnz};       // lower triangular matrix
+    CSCMatrix U{{N, N}, S.unz};       // upper triangular matrix
     std::vector<csint> p_inv(N, -1);  // row permutation vector
     SparseSolution sol(N);            // workspace for triangular solves
 
@@ -256,8 +256,8 @@ LUResult lu(
     const csint min_MN = std::min(M, N);
 
     // Allocate result matrices
-    CSCMatrix L({M, min_MN}, S.lnz);  // lower triangular matrix
-    CSCMatrix U({min_MN, N}, S.unz);  // upper triangular matrix
+    CSCMatrix L{{M, min_MN}, S.lnz};  // lower triangular matrix
+    CSCMatrix U{{min_MN, N}, S.unz};  // upper triangular matrix
     std::vector<csint> p_inv(M, -1);  // row permutation vector
     SparseSolution sol(M);            // workspace for triangular solves
 
@@ -479,8 +479,8 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
     }
 
     // Allocate result matrices
-    CSCMatrix L({N, N}, S.lnz);       // lower triangular matrix
-    CSCMatrix UT({N, N}, S.unz);      // (transpose of) upper triangular matrix
+    CSCMatrix L{{N, N}, S.lnz};       // lower triangular matrix
+    CSCMatrix UT{{N, N}, S.unz};      // (transpose of) upper triangular matrix
     std::vector<csint> p_inv(N, -1);  // row permutation vector
     // TODO implement partial pivoting
     std::iota(p_inv.begin(), p_inv.end(), 0);  // identity permutation
@@ -602,8 +602,8 @@ LUResult ilutp(
     }
 
     // Allocate result matrices
-    CSCMatrix L({N, N}, S.lnz);       // lower triangular matrix
-    CSCMatrix U({N, N}, S.unz);       // upper triangular matrix
+    CSCMatrix L{{N, N}, S.lnz};       // lower triangular matrix
+    CSCMatrix U{{N, N}, S.unz};       // upper triangular matrix
     std::vector<csint> p_inv(N, -1);  // row permutation vector
     SparseSolution sol(M);            // workspace for triangular solves
 
@@ -710,8 +710,8 @@ LUResult ilu_nofill(
     }
 
     // Allocate result matrices
-    CSCMatrix L({N, N}, A.nnz());     // lower triangular matrix
-    CSCMatrix U({N, N}, A.nnz());     // upper triangular matrix
+    CSCMatrix L{{N, N}, A.nnz()};     // lower triangular matrix
+    CSCMatrix U{{N, N}, A.nnz()};     // upper triangular matrix
     std::vector<csint> p_inv(N, -1);  // row permutation vector
     std::vector<csint> w(N, -1);      // workspace for values
     SparseSolution sol(M);            // workspace for triangular solves

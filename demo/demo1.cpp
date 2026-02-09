@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     std::cout << "T:\n" << T << "\n";
 
     // Convert to CSCMatrix
-    CSCMatrix A(T);
+    CSCMatrix A{T};
     std::cout << "A:\n" << A << "\n";
 
     CSCMatrix AT = A.transpose();
@@ -41,11 +41,11 @@ int main(int argc, char *argv[]) {
 
     // Create an identity matrix
     auto [M, N] = A.shape();
-    COOMatrix I({M, M}, M);  // only zeros on the diagonal
+    COOMatrix I{{M, M}, M};  // only zeros on the diagonal
     for (csint i = 0; i < M; ++i) {
         I.insert(i, i, 1.0);
     }
-    CSCMatrix Eye(I);
+    CSCMatrix Eye{I};
 
     // Do some math
     CSCMatrix C = A * AT;  // (M, N) * (N, M) = (M, M)

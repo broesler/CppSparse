@@ -283,7 +283,7 @@ TEST_CASE("Insertion", "[CSCMatrix][operator()][insert]")
 {
     // Create an empty column vector and fill it with values
     csint N = 10;
-    CSCMatrix C({N, 1});
+    CSCMatrix C{{N, 1}};
 
     CHECK(C.nnz() == 0);
     CHECK(C.shape() == Shape{N, 1});
@@ -862,7 +862,7 @@ public:
 TEST_CASE("Exercise 2.12: Validity check", "[ex2.12][is_valid]")
 {
     CSCMatrix A = davis_example_small().compress();
-    TestCSCMatrix A_test_helper(A);
+    TestCSCMatrix A_test_helper{A};
 
     constexpr bool SORTED = true;
     constexpr bool VALUES = true;

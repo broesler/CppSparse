@@ -464,7 +464,7 @@ std::vector<double> CSCMatrix::to_dense_vector(const DenseOrder order) const
 CSCMatrix CSCMatrix::transpose(bool values) const
 {
     std::vector<csint> w(M_);   // workspace
-    CSCMatrix C({N_, M_}, nnz(), values);  // output
+    CSCMatrix C{{N_, M_}, nnz(), values};  // output
 
     // Compute number of elements in each row
     for (csint p = 0; p < nnz(); ++p)
@@ -562,7 +562,7 @@ CSCMatrix& CSCMatrix::sort()
 
     bool values = !v_.empty();
 
-    CSCMatrix C({N_, M_}, nnz(), values);  // intermediate transpose
+    CSCMatrix C{{N_, M_}, nnz(), values};  // intermediate transpose
 
     // Compute number of elements in each row
     for (csint p = 0; p < nnz(); ++p)
@@ -658,7 +658,7 @@ CSCMatrix& CSCMatrix::fkeep(KeepFunc fk)
 
 CSCMatrix CSCMatrix::fkeep(KeepFunc fk) const
 {
-    CSCMatrix C(*this);
+    CSCMatrix C{*this};
     return C.fkeep(fk);
 }
 
@@ -702,7 +702,7 @@ CSCMatrix CSCMatrix::band(const csint kl, const csint ku) const
     if (kl > ku) {
         throw std::invalid_argument("kl must be less than or equal to ku.");
     }
-    CSCMatrix C(*this);
+    CSCMatrix C{*this};
     return C.band(kl, ku);
 }
 
@@ -1094,7 +1094,7 @@ CSCMatrix CSCMatrix::scale(std::span<const double> r, std::span<const double> c)
         );
     }
 
-    CSCMatrix out(*this);
+    CSCMatrix out{*this};
 
     for (auto j : column_range()) {
         for (auto [p, i] : enum_row_indices(j)) {
@@ -1141,7 +1141,7 @@ std::vector<double> CSCMatrix::dot(std::span<const double> X) const
 
 CSCMatrix CSCMatrix::dot(const double c) const
 {
-    CSCMatrix out(v_, i_, p_, shape());
+    CSCMatrix out{v_, i_, p_, shape()};
     out.v_ *= c;
     return out;
 }
@@ -1161,7 +1161,7 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
     bool values = !v_.empty() && !B.v_.empty();
 
     // NOTE See Problem 2.20 for how to compute nnz(A*B)
-    CSCMatrix C({M, N}, nnz() + B.nnz(), values);  // output
+    CSCMatrix C{{M, N}, nnz() + B.nnz(), values};  // output
 
     // Allocate workspaces
     std::vector<csint> w(M);
@@ -1237,7 +1237,7 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
     }
 
     // Allocate the correct size output matrix
-    CSCMatrix C({M, N}, nz_C);
+    CSCMatrix C{{M, N}, nz_C};
 
     // Compute the actual multiplication
     std::fill(w.begin(), w.end(), 0);  // reset workspace
@@ -1342,7 +1342,7 @@ CSCMatrix add_scaled(
 
     bool values = !A.v_.empty() && !B.v_.empty();
 
-    CSCMatrix C({M, N}, A.nnz() + B.nnz(), values);  // output
+    CSCMatrix C{{M, N}, A.nnz() + B.nnz(), values};  // output
 
     // Allocate workspaces
     std::vector<csint> w(M);
@@ -1514,7 +1514,7 @@ CSCMatrix CSCMatrix::permute(
     bool values
 ) const
 {
-    CSCMatrix C({M_, N_}, nnz(), values);
+    CSCMatrix C{{M_, N_}, nnz(), values};
     csint nz = 0;
 
     for (auto k : column_range()) {
@@ -1554,7 +1554,7 @@ CSCMatrix CSCMatrix::symperm(std::span<const csint> p_inv, bool values) const
         throw std::invalid_argument("Matrix must be square.");
     }
 
-    CSCMatrix C({N_, N_}, nnz(), values);
+    CSCMatrix C{{N_, N_}, nnz(), values};
     std::vector<csint> w(N_);  // workspace for column counts
 
     // Count entries in each column of C
@@ -1604,7 +1604,7 @@ CSCMatrix CSCMatrix::permute_transpose(
 ) const
 {
     std::vector<csint> w(M_);            // workspace
-    CSCMatrix C({N_, M_}, nnz(), values);  // output
+    CSCMatrix C{{N_, M_}, nnz(), values};  // output
 
     // Compute number of elements in each permuted row (aka column of C)
     for (csint p = 0; p < nnz(); ++p) {
@@ -1767,7 +1767,7 @@ CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
         throw std::invalid_argument("Matrix column dimensions do not agree.");
     }
 
-    CSCMatrix C({A.M_ + B.M_, A.N_}, A.nnz() + B.nnz());
+    CSCMatrix C{{A.M_ + B.M_, A.N_}, A.nnz() + B.nnz()};
 
     csint nz = 0;
 
@@ -1821,7 +1821,7 @@ CSCMatrix CSCMatrix::slice(
         );
     }
 
-    CSCMatrix C({i_end - i_start, j_end - j_start}, nnz());
+    CSCMatrix C{{i_end - i_start, j_end - j_start}, nnz()};
 
     csint nz = 0;
 
@@ -1857,7 +1857,7 @@ CSCMatrix CSCMatrix::index(
 {
     csint M = rows.size();
     csint N = cols.size();
-    CSCMatrix C({M, N}, nnz());
+    CSCMatrix C{{M, N}, nnz()};
 
     csint nz = 0;
 

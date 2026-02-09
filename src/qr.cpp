@@ -247,8 +247,8 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     csint Nv = std::min(M, N);
 
     // Allocate result matrices
-    CSCMatrix V({M2, Nv}, S.vnz);  // Householder vectors
-    CSCMatrix R({M2, Nv}, S.rnz);  // R factor
+    CSCMatrix V{{M2, Nv}, S.vnz};  // Householder vectors
+    CSCMatrix R{{M2, Nv}, S.rnz};  // R factor
     std::vector<double> beta(Nv);  // scaling factors
 
     // Allocate workspaces
@@ -350,8 +350,8 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
 
     // Allocate result matrices with no values
     bool values = false;
-    CSCMatrix V({M2, Nv}, S.vnz, values);   // Householder vectors
-    CSCMatrix R({M2, Nv}, S.rnz, values);   // R factor
+    CSCMatrix V{{M2, Nv}, S.vnz, values};   // Householder vectors
+    CSCMatrix R{{M2, Nv}, S.rnz, values};   // R factor
 
     // Allocate workspaces
     std::vector<csint> w(M2, -1),  // workspace for pattern of V[:, k]
@@ -515,7 +515,7 @@ CSCMatrix apply_qtleft(
     auto [M, NY] = Y.shape();
 
     CSCMatrix X = Y;  // copy Y into X, work in-place
-    CSCMatrix C({M, NY}, 2 * V.nnz());  // allocate C for the result
+    CSCMatrix C{{M, NY}, 2 * V.nnz()};  // allocate C for the result
 
     if (M2 > M) {
         X.add_empty_bottom(M2 - M);

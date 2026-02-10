@@ -74,7 +74,7 @@ CSCMatrix::CSCMatrix(
 ) : M_(shape[0]),
     N_(shape[1])
 {
-    if (static_cast<csint>(A.size()) != (M_ * N_)) {
+    if (std::ssize(A) != (M_ * N_)) {
         throw std::invalid_argument(
             std::format(
                 "Input array size does not match given shape: "
@@ -256,7 +256,7 @@ CSCMatrix::GetItemResult CSCMatrix::get_item_(csint i, csint j) const
                 v = v_[k];
             } else {
                 // Sum duplicate entries, k points to the first entry
-                csint i_size = static_cast<csint>(i_.size());;
+                csint i_size = std::ssize(i_);;
                 for (csint p = k; p < i_size && i_[p] == i; ++p) {
                     v += v_[p];
                 }
@@ -300,7 +300,7 @@ void CSCMatrix::set_item_(csint i, csint j, double v)
 
             if (!has_canonical_format_) {
                 // Duplicates may exist, so zero them out
-                csint i_size = static_cast<csint>(i_.size());
+                csint i_size = std::ssize(i_);
                 for (csint p = k + 1; p < i_size && i_[p] == i; ++p) {
                     v_[p] = 0.0;
                 }
@@ -359,8 +359,8 @@ CSCMatrix& CSCMatrix::assign(
         throw std::invalid_argument("Input matrix must be of size M x N.");
     }
 
-    csint rows_size = static_cast<csint>(rows.size());
-    csint cols_size = static_cast<csint>(cols.size());
+    csint rows_size = std::ssize(rows);
+    csint cols_size = std::ssize(cols);
     for (csint i = 0; i < rows_size; ++i) {
         for (csint j = 0; j < cols_size; ++j) {
             set_item_(rows[i], cols[j], C[i + j * rows_size]);
@@ -377,8 +377,8 @@ CSCMatrix& CSCMatrix::assign(
     const CSCMatrix& C
 )
 {
-    csint rows_size = static_cast<csint>(rows.size());
-    csint cols_size = static_cast<csint>(cols.size());
+    csint rows_size = std::ssize(rows);
+    csint cols_size = std::ssize(cols);
 
     if (C.M_ != rows_size) {
         throw std::invalid_argument(
@@ -415,7 +415,7 @@ double& CSCMatrix::insert_(csint i, csint j, double v, csint p)
     v_.insert(v_.begin() + p, v);
 
     // Increment all subsequent pointers
-    for (csint k = j + 1; k < static_cast<csint>(p_.size()); ++k) {
+    for (csint k = j + 1; k < std::ssize(p_); ++k) {
         p_[k]++;
     }
 
@@ -767,8 +767,8 @@ static void gaxpy_check_(
     // (M, N) * (N, K) + (M, K) = (M, K) if Transpose = false
     // (N, M) * (M, K) + (N, K) = (N, K) if Transpose = true
     const auto [M, N] = A.shape();
-    csint NxK = static_cast<csint>((!Transpose) ? X.size() : Y.size());
-    csint MxK = static_cast<csint>((!Transpose) ? Y.size() : X.size());
+    csint NxK = (!Transpose) ? std::ssize(X) : std::ssize(Y);
+    csint MxK = (!Transpose) ? std::ssize(Y) : std::ssize(X);
 
     if (NxK % N != 0) {
         throw std::invalid_argument(
@@ -1074,7 +1074,7 @@ std::vector<double> gatxpy_row(
 // Exercise 2.4
 CSCMatrix CSCMatrix::scale(std::span<const double> r, std::span<const double> c) const
 {
-    if (static_cast<csint>(r.size()) != M_) {
+    if (std::ssize(r) != M_) {
         throw std::invalid_argument(
             std::format(
                 "Row scaling vector size must match number of matrix rows."
@@ -1084,7 +1084,7 @@ CSCMatrix CSCMatrix::scale(std::span<const double> r, std::span<const double> c)
         );
     }
 
-    if (static_cast<csint>(c.size()) != N_) {
+    if (std::ssize(c) != N_) {
         throw std::invalid_argument(
             std::format(
                 "Column scaling vector size must match number of matrix columns."
@@ -1108,7 +1108,7 @@ CSCMatrix CSCMatrix::scale(std::span<const double> r, std::span<const double> c)
 
 std::vector<double> CSCMatrix::dot(std::span<const double> X) const
 {
-    csint NxK = static_cast<csint>(X.size());
+    csint NxK = std::ssize(X);
 
     if (NxK % N_ != 0) {
         throw std::invalid_argument(
@@ -1483,7 +1483,7 @@ csint CSCMatrix::scatter(
 
 void CSCMatrix::scatter(csint k, std::span<double> x) const
 {
-    if (static_cast<csint>(x.size()) != M_) {
+    if (std::ssize(x) != M_) {
         throw std::invalid_argument(
             std::format(
                 "Input vector size must match number of matrix rows."
@@ -1667,7 +1667,7 @@ double CSCMatrix::fronorm() const
 bool CSCMatrix::is_valid(const bool sorted, const bool values) const
 {
     // Check number of columns
-    if (static_cast<csint>(p_.size()) != (N_ + 1)) {
+    if (std::ssize(p_) != (N_ + 1)) {
         throw std::runtime_error("Number of columns inconsistent!");
     }
 

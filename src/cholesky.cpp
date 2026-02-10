@@ -60,7 +60,7 @@ csint etree_height(std::span<const csint> parent)
     assert(!parent.empty());
 
     csint height = 0;
-    for (csint i = 0; i < static_cast<csint>(parent.size()); ++i) {
+    for (csint i = 0; i < std::ssize(parent); ++i) {
         csint h = 0;
         for (csint p = i; p != -1; p = parent[p]) {
             ++h;
@@ -202,7 +202,7 @@ std::vector<csint> post(std::span<const csint> parent)
         }
     }
 
-    assert(static_cast<csint>(postorder.size()) == N);
+    assert(std::ssize(postorder) == N);
     postorder.shrink_to_fit();
 
     return postorder;
@@ -277,7 +277,7 @@ std::vector<csint> rowcnt(
         );
     }
 
-    if (static_cast<csint>(parent.size()) != N) {
+    if (std::ssize(parent) != N) {
         throw std::invalid_argument(
             "Parent vector size must match number of columns in A."
         );

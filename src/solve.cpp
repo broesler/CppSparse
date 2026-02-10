@@ -194,7 +194,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
         throw std::invalid_argument("Matrix must be square.");
     }
 
-    if (A.M_ != static_cast<csint>(b.size())) {
+    if (A.M_ != std::ssize(b)) {
         throw std::invalid_argument(
             std::format(
                 "Matrix and vector size mismatch: {} vs. {}",
@@ -246,7 +246,7 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b)
         throw std::invalid_argument("Matrix must be square.");
     }
 
-    if (A.M_ != static_cast<csint>(b.size())) {
+    if (A.M_ != std::ssize(b)) {
         throw std::invalid_argument(
             std::format(
                 "Matrix and vector size mismatch: {} vs. {}",
@@ -341,7 +341,7 @@ std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b)
         throw std::invalid_argument("Matrix must be square.");
     }
 
-    if (A.M_ != static_cast<csint>(b.size())) {
+    if (A.M_ != std::ssize(b)) {
         throw std::invalid_argument(
             std::format(
                 "Matrix and vector size mismatch: {} vs. {}",
@@ -391,7 +391,7 @@ std::vector<double> usolve_cols(const CSCMatrix& A, std::span<const double> b)
         throw std::invalid_argument("Matrix must be square.");
     }
 
-    if (A.M_ != static_cast<csint>(b.size())) {
+    if (A.M_ != std::ssize(b)) {
         throw std::invalid_argument(
             std::format(
                 "Matrix and vector size mismatch: {} vs. {}",
@@ -545,7 +545,7 @@ void tri_solve_perm_inplace(
 std::vector<double> tri_solve_perm(const CSCMatrix& A, std::span<const double> B)
 {
     const auto [M, N] = A.shape();
-    csint MxK = static_cast<csint>(B.size());
+    csint MxK = std::ssize(B);
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");
@@ -627,7 +627,7 @@ void spsolve(
 {
     auto& [xi, x] = sol;
 
-    if (static_cast<csint>(x.size()) < A.M_) {
+    if (std::ssize(x) < A.M_) {
         throw std::runtime_error("SparseSolution x vector not allocated!");
     }
 
@@ -977,7 +977,7 @@ std::vector<double> chol_solve(
 )
 {
     const auto [M, N] = A.shape();
-    csint MxK = static_cast<csint>(B.size());
+    csint MxK = std::ssize(B);
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");
@@ -1083,7 +1083,7 @@ QRSolveResult qr_solve(
 )
 {
     const auto [M, N] = A.shape();
-    csint MxK = static_cast<csint>(B.size());
+    csint MxK = std::ssize(B);
 
     if (MxK % M != 0) {
         throw std::runtime_error("RHS vector size is not a multiple of matrix rows!");
@@ -1198,7 +1198,7 @@ void LUResult::solve(std::span<double> b) const
         throw std::runtime_error("Matrix must be square!");
     }
 
-    if (M != static_cast<csint>(b.size())) {
+    if (M != std::ssize(b)) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
     }
 
@@ -1222,7 +1222,7 @@ void LUResult::tsolve(std::span<double> b) const
         throw std::runtime_error("Matrix must be square!");
     }
 
-    if (N != static_cast<csint>(b.size())) {
+    if (N != std::ssize(b)) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
     }
 
@@ -1247,7 +1247,7 @@ std::vector<double> lu_solve(
 )
 {
     const auto [M, N] = A.shape();
-    csint MxK = static_cast<csint>(B.size());
+    csint MxK = std::ssize(B);
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");
@@ -1365,7 +1365,7 @@ std::vector<double> lu_tsolve(
     double tol
 )
 {
-    if (A.shape()[1] != static_cast<csint>(b.size())) {
+    if (A.shape()[1] != std::ssize(b)) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
     }
 
@@ -1496,7 +1496,7 @@ std::vector<double> spsolve_impl_(const CSCMatrix& A, const RHSType& B)
     const auto [M, N] = A.shape();
 
     if constexpr (std::is_same_v<RHSType, std::span<const double>>) {
-        csint MxK = static_cast<csint>(B.size());
+        csint MxK = std::ssize(B);
 
         if (MxK % M != 0) {
             throw std::runtime_error(

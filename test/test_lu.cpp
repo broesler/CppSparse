@@ -688,7 +688,7 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
 
         CHECK(requests.front() == max_request);
         CHECK(requests.back() >= min_request);
-        CHECK(static_cast<csint>(requests.size()) <= max_total_requests);
+        CHECK(std::ssize(requests) <= max_total_requests);
     }
 
     SECTION("Test with failure") {
@@ -720,7 +720,7 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
 
         REQUIRE(requests.front() == max_request);
         REQUIRE(requests.back() >= min_request);
-        CHECK(static_cast<csint>(requests.size())
+        CHECK(std::ssize(requests)
                 <= static_cast<csint>(std::log2(max_request - min_request)) + 1);
     }
 }

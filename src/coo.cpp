@@ -200,7 +200,7 @@ COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
     // Create a set of unique random (linear) indices
     std::unordered_set<csint> idx;
 
-    while (static_cast<csint>(idx.size()) < nzmax) {
+    while (std::ssize(idx) < nzmax) {
         idx.insert(idx_dist(rng));
     }
 
@@ -271,7 +271,7 @@ COOMatrix& COOMatrix::insert(
 
     csint N = rows.size();
     
-    if (static_cast<csint>(C.size()) != N * N) {
+    if (std::ssize(C) != N * N) {
         throw std::invalid_argument("Input matrix must be of size N x N.");
     }
 
@@ -373,7 +373,7 @@ COOMatrix COOMatrix::T() const { return this->transpose(); }
 // Exercise 2.10
 std::vector<double> COOMatrix::dot(std::span<const double> x) const
 {
-    if (static_cast<csint>(x.size()) != N_) {
+    if (std::ssize(x) != N_) {
         throw std::invalid_argument(
             std::format(
                 "Matrix-vector size mismatch: "

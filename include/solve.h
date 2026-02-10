@@ -75,7 +75,7 @@ std::vector<double> trisolve_dense(
 )
 {
     const auto [M, N] = L.shape();
-    csint MxK = static_cast<csint>(B.size());
+    csint MxK = std::ssize(B);
 
     if (MxK % M != 0) {
         throw std::runtime_error("RHS vector size is not a multiple of matrix rows!");

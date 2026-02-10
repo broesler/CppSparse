@@ -1186,8 +1186,8 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
 
             A.assign(rows, cols, vals);
 
-            auto rows_size = static_cast<csint>(rows.size());
-            auto cols_size = static_cast<csint>(cols.size());
+            auto rows_size = std::ssize(rows);
+            auto cols_size = std::ssize(cols);
             for (csint i = 0; i < rows_size; ++i) {
                 for (csint j = 0; j < cols_size; ++j) {
                     auto A_val = A(rows[i], cols[j]);
@@ -1208,8 +1208,8 @@ TEST_CASE("Exercise 2.25: Indexing for single assignment.", "[ex2.25][assign]")
 
             A.assign(rows, cols, C);
 
-            auto rows_size = static_cast<csint>(rows.size());
-            auto cols_size = static_cast<csint>(cols.size());
+            auto rows_size = std::ssize(rows);
+            auto cols_size = std::ssize(cols);
             for (csint i = 0; i < rows_size; ++i) {
                 for (csint j = 0; j < cols_size; ++j) {
                     auto A_val = A(rows[i], cols[j]);

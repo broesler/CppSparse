@@ -225,7 +225,7 @@ static void make_valid_permutation(std::span<csint> p_inv)
     csint idx = 0;
     for (csint& i : p_inv) {
         if (i < 0) {
-            if (idx < static_cast<csint>(missing.size())) {
+            if (idx < std::ssize(missing)) {
                 i = missing[idx++];
             } else {
                 throw std::runtime_error("More missing rows than values!");

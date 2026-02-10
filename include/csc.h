@@ -1165,7 +1165,7 @@ private:
             // Duplicates may exist, so zero them out
             if (has_sorted_indices_ && !has_canonical_format_) {
                 // Duplicates are in order, so don't need to search entire column
-                csint i_size = static_cast<csint>(i_.size());
+                csint i_size = std::ssize(i_);
                 for (csint p = k + 1; p < i_size && i_[p] == i; p++) {
                     v_[p] = 0.0;
                 }

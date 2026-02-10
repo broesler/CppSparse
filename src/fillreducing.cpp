@@ -684,7 +684,8 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
 
     // transpose if needed
     const auto C = (m2 < n2) ? A.transpose(false) : A;
-    std::tie(M, N) = C.shape();
+    M = C.shape()[0];
+    N = C.shape()[1];
 
     // If we transposed, we need to swap the imatch and jmatch vectors
     std::vector<csint>& jmatch = (m2 < n2) ? jimatch.imatch : jimatch.jmatch;

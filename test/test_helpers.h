@@ -42,7 +42,7 @@ void check_sparse_eq_dense(
     double tol=1e-14
 )
 {
-    auto [M, N] = shape;
+    const auto [M, N] = shape;
     REQUIRE(A.shape() == shape);
     REQUIRE(static_cast<csint>(expect.size()) == M * N);
 

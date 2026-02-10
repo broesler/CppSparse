@@ -37,7 +37,7 @@ COOMatrix::COOMatrix(
     std::span<const double> vals,
     std::span<const csint> rows,
     std::span<const csint> cols,
-    const Shape shape
+    const Shape& shape
 ) : v_(vals.begin(), vals.end()),
     i_(rows.begin(), rows.end()),
     j_(cols.begin(), cols.end())

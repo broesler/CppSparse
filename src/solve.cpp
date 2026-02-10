@@ -154,7 +154,7 @@ std::vector<double> usolve_opt(const CSCMatrix& U, std::span<const double> b)
 // Exercise 3.3
 std::vector<csint> find_lower_diagonals(const CSCMatrix& A)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     if (M != N) {
         throw std::invalid_argument("Matrix must be square.");
@@ -301,7 +301,7 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b)
 // Exercise 3.4
 std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
 {
-    auto [M, N] = U.shape();
+    const auto [M, N] = U.shape();
 
     if (M != N) {
         throw std::invalid_argument("Matrix must be square.");
@@ -446,7 +446,7 @@ std::vector<double> usolve_cols(const CSCMatrix& A, std::span<const double> b)
 // Exercise 3.7
 TriPerm find_tri_permutation(const CSCMatrix& A)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     if (M != N) {
         throw std::invalid_argument("Matrix must be square.");
     }
@@ -544,7 +544,7 @@ void tri_solve_perm_inplace(
 
 std::vector<double> tri_solve_perm(const CSCMatrix& A, std::span<const double> B)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     csint MxK = static_cast<csint>(B.size());
 
     if (M != N) {
@@ -580,7 +580,7 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, std::span<const double> B
 
 std::vector<double> tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     auto [Mb, K] = B.shape();
 
     if (M != N) {
@@ -664,7 +664,7 @@ void reach(
     std::span<const csint> p_inv
 )
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     std::vector<char> marked(M, false);
     std::vector<csint> pstack,  // pause and recursion stacks
                        rstack;
@@ -741,7 +741,7 @@ namespace detail {
 
 std::vector<csint> reach_r(const CSCMatrix& A, const CSCMatrix& B)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     std::vector<char> marked(M, false);
     std::vector<csint> xi;
     xi.reserve(N);
@@ -799,7 +799,7 @@ std::vector<csint> topological_order(
     bool forward
 )
 {
-    auto [M, N] = b.shape();
+    const auto [M, N] = b.shape();
 
     if (N != 1) {
         throw std::invalid_argument("RHS matrix must have a single column!");
@@ -868,7 +868,7 @@ void CholResult::ltsolve_(
 void CholResult::solve(
     const CSCMatrix& B,
     csint k,
-    const std::vector<csint> parent,
+    std::span<const csint> parent,
     std::span<double> x
 ) const
 {
@@ -912,10 +912,10 @@ void CholResult::solve(
 template <bool IsTranspose>
 SparseSolution CholResult::lsolve_impl_(
     const CSCMatrix& b,
-    std::vector<csint> parent
+    std::span<const csint> parent
 ) const
 {
-    auto N = L.N_;
+    const auto N = L.N_;
     SparseSolution sol(N);
     auto& [xi, x] = sol;
 
@@ -925,13 +925,16 @@ SparseSolution CholResult::lsolve_impl_(
     }
     b.scatter(0, x);
 
+    std::vector<csint> parent_;
+
     if (parent.empty()) {
         // Inspect L to get the parent vector, since it has sorted indices
         assert(L.has_sorted_indices_);
-        parent.assign(N, -1);
+        parent_.assign(N, -1);
         for (csint j = 0; j < N-1; ++j) {  // skip the last row (only diagonal)
-            parent[j] = L.i_[L.p_[j]+1];   // first off-diagonal element
+            parent_[j] = L.i_[L.p_[j]+1];  // first off-diagonal element
         }
+        parent = parent_;  // point the span to the local parent vector
     }
 
     // Solve Lx = b or L^T x = b
@@ -950,7 +953,7 @@ SparseSolution CholResult::lsolve_impl_(
 // Exercise 4.3
 SparseSolution CholResult::lsolve(
     const CSCMatrix& b,
-    std::vector<csint> parent
+    std::span<const csint> parent
 ) const
 {
     return lsolve_impl_<false>(b, parent);
@@ -960,7 +963,7 @@ SparseSolution CholResult::lsolve(
 // Exercise 4.4
 SparseSolution CholResult::ltsolve(
     const CSCMatrix& b,
-    std::vector<csint> parent
+    std::span<const csint> parent
 ) const
 {
     return lsolve_impl_<true>(b, parent);
@@ -973,7 +976,7 @@ std::vector<double> chol_solve(
     AMDOrder order
 )
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     csint MxK = static_cast<csint>(B.size());
 
     if (M != N) {
@@ -1010,7 +1013,7 @@ std::vector<double> chol_solve(
     AMDOrder order
 )
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     auto [Mb, K] = B.shape();
 
     if (M != N) {
@@ -1079,7 +1082,7 @@ QRSolveResult qr_solve(
     AMDOrder order
 )
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     csint MxK = static_cast<csint>(B.size());
 
     if (MxK % M != 0) {
@@ -1133,7 +1136,7 @@ QRSolveResult qr_solve(
     AMDOrder order
 )
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     auto [Mb, K] = B.shape();
 
     if (M != Mb) {
@@ -1189,7 +1192,7 @@ QRSolveResult qr_solve(
 // Exercise 6.1
 void LUResult::solve(std::span<double> b) const
 {
-    auto [M, N] = L.shape();
+    const auto [M, N] = L.shape();
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");
@@ -1213,7 +1216,7 @@ void LUResult::solve(std::span<double> b) const
 // Exercise 6.1
 void LUResult::tsolve(std::span<double> b) const
 {
-    auto [M, N] = U.shape();
+    const auto [M, N] = U.shape();
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");
@@ -1243,7 +1246,7 @@ std::vector<double> lu_solve(
     csint ir_steps
 )
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     csint MxK = static_cast<csint>(B.size());
 
     if (M != N) {
@@ -1300,7 +1303,7 @@ std::vector<double> lu_solve(
     csint ir_steps
 )
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     auto [Mb, K] = B.shape();
 
     if (M != N) {
@@ -1460,7 +1463,7 @@ double norm1est_inv(const LUResult& res)
 // Exercise 6.15
 double cond1est(const CSCMatrix& A)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");
@@ -1490,7 +1493,7 @@ double cond1est(const CSCMatrix& A)
 template <typename RHSType>
 std::vector<double> spsolve_impl_(const CSCMatrix& A, const RHSType& B)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     if constexpr (std::is_same_v<RHSType, std::span<const double>>) {
         csint MxK = static_cast<csint>(B.size());

@@ -324,7 +324,7 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][n
 TEST_CASE("Square, rank-deficient A", "[qr][rank-deficient][numeric]") 
 {
     auto A = davis_example_qr();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     // CSparse only uses 2 possible orders for QR factorization:
     auto order = AMDOrder::Natural;

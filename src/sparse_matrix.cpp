@@ -21,7 +21,7 @@ namespace cs {
 
 std::string SparseMatrix::to_string(bool verbose, csint threshold) const
 {
-    auto [M, N] = shape();
+    const auto [M, N] = shape();
     auto nnz_ = nnz();
     std::stringstream ss;
 
@@ -68,9 +68,9 @@ std::string SparseMatrix::make_format_string_() const
 
 void SparseMatrix::print_dense(int precision, bool suppress, std::ostream& os) const
 {
-    auto order = DenseOrder::ColMajor;  // default Fortran-style column-major order
+    const auto order = DenseOrder::ColMajor;  // default Fortran-style column-major order
     const auto A = to_dense_vector(order);
-    auto [M, N] = shape();
+    const auto [M, N] = shape();
 
     if (A.size() != static_cast<size_t>(M * N)) {
         throw std::runtime_error("Matrix size does not match dimensions!");
@@ -84,7 +84,7 @@ void SparseMatrix::print_dense(int precision, bool suppress, std::ostream& os) c
         }
     }
 
-    auto use_scientific = !suppress || (abs_max < 1e-4 || abs_max > 1e4);
+    const auto use_scientific = !suppress || (abs_max < 1e-4 || abs_max > 1e4);
 
     // Compute column width
     auto width = use_scientific ? (9 + precision) : (6 + precision);

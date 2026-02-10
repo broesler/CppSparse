@@ -37,7 +37,7 @@ LUResult lu_test(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural)
     auto LU = (res.L * res.U).droptol().to_canonical();
 
     // Test that permutations are valid
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     std::vector<csint> row_perm(M);
     std::vector<csint> col_perm(N);
     std::iota(row_perm.begin(), row_perm.end(), 0);
@@ -55,7 +55,7 @@ LUResult lu_test(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural)
 TEST_CASE("Symbolic LU Factorization of Square Matrix", "[lu][M == N][symbolic]")
 {
     const auto A = davis_example_qr(10);
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     std::vector<csint> expect_q{0, 1, 2, 3, 4, 5, 6, 7};
 
@@ -359,7 +359,7 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3][lu_colpiv]")
 TEST_CASE("Exercise 6.4: relu", "[ex6.4][relu]")
 {
     auto A = davis_example_qr(10);
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     std::vector<csint> expect_q(N);
     std::iota(expect_q.begin(), expect_q.end(), 0);
@@ -550,7 +550,7 @@ TEST_CASE("Exercise 6.5: LU with Multiple zero rows", "[ex6.5][lu_singular]")
 TEST_CASE("Exercise 6.6: LU Factorization of Rectangular Matrices", "[ex6.6][lu][M < N][M > N]")
 {
     auto A = davis_example_qr(10).to_canonical();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     csint r = 3;  // number of rows or columns to remove
 
@@ -729,7 +729,7 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
 TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13][ilu]")
 {
     const auto A = davis_example_qr(10).to_canonical();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     SECTION("ILUTP: Threshold with Pivoting") {
         // Default is no pivoting

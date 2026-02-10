@@ -77,7 +77,7 @@ struct CholResult
     void solve(
         const CSCMatrix& B,
         csint k,
-        const std::vector<csint> parent,
+        std::span<const csint> parent,
         std::span<double> x
     ) const; 
 
@@ -97,7 +97,7 @@ struct CholResult
     */
     SparseSolution lsolve(
         const CSCMatrix& b,
-        std::vector<csint> parent = {}
+        std::span<const csint> parent = {}
     ) const;
 
     /** Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is
@@ -114,7 +114,7 @@ struct CholResult
     */
     SparseSolution ltsolve(
         const CSCMatrix& b,
-        std::vector<csint> parent = {}
+        std::span<const csint> parent = {}
     ) const;
 
 private:
@@ -153,7 +153,10 @@ private:
     * @return x  the solution vector, stored as a dense vector.
     */
     template <bool IsTranspose>
-    SparseSolution lsolve_impl_(const CSCMatrix& b, std::vector<csint> parent) const;
+    SparseSolution lsolve_impl_(
+        const CSCMatrix& b,
+        std::span<const csint> parent
+    ) const;
 };
 
 

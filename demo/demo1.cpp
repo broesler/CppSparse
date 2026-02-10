@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     std::cout << "AT:\n" << AT << "\n";
 
     // Create an identity matrix
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     COOMatrix I{{M, M}, M};  // only zeros on the diagonal
     for (csint i = 0; i < M; ++i) {
         I.insert(i, i, 1.0);

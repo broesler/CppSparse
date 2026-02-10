@@ -65,7 +65,7 @@ public:
         std::span<const double> vals,
         std::span<const csint> rows,
         std::span<const csint> cols,
-        const Shape shape=Shape{0, 0}
+        const Shape& shape=Shape{0, 0}
     );
 
     /** Allocate a COOMatrix for a given shape and number of non-zeros.

@@ -72,7 +72,7 @@ Problem Problem::from_matrix(const COOMatrix& T, double droptol)
     auto A = T.tocsc();                   // convert to CSC format
     A.sum_duplicates();                        // sum up duplicates
     auto is_sym = A.is_triangular();          // determine if A is symmetric
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     auto nz1 = A.nnz();
     A.dropzeros();                             // drop zero entries
     auto nz2 = A.nnz();

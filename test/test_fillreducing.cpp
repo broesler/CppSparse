@@ -85,7 +85,7 @@ TEST_CASE("Build Graph", "[amd][build_graph]")
 TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
 {
     const auto A = davis_example_amd();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     AMDOrder order;
     std::vector<csint> expect_p;
 
@@ -202,7 +202,7 @@ TEST_CASE("AMD with M > N", "[amd][M > N]")
 TEST_CASE("Maximum Matching", "[maxmatch]")
 {
     auto A = davis_example_amd();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     auto recursive = GENERATE(true, false);
     CAPTURE(recursive);
@@ -346,7 +346,7 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
 TEST_CASE("Strongly Connected Components", "[scc]")
 {
     auto A = davis_example_amd();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     csint expect_Nb = 0;
     std::vector<csint> expect_p(N);
@@ -383,7 +383,7 @@ TEST_CASE("Strongly Connected Components", "[scc]")
 TEST_CASE("Dulmage-Mendelsohn Permutation", "[dmperm]")
 {
     auto A = davis_example_amd();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     auto seed = GENERATE(-1, 0, 1);
     CAPTURE(seed);

@@ -31,7 +31,7 @@ struct SparseRHS {};
 TEST_CASE("Cholesky Solution", "[cholsol]")
 {
     auto A = davis_example_chol();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     auto order = GENERATE(
         AMDOrder::Natural,
@@ -61,7 +61,7 @@ TEMPLATE_TEST_CASE(
 )
 {
     auto A = davis_example_chol();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     auto order = GENERATE(
         AMDOrder::Natural,
@@ -91,7 +91,7 @@ TEMPLATE_TEST_CASE(
 TEST_CASE("QR Solution", "[qrsol]")
 {
     auto A = davis_example_qr();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     auto order = GENERATE(
         AMDOrder::Natural,
@@ -172,7 +172,7 @@ TEMPLATE_TEST_CASE(
 )
 {
     auto A = davis_example_qr();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     auto order = GENERATE(
         AMDOrder::Natural,
@@ -265,7 +265,7 @@ TEMPLATE_TEST_CASE(
 
 TEST_CASE("LU Solution", "[lusol]") {
     auto A = davis_example_qr();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     auto order = GENERATE(
         AMDOrder::Natural,
@@ -298,7 +298,7 @@ TEST_CASE("LU with Iterative Refinement", "[lusol-ir]") {
     double add_diag = 0.0;
     auto randomized = true;
     auto A = davis_example_qr(add_diag, randomized);
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     auto order = GENERATE(
         AMDOrder::Natural,
@@ -343,7 +343,7 @@ TEMPLATE_TEST_CASE(
 )
 {
     auto A = davis_example_qr();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     auto order = GENERATE(
         AMDOrder::Natural,
@@ -396,7 +396,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Triangular", "[spsolve-tri]", RhsCombination
     constexpr csint K = RhsCountType::K;
 
     auto A = davis_example_small().tocsc();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     // Create RHS for Lx = b
     std::vector<double> expect_x(N * K);
@@ -461,7 +461,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Cholesky", "[spsolve-chol]", CholeskyCombina
     constexpr csint K = RhsCountType::K;
 
     auto A = davis_example_chol();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     // Create RHS for Ax = b
     std::vector<double> expect_x(N * K);
@@ -492,7 +492,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: LU Symmetric", "[spsolve-lu-sym]", RhsCombin
     constexpr csint K = RhsCountType::K;
 
     auto A = davis_example_chol();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     // Change one element to make unsymmetric
     A(1, 2) = 0.0;
@@ -524,7 +524,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: LU Unsymmetric", "[spsolve-lu-unsym]", RhsCo
     constexpr csint K = RhsCountType::K;
 
     auto A = davis_example_chol();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     // Drop upper bands to make less symmetric (below 0.3 threshold)
     A.band(-M, 1);
@@ -555,7 +555,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: QR", "[spsolve-qr]", RhsCombinations)
     constexpr csint K = RhsCountType::K;
 
     auto A = davis_example_qr();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     // Create RHS for Ax = b
     std::vector<double> expect_x(N * K);

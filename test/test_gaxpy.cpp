@@ -234,7 +234,7 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
             const CSCMatrix& A,
             const CSCMatrix& expect
         ) {
-            auto [M, N] = C.shape();
+            const auto [M, N] = C.shape();
 
             REQUIRE(M == E.shape()[0]);
             REQUIRE(N == A.shape()[1]);
@@ -293,7 +293,7 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
 
         SECTION("M < N") {
             auto C = A * B;
-            auto [M, N] = C.shape();
+            const auto [M, N] = C.shape();
 
             REQUIRE(M == A.shape()[0]);
             REQUIRE(N == B.shape()[1]);
@@ -333,7 +333,7 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
 
         // M < N
         auto C = A * B;
-        auto [M, N] = C.shape();
+        const auto [M, N] = C.shape();
 
         REQUIRE(M == A.shape()[0]);
         REQUIRE(N == B.shape()[1]);
@@ -517,7 +517,7 @@ TEST_CASE("Add sparse column vectors", "[math][add_scaled]")
         std::vector<csint>  (6, 0)
     }.tocsc();
 
-    auto [M, N] = a.shape();
+    const auto [M, N] = a.shape();
 
     SECTION("Operator") {
         auto C = a + b;

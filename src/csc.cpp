@@ -94,7 +94,7 @@ CSCMatrix::CSCMatrix(
     for (auto j : column_range()) {
         p_.push_back(nz);
 
-        for (csint i = 0; i < M_; ++i) {
+        for (auto i : row_range()) {
             auto val = (order == DenseOrder::ColMajor) ? A[i + j * M_] : A[j + i * N_];
 
             // Only store non-zeros
@@ -709,7 +709,7 @@ CSCMatrix CSCMatrix::band(const csint kl, const csint ku) const
 
 std::vector<double> CSCMatrix::diagonal(csint k) const
 {
-    auto [M, N] = shape();
+    const auto [M, N] = shape();
     csint K = std::min(M, N) - std::abs(k);
 
     if (K < 0) {
@@ -766,7 +766,7 @@ static void gaxpy_check_(
 {
     // (M, N) * (N, K) + (M, K) = (M, K) if Transpose = false
     // (N, M) * (M, K) + (N, K) = (N, K) if Transpose = true
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     csint NxK = static_cast<csint>((!Transpose) ? X.size() : Y.size());
     csint MxK = static_cast<csint>((!Transpose) ? Y.size() : X.size());
 
@@ -843,7 +843,7 @@ std::vector<double> sym_gaxpy(
     std::span<const double> y
 )
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     if (M != N) {
         throw std::invalid_argument("A must be square.");
     }
@@ -879,7 +879,7 @@ std::vector<double> gaxpy_col(
 {
     gaxpy_check_(A, X, Y);
 
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / N;  // number of columns in X
@@ -913,7 +913,7 @@ std::vector<double> gaxpy_block(
 {
     gaxpy_check_(A, X, Y);
 
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / N;  // number of columns in X
@@ -953,7 +953,7 @@ std::vector<double> gaxpy_row(
 {
     gaxpy_check_(A, X, Y);
 
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / N;  // number of columns in X
@@ -987,7 +987,7 @@ std::vector<double> gatxpy_col(
 {
     gaxpy_check_<true>(A, X, Y);
 
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / M;  // number of columns in X
@@ -1016,7 +1016,7 @@ std::vector<double> gatxpy_block(
 {
     gaxpy_check_<true>(A, X, Y);
 
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / M;  // number of columns in X
@@ -1051,7 +1051,7 @@ std::vector<double> gatxpy_row(
 {
     gaxpy_check_<true>(A, X, Y);
 
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / M;  // number of columns in X
@@ -1338,7 +1338,7 @@ CSCMatrix add_scaled(
         throw std::invalid_argument("Matrix dimensions do not agree.");
     }
 
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     auto values = !A.v_.empty() && !B.v_.empty();
 

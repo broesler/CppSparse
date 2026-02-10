@@ -72,7 +72,7 @@ CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense)
 {
     CSCMatrix C;
 
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     bool values = false;  // symbolic transposes
     auto AT = A.transpose(values);
 
@@ -137,7 +137,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
         return P;
     }
 
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     // --- Construct C matrix --------------------------------------------------
     // Find dense threshold
@@ -631,7 +631,7 @@ bool augment_r(
 
 MaxMatch maxtrans_r(const CSCMatrix& A, [[maybe_unused]] csint seed)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     MaxMatch jimatch(M, N, -1);  // allocate result
     auto& [jmatch, imatch] = jimatch;  // reference to jmatch and imatch
@@ -724,7 +724,7 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
 // -----------------------------------------------------------------------------
 SCCResult scc(const CSCMatrix& A)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");
@@ -902,7 +902,7 @@ static void gather_scatter(
 DMPermResult dmperm(const CSCMatrix& A, csint seed)
 {
     // --- Maximum Matching ----------------------------------------------------
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     DMPermResult D(M, N);  // allocate result
 

@@ -26,7 +26,7 @@ namespace cs {
 
 SymbolicLU slu(const CSCMatrix& A, AMDOrder order, bool qr_bound, double alpha)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     SymbolicLU S;             // allocate result
     std::vector<csint> q;     // column permutation vector
 
@@ -62,7 +62,7 @@ SymbolicLU slu(const CSCMatrix& A, AMDOrder order, bool qr_bound, double alpha)
 
 LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");
@@ -165,7 +165,7 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
  */
 void lu_realloc(CSCMatrix& R, csint k, bool lower)
 {
-    auto [M, N] = R.shape();
+    const auto [M, N] = R.shape();
     csint nzmax = 2 * R.nnz() + M;
     csint nzmin = lower ? (R.nnz() + M - k) : (R.nnz() + k + 1);
 
@@ -204,10 +204,10 @@ void lu_realloc(CSCMatrix& R, csint k, bool lower)
  */
 static void make_valid_permutation(std::span<csint> p_inv)
 {
-    csint M = p_inv.size();
+    const csint M = p_inv.size();
 
     std::vector<char> marked(M, false);  // char faster for random access
-    for (csint i : p_inv) {
+    for (const auto i : p_inv) {
         if (i >= 0) {
             marked[i] = true;
         }
@@ -250,7 +250,7 @@ LUResult lu(
         throw std::runtime_error("Column pivot tolerance must be non-negative!");
     }
 
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     // Exercise 6.6: modify to allow rectangular matrices
     const auto min_MN = std::min(M, N);
@@ -409,7 +409,7 @@ LUResult lu(
 // Exercise 6.4
 LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     // Copy result matrices without values
     CSCMatrix L{std::vector<double>(R.L.nnz()), R.L.i_, R.L.p_, R.L.shape()};
@@ -472,7 +472,7 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
 // Exercise 6.7
 LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");
@@ -591,7 +591,7 @@ LUResult ilutp(
     double tol
 )
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");
@@ -703,7 +703,7 @@ LUResult ilu_nofill(
     const SymbolicLU& S
 )
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");

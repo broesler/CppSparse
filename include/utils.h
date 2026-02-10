@@ -15,7 +15,6 @@
 #include <numeric>    // iota
 #include <span>
 #include <string>
-#include <span>
 #include <vector>
 
 #include "types.h"
@@ -151,7 +150,7 @@ template <typename T>
 void print_vec(
     std::span<const T> vec,
     std::ostream& os=std::cout,
-    const std::string end="\n"
+    std::string_view end="\n"
 )
 {
     os << "[";
@@ -176,7 +175,7 @@ std::ostream& operator<<(std::ostream& os, std::span<const T> vec)
 
 /** Print a std::vector to an output stream. */
 template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T> vec)
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
 {
     print_vec(std::span{vec}, os, "");
     return os;

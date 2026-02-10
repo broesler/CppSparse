@@ -24,7 +24,7 @@ namespace cs {
  *----------------------------------------------------------------------------*/
 std::vector<csint> etree(const CSCMatrix& A, bool ata)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     std::vector<csint> parent(N, -1);    // parent of i is parent[i]
     std::vector<csint> ancestor(N, -1);  // workspaces
     std::vector<csint> prev;
@@ -78,7 +78,7 @@ std::vector<csint> ereach(
     std::span<const csint> parent
 )
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     std::vector<char> marked(M, false);  // workspace
     std::vector<csint> s, xi;  // internal dfs stack, output stack
     s.reserve(N);
@@ -119,7 +119,7 @@ std::vector<csint> ereach_post(
         );
     }
 
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     std::vector<char> marked(M, false);  // workspace
     std::vector<csint> xi;  // internal dfs stack, output stack
     xi.reserve(N);
@@ -151,7 +151,7 @@ std::vector<csint> ereach_queue(
     std::span<const csint> parent
 )
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     std::vector<char> marked(M, false);  // workspace
     std::vector<csint> s;  // internal dfs stack, output stack
     s.reserve(N);
@@ -269,7 +269,7 @@ std::vector<csint> rowcnt(
     std::span<const csint> postorder
 )
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     if (M != N) {
         throw std::invalid_argument(
@@ -398,7 +398,7 @@ std::vector<csint> counts(
     bool ata
 )
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     std::vector<csint> delta(N);  // allocate the result
 
     // Workspaces
@@ -531,7 +531,7 @@ SymbolicChol schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 
 CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     CSCMatrix L{{M, N}, S.lnz};        // allocate result
 
     std::vector<csint> c(S.cp);      // column pointers for L
@@ -561,7 +561,7 @@ CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S)
 
 CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     CSCMatrix L{{M, N}, S.lnz};  // allocate result
 
     // Workspaces
@@ -844,7 +844,7 @@ CSCMatrix& chol_update(
 // Use ereach to compute the elimination tree one node at a time (pp 43--44)
 CholCounts chol_etree_counts(const CSCMatrix& A)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");
@@ -882,7 +882,7 @@ CholCounts chol_etree_counts(const CSCMatrix& A)
 // Exercise 4.13
 CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");
@@ -968,7 +968,7 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
 // Exercise 4.13
 CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");

@@ -20,7 +20,6 @@
 #include <span>
 #include <stdexcept>
 #include <string>
-#include <span>
 #include <vector>
 
 #include "utils.h"

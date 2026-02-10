@@ -94,7 +94,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
         auto transpose_test = [](CSCMatrix C) {
             auto C_T = C.transpose();
 
-            auto [M, N] = C.shape();
+            const auto [M, N] = C.shape();
 
             REQUIRE(C.nnz() == C_T.nnz());
             REQUIRE(C_T.shape() == Shape{N, M});
@@ -126,7 +126,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
         SECTION("Symbolic Transpose") {
             auto C_T = C.transpose(false);
 
-            auto [M, N] = C.shape();
+            const auto [M, N] = C.shape();
 
             REQUIRE(C_T.data().empty());
             REQUIRE(C.nnz() == C_T.nnz());
@@ -302,7 +302,7 @@ TEST_CASE("Insertion", "[CSCMatrix][operator()][insert]")
 TEST_CASE("Indexing", "[CSCMatrix][operator()]")
 {
     auto A = davis_example_small();  // non-canonical
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     // Define the expected matrix
     std::vector<double> dense_column_major{
@@ -498,7 +498,7 @@ TEST_CASE("Exercise 2.13: is_symmetric.", "[ex2.13]")
 TEST_CASE("is_triangular")
 {
     const auto A = davis_example_chol();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     SECTION("Symmetric, Non-triangular matrix") {
         REQUIRE(A.is_symmetric());
@@ -967,7 +967,7 @@ TEST_CASE("Exercise 2.22: Concatentation", "[ex2.22][hstack][vstack]")
 TEST_CASE("Exercise 2.23: Slicing", "[ex2.23][slice]")
 {
     auto A = davis_example_small().tocsc();
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
 
     SECTION("Row slicing") {
         auto expect = COOMatrix{

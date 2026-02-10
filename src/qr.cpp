@@ -107,7 +107,7 @@ void happly(
 
 std::vector<csint> find_leftmost(const CSCMatrix& A)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     std::vector<csint> leftmost(M, -1);
 
     for (csint k = N - 1; k >= 0; --k) {
@@ -122,7 +122,7 @@ std::vector<csint> find_leftmost(const CSCMatrix& A)
 
 void vcount(const CSCMatrix& A, SymbolicQR& S)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     assert(static_cast<csint>(S.leftmost.size()) == M);
     assert(static_cast<csint>(S.parent.size()) == N);
 
@@ -241,7 +241,7 @@ SymbolicQR sqr(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 
 QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     auto M2 = S.m2;  // if M < N, M2 = M
 
     auto Nv = std::min(M, N);
@@ -342,7 +342,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
 // Exercise 5.1
 QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     auto M2 = S.m2;
 
     // Exercise 5.2: handle M < N
@@ -415,7 +415,7 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
 // Exercise 5.3
 void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 {
-    auto [M, N] = A.shape();
+    const auto [M, N] = A.shape();
     auto M2 = S.m2;
 
     auto Nv = std::min(M, N);

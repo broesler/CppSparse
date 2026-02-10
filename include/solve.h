@@ -75,7 +75,7 @@ std::vector<double> trisolve_dense(
     InplaceTriSolve inplace_solver
 )
 {
-    auto [M, N] = L.shape();
+    const auto [M, N] = L.shape();
     csint MxK = static_cast<csint>(B.size());
 
     if (MxK % M != 0) {
@@ -107,7 +107,7 @@ std::vector<double> trisolve_dense(
 template <bool Lower>
 std::vector<double> trisolve_sparse(const CSCMatrix& L, const CSCMatrix& B)
 {
-    auto [M, N] = L.shape();
+    const auto [M, N] = L.shape();
     csint K = B.shape()[1];
 
     csint Nx = std::max(M, N);  // enough space for non-square solutions
@@ -118,7 +118,7 @@ std::vector<double> trisolve_sparse(const CSCMatrix& L, const CSCMatrix& B)
     for (csint k = 0; k < K; k++) {
         auto X_k = X_span.subspan(k * Nx, Nx);
         spsolve(L, B, k, sol, {}, Lower);
-        for (auto& i : sol.xi) {
+        for (const auto i : sol.xi) {
             X_k[i] = sol.x[i];
         }
     }

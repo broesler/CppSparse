@@ -7,8 +7,7 @@
 //
 //==============================================================================
 
-#ifndef _CSPARSE_TEST_HELPERS_H_
-#define _CSPARSE_TEST_HELPERS_H_
+#pragma once
 
 #include <functional>  // function
 #include <vector>
@@ -157,7 +156,6 @@ void check_vectors_allclose(
 
 }  // namespace cs
 
-#endif  // _CSPARSE_TEST_HELPERS_H_
 
 //==============================================================================
 //==============================================================================

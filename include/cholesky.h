@@ -7,8 +7,7 @@
 //
 //==============================================================================
 
-#ifndef _CSPARSE_DECOMPOSITION_H_
-#define _CSPARSE_DECOMPOSITION_H_
+#pragma once
 
 #include <span>
 #include <vector>
@@ -571,7 +570,6 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol=0);
 
 }  // namespace cs
 
-#endif // _DECOMPOSITION_H_
 
 //==============================================================================
 //==============================================================================

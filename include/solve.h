@@ -7,8 +7,7 @@
 //
 //==============================================================================
 
-#ifndef _CSPARSE_SOLVE_H_
-#define _CSPARSE_SOLVE_H_
+#pragma once
 
 #include <span>
 #include <vector>
@@ -803,7 +802,6 @@ std::vector<double> spsolve(const CSCMatrix& A, const CSCMatrix& B);
 
 }  // namespace cs
 
-#endif  // _SOLVE_H_
 
 //==============================================================================
 //==============================================================================

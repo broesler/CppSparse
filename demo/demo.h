@@ -7,8 +7,7 @@
 //
 //==============================================================================
 
-#ifndef _CSPARSE_DEMO_H
-#define _CSPARSE_DEMO_H
+#pragma once
 
 #include <algorithm>  // max
 #include <chrono>
@@ -92,7 +91,6 @@ std::ostream& operator<<(std::ostream& os, const AMDOrder& order);
 
 }  // namespace cs
 
-#endif  // _CSPARSE_DEMO_H
 
 //==============================================================================
 //==============================================================================

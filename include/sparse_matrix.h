@@ -7,8 +7,7 @@
 //
 //==============================================================================
 
-#ifndef _CSPARSE_SPARSE_MATRIX_H_
-#define _CSPARSE_SPARSE_MATRIX_H_
+#pragma once
 
 #include <iostream>
 #include <ranges>
@@ -156,7 +155,6 @@ inline std::ostream& operator<<(std::ostream& os, const SparseMatrix& A)
 
 }  // namespace cs
 
-#endif  // _CSPARSE_SPARSE_MATRIX_H_
 
 //==============================================================================
 //==============================================================================

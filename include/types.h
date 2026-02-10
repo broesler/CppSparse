@@ -7,8 +7,7 @@
 //
 //==============================================================================
 
-#ifndef _CSPARSE_TYPES_H_
-#define _CSPARSE_TYPES_H_
+#pragma once
 
 #include <cstdint>
 #include <span>
@@ -82,7 +81,6 @@ MaxMatch maxtrans_r(const CSCMatrix& A, csint seed);
 
 }  // namespace cs
 
-#endif  // _CSPARSE_TYPES_H_
 
 //==============================================================================
 //==============================================================================

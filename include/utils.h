@@ -7,8 +7,7 @@
 //
 //==============================================================================
 
-#ifndef _CSPARSE_UTILS_H_
-#define _CSPARSE_UTILS_H_
+#pragma once
 
 #include <algorithm>  // sort
 #include <iostream>
@@ -200,7 +199,6 @@ std::ostream& operator<<(std::ostream& os, const std::array<T, N>& arr)
 
 } // namespace cs
 
-#endif  // _UTILS_H_
 
 //==============================================================================
 //==============================================================================

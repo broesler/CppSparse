@@ -7,8 +7,7 @@
 //
 //==============================================================================
 
-#ifndef _CSPARSE_PYBIND11_H_
-#define _CSPARSE_PYBIND11_H_
+#pragma once
 
 #include <array>
 #include <iostream>
@@ -601,7 +600,6 @@ auto make_lu_solver(DenseSolver&& dense_solver, SparseSolver&& sparse_solver)
 }
 
 
-#endif  // _CSPARSE_PYBIND11_H_
 
 //==============================================================================
 //==============================================================================

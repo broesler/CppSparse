@@ -224,7 +224,7 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
     // Starred elements are the diagonals of the un-permuted matrix
 
     // Create full matrix with row numbers as values
-    const csint N = 6;
+    constexpr csint N = 6;
 
     std::vector<double> A_vals(N * N);
 

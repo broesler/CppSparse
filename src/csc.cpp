@@ -918,7 +918,7 @@ std::vector<double> gaxpy_block(
 
     csint K = X.size() / N;  // number of columns in X
 
-    const csint BLOCK_SIZE = 32;  // block size for column operations
+    constexpr csint BLOCK_SIZE = 32;  // block size for column operations
 
     // For each column of X
     for (csint k = 0; k < K; ++k) {
@@ -1021,7 +1021,7 @@ std::vector<double> gatxpy_block(
 
     csint K = X.size() / M;  // number of columns in X
 
-    const csint BLOCK_SIZE = 32;  // block size for column operations
+    constexpr csint BLOCK_SIZE = 32;  // block size for column operations
 
     // For each column of X
     for (csint k = 0; k < K; ++k) {

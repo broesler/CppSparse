@@ -7,7 +7,8 @@
  *
  *============================================================================*/
 
-#include <numeric>  // iota
+#include <algorithm>  // generate, fill
+#include <numeric>    // iota
 #include <random>
 #include <vector>
 

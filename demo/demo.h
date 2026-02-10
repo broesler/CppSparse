@@ -9,11 +9,8 @@
 
 #pragma once
 
-#include <algorithm>  // max
 #include <chrono>
-#include <iomanip>    // format
 #include <iostream>
-#include <limits>     // numeric_limits
 #include <vector>
 
 #include "csparse.h"
@@ -39,7 +36,7 @@ struct Problem
      *
      * @return  A Problem object containing the matrix and other data.
      */
-    static explicit Problem from_matrix(const COOMatrix& T, double droptol=0);
+    static Problem from_matrix(const COOMatrix& T, double droptol=0);
 };
 
 

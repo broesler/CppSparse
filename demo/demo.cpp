@@ -8,7 +8,6 @@
  *============================================================================*/
 
 #include <chrono>
-#include <iomanip>    // format
 #include <iostream>
 #include <limits>     // numeric_limits
 #include <vector>

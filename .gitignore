@@ -13,4 +13,8 @@ demo1
 demo2
 demo3
 printmatrix_demo
+# Debug and linting files
 *.trace/
+.clangd
+.cache/
+compile_commands.json

@@ -11,8 +11,6 @@
 
 #include <cassert>
 #include <functional>
-#include <iostream>
-#include <optional>
 #include <ranges>
 #include <string>
 #include <string_view>

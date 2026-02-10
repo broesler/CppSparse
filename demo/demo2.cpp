@@ -9,7 +9,6 @@
  *============================================================================*/
 
 #include <array>
-#include <iomanip>    // format
 #include <iostream>
 
 #include "csparse.h"

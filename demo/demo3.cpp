@@ -8,7 +8,6 @@
  *============================================================================*/
 
 #include <algorithm>  // generate
-#include <iomanip>    // format
 #include <iostream>
 #include <random>
 #include <span>

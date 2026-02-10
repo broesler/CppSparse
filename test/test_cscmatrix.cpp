@@ -13,13 +13,11 @@
 
 #include <sstream>
 #include <string>
-#include <stdexcept>  // out_of_range
 #include <vector>
 
 #include "csparse.h"
 #include "test_helpers.h"
 
-using Catch::Matchers::AllTrue;
 using Catch::Matchers::WithinAbs;
 
 

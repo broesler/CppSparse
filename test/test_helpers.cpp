@@ -10,7 +10,6 @@
 #include <catch2/matchers/catch_matchers_all.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include <cmath>       // fabs
 #include <functional>  // function, greater_equal, not_equal_to
 #include <vector>
 

@@ -13,7 +13,6 @@
 #include <vector>
 
 #include "types.h"
-#include "utils.h"  // pvec, ipvec
 #include "csc.h"
 
 

@@ -10,7 +10,6 @@
 #include <algorithm>  // min, max
 #include <cmath>      // sqrt
 #include <numeric>    // iota, accumulate
-#include <optional>
 #include <ranges>     // reverse
 #include <stdexcept>
 #include <tuple>      // tie

@@ -13,7 +13,6 @@
 #include <numeric>    // accumulate
 #include <ranges>     // views::reverse, span
 #include <vector>
-#include <optional>
 
 #include "cholesky.h"  // etree, post
 #include "qr.h"

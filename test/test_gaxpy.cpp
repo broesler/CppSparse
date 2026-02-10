@@ -15,7 +15,6 @@
 #include "csparse.h"
 #include "test_helpers.h"
 
-using Catch::Matchers::AllTrue;
 using Catch::Matchers::WithinAbs;
 
 

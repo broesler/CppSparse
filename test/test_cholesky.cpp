@@ -10,7 +10,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_all.hpp>
 
-#include <algorithm>  // reverse
 #include <map>
 #include <numeric>    // iota
 #include <random>
@@ -20,7 +19,6 @@
 #include "csparse.h"
 #include "test_helpers.h"
 
-using Catch::Matchers::AllTrue;
 using Catch::Matchers::WithinAbs;
 
 namespace cs {

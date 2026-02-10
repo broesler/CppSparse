@@ -20,9 +20,7 @@
 #include "csparse.h"
 #include "test_helpers.h"
 
-using Catch::Matchers::AllTrue;
 using Catch::Matchers::WithinAbs;
-using Catch::Matchers::RangeEquals;
 using Catch::Matchers::UnorderedEquals;
 
 

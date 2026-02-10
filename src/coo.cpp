@@ -9,7 +9,6 @@
 
 #include <algorithm>      // max_element
 #include <cassert>
-#include <cmath>          // abs
 #include <iostream>
 #include <fstream>
 #include <format>
@@ -19,11 +18,9 @@
 #include <stdexcept>
 #include <string>
 #include <sstream>
-#include <tuple>          // tie
 #include <unordered_set>
 #include <vector>
 
-#include "utils.h"
 #include "coo.h"
 #include "csc.h"
 

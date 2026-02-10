@@ -15,7 +15,6 @@
 #include <vector>
 
 #include "types.h"
-#include "utils.h"  // print_dense_vec
 
 namespace cs {
 

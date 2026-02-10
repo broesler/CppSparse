@@ -10,13 +10,11 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_all.hpp>
 
-#include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "csparse.h"
-#include "test_helpers.h"
 
 namespace cs {
 

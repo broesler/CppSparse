@@ -9,11 +9,8 @@
 
 #pragma once
 
-#include <algorithm>  // sort
 #include <iostream>
-#include <numeric>    // iota
 #include <span>
-#include <string>
 #include <vector>
 
 #include "types.h"

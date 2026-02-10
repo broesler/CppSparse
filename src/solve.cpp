@@ -11,7 +11,6 @@
 #include <cassert>
 #include <cmath>       // fabs
 #include <format>
-#include <functional>  // reference wrapper
 #include <ranges>      // views::reverse
 #include <span>
 #include <vector>

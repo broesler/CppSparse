@@ -11,15 +11,11 @@
 #include <cassert>
 #include <cmath>      // isfinite
 #include <format>
-#include <fstream>
-#include <iomanip>    // setw, fixed, setprecision
-#include <iostream>
 #include <limits>     // numeric_limits
 #include <numeric>    // accumulate
 #include <random>
 #include <span>
 #include <stdexcept>
-#include <string>
 #include <vector>
 
 #include "utils.h"
@@ -167,9 +163,6 @@ double norm(std::span<const double> x, const double ord)
             [](double a, double b) { return std::fabs(a) < std::fabs(b); }
         ));
     } else if (ord == 0) {
-        // for (const auto& val : x) {
-        //     res += (val != 0);
-        // }
         return std::count_if(
             x.begin(), x.end(),
             [](double val) {
@@ -177,35 +170,31 @@ double norm(std::span<const double> x, const double ord)
             }
         );
     } else if (ord == 1) {
-        // for (const auto& val : x) {
-        //     res += std::fabs(val);
-        // }
-        return std::accumulate(
-            x.begin(), x.end(), 0.0,
-            [](double sum, double val) { return sum + std::fabs(val); }
+        return std::transform_reduce(
+            x.begin(),
+            x.end(),
+            0.0,
+            std::plus<double>(),
+            [](double val) { return std::fabs(val); }
         );
     } else if (ord == 2) {
-        // for (const auto& val : x) {
-        //     res += val * val;
-        // }
-        // res = std::sqrt(res);
         return std::sqrt(
-            std::accumulate(
-                x.begin(), x.end(), 0.0,
-                [](double sum, double val) { return sum + val * val; }
+            std::transform_reduce(
+                x.begin(),
+                x.end(),
+                0.0,
+                std::plus<double>(),
+                [](double val) { return val * val; }
             )
         );
     } else {
-        // for (const auto& val : x) {
-        //     res += std::pow(std::fabs(val), ord);
-        // }
-        // res = std::pow(res, 1.0 / ord);
         return std::pow(
-            std::accumulate(
-                x.begin(), x.end(), 0.0,
-                [ord](double sum, double val) {
-                    return sum + std::pow(std::fabs(val), ord); 
-                }
+            std::transform_reduce(
+                x.begin(),
+                x.end(),
+                0.0,
+                std::plus<double>(),
+                [ord](double val) { return std::pow(std::fabs(val), ord); }
             ),
             1.0 / ord
         );

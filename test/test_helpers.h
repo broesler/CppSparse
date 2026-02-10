@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include <functional>  // function
 #include <vector>
 
 #include "types.h"

@@ -207,7 +207,7 @@ auto sparse_to_ndarray(const T& self, const char order_)
 
     // Copy the data from the vector to the NumPy array.  This is the most
     // straightforward way.
-    std::copy(v.begin(), v.end(), ptr);
+    std::ranges::copy(v, ptr);
 
     return result;
 };

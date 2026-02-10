@@ -606,7 +606,7 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B)
         auto X_k = X_span.subspan(k * N, N);
 
         // Scatter B[:, k] into B_k
-        std::fill(B_k.begin(), B_k.end(), 0.0);
+        std::ranges::fill(B_k, 0.0);
         B.scatter(k, B_k);
 
         tri_solve_perm_inplace(A, tri_perm, B_k, X_k);
@@ -631,7 +631,7 @@ void spsolve(
         throw std::runtime_error("SparseSolution x vector not allocated!");
     }
 
-    std::fill(x.begin(), x.end(), 0.0);            // clear x
+    std::ranges::fill(x, 0.0);            // clear x
 
     // Populate xi with the non-zero indices of x
     reach(A, B, k, xi, p_inv);
@@ -1166,7 +1166,7 @@ QRSolveResult qr_solve(
     for (csint k = 0; k < K; ++k) {
         // Solve for each RHS column
         auto X_k = X_span.subspan(k * N, N);
-        std::fill(B_k.begin(), B_k.end(), 0.0);
+        std::ranges::fill(B_k, 0.0);
 
         B.scatter(k, B_k);  // scatter B[:, k] into B_k
 
@@ -1339,7 +1339,7 @@ std::vector<double> lu_solve(
 
         if (ir_steps > 0) {
             // Cache B_k for iterative refinement
-            std::copy(X_k.begin(), X_k.end(), B_k.begin());
+            std::ranges::copy(X_k, B_k.begin());
         }
 
         // Solve Ax = B
@@ -1429,7 +1429,7 @@ double norm1est_inv(const LUResult& res)
             }
 
             // Set x to a unit vector in the j direction
-            std::fill(x.begin(), x.end(), 0.0);
+            std::ranges::fill(x, 0.0);
             x[j] = 1.0;
             jold = j;
         }
@@ -1445,7 +1445,7 @@ double norm1est_inv(const LUResult& res)
         }
 
         // s elements are in {-1, 1}
-        std::fill(s.begin(), s.end(), 1.0);
+        std::ranges::fill(s, 1.0);
         for (csint p = 0; p < N; ++p) {
             if (x[p] < 0) {
                 s[p] = -1.0;

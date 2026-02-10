@@ -164,8 +164,8 @@ private:
  */
 class CholeskyNotPositiveDefiniteError : public std::runtime_error {
 public:
-    CholeskyNotPositiveDefiniteError(const std::string& msg)
-        : std::runtime_error(msg) {}
+    explicit CholeskyNotPositiveDefiniteError(std::string&& msg)
+        : std::runtime_error(std::move(msg)) {}
 };
 
 

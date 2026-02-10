@@ -477,7 +477,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
         C.p_[i] = flip(C.p_[i]);  // fix assembly tree
     }
 
-    std::fill(head.begin(), head.end(), -1);
+    std::ranges::fill(head, -1);
 
     // Place unordered nodes in lists
     for (csint j = N; j >= 0; --j) {
@@ -693,7 +693,7 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
 
     // Allocate workspaces
     w.resize(N);
-    std::fill(w.begin(), w.end(), -1);  // mark all nodes as unvisited
+    std::ranges::fill(w, -1);  // mark all nodes as unvisited
 
     std::vector<csint> cheap(C.indptr()),  // cheap assignment
                        is(N),              // row indices stack
@@ -708,7 +708,7 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
         augment(q[k], C, jmatch, cheap, w, js, is, ps);
     }
 
-    std::fill(imatch.begin(), imatch.end(), -1);  // find row match
+    std::ranges::fill(imatch, -1);  // find row match
     for (auto i : C.row_range()) {
         if (jmatch[i] >= 0) {
             imatch[jmatch[i]] = i;
@@ -748,7 +748,7 @@ SCCResult scc(const CSCMatrix& A)
     }
 
     // ----- DFS through A^T
-    std::fill(marked.begin(), marked.end(), false);  // clear marks
+    std::ranges::fill(marked, false);  // clear marks
 
     // get i in reverse order of finish time
     for (const auto& i : std::views::reverse(xi)) {
@@ -761,8 +761,8 @@ SCCResult scc(const CSCMatrix& A)
     D.r.push_back(0);  // first block starts at zero
 
     // reverse the order of the blocks and nodes since dfs returns in reverse
-    std::reverse(D.r.begin(), D.r.end());
-    std::reverse(D.p.begin(), D.p.end());
+    std::ranges::reverse(D.r);
+    std::ranges::reverse(D.p);
 
     D.Nb = D.r.size() - 1;  // number of strongly connected components
 
@@ -894,7 +894,8 @@ static void gather_scatter(
     for (csint k = 0; k < nc; ++k) {
         temp[k] = source[ps[k] + offset];
     }
-    std::copy(temp.begin(), temp.begin() + nc, source.begin() + offset);
+    // copy the first nc elements of temp back to source, starting at offset
+    std::ranges::copy(temp | std::views::take(nc), source.begin() + offset);
 }
 
 

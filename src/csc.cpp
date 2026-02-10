@@ -1240,7 +1240,7 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
     CSCMatrix C{{M, N}, nz_C};
 
     // Compute the actual multiplication
-    std::fill(w.begin(), w.end(), 0);  // reset workspace
+    std::ranges::fill(w, 0);  // reset workspace
     std::vector<double> x(M);
 
     csint nz = 0;  // track total number of non-zeros in C
@@ -1746,8 +1746,8 @@ CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
         C.p_[A.N_ + j] = B.p_[j] + A.nnz();
     }
 
-    std::copy(B.i_.cbegin(), B.i_.cend(), C.i_.begin() + A.nnz());
-    std::copy(B.v_.cbegin(), B.v_.cend(), C.v_.begin() + A.nnz());
+    std::ranges::copy(B.i_, C.i_.begin() + A.nnz());
+    std::ranges::copy(B.v_, C.v_.begin() + A.nnz());
 
     C.p_[C.N_] = A.nnz() + B.nnz();
 

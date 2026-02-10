@@ -22,7 +22,7 @@ struct SparseSolution {
     std::vector<csint> xi;  // non-zero indices of x
     std::vector<double> x;  // (N,) dense solution vector
 
-    SparseSolution(csint N) : x(N) {
+    explicit SparseSolution(csint N) : x(N) {
         xi.reserve(N);  // do not initialize for dfs call!
     }
 };
@@ -37,8 +37,8 @@ struct TriPerm {
  */
 class PermutedTriangularMatrixError : public std::runtime_error {
 public:
-    PermutedTriangularMatrixError(const std::string& msg)
-        : std::runtime_error(msg) {}
+    explicit PermutedTriangularMatrixError(std::string&& msg)
+        : std::runtime_error(std::move(msg)) {}
 };
 
 

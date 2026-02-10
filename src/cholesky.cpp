@@ -7,11 +7,11 @@
  *
  *============================================================================*/
 
-#include <algorithm>  // std::copy
 #include <cassert>
 #include <cmath>      // std::sqrt
 #include <iterator>   // std::back_inserter
 #include <numeric>    // std::iota, partial_sum
+#include <ranges>
 
 #include "cholesky.h"
 #include "csc.h"
@@ -96,7 +96,7 @@ std::vector<csint> ereach(
             }
 
             // Push path onto output stack
-            std::copy(s.crbegin(), s.crend(), std::back_inserter(xi));
+            std::ranges::reverse_copy(s, std::back_inserter(xi));
             s.clear();
         }
     }

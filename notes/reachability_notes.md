@@ -86,7 +86,7 @@ output = [ 4, 3, 2, 1]
 with the more efficient idiomatic line:
 
 ```cpp
-std::copy(stack.rbegin(), stack.rend(), std::back_inserter(output));
+std::ranges::reverse_copy(stack, std::back_inserter(output));
 ```
 
 On the next subpath traversal, we get:
@@ -106,7 +106,7 @@ Reversing in-place is more efficient than copying the output to a new vector, so
 we can use:
 
 ```cpp
-std::reverse(output.begin(), output.end());
+std::ranges::reverse(output);
 return output;
 ```
 

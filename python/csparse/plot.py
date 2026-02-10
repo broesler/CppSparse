@@ -88,8 +88,10 @@ def cspy(A, *, cmap="viridis_r", colorbar=True, ticklabels=False, ax=None, **kwa
 
     # Set plot limits and aspect ratio
     # Ensure limits are appropriate even for single row/column matrices
-    ax.set_xlim(-0.75, N - 0.25 if N > 0 else 0.75)
-    ax.set_ylim(M - 0.25 if M > 0 else 0.75, -0.75)  # inverted y-axis like spy
+    if ax.get_autoscale_on():
+        ax.set_xlim(-0.75, N - 0.25 if N > 0 else 0.75)
+        ax.set_ylim(M - 0.25 if M > 0 else 0.75, -0.75)  # inverted y-axis like spy
+
     ax.set_aspect("equal")
 
     # ax.spines['bottom'].set_visible(False)

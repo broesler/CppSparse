@@ -54,6 +54,17 @@ def demo2(problem, name='', axs=None):
     _, cb = csparse.cspy(C, ax=axs[0], norm='log')
     axs[0].set_title('C')
 
+    # Plot inset for large matrix
+    if name == 'bcsstk16':
+        ax_inset = axs[0].inset_axes(
+            [0.01, 0.01, 0.4, 0.4],
+            xlim=(2200, 2360),
+            ylim=(2360, 2200),  # axes flipped to matrix orientation
+        )
+        csparse.cspy(C, ax=ax_inset, norm='log', colorbar=False)
+        ax_inset.set_xlabel('')
+        axs[0].indicate_inset_zoom(ax_inset, edgecolor='grey')
+
     # Compute the Dulmage-Mendelsohn (DM) ordering
     M, N = C.shape
     res = csparse.dmperm(C)
@@ -83,7 +94,6 @@ def demo2(problem, name='', axs=None):
     #         Compute and plot a decomposition of the matrix
     # -------------------------------------------------------------------------
     # Code is unique to the python demo (not in C++ demo)
-
     ax = axs[3]
 
     pad = {
@@ -178,14 +188,14 @@ def demo2(problem, name='', axs=None):
 matrix_path = Path('../../data/')
 
 matrix_names = [
-    't1',
-    'fs_183_1',
-    'west0067',
-    'lp_afiro',
-    'ash219',
-    'mbeacxc',
-    'bcsstk01',
-    # 'bcsstk16'
+    # 't1',
+    # 'fs_183_1',
+    # 'west0067',
+    # 'lp_afiro',
+    # 'ash219',
+    # 'mbeacxc',
+    # 'bcsstk01',
+    'bcsstk16'
 ]
 
 

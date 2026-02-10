@@ -221,7 +221,7 @@ std::vector<csint> randperm(csint N, csint seed)
     if (seed == 0) {
         return res;
     } else if (seed == -1) {
-        std::reverse(res.begin(), res.end());
+        std::ranges::reverse(res);
         return res;
     } else {
         if (seed < 0) {

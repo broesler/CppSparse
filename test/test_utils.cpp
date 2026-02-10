@@ -76,7 +76,7 @@ TEST_CASE("Random permutation", "[vector][randperm]")
 
     SECTION("Reverse permutation") {
         seed = -1;
-        std::reverse(expect_p.begin(), expect_p.end());
+        std::ranges::reverse(expect_p);
     }
 
     SECTION("Arbitrary permutation") {

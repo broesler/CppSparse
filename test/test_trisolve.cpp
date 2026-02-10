@@ -316,8 +316,8 @@ TEST_CASE("Permuted triangular solvers", "[trisolve_perm]")
 
         // NOTE returns *reversed* vectors for an upper triangular matrix!!
         auto [p_inv, q_inv, p_diags] = find_tri_permutation(PUQ);
-        std::reverse(p_inv.begin(), p_inv.end());
-        std::reverse(q_inv.begin(), q_inv.end());
+        std::ranges::reverse(p_inv);
+        std::ranges::reverse(q_inv);
 
         CHECK(p_inv == expect_p);
         CHECK(q_inv == expect_q);

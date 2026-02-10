@@ -680,7 +680,7 @@ void reach(
     }
 
     // xi is returned from dfs in reverse order, since it is a stack
-    std::reverse(xi.begin(), xi.end());
+    std::ranges::reverse(xi);
 }
 
 
@@ -753,7 +753,7 @@ std::vector<csint> reach_r(const CSCMatrix& A, const CSCMatrix& B)
     }
 
     // xi is returned from dfs in reverse order, since it is a stack
-    std::reverse(xi.begin(), xi.end());
+    std::ranges::reverse(xi);
     return xi;
 }
 
@@ -828,7 +828,7 @@ std::vector<csint> topological_order(
 
     if (forward) {
         // Reverse the order of the stack to get the topological order
-        std::reverse(xi.begin(), xi.end());
+        std::ranges::reverse(xi);
     }
 
     return xi;
@@ -902,7 +902,7 @@ void CholResult::solve(
     b.scatter(0, w);
 
     lsolve_(xi, w);                      // y = L \ b -> w = y
-    std::reverse(xi.begin(), xi.end());  // reverse the order for L^T
+    std::ranges::reverse(xi);  // reverse the order for L^T
     ltsolve_(xi, w);                     // P^T x = L^T \ y -> w = P^T x
     pvec<double>(p_inv, w, x);           // x = P P^T x
 }

@@ -10,6 +10,7 @@
 #include <algorithm>  // reverse_copy
 #include <cassert>
 #include <cmath>      // std::sqrt
+#include <format>
 #include <iterator>   // std::back_inserter
 #include <numeric>    // std::iota, partial_sum
 

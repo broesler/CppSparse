@@ -15,9 +15,15 @@ JOBS = 8
 
 CMAKE_FLAGS ?=
 
+ifdef CONDA_PREFIX
+	CMAKE_FLAGS += -DCMAKE_PREFIX_PATH=$(CONDA_PREFIX)
+endif
+
 CMAKE_CONFIG_ARGS := -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) \
 					 -DCMAKE_CXX_COMPILER=$(CXX) \
-					 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+					 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+					 $(CMAKE_FLAGS)
+
 CMAKE_BUILD_ARGS := --build $(BUILD_DIR) --config $(BUILD_TYPE) -j${JOBS}
 
 ifdef USE_ASAN
@@ -37,7 +43,7 @@ all: lib tests python demos
 lib:
 	mkdir -p $(BUILD_DIR)
 	cmake -S . -B $(BUILD_DIR) $(CMAKE_CONFIG_ARGS)
-	cmake $(CMAKE_BUILD_ARGS) --target csparse_lib $(CMAKE_FLAGS)
+	cmake $(CMAKE_BUILD_ARGS) --target csparse_lib
 
 # Build the C++ tests
 tests: lib

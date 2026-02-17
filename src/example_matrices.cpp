@@ -69,9 +69,9 @@ CSCMatrix davis_example_qr(double add_diag, bool random_vals)
     std::vector<double> vals(rows.size());
     if (random_vals) {
         // Randomize the non-zero values
-        unsigned int seed = std::random_device{}();
-        std::default_random_engine rng(seed);
-        std::uniform_real_distribution<double> uniform(0.0, 1.0);
+        const auto seed = std::random_device{}();
+        std::default_random_engine rng{seed};
+        std::uniform_real_distribution<double> uniform{0.0, 1.0};
         std::generate(
             vals.begin(),
             vals.end(),

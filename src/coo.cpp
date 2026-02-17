@@ -109,9 +109,7 @@ COOMatrix::COOMatrix(
 }
 
 
-COOMatrix::COOMatrix(const Shape& shape, csint nzmax)
-    : M_(shape[0]),
-      N_(shape[1]) 
+COOMatrix::COOMatrix(const Shape& shape, csint nzmax) : M_{shape[0]}, N_{shape[1]} 
 {
     v_.reserve(nzmax);
     i_.reserve(nzmax);
@@ -120,10 +118,7 @@ COOMatrix::COOMatrix(const Shape& shape, csint nzmax)
 
 
 // Exercise 2.2
-COOMatrix::COOMatrix(const CSCMatrix& A)
-    : v_(A.nnz()),
-      i_(A.nnz()),
-      j_(A.nnz())
+COOMatrix::COOMatrix(const CSCMatrix& A) : v_(A.nnz()), i_(A.nnz()), j_(A.nnz())
 {
     // Get the shape
     M_ = A.M_;
@@ -190,9 +185,9 @@ COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
         seed = std::random_device{}();
     }
 
-    std::default_random_engine rng(seed);
-    std::uniform_int_distribution<csint> idx_dist(0, M * N - 1);
-    std::uniform_real_distribution<double> value_dist(0.0, 1.0);
+    std::default_random_engine rng{seed};
+    std::uniform_int_distribution<csint> idx_dist{0, M * N - 1};
+    std::uniform_real_distribution<double> value_dist{0.0, 1.0};
 
     // Create a set of unique random (linear) indices
     std::unordered_set<csint> idx;
@@ -209,7 +204,11 @@ COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
     // Use ranges::transform to fill the vectors
     std::ranges::transform(idx, row_idx.begin(), [N](csint i) { return i / N; });
     std::ranges::transform(idx, col_idx.begin(), [N](csint i) { return i % N; });
-    std::ranges::generate(values.begin(), values.end(), [&rng, &value_dist]() { return value_dist(rng); });
+    std::ranges::generate(
+        values.begin(),
+        values.end(),
+        [&rng, &value_dist]() { return value_dist(rng); }
+    );
 
     // Build the matrix
     return {values, row_idx, col_idx, {M, N}};
@@ -404,11 +403,7 @@ void COOMatrix::write_elems_(std::stringstream& ss, csint start, csint end) cons
     for (csint k = start; k < end; ++k) {
         ss << std::vformat(
             format_string,
-            std::make_format_args(
-                i_[k], row_width,
-                j_[k], col_width,
-                v_[k]
-            )
+            std::make_format_args(i_[k], row_width, j_[k], col_width, v_[k])
         );
 
         if (k < end - 1) {

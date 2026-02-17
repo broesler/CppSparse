@@ -37,16 +37,16 @@ CSCMatrix::CSCMatrix(
     : v_(data.begin(), data.end()),
       i_(indices.begin(), indices.end()),
       p_(indptr.begin(), indptr.end()),
-      M_(shape[0]),
-      N_(shape[1])
+      M_{shape[0]},
+      N_{shape[1]}
 {}
 
 
 CSCMatrix::CSCMatrix(const Shape& shape, csint nzmax, bool values)
     : i_(nzmax),
       p_(shape[1] + 1),
-      M_(shape[0]),
-      N_(shape[1])
+      M_{shape[0]},
+      N_{shape[1]}
 {
     if (values) {
         v_.resize(nzmax);
@@ -71,8 +71,8 @@ CSCMatrix::CSCMatrix(
     std::span<const double> A,
     const Shape& shape,
     const DenseOrder order
-) : M_(shape[0]),
-    N_(shape[1])
+) : M_{shape[0]},
+    N_{shape[1]}
 {
     if (std::ssize(A) != (M_ * N_)) {
         throw std::invalid_argument(
@@ -1801,7 +1801,7 @@ CSCMatrix CSCMatrix::slice(
     const csint i_end,
     const csint j_start,
     const csint j_end
-    ) const
+) const
 {
     if ((i_start < 0) || (i_end > M_) || (i_start > i_end)) {
         throw std::out_of_range(
@@ -1853,7 +1853,7 @@ CSCMatrix CSCMatrix::slice(
 CSCMatrix CSCMatrix::index(
     std::span<const csint> rows,
     std::span<const csint> cols
-    ) const
+) const
 {
     csint M = rows.size();
     csint N = cols.size();

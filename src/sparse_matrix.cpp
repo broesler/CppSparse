@@ -28,7 +28,8 @@ std::string SparseMatrix::to_string(bool verbose, csint threshold) const
     ss << std::format(
         "<{} matrix\n"
         "        with {} stored elements and shape ({}, {})>",
-        get_format_desc_(), nnz_, M, N);
+        get_format_desc_(), nnz_, M, N
+    );
 
     if (verbose) {
         ss << std::endl;

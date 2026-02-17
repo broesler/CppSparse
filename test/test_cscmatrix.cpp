@@ -376,6 +376,14 @@ TEST_CASE("Item Comparison Operators", "[CSCMatrix][operator==]")
     CHECK(A(1, 0) <= A(0, 0));
     CHECK(A(0, 0) > A(1, 0));
     CHECK(A(1, 0) < A(0, 0));
+
+    // double vs. 
+    CHECK(4.5 == A(0, 0));
+    CHECK(4.0 <= A(0, 0));
+    CHECK(5.0 >= A(0, 0));
+    CHECK(4.0 < A(0, 0));
+    CHECK(5.0 > A(0, 0));
+
 }
 
 

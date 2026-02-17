@@ -8,4 +8,5 @@ dependencies:
   - make
   - cmake
   - cxx-compiler
+  - catch2
   - pybind11

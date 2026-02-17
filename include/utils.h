@@ -138,62 +138,6 @@ std::vector<T> ipvec(const std::vector<csint>& p, const std::vector<T>& b)
 std::vector<csint> randperm(csint N, csint seed=0);
 
 
-/*------------------------------------------------------------------------------
- *         Printing
- *----------------------------------------------------------------------------*/
-/** Print a std::vector. */
-template <typename T>
-void print_vec(
-    std::span<const T> vec,
-    std::ostream& os=std::cout,
-    std::string_view end="\n"
-)
-{
-    os << "[";
-    for (size_t i = 0; i < vec.size(); i++) {
-        os << vec[i];
-        if (i < vec.size() - 1) {
-            os << ", ";
-        }
-    }
-    os << "]" << end;
-}
-
-
-/** Print a std::span to an output stream. */
-template <typename T>
-std::ostream& operator<<(std::ostream& os, std::span<const T> vec)
-{
-    print_vec(vec, os, "");
-    return os;
-}
-
-
-/** Print a std::vector to an output stream. */
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
-{
-    print_vec(std::span{vec}, os, "");
-    return os;
-}
-
-
-/** Print a std::array to an output stream. */
-template <typename T, std::size_t N>
-std::ostream& operator<<(std::ostream& os, const std::array<T, N>& arr)
-{
-    os << "{";
-    for (std::size_t i = 0; i < N; ++i) {
-        os << arr[i];
-        if (i < N - 1) {
-            os << ", ";
-        }
-    }
-    os << "}";
-    return os;
-}
-
-
 } // namespace cs
 
 

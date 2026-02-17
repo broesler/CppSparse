@@ -301,25 +301,25 @@ COOMatrix& COOMatrix::insert(
  *----------------------------------------------------------------------------*/
 CSCMatrix COOMatrix::compress() const 
 {
-    auto nnz_ = nnz();
-    auto values = !v_.empty();
-    CSCMatrix C{{M_, N_}, nnz_, values};
+    const bool values = !v_.empty();
+    CSCMatrix C{{M_, N_}, nnz(), values};
     std::vector<csint> w(N_);  // workspace
 
     // Compute number of elements in each column
-    for (csint k = 0; k < nnz_; ++k)
-        w[j_[k]]++;
+    for (auto j : j_) {
+        w[j]++;
+    }
 
     // Column pointers are the cumulative sum, starting with 0
     std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
-    for (csint k = 0; k < nnz_; ++k) {
+    for (auto [i, j, v] : elems()) {
         // A(i, j) is the pth entry in the CSC matrix
-        auto p = w[j_[k]]++;  // "pointer" to the current element's column
-        C.i_[p] = i_[k];
+        auto p = w[j]++;  // "pointer" to the current element's column
+        C.i_[p] = i;
         if (values) {
-            C.v_[p] = v_[k];
+            C.v_[p] = v;
         }
     }
 
@@ -336,17 +336,17 @@ std::vector<double> COOMatrix::to_dense_vector(const DenseOrder order) const
     std::vector<double> arr(M_ * N_, 0.0);
     csint idx;
 
-    for (csint k = 0; k < nnz(); ++k) {
+    for (auto [i, j, v] : elems()) {
         // Column- vs row-major order
         if (order == DenseOrder::ColMajor) {
-            idx = i_[k] + j_[k] * M_;
+            idx = i + j * M_;
         } else if (order == DenseOrder::RowMajor) {
-            idx = j_[k] + i_[k] * N_;
+            idx = j + i * N_;
         } else {
             throw std::invalid_argument("Invalid order argument.");
         }
 
-        arr[idx] = v_[k];
+        arr[idx] = v;
     }
 
     return arr;
@@ -381,8 +381,8 @@ std::vector<double> COOMatrix::dot(std::span<const double> x) const
 
     std::vector<double> out(x.size());
 
-    for (csint p = 0; p < nnz(); ++p) {
-        out[i_[p]] += v_[p] * x[j_[p]];
+    for (auto [i, j, v] : elems()) {
+        out[i] += v * x[j];
     }
 
     return out;
@@ -395,10 +395,10 @@ std::vector<double> COOMatrix::dot(std::span<const double> x) const
 void COOMatrix::write_elems_(std::stringstream& ss, csint start, csint end) const
 {
     // Compute index width from maximum index
-    int row_width = std::to_string(M_ - 1).size();
-    int col_width = std::to_string(N_ - 1).size();
+    auto row_width = std::to_string(M_ - 1).size();
+    auto col_width = std::to_string(N_ - 1).size();
 
-    const std::string format_string = make_format_string_();
+    const auto format_string = make_format_string_();
 
     for (csint k = start; k < end; ++k) {
         ss << std::vformat(

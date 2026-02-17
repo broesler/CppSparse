@@ -135,6 +135,20 @@ public:
     const std::vector<csint>& col() const;
     virtual const std::vector<double>& data() const override;
 
+    /** Return an iterator over the number of non-zeros in the matrix. */
+    auto elem_range() const { return std::views::iota(csint{0}, nnz()); }
+
+    /** Return an iterator over the row indices, column indices, and values of the
+     * non-zero entries in the matrix. */
+    auto elems() const
+    {
+        return elem_range() | std::views::transform(
+            [this](csint k) {
+                return std::tuple{i_[k], j_[k], !v_.empty() ? v_[k] : 0.0};
+             }
+        );
+    }
+
     /** Insert triplet entry into the matrix.
      *
      * Note that there is no argument checking other than for positive indices.

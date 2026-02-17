@@ -30,8 +30,10 @@ Householder house(std::span<const double> x)
     std::vector<double> v(x.begin(), x.end());  // copy x into v
 
     // sigma is the sum of squares of all elements *except* the first
-    for (csint i = 1; i < std::ssize(v); ++i) {
-        sigma += v[i] * v[i];
+    auto v_view = v | std::views::drop(1);
+
+    for (const auto vi : v_view) {
+        sigma += vi * vi;
     }
 
     if (sigma == 0) {  // x is already a multiple of e1
@@ -53,8 +55,8 @@ Householder house(std::span<const double> x)
         beta = (s - alpha) / s;
 
         v[0] = 1;
-        for (csint i = 1; i < std::ssize(v); ++i) {
-            v[i] /= (alpha - s);
+        for (auto& vi : v_view) {
+            vi /= (alpha - s);
         }
 
         //---------- Davis book code (cs_house)
@@ -72,7 +74,7 @@ Householder house(std::span<const double> x)
         // beta = 2 * (v0 * v0) / (v0 * v0 + sigma);
 
         // normalize to v[0] == 1
-        // for (auto& vi : v) {
+        // for (auto& vi : v_view) {
         //     vi /= v0;
         // }
     }
@@ -106,10 +108,10 @@ void happly(
 
 std::vector<csint> find_leftmost(const CSCMatrix& A)
 {
-    const auto [M, N] = A.shape();
+    const auto M = A.shape()[0];
     std::vector<csint> leftmost(M, -1);
 
-    for (csint k = N - 1; k >= 0; --k) {
+    for (auto k : A.column_range() | std::views::reverse) {
         for (auto i : A.row_indices(k)) {
             leftmost[i] = k;  // leftmost[i] = min(find(A(i, :)))
         }
@@ -133,7 +135,7 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
     S.p_inv.assign(M + N, -1);  // initialize permutation vector
 
     // Initialize the linked lists for each row with their leftmost index
-    for (csint i = M-1; i >= 0; --i) {  // scan rows in reverse order
+    for (auto i : A.row_range() | std::views::reverse) {  // scan rows in reverse order
         auto k = S.leftmost[i];
         if (k != -1) {                  // row i is not empty
             if (nque[k]++ == 0) {
@@ -150,7 +152,7 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
     // List k contains all rows that belong to V(:, k)
     csint k;  // declare outside loop for final row permutation
     for (k = 0; k < N; ++k) {          // find row permutation and nnz(V)
-        auto i = head[k];             // remove row i from queue k
+        auto i = head[k];              // remove row i from queue k
         S.vnz++;                       // count V(k, k) as nonzero
         if (i < 0) {
             i = S.m2++;                // add a fictitious row

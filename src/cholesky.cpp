@@ -188,8 +188,10 @@ std::vector<csint> post(std::span<const csint> parent)
     std::vector<csint> head(N, -1);
     std::vector<csint> next(N);
 
+    auto j_range = std::views::iota(csint{0}, N);
+
     // Traverse nodes in reverse order
-    for (csint j = N - 1; j >= 0; --j) {
+    for (auto j : j_range | std::views::reverse) {
         if (parent[j] != -1) {           // only operate on non-roots
             next[j] = head[parent[j]];   // add j to list of its parent
             head[parent[j]] = j;
@@ -197,7 +199,7 @@ std::vector<csint> post(std::span<const csint> parent)
     }
 
     // Search from each root
-    for (csint j = 0; j < N; ++j) {
+    for (auto j : j_range) {
         if (parent[j] == -1) {  // only search from roots
             tdfs(j, head, next, postorder);
         }
@@ -680,9 +682,9 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
             // Row indices and values in L[k:, j] are stored in:
             //  L.i_ and L.v_[c[j] ... L.p_[j+1]-1]
             //
-            auto lkj = L.v_[c[j]];  // cache L(k, j)
-            for (csint p = c[j]++; p < L.p_[j+1]; ++p) {
-                x[L.i_[p]] -= L.v_[p] * lkj;
+            auto lkj = L.v_[c[j]++];  // cache L(k, j)
+            for (auto [i, v] : L.column(j)) {
+                x[i] -= v * lkj;
             }
         }
 

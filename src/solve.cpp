@@ -52,7 +52,7 @@ std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& B)
 
 void ltsolve_inplace(const CSCMatrix& L, std::span<double> x)
 {
-    for (csint j = L.N_ - 1; j >= 0; --j) {
+    for (auto j : L.column_range() | std::views::reverse) {
         for (csint p = L.p_[j] + 1; p < L.p_[j+1]; ++p) {
             x[j] -= L.v_[p] * x[L.i_[p]];
         }
@@ -69,7 +69,7 @@ std::vector<double> ltsolve(const CSCMatrix& L, std::span<const double> B)
 
 void usolve_inplace(const CSCMatrix& U, std::span<double> x)
 {
-    for (csint j = U.N_ - 1; j >= 0; --j) {
+    for (auto j : U.column_range() | std::views::reverse) {
         x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
         for (csint p = U.p_[j]; p < U.p_[j+1] - 1; ++p) {
             x[U.i_[p]] -= U.v_[p] * x[j];
@@ -132,7 +132,7 @@ std::vector<double> lsolve_opt(const CSCMatrix& L, std::span<const double> b)
 // Exercise 3.8
 void usolve_inplace_opt(const CSCMatrix& U, std::span<double> x)
 {
-    for (csint j = U.N_ - 1; j >= 0; --j) {
+    for (auto j : U.column_range() | std::views::reverse) {
         auto& x_val = x[j];  // cache reference to value
         if (x_val != 0) {
             x_val /= U.v_[U.p_[j+1] - 1];  // diagonal entry
@@ -218,8 +218,8 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
 
     // Perform the permuted forward solve
     for (auto j : A.column_range()) {
-        auto i = p_inv[j];        // permuted row index
-        auto d = p_diags[j];      // pointer to the diagonal entry
+        auto i = p_inv[j];       // permuted row index
+        auto d = p_diags[j];     // pointer to the diagonal entry
         auto x_val = b_work[i];  // cache diagonal value
 
         if (x_val != 0) {
@@ -280,14 +280,14 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b)
 
     // Perform the permuted forward solve
     for (const auto& j : q_inv) {
-        auto d = p_diags[j];      // pointer to the diagonal entry
-        auto i = A.i_[d];         // permuted row index
+        auto d = p_diags[j];     // pointer to the diagonal entry
+        auto i = A.i_[d];        // permuted row index
         auto x_val = b_work[i];  // cache diagonal value
 
         if (x_val != 0) {
             x_val /= A.v_[d];  // solve for x[A.i_[d]]
             x[j] = x_val;      // store solution in correct position
-            for (csint p = A.p_[j]+1; p < A.p_[j+1]; ++p) {
+            for (csint p = A.p_[j] + 1; p < A.p_[j+1]; ++p) {
                 b_work[A.i_[p]] -= A.v_[p] * x_val;  // update the off-diagonals
             }
         }
@@ -364,9 +364,9 @@ std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b)
     std::vector<double> b_work(b.begin(), b.end());
 
     // Perform the permuted backward solve
-    for (csint j = A.N_ - 1; j >= 0; --j) {
-        auto i = p_inv[j];        // permuted row index
-        auto d = p_diags[j];      // pointer to the diagonal entry
+    for (auto j : A.column_range() | std::views::reverse) {
+        auto i = p_inv[j];       // permuted row index
+        auto d = p_diags[j];     // pointer to the diagonal entry
         auto x_val = b_work[i];  // cache diagonal value
 
         if (x_val != 0) {
@@ -877,8 +877,8 @@ void CholResult::solve(
 
     // // scatter permuted b -> w = Pb
     // assert(k < B.N_);
-    // for (csint p = B.p_[k]; p < B.p_[k+1]; ++p) {
-    //     w[p_inv[B.i_[p]]] = B.v_[p];
+    // for (auto [i, v] : B.column(k)) {
+    //     w[p_inv[i]] = v;
     // }
 
     // lsolve_inplace(L, w);       // y = L \ b -> w = y
@@ -930,8 +930,8 @@ SparseSolution CholResult::lsolve_impl_(
         // Inspect L to get the parent vector, since it has sorted indices
         assert(L.has_sorted_indices_);
         parent_.assign(N, -1);
-        for (csint j = 0; j < N-1; ++j) {  // skip the last row (only diagonal)
-            parent_[j] = L.i_[L.p_[j]+1];  // first off-diagonal element
+        for (csint j = 0; j < N - 1; ++j) {  // skip the last row (only diagonal)
+            parent_[j] = L.i_[L.p_[j]+1];    // first off-diagonal element
         }
         parent = parent_;  // point the span to the local parent vector
     }
@@ -1384,21 +1384,16 @@ std::vector<double> lu_tsolve(
  *
  * @return j  the first index of the maximum absolute value
  */
-static inline csint min_argmaxabs(const std::vector<double>& x)
+static inline auto min_argmaxabs(std::span<const double> x)
 {
-    csint N = x.size();
-    auto j = N;         // minimum index
-    double max_val = 0;  // maximum absolute value
-
-    for (csint i = N-1; i >= 0; --i) {
-        auto mval = std::fabs(x[i]);
-        if (i < j && mval > max_val) {
-            max_val = mval;
-            j = i;
-        }
+    if (x.empty()) {
+        throw std::runtime_error("Input vector cannot be empty!");
     }
 
-    return j;
+    // Find first iterator with maximum absolute value
+    auto it = std::ranges::max_element(x, {}, [](double v) { return std::abs(v); });
+
+    return std::distance(x.begin(), it);
 }
 
 
@@ -1417,8 +1412,10 @@ double norm1est_inv(const LUResult& res)
     std::vector<double> s(N);
     csint jold = -1;
 
+    constexpr csint MAX_ITER = 5;  // maximum number of iterations
+
     // Estimate the 1-norm
-    for (csint k = 0; k < 5; ++k) {
+    for (csint k = 0; k < MAX_ITER; ++k) {
         if (k > 0) {
             // j is the first index where |x| == max(|x|) (infinity norm)
             auto j = min_argmaxabs(x);
@@ -1444,15 +1441,12 @@ double norm1est_inv(const LUResult& res)
         }
 
         // s elements are in {-1, 1}
-        std::ranges::fill(s, 1.0);
-        for (csint p = 0; p < N; ++p) {
-            if (x[p] < 0) {
-                s[p] = -1.0;
-            }
-        }
+        std::ranges::transform(
+            x, s.begin(), [](auto v) { return std::copysign(1.0, v); }
+        );
 
-        std::swap(x, s);        // x = s
-        res.tsolve(x);  // Solve A^T x = s
+        std::swap(x, s);  // x = s
+        res.tsolve(x);    // Solve A^T x = s
     }
 
     return est;

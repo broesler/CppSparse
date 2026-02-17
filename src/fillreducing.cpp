@@ -52,14 +52,11 @@ static inline csint flip(csint i) {  return -i - 2; }
  *
  * @return the updated mark
  */
-static csint wclear(csint mark, csint lemax, std::vector<csint>& w, csint N)
+static csint wclear(csint mark, csint lemax, std::span<csint> w)
 {
+    csint N = std::ssize(w) - 1;  // w has size N+1, but we only use w[0..N-1]
     if (mark < 2 || (mark + lemax < 0)) {
-        for (csint k = 0; k < N; ++k) {
-            if (w[k] != 0) {
-                w[k] = 1;
-            }
-        }
+        std::ranges::replace_if(w.first(N), [](auto v) { return v != 0; }, 1);
         mark = 2;
     }
     return mark;  // at this point, w [0..N-1] < mark holds
@@ -170,7 +167,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
                        degree{len} ;    // degree of node i
 
     csint lemax = 0;
-    auto mark = wclear(0, 0, w, N);  // clear w
+    auto mark = wclear(0, 0, w);  // clear w
     elen[N] = -2;  // N is a dead element
     C.p_[N] = -1;  // N is a root of assembly tree
     w[N] = 0;      // N is a dead element
@@ -306,7 +303,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
         elen[k] = -2;               // k is now an element
 
         // --- Find set differences --------------------------------------------
-        mark = wclear(mark, lemax, w, N);  // clear w if necessary
+        mark = wclear(mark, lemax, w);  // clear w if necessary
 
         for (csint pk = pk1; pk < pk2; ++pk) {   // scan 1 : find |Le \ Lk|
             auto i = C.i_[pk];
@@ -388,7 +385,7 @@ std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
 
         degree[k] = dk;  // finalize |Lk|
         lemax = std::max(lemax, dk);
-        mark = wclear(mark + lemax, lemax, w, N);  // clear w
+        mark = wclear(mark + lemax, lemax, w);  // clear w
 
         // --- Supernode detection ---------------------------------------------
         for (csint pk = pk1; pk < pk2; ++pk) {

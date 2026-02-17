@@ -359,8 +359,8 @@ CSCMatrix& CSCMatrix::assign(
         throw std::invalid_argument("Input matrix must be of size M x N.");
     }
 
-    csint rows_size = std::ssize(rows);
-    csint cols_size = std::ssize(cols);
+    const csint rows_size = std::ssize(rows);
+    const csint cols_size = std::ssize(cols);
     for (csint i = 0; i < rows_size; ++i) {
         for (csint j = 0; j < cols_size; ++j) {
             set_item_(rows[i], cols[j], C[i + j * rows_size]);
@@ -377,8 +377,8 @@ CSCMatrix& CSCMatrix::assign(
     const CSCMatrix& C
 )
 {
-    csint rows_size = std::ssize(rows);
-    csint cols_size = std::ssize(cols);
+    const csint rows_size = std::ssize(rows);
+    const csint cols_size = std::ssize(cols);
 
     if (C.M_ != rows_size) {
         throw std::invalid_argument(
@@ -606,24 +606,23 @@ CSCMatrix& CSCMatrix::sort()
 CSCMatrix& CSCMatrix::sum_duplicates()
 {
     csint nz = 0;  // count actual number of non-zeros (excluding dups)
-    std::vector<csint> w(M_, -1);                      // row i not yet seen
+    std::vector<csint> w(M_, -1);        // row i not yet seen
 
     for (auto j : column_range()) {
-        auto q = nz;                                  // column j will start at q
-        for (csint p = p_[j]; p < p_[j + 1]; ++p) {
-            auto i = i_[p];                          // A(i, j) is nonzero
+        auto q = nz;                     // column j will start at q
+        for (auto [i, v] : column(j)) {
             if (w[i] >= q) {
-                v_[w[i]] += v_[p];                   // A(i, j) is a duplicate
+                v_[w[i]] += v;           // A(i, j) is a duplicate
             } else {
-                w[i] = nz;                          // record where row i occurs
-                i_[nz] = i;                          // keep A(i, j)
-                v_[nz++] = v_[p];
+                w[i] = nz;               // record where row i occurs
+                i_[nz] = i;              // keep A(i, j)
+                v_[nz++] = v;
             }
         }
-        p_[j] = q;                                    // record start of column j
+        p_[j] = q;                       // record start of column j
     }
 
-    p_[N_] = nz;                                     // finalize A
+    p_[N_] = nz;                         // finalize A
     realloc();
 
     return *this;
@@ -1220,7 +1219,7 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
     // Compute nnz(A*B) by counting non-zeros in each column of C
     csint nz_C = 0;
 
-    for (csint j = 0; j < N; ++j) {
+    for (auto j : B.column_range()) {
         csint mark = j + 1;
         for (auto Bi : B.row_indices(j)) {
             // Scatter, but without x or C
@@ -1243,7 +1242,7 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
     csint nz = 0;  // track total number of non-zeros in C
     bool fs = true;  // first call to scatter
 
-    for (csint j = 0; j < N; ++j) {
+    for (auto j : B.column_range()) {
         C.p_[j] = nz;  // column j of C starts here
 
         // Compute x = A @ B[:, j]
@@ -1351,7 +1350,7 @@ CSCMatrix add_scaled(
     csint nz = 0;    // track total number of non-zeros in C
     bool fs = true;  // Exercise 2.19 -- first call to scatter
 
-    for (csint j = 0; j < N; ++j) {
+    for (auto j : A.column_range()) {
         C.p_[j] = nz;  // column j of C starts here
         nz = A.scatter(j, alpha, w, x, j+1, C, nz, fs);  // alpha * A(:, j)
         fs = false;
@@ -1496,8 +1495,8 @@ void CSCMatrix::scatter(csint k, std::span<double> x) const
         );
     }
 
-    for (csint p = p_[k]; p < p_[k+1]; ++p) {
-        x[i_[p]] += v_[p];  // accumulate duplicate entries
+    for (auto [i, v] : column(k)) {
+        x[i] += v;  // accumulate duplicate entries
     }
 }
 
@@ -1518,11 +1517,10 @@ CSCMatrix CSCMatrix::permute(
         C.p_[k] = nz;                   // column k of C is column q[k] of A
         auto j = q.empty() ? k : q[k];
 
-        for (csint t = p_[j]; t < p_[j+1]; ++t) {
+        for (auto [i, v] : column(j)) {
             if (values) {
-                C.v_[nz] = v_[t];       // row i of A is row p_inv[i] of C
+                C.v_[nz] = v;       // row i of A is row p_inv[i] of C
             }
-            auto i = i_[t];
             C.i_[nz++] = p_inv.empty() ? i : p_inv[i];
         }
     }

@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     // Create an identity matrix
     const auto [M, N] = A.shape();
     COOMatrix I{{M, M}, M};  // only zeros on the diagonal
-    for (csint i = 0; i < M; ++i) {
+    for (auto i : A.row_range()) {
         I.insert(i, i, 1.0);
     }
     CSCMatrix Eye{I};

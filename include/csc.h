@@ -276,7 +276,7 @@ public:
         friend class CSCMatrix;
 
         // Constructor is private so only CSCMatrix can create it.
-        ItemProxy(CSCMatrix& A, csint i, csint j) : A_(A), i_(i), j_(j) {}
+        ItemProxy(CSCMatrix& A, csint i, csint j) : A_{A}, i_{i}, j_{j} {}
 
         // Apply a compound assignment operator: `A(i, j) += v`.
         template <typename BinaryOp>
@@ -294,7 +294,7 @@ public:
 
         // Copy constructor (explicitly defined for "+=" etc. operators)
         ItemProxy (const ItemProxy& other)
-            : A_(other.A_), i_(other.i_), j_(other.j_) {}
+            : A_{other.A_}, i_{other.i_}, j_{other.j_} {}
 
         // Assignment operator: `A(i, j) = v;`
         // Returning a reference to the object allows for method chaining
@@ -313,10 +313,6 @@ public:
         // Comparison operators
         auto operator<=>(const ItemProxy& other) const {
             return static_cast<double>(*this) <=> static_cast<double>(other);
-        }
-
-        auto operator<=>(double v) const {
-            return static_cast<double>(*this) <=> v;
         }
 
         // Compound assignment operators: `A(i, j) += v;` etc.

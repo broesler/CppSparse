@@ -372,9 +372,9 @@ std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b)
         if (x_val != 0) {
             x_val /= A.v_[d];  // solve for x[d]
             x[j] = x_val;      // store solution in correct position
-            for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
+            for (auto [p, Ai, Av] : A.enum_column(j)) {
                 if (p != d) {
-                    b_work[A.i_[p]] -= A.v_[p] * x_val;  // update the off-diagonals
+                    b_work[Ai] -= Av * x_val;  // update the off-diagonals
                 }
             }
         }
@@ -881,9 +881,9 @@ void CholResult::solve(
     //     w[p_inv[B.i_[p]]] = B.v_[p];
     // }
 
-    // lsolve_inplace(L, w);    // y = L \ b -> w = y
-    // ltsolve_inplace(L, w);   // P^T x = L^T \ y -> w = P^T x
-    // pvec<double>(p_inv, w, x);   // x = P P^T x
+    // lsolve_inplace(L, w);       // y = L \ b -> w = y
+    // ltsolve_inplace(L, w);      // P^T x = L^T \ y -> w = P^T x
+    // pvec<double>(p_inv, w, x);  // x = P P^T x
 
     // ----- Option 2: Solve as sparse column and scatter to dense at end
     auto b = B.slice(0, B.M_, k, k+1);  // get single column
@@ -900,10 +900,10 @@ void CholResult::solve(
     std::vector<double> w(L.M_);  // workspace
     b.scatter(0, w);
 
-    lsolve_(xi, w);                      // y = L \ b -> w = y
-    std::ranges::reverse(xi);  // reverse the order for L^T
-    ltsolve_(xi, w);                     // P^T x = L^T \ y -> w = P^T x
-    pvec<double>(p_inv, w, x);           // x = P P^T x
+    lsolve_(xi, w);             // y = L \ b -> w = y
+    std::ranges::reverse(xi);   // reverse the order for L^T
+    ltsolve_(xi, w);            // P^T x = L^T \ y -> w = P^T x
+    pvec<double>(p_inv, w, x);  // x = P P^T x
 }
 
 

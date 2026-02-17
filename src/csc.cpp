@@ -399,9 +399,8 @@ CSCMatrix& CSCMatrix::assign(
     }
 
     for (csint j = 0; j < cols_size; ++j) {
-        for (csint p = C.p_[j]; p < C.p_[j+1]; ++p) {
-            auto i = C.i_[p];
-            (*this)(rows[i], cols[j]) = C.v_[p];
+        for (auto [i, v] : C.column(j)) {
+            (*this)(rows[i], cols[j]) = v;
         }
     }
 
@@ -1223,11 +1222,9 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
 
     for (csint j = 0; j < N; ++j) {
         csint mark = j + 1;
-        for (csint p = B.p_[j]; p < B.p_[j+1]; ++p) {
+        for (auto Bi : B.row_indices(j)) {
             // Scatter, but without x or C
-            auto k = B.i_[p];  // B(k, j) is non-zero
-            for (csint pa = p_[k]; pa < p_[k+1]; ++pa) {
-                auto i = i_[pa];     // A(i, k) is non-zero
+            for (auto i : row_indices(Bi)) {
                 if (w[i] < mark) {
                     w[i] = mark;     // i is new entry in column k
                     ++nz_C;         // count non-zeros in C, but don't compute
@@ -1250,9 +1247,9 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
         C.p_[j] = nz;  // column j of C starts here
 
         // Compute x = A @ B[:, j]
-        for (csint p = B.p_[j]; p < B.p_[j+1]; ++p) {
+        for (auto [Bi, Bv] : B.column(j)) {
             // Compute x += A[:, B.i_[p]] * B.v_[p]
-            nz = scatter(B.i_[p], B.v_[p], w, x, j+1, C, nz, fs);
+            nz = scatter(Bi, Bv, w, x, j+1, C, nz, fs);
             fs = false;
         }
 
@@ -1775,16 +1772,17 @@ CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
         C.p_[j] = nz;  // column j of C starts here
 
         // Copy column j from the first matrix
-        for (csint p = A.p_[j]; p < A.p_[j+1]; ++p) {
-            C.i_[nz] = A.i_[p];
-            C.v_[nz] = A.v_[p];
+        for (auto [Ai, Av] : A.column(j)) {
+            C.i_[nz] = Ai;
+            C.v_[nz] = Av;
             ++nz;
         }
 
         // Copy column j from the second matrix
-        for (csint p = B.p_[j]; p < B.p_[j+1]; ++p) {
-            C.i_[A.p_[j+1] + p] = A.M_ + B.i_[p];
-            C.v_[A.p_[j+1] + p] = B.v_[p];
+        for (auto [Bp, Bi, Bv] : B.enum_column(j)) {
+            auto& Ap = A.p_[j+1];  // column j of A ends here
+            C.i_[Ap + Bp] = A.M_ + Bi;
+            C.v_[Ap + Bp] = Bv;
             ++nz;
         }
     }

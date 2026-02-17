@@ -9,7 +9,8 @@
 
 #include <algorithm>  // generate
 #include <format>
-#include <iostream>
+#include <iostream>  // cerr
+#include <print>
 #include <random>
 #include <span>
 
@@ -31,7 +32,7 @@ int main(int argc, char* argv[])
         // Read from stdin
         T = COOMatrix::from_stream(std::cin);
     } else {
-        std::cerr << "Usage: demo2 [filename] or demo2 < [filename]" << std::endl;
+        std::println(std::cerr, "Usage: demo2 [filename] or demo2 < [filename]");
         return EXIT_FAILURE;
     }
 
@@ -41,21 +42,21 @@ int main(int argc, char* argv[])
     auto order = AMDOrder::APlusAT;  // AMD ordering for Cholesky
 
     if (!prob.is_sym) {
-        std::cerr << "Matrix is not symmetric." << std::endl;
+        std::print(std::cerr, "Matrix is not symmetric.");
         return EXIT_FAILURE;
     }
 
-    std::cout << "Cholesky then update/downdate, order = " << order << "\n";
+    std::println("Cholesky then update/downdate, order = {:15}", order);
 
     // Symbolic Cholesky
     auto t = tic();
     auto S = schol(prob.C, order);
-    std::cout << std::format("symbolic chol time: {:8.2e}\n", toc(t));
+    std::println("symbolic chol time: {:8.2e}", toc(t));
 
     // Numeric Cholesky
     t = tic();
     auto L = chol(prob.C, S).L;
-    std::cout << std::format("numeric  chol time: {:8.2e}\n", toc(t));
+    std::println("numeric  chol time: {:8.2e}", toc(t));
 
     // Solve Ax = b part by part
     t = tic();
@@ -65,10 +66,9 @@ int main(int argc, char* argv[])
     auto PTx = ltsolve(L, y);          // P^T x = L^T \ y
     prob.x = pvec(S.p_inv, PTx);                      // x = P P^T x
 
-    std::cout << std::format("solve    chol time: {:8.2e}\n", toc(t));
-    std::cout << "original: ";
+    std::println("solve    chol time: {:8.2e}", toc(t));
     auto resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
-    std::cout << std::format("residual: {:8.2e}", resid) << std::endl;
+    std::println("original: residual: {:8.2e}", resid);
 
     // Construct W: W has the pattern of L[k:, k],
     // but with random values on [0, 1), scaled by the diagonal entry L[k, k]
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
     t = tic();
     L = chol_update(L, true, W, S.parent);
     auto t1 = toc(t);
-    std::cout << std::format("update:   time: {:8.2e}\n", t1);
+    std::println("update:   time: {:8.2e}", t1);
 
     // Perform the solve again
     t = tic();
@@ -107,14 +107,14 @@ int main(int argc, char* argv[])
     PTx = ltsolve(L, y);          // P^T x = L^T \ y
     prob.x = pvec(S.p_inv, PTx);  // x = P P^T x
 
-    std::cout << std::format("update:   time: {:8.2e} (incl solve) ", toc(t) + t1);
+    std::print("update:   time: {:8.2e} (incl solve) ", toc(t) + t1);
 
     // Check: E = C + (P'W)*(P'W)'
     auto PTW = W.permute_rows(inv_permute(S.p_inv));
     auto E = prob.C + PTW * PTW.T();
 
     resid = residual_norm(E, prob.x, prob.b, prob.resid);
-    std::cout << std::format("residual: {:8.2e}", resid) << std::endl;
+    std::println("residual: {:8.2e}", resid);
 
     // Compute with rechol
     t = tic();
@@ -126,9 +126,9 @@ int main(int argc, char* argv[])
     PTx = ltsolve(L, y);          // P^T x = L^T \ y
     prob.x = pvec(S.p_inv, PTx);  // x = P P^T x
 
-    std::cout << std::format("rechol:   time: {:8.2e} (incl solve) ", toc(t));
+    std::print("rechol:   time: {:8.2e} (incl solve) ", toc(t));
     resid = residual_norm(E, prob.x, prob.b, prob.resid);
-    std::cout << std::format("residual: {:8.2e}", resid) << std::endl;
+    std::println("residual: {:8.2e}", resid);
 
     // Downdate: L @ L.T - W @ W.T
     t = tic();
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 
     t1 = toc(t);
 
-    std::cout << std::format("downdate: time: {:8.2e}\n", t1);
+    std::println("downdate: time: {:8.2e}", t1);
 
     // Solve again
     Pb = ipvec(S.p_inv, prob.b);  // P*b
@@ -145,9 +145,9 @@ int main(int argc, char* argv[])
     PTx = ltsolve(L, y);          // P^T x = L^T \ y
     prob.x = pvec(S.p_inv, PTx);  // x = P P^T x
 
-    std::cout << std::format("downdate: time: {:8.2e} (incl solve ", toc(t) + t1);
+    std::print("downdate: time: {:8.2e} (incl solve ", toc(t) + t1);
     resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
-    std::cout << std::format("residual: {:8.2e}", resid) << std::endl;
+    std::println("residual: {:8.2e}", resid);
 
     return EXIT_SUCCESS;
 }

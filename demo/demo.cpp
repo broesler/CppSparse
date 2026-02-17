@@ -19,30 +19,6 @@
 namespace cs {
 
 
-std::ostream& operator<<(std::ostream& os, const AMDOrder& order)
-{
-    switch (order) {
-        case AMDOrder::Natural:
-            os << "Natural        ";
-            break;
-        case AMDOrder::APlusAT:
-            os << "APlusAT        ";
-            break;
-        case AMDOrder::ATANoDenseRows:
-            os << "ATANoDenseRows ";
-            break;
-        case AMDOrder::ATA:
-            os << "ATA            ";
-            break;
-        default:
-            os << "UnknownAMDOrder";
-            break;
-    }
-
-    return os;
-}
-
-
 TimePoint tic() { return Clock::now(); }
 
 
@@ -83,8 +59,8 @@ Problem Problem::from_matrix(const COOMatrix& T, double droptol)
     auto C = is_sym ? make_sym(A) : A;  // C = A + triu(A,1)'
 
     // Print title
-    std::cout << std::format(
-        "--- Matrix: {}-by-{}, nnz: {} (sym: {}: nnz: {}), norm: {:8.2e}\n",
+    std::println(
+        "--- Matrix: {}-by-{}, nnz: {} (sym: {}: nnz: {}), norm: {:8.2e}",
         M,
         N,
         A.nnz(),
@@ -94,11 +70,11 @@ Problem Problem::from_matrix(const COOMatrix& T, double droptol)
     );
 
     if (nz1 != nz2) {
-        std::cout << "zero entries dropped: " << nz1 - nz2 << std::endl;
+        std::println("zero entries dropped: {}", nz1 - nz2);
     }
 
     if (nz2 != A.nnz()) {
-        std::cout << "tiny entries dropped: " << nz2 - A.nnz() << std::endl;
+        std::println("tiny entries dropped: {}", nz2 - A.nnz());
     }
 
     // Compute the RHS

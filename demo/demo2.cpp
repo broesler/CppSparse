@@ -10,6 +10,7 @@
 
 #include <array>
 #include <iostream>
+#include <print>
 
 #include "csparse.h"
 #include "demo.h"
@@ -29,7 +30,7 @@ int main(int argc, char* argv[])
         // Read from stdin
         T = COOMatrix::from_stream(std::cin);
     } else {
-        std::cerr << "Usage: demo2 [filename] or demo2 < [filename]" << std::endl;
+        std::println(std::cerr, "Usage: demo2 [filename] or demo2 < [filename]");
         return EXIT_FAILURE;
     }
 
@@ -47,26 +48,23 @@ int main(int argc, char* argv[])
     {
         ns += ((D.r[k+1] == D.r[k] + 1) && (D.s[k+1] == D.s[k] + 1));
     }
-    std::cout << "blocks: " << D.Nb
-              << " singletons: " << ns
-              << " structural rank: " << sprank
-              << std::endl;
+    std::println("blocks: {}, singletons: {}, structural rank: {}", D.Nb, ns, sprank);
 
     // Solve linear system using QR
     for (auto order : {AMDOrder::Natural, AMDOrder::ATA}) {
         if (order == AMDOrder::Natural && M > 1000) {
             continue;
         }
-        std::cout << "QR    " << order;
+        std::println("QR    {:15}", order);
         auto t = tic();
         prob.x = qr_solve(prob.C, prob.b, order).x;
-        std::cout << std::format("time: {:.2e} ", toc(t));
+        std::print("time: {:.2e} ", toc(t));
         auto resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
-        std::cout << std::format("residual: {:8.2e}", resid) << std::endl;
+        std::println("residual: {:8.2e}", resid);
     }
 
     if (M != N || sprank < N) {
-        std::cout << std::endl;
+        std::println();
         return EXIT_SUCCESS;  // return if rect. or singular
     }
 
@@ -82,16 +80,16 @@ int main(int argc, char* argv[])
         if (order == AMDOrder::Natural && M > 1000) {
             continue;
         }
-        std::cout << "LU    " << order;
+        std::print("LU    {:15}", order);
         auto t = tic();
         prob.x = lu_solve(prob.C, prob.b, order, tol);
-        std::cout << std::format("time: {:.2e} ", toc(t));
+        std::print("time: {:.2e} ", toc(t));
         auto resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
-        std::cout << std::format("residual: {:8.2e}", resid) << std::endl;
+        std::println("residual: {:8.2e}", resid);
     }
 
     if (!prob.is_sym) {
-        std::cout << std::endl;
+        std::println();
         return EXIT_SUCCESS;
     }
 
@@ -100,15 +98,15 @@ int main(int argc, char* argv[])
         if (order == AMDOrder::Natural && M > 1000) {
             continue;
         }
-        std::cout << "Chol  " << order;
+        std::print("Chol  {:15}", order);
         auto t = tic();
         prob.x = chol_solve(prob.C, prob.b, order);
-        std::cout << std::format("time: {:.2e} ", toc(t));
+        std::print("time: {:.2e} ", toc(t));
         auto resid = residual_norm(prob.C, prob.x, prob.b, prob.resid);
-        std::cout << std::format("residual: {:8.2e}", resid) << std::endl;
+        std::println("residual: {:8.2e}", resid);
     }
 
-    std::cout << std::endl;  // extra newline for readability
+    std::println();  // extra newline for readability
 
     return EXIT_SUCCESS;
 }

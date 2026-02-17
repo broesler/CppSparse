@@ -82,10 +82,6 @@ double residual_norm(
 );
 
 
-/** Print AMDOrder */
-std::ostream& operator<<(std::ostream& os, const AMDOrder& order);
-
-
 }  // namespace cs
 
 

@@ -10,6 +10,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+#include <print>
 #include <stdexcept>
 #include <vector>
 
@@ -88,13 +89,11 @@ cs::CSCMatrix csc_from_scipy(const py::object& obj)
         return {data, indices, indptr, shape};
 
     } catch (const py::cast_error& e) {
-        std::cerr << "Error in SciPy CSC to C++ CSCMatrix cast: "
-            << e.what() << std::endl;
+        std::println(std::cerr, "Error in SciPy CSC to C++ CSCMatrix cast: {}", e.what());
         throw e;
 
     } catch (const py::error_already_set& e) {
-        std::cerr << "Python error in SciPy CSC to C++ CSCMatrix cast: "
-            << e.what() << std::endl;
+        std::println(std::cerr, "Python error in SciPy CSC to C++ CSCMatrix cast: {}", e.what());
         PyErr_Print();  // print Python traceback
         throw e;
     }
@@ -138,13 +137,11 @@ cs::COOMatrix coo_from_scipy(const py::object& obj)
         return {data, row, col, shape};
 
     } catch (const py::cast_error& e) {
-        std::cerr << "Error in SciPy COO to C++ COOMatrix cast: "
-            << e.what() << std::endl;
+        std::println(std::cerr, "Error in SciPy COO to C++ COOMatrix cast: {}", e.what());
         throw e;
 
     } catch (const py::error_already_set& e) {
-        std::cerr << "Python error in SciPy COO to C++ COOMatrix cast: "
-            << e.what() << std::endl;
+        std::println(std::cerr, "Python error in SciPy COO to C++ COOMatrix cast: {}", e.what());
         PyErr_Print();  // print Python traceback
         throw e;
     }

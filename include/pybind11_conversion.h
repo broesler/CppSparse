@@ -42,24 +42,6 @@ inline auto denseorder_from_char(const char order)
 }
 
 
-/** Convert a string to an AMDOrder enum.
- *
- * @param order  the string to convert
- *
- * @return the AMDOrder enum
- */
-inline cs::AMDOrder amdorder_from_string(const std::string& order)
-{
-    if (order == "Natural") { return cs::AMDOrder::Natural; }
-    if (order == "APlusAT") { return cs::AMDOrder::APlusAT; }
-    if (order == "ATANoDenseRows") { return cs::AMDOrder::ATANoDenseRows; }
-    if (order == "ATA") { return cs::AMDOrder::ATA; }
-    throw std::runtime_error(
-        std::format("Invalid AMDOrder specified: {}.", order)
-    );
-}
-
-
 namespace pybind11::detail {
 
 // -----------------------------------------------------------------------------
@@ -92,15 +74,16 @@ struct type_caster<std::vector<T>> {
                 py::buffer_info buf_info = arr.request();
 
                 if (buf_info.ndim != 1) {
-                    std::cerr << "  NumPy array is not 1D." << std::endl;
+                    std::println(std::cerr, "  NumPy array is not 1D.");
                     return false;
                 }
 
                 if (buf_info.itemsize != sizeof(T)) {
-                    std::cerr << "  Internal itemsize mismatch "
-                        << "(should be " << sizeof(T)
-                        << " , but is " << buf_info.itemsize << ")."
-                        << std::endl;
+                    std::println(
+                        std::cerr,
+                        "  Internal itemsize mismatch (should be {}, but is {}).",
+                        sizeof(T), buf_info.itemsize
+                    );
                     return false;
                 }
 
@@ -113,13 +96,19 @@ struct type_caster<std::vector<T>> {
                 return true;
 
             } catch (const py::error_already_set& e) {
-                std::cerr << "  Failed to request NumPy buffer for type "
-                    << typeid(T).name() << ": " << e.what() << std::endl;
+                std::println(
+                    std::cerr,
+                    "  Failed to request NumPy buffer for type {}: {}",
+                    typeid(T).name(), e.what()
+                );
                 PyErr_Print();  // print Python traceback
                 return false;
             } catch (const std::exception& e) {
-                std::cerr << "  Failed to cast NumPy array to std::vector<"
-                    << typeid(T).name() << ">: " << e.what() << std::endl;
+                std::println(
+                    std::cerr,
+                    "  Failed to cast NumPy array to std::vector<{}>: {}",
+                    typeid(T).name(), e.what()
+                );
                 return false;
             }
         }
@@ -136,8 +125,11 @@ struct type_caster<std::vector<T>> {
                 }
                 return true;
             } catch (const py::cast_error& e) {
-                std::cerr << "  Failed to cast Python list elements to "
-                    << typeid(T).name() << ": " << e.what() << std::endl;
+                std::println(
+                    std::cerr,
+                    "  Failed to cast Python list elements to {}: {}",
+                    typeid(T).name(), e.what()
+                );
                 return false;
             }
         }
@@ -494,7 +486,7 @@ py::object solver_impl_(
                 [](const std::string& ord, [[maybe_unused]] auto&&... rest) { return ord; },
                 std::forward_as_tuple(args...)
             );
-            cs::AMDOrder order_enum = amdorder_from_string(order);
+            cs::AMDOrder order_enum = cs::amdorder_from_string(order);
 
             // Get remaining arguments as a tuple
             auto remaining = std::apply(

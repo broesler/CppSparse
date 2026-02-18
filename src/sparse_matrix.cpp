@@ -8,7 +8,6 @@
  *============================================================================*/
 
 #include <cmath>      // isfinite, fabs
-#include <iomanip>    // setw, setprecision, fixed, scientific
 #include <iostream>
 #include <format>
 #include <string>
@@ -94,7 +93,6 @@ void SparseMatrix::write_elems_(std::string& out, csint start, csint end) const
 }
 
 
-// TODO change print_dense to be compatible with std::print
 void SparseMatrix::print_dense(int precision, bool suppress, std::ostream& os) const
 {
     const auto order = DenseOrder::ColMajor;  // default Fortran-style column-major order
@@ -124,24 +122,25 @@ void SparseMatrix::print_dense(int precision, bool suppress, std::ostream& os) c
     const std::string indent(1, ' ');
 
     for (auto i : row_range()) {
-        os << indent;
+        std::print(os, "{}", indent);
         for (auto j : column_range()) {
             csint idx = (order == DenseOrder::ColMajor) ? (i + j*M) : (i*N + j);
             auto val = A[idx];
 
             if (val == 0.0 || (suppress && std::fabs(val) < suppress_tol)) {
-                os << std::format("{:>{}}", "0", width);
+                // Print zero with the same width for alignment
+                std::print(os, "{:>{}}", "0", width);
             } else {
                 // bool is_integer = std::abs(val - std::round(val)) < suppress_tol;
                 // bool print_integer = is_integer && !use_scientific;
-                os << std::setw(width)
-                   // << std::setprecision(print_integer ? 0 : precision)
-                   << std::setprecision(precision)
-                   << (use_scientific ? std::scientific : std::fixed)
-                   << val;
+                if (use_scientific) {
+                    std::print(os, "{:>{}.{}e}", val, width, precision);
+                } else {
+                    std::print(os, "{:>{}.{}f}", val, width, precision);
+                }
             }
         }
-        os << std::endl;
+        std::println(os);
     }
 }
 

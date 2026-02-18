@@ -7,9 +7,10 @@
  *
  *============================================================================*/
 
+#include <algorithm>  // fold_left, max
 #include <cmath>      // isfinite, fabs
-#include <iostream>
 #include <format>
+#include <ranges>
 #include <string>
 
 #include "sparse_matrix.h"
@@ -93,7 +94,13 @@ void SparseMatrix::write_elems_(std::string& out, csint start, csint end) const
 }
 
 
-void SparseMatrix::print_dense(int precision, bool suppress, std::ostream& os) const
+void SparseMatrix::format_dense_to(
+    std::string& out,
+    int width,
+    int precision,
+    char format_spec,
+    bool suppress
+) const
 {
     const auto order = DenseOrder::ColMajor;  // default Fortran-style column-major order
     const auto A = to_dense_vector(order);
@@ -103,44 +110,61 @@ void SparseMatrix::print_dense(int precision, bool suppress, std::ostream& os) c
         throw std::runtime_error("Matrix size does not match dimensions!");
     }
 
-    // Determine whether to use scientific notation
-    double abs_max = 0.0;
-    for (const auto& val : A) {
-        if (std::isfinite(val)) {
-            abs_max = std::max(abs_max, std::fabs(val));
-        }
+    // Determine whether to use scientific notation (if not specified)
+    auto fmt = format_spec;
+
+    if (fmt == '\0') {
+        // Use scientific notation if extremum value is very small or very large
+        auto max_abs_val = std::ranges::fold_left(
+            A | std::views::filter([](double v) { return std::isfinite(v); }),
+            0.0,
+            [](double acc, double val) { return std::max(acc, std::abs(val)); }
+        );
+        bool use_scientific = !suppress || (max_abs_val < 1e-4 || max_abs_val > 1e4);
+        fmt = use_scientific ? 'e' : 'f';
     }
 
-    const auto use_scientific = !suppress || (abs_max < 1e-4 || abs_max > 1e4);
+    const auto p = (precision == -1) ? 4 : precision;
 
-    // Compute column width
-    auto width = use_scientific ? (9 + precision) : (6 + precision);
-    width = std::max(width, 5);  // enough for "nan", "-inf", etc.
+    auto w = width;
+
+    if (w == -1) {
+        auto base_w = 4;          // default width e.g. "-1."
+        base_w += p;              // add precision "-1.2345"
+        if (fmt == 'e') {
+            base_w += 4;          // 'e' needs more space for "e+00" part.
+        }
+        w = std::max(base_w, 4);  // enough for "nan", "-inf", etc.
+    }
+
+    // Add column padding
+    constexpr auto padding = 4;
+    w += padding;
+
+    const auto format_string = std::format("{{:>{}.{}{}}}", w, p, fmt);
 
     constexpr double suppress_tol = 1e-10;
 
-    const std::string indent(1, ' ');
-
     for (auto i : row_range()) {
-        std::print(os, "{}", indent);
+        out.append(" ");  // indent each row
         for (auto j : column_range()) {
             csint idx = (order == DenseOrder::ColMajor) ? (i + j*M) : (i*N + j);
             auto val = A[idx];
 
             if (val == 0.0 || (suppress && std::fabs(val) < suppress_tol)) {
                 // Print zero with the same width for alignment
-                std::print(os, "{:>{}}", "0", width);
+                std::format_to(std::back_inserter(out), "{:>{}}", "0", w);
             } else {
                 // bool is_integer = std::abs(val - std::round(val)) < suppress_tol;
                 // bool print_integer = is_integer && !use_scientific;
-                if (use_scientific) {
-                    std::print(os, "{:>{}.{}e}", val, width, precision);
-                } else {
-                    std::print(os, "{:>{}.{}f}", val, width, precision);
-                }
+                std::vformat_to(
+                    std::back_inserter(out),
+                    format_string,
+                    std::make_format_args(val)
+                );
             }
         }
-        std::println(os);
+        out.append("\n");
     }
 }
 

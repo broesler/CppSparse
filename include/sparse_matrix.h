@@ -110,15 +110,16 @@ public:
 
     ///  Print the matrix in dense format.
     ///
-    /// @param precision  the number of decimal places to print.
-    /// @param suppress  if true, small values will be printed as "0".
-    /// @param os  a reference to the output stream.
+    /// \param out       the output string into which to write.
+    /// \param precision  the number of decimal places to print.
+    /// \param suppress  if true, small values will be printed as "0".
     ///
-    /// @return os  a reference to the output stream.
-    virtual void print_dense(
-        int precision=4,
-        bool suppress=true,
-        std::ostream& os=std::cout
+    virtual void format_dense_to(
+        std::string& out,
+        int width=-1,
+        int precision=-1,
+        char format_spec='\0',
+        bool suppress=true
     ) const;
 
 };  // class SparseMatrix
@@ -146,21 +147,89 @@ inline auto operator*(const SparseMatrix& A, const std::vector<double>& x)
 template<>
 struct std::formatter<cs::SparseMatrix> : std::formatter<std::string_view>
 {
-    // TODO accept a threshold for how many non-zeros to print, e.g. {:100v}
-    // Accept {:v} for verbose printing, or just {} for default.
+    enum class PrintMode {
+        Summary,  // print only the summary lines
+        Verbose,  // print all non-zeros and their coordinates
+        Dense,    // print the matrix in dense format
+    };
+
+    PrintMode mode = PrintMode::Summary;
     bool verbose = false;
-    cs::csint threshold = 100;
+    int threshold = 100;
+    int width = -1;
+    int precision = -1;
+    char format_spec = '\0';
+    bool suppress = true;
 
     constexpr auto parse(std::format_parse_context& ctx)
     {
         auto it = ctx.begin();
-        if (it == ctx.end()) {
+
+        // std::is_digit is not constexpr, so define our own
+        auto is_digit = [](char c) { return c >= '0' && c <= '9'; };
+        auto is_alpha = [](char c) {
+            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+        };
+
+        // Check for empty format specifier, e.g. {}
+        if (it == ctx.end() || *it == '}') {
             return it;
         }
 
+        // Check for threshold prefix, e.g. {:100v}
+        if (is_digit(*it)) {
+            threshold = 0;
+            while (it != ctx.end() && is_digit(*it)) {
+                threshold = threshold * 10 + (*it - '0');
+                ++it;
+            }
+        }
+
+        // If we're at the end, specifier is invalid, e.g. {:100}
+        if (it == ctx.end() || *it == '}') {
+            throw std::format_error(
+                "Invalid format args for SparseMatrix. "
+                "Threshold needs to be followed by 'v' for verbose printing."
+            );
+        }
+
         if (*it == 'v') {
-            verbose = true;
+            mode = PrintMode::Verbose;
             ++it;
+        } else if (*it == 'd') {
+            mode = PrintMode::Dense;
+            ++it;
+
+            // Parse width and precision for dense format, e.g. {:10.4d}
+            if (it != ctx.end() && is_digit(*it)) {
+                width = 0;
+                while (it != ctx.end() && is_digit(*it)) {
+                    width = width * 10 + (*it - '0');
+                    ++it;
+                }
+            }
+
+            if (it != ctx.end() && *it == '.') {
+                ++it;
+                precision = 0;
+                while (it != ctx.end() && is_digit(*it)) {
+                    precision = precision * 10 + (*it - '0');
+                    ++it;
+                }
+            }
+
+            // Parse format specifier for dense format, e.g. {:10.4de} for
+            // scientific notation
+            if (it != ctx.end() && is_alpha(*it)) {
+                format_spec = *it;
+                ++it;
+            }
+
+            // Check for '!' to *not* suppress small values, e.g. {:10.4d!}
+            if (it != ctx.end() && *it == '!') {
+                suppress = false;
+                ++it;
+            }
         }
 
         if (it != ctx.end() && *it != '}') {
@@ -173,7 +242,12 @@ struct std::formatter<cs::SparseMatrix> : std::formatter<std::string_view>
     auto format(const cs::SparseMatrix& A, std::format_context& ctx) const
     {
         std::string buffer;
-        A.format_to(buffer, verbose, threshold);
+        if (mode == PrintMode::Dense) {
+            A.format_dense_to(buffer, width, precision, format_spec, suppress);
+        } else {
+            A.format_to(buffer, (mode == PrintMode::Verbose), threshold);
+        }
+
         return std::formatter<std::string_view>::format(buffer, ctx);
     }
 };

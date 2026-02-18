@@ -217,6 +217,39 @@ public:
         );
     }
 
+    /** Operate on the non-zero elements of the matrix, as (i, j, v) tuples.
+     *
+     * @param start, end operate on the `kth` element(s) for `k ∈ [start, end)`.
+     * @param func       a function that takes the row index `i`, column index
+     *                   `j`, and value `v`.
+     */
+    virtual void for_each_in_range(csint start, csint end, ElemFunc func) const override
+    {
+        csint k = 0;
+
+        for (const auto j : column_range()) {
+            csint len = col_length(j);
+
+            // If the entire column is before the start index, skip it.
+            if (k + len <= start) {
+                k += len;
+                continue;
+            }
+
+            for (const auto [i, v] : column(j)) {
+                if (k >= start && k < end) {
+                    func(i, j, v);
+                }
+
+                ++k;  // increment number of elements used
+
+                if (k >= end) {
+                    return;
+                }
+            }
+        }
+    }
+
     /** Convert a CSCMatrix to canonical format in-place.
      *
      * The columns are guaranteed to be sorted, no duplicates are allowed, and no

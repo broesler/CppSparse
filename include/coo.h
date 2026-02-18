@@ -131,22 +131,40 @@ public:
     virtual csint nzmax() const override;  // maximum number of non-zeros
     virtual Shape shape() const override;  // the dimensions of the matrix
 
-    const std::vector<csint>& row() const;     // indices and data
+    const std::vector<csint>& row() const;
     const std::vector<csint>& col() const;
     virtual const std::vector<double>& data() const override;
 
-    /** Return an iterator over the number of non-zeros in the matrix. */
-    auto elem_range() const { return std::views::iota(csint{0}, nnz()); }
-
-    /** Return an iterator over the row indices, column indices, and values of the
-     * non-zero entries in the matrix. */
+    /** Return a view of the row indices, column indices, and values of the
+     * non-zero elements in the matrix. */
     auto elems() const
     {
-        return elem_range() | std::views::transform(
+        return std::views::iota(csint{0}, nnz()) | std::views::transform(
             [this](csint k) {
                 return std::tuple{i_[k], j_[k], !v_.empty() ? v_[k] : 0.0};
-             }
+            }
         );
+    }
+
+    /** Operate on the non-zero elements of the matrix, as (i, j, v) tuples.
+     *
+     * @param start, end operate on the `kth` element(s) for `k ∈ [start, end)`.
+     * @param func       a function that takes the row index `i`, column index
+     *                   `j`, and value `v`.
+     */
+    virtual void for_each_in_range(csint start, csint end, ElemFunc func) const override
+    {
+        csint actual_end = std::min(end, nnz());
+        if (start >= actual_end) {
+            return;  // no elements to process
+        }
+        auto elems_view = elems()
+            | std::views::drop(start)
+            | std::views::take(actual_end - start);
+
+        for (auto [i, j, v] : elems_view) {
+            func(i, j, v);
+        }
     }
 
     /** Insert triplet entry into the matrix.

@@ -573,12 +573,9 @@ TEST_CASE("Exercise 6.7: Crout's method LU Factorization", "[ex6.7][crout]")
         auto S = slu(A);
         auto res = lu_crout(A, S);
 
-        // std::println("A:");
-        // A.print_dense();
-        // std::println("L:");
-        // res.L.print_dense();
-        // std::println("U:");
-        // res.U.print_dense();
+        // std::println("A:\n{}", A);
+        // std::println("L:\n{}", res.L);
+        // std::println("U:\n{}", res.U);
 
         auto LU = (res.L * res.U).droptol().to_canonical();
         auto PA = A.permute_rows(res.p_inv).to_canonical();

@@ -46,30 +46,36 @@ int main()
     auto A = Ac.tocsc();
     
     std::println("---------- Default:");
-    A.print_dense();
+    std::println("{:d}", A);
 
     std::println("---------- Scale a column extra large:");
     for (csint i = 0; i < M; ++i) {
         A(i, 2) *= 1e10;
     }
     A = A.to_canonical();
-    A.print_dense();
+    std::println("{:d}", A);
 
     std::println("---------- Scale a column extra small:");
     for (csint i = 0; i < M; ++i) {
         A(i, 2) *= 1e-20;
     }
     A = A.to_canonical();
-    A.print_dense();
+    std::println("{:d}", A);
 
     std::println("---------- suppress=false:");
-    A.print_dense(4, false);
+    std::println("{:d.4!}", A);
 
     std::println("---------- precision=16:");
-    A.print_dense(16);
+    std::println("{:d.16}", A);
 
     std::println("---------- precision=16, suppress=false:");
-    A.print_dense(16, false);
+    std::println("{:d.16!}", A);
+
+    std::println("---------- precision=2, fmt=g:");
+    std::println("{:d.2g}", A);
+
+    std::println("---------- width=6, precision=4, fmt=f:");
+    std::println("{:d6.4f}", A);
 
     return EXIT_SUCCESS;
 }

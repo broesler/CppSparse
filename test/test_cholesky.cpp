@@ -428,13 +428,10 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
             // Compute the complete Cholesky factorization for comparison
             const auto Lf = chol(A, schol(A)).L;
 
-            // std::println("Lf:");
-            // Lf.print_dense();
-            // std::println("L:");
-            // L.print_dense();
+            // std::println("Lf:\n{:d}", Lf);
+            // std::println("L:\n{:d}", L);
 
-            // std::println("A:");
-            // A.print_dense();
+            // std::println("A:\n{:d}", A);
 
             // L is lower triangular with the same sparsity pattern as A
             const auto A_tril = std::as_const(A).band(-N, 0).to_canonical();
@@ -457,8 +454,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
             );
             const auto AmLLT = (A - LLT).droptol(tol).to_canonical();
 
-            // std::println("A - LLT:");
-            // AmLLT.print_dense();
+            // std::println("A - LLT:\n{:d}", A - LLT);
 
             CHECK(LLT_Anz.nnz() == A.nnz());
             CHECK(AmLLT.is_symmetric());
@@ -502,18 +498,13 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
                 const auto Lf = chol(A, S).L;
                 const auto LLT = (L * L.T()).droptol().to_canonical();
 
-                // std::println("Lf:");
-                // Lf.print_dense();
-                // std::println("L:");
-                // L.print_dense();
+                // std::println("Lf:\n{:d}", Lf);
+                // std::println("L:\n{:d}", L);
 
-                // std::println("LLT:");
-                // LLT.print_dense();
-                // std::println("A:");
-                // A.print_dense();
+                // std::println("LLT:\n{:d}", LLT);
+                // std::println("A:\n{:d}", A);
 
-                // std::println("A - LLT:");
-                // (A - LLT).print_dense();
+                // std::println("A - LLT:\n{:d}", A - LLT);
 
                 csint expect_drops = 6;  // rel_drop_tol = 0.005;
 

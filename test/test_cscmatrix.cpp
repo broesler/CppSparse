@@ -46,17 +46,18 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
         std::stringstream s;
 
         SECTION("Print short") {
-            std::string expect =
+            constexpr std::string_view expect {
                 "<C++Sparse Compressed Sparse Column matrix\n"
-                "        with 10 stored elements and shape (4, 4)>\n";
+                "        with 10 stored elements and shape (4, 4)>\n"
+            };
 
-            C.print(s);  // default verbose=false
+            std::println(s, "{}", C);  // default verbose = false
 
             REQUIRE(s.str() == expect);
         }
 
         SECTION("Print verbose") {
-            std::string expect =
+            constexpr std::string_view expect {
                 "<C++Sparse Compressed Sparse Column matrix\n"
                 "        with 10 stored elements and shape (4, 4)>\n"
                 "(1, 0):  3.1\n"
@@ -68,15 +69,16 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
                 "(2, 2):  3\n"
                 "(0, 2):  3.2\n"
                 "(3, 3):  1\n"
-                "(1, 3):  0.9\n";
+                "(1, 3):  0.9\n"
+            };
 
             SECTION("Print from function") {
-                C.print(s, true);
+                std::println(s, "{:v}", C);  // verbose = true
                 REQUIRE(s.str() == expect);
             }
 
             SECTION("Print from operator<< overload") {
-                s << C;
+                s << C << std::endl;
                 REQUIRE(s.str() == expect);
             }
         }

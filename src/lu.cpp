@@ -186,9 +186,8 @@ void lu_realloc(CSCMatrix& R, csint k, bool lower)
     // if we get here, we failed to allocate memory
     if (!err_msg.empty()) {
         // Print error message with file and line number
-        std::cerr << "Error in " << __FILE__ << ":" << __LINE__ << ": " 
-            << err_msg << std::endl;
-        std::cerr << "    Failed to allocate memory for LU factorization." << std::endl;
+        std::println(std::cerr, "Error in {}:{}: {}", __FILE__, __LINE__, err_msg);
+        std::println(std::cerr, "    Failed to allocate memory for LU factorization.");
         throw std::bad_alloc();
     }
 }

@@ -573,11 +573,11 @@ TEST_CASE("Exercise 6.7: Crout's method LU Factorization", "[ex6.7][crout]")
         auto S = slu(A);
         auto res = lu_crout(A, S);
 
-        // std::cout << "A:" << std::endl;
+        // std::println("A:");
         // A.print_dense();
-        // std::cout << "L:" << std::endl;
+        // std::println("L:");
         // res.L.print_dense();
-        // std::cout << "U:" << std::endl;
+        // std::println("U:");
         // res.U.print_dense();
 
         auto LU = (res.L * res.U).droptol().to_canonical();
@@ -676,13 +676,13 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
 
         auto requests = L.get_realloc_attempts();
 
-        // std::cout << "--- Test without failure:" << std::endl;
+        // std::println("--- Test without failure:");
         // if (lower) {
-        //     std::cout << "(lower) ";
+        //     std::print("(lower) ");
         // } else {
-        //     std::cout << "(upper) ";
+        //     std::print("(upper) ");
         // }
-        // std::cout << "requests: " << requests << std::endl;
+        // std::println("requests: {}", requests);
 
         CHECK(requests.front() == max_request);
         CHECK(requests.back() >= min_request);
@@ -708,13 +708,13 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
 
         auto requests = L.get_realloc_attempts();
 
-        // std::cout << "--- Test with failure:" << std::endl;
+        // std::println("--- Test with failure:");
         // if (lower) {
-        //     std::cout << "(lower) ";
+        //     std::print("(lower) ");
         // } else {
-        //     std::cout << "(upper) ";
+        //     std::print("(upper) ");
         // }
-        // std::cout << "requests: " << requests << std::endl;
+        // std::println("requests: {}", requests);
 
         REQUIRE(requests.front() == max_request);
         REQUIRE(requests.back() >= min_request);
@@ -825,7 +825,7 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13][ilu]")
         auto nz_norm = (A - LU_Anz).fronorm() / A.fronorm();
         auto norm = AmLU.fronorm() / A.fronorm();  // total norm
 
-        // std::cout << "   norm: " << std::format("{:6.4g}", norm) << std::endl;
+        // std::println("   norm: {:6.4g}", norm);
 
         CHECK_THAT(nz_norm, WithinAbs(0.0, 1e-16));
         CHECK(norm > nz_norm * 1e10);  // hack number

@@ -126,8 +126,8 @@ void CSCMatrix::realloc(csint nzmax)
         v_.resize(Z);
     }
     } catch (const std::bad_alloc& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-        std::cerr << "Failed to allocate memory for CSCMatrix." << std::endl;
+        std::println(std::cerr, "Error: {}", e.what());
+        std::println(std::cerr, "Failed to allocate memory for CSCMatrix.");
         throw;  // let calling code handle it
     }
 

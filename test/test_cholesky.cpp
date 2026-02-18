@@ -428,12 +428,12 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
             // Compute the complete Cholesky factorization for comparison
             const auto Lf = chol(A, schol(A)).L;
 
-            // std::cout << "Lf:" << std::endl;
+            // std::println("Lf:");
             // Lf.print_dense();
-            // std::cout << "L:" << std::endl;
+            // std::println("L:");
             // L.print_dense();
 
-            // std::cout << "A:" << std::endl;
+            // std::println("A:");
             // A.print_dense();
 
             // L is lower triangular with the same sparsity pattern as A
@@ -457,7 +457,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
             );
             const auto AmLLT = (A - LLT).droptol(tol).to_canonical();
 
-            // std::cout << "A - LLT:" << std::endl;
+            // std::println("A - LLT:");
             // AmLLT.print_dense();
 
             CHECK(LLT_Anz.nnz() == A.nnz());
@@ -467,8 +467,8 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
             auto nz_norm = (A - LLT_Anz).fronorm() / A.fronorm();
             auto norm = AmLLT.fronorm() / A.fronorm();  // total norm
 
-            // std::cout << "nz_norm: " << std::format("{:6.4g}", nz_norm) << std::endl;
-            // std::cout << "   norm: " << std::format("{:6.4g}", norm) << std::endl;
+            // std::println("nz_norm: {:6.4g}", nz_norm);
+            // std::println("   norm: {:6.4g}", norm);
 
             CHECK_THAT(nz_norm, WithinAbs(0.0, 1e-15));
             CHECK(norm > nz_norm * 1e10);  // hack number
@@ -502,17 +502,17 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
                 const auto Lf = chol(A, S).L;
                 const auto LLT = (L * L.T()).droptol().to_canonical();
 
-                // std::cout << "Lf:" << std::endl;
+                // std::println("Lf:");
                 // Lf.print_dense();
-                // std::cout << "L:" << std::endl;
+                // std::println("L:");
                 // L.print_dense();
 
-                // std::cout << "LLT:" << std::endl;
+                // std::println("LLT:");
                 // LLT.print_dense();
-                // std::cout << "A:" << std::endl;
+                // std::println("A:");
                 // A.print_dense();
 
-                // std::cout << "A - LLT:" << std::endl;
+                // std::println("A - LLT:");
                 // (A - LLT).print_dense();
 
                 csint expect_drops = 6;  // rel_drop_tol = 0.005;

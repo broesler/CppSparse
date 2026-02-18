@@ -726,7 +726,7 @@ TEST_CASE("Exercise 2.15: Band function", "[ex2.15][band]")
             ku = 2;
 
         // CSCMatrix Ab = A.band(kl, ku);
-        // std::cout << Ab;
+        // std::print(Ab);
         auto Ab = A.band(kl, ku).tocoo();
 
         std::vector<csint> expect_rows{0, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 2, 3, 4, 5, 3, 4, 5};

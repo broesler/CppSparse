@@ -389,31 +389,6 @@ std::vector<double> COOMatrix::dot(std::span<const double> x) const
 }
 
 
-/*------------------------------------------------------------------------------
- *         Printing
- *----------------------------------------------------------------------------*/
-void COOMatrix::write_elems_(std::string& out, csint start, csint end) const
-{
-    // Compute index width from maximum index
-    auto row_width = std::to_string(M_ - 1).size();
-    auto col_width = std::to_string(N_ - 1).size();
-
-    const auto format_string = make_format_string_();
-
-    for (csint k = start; k < end; ++k) {
-        std::vformat_to(
-            std::back_inserter(out),
-            format_string,
-            std::make_format_args(i_[k], row_width, j_[k], col_width, v_[k])
-        );
-
-        if (k < end - 1) {
-            out.append("\n");
-        }
-    }
-}
-
-
 }  // namespace cs
 
 /*==============================================================================

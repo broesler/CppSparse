@@ -63,6 +63,38 @@ std::string SparseMatrix::make_format_string_() const
 }
 
 
+void SparseMatrix::write_elems_(std::string& out, csint start, csint end) const
+{
+    // Compute index width from maximum index
+    auto [M, N] = shape();
+    auto row_width = std::to_string(M - 1).size();
+    auto col_width = std::to_string(N - 1).size();
+
+    const auto format_string = make_format_string_();
+
+    csint k = 0;
+    csint total_to_print = end - start;
+
+    // Operate on the non-zero elements of the matrix, as (i, j, v) tuples.
+    for_each_in_range(
+        start,
+        end,
+        [&](csint i, csint j, double v) {
+            std::vformat_to(
+                std::back_inserter(out),
+                format_string,
+                std::make_format_args(i, row_width, j, col_width, v)
+            );
+
+            if (++k < total_to_print) {
+                out.append("\n");
+            }
+        }
+    );
+}
+
+
+// TODO change print_dense to be compatible with std::print
 void SparseMatrix::print_dense(int precision, bool suppress, std::ostream& os) const
 {
     const auto order = DenseOrder::ColMajor;  // default Fortran-style column-major order

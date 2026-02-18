@@ -38,14 +38,12 @@ protected:
      */
     virtual std::string make_format_string_() const;
 
-    // TODO make this non-virtual by implementing a virtual "elems()" method.
     /** Print elements of the matrix between `start` and `end`.
      *
-     * @param ss          the output string stream
-     * @param start, end  print the all elements where `p ∈ [start, end]`,
-     *        counting column-wise.
+     * @param out         the output string
+     * @param start, end  print the `kth` element(s) for `k ∈ [start, end)`.
      */
-    virtual void write_elems_(std::string& out, csint start, csint end) const = 0;
+    virtual void write_elems_(std::string& out, csint start, csint end) const;
 
 public:
     /// Virtual destructor: essential for base classes when using polymorphism,

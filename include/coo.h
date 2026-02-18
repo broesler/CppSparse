@@ -263,15 +263,6 @@ protected:
         return format_desc_;
     }
 
-    /** Print elements of the matrix between `start` and `end`.
-     *
-     * @param ss          the output string stream
-     * @param start, end  print the all elements where `p ∈ [start, end]`,
-     *        counting column-wise.
-     */
-    virtual void write_elems_(std::string& out, csint start, csint end) const override;
-
-
 private:
     static constexpr std::string_view format_desc_ = "C++Sparse COOrdinate Sparse";
     std::vector<double> v_;  // numerical values, size nzmax (auto doubles)

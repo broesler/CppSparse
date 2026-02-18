@@ -1,5 +1,5 @@
 /*==============================================================================
- *     File: test_printing.cpp
+ *     File: printmatrix_demo.cpp
  *  Created: 2025-04-09 10:23
  *   Author: Bernie Roesler
  *
@@ -7,9 +7,8 @@
  *
  *============================================================================*/
 
-#include <iostream>
 #include <cmath>    // nan
-#include <limits>     // numeric_limits
+#include <print>
 #include <vector>
 
 #include "csparse.h"
@@ -46,30 +45,30 @@ int main()
 
     auto A = Ac.tocsc();
     
-    std::cout << "---------- Default:" << std::endl;
+    std::println("---------- Default:");
     A.print_dense();
 
-    std::cout << "---------- Scale a column extra large:" << std::endl;
+    std::println("---------- Scale a column extra large:");
     for (csint i = 0; i < M; ++i) {
         A(i, 2) *= 1e10;
     }
     A = A.to_canonical();
     A.print_dense();
 
-    std::cout << "---------- Scale a column extra small:" << std::endl;
+    std::println("---------- Scale a column extra small:");
     for (csint i = 0; i < M; ++i) {
         A(i, 2) *= 1e-20;
     }
     A = A.to_canonical();
     A.print_dense();
 
-    std::cout << "---------- suppress=false:" << std::endl;
+    std::println("---------- suppress=false:");
     A.print_dense(4, false);
 
-    std::cout << "---------- precision=16:" << std::endl;
+    std::println("---------- precision=16:");
     A.print_dense(16);
 
-    std::cout << "---------- precision=16, suppress=false:" << std::endl;
+    std::println("---------- precision=16, suppress=false:");
     A.print_dense(16, false);
 
     return EXIT_SUCCESS;

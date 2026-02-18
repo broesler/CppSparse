@@ -34,13 +34,14 @@ protected:
      */
     virtual std::string make_format_string_() const;
 
+    // TODO make this non-virtual by implementing a virtual "elems()" method.
     /** Print elements of the matrix between `start` and `end`.
      *
      * @param ss          the output string stream
      * @param start, end  print the all elements where `p ∈ [start, end]`,
      *        counting column-wise.
      */
-    virtual void write_elems_(std::stringstream& ss, csint start, csint end) const = 0;
+    virtual void write_elems_(std::string& out, csint start, csint end) const = 0;
 
 public:
     /// Virtual destructor: essential for base classes when using polymorphism,
@@ -51,7 +52,7 @@ public:
     virtual csint nzmax() const = 0;  // maximum number of non-zeros
     virtual Shape shape() const = 0;  // the dimensions of the matrix
 
-    virtual const std::vector<double>& data() const = 0;  // numerical values
+    virtual const std::vector<double>& data() const = 0;         // numerical values
 
     /** Return a range for iterating over the columns.
      *
@@ -89,22 +90,24 @@ public:
     // -------------------------------------------------------------------------
     //         Printing
     // -------------------------------------------------------------------------
-    ///  Convert the matrix to a string.
+    /// Write the matrix to a string.
     /// 
-    /// @param verbose     if True, print all non-zeros and their coordinates
+    /// @param out         the output string into which to write.
+    /// @param verbose     if True, print all non-zeros and their coordinates.
     /// @param threshold   if `nnz > threshold`, print only the first and last
     ///        3 entries in the matrix. Otherwise, print all entries.
-    virtual std::string to_string(
+    virtual void format_to(
+        std::string& out,
         bool verbose=false,
         csint threshold=100
     ) const;
 
     ///  Print the matrix in dense format.
-    /// 
+    ///
     /// @param precision  the number of decimal places to print.
     /// @param suppress  if true, small values will be printed as "0".
     /// @param os  a reference to the output stream.
-    /// 
+    ///
     /// @return os  a reference to the output stream.
     virtual void print_dense(
         int precision=4,
@@ -112,45 +115,71 @@ public:
         std::ostream& os=std::cout
     ) const;
 
-    ///  Print the matrix.
-    /// 
-    /// @param os          the output stream, defaults to std::cout
-    /// @param verbose     if True, print all non-zeros and their coordinates
-    /// @param threshold   if `nz > threshold`, print only the first and last
-    ///        3 entries in the matrix. Otherwise, print all entries.
-    /// 
-    virtual void print(
-        std::ostream& os=std::cout,
-        bool verbose=false,
-        csint threshold=100
-    ) const
-    {
-        os << to_string(verbose, threshold) << std::endl;
-    }
 };  // class SparseMatrix
 
 
 // Exercise 2.10
 inline auto operator*(const SparseMatrix& A, std::span<const double> x)
 {
-    return A.dot(x); 
+    return A.dot(x);
 }
 
 
 // Exercise 2.10 (overload for exact match with vector inputs)
 inline auto operator*(const SparseMatrix& A, const std::vector<double>& x)
 {
-    return A.dot(x); 
+    return A.dot(x);
 }
 
+}  // namespace cs
 
-// inline since it's defined in the header
+
+// -----------------------------------------------------------------------------
+//         Printing Support for C++23
+// -----------------------------------------------------------------------------
+template<>
+struct std::formatter<cs::SparseMatrix> : std::formatter<std::string_view>
+{
+    // TODO accept a threshold for how many non-zeros to print, e.g. {:100v}
+    // Accept {:v} for verbose printing, or just {} for default.
+    bool verbose = false;
+    cs::csint threshold = 100;
+
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        auto it = ctx.begin();
+        if (it == ctx.end()) {
+            return it;
+        }
+
+        if (*it == 'v') {
+            verbose = true;
+            ++it;
+        }
+
+        if (it != ctx.end() && *it != '}') {
+            throw std::format_error("Invalid format args for SparseMatrix.");
+        }
+
+        return it;
+    }
+
+    auto format(const cs::SparseMatrix& A, std::format_context& ctx) const
+    {
+        std::string buffer;
+        A.format_to(buffer, verbose, threshold);
+        return std::formatter<std::string_view>::format(buffer, ctx);
+    }
+};
+
+
+namespace cs {
+
+// Overload operator<< for compatibility with C++20 and earlier
 inline std::ostream& operator<<(std::ostream& os, const SparseMatrix& A)
 {
-    A.print(os, true);  // verbose printing assumed
-    return os;
+    return os << std::format("{:v}", A);  // verbose printing assumed
 }
-
 
 }  // namespace cs
 

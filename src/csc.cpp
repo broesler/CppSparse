@@ -1952,7 +1952,7 @@ std::vector<double> CSCMatrix::sum_cols() const
 /*------------------------------------------------------------------------------
  *         Printing
  *----------------------------------------------------------------------------*/
-void CSCMatrix::write_elems_(std::stringstream& ss, csint start, csint end) const
+void CSCMatrix::write_elems_(std::string& out, csint start, csint end) const
 {
     const std::string format_string = make_format_string_();
 
@@ -1964,16 +1964,19 @@ void CSCMatrix::write_elems_(std::stringstream& ss, csint start, csint end) cons
     for (auto j : column_range()) {
         for (auto [i, v] : column(j)) {
             if ((n >= start) && (n < end)) {
-                ss << std::vformat(
+                std::vformat_to(
+                    std::back_inserter(out),
                     format_string,
                     std::make_format_args(i, row_width, j, col_width, v)
                 );
 
                 if (n < end - 1) {
-                    ss << "\n";
+                    out.append("\n");
                 }
             }
-            ++n;
+            if (++n >= end) {
+                return;  // stop if we've printed enough elements
+            }
         }
     }
 }

@@ -251,7 +251,7 @@ protected:
      * @param start, end  print the all elements where `p ∈ [start, end]`,
      *        counting column-wise.
      */
-    virtual void write_elems_(std::stringstream& ss, csint start, csint end) const override;
+    virtual void write_elems_(std::string& out, csint start, csint end) const override;
 
 
 private:
@@ -267,6 +267,11 @@ private:
 
 
 }  // namespace cs
+
+
+// Printing specialization for COOMatrix
+template <>
+struct std::formatter<cs::COOMatrix> : std::formatter<cs::SparseMatrix> {};
 
 
 //==============================================================================

@@ -20,24 +20,24 @@ int main(int argc, char *argv[]) {
 
     // Load a matrix from either a filename or stdin
     if (argc > 2) {
-        std::cerr << "Usage: " << argv[0] << " [filename]\n";
+        std::println(std::cerr, "Usage: {} [filename]", argv[0]);
         return EXIT_FAILURE;
     } else if (argc == 2) {
         T = COOMatrix::from_file(argv[1]);
     } else {
-        std::cerr << "Usage: " << argv[0] << " [filename]\n";
-        std::cerr << "Reading from stdin...\n";
+        std::println(std::cerr, "Usage: {} [filename]", argv[0]);
+        std::println(std::cerr, "Reading from stdin...");
         T = COOMatrix::from_stream(std::cin);
     }
 
-    std::cout << "T:\n" << T << "\n";
+    std::println("T:\n{:v}", T);
 
     // Convert to CSCMatrix
     CSCMatrix A{T};
-    std::cout << "A:\n" << A << "\n";
+    std::println("A:\n{:v}", A);
 
     auto AT = A.transpose();
-    std::cout << "AT:\n" << AT << "\n";
+    std::println("AT:\n{:v}", AT);
 
     // Create an identity matrix
     const auto [M, N] = A.shape();
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
     // Do some math
     auto C = A * AT;  // (M, N) * (N, M) = (M, M)
     auto D = C + Eye * C.norm();  // D = C + Eye * norm(C, 1)
-    std::cout << "D:\n" << D << "\n";
+    std::println("D:\n{:v}", D);
 
     return EXIT_SUCCESS;
 }

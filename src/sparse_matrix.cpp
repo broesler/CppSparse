@@ -11,41 +11,37 @@
 #include <iomanip>    // setw, setprecision, fixed, scientific
 #include <iostream>
 #include <format>
-#include <sstream>
+#include <string>
 
 #include "sparse_matrix.h"
 
 
 namespace cs {
 
-
-std::string SparseMatrix::to_string(bool verbose, csint threshold) const
+void SparseMatrix::format_to(std::string& out, bool verbose, csint threshold) const
 {
     const auto [M, N] = shape();
-    auto nnz_ = nnz();
-    std::stringstream ss;
+    const auto nz = nnz();
 
-    ss << std::format(
-        "<{} matrix\n"
-        "        with {} stored elements and shape ({}, {})>",
-        get_format_desc_(), nnz_, M, N
+    std::format_to(
+        std::back_inserter(out),
+        "<{} matrix\n        with {} stored elements and shape ({}, {})>",
+        get_format_desc_(), nz, M, N
     );
 
     if (verbose) {
-        ss << std::endl;
-        if (nnz_ < threshold) {
+        out.append("\n");
+        if (nz < threshold) {
             // Print all elements
-            write_elems_(ss, 0, nnz_);
+            write_elems_(out, 0, nz);
         } else {
             // Print just the first and last Nelems non-zero elements
-            int Nelems = 3;
-            write_elems_(ss, 0, Nelems);
-            ss << "\n...\n";
-            write_elems_(ss, nnz_ - Nelems, nnz_);
+            constexpr int Nelems = 3;
+            write_elems_(out, 0, Nelems);
+            out.append("\n...\n");
+            write_elems_(out, nz - Nelems, nz);
         }
     }
-
-    return ss.str();
 }
 
 

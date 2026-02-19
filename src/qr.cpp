@@ -9,6 +9,7 @@
  *============================================================================*/
 
 #include <algorithm>  // max
+#include <cassert>
 #include <cmath>      // copysign
 #include <numeric>    // accumulate
 #include <ranges>     // views::reverse, span

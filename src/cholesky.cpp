@@ -638,10 +638,17 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
 CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 {
     // Ensure L has been allocated via symbolic_cholesky
-    assert(!L.indptr().empty());
-    assert(!L.indices().empty());
-    assert(!L.data().empty());
-    assert(L.has_sorted_indices_);
+    if (L.indptr().empty() || L.indices().empty() || L.data().empty()) {
+        throw std::invalid_argument(
+            "L must be allocated via symbolic_cholesky before calling leftchol."
+        );
+    }
+
+    if (!L.has_sorted_indices_) {
+        throw std::invalid_argument(
+            "L must have sorted row indices for leftchol."
+        );
+    }
 
     auto N = A.shape()[1];
 

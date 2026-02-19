@@ -12,6 +12,7 @@
 #include <cassert>
 #include <functional>
 #include <ranges>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <sstream>
@@ -483,7 +484,9 @@ public:
      * @return the value of the matrix if it is a 1x1 matrix.
      */
     operator double() const {
-        assert((M_ == 1) && (N_ == 1));
+        if ((M_ != 1) || (N_ != 1)) {
+            throw std::runtime_error("Cannot convert to double: matrix is not 1x1");
+        }
         return v_[0];
     }
 

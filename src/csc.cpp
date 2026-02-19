@@ -8,7 +8,6 @@
  *============================================================================*/
 
 #include <algorithm>   // lower_bound
-#include <cassert>
 #include <cmath>       // fabs
 #include <format>
 #include <numeric>     // partial_sum, iota

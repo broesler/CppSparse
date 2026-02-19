@@ -424,7 +424,7 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
     // Check that results have been allocated
     auto& V = res.V;
     auto& R = res.R;
-    std::vector<double>& beta = res.beta;
+    auto& beta = res.beta;
 
     if (V.indices().empty() || R.indices().empty()) {
         throw std::runtime_error("V and R patterns have not been computed!");

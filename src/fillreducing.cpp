@@ -685,8 +685,8 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
     N = C.shape()[1];
 
     // If we transposed, we need to swap the imatch and jmatch vectors
-    std::vector<csint>& jmatch = (m2 < n2) ? jimatch.imatch : jimatch.jmatch;
-    std::vector<csint>& imatch = (m2 < n2) ? jimatch.jmatch : jimatch.imatch;
+    auto& jmatch = (m2 < n2) ? jimatch.imatch : jimatch.jmatch;
+    auto& imatch = (m2 < n2) ? jimatch.jmatch : jimatch.imatch;
 
     // Allocate workspaces
     w.resize(N);
@@ -963,8 +963,8 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
     // C(scc.p, scc.p) is the permuted matrix
     // kth block is scc.r[k]..r[k+1]-1
     // scc.Nb is the number of blocks of A(R2, C2)
-    std::vector<csint>& ps = strong_cc.p;
-    std::vector<csint>& rs = strong_cc.r;
+    auto& ps = strong_cc.p;
+    auto& rs = strong_cc.r;
     gather_scatter(D.q, wj, ps, nc, D.cc[2]);
     gather_scatter(D.p, wi, ps, nc, D.rr[1]);
 

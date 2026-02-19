@@ -132,12 +132,6 @@ inline auto operator*(const SparseMatrix& A, std::span<const double> x)
 }
 
 
-// Exercise 2.10 (overload for exact match with vector inputs)
-inline auto operator*(const SparseMatrix& A, const std::vector<double>& x)
-{
-    return A.dot(x);
-}
-
 }  // namespace cs
 
 

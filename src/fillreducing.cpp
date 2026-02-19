@@ -632,8 +632,9 @@ MaxMatch maxtrans_r(const CSCMatrix& A, [[maybe_unused]] csint seed)
     MaxMatch jimatch(M, N, -1);  // allocate result
     auto& [jmatch, imatch] = jimatch;  // reference to jmatch and imatch
 
-    std::vector<csint> w(N, -1),           // mark all nodes as unvisited
-                       cheap(A.indptr());  // cheap assignment
+    auto Ap = A.indptr();
+    std::vector<csint> w(N, -1),  // mark all nodes as unvisited
+                       cheap(Ap.begin(), Ap.end());
 
     for (auto k : A.column_range()) {
         augment_r(k, A, jmatch, cheap, w, k);
@@ -692,10 +693,11 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
     w.resize(N);
     std::ranges::fill(w, -1);  // mark all nodes as unvisited
 
-    std::vector<csint> cheap(C.indptr()),  // cheap assignment
-                       is(N),              // row indices stack
-                       js(N),              // col indices stack
-                       ps(N);              // pause stack for DFS in augment
+    auto Cp = C.indptr();
+    std::vector<csint> cheap(Cp.begin(), Cp.end()),
+                       is(N),  // row indices stack
+                       js(N),  // col indices stack
+                       ps(N);  // pause stack for DFS in augment
 
     // randperm can help with worst-case behavior O(|A|N), see Davis, p 118.
     auto q = randperm(N, seed);  // random permutation of columns

@@ -54,7 +54,7 @@ public:
     virtual csint nzmax() const = 0;  // maximum number of non-zeros
     virtual Shape shape() const = 0;  // the dimensions of the matrix
 
-    virtual const std::vector<double>& data() const = 0;  // numerical values
+    virtual std::span<const double> data() const = 0;  // numerical values
 
     // Iterator over the non-zero elements of the matrix, as (i, j, v) tuples,
     // taking the `kth` element for `k ∈ [0, nnz())`.

@@ -143,9 +143,9 @@ public:
     virtual csint nzmax() const override;  // maximum number of non-zeros
     virtual Shape shape() const override;  // the dimensions of the matrix
 
-    const std::vector<csint>& indices() const;
-    const std::vector<csint>& indptr() const;
-    virtual const std::vector<double>& data() const override;
+    auto indices() const { return std::span<const csint>{i_}; }
+    auto indptr() const { return std::span<const csint>{p_}; }
+    virtual std::span<const double> data() const override { return {v_}; }
 
     /** Return the number of non-zeros in column j. */
     csint col_length(csint j) const

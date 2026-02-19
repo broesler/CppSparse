@@ -143,10 +143,6 @@ csint CSCMatrix::nnz() const { return i_.size(); }
 csint CSCMatrix::nzmax() const { return i_.capacity(); }
 Shape CSCMatrix::shape() const { return {M_, N_}; }
 
-const std::vector<csint>& CSCMatrix::indices() const { return i_; }
-const std::vector<csint>& CSCMatrix::indptr() const { return p_; }
-const std::vector<double>& CSCMatrix::data() const { return v_; }
-
 
 // Exercise 2.9
 CSCMatrix& CSCMatrix::to_canonical()

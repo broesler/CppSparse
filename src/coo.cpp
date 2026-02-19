@@ -222,10 +222,6 @@ csint COOMatrix::nnz() const { return i_.size(); }
 csint COOMatrix::nzmax() const { return i_.capacity(); }
 Shape COOMatrix::shape() const { return {M_, N_}; }
 
-const std::vector<csint>& COOMatrix::row() const { return i_; }
-const std::vector<csint>& COOMatrix::col() const { return j_; }
-const std::vector<double>& COOMatrix::data() const { return v_; }
-
 
 // cs_entry
 COOMatrix& COOMatrix::insert(csint i, csint j, double v)

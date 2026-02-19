@@ -13,7 +13,6 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include <stdexcept>
-#include <string>
 #include <vector>
 
 #include "pybind11_conversion.h"
@@ -22,7 +21,6 @@
 
 namespace py = pybind11;
 
-// TODO use py::enum_?
 
 PYBIND11_MODULE(csparse, m)
 {
@@ -568,11 +566,8 @@ PYBIND11_MODULE(csparse, m)
             )pbdoc"
         )
         .def("to_dense_vector",
-            [](const cs::CSCMatrix& self, const char order_) {
-                auto order = denseorder_from_char(order_);
-                return self.to_dense_vector(order);
-            },
-            py::arg("order")='F',
+            &cs::COOMatrix::to_dense_vector,
+            py::arg("order")="F",
             R"pbdoc(
             Convert the COO matrix to a dense vector.
 
@@ -588,7 +583,7 @@ PYBIND11_MODULE(csparse, m)
                 A dense array representation of the matrix.
             )pbdoc"
         )
-        .def("toarray", &sparse_to_ndarray<cs::COOMatrix>, py::arg("order")='C',
+        .def("toarray", &sparse_to_ndarray<cs::COOMatrix>, py::arg("order")="C",
             R"pbdoc(
             Convert the COO matrix to a dense vector.
 
@@ -712,7 +707,7 @@ PYBIND11_MODULE(csparse, m)
             py::arg("data"),
             py::arg("indices"),
             py::arg("indptr"),
-            py::arg("shape")=cs::Shape{0, 0}
+            py::arg("shape")
         )
         .def(py::init<const cs::Shape&, cs::csint, bool>(),
             py::arg("shape"),
@@ -721,19 +716,13 @@ PYBIND11_MODULE(csparse, m)
             py::arg("values")=true
         )
         .def(py::init<const cs::COOMatrix&>())
-        .def(py::init(
-                [](
-                    const std::vector<double>& A,
-                    const cs::Shape& shape,
-                    const char order_
-                ) {
-                    auto order = denseorder_from_char(order_);
-                    return cs::CSCMatrix{A, shape, order};
-                }
-            ),
+        .def(py::init<
+            const std::vector<double>&,
+            const cs::Shape&,
+            cs::DenseOrder>(),
             py::arg("A"),
             py::arg("shape"),
-            py::arg("order")='F'
+            py::arg("order")="F"
         )
         //
         .def_property_readonly("nnz", &cs::CSCMatrix::nnz)
@@ -902,11 +891,8 @@ PYBIND11_MODULE(csparse, m)
             )pbdoc"
         )
         .def("to_dense_vector",
-            [](const cs::CSCMatrix& self, const char order_) {
-                auto order = denseorder_from_char(order_);
-                return self.to_dense_vector(order);
-            },
-            py::arg("order")='F',
+            &cs::CSCMatrix::to_dense_vector,
+            py::arg("order")="F",
             R"pbdoc(
             Convert the CSC matrix to a dense vector.
 
@@ -926,7 +912,9 @@ PYBIND11_MODULE(csparse, m)
             toarray : Convert the CSC matrix to a dense array.
             )pbdoc"
         )
-        .def("toarray", &sparse_to_ndarray<cs::CSCMatrix>, py::arg("order")='C',
+        .def("toarray",
+            &sparse_to_ndarray<cs::CSCMatrix>,
+            py::arg("order")="C",
             R"pbdoc(
             Convert the CSC matrix to a dense vector.
 
@@ -1664,15 +1652,16 @@ PYBIND11_MODULE(csparse, m)
     m.def("chol",
         [] (
             const py::object& A_scipy,
-            const std::string& order="Natural",
+            cs::AMDOrder order = cs::AMDOrder::Natural,
             bool use_postorder=false
         ) {
             const auto A = csc_from_scipy(A_scipy);
-            auto order_enum = cs::amdorder_from_string(order);
-            const auto S = cs::schol(A, order_enum, use_postorder);
+            const auto S = cs::schol(A, order, use_postorder);
             return cs::chol(A, S);
         },
-        py::arg("A"), py::arg("order")="Natural", py::arg("use_postorder")=false,
+        py::arg("A"),
+        py::arg("order")="Natural",
+        py::arg("use_postorder")=false,
         R"pbdoc(
         Perform Cholesky factorization of a sparse matrix.
 
@@ -1691,12 +1680,11 @@ PYBIND11_MODULE(csparse, m)
     m.def("symbolic_cholesky",
         [](
             const py::object& A_scipy,
-            const std::string& order="Natural",
+            cs::AMDOrder order = cs::AMDOrder::Natural,
             bool use_postorder=false
         ) {
             const auto A = csc_from_scipy(A_scipy);
-            auto order_enum = cs::amdorder_from_string(order);
-            const auto S = cs::schol(A, order_enum, use_postorder);
+            const auto S = cs::schol(A, order, use_postorder);
             // TODO Fill the values with 1.0 for the symbolic factorization?
             // cs::CSCMatrix L = cs::symbolic_cholesky(A, S);
             // std::fill(L.v_.begin(), L.v_.end(), 1.0);
@@ -1724,12 +1712,11 @@ PYBIND11_MODULE(csparse, m)
     m.def("leftchol",
         [] (
             const py::object& A_scipy,
-            const std::string& order="Natural",
+            cs::AMDOrder order = cs::AMDOrder::Natural,
             bool use_postorder=false
         ) {
             const auto A = csc_from_scipy(A_scipy);
-            auto order_enum = cs::amdorder_from_string(order);
-            const auto S = cs::schol(A, order_enum, use_postorder);
+            const auto S = cs::schol(A, order, use_postorder);
             auto res = cs::symbolic_cholesky(A, S);
             res.L = cs::leftchol(A, S, res.L);
             return res;
@@ -1756,12 +1743,11 @@ PYBIND11_MODULE(csparse, m)
     m.def("rechol",
         [] (
             const py::object& A_scipy,
-            const std::string& order="Natural",
+            cs::AMDOrder order = cs::AMDOrder::Natural,
             bool use_postorder=false
         ) {
             const auto A = csc_from_scipy(A_scipy);
-            auto order_enum = cs::amdorder_from_string(order);
-            const auto S = cs::schol(A, order_enum, use_postorder);
+            const auto S = cs::schol(A, order, use_postorder);
             auto res = cs::symbolic_cholesky(A, S);
             res.L = cs::rechol(A, S, res.L);
             return res;
@@ -1820,12 +1806,11 @@ PYBIND11_MODULE(csparse, m)
     m.def("qr",
         [](
             const py::object& A_scipy,
-            const std::string& order="Natural",
+            cs::AMDOrder order = cs::AMDOrder::Natural,
             bool use_postorder=false
         ) {
             const auto A = csc_from_scipy(A_scipy);
-            auto order_enum = cs::amdorder_from_string(order);
-            const auto S = cs::sqr(A, order_enum, use_postorder);
+            const auto S = cs::sqr(A, order, use_postorder);
             return cs::qr(A, S);
         },
         py::arg("A"),
@@ -1850,13 +1835,12 @@ PYBIND11_MODULE(csparse, m)
     m.def("slu",
         [](
             const py::object& A_scipy,
-            const std::string& order="Natural",
+            cs::AMDOrder order = cs::AMDOrder::Natural,
             bool qr_bound=false,
             double alpha=1.0
         ) {
             const auto A = csc_from_scipy(A_scipy);
-            auto order_enum = cs::amdorder_from_string(order);
-            const auto S = cs::slu(A, order_enum, qr_bound, alpha);
+            const auto S = cs::slu(A, order, qr_bound, alpha);
             return py::make_tuple(S.lnz, S.unz, py::cast(S.q));
         },
         py::arg("A"),
@@ -1885,12 +1869,11 @@ PYBIND11_MODULE(csparse, m)
     m.def("lu",
         [](
             const py::object& A_scipy,
-            const std::string& order="Natural",
+            cs::AMDOrder order = cs::AMDOrder::Natural,
             double tol=1.0
         ) {
             const auto A = csc_from_scipy(A_scipy);
-            auto order_enum = cs::amdorder_from_string(order);
-            const auto S = cs::slu(A, order_enum);
+            const auto S = cs::slu(A, order);
             return cs::lu(A, S, tol);
         },
         py::arg("A"),
@@ -1917,11 +1900,10 @@ PYBIND11_MODULE(csparse, m)
     m.def("amd",
         [](
             const py::object& A_scipy,
-            const std::string& order="Natural"
+            cs::AMDOrder order = cs::AMDOrder::APlusAT
         ) {
             const auto A = csc_from_scipy(A_scipy);
-            auto order_enum = cs::amdorder_from_string(order);
-            return cs::amd(A, order_enum);
+            return cs::amd(A, order);
         },
         py::arg("A"),
         py::arg("order")="APlusAT",

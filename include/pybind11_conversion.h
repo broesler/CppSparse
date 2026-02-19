@@ -26,14 +26,81 @@
 namespace py = pybind11;
 
 
-
 namespace pybind11::detail {
+
+// -----------------------------------------------------------------------------
+//        Type Casters for enum <=> string
+// -----------------------------------------------------------------------------
+template <>
+struct type_caster<cs::DenseOrder>
+{
+    PYBIND11_TYPE_CASTER(cs::DenseOrder, _("str"));
+
+    // C++ (cs::DenseOrder) to Python (str)
+    static handle cast(
+        cs::DenseOrder src,
+        [[maybe_unused]] return_value_policy policy,
+        [[maybe_unused]] handle parent
+    ) {
+        auto order_str = cs::string_from_denseorder(src);
+        return py::str(order_str).release();
+    }
+
+    // Python (str) to C++ (cs::DenseOrder)
+    bool load(handle src, [[maybe_unused]] bool convert) {
+        // Try to load as a string (e.g. "C" or "F")
+        if (py::isinstance<py::str>(src)) {
+            try {
+                value = cs::denseorder_from_string(src.cast<std::string>());
+                return true;
+            } catch (const std::exception& e) {
+                throw py::value_error(e.what());
+            }
+        }
+
+        return false;  // not a valid type for DenseOrder
+    }
+};
+
+
+template <>
+struct type_caster<cs::AMDOrder>
+{
+    PYBIND11_TYPE_CASTER(cs::AMDOrder, _("str"));
+
+    // C++ (cs::AMDOrder) to Python (str)
+    static handle cast(
+        cs::AMDOrder src,
+        [[maybe_unused]] return_value_policy policy,
+        [[maybe_unused]] handle parent
+    ) {
+        auto order_str = cs::string_from_amdorder(src);
+        return py::str(order_str).release();
+    }
+
+    // Python (str) to C++ (cs::AMDOrder)
+    bool load(handle src, [[maybe_unused]] bool convert) {
+        // Try to load as a string (e.g. "Natural", "APlusAT", etc.)
+        if (py::isinstance<py::str>(src)) {
+            try {
+                value = cs::amdorder_from_string(src.cast<std::string>());
+                return true;
+            } catch (const std::exception& e) {
+                throw py::value_error(e.what());
+            }
+        }
+
+        return false;  // not a valid type for AMDOrder
+    }
+};
+
 
 // -----------------------------------------------------------------------------
 //         Custom Type Caster for std::vector<T> <=> py::array_t<T>
 // -----------------------------------------------------------------------------
 template <typename T>
-struct type_caster<std::vector<T>> {
+struct type_caster<std::vector<T>>
+{
     // macro to define the `value` member and internals
     PYBIND11_TYPE_CASTER(std::vector<T>, _("Sequence[Union[int, float]]"));
 
@@ -148,10 +215,8 @@ inline py::array_t<T> array_to_numpy(const std::array<T, N>& arr)
  * @return a NumPy array with the same data as the matrix
  */
 template <typename T>
-auto sparse_to_ndarray(const T& self, const char order_)
+auto sparse_to_ndarray(const T& self, cs::DenseOrder order)
 {
-    const auto order = denseorder_from_char(order_);
-
     // Get the matrix in dense row-major order
     std::vector<double> v = self.to_dense_vector(order);
     auto [M, N] = self.shape();
@@ -293,13 +358,7 @@ auto make_gaxpy_matrix_func(Func&& func)
         // Store original shape of Y for reshaping output
         py::tuple Y_shape = Y_np.attr("shape");
 
-        std::string order;
-
-        if constexpr (ColMajor) {
-            order = "F";
-        } else {
-            order = "C";
-        }
+        constexpr std::string_view order = ColMajor ? "F" : "C";
 
         // Flatten arrays to 1D
         X_np = X_np.attr("reshape")(-1, py::arg("order")=order);
@@ -461,54 +520,17 @@ py::object solver_impl_(
     Args&&... args
 )
 {
-    // Extract order argument, if present
-    auto args_tuple = [&]() {
-        if constexpr (sizeof...(Args) == 0) {
-            return std::make_tuple();
-        } else {
-            // Get first argument as order string
-            auto order = std::apply(
-                [](const std::string& ord, [[maybe_unused]] auto&&... rest) { return ord; },
-                std::forward_as_tuple(args...)
-            );
-            cs::AMDOrder order_enum = cs::amdorder_from_string(order);
-
-            // Get remaining arguments as a tuple
-            auto remaining = std::apply(
-                [](const std::string&, auto&&... rest) {
-                    return std::make_tuple(std::forward<decltype(rest)>(rest)...);
-                },
-                std::forward_as_tuple(args...)
-            );
-
-            return std::tuple_cat(std::make_tuple(order_enum), remaining);
-        }
-    }();
-
     py::module_ sparse = py::module_::import("scipy.sparse");
     bool is_sparse_RHS = sparse.attr("issparse")(B_obj).cast<bool>();
 
     if (is_sparse_RHS) {
-        // Call the sparse solver with the unpacked args
-        return std::apply(
-            [&](auto&&... unpacked_args) {
-                return solver_sparse_impl_(
-                    sparse_solver, A_scipy, B_obj,
-                    std::forward<decltype(unpacked_args)>(unpacked_args)...
-                );
-            },
-            args_tuple
+        return solver_sparse_impl_(
+            sparse_solver, A_scipy, B_obj, std::forward<Args>(args)...
         );
     } else {
         // Call the dense solver with the unpacked args
-        return std::apply(
-            [&](auto&&... unpacked_args) {
-                return solver_dense_impl_(
-                    dense_solver, A_scipy, B_obj,
-                    std::forward<decltype(unpacked_args)>(unpacked_args)...
-                );
-            },
-            args_tuple
+        return solver_dense_impl_(
+            dense_solver, A_scipy, B_obj, std::forward<Args>(args)...
         );
     }
 }
@@ -550,7 +572,7 @@ auto make_chol_solver(DenseSolver&& dense_solver, SparseSolver&& sparse_solver)
     ](
         const py::object& A_scipy,
         const py::object& B_obj,
-        const std::string& order
+        cs::AMDOrder order
     ) -> py::object {
         return solver_impl_(dense_solver, sparse_solver, A_scipy, B_obj, order);
     };
@@ -566,7 +588,7 @@ auto make_lu_solver(DenseSolver&& dense_solver, SparseSolver&& sparse_solver)
     ](
         const py::object& A_scipy,
         const py::object& B_obj,
-        const std::string& order,
+        cs::AMDOrder order,
         double tol,
         cs::csint ir_steps
     ) -> py::object {

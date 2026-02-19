@@ -42,35 +42,35 @@ enum class AMDOrder
 // -----------------------------------------------------------------------------
 //        String Conversions for Enums
 // -----------------------------------------------------------------------------
-/** Convert a char to a DenseOrder enum.
+/** Convert a string to a DenseOrder enum.
  *
- * @param order  the char to convert ('C' or 'F')
+ * @param order  the string to convert ("C" or "F")
  *
  * @return the DenseOrder enum
  */
-inline auto denseorder_from_char(const char order)
+inline auto denseorder_from_string(std::string_view order)
 {
-    if (order == 'C') { return cs::DenseOrder::RowMajor; }
-    if (order == 'F') { return cs::DenseOrder::ColMajor; }
+    if (order == "C") { return cs::DenseOrder::RowMajor; }
+    if (order == "F") { return cs::DenseOrder::ColMajor; }
     throw std::runtime_error(
         std::format("Invalid DenseOrder specified: {}.", order)
     );
 }
 
 
-/** Convert a DenseOrder enum to a char.
+/** Convert a DenseOrder enum to a string.
  *
  * @param order  the DenseOrder enum to convert
  *
- * @return the char representation of the DenseOrder enum ('C' or 'F')
+ * @return the string representation of the DenseOrder enum ("C" or "F")
  */
-constexpr char char_from_denseorder(const DenseOrder order) noexcept
+constexpr std::string_view string_from_denseorder(DenseOrder order) noexcept
 {
     switch (order) {
-        case DenseOrder::RowMajor: return 'C';
-        case DenseOrder::ColMajor: return 'F';
+        case DenseOrder::RowMajor: return "C";
+        case DenseOrder::ColMajor: return "F";
     }
-    return '?';  // no "default" so compiler catches missing cases
+    return "?";  // no "default" so compiler catches missing cases
 }
 
 
@@ -80,7 +80,7 @@ constexpr char char_from_denseorder(const DenseOrder order) noexcept
  *
  * @return the AMDOrder enum
  */
-inline AMDOrder amdorder_from_string(std::string_view order)
+inline auto amdorder_from_string(std::string_view order)
 {
     if (order == "Natural") { return AMDOrder::Natural; }
     if (order == "APlusAT") { return AMDOrder::APlusAT; }
@@ -96,7 +96,7 @@ inline AMDOrder amdorder_from_string(std::string_view order)
  *
  * @return the string representation of the AMDOrder enum
  */
-constexpr std::string_view string_from_amdorder(const AMDOrder order) noexcept
+constexpr std::string_view string_from_amdorder(AMDOrder order) noexcept
 {
     switch (order) {
         case AMDOrder::Natural:         return "Natural";
@@ -160,11 +160,13 @@ MaxMatch maxtrans_r(const CSCMatrix& A, csint seed);
 
 /** Custom formatter for DenseOrder enum to enable std::format support. */
 template <>
-struct std::formatter<cs::DenseOrder> : std::formatter<char>
+struct std::formatter<cs::DenseOrder> : std::formatter<std::string_view>
 {
-    auto format(const cs::DenseOrder order, auto& ctx) const
+    auto format(cs::DenseOrder order, auto& ctx) const
     {
-        return std::formatter<char>::format(char_from_denseorder(order), ctx);
+        return std::formatter<std::string_view>::format(
+            string_from_denseorder(order), ctx
+        );
     }
 };
 
@@ -173,7 +175,7 @@ struct std::formatter<cs::DenseOrder> : std::formatter<char>
 template <>
 struct std::formatter<cs::AMDOrder> : std::formatter<std::string_view>
 {
-    auto format(const cs::AMDOrder order, auto& ctx) const
+    auto format(cs::AMDOrder order, auto& ctx) const
     {
         return std::formatter<std::string_view>::format(
             string_from_amdorder(order), ctx
@@ -185,13 +187,13 @@ struct std::formatter<cs::AMDOrder> : std::formatter<std::string_view>
 namespace cs {
 
 /** Print DenseOrder to a stream */
-inline std::ostream& operator<<(std::ostream& os, const DenseOrder& order)
+inline std::ostream& operator<<(std::ostream& os, DenseOrder order)
 {
     return os << std::format("{}", order);
 }
 
 /** Print AMDOrder to a stream */
-inline std::ostream& operator<<(std::ostream& os, const AMDOrder& order)
+inline std::ostream& operator<<(std::ostream& os, AMDOrder order)
 {
     return os << std::format("{}", order);
 }

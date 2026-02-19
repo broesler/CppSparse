@@ -309,15 +309,8 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
     }
 
     // Count number of non-negative entries in jmatch
-    auto row_rank = std::accumulate(
-        res.jmatch.begin(), res.jmatch.end(), 0,
-        [](csint sum, csint i) { return sum + (i >= 0); }
-    );
-
-    auto col_rank = std::accumulate(
-        res.imatch.begin(), res.imatch.end(), 0,
-        [](csint sum, csint j) { return sum + (j >= 0); }
-    );
+    auto row_rank = std::ranges::count_if(res.jmatch, [](auto i) { return i >= 0; });
+    auto col_rank = std::ranges::count_if(res.imatch, [](auto j) { return j >= 0; });
 
     auto sprank = std::min(row_rank, col_rank);
 

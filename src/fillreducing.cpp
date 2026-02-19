@@ -7,7 +7,7 @@
  *
  *============================================================================*/
 
-#include <algorithm>  // min, max
+#include <algorithm>  // min, max, fold_left
 #include <cmath>      // sqrt
 #include <numeric>    // iota, accumulate
 #include <ranges>     // reverse
@@ -76,7 +76,7 @@ CSCMatrix build_graph(const CSCMatrix& A, AMDOrder order, csint dense)
         case AMDOrder::Natural:
             // NOTE should never get here since amd returns early, but if it
             // does, return the original matrix without values
-            C = CSCMatrix{{}, A.indices(), A.indptr(), A.shape()};
+            C = CSCMatrix{{}, A.i_, A.p_, A.shape()};
             break;
         case AMDOrder::APlusAT:
             if (M != N) {
@@ -678,7 +678,7 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
         return jimatch;
     }
 
-    auto m2 = std::accumulate(w.cbegin(), w.cend(), 0);  // count non-empty rows
+    auto m2 = std::ranges::fold_left(w, 0, std::plus<>());  // count non-empty rows
 
     // transpose if needed
     const auto C = (m2 < n2) ? A.transpose(false) : A;

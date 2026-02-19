@@ -231,7 +231,7 @@ SymbolicQR sqr(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 
     // column counts of the Cholesky factor of C^T C
     auto cp = counts(C, S.parent, postorder, CTC);
-    S.rnz = std::accumulate(cp.cbegin(), cp.cend(), 0);
+    S.rnz = std::ranges::fold_left(cp, 0, std::plus<>());
 
     S.leftmost = find_leftmost(C);
     vcount(C, S);  // compute p_inv, vnz, m2

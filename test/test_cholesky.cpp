@@ -140,7 +140,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         std::iota(expect_p_inv.begin(), expect_p_inv.end(), 0);
 
         auto c = chol_colcounts(A);
-        auto expect_nnz = std::accumulate(c.begin(), c.end(), 0);
+        auto expect_nnz = std::ranges::fold_left(c, 0, std::plus<>());
         std::vector<csint> expect_cp(N + 1);
         std::partial_sum(c.begin(), c.end(), expect_cp.begin() + 1);
 

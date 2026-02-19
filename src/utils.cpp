@@ -7,13 +7,12 @@
  *
  *============================================================================*/
 
-#include <algorithm>  // max_element
-#include <cassert>
+#include <algorithm>  // fold_left, count_if
 #include <cmath>      // isfinite
 #include <format>
 #include <limits>     // numeric_limits
-#include <numeric>    // accumulate
 #include <random>
+#include <ranges>     // views::transform
 #include <span>
 #include <stdexcept>
 #include <vector>
@@ -156,48 +155,31 @@ double norm(std::span<const double> x, const double ord)
         return 0.0;
     }
 
+    auto abs_view = x | std::views::transform([](double val) { return std::fabs(val); });
+
     if (ord == std::numeric_limits<double>::infinity()) {
-        // infinity norm
-        return std::fabs(*std::max_element(
-            x.begin(), x.end(),
-            [](double a, double b) { return std::fabs(a) < std::fabs(b); }
-        ));
+        // infinity norm: max(|x_i|)
+        return std::ranges::max(abs_view);
     } else if (ord == 0) {
-        return std::count_if(
-            x.begin(), x.end(),
-            [](double val) {
-                return std::fabs(val) > std::numeric_limits<double>::epsilon(); 
-            }
+        // Zero "norm": number of non-zero entries
+        return std::ranges::count_if(
+            abs_view, [](double v) { return v > std::numeric_limits<double>::epsilon(); }
         );
     } else if (ord == 1) {
-        return std::transform_reduce(
-            x.begin(),
-            x.end(),
-            0.0,
-            std::plus<double>(),
-            [](double val) { return std::fabs(val); }
-        );
+        // One norm: ∑|x_i|
+        return std::ranges::fold_left(abs_view, 0.0, std::plus<>());
     } else if (ord == 2) {
-        return std::sqrt(
-            std::transform_reduce(
-                x.begin(),
-                x.end(),
-                0.0,
-                std::plus<double>(),
-                [](double val) { return val * val; }
-            )
-        );
+        // Two norm: sqrt(∑|x_i|^2)
+        auto sqr_view = x | std::views::transform([](double val) { return val * val; });
+        auto sum_sqr = std::ranges::fold_left(sqr_view, 0.0, std::plus<>());
+        return std::sqrt(sum_sqr);
     } else {
-        return std::pow(
-            std::transform_reduce(
-                x.begin(),
-                x.end(),
-                0.0,
-                std::plus<double>(),
-                [ord](double val) { return std::pow(std::fabs(val), ord); }
-            ),
-            1.0 / ord
+        // General p-norm: (∑|x_i|^p)^(1/p)
+        auto pow_view = x | std::views::transform(
+            [ord](double val) { return std::pow(std::fabs(val), ord); }
         );
+        auto sum_pow = std::ranges::fold_left(pow_view, 0.0, std::plus<>());
+        return std::pow(sum_pow, 1.0 / ord);
     }
 }
 

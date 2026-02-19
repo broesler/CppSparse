@@ -676,20 +676,20 @@ CSCMatrix& CSCMatrix::droptol(double tol)
 
 
 // Exercise 2.15
-CSCMatrix& CSCMatrix::band(const csint kl, const csint ku)
+CSCMatrix& CSCMatrix::band(csint kl, csint ku)
 {
     if (kl > ku) {
         throw std::invalid_argument("kl must be less than or equal to ku.");
     }
     return fkeep(
-        [=](csint i, csint j, [[maybe_unused]] double Aij) {
+        [kl, ku](csint i, csint j, [[maybe_unused]] double Aij) {
             return (i <= (j - kl)) && (i >= (j - ku));
         }
     );
 }
 
 
-CSCMatrix CSCMatrix::band(const csint kl, const csint ku) const
+CSCMatrix CSCMatrix::band(csint kl, csint ku) const
 {
     if (kl > ku) {
         throw std::invalid_argument("kl must be less than or equal to ku.");
@@ -1131,7 +1131,7 @@ std::vector<double> CSCMatrix::dot(std::span<const double> X) const
 }
 
 
-CSCMatrix CSCMatrix::dot(const double c) const
+CSCMatrix CSCMatrix::dot(double c) const
 {
     CSCMatrix out{v_, i_, p_, shape()};
     out.v_ *= c;
@@ -1312,8 +1312,8 @@ double CSCMatrix::vecdot(const CSCMatrix& y) const
 }
 
 
-CSCMatrix operator*(const CSCMatrix& A, const double c) { return A.dot(c); }
-CSCMatrix operator*(const double c, const CSCMatrix& A) { return A.dot(c); }
+CSCMatrix operator*(const CSCMatrix& A, double c) { return A.dot(c); }
+CSCMatrix operator*(double c, const CSCMatrix& A) { return A.dot(c); }
 CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B) { return A.dot(B); }
 
 
@@ -1786,12 +1786,7 @@ CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
 
 
 // Exercise 2.23
-CSCMatrix CSCMatrix::slice(
-    const csint i_start,
-    const csint i_end,
-    const csint j_start,
-    const csint j_end
-) const
+CSCMatrix CSCMatrix::slice(csint i_start, csint i_end, csint j_start, csint j_end) const
 {
     if ((i_start < 0) || (i_end > M_) || (i_start > i_end)) {
         throw std::out_of_range(
@@ -1876,7 +1871,7 @@ CSCMatrix CSCMatrix::index(
 
 
 // Exercise 2.29
-CSCMatrix& CSCMatrix::add_empty_top(const csint k)
+CSCMatrix& CSCMatrix::add_empty_top(csint k)
 {
     M_ += k;
 
@@ -1890,7 +1885,7 @@ CSCMatrix& CSCMatrix::add_empty_top(const csint k)
 
 
 // Exercise 2.29
-CSCMatrix& CSCMatrix::add_empty_bottom(const csint k)
+CSCMatrix& CSCMatrix::add_empty_bottom(csint k)
 {
     M_ += k;
     return *this;
@@ -1898,7 +1893,7 @@ CSCMatrix& CSCMatrix::add_empty_bottom(const csint k)
 
 
 // Exercise 2.29
-CSCMatrix& CSCMatrix::add_empty_left(const csint k)
+CSCMatrix& CSCMatrix::add_empty_left(csint k)
 {
     N_ += k;
     p_.insert(p_.begin(), k, 0);  // insert k zeros at the beginning
@@ -1907,7 +1902,7 @@ CSCMatrix& CSCMatrix::add_empty_left(const csint k)
 
 
 // Exercise 2.29
-CSCMatrix& CSCMatrix::add_empty_right(const csint k)
+CSCMatrix& CSCMatrix::add_empty_right(csint k)
 {
     N_ += k;
     p_.insert(p_.end(), k, nnz());  // insert k nnz() at the end

@@ -31,9 +31,9 @@ std::vector<double> operator-(std::span<const double> a);
 
 std::span<double> operator+=(std::span<double> a, std::span<const double> b);
 
-std::vector<double> operator*(const double c, std::span<const double> x);
-std::vector<double> operator*(std::span<const double> x, const double c);
-std::span<double> operator*=(std::span<double> x, const double c);
+std::vector<double> operator*(double c, std::span<const double> x);
+std::vector<double> operator*(std::span<const double> x, double c);
+std::span<double> operator*=(std::span<double> x, double c);
 
 
 /** Compute the norm of a vector.
@@ -43,7 +43,7 @@ std::span<double> operator*=(std::span<double> x, const double c);
  *
  * @return norm  the norm of the vector
  */
-double norm(std::span<const double> x, const double ord=2.0);
+double norm(std::span<const double> x, double ord=2.0);
 
 /*------------------------------------------------------------------------------
  *          Vector Permutations

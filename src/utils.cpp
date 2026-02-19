@@ -87,7 +87,7 @@ std::vector<double> operator-(
 
 
 /** Scale a vector by a scalar */
-std::vector<double> operator*(const double c, std::span<const double> vec)
+std::vector<double> operator*(double c, std::span<const double> vec)
 {
     std::vector<double> out(vec.begin(), vec.end());
     for (auto& x : out) {
@@ -97,13 +97,13 @@ std::vector<double> operator*(const double c, std::span<const double> vec)
 }
 
 
-std::vector<double> operator*(std::span<const double> vec, const double c)
+std::vector<double> operator*(std::span<const double> vec, double c)
 {
     return c * vec;
 }
 
 
-std::span<double> operator*=(std::span<double> vec, const double c)
+std::span<double> operator*=(std::span<double> vec, double c)
 {
     for (auto& x : vec) {
         x *= c;
@@ -149,7 +149,7 @@ std::vector<csint> inv_permute(std::span<const csint> p)
 }
 
 
-double norm(std::span<const double> x, const double ord)
+double norm(std::span<const double> x, double ord)
 {
     if (x.empty()) {
         return 0.0;

@@ -125,7 +125,7 @@ void check_all_compare(std::span<const T> vec, const T& c, Compare comp)
  * @param vec  a vector of doubles
  * @param c    the double to compare to
  */
-void check_all_greater_equal(std::span<const double> vec, const double c);
+void check_all_greater_equal(std::span<const double> vec, double c);
 
 
 /** Check that all elements of a vector are not equal to a double.
@@ -133,7 +133,7 @@ void check_all_greater_equal(std::span<const double> vec, const double c);
  * @param vec  a vector of doubles
  * @param c    the double to compare to
  */
-void check_all_not_equal(std::span<const double> vec, const double c);
+void check_all_not_equal(std::span<const double> vec, double c);
 
 
 /** Check that all elements of two vectors are within a given tolerance.
@@ -145,7 +145,7 @@ void check_all_not_equal(std::span<const double> vec, const double c);
 void check_vectors_allclose(
     std::span<const double> a,
     std::span<const double> b,
-    const double tol=1e-14
+    double tol=1e-14
 );
 
 

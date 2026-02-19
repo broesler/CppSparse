@@ -9,13 +9,11 @@
 
 #pragma once
 
-#include <cassert>
 #include <functional>
 #include <ranges>
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <sstream>
 #include <span>
 #include <vector>
 
@@ -203,7 +201,7 @@ public:
     {
         return indptr_range(j) | std::views::transform(
             [this](csint p) {
-                return std::tuple<const csint&, double&>{i_[p], v_[p]};
+                return std::tuple<csint, double&>{i_[p], v_[p]};
             }
         );
     }
@@ -213,7 +211,7 @@ public:
     {
         return indptr_range(j) | std::views::transform(
             [this](csint p) {
-                return std::tuple<csint, const csint&, double&>{p, i_[p], v_[p]};
+                return std::tuple<csint, csint, double&>{p, i_[p], v_[p]};
             }
         );
     }
@@ -661,7 +659,7 @@ public:
     virtual std::vector<double> dot(std::span<const double> X) const override;
 
     /** Scale a matrix by a scalar */
-    CSCMatrix dot(const double c) const;
+    CSCMatrix dot(double c) const;
 
     /** Matrix-matrix multiplication
      *
@@ -900,12 +898,7 @@ public:
      *
      * @return C  the submatrix A(i_start:i_end, j_start:j_end).
      */
-    CSCMatrix slice(
-        const csint i_start,
-        const csint i_end,
-        const csint j_start,
-        const csint j_end
-    ) const;
+    CSCMatrix slice(csint i_start, csint i_end, csint j_start, csint j_end) const;
 
     /** Select a submatrix by arbitrary row and column indices.
      *
@@ -932,7 +925,7 @@ public:
      *
      * @return  a reference to the modified matrix
      */
-    CSCMatrix& add_empty_top(const csint k);
+    CSCMatrix& add_empty_top(csint k);
 
     /** Add empty rows to the bottom of the matrix.
      *
@@ -942,7 +935,7 @@ public:
      *
      * @return  a reference to the modified matrix
      */
-    CSCMatrix& add_empty_bottom(const csint k);
+    CSCMatrix& add_empty_bottom(csint k);
 
     /** Add empty columns to the left of the matrix.
      *
@@ -952,7 +945,7 @@ public:
      *
      * @return  a reference to the modified matrix
      */
-    CSCMatrix& add_empty_left(const csint k);
+    CSCMatrix& add_empty_left(csint k);
 
     /** Add empty columns to the right of the matrix.
     *
@@ -962,7 +955,7 @@ public:
     *
     * @return  a reference to the modified matrix
     */
-    CSCMatrix& add_empty_right(const csint k);
+    CSCMatrix& add_empty_right(csint k);
 
     /** Sum the rows of a matrix.
      *
@@ -975,9 +968,6 @@ public:
      * @return out  a vector of length `N` containing the sum of each column.
      */
     std::vector<double> sum_cols() const;
-
-    // double sum() const;
-    // std::vector<double> sum(const int axis) const;
 
     //--------------------------------------------------------------------------
     //        Triangular Matrix Solutions
@@ -1228,8 +1218,8 @@ CSCMatrix operator-(const CSCMatrix& A, const CSCMatrix& B);
 CSCMatrix operator-(const CSCMatrix& A);
 
 CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B);
-CSCMatrix operator*(const CSCMatrix& A, const double c);
-CSCMatrix operator*(const double c, const CSCMatrix& A);
+CSCMatrix operator*(const CSCMatrix& A, double c);
+CSCMatrix operator*(double c, const CSCMatrix& A);
 
 
 /** Matrix-vector multiply `y = Ax + y`.

@@ -87,13 +87,13 @@ void check_sparse_allclose(
 }
 
 
-void check_all_greater_equal(std::span<const double> vec, const double c)
+void check_all_greater_equal(std::span<const double> vec, double c)
 {
     return check_all_compare(vec, c, std::greater_equal<double>());
 }
 
 
-void check_all_not_equal(std::span<const double> vec, const double c)
+void check_all_not_equal(std::span<const double> vec, double c)
 {
     return check_all_compare(vec, c, std::not_equal_to<double>());
 }
@@ -102,7 +102,7 @@ void check_all_not_equal(std::span<const double> vec, const double c)
 void check_vectors_allclose(
     std::span<const double> a,
     std::span<const double> b,
-    const double tol
+    double tol
 )
 {
     REQUIRE(a.size() == b.size());

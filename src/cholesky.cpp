@@ -899,11 +899,11 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
     CSCMatrix L{{N, N}, C_tril.nnz()};  // allocate result
 
     // Workspaces
-    std::vector<csint> c(C_tril.indptr());  // column pointers for L
-    std::vector<csint> w(N, -1);            // row indices for column of C
-    std::vector<double> x(N);               // values for column of C
+    std::vector<csint> c(C_tril.p_);  // column pointers for L
+    std::vector<csint> w(N, -1);      // row indices for column of C
+    std::vector<double> x(N);         // values for column of C
 
-    L.p_ = C_tril.indptr();  // column pointers for L (same pattern as A)
+    L.p_ = C_tril.p_;  // column pointers for L (same pattern as A)
 
     // Compute L(k, :) for L*L' = C in up-looking order
     for (auto k : L.column_range()) {

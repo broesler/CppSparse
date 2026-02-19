@@ -230,7 +230,7 @@ public:
      * @return a copy of the matrix as a dense array.
      */
     virtual std::vector<double> to_dense_vector(
-        const DenseOrder order = DenseOrder::ColMajor
+        DenseOrder order = DenseOrder::ColMajor
     ) const override;
 
     //--------------------------------------------------------------------------

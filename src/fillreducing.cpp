@@ -64,7 +64,7 @@ static csint wclear(csint mark, csint lemax, std::span<csint> w)
 
 
 // Compute the C matrix for AMD ordering
-CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense)
+CSCMatrix build_graph(const CSCMatrix& A, AMDOrder order, csint dense)
 {
     CSCMatrix C;
 
@@ -122,7 +122,7 @@ CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense)
 }
 
 
-std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order)
+std::vector<csint> amd(const CSCMatrix& A, AMDOrder order)
 {
     std::vector<csint> P;  // the output vector
 

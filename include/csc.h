@@ -125,7 +125,7 @@ public:
     CSCMatrix(
         std::span<const double> A,
         const Shape& shape,
-        const DenseOrder order = DenseOrder::ColMajor
+        DenseOrder order = DenseOrder::ColMajor
     );
 
     /** Reallocate a CSCMatrix to a new number of non-zeros.
@@ -475,7 +475,7 @@ public:
      * @return a copy of the matrix as a dense column-major array.
      */
     virtual std::vector<double> to_dense_vector(
-        const DenseOrder order = DenseOrder::ColMajor
+        DenseOrder order = DenseOrder::ColMajor
     ) const override;
 
     /** Convert a CSCMatrix to a double if it is a 1x1 matrix.
@@ -1078,8 +1078,8 @@ public:
     // -------------------------------------------------------------------------
     //         Fill-reducing Orderings
     // -------------------------------------------------------------------------
-    friend CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense);
-    friend std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order);
+    friend CSCMatrix build_graph(const CSCMatrix& A, AMDOrder order, csint dense);
+    friend std::vector<csint> amd(const CSCMatrix& A, AMDOrder order);
 
     friend bool detail::augment_r(
         csint k,

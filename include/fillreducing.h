@@ -66,7 +66,7 @@ struct DMPermResult {
  *
  * @return the symmetric adjacency matrix C
  */
-CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense);
+CSCMatrix build_graph(const CSCMatrix& A, AMDOrder order, csint dense);
 
 
 /** Compute the approximate minimum degree ordering of a matrix.
@@ -95,7 +95,7 @@ CSCMatrix build_graph(const CSCMatrix& A, const AMDOrder order, csint dense);
  *
  * @return the permutation vector
  */
-std::vector<csint> amd(const CSCMatrix& A, const AMDOrder order=AMDOrder::Natural);
+std::vector<csint> amd(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
 
 
 namespace detail {

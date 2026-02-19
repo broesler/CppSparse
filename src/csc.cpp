@@ -33,12 +33,11 @@ CSCMatrix::CSCMatrix(
     std::span<const csint> indices,
     std::span<const csint> indptr,
     const Shape& shape
-)
-    : v_(data.begin(), data.end()),
-      i_(indices.begin(), indices.end()),
-      p_(indptr.begin(), indptr.end()),
-      M_{shape[0]},
-      N_{shape[1]}
+) : v_(data.begin(), data.end()),
+    i_(indices.begin(), indices.end()),
+    p_(indptr.begin(), indptr.end()),
+    M_{shape[0]},
+    N_{shape[1]}
 {}
 
 
@@ -70,7 +69,7 @@ CSCMatrix::CSCMatrix(const COOMatrix& A) : CSCMatrix(A.compress())
 CSCMatrix::CSCMatrix(
     std::span<const double> A,
     const Shape& shape,
-    const DenseOrder order
+    DenseOrder order
 ) : M_{shape[0]},
     N_{shape[1]}
 {
@@ -430,7 +429,7 @@ COOMatrix CSCMatrix::tocoo() const { return COOMatrix{*this}; }
 
 
 // Exercise 2.16
-std::vector<double> CSCMatrix::to_dense_vector(const DenseOrder order) const
+std::vector<double> CSCMatrix::to_dense_vector(DenseOrder order) const
 {
     std::vector<double> A(M_ * N_, 0.0);
     csint idx;

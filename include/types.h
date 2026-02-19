@@ -29,6 +29,7 @@ enum class DenseOrder
     ColMajor   // Fortran-style column-major order
 };
 
+
 enum class AMDOrder
 {
     Natural,         // Natural ordering (no-op)
@@ -36,6 +37,41 @@ enum class AMDOrder
     ATANoDenseRows,  // LU: A.T @ A, but no dense rows
     ATA              // QR: A.T * A
 };
+
+
+// -----------------------------------------------------------------------------
+//        String Conversions for Enums
+// -----------------------------------------------------------------------------
+/** Convert a char to a DenseOrder enum.
+ *
+ * @param order  the char to convert ('C' or 'F')
+ *
+ * @return the DenseOrder enum
+ */
+inline auto denseorder_from_char(const char order)
+{
+    if (order == 'C') { return cs::DenseOrder::RowMajor; }
+    if (order == 'F') { return cs::DenseOrder::ColMajor; }
+    throw std::runtime_error(
+        std::format("Invalid DenseOrder specified: {}.", order)
+    );
+}
+
+
+/** Convert a DenseOrder enum to a char.
+ *
+ * @param order  the DenseOrder enum to convert
+ *
+ * @return the char representation of the DenseOrder enum ('C' or 'F')
+ */
+constexpr char char_from_denseorder(const DenseOrder order) noexcept
+{
+    switch (order) {
+        case DenseOrder::RowMajor: return 'C';
+        case DenseOrder::ColMajor: return 'F';
+    }
+    return '?';  // no "default" so compiler catches missing cases
+}
 
 
 /** Convert a string to an AMDOrder enum.
@@ -72,7 +108,9 @@ constexpr std::string_view string_from_amdorder(const AMDOrder order) noexcept
 }
 
 
-// Forward declarations
+// -----------------------------------------------------------------------------
+//         Forward declarations
+// -----------------------------------------------------------------------------
 struct CholCounts;
 struct CholResult;
 struct TriPerm;
@@ -120,6 +158,17 @@ MaxMatch maxtrans_r(const CSCMatrix& A, csint seed);
 }  // namespace cs
 
 
+/** Custom formatter for DenseOrder enum to enable std::format support. */
+template <>
+struct std::formatter<cs::DenseOrder> : std::formatter<char>
+{
+    auto format(const cs::DenseOrder order, auto& ctx) const
+    {
+        return std::formatter<char>::format(char_from_denseorder(order), ctx);
+    }
+};
+
+
 /** Custom formatter for AMDOrder enum to enable std::format support. */
 template <>
 struct std::formatter<cs::AMDOrder> : std::formatter<std::string_view>
@@ -134,6 +183,12 @@ struct std::formatter<cs::AMDOrder> : std::formatter<std::string_view>
 
 
 namespace cs {
+
+/** Print DenseOrder to a stream */
+inline std::ostream& operator<<(std::ostream& os, const DenseOrder& order)
+{
+    return os << std::format("{}", order);
+}
 
 /** Print AMDOrder to a stream */
 inline std::ostream& operator<<(std::ostream& os, const AMDOrder& order)

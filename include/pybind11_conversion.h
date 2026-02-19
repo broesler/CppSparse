@@ -26,21 +26,6 @@
 namespace py = pybind11;
 
 
-/** Convert a char to a DenseOrder enum.
- *
- * @param order  the char to convert ('C' or 'F')
- *
- * @return the DenseOrder enum
- */
-inline auto denseorder_from_char(const char order)
-{
-    if (order == 'C') { return cs::DenseOrder::RowMajor; }
-    if (order == 'F') { return cs::DenseOrder::ColMajor; }
-    throw std::runtime_error(
-        std::format("Invalid DenseOrder specified: {}.", order)
-    );
-}
-
 
 namespace pybind11::detail {
 

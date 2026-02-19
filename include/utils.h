@@ -77,6 +77,11 @@ void pvec(std::span<const csint> p, std::span<const T> b, std::span<T> x)
 }
 
 
+// NOTE the 2-argument versions cannot use std::span as input because the
+// compiler does not have a conversion between std::vector and std::span, so the
+// type T cannot be deduced. The solution is to either explicitly specify
+// a vector argument, or to accept b as a Container and deduce T from that.
+
 /** Compute \f$ x = Pb \f$ where P is a permutation matrix, represented as
  * a vector.
  *

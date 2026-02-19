@@ -8,6 +8,7 @@
  *============================================================================*/
 
 #include <array>
+#include <format>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
@@ -21,6 +22,7 @@
 
 namespace py = pybind11;
 
+// TODO use py::enum_?
 
 PYBIND11_MODULE(csparse, m)
 {
@@ -624,9 +626,15 @@ PYBIND11_MODULE(csparse, m)
         .def("__matmul__", &cs::COOMatrix::dot)
         //
         .def("__repr__", [](const cs::COOMatrix& A) {
-            return A.to_string(false);  // don't print all elements
+            return std::format("{}", A);
         })
-        .def("__str__", &cs::COOMatrix::to_string,
+        .def("__str__",
+            [](const cs::COOMatrix& A, bool verbose=true, cs::csint threshold=1000) {
+                const auto fmt_string = std::format(
+                    "{{:{}{}}}", threshold, verbose ? "v" : ""
+                );
+                return std::vformat(fmt_string, std::make_format_args(A));
+            },
             py::arg("verbose")=true,
             py::arg("threshold")=1000
         );
@@ -1280,9 +1288,15 @@ PYBIND11_MODULE(csparse, m)
         )
         //
         .def("__repr__", [](const cs::CSCMatrix& A) {
-            return A.to_string(false);  // don't print all elements
+            return std::format("{}", A);
         })
-        .def("__str__", &cs::CSCMatrix::to_string,
+        .def("__str__",
+            [](const cs::CSCMatrix& A, bool verbose=true, cs::csint threshold=1000) {
+                const auto fmt_string = std::format(
+                    "{{:{}{}}}", threshold, verbose ? "v" : ""
+                );
+                return std::vformat(fmt_string, std::make_format_args(A));
+            },
             py::arg("verbose")=true,
             py::arg("threshold")=1000
         );

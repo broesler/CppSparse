@@ -96,7 +96,37 @@ struct type_caster<cs::AMDOrder>
 
 
 // -----------------------------------------------------------------------------
-//         Custom Type Caster for std::vector<T> <=> py::array_t<T>
+//        Type Caster for std::span -> py::array_t
+// -----------------------------------------------------------------------------
+template <typename T>
+struct type_caster<std::span<T>>
+{
+    PYBIND11_TYPE_CASTER(std::span<T>, _("numpy.ndarray"));
+
+    // span -> NumPy array
+    static handle cast(
+        std::span<T> src,
+        [[maybe_unused]] return_value_policy policy,
+        [[maybe_unused]] handle parent
+    ) {
+        return py::array_t<std::remove_const_t<T>>(
+            src.size(),
+            src.data()
+        ).release();
+    }
+
+    // NOTE Do not support Numpy array -> span conversion, since span is
+    // a non-owning view and we can't guarantee the lifetime of the data.
+    // Instead, pybind11 uses the type_caster to std::vector<T>, which is
+    // allowed as an argument to std::span parameters in C++ functions.
+    bool load([[maybe_unused]] handle src, [[maybe_unused]] bool convert) {
+        return false;
+    }
+};
+
+
+// -----------------------------------------------------------------------------
+//         Type Caster for std::vector<T> <=> py::array_t<T>
 // -----------------------------------------------------------------------------
 template <typename T>
 struct type_caster<std::vector<T>>
@@ -193,6 +223,10 @@ struct type_caster<std::vector<T>>
 
 }  // namespace pybind11::detail
 
+
+// -----------------------------------------------------------------------------
+//         Conversion Templates
+// -----------------------------------------------------------------------------
 
 /** Convert an array to a NumPy array.
  *

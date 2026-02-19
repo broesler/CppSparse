@@ -21,6 +21,7 @@
 #include "test_helpers.h"
 
 using Catch::Matchers::WithinAbs;
+using Catch::Matchers::RangeEquals;
 using Catch::Matchers::UnorderedEquals;
 
 
@@ -363,7 +364,7 @@ TEST_CASE("Exercise 6.4: relu", "[ex6.4][relu]")
     std::iota(expect_q.begin(), expect_q.end(), 0);
 
     // Create new matrix with same sparsity pattern as A
-    std::vector<double> B_data(A.data());
+    std::vector<double> B_data(A.data().begin(), A.data().end());
     for (auto& x : B_data) {
         x += 1;
     }
@@ -804,8 +805,8 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13][ilu]")
         const auto LpU = (ires.L + ires.U).droptol().to_canonical();
 
         CHECK(LpU.nnz() == A.nnz());
-        CHECK(LpU.indices() == A.indices());
-        CHECK(LpU.indptr() == A.indptr());
+        CHECK_THAT(LpU.indices(), RangeEquals(A.indices()));
+        CHECK_THAT(LpU.indptr(), RangeEquals(A.indptr()));
 
         // Test norm just on non-zero pattern of A
         // MATLAB >> norm(A - (L * U) * spones(A), "fro") / norm(A, "fro")

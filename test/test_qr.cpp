@@ -281,12 +281,12 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][n
     SECTION("Exercise 5.1: Symbolic factorization") {
         auto sym_res = symbolic_qr(A, S);
 
-        CHECK(sym_res.V.indptr() == res.V.indptr());
-        CHECK(sym_res.V.indices() == res.V.indices());
+        CHECK_THAT(sym_res.V.indptr(), RangeEquals(res.V.indptr()));
+        CHECK_THAT(sym_res.V.indices(), RangeEquals(res.V.indices()));
         CHECK(sym_res.V.data().empty());
         CHECK(sym_res.beta.empty());
-        CHECK(sym_res.R.indptr() == res.R.indptr());
-        CHECK(sym_res.R.indices() == res.R.indices());
+        CHECK_THAT(sym_res.R.indptr(), RangeEquals(res.R.indptr()));
+        CHECK_THAT(sym_res.R.indices(), RangeEquals(res.R.indices()));
         REQUIRE(sym_res.R.data().empty());
     }
 
@@ -481,12 +481,12 @@ TEST_CASE("Numeric QR factorization of overdetermined matrix M > N", "[qr][M > N
     SECTION("Exercise 5.1: Symbolic factorization") {
         auto sym_res = symbolic_qr(A, S);
 
-        CHECK(sym_res.V.indptr() == res.V.indptr());
-        CHECK(sym_res.V.indices() == res.V.indices());
+        CHECK_THAT(sym_res.V.indptr(), RangeEquals(res.V.indptr()));
+        CHECK_THAT(sym_res.V.indices(), RangeEquals(res.V.indices()));
         CHECK(sym_res.V.data().empty());
         CHECK(sym_res.beta.empty());
-        CHECK(sym_res.R.indptr() == res.R.indptr());
-        CHECK(sym_res.R.indices() == res.R.indices());
+        CHECK_THAT(sym_res.R.indptr(), RangeEquals(res.R.indptr()));
+        CHECK_THAT(sym_res.R.indices(), RangeEquals(res.R.indices()));
         REQUIRE(sym_res.R.data().empty());
     }
 
@@ -603,8 +603,8 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
         // M < N, whereas `res` is the full factorization of A.
         auto sym_res = symbolic_qr(A, S);
 
-        CHECK(sym_res.V.indptr() == res.V.indptr());
-        CHECK(sym_res.V.indices() == res.V.indices());
+        CHECK_THAT(sym_res.V.indptr(), RangeEquals(res.V.indptr()));
+        CHECK_THAT(sym_res.V.indices(), RangeEquals(res.V.indices()));
         CHECK(sym_res.V.data().empty());
         CHECK(sym_res.beta.empty());
 

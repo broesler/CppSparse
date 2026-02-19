@@ -16,6 +16,9 @@
 
 #include "csparse.h"
 
+using Catch::Matchers::RangeEquals;
+
+
 namespace cs {
 
 
@@ -54,9 +57,9 @@ TEST_CASE("COOMatrix Constructors", "[COOMatrix][constructor]")
         CHECK(A.nnz() == 10);
         CHECK(A.nzmax() >= 10);
         CHECK(A.shape() == Shape{4, 4});
-        CHECK(A.row() == i);
-        CHECK(A.col() == j);
-        CHECK(A.data() == v);
+        CHECK_THAT(A.row(), RangeEquals(i));
+        CHECK_THAT(A.col(), RangeEquals(j));
+        CHECK_THAT(A.data(), RangeEquals(v));
     }
 }
 
@@ -145,19 +148,19 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
         auto A_T = A.transpose();
         auto A_TT = A.T();
 
-        REQUIRE(A_T.row() == A.col());
-        REQUIRE(A_T.col() == A.row());
-        REQUIRE(A_T.row() == A_TT.row());
-        REQUIRE(A_T.col() == A_TT.col());
+        REQUIRE_THAT(A_T.row(), RangeEquals(A.col()));
+        REQUIRE_THAT(A_T.col(), RangeEquals(A.row()));
+        REQUIRE_THAT(A_T.row(), RangeEquals(A_TT.row()));
+        REQUIRE_THAT(A_T.col(), RangeEquals(A_TT.col()));
         REQUIRE(&A != &A_T);
     }
 
     SECTION("Read from a file") {
         auto F = COOMatrix::from_file("./data/t1");
 
-        REQUIRE(A.row() == F.row());
-        REQUIRE(A.col() == F.col());
-        REQUIRE(A.data() == F.data());
+        REQUIRE_THAT(A.row(), RangeEquals(F.row()));
+        REQUIRE_THAT(A.col(), RangeEquals(F.col()));
+        REQUIRE_THAT(A.data(), RangeEquals(F.data()));
     }
 
     SECTION("Conversion to dense array: Column-major") {

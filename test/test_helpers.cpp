@@ -11,12 +11,13 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <functional>  // function, greater_equal, not_equal_to
-#include <vector>
+#include <span>
 
 #include "csparse.h"
 #include "test_helpers.h"
 
 using Catch::Matchers::WithinAbs;
+using Catch::Matchers::RangeEquals;
 
 
 namespace cs {
@@ -33,8 +34,8 @@ void check_canonical_allclose(
     REQUIRE(expect.has_canonical_format());
     CHECK(A.nnz() == expect.nnz());
     CHECK(A.shape() == expect.shape());
-    CHECK(A.indptr() == expect.indptr());
-    CHECK(A.indices() == expect.indices());
+    CHECK_THAT(A.indptr(), RangeEquals(expect.indptr()));
+    CHECK_THAT(A.indices(), RangeEquals(expect.indices()));
     if (values) {
         for (csint p = 0; p < A.nnz(); ++p) {
             CAPTURE(p);
@@ -86,21 +87,21 @@ void check_sparse_allclose(
 }
 
 
-void check_all_greater_equal(const std::vector<double>& vec, const double c)
+void check_all_greater_equal(std::span<const double> vec, const double c)
 {
     return check_all_compare(vec, c, std::greater_equal<double>());
 }
 
 
-void check_all_not_equal(const std::vector<double>& vec, const double c)
+void check_all_not_equal(std::span<const double> vec, const double c)
 {
     return check_all_compare(vec, c, std::not_equal_to<double>());
 }
 
 
 void check_vectors_allclose(
-    const std::vector<double>& a,
-    const std::vector<double>& b,
+    std::span<const double> a,
+    std::span<const double> b,
     const double tol
 )
 {

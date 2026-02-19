@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <vector>
+#include <span>
 
 #include "types.h"
 
@@ -35,7 +35,7 @@ constexpr double tol = 1e-14;
 template <typename MatrixT>
 void check_sparse_eq_dense(
     MatrixT& A,
-    const std::vector<double>& expect,
+    std::span<const double> expect,
     Shape shape,
     double tol=1e-14
 )
@@ -111,11 +111,7 @@ void check_sparse_allclose(
  * @param c    the double to compare to
  */
 template <typename T, typename Compare>
-void check_all_compare(
-    const std::vector<T>& vec,
-    const T& c,
-    Compare comp
-)
+void check_all_compare(std::span<const T> vec, const T& c, Compare comp)
 {
     for (size_t i = 0; i < vec.size(); i++) {
         CAPTURE(i, vec[i], c);
@@ -129,7 +125,7 @@ void check_all_compare(
  * @param vec  a vector of doubles
  * @param c    the double to compare to
  */
-void check_all_greater_equal(const std::vector<double>& vec, const double c);
+void check_all_greater_equal(std::span<const double> vec, const double c);
 
 
 /** Check that all elements of a vector are not equal to a double.
@@ -137,7 +133,7 @@ void check_all_greater_equal(const std::vector<double>& vec, const double c);
  * @param vec  a vector of doubles
  * @param c    the double to compare to
  */
-void check_all_not_equal(const std::vector<double>& vec, const double c);
+void check_all_not_equal(std::span<const double> vec, const double c);
 
 
 /** Check that all elements of two vectors are within a given tolerance.
@@ -147,8 +143,8 @@ void check_all_not_equal(const std::vector<double>& vec, const double c);
  * @param tol   the tolerance for comparison
  */
 void check_vectors_allclose(
-    const std::vector<double>& a,
-    const std::vector<double>& b,
+    std::span<const double> a,
+    std::span<const double> b,
     const double tol=1e-14
 );
 

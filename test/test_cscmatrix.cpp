@@ -19,6 +19,7 @@
 #include "test_helpers.h"
 
 using Catch::Matchers::WithinAbs;
+using Catch::Matchers::RangeEquals;
 
 
 namespace cs {
@@ -30,16 +31,16 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
     auto C = A.compress();  // unsorted columns
 
     SECTION("Attributes") {
-        std::vector<csint> indptr_expect{  0,             3,             6,        8,  10};
-        std::vector<csint> indices_expect{  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
-        std::vector<double> data_expect  {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
+        const std::vector<csint> indptr_expect  {  0,             3,             6,        8,  10};
+        const std::vector<csint> indices_expect {  1,   3,   0,   1,   3,   2,   2,   0,   3,   1};
+        const std::vector<double> data_expect   {3.1, 3.5, 4.5, 2.9, 0.4, 1.7, 3.0, 3.2, 1.0, 0.9};
 
         REQUIRE(C.nnz() == 10);
         REQUIRE(C.nzmax() >= 10);
         REQUIRE(C.shape() == Shape{4, 4});
-        REQUIRE(C.indptr() == indptr_expect);
-        REQUIRE(C.indices() == indices_expect);
-        REQUIRE(C.data() == data_expect);
+        REQUIRE_THAT(C.indptr(), RangeEquals(indptr_expect));
+        REQUIRE_THAT(C.indices(), RangeEquals(indices_expect));
+        REQUIRE_THAT(C.data(), RangeEquals(data_expect));
     }
 
     SECTION ("Printing") {
@@ -147,9 +148,9 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
 
             CHECK(Cs.shape() == shape_expect);
             CHECK(Cs.has_sorted_indices());
-            CHECK(Cs.indptr() == indptr_expect);
-            CHECK(Cs.indices() == indices_expect);
-            REQUIRE(Cs.data() == data_expect);
+            CHECK_THAT(Cs.indptr(), RangeEquals(indptr_expect));
+            CHECK_THAT(Cs.indices(), RangeEquals(indices_expect));
+            REQUIRE_THAT(Cs.data(), RangeEquals(data_expect));
         };
 
         SECTION("Two transposes") {
@@ -249,9 +250,9 @@ TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
     check_all_not_equal(C.data(), 0.0);
 
     // Sorted entries
-    REQUIRE(C.indptr() == indptr_expect);
-    REQUIRE(C.indices() == indices_expect);
-    REQUIRE(C.data() == data_expect);
+    REQUIRE_THAT(C.indptr(), RangeEquals(indptr_expect));
+    REQUIRE_THAT(C.indices(), RangeEquals(indices_expect));
+    REQUIRE_THAT(C.data(), RangeEquals(data_expect));
 
     // Flags set
     REQUIRE(C.has_sorted_indices());
@@ -260,9 +261,9 @@ TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
 
     SECTION("Constructor") {
         CSCMatrix B{A};
-        REQUIRE(C.indptr() == B.indptr());
-        REQUIRE(C.indices() == B.indices());
-        REQUIRE(C.data() == B.data());
+        REQUIRE_THAT(C.indptr(), RangeEquals(B.indptr()));
+        REQUIRE_THAT(C.indices(), RangeEquals(B.indices()));
+        REQUIRE_THAT(C.data(), RangeEquals(B.data()));
     }
 
     SECTION("Indexing") {
@@ -457,9 +458,9 @@ TEST_CASE("Exercise 2.2: Conversion to COOMatrix") {
         REQUIRE(A.nnz() == 10);
         REQUIRE(A.nzmax() >= 10);
         REQUIRE(A.shape() == Shape{4, 4});
-        REQUIRE(A.row() == expect_i);
-        REQUIRE(A.col() == expect_j);
-        REQUIRE(A.data() == expect_v);
+        REQUIRE_THAT(A.row(), RangeEquals(expect_i));
+        REQUIRE_THAT(A.col(), RangeEquals(expect_j));
+        REQUIRE_THAT(A.data(), RangeEquals(expect_v));
     };
 
     SECTION("As constructor") {
@@ -718,9 +719,9 @@ TEST_CASE("Exercise 2.15: Band function", "[ex2.15][band]")
         std::vector<double> expect_data(expect_rows.size(), 1);
 
         CHECK(Ab.nnz() == N);
-        CHECK(Ab.row() == expect_rows);
-        CHECK(Ab.col() == expect_cols);
-        REQUIRE(Ab.data() == expect_data);
+        CHECK_THAT(Ab.row(), RangeEquals(expect_rows));
+        CHECK_THAT(Ab.col(), RangeEquals(expect_cols));
+        REQUIRE_THAT(Ab.data(), RangeEquals(expect_data));
     }
 
     SECTION("Arbitrary diagonals") {
@@ -736,9 +737,9 @@ TEST_CASE("Exercise 2.15: Band function", "[ex2.15][band]")
         std::vector<double> expect_data(expect_rows.size(), 1);
 
         CHECK(Ab.nnz() == 27);
-        CHECK(Ab.row() == expect_rows);
-        CHECK(Ab.col() == expect_cols);
-        REQUIRE(Ab.data() == expect_data);
+        CHECK_THAT(Ab.row(), RangeEquals(expect_rows));
+        CHECK_THAT(Ab.col(), RangeEquals(expect_cols));
+        REQUIRE_THAT(Ab.data(), RangeEquals(expect_data));
     }
 }
 
@@ -1240,7 +1241,7 @@ TEST_CASE("Exercise 2.29: Adding empty rows and columns to a CSCMatrix.", "[ex2.
     SECTION("Add empty rows to top") {
         C.add_empty_top(k);
 
-        auto expect_indices = A.indices();
+        std::vector<csint> expect_indices(A.indices().begin(), A.indices().end());
         for (auto& x : expect_indices) {
             x += k;
         }
@@ -1248,8 +1249,8 @@ TEST_CASE("Exercise 2.29: Adding empty rows and columns to a CSCMatrix.", "[ex2.
         REQUIRE(C.nnz() == A.nnz());
         REQUIRE(C.shape()[0] == A.shape()[0] + k);
         REQUIRE(C.shape()[1] == A.shape()[1]);
-        REQUIRE(C.indptr() == A.indptr());
-        REQUIRE(C.indices() == expect_indices);
+        REQUIRE_THAT(C.indptr(), RangeEquals(A.indptr()));
+        REQUIRE_THAT(C.indices(), RangeEquals(expect_indices));
     }
 
     SECTION("Add empty rows to bottom") {
@@ -1258,8 +1259,8 @@ TEST_CASE("Exercise 2.29: Adding empty rows and columns to a CSCMatrix.", "[ex2.
         REQUIRE(C.nnz() == A.nnz());
         REQUIRE(C.shape()[0] == A.shape()[0] + k);
         REQUIRE(C.shape()[1] == A.shape()[1]);
-        REQUIRE(C.indptr() == A.indptr());
-        REQUIRE(C.indices() == A.indices());
+        REQUIRE_THAT(C.indptr(), RangeEquals(A.indptr()));
+        REQUIRE_THAT(C.indices(), RangeEquals(A.indices()));
     }
 
     SECTION("Add empty columns to left") {
@@ -1276,14 +1277,14 @@ TEST_CASE("Exercise 2.29: Adding empty rows and columns to a CSCMatrix.", "[ex2.
         REQUIRE(C.nnz() == A.nnz());
         REQUIRE(C.shape()[0] == A.shape()[0]);
         REQUIRE(C.shape()[1] == A.shape()[1] + k);
-        REQUIRE(C.indptr() == expect_indptr);
-        REQUIRE(C.indices() == A.indices());
+        REQUIRE_THAT(C.indptr(), RangeEquals(expect_indptr));
+        REQUIRE_THAT(C.indices(), RangeEquals(A.indices()));
     }
 
     SECTION("Add empty columns to right") {
         C.add_empty_right(k);
 
-        auto expect_indptr = A.indptr();
+        std::vector<csint> expect_indptr(A.indptr().begin(), A.indptr().end());
         std::vector<csint> nnzs(k, A.nnz());
         expect_indptr.insert(
             expect_indptr.end(),
@@ -1294,8 +1295,8 @@ TEST_CASE("Exercise 2.29: Adding empty rows and columns to a CSCMatrix.", "[ex2.
         REQUIRE(C.nnz() == A.nnz());
         REQUIRE(C.shape()[0] == A.shape()[0]);
         REQUIRE(C.shape()[1] == A.shape()[1] + k);
-        REQUIRE(C.indptr() == expect_indptr);
-        REQUIRE(C.indices() == A.indices());
+        REQUIRE_THAT(C.indptr(), RangeEquals(expect_indptr));
+        REQUIRE_THAT(C.indices(), RangeEquals(A.indices()));
     }
 }
 

@@ -20,6 +20,8 @@
 #include "test_helpers.h"
 
 using Catch::Matchers::WithinAbs;
+using Catch::Matchers::RangeEquals;
+
 
 namespace cs {
 
@@ -365,8 +367,8 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
 
         CHECK(Ls.nnz() == L.nnz());
         CHECK(Ls.shape() == L.shape());
-        CHECK(Ls.indptr() == L.indptr());
-        CHECK(Ls.indices() == L.indices());
+        CHECK_THAT(Ls.indptr(), RangeEquals(L.indptr()));
+        CHECK_THAT(Ls.indices(), RangeEquals(L.indices()));
         CHECK(Ls.data().size() == L.data().size());  // allocation only
     }
 
@@ -440,8 +442,8 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
             CHECK(L._test_sorted());
             CHECK(L.nnz() == Lf.nnz() - fill_in);  // fill-in is 6
             CHECK(L.nnz() == A_tril.nnz());
-            CHECK(L.indptr() == A_tril.indptr());
-            CHECK(L.indices() == A_tril.indices());
+            CHECK_THAT(L.indptr(), RangeEquals(A_tril.indptr()));
+            CHECK_THAT(L.indices(), RangeEquals(A_tril.indices()));
 
             // Test norm just on non-zero pattern of A
             // MATLAB >> norm(A - (Lf * Lf') * spones(A), "fro") / norm(A, "fro")

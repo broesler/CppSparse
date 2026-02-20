@@ -125,12 +125,10 @@ COOMatrix::COOMatrix(const CSCMatrix& A) : v_(A.nnz()), i_(A.nnz()), j_(A.nnz())
     N_ = A.N_;
     // Get all elements in column order
     csint nz = 0;
-    for (auto j : column_range()) {
-        for (auto [i, v] : A.column(j)) {
-            i_[nz] = i;
-            j_[nz] = j;
-            v_[nz++] = v;
-        }
+    for (auto [i, j, v] : A.elems()) {
+        i_[nz] = i;
+        j_[nz] = j;
+        v_[nz++] = v;
     }
 }
 

@@ -165,13 +165,13 @@ bool CSCMatrix::is_symmetric() const
         return false;
     }
 
-    for (auto j : column_range()) {
-        for (auto [i, v] : column(j)) {
-            if (i == j)
-                continue;  // skip diagonal
+    for (auto [i, j, v] : elems()) {
+        if (i == j) {
+            continue;  // skip diagonal
+        }
 
-            if (v != (*this)(j, i))
-                return false;
+        if (v != (*this)(j, i)) {
+            return false;
         }
     }
 
@@ -189,13 +189,11 @@ csint CSCMatrix::is_triangular() const
     bool is_upper = true;
     bool is_lower = true;
 
-    for (auto j : column_range()) {
-        for (auto i : row_indices(j)) {
-            if (i > j) {
-                is_upper = false;
-            } else if (i < j) {
-                is_lower = false;
-            }
+    for (auto [i, j, v] : elems()) {
+        if (i > j) {
+            is_upper = false;
+        } else if (i < j) {
+            is_lower = false;
         }
     }
 
@@ -429,24 +427,22 @@ std::vector<double> CSCMatrix::to_dense_vector(DenseOrder order) const
     std::vector<double> A(M_ * N_, 0.0);
     csint idx;
 
-    for (auto j : column_range()) {
-        for (auto [i, v] : column(j)) {
-            // Column- vs row-major order
-            if (order == DenseOrder::ColMajor) {
-                idx = i + j * M_;
-            } else if (order == DenseOrder::RowMajor) {
-                idx = j + i * N_;
-            } else {
-                throw std::invalid_argument("Invalid order argument.");
-            }
+    for (auto [i, j, v] : elems()) {
+        // Column- vs row-major order
+        if (order == DenseOrder::ColMajor) {
+            idx = i + j * M_;
+        } else if (order == DenseOrder::RowMajor) {
+            idx = j + i * N_;
+        } else {
+            throw std::invalid_argument("Invalid order argument.");
+        }
 
-            if (v_.empty()) {
-                A[idx] = 1.0; // no values, so set to 1.0
-            } else if (has_canonical_format_) {
-                A[idx] = v;
-            } else {
-                A[idx] += v;  // account for duplicates
-            }
+        if (v_.empty()) {
+            A[idx] = 1.0; // no values, so set to 1.0
+        } else if (has_canonical_format_) {
+            A[idx] = v;
+        } else {
+            A[idx] += v;  // account for duplicates
         }
     }
 
@@ -467,14 +463,12 @@ CSCMatrix CSCMatrix::transpose(bool values) const
     std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
-    for (auto j : column_range()) {
-        for (auto [i, v] : column(j)) {
-            // place A(i, j) as C(j, i)
-            auto q = w[i]++;
-            C.i_[q] = j;
-            if (values) {
-                C.v_[q] = v;
-            }
+    for (auto [i, j, v] : elems()) {
+        // place A(i, j) as C(j, i)
+        auto q = w[i]++;
+        C.i_[q] = j;
+        if (values) {
+            C.v_[q] = v;
         }
     }
 
@@ -565,14 +559,12 @@ CSCMatrix& CSCMatrix::sort()
     std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
-    for (auto j : column_range()) {
-        for (auto [i, v] : column(j)) {
-            // place A(i, j) as C(j, i)
-            auto q = w[i]++;
-            C.i_[q] = j;
-            if (values) {
-                C.v_[q] = v;
-            }
+    for (auto [i, j, v] : elems()) {
+        // place A(i, j) as C(j, i)
+        auto q = w[i]++;
+        C.i_[q] = j;
+        if (values) {
+            C.v_[q] = v;
         }
     }
 
@@ -728,17 +720,15 @@ double CSCMatrix::structural_symmetry() const
     csint nnz_AAT = 0;
     csint nnz_A = 0;
 
-    for (auto j : column_range()) {
-        for (auto i : row_indices(j)) {
-            // Count all off-diagonal elements in A
-            if (i != j) {
-                ++nnz_A;
-            }
+    for (auto [i, j, v] : elems()) {
+        // Count all off-diagonal elements in A
+        if (i != j) {
+            ++nnz_A;
+        }
 
-            // Count paired off-diagonal elements
-            if (i < j && get_item_(j, i).found) {
-                nnz_AAT += 2;
-            }
+        // Count paired off-diagonal elements
+        if (i < j && get_item_(j, i).found) {
+            nnz_AAT += 2;
         }
     }
 
@@ -797,10 +787,8 @@ std::vector<double> gaxpy(
 
     std::vector<double> out(y.begin(), y.end());  // copy the input vector
 
-    for (auto j : A.column_range()) {
-        for (auto [i, v] : A.column(j)) {
-            out[i] += v * x[j];
-        }
+    for (auto [i, j, v] : A.elems()) {
+        out[i] += v * x[j];
     }
 
     return out;
@@ -818,10 +806,8 @@ std::vector<double> gatxpy(
 
     std::vector<double> out(y.begin(), y.end());  // copy the input vector
 
-    for (auto j : A.column_range()) {
-        for (auto [i, v] : A.column(j)) {
-            out[j] += v * x[i];
-        }
+    for (auto [i, j, v] : A.elems()) {
+        out[j] += v * x[i];
     }
 
     return out;
@@ -844,17 +830,16 @@ std::vector<double> sym_gaxpy(
 
     std::vector<double> out(y.begin(), y.end());  // copy the input vector
 
-    for (auto j : A.column_range()) {
-        for (auto [i, v] : A.column(j)) {
-            if (i > j)
-                continue;  // skip lower triangular
+    for (auto [i, j, v] : A.elems()) {
+        if (i > j)
+            continue;  // skip lower triangular
 
-            // Add the upper triangular elements
-            out[i] += v * x[j];
+        // Add the upper triangular elements
+        out[i] += v * x[j];
 
-            // If off-diagonal, also add the symmetric element
-            if (i < j)
-                out[j] += v * x[i];
+        // If off-diagonal, also add the symmetric element
+        if (i < j) {
+            out[j] += v * x[i];
         }
     }
 
@@ -987,11 +972,9 @@ std::vector<double> gatxpy_col(
     // For each column of X
     for (csint k = 0; k < K; ++k) {
         // Compute one column of Y (see gaxpy)
-        for (auto j : A.column_range()) {
-            for (auto [i, v] : A.column(j)) {
-                // Indexing in column-major order
-                out[j + k * N] += v * X[i + k * M];
-            }
+        for (auto [i, j, v] : A.elems()) {
+            // Indexing in column-major order
+            out[j + k * N] += v * X[i + k * M];
         }
     }
 
@@ -1051,11 +1034,9 @@ std::vector<double> gatxpy_row(
     // For each column of X
     for (csint k = 0; k < K; ++k) {
         // Compute one column of Y (see gaxpy)
-        for (auto j : A.column_range()) {
-            for (auto [i, v] : A.column(j)) {
-                // Indexing in row-major order
-                out[k + j * K] += v * X[k + i * K];
-            }
+        for (auto [i, j, v] : A.elems()) {
+            // Indexing in row-major order
+            out[k + j * K] += v * X[k + i * K];
         }
     }
 
@@ -1118,12 +1099,10 @@ std::vector<double> CSCMatrix::dot(std::span<const double> X) const
 
     for (csint k = 0; k < K; ++k) {
         // Compute one column of output
-        for (auto j : column_range()) {
-            for (auto [i, v] : column(j)) {
-                csint idx = i + k * M_;  // column-major input/output order
-                csint jdx = j + k * N_;
-                out[idx] += v * X[jdx];
-            }
+        for (auto [i, j, v] : elems()) {
+            csint idx = i + k * M_;  // column-major input/output order
+            csint jdx = j + k * N_;
+            out[idx] += v * X[jdx];
         }
     }
 
@@ -1606,14 +1585,12 @@ CSCMatrix CSCMatrix::permute_transpose(
     w = C.p_;  // copy back into workspace
 
     // place A(i, j) as C(j, i) (permuted)
-    for (auto j : column_range()) {
-        for (auto [i, v] : column(j)) {
-            auto idx = p_inv.empty() ? i : p_inv[i];
-            auto t = w[idx]++;
-            C.i_[t] = q_inv.empty() ? j : q_inv[j];
-            if (values) {
-                C.v_[t] = v;
-            }
+    for (auto [i, j, v] : elems()) {
+        auto idx = p_inv.empty() ? i : p_inv[i];
+        auto t = w[idx]++;
+        C.i_[t] = q_inv.empty() ? j : q_inv[j];
+        if (values) {
+            C.v_[t] = v;
         }
     }
 
@@ -1914,10 +1891,8 @@ std::vector<double> CSCMatrix::sum_rows() const
 {
     std::vector<double> out(M_, 0.0);
 
-    for (auto j : column_range()) {
-        for (auto [i, v] : column(j)) {
-            out[i] += v;
-        }
+    for (auto [i, j, v] : elems()) {
+        out[i] += v;
     }
 
     return out;
@@ -1928,10 +1903,8 @@ std::vector<double> CSCMatrix::sum_cols() const
 {
     std::vector<double> out(N_, 0.0);
 
-    for (auto j : column_range()) {
-        for (auto v : col_values(j)) {
-            out[j] += v;
-        }
+    for (auto [i, j, v] : elems()) {
+        out[j] += v;
     }
 
     return out;

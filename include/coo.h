@@ -139,9 +139,10 @@ public:
      * non-zero elements in the matrix. */
     auto elems() const
     {
+        const bool has_values = !v_.empty();
         return std::views::iota(csint{0}, nnz()) | std::views::transform(
-            [this](csint k) {
-                return std::tuple{i_[k], j_[k], !v_.empty() ? v_[k] : 0.0};
+            [this, has_values](csint k) {
+                return std::tuple{i_[k], j_[k], has_values ? v_[k] : 0.0};
             }
         );
     }

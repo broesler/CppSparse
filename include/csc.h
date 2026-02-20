@@ -179,9 +179,10 @@ public:
     /** Return an iterator over the indices and values of column j. */
     auto column(csint j) const
     {
+        const bool has_values = !v_.empty();
         return indptr_range(j) | std::views::transform(
-            [this](csint p) {
-                return std::pair{i_[p], !v_.empty() ? v_[p] : 0.0};
+            [this, has_values](csint p) {
+                return std::pair{i_[p], has_values ? v_[p] : 0.0};
             }
         );
     }
@@ -189,9 +190,10 @@ public:
     /** Return an iterator over the pointers, indices and values of column j. */
     auto enum_column(csint j) const
     {
+        const bool has_values = !v_.empty();
         return indptr_range(j) | std::views::transform(
-            [this](csint p) {
-                return std::tuple{p, i_[p], !v_.empty() ? v_[p] : 0.0};
+            [this, has_values](csint p) {
+                return std::tuple{p, i_[p], has_values ? v_[p] : 0.0};
             }
         );
     }

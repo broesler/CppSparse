@@ -202,11 +202,7 @@ COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
     // Use ranges::transform to fill the vectors
     std::ranges::transform(idx, row_idx.begin(), [N](csint i) { return i / N; });
     std::ranges::transform(idx, col_idx.begin(), [N](csint i) { return i % N; });
-    std::ranges::generate(
-        values.begin(),
-        values.end(),
-        [&rng, &value_dist]() { return value_dist(rng); }
-    );
+    std::ranges::generate(values, [&rng, &value_dist]() { return value_dist(rng); });
 
     // Build the matrix
     return {values, row_idx, col_idx, {M, N}};

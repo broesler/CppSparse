@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
     std::uniform_real_distribution<double> unif(0.0, 1.0);
 
     std::vector<double> W_vals(W_rows.size());
-    std::generate(W_vals.begin(), W_vals.end(), [&]() { return unif(rng) * s; });
+    std::ranges::generate(W_vals, [&unif, &rng, s]() { return unif(rng) * s; });
 
     std::vector<csint> W_cols(W_rows.size());  // all zeros for column vector
 

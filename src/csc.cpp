@@ -493,10 +493,10 @@ CSCMatrix CSCMatrix::tsort() const
 CSCMatrix& CSCMatrix::qsort()
 {
     // Find maximum column size
-    csint max_len = 0;
-    for (auto j : column_range()) {
-        max_len = std::max(max_len, p_[j+1] - p_[j]);
-    }
+    auto max_len = std::ranges::max(
+        column_range()
+        | std::views::transform([this](auto j) { return col_length(j); })
+    );
 
     // Allocate workspaces
     std::vector<csint> w,
@@ -509,7 +509,7 @@ CSCMatrix& CSCMatrix::qsort()
     for (auto j : column_range()) {
         // Pointers to the rows
         auto p = p_[j];
-        csint len = p_[j+1] - p;
+        csint len = col_length(j);
 
         // resize workspaces
         w.resize(len);
@@ -517,16 +517,12 @@ CSCMatrix& CSCMatrix::qsort()
         idx.resize(len);
 
         // Copy the row indices and values into the workspace
-        std::copy_n(i_.cbegin() + p, len, w.begin());
-        std::copy_n(v_.cbegin() + p, len, x.begin());
+        std::ranges::copy(i_ | std::views::drop(p) | std::views::take(len), w.begin());
+        std::ranges::copy(v_ | std::views::drop(p) | std::views::take(len), x.begin());
         std::ranges::iota(idx, 0);
 
         // argsort the rows to get indices
-        std::sort(
-            idx.begin(),
-            idx.end(),
-            [&w](csint i, csint j) { return w[i] < w[j]; }
-        );
+        std::ranges::sort(idx, [&w](csint i, csint j) { return w[i] < w[j]; });
 
         // Re-assign the values
         for (csint i = 0; i < len; ++i) {

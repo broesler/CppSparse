@@ -523,7 +523,7 @@ CSCMatrix apply_qtleft(
         X.add_empty_bottom(M2 - M);
     }
 
-    X = X.permute_rows(p_inv);  // apply p_inv to Y
+    X.permute_rows_inplace(p_inv);  // apply p_inv to Y
 
     std::vector<double> x(M);
     csint nz = 0;

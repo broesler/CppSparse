@@ -92,7 +92,7 @@ TEST_CASE("Symbolic LU Factorization of Square Matrix", "[lu][M == N][symbolic]"
 
 TEST_CASE("Numeric LU Factorization of Square Matrix", "[lu][M == N][numeric]")
 {
-    auto A = davis_example_qr(10);
+    const auto A = davis_example_qr(10);
     auto Ap = A;
     std::vector<csint> expect_p,
                        expect_q;
@@ -357,7 +357,7 @@ TEST_CASE("Exercise 6.3: Column Pivoting in LU", "[ex6.3][lu_colpiv]")
 
 TEST_CASE("Exercise 6.4: relu", "[ex6.4][relu]")
 {
-    auto A = davis_example_qr(10);
+    const auto A = davis_example_qr(10);
     const auto [M, N] = A.shape();
 
     std::vector<csint> expect_q(N);
@@ -426,7 +426,7 @@ void run_lu_singular_test(auto matrix_modifier)
 
     if (permute_rows) {
         std::vector<csint> p{5, 1, 7, 0, 2, 6, 4, 3};  // arbitrary
-        A = A.permute_rows(inv_permute(p));
+        A.permute_rows_inplace(inv_permute(p));
     }
 
     // Do the actual modification to make the matrix singular

@@ -852,9 +852,9 @@ void CholResult::lsolve_(
 {
     for (const auto& j : xi) {
         auto& x_val = x[j];  // cache diagonal value
-        x_val /= L.v_[L.p_[j]];
-        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; ++p) {
-            x[L.i_[p]] -= L.v_[p] * x_val;
+        x_val /= L.col_values(j).front();
+        for (auto [i, v] : L.column(j) | std::views::drop(1)) {
+            x[i] -= v * x_val;
         }
     }
 }
@@ -867,10 +867,10 @@ void CholResult::ltsolve_(
 {
     for (const auto& j : xi) {
         auto& x_val = x[j];  // cache diagonal value
-        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; ++p) {
-            x_val -= L.v_[p] * x[L.i_[p]];
+        for (auto [i, v] : L.column(j) | std::views::drop(1)) {
+            x_val -= v * x[i];
         }
-        x_val /= L.v_[L.p_[j]];
+        x_val /= L.col_values(j).front();
     }
 }
 
@@ -882,6 +882,17 @@ void CholResult::solve(
     std::span<double> x
 ) const
 {
+    if (B.shape()[0] != L.shape()[0]) {
+        throw std::invalid_argument(
+            std::format(
+                "RHS row size {} does not match matrix size {}!",
+                B.shape()[0], L.shape()[0]
+            )
+        );
+    }
+
+    auto M = B.shape()[0];
+
     // ----- Option 1: scatter into dense column and solve dense
     // // Solve Ax = b ==> (P^T L L^T P) x = b
     // std::vector<double> w(L.M_);  // workspace
@@ -897,8 +908,9 @@ void CholResult::solve(
     // pvec<double>(p_inv, w, x);  // x = P P^T x
 
     // ----- Option 2: Solve as sparse column and scatter to dense at end
-    auto b = B.slice(0, B.M_, k, k+1);  // get single column
+    auto b = B.slice(0, M, k, k+1);  // get single column
 
+    // TODO implement CSCMatrix::permute_rows non-const version
     // Permute the rows in-place
     for (auto& i : b.i_) {
         i = p_inv[i];
@@ -908,7 +920,7 @@ void CholResult::solve(
     auto xi = topological_order(b, parent);
 
     // Scatter b into w
-    std::vector<double> w(L.M_);  // workspace
+    std::vector<double> w(M);  // workspace
     b.scatter(0, w);
 
     lsolve_(xi, w);             // y = L \ b -> w = y
@@ -925,12 +937,12 @@ SparseSolution CholResult::lsolve_impl_(
     std::span<const csint> parent
 ) const
 {
-    const auto N = L.N_;
+    const auto N = L.shape()[0];
     SparseSolution sol(N);
     auto& [xi, x] = sol;
 
     // Scatter b into x
-    if (b.N_ != 1) {
+    if (b.shape()[1] != 1) {
         throw std::runtime_error("RHS matrix must have a single column!");
     }
     b.scatter(0, x);
@@ -938,11 +950,15 @@ SparseSolution CholResult::lsolve_impl_(
     std::vector<csint> parent_;
 
     if (parent.empty()) {
+        if (!L.has_sorted_indices_) {
+            throw std::runtime_error(
+                "L does not have sorted indices, cannot infer parent vector!"
+            );
+        }
         // Inspect L to get the parent vector, since it has sorted indices
-        assert(L.has_sorted_indices_);
         parent_.assign(N, -1);
         for (csint j = 0; j < N - 1; ++j) {  // skip the last row (only diagonal)
-            parent_[j] = L.i_[L.p_[j]+1];    // first off-diagonal element
+            parent_[j] = L.row_indices(j)[1];  // first off-diagonal element
         }
         parent = parent_;  // point the span to the local parent vector
     }

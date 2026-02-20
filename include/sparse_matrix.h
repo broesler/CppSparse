@@ -27,18 +27,12 @@ protected:
     /** Return the format description of the matrix. */
     virtual std::string_view get_format_desc_() const = 0;
 
-    /** Make the format string for printing one element of the matrix.
+    /** Print elements of the matrix between `start` and `end`.
      *
-     * The element will be printed as: "(i, u): v" where `i` is the row index,
-     * `u` is the column index, and `v` is the value of the element. This
+     * The element will be printed as: "(i, j): v" where `i` is the row index,
+     * `j` is the column index, and `v` is the value of the element. This
      * function sets the format specifiers for `std::format` depending on the
      * values of the entire matrix, so that the output is consistent.
-     *
-     * @return a string describing the format of a single element.
-     */
-    virtual std::string make_format_string_() const;
-
-    /** Print elements of the matrix between `start` and `end`.
      *
      * @param out         the output string
      * @param start, end  print the `kth` element(s) for `k ∈ [start, end)`.

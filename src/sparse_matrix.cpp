@@ -45,21 +45,13 @@ void SparseMatrix::format_to(std::string& out, bool verbose, csint threshold) co
 }
 
 
-std::string SparseMatrix::make_format_string_() const
+/** Return max(|x_i|) for x_i in data, ignoring non-finite values. */
+static inline auto get_max_abs_finite(std::span<const double> data)
 {
-    // Determine whether to use scientific notation
-    double abs_max = 0.0;
-    for (const auto& val : data()) {
-        if (std::isfinite(val)) {
-            abs_max = std::max(abs_max, std::fabs(val));
-        }
-    }
-
-    auto use_scientific = (abs_max < 1e-4 || abs_max > 1e4);
-    // Leading space aligns for "-" signs
-    const auto fmt = use_scientific ? " .4e" : " .4g";
-
-    return std::format("({{0:>{{1}}d}}, {{2:>{{3}}d}}): {{4:{}}}", fmt);
+    auto data_view = data
+        | std::views::filter([](double v) { return std::isfinite(v); })
+        | std::views::transform([](double v) { return std::abs(v); });
+    return data_view.empty() ? 0.0 : std::ranges::max(data_view);
 }
 
 
@@ -70,7 +62,15 @@ void SparseMatrix::write_elems_(std::string& out, csint start, csint end) const
     auto row_width = std::to_string(M - 1).size();
     auto col_width = std::to_string(N - 1).size();
 
-    const auto format_string = make_format_string_();
+    // Determine whether to use scientific notation
+    auto max_abs_val = get_max_abs_finite(data());
+    bool use_scientific = (max_abs_val < 1e-4 || max_abs_val > 1e4);
+
+    // Leading space aligns for "-" signs
+    const auto fmt = use_scientific ? " .4e" : " .4g";
+    const auto format_string = std::format(
+        "({{0:>{{1}}d}}, {{2:>{{3}}d}}): {{4:{}}}", fmt
+    );
 
     csint k = 0;
     csint total_to_print = end - start;
@@ -115,11 +115,7 @@ void SparseMatrix::format_dense_to(
 
     if (fmt == '\0') {
         // Use scientific notation if extremum value is very small or very large
-        auto max_abs_val = std::ranges::fold_left(
-            A | std::views::filter([](double v) { return std::isfinite(v); }),
-            0.0,
-            [](double acc, double val) { return std::max(acc, std::abs(val)); }
-        );
+        auto max_abs_val = get_max_abs_finite(data());
         bool use_scientific = !suppress || (max_abs_val < 1e-4 || max_abs_val > 1e4);
         fmt = use_scientific ? 'e' : 'f';
     }

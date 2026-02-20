@@ -12,8 +12,6 @@
 #include <format>
 #include <numeric>     // partial_sum, iota
 #include <stdexcept>
-#include <sstream>
-#include <string>
 #include <span>
 #include <vector>
 
@@ -1596,33 +1594,18 @@ CSCMatrix CSCMatrix::permute_transpose(
 
 double CSCMatrix::norm() const
 {
-    double the_norm = 0;
-
-    for (auto j : column_range()) {
-        double s = 0;
-
-        for (auto v : col_values(j)) {
-            s += std::fabs(v);
-        }
-
-        the_norm = std::max(the_norm, s);
+    if (column_range().empty()) {
+        return 0.0;
     }
 
-    return the_norm;
+    // max_j (∑_i |v_ij|) -> max_j (1-norm of column j)
+    return std::ranges::max(column_range() | std::views::transform(
+        [this](auto j) { return cs::norm(col_values(j), 1); }
+    ));
 }
 
 
-double CSCMatrix::fronorm() const
-{
-    double sumsq = 0;
-
-    // Sum the squares of the entries in v_
-    for (const auto& v : v_) {
-        sumsq += v * v;
-    }
-
-    return std::sqrt(sumsq);
-}
+double CSCMatrix::fronorm() const { return cs::norm(v_, 2); }
 
 
 // Exercise 2.12

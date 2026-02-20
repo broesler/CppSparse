@@ -8,8 +8,8 @@
  *============================================================================*/
 
 #include <algorithm>  // generate, fill
-#include <numeric>    // iota
 #include <random>
+#include <ranges>
 #include <vector>
 
 #include "types.h"
@@ -72,16 +72,12 @@ CSCMatrix davis_example_qr(double add_diag, bool random_vals)
         const auto seed = std::random_device{}();
         std::default_random_engine rng{seed};
         std::uniform_real_distribution<double> uniform{0.0, 1.0};
-        std::generate(
-            vals.begin(),
-            vals.end(),
-            [&rng, &uniform]() { return uniform(rng); }
-        );
+        std::ranges::generate(vals, [&rng, &uniform]() { return uniform(rng); });
     } else {
         // Label the diagonal elements 1..7, skipping the 8th
-        std::iota(vals.begin(), vals.begin() + (N - 1), 1.0);
+        std::ranges::copy(std::views::iota(1, N), vals.begin());
         // All non-diagonal values set to 1.0
-        std::fill(vals.begin() + (N - 1), vals.end(), 1.0);
+        std::ranges::fill(vals | std::views::drop(N - 1), 1.0);
     }
 
     COOMatrix A{vals, rows, cols};

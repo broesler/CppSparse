@@ -326,10 +326,10 @@ TEST_CASE("LU with Iterative Refinement", "[lusol-ir]") {
     auto r_ir_norm = norm(b - A * x_ir);
 
     std::println("\nIterative Refinement: ");
-    std::println("x    =  {}", x);
-    std::println("x_ir =  {}", x_ir);
-    std::println("norm(r)    =  {}", r_norm);
-    std::println("norm(r_ir) =  {}", r_ir_norm);
+    std::println("x    =  {::.16e}", x);
+    std::println("x_ir =  {::.16e}", x_ir);
+    std::println("norm(r)    =  {:.2e}", r_norm);
+    std::println("norm(r_ir) =  {:.2e}", r_ir_norm);
 #endif
 }
 

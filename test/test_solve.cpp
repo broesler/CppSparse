@@ -13,6 +13,7 @@
 #include <catch2/generators/catch_generators.hpp>
 
 #include <numeric>  // iota
+#include <span>
 #include <vector>
 
 #include "csparse.h"
@@ -213,10 +214,11 @@ TEMPLATE_TEST_CASE(
 
         // Take only the first N - k rows of expect_x
         csint Nmk = N - k;
-        for (csint j = 0; j < K; ++j) {
-            auto read_start = expect_x.begin() + j * N;
-            auto write_start = expect_x.begin() + j * Nmk;
-            std::move(read_start, read_start + Nmk, write_start);
+        for (csint j = 1; j < K; ++j) {
+            std::ranges::move(
+                expect_x | std::views::drop(j * N) | std::views::take(Nmk),
+                expect_x.begin() + j * Nmk
+            );
         } 
         expect_x.resize(Nmk * K);
 

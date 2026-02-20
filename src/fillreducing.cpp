@@ -85,6 +85,7 @@ CSCMatrix build_graph(const CSCMatrix& A, AMDOrder order, csint dense)
             C = A + AT;
             break;
         case AMDOrder::ATANoDenseRows: {
+            // TODO refactor into its own (friend?) function
             // Drop dense columns from AT (i.e., rows from A)
             csint q = 0;
 
@@ -673,8 +674,8 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
     }
 
     if (k == std::min(M, N)) {  // quick return if diagonal zero-free
-        std::iota(jimatch.jmatch.begin(), jimatch.jmatch.begin() + k, 0);
-        std::iota(jimatch.imatch.begin(), jimatch.imatch.begin() + k, 0);
+        std::ranges::iota(jimatch.jmatch | std::views::take(k), 0);
+        std::ranges::iota(jimatch.imatch | std::views::take(k), 0);
         return jimatch;
     }
 
@@ -890,11 +891,13 @@ static void gather_scatter(
     csint offset
 )
 {
+    // gather the first nc elements of source, starting at offset, into temp,
+    // using ps as the permutation
     for (csint k = 0; k < nc; ++k) {
         temp[k] = source[ps[k] + offset];
     }
     // copy the first nc elements of temp back to source, starting at offset
-    std::ranges::copy(temp | std::views::take(nc), source.begin() + offset);
+    std::ranges::copy_n(temp.begin(), nc, source.begin() + offset);
 }
 
 

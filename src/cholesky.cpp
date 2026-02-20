@@ -303,7 +303,7 @@ std::vector<csint> rowcnt(
 
     auto [first, level] = firstdesc(parent, postorder);
 
-    for (const auto& j : postorder) {  // j is the kth node in postorder
+    for (auto j : postorder) {  // j is the kth node in postorder
         for (auto i : A.row_indices(j)) {
             // A(i, j) is nonzero, consider ith row subtree
             auto [q, jleaf] = least_common_ancestor(i, j, first, maxfirst, prevleaf, ancestor);
@@ -546,7 +546,7 @@ CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S)
     // Compute L(:, k) for L*L' = C
     for (auto k : L.column_range()) {
         // pattern of L(k, :) (order doesn't matter)
-        for (const auto& j : ereach_queue(C, k, S.parent)) {
+        for (auto j : ereach_queue(C, k, S.parent)) {
             L.i_[c[j]++] = k;  // store L(k, j) in column j
         }
 
@@ -595,7 +595,7 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
         // Solve L(0:k-1, 0:k-1) * x = C(0:k-1, k) == L[:k, :k] * x = C[:k, k]
         //   => L[k, :k] := x.T
         // ereach gives the pattern of L(k, :) in topological order
-        for (const auto& i : ereach(C, k, S.parent)) {
+        for (auto i : ereach(C, k, S.parent)) {
             auto lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 
@@ -683,7 +683,7 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
         //                  x[k]            | ---- x[k+1:] ----
 
         // ereach_queue gives pattern of L(k, :) in no particular order
-        for (const auto& j : ereach_queue(C, k, S.parent)) {
+        for (auto j : ereach_queue(C, k, S.parent)) {
             // Compute x[k:] -= L[k:, j] * L[k, j]
             //
             // Row indices and values in L[k:, j] are stored in:
@@ -753,7 +753,7 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
         // Solve L(0:k-1, 0:k-1) * x = C(0:k-1, k) =- L[:k, :k] * x = C[:k, k]
         //   => L[k, :k] := x.T == l_{12}.T
         // ereach gives the pattern of L(k, :) in topological order
-        for (const auto& i : ereach(C, k, S.parent)) {
+        for (auto i : ereach(C, k, S.parent)) {
             auto lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 
@@ -933,7 +933,7 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
         // Solve L(0:k-1, 0:k-1) * x = C(0:k-1, k) == L[:k, :k] * x = C[:k, k]
         //   => L[k, :k] := x.T
         // ereach gives the pattern of L(k, :) in topological order
-        for (const auto& i : ereach(C, k, S.parent)) {
+        for (auto i : ereach(C, k, S.parent)) {
             // Only keep entries that are in the column of C
             if (w[i] != k) {
                 continue;
@@ -1043,7 +1043,7 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
         // Solve L(0:k-1, 0:k-1) * x = C(0:k-1, k) == L[:k, :k] * x = C[:k, k]
         //   => L[k, :k] := x.T
         // ereach gives the pattern of L(k, :) in topological order
-        for (const auto& i : ereach(C, k, S.parent)) {
+        for (auto i : ereach(C, k, S.parent)) {
             auto lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 

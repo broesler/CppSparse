@@ -220,6 +220,23 @@ public:
         return std::views::zip(indptr_range_(j), idx_view, val_view);
     }
 
+    /** Return an iterator over the indices and values of the matrix, in order
+     * of the columns. */
+    auto elems() const
+    {
+        const bool has_values = !v_.empty();
+        return column_range() | std::views::transform(
+            [this, has_values](csint j) {
+                return indptr_range_(j) | std::views::transform(
+                    [this, j, has_values](csint p) {
+                        return std::tuple{i_[p], j, has_values ? v_[p] : 0.0};
+                    }
+                );
+            }
+        )
+        | std::views::join;
+    }
+
     /** Operate on the non-zero elements of the matrix, as (i, j, v) tuples.
      *
      * @param start, end operate on the `kth` element(s) for `k ∈ [start, end)`.

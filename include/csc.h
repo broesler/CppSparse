@@ -993,19 +993,6 @@ public:
     //--------------------------------------------------------------------------
     //        Triangular Matrix Solutions
     //--------------------------------------------------------------------------
-    friend void lsolve_inplace(const CSCMatrix& A, std::span<double> x);
-    friend void ltsolve_inplace(const CSCMatrix& A, std::span<double> x);
-    friend void usolve_inplace(const CSCMatrix& A, std::span<double> x);
-    friend void utsolve_inplace(const CSCMatrix& A, std::span<double> x);
-
-    friend void lsolve_inplace_opt(const CSCMatrix& A, std::span<double> x);
-    friend void usolve_inplace_opt(const CSCMatrix& A, std::span<double> x);
-
-    friend std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b);
-    friend std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b);
-    friend std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b);
-    friend std::vector<double> usolve_cols(const CSCMatrix& A, std::span<const double> b);
-
     friend void tri_solve_perm_inplace(
         const CSCMatrix& A,
         const TriPerm& tri_perm,

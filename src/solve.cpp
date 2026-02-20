@@ -30,9 +30,9 @@ namespace cs {
 void lsolve_inplace(const CSCMatrix& L, std::span<double> x)
 {
     for (auto j : L.column_range()) {
-        x[j] /= L.v_[L.p_[j]];
-        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; ++p) {
-            x[L.i_[p]] -= L.v_[p] * x[j];
+        x[j] /= L.col_values(j).front();
+        for (auto [i, v] : L.column(j) | std::views::drop(1)) {
+            x[i] -= v * x[j];
         }
     }
 }
@@ -53,10 +53,10 @@ std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& B)
 void ltsolve_inplace(const CSCMatrix& L, std::span<double> x)
 {
     for (auto j : L.column_range() | std::views::reverse) {
-        for (csint p = L.p_[j] + 1; p < L.p_[j+1]; ++p) {
-            x[j] -= L.v_[p] * x[L.i_[p]];
+        for (auto [i, v] : L.column(j) | std::views::drop(1)) {
+            x[j] -= v * x[i];
         }
-        x[j] /= L.v_[L.p_[j]];
+        x[j] /= L.col_values(j).front();
     }
 }
 
@@ -70,9 +70,9 @@ std::vector<double> ltsolve(const CSCMatrix& L, std::span<const double> B)
 void usolve_inplace(const CSCMatrix& U, std::span<double> x)
 {
     for (auto j : U.column_range() | std::views::reverse) {
-        x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
-        for (csint p = U.p_[j]; p < U.p_[j+1] - 1; ++p) {
-            x[U.i_[p]] -= U.v_[p] * x[j];
+        x[j] /= U.col_values(j).back();  // diagonal entry
+        for (auto [i, v] : U.column(j) | std::views::take(U.col_length(j) - 1)) {
+            x[i] -= v * x[j];
         }
     }
 }
@@ -93,10 +93,10 @@ std::vector<double> usolve(const CSCMatrix& U, const CSCMatrix& B)
 void utsolve_inplace(const CSCMatrix& U, std::span<double> x)
 {
     for (auto j : U.column_range()) {
-        for (csint p = U.p_[j]; p < U.p_[j+1] - 1; ++p) {
-            x[j] -= U.v_[p] * x[U.i_[p]];
+        for (auto [i, v] : U.column(j) | std::views::take(U.col_length(j) - 1)) {
+            x[j] -= v * x[i];
         }
-        x[j] /= U.v_[U.p_[j+1] - 1];  // diagonal entry
+        x[j] /= U.col_values(j).back();  // diagonal entry
     }
 }
 
@@ -114,9 +114,9 @@ void lsolve_inplace_opt(const CSCMatrix& L, std::span<double> x)
         auto& x_val = x[j];  // cache reference to value
         // Exercise 3.8: improve performance by checking for zeros
         if (x_val != 0) {
-            x_val /= L.v_[L.p_[j]];
-            for (csint p = L.p_[j] + 1; p < L.p_[j+1]; ++p) {
-                x[L.i_[p]] -= L.v_[p] * x_val;
+            x_val /= L.col_values(j).front();
+            for (auto [i, v] : L.column(j) | std::views::drop(1)) {
+                x[i] -= v * x_val;
             }
         }
     }
@@ -135,9 +135,10 @@ void usolve_inplace_opt(const CSCMatrix& U, std::span<double> x)
     for (auto j : U.column_range() | std::views::reverse) {
         auto& x_val = x[j];  // cache reference to value
         if (x_val != 0) {
-            x_val /= U.v_[U.p_[j+1] - 1];  // diagonal entry
-            for (csint p = U.p_[j]; p < U.p_[j+1] - 1; ++p) {
-                x[U.i_[p]] -= U.v_[p] * x_val;
+            x_val /= U.col_values(j).back();  // diagonal entry
+            // for (csint p = U.p_[j]; p < U.p_[j+1] - 1; ++p) {
+            for (auto [i, v] : U.column(j) | std::views::take(U.col_length(j) - 1)) {
+                x[i] -= v * x_val;
             }
         }
     }
@@ -189,16 +190,15 @@ std::vector<csint> find_lower_diagonals(const CSCMatrix& A)
 // Exercise 3.3
 std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
 {
-    if (A.M_ != A.N_) {
+    auto [M, N] = A.shape();
+
+    if (M != N) {
         throw std::invalid_argument("Matrix must be square.");
     }
 
-    if (A.M_ != std::ssize(b)) {
+    if (M != std::ssize(b)) {
         throw std::invalid_argument(
-            std::format(
-                "Matrix and vector size mismatch: {} vs. {}",
-                A.M_, b.size()
-            )
+            std::format("Matrix and vector size mismatch: {} vs. {}", M, b.size())
         );
     }
 
@@ -206,24 +206,27 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
     // p_diags is a vector of pointers to the diagonal entries
     auto p_diags = find_lower_diagonals(A);
 
+    auto Ai = A.indices();
+    auto Av = A.data();
+
     // Compute the row permutation vector
-    std::vector<csint> p_inv(A.N_);
+    std::vector<csint> p_inv(N);
     for (auto j : A.column_range()) {
-        p_inv[j] = A.i_[p_diags[j]];
+        p_inv[j] = Ai[p_diags[j]];
     }
 
     // Second (forward) pass to solve the system PL x = b -> L x = P^T b
-    std::vector<double> x(A.N_);
+    std::vector<double> x(N);
     std::vector<double> b_work(b.begin(), b.end());
 
     // Perform the permuted forward solve
     for (auto j : A.column_range()) {
-        auto i = p_inv[j];       // permuted row index
+        auto ip = p_inv[j];       // permuted row index
         auto d = p_diags[j];     // pointer to the diagonal entry
-        auto x_val = b_work[i];  // cache diagonal value
+        auto x_val = b_work[ip];  // cache diagonal value
 
         if (x_val != 0) {
-            x_val /= A.v_[d];  // solve for x[d]
+            x_val /= Av[d];  // solve for x[d]
             x[j] = x_val;      // store solution in correct position
             // update the off-diagonals
             for (auto [p, i, v] : A.enum_column(j)) {
@@ -241,25 +244,28 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
 // Exercise 3.5
 std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b)
 {
-    if (A.M_ != A.N_) {
+    auto [M, N] = A.shape();
+
+    if (M != N) {
         throw std::invalid_argument("Matrix must be square.");
     }
 
-    if (A.M_ != std::ssize(b)) {
+    if (M != std::ssize(b)) {
         throw std::invalid_argument(
-            std::format(
-                "Matrix and vector size mismatch: {} vs. {}",
-                A.M_, b.size()
-            )
+            std::format("Matrix and vector size mismatch: {} vs. {}", M, b.size())
         );
     }
 
+    auto Ap = A.indptr();
+    auto Ai = A.indices();
+    auto Av = A.data();
+
     // First O(N) pass to find the diagonal entries
     // Assume that the first entry in each column has the smallest row index
-    std::vector<csint> p_diags(A.N_, -1);
+    std::vector<csint> p_diags(N, -1);
     for (auto j : A.column_range()) {
         if (p_diags[j] == -1) {
-            p_diags[j] = A.p_[j];  // pointer to the diagonal entry
+            p_diags[j] = Ap[j];  // pointer to the diagonal entry
         } else {
             // We have seen this column index before
             throw PermutedTriangularMatrixError(
@@ -269,26 +275,26 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b)
     }
 
     // Compute the column permutation vector
-    std::vector<csint> q_inv(A.N_);
+    std::vector<csint> q_inv(N);
     for (auto i : A.column_range()) {
-        q_inv[A.i_[p_diags[i]]] = i;
+        q_inv[Ai[p_diags[i]]] = i;
     }
 
     // Second (forward) pass to solve the system LQ x = b
-    std::vector<double> x(A.N_);
+    std::vector<double> x(N);
     std::vector<double> b_work(b.begin(), b.end());
 
     // Perform the permuted forward solve
     for (const auto& j : q_inv) {
         auto d = p_diags[j];     // pointer to the diagonal entry
-        auto i = A.i_[d];        // permuted row index
-        auto x_val = b_work[i];  // cache diagonal value
+        auto ip = Ai[d];          // permuted row index
+        auto x_val = b_work[ip];  // cache diagonal value
 
         if (x_val != 0) {
-            x_val /= A.v_[d];  // solve for x[A.i_[d]]
+            x_val /= Av[d];  // solve for x[Ai[d]]
             x[j] = x_val;      // store solution in correct position
-            for (csint p = A.p_[j] + 1; p < A.p_[j+1]; ++p) {
-                b_work[A.i_[p]] -= A.v_[p] * x_val;  // update the off-diagonals
+            for (auto [i, v] : A.column(j) | std::views::drop(1)) {
+                b_work[i] -= v * x_val;  // update the off-diagonals
             }
         }
     }
@@ -336,16 +342,15 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
 // Exercise 3.4
 std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b)
 {
-    if (A.M_ != A.N_) {
+    auto [M, N] = A.shape();
+
+    if (M != N) {
         throw std::invalid_argument("Matrix must be square.");
     }
 
-    if (A.M_ != std::ssize(b)) {
+    if (M != std::ssize(b)) {
         throw std::invalid_argument(
-            std::format(
-                "Matrix and vector size mismatch: {} vs. {}",
-                A.M_, b.size()
-            )
+            std::format("Matrix and vector size mismatch: {} vs. {}", M, b.size())
         );
     }
 
@@ -353,28 +358,31 @@ std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b)
     // p_diags is a vector of pointers to the diagonal entries
     auto p_diags = find_upper_diagonals(A);
 
+    auto Ai = A.indices();
+    auto Av = A.data();
+
     // Compute the row permutation vector
-    std::vector<csint> p_inv(A.N_);
+    std::vector<csint> p_inv(N);
     for (auto i : A.column_range()) {
-        p_inv[i] = A.i_[p_diags[i]];
+        p_inv[i] = Ai[p_diags[i]];
     }
 
     // Second (forward) pass to solve the system PU x = b -> U x = P^T b
-    std::vector<double> x(A.N_);
+    std::vector<double> x(N);
     std::vector<double> b_work(b.begin(), b.end());
 
     // Perform the permuted backward solve
     for (auto j : A.column_range() | std::views::reverse) {
-        auto i = p_inv[j];       // permuted row index
+        auto ip = p_inv[j];       // permuted row index
         auto d = p_diags[j];     // pointer to the diagonal entry
-        auto x_val = b_work[i];  // cache diagonal value
+        auto x_val = b_work[ip];  // cache diagonal value
 
         if (x_val != 0) {
-            x_val /= A.v_[d];  // solve for x[d]
+            x_val /= Av[d];  // solve for x[d]
             x[j] = x_val;      // store solution in correct position
-            for (auto [p, Ai, Av] : A.enum_column(j)) {
+            for (auto [p, i, v] : A.enum_column(j)) {
                 if (p != d) {
-                    b_work[Ai] -= Av * x_val;  // update the off-diagonals
+                    b_work[i] -= v * x_val;  // update the off-diagonals
                 }
             }
         }
@@ -386,25 +394,28 @@ std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b)
 
 std::vector<double> usolve_cols(const CSCMatrix& A, std::span<const double> b)
 {
-    if (A.M_ != A.N_) {
+    auto [M, N] = A.shape();
+
+    if (M != N) {
         throw std::invalid_argument("Matrix must be square.");
     }
 
-    if (A.M_ != std::ssize(b)) {
+    if (M != std::ssize(b)) {
         throw std::invalid_argument(
-            std::format(
-                "Matrix and vector size mismatch: {} vs. {}",
-                A.M_, b.size()
-            )
+            std::format("Matrix and vector size mismatch: {} vs. {}", M, b.size())
         );
     }
 
+    auto Ap = A.indptr();
+    auto Ai = A.indices();
+    auto Av = A.data();
+
     // First O(N) pass to find the diagonal entries
     // Assume that the last entry in each column has the largest row index
-    std::vector<csint> p_diags(A.N_, -1);
+    std::vector<csint> p_diags(N, -1);
     for (auto j : A.column_range()) {
         if (p_diags[j] == -1) {
-            p_diags[j] = A.p_[j+1] - 1;  // pointer to the diagonal entry
+            p_diags[j] = Ap[j+1] - 1;  // pointer to the diagonal entry
         } else {
             // We have seen this column index before
             throw PermutedTriangularMatrixError(
@@ -414,26 +425,26 @@ std::vector<double> usolve_cols(const CSCMatrix& A, std::span<const double> b)
     }
 
     // Compute the column permutation vector
-    std::vector<csint> q_inv(A.N_);
+    std::vector<csint> q_inv(N);
     for (auto i : A.column_range()) {
-        q_inv[A.i_[p_diags[i]]] = i;
+        q_inv[Ai[p_diags[i]]] = i;
     }
 
     // Second (forward) pass to solve the system UQ x = b
-    std::vector<double> x(A.N_);
+    std::vector<double> x(N);
     std::vector<double> b_work(b.begin(), b.end());
 
     // Perform the permuted backward solve
-    for (const auto& j : std::views::reverse(q_inv)) {
+    for (auto j : q_inv | std::views::reverse) {
         auto d = p_diags[j];      // pointer to the diagonal entry
-        auto i = A.i_[d];         // permuted row index
-        auto x_val = b_work[i];  // cache diagonal value
+        auto ip = Ai[d];         // permuted row index
+        auto x_val = b_work[ip];  // cache diagonal value
 
         if (x_val != 0) {
-            x_val /= A.v_[d];  // solve for x[A.i_[d]]
+            x_val /= Av[d];  // solve for x[Ai[d]]
             x[j] = x_val;      // store solution in correct position
-            for (csint p = A.p_[j]; p < A.p_[j+1] - 1; ++p) {
-                b_work[A.i_[p]] -= A.v_[p] * x_val;  // update the off-diagonals
+            for (auto [i, v] : A.column(j) | std::views::take(A.col_length(j) - 1)) {
+                b_work[i] -= v * x_val;  // update the off-diagonals
             }
         }
     }

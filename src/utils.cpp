@@ -39,25 +39,21 @@ std::vector<double> operator+(
         );
     }
 
-    std::vector<double> out(a.size());
-
-    for (size_t i = 0; i < a.size(); ++i) {
-        out[i] = a[i] + b[i];
-    }
-
-    return out;
+    return std::views::zip(a, b)
+        | std::views::transform([](auto&& vals) {
+            auto [x, y] = vals;
+            return x + y;
+        })
+        | std::ranges::to<std::vector>();
 }
+
 
 /** Unary minus operator for a vector */
 std::vector<double> operator-(std::span<const double> a)
 {
-    std::vector<double> out(a.size());
-
-    for (size_t i = 0; i < a.size(); ++i) {
-        out[i] = -a[i];
-    }
-
-    return out;
+    return a
+        | std::views::transform(std::negate<>()) 
+        | std::ranges::to<std::vector>();
 }
 
 
@@ -76,24 +72,21 @@ std::vector<double> operator-(
         );
     }
 
-    std::vector<double> out(a.size());
-
-    for (size_t i = 0; i < a.size(); ++i) {
-        out[i] = a[i] - b[i];
-    }
-
-    return out;
+    return std::views::zip(a, b)
+        | std::views::transform([] (auto&& vals) {
+            auto [x, y] = vals;
+            return x - y;
+        })
+        | std::ranges::to<std::vector>();
 }
 
 
 /** Scale a vector by a scalar */
 std::vector<double> operator*(double c, std::span<const double> vec)
 {
-    std::vector<double> out(vec.begin(), vec.end());
-    for (auto& x : out) {
-        x *= c;
-    }
-    return out;
+    return vec
+        | std::views::transform([c](auto x) { return c * x; })
+        | std::ranges::to<std::vector>();
 }
 
 
@@ -105,9 +98,7 @@ std::vector<double> operator*(std::span<const double> vec, double c)
 
 std::span<double> operator*=(std::span<double> vec, double c)
 {
-    for (auto& x : vec) {
-        x *= c;
-    }
+    std::ranges::for_each(vec, [c](auto& x) { return x *= c; });
     return vec;
 }
 
@@ -126,9 +117,13 @@ std::span<double> operator+=(
         );
     }
 
-    for (size_t i = 0; i < a.size(); ++i) {
-        a[i] += b[i];
-    }
+    std::ranges::for_each(
+        std::views::zip(a, b),
+        [](auto&& vals) {
+            auto [x, y] = vals;
+            x += y;
+        }
+    );
 
     return a;
 }

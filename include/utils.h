@@ -72,8 +72,9 @@ std::vector<csint> inv_permute(std::span<const csint> p);
 template <typename T>
 void pvec(std::span<const csint> p, std::span<const T> b, std::span<T> x)
 {
-    for (size_t k = 0; k < p.size(); k++)
+    for (size_t k = 0; k < p.size(); k++) {
         x[k] = b[p[k]];
+    }
 }
 
 
@@ -109,8 +110,9 @@ std::vector<T> pvec(const std::vector<csint>& p, const std::vector<T>& b)
 template <typename T>
 void ipvec(std::span<const csint> p, std::span<const T> b, std::span<T> x)
 {
-    for (size_t k = 0; k < p.size(); k++)
+    for (size_t k = 0; k < p.size(); k++) {
         x[p[k]] = b[k];
+    }
 }
 
 

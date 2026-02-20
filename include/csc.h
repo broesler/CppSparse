@@ -179,6 +179,9 @@ public:
         return std::views::zip(indptr_range_(j), row_indices(j));
     }
 
+    // NOTE need to use the pair/tuple method instead of zip because
+    // std::views::repeat(0.0) is a different type than a span, so zip won't
+    // work if v_ is empty (i.e. symbolic matrix).
     /** Return an iterator over the indices and values of column j. */
     auto column(csint j) const
     {
@@ -204,21 +207,17 @@ public:
     /** Return an mutable iterator over the indices and values of column j. */
     auto column(csint j)
     {
-        return indptr_range_(j) | std::views::transform(
-            [this](csint p) {
-                return std::tuple<csint, double&>{i_[p], v_[p]};
-            }
-        );
+        auto idx_view = std::span(i_).subspan(p_[j], col_length(j));
+        auto val_view = std::span(v_).subspan(p_[j], col_length(j));
+        return std::views::zip(idx_view, val_view);
     }
 
     /** Return a mutable iterator over the pointers, indices and values of column j. */
     auto enum_column(csint j)
     {
-        return indptr_range_(j) | std::views::transform(
-            [this](csint p) {
-                return std::tuple<csint, csint, double&>{p, i_[p], v_[p]};
-            }
-        );
+        auto idx_view = std::span(i_).subspan(p_[j], col_length(j));
+        auto val_view = std::span(v_).subspan(p_[j], col_length(j));
+        return std::views::zip(indptr_range_(j), idx_view, val_view);
     }
 
     /** Operate on the non-zero elements of the matrix, as (i, j, v) tuples.

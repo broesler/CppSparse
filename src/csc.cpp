@@ -1682,7 +1682,7 @@ bool CSCMatrix::is_valid(const bool sorted, const bool values) const
     // See also: `scipy.sparse._compressed._cs_matrix.check_format` 
     //  for O(1) and O(|A|) checks.
     for (auto j : column_range()) {
-        for (auto p : indptr_range(j)) {
+        for (auto p : indptr_range_(j)) {
             auto i = i_[p];
 
             if (i < 0 || i > M_) {

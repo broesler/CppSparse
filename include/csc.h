@@ -24,6 +24,15 @@ namespace cs {
 
 class CSCMatrix : public SparseMatrix
 {
+private:
+    // Declare indptr_range_ member first since its entire definition is needed
+    // for the public iterators
+    /** Return an iterator over the index "pointers" of column j. */
+    auto indptr_range_(csint j) const
+    {
+        return std::views::iota(p_[j], p_[j+1]);
+    }
+
 public:
     friend class COOMatrix;
     friend class TestCSCMatrix;  // dummy class for testing
@@ -164,23 +173,17 @@ public:
         return std::span(v_).subspan(p_[j], col_length(j));
     }
 
-    /** Return an iterator over the index "pointers" of column j. */
-    auto indptr_range(csint j) const
-    {
-        return std::views::iota(p_[j], p_[j+1]);
-    }
-
     /** Return an iterator over the pointers and indices of column j. */
     auto enum_row_indices(csint j) const
     {
-        return std::views::zip(indptr_range(j), row_indices(j));
+        return std::views::zip(indptr_range_(j), row_indices(j));
     }
 
     /** Return an iterator over the indices and values of column j. */
     auto column(csint j) const
     {
         const bool has_values = !v_.empty();
-        return indptr_range(j) | std::views::transform(
+        return indptr_range_(j) | std::views::transform(
             [this, has_values](csint p) {
                 return std::pair{i_[p], has_values ? v_[p] : 0.0};
             }
@@ -191,7 +194,7 @@ public:
     auto enum_column(csint j) const
     {
         const bool has_values = !v_.empty();
-        return indptr_range(j) | std::views::transform(
+        return indptr_range_(j) | std::views::transform(
             [this, has_values](csint p) {
                 return std::tuple{p, i_[p], has_values ? v_[p] : 0.0};
             }
@@ -201,7 +204,7 @@ public:
     /** Return an mutable iterator over the indices and values of column j. */
     auto column(csint j)
     {
-        return indptr_range(j) | std::views::transform(
+        return indptr_range_(j) | std::views::transform(
             [this](csint p) {
                 return std::tuple<csint, double&>{i_[p], v_[p]};
             }
@@ -211,7 +214,7 @@ public:
     /** Return a mutable iterator over the pointers, indices and values of column j. */
     auto enum_column(csint j)
     {
-        return indptr_range(j) | std::views::transform(
+        return indptr_range_(j) | std::views::transform(
             [this](csint p) {
                 return std::tuple<csint, csint, double&>{p, i_[p], v_[p]};
             }

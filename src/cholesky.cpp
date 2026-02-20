@@ -36,9 +36,9 @@ std::vector<csint> etree(const CSCMatrix& A, bool ata)
     for (auto k : A.column_range()) {
         for (auto ip : A.row_indices(k)) {
             auto i = ata ? prev[ip] : ip;  // A(i, k) is nonzero
-            while (i != -1 && i < k) {      // only use upper triangular of A
+            while (i != -1 && i < k) {     // only use upper triangular of A
                 auto inext = ancestor[i];  // traverse up to the root
-                ancestor[i] = k;            // path compression
+                ancestor[i] = k;           // path compression
                 if (inext == -1) {
                     parent[i] = k;          // no ancestor
                 }
@@ -384,10 +384,11 @@ void init_ata(
 
     // Find the first non-zero row index in each column
     for (auto i : AT.column_range()) {
-        auto k = N;
-        for (auto ip : AT.row_indices(i)) {
-            k = std::min(k, w[ip]);
-        }
+        auto k = std::ranges::fold_left(
+            AT.row_indices(i) | std::views::transform([&w](auto ip) { return w[ip]; }),
+            N,  // init to N so that if column i is empty, k = N
+            std::ranges::min
+        );
         next[i] = head[k];  // place row i in linked list k
         head[k] = i;
     }
@@ -501,9 +502,9 @@ SymbolicChol schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 
     if (order == AMDOrder::Natural) {
         std::ranges::iota(p, 0);  // identity permutation TODO empty?
-        S.p_inv = p;                       // identity is its own inverse
+        S.p_inv = p;              // identity is its own inverse
     } else {
-        p = amd(A, order);                 // order = APlusAT for Cholesky
+        p = amd(A, order);        // order = APlusAT for Cholesky
         S.p_inv = inv_permute(p);
     }
 

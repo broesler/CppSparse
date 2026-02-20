@@ -155,30 +155,31 @@ double norm(std::span<const double> x, double ord)
         return 0.0;
     }
 
-    auto abs_view = x | std::views::transform([](double val) { return std::fabs(val); });
+    constexpr auto inf = std::numeric_limits<double>::infinity();
+    constexpr auto eps = std::numeric_limits<double>::epsilon();
 
-    if (ord == std::numeric_limits<double>::infinity()) {
+    auto abs_view = x | std::views::transform(std::fabs<>);
+
+    if (ord == inf) {
         // infinity norm: max(|x_i|)
         return std::ranges::max(abs_view);
     } else if (ord == 0) {
         // Zero "norm": number of non-zero entries
-        return std::ranges::count_if(
-            abs_view, [](double v) { return v > std::numeric_limits<double>::epsilon(); }
-        );
+        return std::ranges::count_if(abs_view, [](auto v) { return v > eps; });
     } else if (ord == 1) {
-        // One norm: ∑|x_i|
+        // 1-norm: ∑|x_i|
         return std::ranges::fold_left(abs_view, 0.0, std::plus<>());
     } else if (ord == 2) {
-        // Two norm: sqrt(∑|x_i|^2)
-        auto sqr_view = x | std::views::transform([](double val) { return val * val; });
-        auto sum_sqr = std::ranges::fold_left(sqr_view, 0.0, std::plus<>());
+        // 2-norm: sqrt(∑|x_i|^2)
+        auto sqr_view = x | std::views::transform([](auto val) { return val * val; });
+        const auto sum_sqr = std::ranges::fold_left(sqr_view, 0.0, std::plus<>());
         return std::sqrt(sum_sqr);
     } else {
         // General p-norm: (∑|x_i|^p)^(1/p)
         auto pow_view = x | std::views::transform(
-            [ord](double val) { return std::pow(std::fabs(val), ord); }
+            [ord](auto val) { return std::pow(std::fabs(val), ord); }
         );
-        auto sum_pow = std::ranges::fold_left(pow_view, 0.0, std::plus<>());
+        const auto sum_pow = std::ranges::fold_left(pow_view, 0.0, std::plus<>());
         return std::pow(sum_pow, 1.0 / ord);
     }
 }
@@ -187,7 +188,7 @@ double norm(std::span<const double> x, double ord)
 std::vector<csint> randperm(csint N, csint seed)
 {
     std::vector<csint> res(N);
-    std::ranges::iota(res, 0);  // itentity permutation
+    std::ranges::iota(res, 0);  // identity permutation
 
     if (seed == 0) {
         return res;
@@ -199,7 +200,7 @@ std::vector<csint> randperm(csint N, csint seed)
             throw std::invalid_argument("Seed must be non-negative.");
         }
         std::default_random_engine rng(seed);
-        std::shuffle(res.begin(), res.end(), rng);
+        std::ranges::shuffle(res, rng);
         return res;
     }
 }

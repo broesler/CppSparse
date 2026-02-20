@@ -82,7 +82,7 @@ TEST_CASE("Random permutation", "[vector][randperm]")
     SECTION("Arbitrary permutation") {
         seed = 565656;
         std::default_random_engine rng(seed);
-        std::shuffle(expect_p.begin(), expect_p.end(), rng);
+        std::ranges::shuffle(expect_p, rng);
     }
 
     auto p = randperm(N, seed);

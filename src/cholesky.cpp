@@ -296,7 +296,7 @@ std::vector<csint> rowcnt(
     std::vector<csint> rowcount(N, 1);   // count the diagonal to start
 
     std::vector<csint> ancestor(N);  // every node is its own ancestor
-    std::iota(ancestor.begin(), ancestor.end(), 0);
+    std::ranges::iota(ancestor, 0);
 
     std::vector<csint> maxfirst(N, -1);  // max first[i] for nodes in subtree of i
     std::vector<csint> prevleaf(N, -1);  // previous leaf of ith row subtree
@@ -413,7 +413,7 @@ std::vector<csint> counts(
                        next;             // next node of the linked list
 
     // every node is its own ancestor
-    std::iota(ancestor.begin(), ancestor.end(), 0);
+    std::ranges::iota(ancestor, 0);
 
     // Compute first descendent of each node in the tree
     for (auto k : A.column_range()) {
@@ -500,7 +500,7 @@ SymbolicChol schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
     std::vector<csint> p(A.shape()[1]);    // the matrix permutation
 
     if (order == AMDOrder::Natural) {
-        std::iota(p.begin(), p.end(), 0);  // identity permutation
+        std::ranges::iota(p, 0);  // identity permutation TODO empty?
         S.p_inv = p;                       // identity is its own inverse
     } else {
         p = amd(A, order);                 // order = APlusAT for Cholesky

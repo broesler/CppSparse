@@ -519,7 +519,7 @@ CSCMatrix& CSCMatrix::qsort()
         // Copy the row indices and values into the workspace
         std::copy_n(i_.cbegin() + p, len, w.begin());
         std::copy_n(v_.cbegin() + p, len, x.begin());
-        std::iota(idx.begin(), idx.end(), 0);
+        std::ranges::iota(idx, 0);
 
         // argsort the rows to get indices
         std::sort(

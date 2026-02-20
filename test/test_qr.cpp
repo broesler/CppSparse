@@ -167,7 +167,7 @@ TEST_CASE("QR factorization of the Identity Matrix", "[qr][identity]")
 {
     csint N = 8;
     std::vector<csint> rows(N);
-    std::iota(rows.begin(), rows.end(), 0);
+    std::ranges::iota(rows, 0);
     std::vector<double> vals(N, 1.0);
 
     auto I = COOMatrix{vals, rows, rows}.tocsc();
@@ -266,7 +266,7 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][n
 
     // Create the identity matrix for testing
     std::vector<csint> idx(N);
-    std::iota(idx.begin(), idx.end(), 0);
+    std::ranges::iota(idx, 0);
     std::vector<double> vals(N, 1.0);
     auto I = COOMatrix{vals, idx, idx}.tocsc();
 
@@ -377,7 +377,7 @@ TEST_CASE("Square, rank-deficient A", "[qr][rank-deficient][numeric]")
 
     // Identity matrix for building Q
     std::vector<csint> idx(M2);
-    std::iota(idx.begin(), idx.end(), 0);
+    std::ranges::iota(idx, 0);
     std::vector<double> vals(M2, 1.0);
     auto I = COOMatrix{vals, idx, idx}.tocsc();
 
@@ -466,7 +466,7 @@ TEST_CASE("Numeric QR factorization of overdetermined matrix M > N", "[qr][M > N
 
     // Create the identity matrix for testing
     std::vector<csint> idx(M);
-    std::iota(idx.begin(), idx.end(), 0);
+    std::ranges::iota(idx, 0);
     std::vector<double> vals(M, 1.0);
     auto I = COOMatrix{vals, idx, idx}.tocsc();
 
@@ -586,7 +586,7 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
 
     // Create the identity matrix for testing
     std::vector<csint> idx(M2);
-    std::iota(idx.begin(), idx.end(), 0);
+    std::ranges::iota(idx, 0);
     std::vector<double> vals(M2, 1.0);
     auto I = COOMatrix{vals, idx, idx}.tocsc();
 

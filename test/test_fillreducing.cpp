@@ -93,7 +93,7 @@ TEST_CASE("Approximate Minimum Degree (AMD)", "[amd]")
         order = AMDOrder::Natural;
         // ordering should be the same as the original
         expect_p.resize(N);
-        std::iota(expect_p.begin(), expect_p.end(), 0);
+        std::ranges::iota(expect_p, 0);
     }
 
     SECTION("A + A^T") {
@@ -128,7 +128,7 @@ TEST_CASE("AMD with M < N", "[amd][M < N]")
         order = AMDOrder::Natural;
         // ordering should be the same as the original
         expect_p.resize(N);
-        std::iota(expect_p.begin(), expect_p.end(), 0);
+        std::ranges::iota(expect_p, 0);
     }
 
     SECTION("A + A^T") {
@@ -170,7 +170,7 @@ TEST_CASE("AMD with M > N", "[amd][M > N]")
         order = AMDOrder::Natural;
         // ordering should be the same as the original
         expect_p.resize(N);
-        std::iota(expect_p.begin(), expect_p.end(), 0);
+        std::ranges::iota(expect_p, 0);
     }
 
     SECTION("A + A^T") {
@@ -217,8 +217,8 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
     SECTION("Square, Symmetric Full rank") {
         // Matrix is full rank, so should be identity permutation
         expect_rank = 10;
-        std::iota(expect_jmatch.begin(), expect_jmatch.end(), 0);
-        std::iota(expect_imatch.begin(), expect_imatch.end(), 0);
+        std::ranges::iota(expect_jmatch, 0);
+        std::ranges::iota(expect_imatch, 0);
     }
 
     SECTION("Square, Rank-deficient (zero rows)") {

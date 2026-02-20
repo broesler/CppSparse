@@ -40,7 +40,7 @@ TEST_CASE("Cholesky Solution", "[cholsol]")
 
     // Create RHS for Ax = b
     std::vector<double> expect(N);
-    std::iota(expect.begin(), expect.end(), 1);
+    std::ranges::iota(expect, 1);
 
     const auto b = A * expect;
 
@@ -71,7 +71,7 @@ TEMPLATE_TEST_CASE(
     // Create RHS for Ax = b
     csint K = 3;  // arbitrary number of RHS columns
     std::vector<double> expect_x(N * K);
-    std::iota(expect_x.begin(), expect_x.end(), 1);
+    std::ranges::iota(expect_x, 1);
 
     const auto b = A * expect_x;
     std::vector<double> x;
@@ -99,7 +99,7 @@ TEST_CASE("QR Solution", "[qrsol]")
     CAPTURE(order);
 
     std::vector<double> expect(N);
-    std::iota(expect.begin(), expect.end(), 1);
+    std::ranges::iota(expect, 1);
 
     std::vector<double> b;
     QRSolveResult res;
@@ -182,7 +182,7 @@ TEMPLATE_TEST_CASE(
     // Create RHS for Ax = b
     csint K = 3;  // arbitrary number of RHS columns
     std::vector<double> expect(N * K);
-    std::iota(expect.begin(), expect.end(), 1);
+    std::ranges::iota(expect, 1);
 
 
     std::vector<double> b;
@@ -275,7 +275,7 @@ TEST_CASE("LU Solution", "[lusol]") {
 
     // Create RHS for Ax = b
     std::vector<double> expect(N);
-    std::iota(expect.begin(), expect.end(), 1);
+    std::ranges::iota(expect, 1);
 
     const auto b = A * expect;
 
@@ -308,7 +308,7 @@ TEST_CASE("LU with Iterative Refinement", "[lusol-ir]") {
 
     // Create RHS for Ax = b
     std::vector<double> expect(N);
-    std::iota(expect.begin(), expect.end(), 1);
+    std::ranges::iota(expect, 1);
 
     const auto b = A * expect;
 
@@ -354,7 +354,7 @@ TEMPLATE_TEST_CASE(
     // Create RHS for Ax = b
     csint K = 3;  // arbitrary number of RHS columns
     std::vector<double> expect_x(N * K);
-    std::iota(expect_x.begin(), expect_x.end(), 1);
+    std::ranges::iota(expect_x, 1);
 
     const auto b = A * expect_x;
     std::vector<double> x;
@@ -399,7 +399,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Triangular", "[spsolve-tri]", RhsCombination
 
     // Create RHS for Lx = b
     std::vector<double> expect_x(N * K);
-    std::iota(expect_x.begin(), expect_x.end(), 1);
+    std::ranges::iota(expect_x, 1);
 
     const std::vector<csint> p{3, 0, 1, 2};
     const std::vector<csint> q{1, 2, 0, 3};
@@ -464,7 +464,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Cholesky", "[spsolve-chol]", CholeskyCombina
 
     // Create RHS for Ax = b
     std::vector<double> expect_x(N * K);
-    std::iota(expect_x.begin(), expect_x.end(), 1);
+    std::ranges::iota(expect_x, 1);
 
     auto b = A * expect_x;
 
@@ -501,7 +501,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: LU Symmetric", "[spsolve-lu-sym]", RhsCombin
 
     // Create RHS for Ax = b
     std::vector<double> expect_x(N * K);
-    std::iota(expect_x.begin(), expect_x.end(), 1);
+    std::ranges::iota(expect_x, 1);
 
     const auto b = A * expect_x;
 
@@ -532,7 +532,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: LU Unsymmetric", "[spsolve-lu-unsym]", RhsCo
 
     // Create RHS for Ax = b
     std::vector<double> expect_x(N * K);
-    std::iota(expect_x.begin(), expect_x.end(), 1);
+    std::ranges::iota(expect_x, 1);
 
     const auto b = A * expect_x;
 
@@ -558,7 +558,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: QR", "[spsolve-qr]", RhsCombinations)
 
     // Create RHS for Ax = b
     std::vector<double> expect_x(N * K);
-    std::iota(expect_x.begin(), expect_x.end(), 1);
+    std::ranges::iota(expect_x, 1);
 
     std::vector<double> b, x;
 

@@ -129,7 +129,7 @@ std::vector<csint> amd(const CSCMatrix& A, AMDOrder order)
     if (order == AMDOrder::Natural) {
         // Natural ordering (no permutation)
         P.resize(A.N_);
-        std::iota(P.begin(), P.end(), 0);  // identity permutation
+        std::ranges::iota(P, 0);  // identity permutation
         return P;
     }
 

@@ -39,8 +39,8 @@ LUResult lu_test(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural)
     const auto [M, N] = A.shape();
     std::vector<csint> row_perm(M);
     std::vector<csint> col_perm(N);
-    std::iota(row_perm.begin(), row_perm.end(), 0);
-    std::iota(col_perm.begin(), col_perm.end(), 0);
+    std::ranges::iota(row_perm, 0);
+    std::ranges::iota(col_perm, 0);
 
     CHECK_THAT(res.p_inv, UnorderedEquals(row_perm));
     CHECK_THAT(res.q,     UnorderedEquals(col_perm));
@@ -361,7 +361,7 @@ TEST_CASE("Exercise 6.4: relu", "[ex6.4][relu]")
     const auto [M, N] = A.shape();
 
     std::vector<csint> expect_q(N);
-    std::iota(expect_q.begin(), expect_q.end(), 0);
+    std::ranges::iota(expect_q, 0);
 
     // Create new matrix with same sparsity pattern as A
     std::vector<double> B_data(A.data().begin(), A.data().end());

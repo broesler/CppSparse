@@ -187,7 +187,7 @@ double norm(std::span<const double> x, double ord)
 std::vector<csint> randperm(csint N, csint seed)
 {
     std::vector<csint> res(N);
-    std::iota(res.begin(), res.end(), 0);  // itentity permutation
+    std::ranges::iota(res, 0);  // itentity permutation
 
     if (seed == 0) {
         return res;

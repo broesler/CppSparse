@@ -77,7 +77,7 @@ TEST_CASE("Reachability and DFS", "[dfs][reach]")
 
     // Add the diagonals
     std::vector<csint> diags(N);
-    std::iota(diags.begin(), diags.end(), 0);
+    std::ranges::iota(diags, 0);
     rows.insert(rows.end(), diags.begin(), diags.end());
     cols.insert(cols.end(), diags.begin(), diags.end());
 

@@ -205,7 +205,7 @@ SymbolicQR sqr(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 
     if (order == AMDOrder::Natural) {
         q.resize(N);
-        std::iota(q.begin(), q.end(), 0);  // identity permutation
+        std::ranges::iota(q, 0);  // identity permutation
     } else {
         q = amd(C, order);                 // order = ATA for QR
     }

@@ -137,7 +137,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         auto S = schol(A, AMDOrder::Natural);
 
         std::vector<csint> expect_p_inv(A.shape()[1]);
-        std::iota(expect_p_inv.begin(), expect_p_inv.end(), 0);
+        std::ranges::iota(expect_p_inv, 0);
 
         auto c = chol_colcounts(A);
         auto expect_nnz = std::ranges::fold_left(c, 0, std::plus<>());
@@ -167,7 +167,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
 
         // should be no permutation with AMDOrder::Natural
         std::vector<csint> expect_p(N);
-        std::iota(expect_p.begin(), expect_p.end(), 0);
+        std::ranges::iota(expect_p, 0);
 
         SECTION("Natural") {}
 
@@ -258,7 +258,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
 
         // Create RHS for Lx = b
         std::vector<double> expect(N);
-        std::iota(expect.begin(), expect.end(), 1);
+        std::ranges::iota(expect, 1);
         // zero-out a few rows of expect to make it "sparse"
         for (const auto& i : {2, 4, 7, 9}) {
             expect[i] = 0;
@@ -299,7 +299,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
 
         // Create RHS for Lx = b
         std::vector<double> expect(N);
-        std::iota(expect.begin(), expect.end(), 1);
+        std::ranges::iota(expect, 1);
         // zero-out a few rows of expect to make it "sparse"
         for (const auto& i : {2, 4, 7, 9}) {
             expect[i] = 0;

@@ -33,7 +33,7 @@ SymbolicLU slu(const CSCMatrix& A, AMDOrder order, bool qr_bound, double alpha)
     // Determine column ordering of A
     if (order == AMDOrder::Natural) {
         q.resize(N);
-        std::iota(q.begin(), q.end(), 0);  // identity permutation
+        std::ranges::iota(q, 0);  // identity permutation
     } else {
         q = amd(A, order);  // order = ATANoDenseRows for LU
     }
@@ -482,7 +482,7 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
     CSCMatrix UT{{N, N}, S.unz};      // (transpose of) upper triangular matrix
     std::vector<csint> p_inv(N, -1);  // row permutation vector
     // TODO implement partial pivoting
-    std::iota(p_inv.begin(), p_inv.end(), 0);  // identity permutation
+    std::ranges::iota(p_inv, 0);  // identity permutation
 
     csint lnz = 0,
           unz = 0;

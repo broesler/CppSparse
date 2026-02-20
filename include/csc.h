@@ -844,6 +844,14 @@ public:
      */
     CSCMatrix permute_rows(std::span<const csint> p_inv, bool values=true) const;
 
+    /** Permute the rows of a matrix, in place.
+     *
+     * @param p_inv  *inverse* row permutation vector. `p_inv` is length `M`.
+     *
+     * @return a reference to the matrix with permuted rows.
+     */
+    CSCMatrix& permute_rows_inplace(std::span<const csint> p_inv);
+
     /** Permute the columns of a matrix.
      *
      * @note In Matlab, this call is `C = A(:, q)`.

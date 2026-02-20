@@ -1504,6 +1504,17 @@ CSCMatrix CSCMatrix::permute_rows(std::span<const csint> p_inv, bool values) con
 }
 
 
+CSCMatrix& CSCMatrix::permute_rows_inplace(std::span<const csint> p_inv)
+{
+    if (!p_inv.empty()) {
+        for (auto& i : i_) {
+            i = p_inv[i];
+        }
+    }
+    return *this;
+}
+
+
 CSCMatrix CSCMatrix::permute_cols(std::span<const csint> q, bool values) const
 {
     return permute({}, q, values);

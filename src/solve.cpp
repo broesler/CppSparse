@@ -222,7 +222,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
     // Perform the permuted forward solve
     for (auto j : A.column_range()) {
         auto ip = p_inv[j];       // permuted row index
-        auto d = p_diags[j];     // pointer to the diagonal entry
+        auto d = p_diags[j];      // pointer to the diagonal entry
         auto x_val = b_work[ip];  // cache diagonal value
 
         if (x_val != 0) {
@@ -286,13 +286,13 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b)
 
     // Perform the permuted forward solve
     for (const auto& j : q_inv) {
-        auto d = p_diags[j];     // pointer to the diagonal entry
+        auto d = p_diags[j];      // pointer to the diagonal entry
         auto ip = Ai[d];          // permuted row index
         auto x_val = b_work[ip];  // cache diagonal value
 
         if (x_val != 0) {
             x_val /= Av[d];  // solve for x[Ai[d]]
-            x[j] = x_val;      // store solution in correct position
+            x[j] = x_val;    // store solution in correct position
             for (auto [i, v] : A.column(j) | std::views::drop(1)) {
                 b_work[i] -= v * x_val;  // update the off-diagonals
             }
@@ -910,11 +910,8 @@ void CholResult::solve(
     // ----- Option 2: Solve as sparse column and scatter to dense at end
     auto b = B.slice(0, M, k, k+1);  // get single column
 
-    // TODO implement CSCMatrix::permute_rows non-const version
     // Permute the rows in-place
-    for (auto& i : b.i_) {
-        i = p_inv[i];
-    }
+    b.permute_rows_inplace(p_inv);
 
     // Get the order of the nodes from the elimination tree
     auto xi = topological_order(b, parent);
@@ -950,14 +947,14 @@ SparseSolution CholResult::lsolve_impl_(
     std::vector<csint> parent_;
 
     if (parent.empty()) {
-        if (!L.has_sorted_indices_) {
+        if (!L.has_sorted_indices()) {
             throw std::runtime_error(
                 "L does not have sorted indices, cannot infer parent vector!"
             );
         }
         // Inspect L to get the parent vector, since it has sorted indices
         parent_.assign(N, -1);
-        for (csint j = 0; j < N - 1; ++j) {  // skip the last row (only diagonal)
+        for (csint j = 0; j < N - 1; ++j) {    // skip the last row (only diagonal)
             parent_[j] = L.row_indices(j)[1];  // first off-diagonal element
         }
         parent = parent_;  // point the span to the local parent vector

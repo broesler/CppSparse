@@ -36,7 +36,6 @@ private:
 public:
     friend class COOMatrix;
     friend class TestCSCMatrix;  // dummy class for testing
-    friend struct CholResult;    // for use with CholResult::lsolve
 
     /** 
      * @typedef KeepFunc

@@ -530,6 +530,8 @@ void tri_solve_perm_inplace(
     // Extract the permutation vectors
     auto [p_inv, q_inv, p_diags] = tri_perm;
 
+    auto Av = A.data();
+
     // Solve the system (PTQ) x = b => T (Q x) = (P^T b)
     for (auto k : A.column_range()) {
         auto i = p_inv[k];    // permuted row
@@ -539,7 +541,7 @@ void tri_solve_perm_inplace(
         // Solve for x[j]
         auto x_val = b[i];
         if (x_val != 0) {
-            x_val /= A.v_[d];  // diagonal entry
+            x_val /= Av[d];  // diagonal entry
             x[j] = x_val;
             // Update off-diagonals
             for (auto [p, i, v] : A.enum_column(j)) {

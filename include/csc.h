@@ -1001,13 +1001,6 @@ public:
     //--------------------------------------------------------------------------
     //        Triangular Matrix Solutions
     //--------------------------------------------------------------------------
-    friend void tri_solve_perm_inplace(
-        const CSCMatrix& A,
-        const TriPerm& tri_perm,
-        std::span<double> b,
-        std::span<double> x
-    );
-
     friend void spsolve(
         const CSCMatrix& A,
         const CSCMatrix& B,

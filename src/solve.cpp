@@ -9,7 +9,6 @@
 
 #include <algorithm>   // fill
 #include <cassert>
-#include <cmath>       // fabs
 #include <format>
 #include <ranges>      // views::reverse
 #include <span>
@@ -136,7 +135,6 @@ void usolve_inplace_opt(const CSCMatrix& U, std::span<double> x)
         auto& x_val = x[j];  // cache reference to value
         if (x_val != 0) {
             x_val /= U.col_values(j).back();  // diagonal entry
-            // for (csint p = U.p_[j]; p < U.p_[j+1] - 1; ++p) {
             for (auto [i, v] : U.column(j) | std::views::take(U.col_length(j) - 1)) {
                 x[i] -= v * x_val;
             }
@@ -659,7 +657,7 @@ void spsolve(
             continue;  // x(j) is not in the pattern of G
         }
 
-        auto& xj = x[j];                             // cache reference to value
+        auto& xj = x[j];  // cache reference to value
 
         // If lower, L(j,j) is 1st entry, otherwise, U(j,j) is last entry
         xj /= lower ? A.col_values(J).front() : A.col_values(J).back();
@@ -715,9 +713,13 @@ void dfs(
     std::span<const csint> p_inv
 )
 {
+    csint N = A.shape()[1];
+    auto Ap = A.indptr();
+    auto Ai = A.indices();
+
     // Ensure the stacks are reserved and cleared
-    if (static_cast<csint>(pstack.capacity()) < A.N_) { pstack.reserve(A.N_); }
-    if (static_cast<csint>(rstack.capacity()) < A.N_) { rstack.reserve(A.N_); }
+    if (static_cast<csint>(pstack.capacity()) < N) { pstack.reserve(N); }
+    if (static_cast<csint>(rstack.capacity()) < N) { rstack.reserve(N); }
     pstack.clear();
     rstack.clear();
 
@@ -732,15 +734,15 @@ void dfs(
 
         if (!marked[j]) {
             marked[j] = true;  // mark node j as visited
-            pstack.push_back((jnew < 0) ? 0 : A.p_[jnew]);
+            pstack.push_back((jnew < 0) ? 0 : Ap[jnew]);
         }
 
         done = true;  // node j done if no unvisited neighbors
-        csint q = (jnew < 0) ? 0 : A.p_[jnew+1];
+        csint q = (jnew < 0) ? 0 : Ap[jnew+1];
 
         // examine all neighbors of j
         for (csint p = pstack.back(); p < q; ++p) {
-            auto i = A.i_[p];        // consider neighbor node i
+            auto i = Ai[p];        // consider neighbor node i
             if (!marked[i]) {
                 pstack.back() = p;    // pause dfs of node j
                 rstack.push_back(i);  // start dfs at node i

@@ -999,19 +999,6 @@ public:
     std::vector<double> sum_cols() const;
 
     //--------------------------------------------------------------------------
-    //        Triangular Matrix Solutions
-    //--------------------------------------------------------------------------
-    friend void dfs(
-        const CSCMatrix& A,
-        csint j,
-        std::span<char> marked,
-        std::vector<csint>& xi,
-        std::vector<csint>& pstack,
-        std::vector<csint>& rstack,
-        std::span<const csint> p_inv
-    );
-
-    //--------------------------------------------------------------------------
     //        Cholesky Decomposition
     //--------------------------------------------------------------------------
     friend CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S);

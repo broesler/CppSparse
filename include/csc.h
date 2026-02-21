@@ -1058,7 +1058,7 @@ public:
     // -------------------------------------------------------------------------
     //         Fill-reducing Orderings
     // -------------------------------------------------------------------------
-    friend CSCMatrix build_graph(const CSCMatrix& A, AMDOrder order, csint dense);
+    friend void drop_dense_cols_inplace(CSCMatrix& A, csint dense);
     friend std::vector<csint> amd(const CSCMatrix& A, AMDOrder order);
 
     friend bool detail::augment_r(

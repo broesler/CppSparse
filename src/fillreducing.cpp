@@ -63,20 +63,43 @@ static csint wclear(csint mark, csint lemax, std::span<csint> w)
 }
 
 
+void drop_dense_cols_inplace(CSCMatrix& A, csint dense)
+{
+    csint nz = 0;
+
+    for (auto j : A.column_range()) {
+        auto p = A.p_[j];  // column j of A starts here
+        A.p_[j] = nz;      // new column j starts here
+
+        if (A.p_[j+1] - p > dense) {
+            continue;  // skip dense col j
+        }
+
+        // Copy non-dense entries
+        for (; p < A.p_[j+1]; ++p) {
+            A.i_[nz++] = A.i_[p];
+        }
+    }
+
+    A.p_[A.N_] = nz;  // finalize A
+    A.realloc(nz);    // resize A to remove dense rows
+}
+
+
 // Compute the C matrix for AMD ordering
 CSCMatrix build_graph(const CSCMatrix& A, AMDOrder order, csint dense)
 {
     CSCMatrix C;
 
     const auto [M, N] = A.shape();
-    bool values = false;  // symbolic transposes
+    constexpr bool values = false;  // symbolic transposes
     auto AT = A.transpose(values);
 
     switch (order) {
         case AMDOrder::Natural:
             // NOTE should never get here since amd returns early, but if it
             // does, return the original matrix without values
-            C = CSCMatrix{{}, A.i_, A.p_, A.shape()};
+            C = CSCMatrix{{}, A.indices(), A.indptr(), A.shape()};
             break;
         case AMDOrder::APlusAT:
             if (M != N) {
@@ -84,31 +107,11 @@ CSCMatrix build_graph(const CSCMatrix& A, AMDOrder order, csint dense)
             }
             C = A + AT;
             break;
-        case AMDOrder::ATANoDenseRows: {
-            // TODO refactor into its own (friend?) function
-            // Drop dense columns from AT (i.e., rows from A)
-            csint q = 0;
-
-            for (auto j : AT.column_range()) {
-                auto p = AT.p_[j];  // column j of AT starts here
-                AT.p_[j] = q;        // new column j starts here
-
-                if (AT.p_[j+1] - p > dense) {
-                    continue;        // skip dense col j
-                }
-
-                // Copy non-dense entries
-                for (; p < AT.p_[j+1]; ++p) {
-                    AT.i_[q++] = AT.i_[p];
-                }
-            }
-
-            AT.p_[M] = q;   // finalize AT
-            AT.realloc(q);  // resize AT to remove dense rows
-
+        case AMDOrder::ATANoDenseRows:
+            // Drop dense rows from A (i.e., cols from AT)
+            drop_dense_cols_inplace(AT, dense);
             C = AT * AT.transpose(values);  // C = A^T * A, without dense rows
             break;
-        }
         case AMDOrder::ATA:
             C = AT * A;
             break;

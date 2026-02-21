@@ -30,7 +30,8 @@ private:
     /** Return an iterator over the index "pointers" of column j. */
     auto indptr_range_(csint j) const
     {
-        return std::views::iota(p_[j], p_[j+1]);
+        // If p_[j+1] < p_[j], then the column is empty, return an empty range.
+        return std::views::iota(p_[j], std::max(p_[j], p_[j+1]));
     }
 
 public:
@@ -157,7 +158,7 @@ public:
     /** Return the number of non-zeros in column j. */
     csint col_length(csint j) const
     {
-        return p_[j+1] - p_[j];
+        return indptr_range_(j).size();
     }
 
     /** Return a span over the row indices of column j. */

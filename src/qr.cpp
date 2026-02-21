@@ -151,8 +151,7 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
     S.m2 = M;
 
     // List k contains all rows that belong to V(:, k)
-    csint k;  // declare outside loop for final row permutation
-    for (k = 0; k < N; ++k) {          // find row permutation and nnz(V)
+    for (auto k : A.column_range()) {  // find row permutation and nnz(V)
         auto i = head[k];              // remove row i from queue k
         S.vnz++;                       // count V(k, k) as nonzero
         if (i < 0) {
@@ -174,11 +173,11 @@ void vcount(const CSCMatrix& A, SymbolicQR& S)
         }
     }
 
-    for (auto i : A.row_range()) {    // assign any unordered rows to last k
-        if (S.p_inv[i] < 0) {
-            S.p_inv[i] = k++;
-        }
-    }
+    // assign remaining rows to last k
+    auto row_view = S.p_inv
+        | std::views::take(M)
+        | std::views::filter([](auto x) { return x < 0; });
+    std::ranges::iota(row_view, N);
 
     S.p_inv.resize(S.m2);     // resize to the actual number of rows
     S.p_inv.shrink_to_fit();  // shrink to fit
@@ -464,8 +463,10 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 
         // [v, beta, s] = house(x) == house(V[:, k])
         auto h = house(V.col_values(k));
+        // std::ranges::copy(h.v, V.col_values(k).begin());  // TODO non-const view
         std::ranges::copy(h.v, V.v_.begin() + V.p_[k]);
         beta[k] = h.beta;
+        // R.col_values(k).back() = h.s;  // TODO non-const R(k, k) = -sign(x[0]) * norm(x)
         R.v_[R.p_[k+1] - 1] = h.s;  // R(k, k) = -sign(x[0]) * norm(x)
     }
 

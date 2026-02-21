@@ -53,80 +53,6 @@ struct QRSolveResult {
 //        Triangular Matrix Solutions
 //------------------------------------------------------------------------------
 
-namespace detail {
-
-/** Solve a triangular linear system \f$ Tx = B \f$ for multiple RHS columns.
- *
- * @tparam InplaceTriSolve  a function that performs an in-place triangular
- *         solve on a single RHS vector.
- *
- * @param L  a triangular matrix
- * @param B  a dense matrix with multiple RHS columns, stored column-wise
- * @param inplace_solver  a function that performs an in-place triangular
- *         solve on a single RHS vector.
- *
- * @return X  the solution matrix with multiple columns, stored column-wise
- */
-template <typename InplaceTriSolve>
-std::vector<double> trisolve_dense(
-    const CSCMatrix& L,
-    std::span<const double> B,
-    InplaceTriSolve inplace_solver
-)
-{
-    const auto [M, N] = L.shape();
-    csint MxK = std::ssize(B);
-
-    if (MxK % M != 0) {
-        throw std::runtime_error("RHS vector size is not a multiple of matrix rows!");
-    }
-
-    csint K = MxK / M;                          // number of RHS columns
-    std::vector<double> X(B.begin(), B.end());  // NOTE only works if M >= N
-    std::span<double> X_span(X);                // view onto X
-
-    for (csint k = 0; k < K; k++) {
-        auto X_k = X_span.subspan(k * N, N);
-        inplace_solver(L, X_k);
-    }
-
-    return X;
-};
-
-
-/** Solve a triangular linear system \f$ Tx = B \f$ for multiple RHS columns.
- *
- * @tparam Lower  True if input is lower triangular, otherwise upper.
- *
- * @param L  a triangular matrix
- * @param B  a sparse matrix with multiple RHS columns
- *
- * @return X  the solution matrix with multiple columns, stored column-wise
- */
-template <bool Lower>
-std::vector<double> trisolve_sparse(const CSCMatrix& L, const CSCMatrix& B)
-{
-    const auto [M, N] = L.shape();
-    csint K = B.shape()[1];
-
-    csint Nx = std::max(M, N);  // enough space for non-square solutions
-    std::vector<double> X(Nx * K);
-    std::span<double> X_span(X);
-    SparseSolution sol(Nx);
-
-    for (csint k = 0; k < K; k++) {
-        auto X_k = X_span.subspan(k * Nx, Nx);
-        spsolve(L, B, k, sol, {}, Lower);
-        for (const auto i : sol.xi) {
-            X_k[i] = sol.x[i];
-        }
-    }
-
-    return X;
-}
-
-}  // namespace detail
-
 
 /** Forward solve a lower-triangular system \f$ Lx = b \f$, in-place.
  *
@@ -480,6 +406,77 @@ void spsolve(
 
 namespace detail {
 
+/** Solve a triangular linear system \f$ Tx = B \f$ for multiple RHS columns.
+ *
+ * @tparam InplaceTriSolve  a function that performs an in-place triangular
+ *         solve on a single RHS vector.
+ *
+ * @param L  a triangular matrix
+ * @param B  a dense matrix with multiple RHS columns, stored column-wise
+ * @param inplace_solver  a function that performs an in-place triangular
+ *         solve on a single RHS vector.
+ *
+ * @return X  the solution matrix with multiple columns, stored column-wise
+ */
+template <typename InplaceTriSolve>
+std::vector<double> trisolve_dense(
+    const CSCMatrix& L,
+    std::span<const double> B,
+    InplaceTriSolve inplace_solver
+)
+{
+    const auto [M, N] = L.shape();
+    csint MxK = std::ssize(B);
+
+    if (MxK % M != 0) {
+        throw std::runtime_error("RHS vector size is not a multiple of matrix rows!");
+    }
+
+    csint K = MxK / M;                          // number of RHS columns
+    std::vector<double> X(B.begin(), B.end());  // NOTE only works if M >= N
+    std::span<double> X_span(X);                // view onto X
+
+    for (csint k = 0; k < K; k++) {
+        auto X_k = X_span.subspan(k * N, N);
+        inplace_solver(L, X_k);
+    }
+
+    return X;
+};
+
+
+/** Solve a triangular linear system \f$ Tx = B \f$ for multiple RHS columns.
+ *
+ * @tparam Lower  True if input is lower triangular, otherwise upper.
+ *
+ * @param L  a triangular matrix
+ * @param B  a sparse matrix with multiple RHS columns
+ *
+ * @return X  the solution matrix with multiple columns, stored column-wise
+ */
+template <bool Lower>
+std::vector<double> trisolve_sparse(const CSCMatrix& L, const CSCMatrix& B)
+{
+    const auto [M, N] = L.shape();
+    csint K = B.shape()[1];
+
+    csint Nx = std::max(M, N);  // enough space for non-square solutions
+    std::vector<double> X(Nx * K);
+    std::span<double> X_span(X);
+    SparseSolution sol(Nx);
+
+    for (csint k = 0; k < K; k++) {
+        auto X_k = X_span.subspan(k * Nx, Nx);
+        spsolve(L, B, k, sol, {}, Lower);
+        for (const auto i : sol.xi) {
+            X_k[i] = sol.x[i];
+        }
+    }
+
+    return X;
+}
+
+
 /** Compute the reachability indices of a column `k` in a sparse matrix `B`,
  * given a sparse matrix `A` that defines the graph.
  *
@@ -687,7 +684,7 @@ QRSolveResult qr_solve(
  * @param B  (N, K) the dense RHS matrix in column-major format.
  * @param order  the fill-reducing ordering of the matrix to compute
  * @param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
- *        used. If `tol` is less than 1.0, diagonal pivoting is used. 
+ *        used. If `tol` is less than 1.0, diagonal pivoting is used.
  * @param ir_steps  the maximum number of iterative refinement steps to perform.
  *
  * @return X  (N, K) the dense solution matrix, in column-major format.
@@ -709,7 +706,7 @@ std::vector<double> lu_solve(
  * @param B  (N, K) the sparse RHS matrix in column-major format.
  * @param order  the fill-reducing ordering of the matrix to compute
  * @param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
- *        used. If `tol` is less than 1.0, diagonal pivoting is used. 
+ *        used. If `tol` is less than 1.0, diagonal pivoting is used.
  * @param ir_steps  the maximum number of iterative refinement steps to perform.
  *
  * @return X  (N, K) the dense solution matrix, in column-major format.
@@ -731,7 +728,7 @@ std::vector<double> lu_solve(
  * @param b  a dense vector
  * @param order  the fill-reducing ordering of the matrix to compute
  * #param tol  the tolerance for pivoting. If `tol` is 1.0, partial pivoting is
- *        used. If `tol` is less than 1.0, diagonal pivoting is used. 
+ *        used. If `tol` is less than 1.0, diagonal pivoting is used.
  *
  * @return x  the solution vector
  */

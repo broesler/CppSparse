@@ -1001,15 +1001,6 @@ public:
     //--------------------------------------------------------------------------
     //        Triangular Matrix Solutions
     //--------------------------------------------------------------------------
-    friend void spsolve(
-        const CSCMatrix& A,
-        const CSCMatrix& B,
-        csint k,
-        SparseSolution& sol,
-        std::span<const csint> p_inv,
-        bool lower
-    );
-
     friend void dfs(
         const CSCMatrix& A,
         csint j,

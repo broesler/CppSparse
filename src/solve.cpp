@@ -639,7 +639,7 @@ void spsolve(
 {
     auto& [xi, x] = sol;
 
-    if (std::ssize(x) < A.M_) {
+    if (std::ssize(x) < A.shape()[0]) {
         throw std::runtime_error("SparseSolution x vector not allocated!");
     }
 
@@ -651,18 +651,27 @@ void spsolve(
     B.scatter(k, x);  // scatter B(:, k) into x
 
     // Solve Lx = b_k or Ux = b_k
-    for (auto& j : xi) {  // x(j) is nonzero
+    for (auto j : xi) {  // x(j) is nonzero
         // j maps to col J of G
         auto J = p_inv.empty() ? j : p_inv[j];
+
         if (J < 0) {
             continue;  // x(j) is not in the pattern of G
         }
+
         auto& xj = x[j];                             // cache reference to value
-        xj /= A.v_[lower ? A.p_[J] : A.p_[J+1] - 1];   // x(j) /= G(j, j)
-        auto p = lower ? A.p_[J] + 1 : A.p_[J];        // lower: L(j,j) 1st entry
-        auto q = lower ? A.p_[J+1]   : A.p_[J+1] - 1;  // up: U(j,j) last entry
-        for (; p < q; ++p) {
-            x[A.i_[p]] -= A.v_[p] * xj;                // x[i] -= G(i, j) * x[j]
+
+        // If lower, L(j,j) is 1st entry, otherwise, U(j,j) is last entry
+        xj /= lower ? A.col_values(J).front() : A.col_values(J).back();
+
+        // Update the off-diagonal entries
+        const auto len = A.col_length(J);
+        auto col_view = A.column(J)
+            | std::views::drop(lower ? 1 : 0)
+            | std::views::take(lower ? len : len - 1);
+
+        for (auto [i, v] : col_view) {
+            x[i] -= v * xj;  // x[i] -= G(i, j) * x[j]
         }
     }
 }

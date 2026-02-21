@@ -116,11 +116,11 @@ void CSCMatrix::realloc(csint nzmax)
     auto Z = (nzmax <= 0) ? p_[N_] : nzmax;
 
     try {
-    p_.resize(N_ + 1);  // always contains N_ columns + nz
-    i_.resize(Z);
-    if (!v_.empty()) {
-        v_.resize(Z);
-    }
+        p_.resize(N_ + 1);  // always contains N_ columns + nz
+        i_.resize(Z);
+        if (!v_.empty()) {
+            v_.resize(Z);
+        }
     } catch (const std::bad_alloc& e) {
         std::println(std::cerr, "Error: {}", e.what());
         std::println(std::cerr, "Failed to allocate memory for CSCMatrix.");

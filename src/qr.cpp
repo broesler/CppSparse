@@ -450,10 +450,9 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
         }
 
         // for each i in pattern of R[:, k] (R(i, k) is non-zero)
-        for (csint p = R.p_[k]; p < R.p_[k+1] - 1; ++p) {
-            auto i = R.i_[p];             // R(i, k)
+        for (auto [i, v] : R.column(k) | std::views::take(R.col_length(k) - 1)) {
             happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
-            R.v_[p] = x[i];                // R(i, k) = x(i)
+            v = x[i];                  // R(i, k) = x(i)
             x[i] = 0;
         }
 
@@ -464,8 +463,7 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
         }
 
         // [v, beta, s] = house(x) == house(V[:, k])
-        auto V_k = std::span(V.v_).subspan(V.p_[k], V.col_length(k));
-        auto h = house(V_k);
+        auto h = house(V.col_values(k));
         std::ranges::copy(h.v, V.v_.begin() + V.p_[k]);
         beta[k] = h.beta;
         R.v_[R.p_[k+1] - 1] = h.s;  // R(k, k) = -sign(x[0]) * norm(x)

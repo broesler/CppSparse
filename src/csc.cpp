@@ -1391,9 +1391,7 @@ CSCMatrix operator-(const CSCMatrix& A, const CSCMatrix& B) { return A.subtract(
 
 CSCMatrix operator-(const CSCMatrix& A) {
     auto C = A;
-    for (auto& val : C.v_) {
-        val = -val;
-    }
+    std::ranges::transform(C.v_, C.v_.begin(), std::negate<>{});
     return C;
 }
 

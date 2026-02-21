@@ -141,9 +141,7 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
     U.p_[N] = unz;
 
     // permute row indices of L for final p_inv
-    for (csint p = 0; p < lnz; ++p) {
-        L.i_[p] = p_inv[L.i_[p]];
-    }
+    L.permute_rows_inplace(p_inv);
 
     L.realloc();  // trim excess storage
     U.realloc();
@@ -394,9 +392,7 @@ LUResult lu(
     }
 
     // permute row indices of L for final p_inv
-    for (csint p = 0; p < lnz; ++p) {
-        L.i_[p] = p_inv[L.i_[p]];
-    }
+    L.permute_rows_inplace(p_inv);
 
     L.realloc();  // trim excess storage
     U.realloc();
@@ -424,9 +420,7 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     // The indices of L have already been permuted to the p_inv ordering by
     // the previous call to cs::lu(), so un-permute them here.
     const auto R_p = inv_permute(R.p_inv);
-    for (csint p = 0; p < L.nnz(); ++p) {
-        L.i_[p] = R_p[L.i_[p]];
-    }
+    L.permute_rows_inplace(R_p);
 
     SparseSolution sol(M);  // workspace for triangular solves
 
@@ -460,9 +454,7 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     }
 
     // Permute the row indices of L back to the original
-    for (csint p = 0; p < lnz; ++p) {
-        L.i_[p] = p_inv[L.i_[p]];
-    }
+    L.permute_rows_inplace(p_inv);
 
     return {.L = L, .U = U, .p_inv = p_inv, .q = S.q};
 }
@@ -685,11 +677,8 @@ LUResult ilutp(
     // --- Finalize L and U ---------------------------------------------------
     L.p_[N] = lnz;
     U.p_[N] = unz;
-    // permute row indices of L for final p_inv
-    for (csint p = 0; p < lnz; ++p) {
-        L.i_[p] = p_inv[L.i_[p]];
-    }
-    L.realloc();  // trim excess storage
+    L.permute_rows_inplace(p_inv);  // permute row indices of L for final p_inv
+    L.realloc();                    // trim excess storage
     U.realloc();
 
     return {.L = L, .U = U, .p_inv = p_inv, .q = S.q};

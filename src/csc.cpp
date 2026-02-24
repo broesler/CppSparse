@@ -201,28 +201,21 @@ csint CSCMatrix::is_triangular() const
 
 bool CSCMatrix::_test_sorted() const
 {
-    for (auto j : column_range()) {
-        // Check that the column is sorted
-        for (csint p = p_[j]; p < p_[j+1] - 1; ++p) {
-            if (i_[p] > i_[p+1]) {
-                return false;
-            }
-        }
-    }
-
-    return true;
+    return std::ranges::all_of(
+        column_range(),
+        [this](csint j) { return std::ranges::is_sorted(row_indices(j)); }
+    );
 }
 
 
 std::pair<bool, csint> CSCMatrix::binary_search_(csint i, csint j) const
 {
     // Binary search for t <= i
-    auto start = i_.cbegin() + p_[j];
-    auto end = i_.cbegin() + p_[j+1];
-    auto t = std::lower_bound(start, end, i);
+    auto idx = row_indices(j);
+    auto t = std::ranges::lower_bound(idx, i);
     // Check that we actually found the index t == i
-    auto found = (t != end && *t == i);
-    auto k = std::distance(i_.cbegin(), t);
+    auto found = (t != idx.end() && *t == i);
+    csint k = p_[j] + std::distance(idx.begin(), t);
     return {found, k};
 }
 
@@ -246,7 +239,7 @@ CSCMatrix::GetItemResult CSCMatrix::get_item_(csint i, csint j) const
                 v = v_[k];
             } else {
                 // Sum duplicate entries, k points to the first entry
-                csint i_size = std::ssize(i_);;
+                csint i_size = std::ssize(i_);
                 for (csint p = k; p < i_size && i_[p] == i; ++p) {
                     v += v_[p];
                 }
@@ -515,18 +508,22 @@ CSCMatrix& CSCMatrix::qsort()
         idx.resize(len);
 
         // Copy the row indices and values into the workspace
-        std::ranges::copy(i_ | std::views::drop(p) | std::views::take(len), w.begin());
-        std::ranges::copy(v_ | std::views::drop(p) | std::views::take(len), x.begin());
-        std::ranges::iota(idx, 0);
+        std::ranges::copy(row_indices(j), w.begin());
+        std::ranges::copy(col_values(j), x.begin());
 
         // argsort the rows to get indices
+        std::ranges::iota(idx, 0);
         std::ranges::sort(idx, [&w](csint i, csint j) { return w[i] < w[j]; });
 
-        // Re-assign the values
-        for (csint i = 0; i < len; ++i) {
-            i_[p + i] = w[idx[i]];
-            v_[p + i] = x[idx[i]];
-        }
+        // Re-assign the sorted values
+        std::ranges::copy(
+            idx | std::views::transform([&w](csint k) { return w[k]; }),
+            i_.begin() + p
+        );
+        std::ranges::copy(
+            idx | std::views::transform([&x](csint k) { return x[k]; }),
+            v_.begin() + p
+        );
     }
 
     has_sorted_indices_ = true;

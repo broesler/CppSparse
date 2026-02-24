@@ -7,7 +7,7 @@
  *
  *============================================================================*/
 
-#include <algorithm>      // max_element
+#include <algorithm>      // max
 #include <cassert>
 #include <iostream>
 #include <fstream>
@@ -47,7 +47,7 @@ COOMatrix::COOMatrix(
             M_ = 0;  // no rows
         } else {
             // Infer from the given indices
-            M_ = *std::max_element(i_.cbegin(), i_.cend()) + 1;
+            M_ = std::ranges::max(i_) + 1;
         }
     }
 
@@ -58,7 +58,7 @@ COOMatrix::COOMatrix(
             N_ = 0;  // no columns
         } else {
             // Infer from the given indices
-            N_ = *std::max_element(j_.cbegin(), j_.cend()) + 1;
+            N_ = std::ranges::max(j_) + 1;
         }
     }
 
@@ -89,7 +89,7 @@ COOMatrix::COOMatrix(
     // Check for any i or j out of bounds
     if (shape[0] && !i_.empty()) {  // shape was given as input, not inferred
         assert(M_ == shape[0]);
-        auto max_i = *std::max_element(i_.cbegin(), i_.cend());
+        auto max_i = std::ranges::max(i_);
         if (max_i >= M_) {
             throw std::runtime_error(
                 std::format("Row index out of bounds: {} >= {}", max_i, M_)
@@ -99,7 +99,7 @@ COOMatrix::COOMatrix(
 
     if (shape[1] && !j_.empty()) {  // shape was given as input, not inferred
         assert(N_ == shape[1]);
-        auto max_j = *std::max_element(j_.cbegin(), j_.cend());
+        auto max_j = std::ranges::max(j_);
         if (max_j >= N_) {
             throw std::runtime_error(
                 std::format("Column index out of bounds: {} >= {}", max_j, N_)

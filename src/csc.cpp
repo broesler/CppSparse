@@ -460,8 +460,9 @@ CSCMatrix CSCMatrix::transpose(bool values) const
     CSCMatrix C{{N_, M_}, nnz(), values};  // output
 
     // Compute number of elements in each row
-    for (csint p = 0; p < nnz(); ++p)
-        w[i_[p]]++;
+    for (auto i : i_) {
+        w[i]++;
+    }
 
     // Row pointers are the cumulative sum of the counts, starting with 0.
     std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
@@ -550,8 +551,9 @@ CSCMatrix& CSCMatrix::sort()
     CSCMatrix C{{N_, M_}, nnz(), values};  // intermediate transpose
 
     // Compute number of elements in each row
-    for (csint p = 0; p < nnz(); ++p)
-        w[i_[p]]++;
+    for (auto i : i_) {
+        w[i]++;
+    }
 
     // Row pointers are the cumulative sum of the counts, starting with 0.
     std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
@@ -1125,10 +1127,10 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
         x.resize(M);
     }
 
-    csint nz = 0;  // track total number of non-zeros in C
+    csint nz = 0;    // track total number of non-zeros in C
     bool fs = true;  // Exercise 2.19 -- first call to scatter
 
-    for (csint j = 0; j < N; ++j) {
+    for (auto j : B.column_range()) {
         if (nz + M > C.nzmax()) {
             C.realloc(2 * C.nzmax() + M);  // double the size of C
         }
@@ -1177,8 +1179,8 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
             // Scatter, but without x or C
             for (auto i : row_indices(Bi)) {
                 if (w[i] < mark) {
-                    w[i] = mark;     // i is new entry in column k
-                    ++nz_C;         // count non-zeros in C, but don't compute
+                    w[i] = mark;  // i is new entry in column k
+                    ++nz_C;       // count non-zeros in C, but don't compute
                 }
             }
         }
@@ -1247,15 +1249,14 @@ double CSCMatrix::vecdot(const CSCMatrix& y) const
         std::vector<double> w(M_);  // workspace
 
         // Expand this vector
-        for (csint p = 0; p < nnz(); ++p) {
-            w[i_[p]] = v_[p];
+        for (auto [i, v] : std::views::zip(i_, v_)) {
+            w[i] = v;
         }
 
         // Multiply by non-zero entries in y and sum
-        for (csint q = 0; q < y.nnz(); ++q) {
-            auto i = y.i_[q];
+        for (auto [i, v] : std::views::zip(y.i_, y.v_)) {
             if (w[i] != 0) {
-                z += w[i] * y.v_[q];
+                z += w[i] * v;
             }
         }
     }
@@ -1576,8 +1577,7 @@ CSCMatrix CSCMatrix::permute_transpose(
     CSCMatrix C{{N_, M_}, nnz(), values};  // output
 
     // Compute number of elements in each permuted row (aka column of C)
-    for (csint p = 0; p < nnz(); ++p) {
-        auto i = i_[p];
+    for (auto i : i_) {
         auto idx = p_inv.empty() ? i : p_inv[i];
         w[idx]++;
     }
@@ -1809,11 +1809,11 @@ CSCMatrix CSCMatrix::index(
 
     csint nz = 0;
 
-    for (csint j = 0; j < N; ++j) {
+    for (auto j : C.column_range()) {
         C.p_[j] = nz;  // column j of C starts here
 
         // Iterate over `rows` and find the corresponding indices in `i_`.
-        for (csint k = 0; k < M; ++k) {
+        for (auto k : C.row_range()) {
             auto val = (*this)(rows[k], cols[j]);
             if (val != 0) {
                 C.i_[nz] = k;

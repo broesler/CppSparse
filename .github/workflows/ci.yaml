@@ -26,6 +26,22 @@ jobs:
         with:
           submodules: 'recursive'
 
+      - name: Install Compiler (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-14
+          echo "CC=gcc-14" >> $GITHUB_ENV
+          echo "CXX=g++-14" >> $GITHUB_ENV
+
+      - name: Install Compiler (MacOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install llvm@21
+          echo "CC=/opt/homebrew/opt/llvm@21/bin/clang" >> $GITHUB_ENV
+          echo "CXX=/opt/homebrew/opt/llvm@21/bin/clang++" >> $GITHUB_ENV
+          echo "LDFLAGS=-L/opt/homebrew/opt/llvm@21/lib" >> $GITHUB_ENV
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

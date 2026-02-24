@@ -10,19 +10,20 @@
 BUILD_TYPE ?= Release
 BUILD_DIR := build/$(BUILD_TYPE)
 
-CXX ?= clang++
-JOBS = 8
-
-CMAKE_FLAGS ?=
-
-ifdef CONDA_PREFIX
-	CMAKE_FLAGS += -DCMAKE_PREFIX_PATH=$(CONDA_PREFIX)
+BREW_LLVM := $(shell brew --prefix llvm 2>/dev/null)
+ifneq ($(BREW_LLVM),)
+	CXX := $(BREW_LLVM)/bin/clang++
+else
+	CXX ?= clang++
 endif
+
+$(info >>> Using CXX = $(CXX))
+
+JOBS = 8
 
 CMAKE_CONFIG_ARGS := -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) \
 					 -DCMAKE_CXX_COMPILER=$(CXX) \
-					 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-					 $(CMAKE_FLAGS)
+					 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
 CMAKE_BUILD_ARGS := --build $(BUILD_DIR) --config $(BUILD_TYPE) -j${JOBS}
 

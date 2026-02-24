@@ -116,6 +116,14 @@ pybind11_add_module(csparse ${PYBIND11_SRC})
 target_include_directories(csparse PRIVATE include demo)
 target_link_libraries(csparse PRIVATE csparse_lib)
 
+if (APPLE)
+    get_filename_component(CXX_BIN_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)
+    target_link_options(csparse PRIVATE
+        -L${CXX_BIN_DIR}/../lib/c++
+        -Wl,-rpath,${CXX_BIN_DIR}/../lib/c++
+    )
+endif()
+
 # Build the Python module in the build directory
 set_target_properties(
     csparse

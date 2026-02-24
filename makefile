@@ -22,9 +22,9 @@ $(info >>> Using CXX = $(CXX))
 JOBS = 8
 
 CMAKE_CONFIG_ARGS := -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) \
-					 -DCMAKE_CXX_COMPILER=$(CXX) \
-					 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-					 -DCMAKE_PREFIX_PATH=$(shell python -m pybind11 --cmakedir)
+	-DCMAKE_CXX_COMPILER=$(CXX) \
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+	-DCMAKE_PREFIX_PATH=$(shell python -m pybind11 --cmakedir)
 
 CMAKE_BUILD_ARGS := --build $(BUILD_DIR) --config $(BUILD_TYPE) -j${JOBS}
 

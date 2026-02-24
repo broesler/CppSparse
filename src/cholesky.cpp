@@ -55,16 +55,49 @@ std::vector<csint> etree(const CSCMatrix& A, bool ata)
 
 
 // Exercise 4.6
-// TODO this algorithm is O(N * avg height), but needs to be O(N)
 csint etree_height(std::span<const csint> parent)
 {
+    // O(N * avg_height) algorithm: tranverses up to the root from each node
+    // csint height = 0;
+    // for (csint i = 0; i < std::ssize(parent); ++i) {
+    //     csint h = 0;
+    //     for (csint p = i; p != -1; p = parent[p]) {
+    //         ++h;
+    //     }
+    //     height = std::max(height, h);
+    // }
+
+    // O(N) algorithm: cache the height of each node as we compute it
+    const csint N = std::ssize(parent);
+    constexpr csint root = -1;
+    constexpr csint not_computed = -1;
+
+    std::vector<csint> cache(N, not_computed);
+    std::vector<csint> path;  // workspace for path from node to root
+    path.reserve(N);
+
     csint height = 0;
-    for (csint i = 0; i < std::ssize(parent); ++i) {
-        csint h = 0;
-        for (csint p = i; p != -1; p = parent[p]) {
-            ++h;
+
+    for (csint i = 0; i < N; i++) {
+        if (cache[i] != not_computed) {
+            continue;  // already computed height of node i
         }
-        height = std::max(height, h);
+
+        // Traverse up to the root, caching the path
+        path.clear();
+        csint p = i;
+        while (p != root && cache[p] == not_computed) {
+            path.push_back(p);
+            p = parent[p];
+        }
+
+        csint h = (p == root) ? 0 : cache[p];  // height of root is 0
+        for (auto node : path | std::views::reverse) {
+            cache[node] = ++h;  // height of node is height of parent + 1
+        }
+
+        // Update the height
+        height = std::max(height, cache[i]);
     }
 
     return height;

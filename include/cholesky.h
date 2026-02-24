@@ -253,7 +253,7 @@ LCAStatus least_common_ancestor(
 std::vector<csint> etree(const CSCMatrix& A, bool ata=false);
 
 
-/** Compute the height of the elimination tree.
+/** Compute the height of the elimination tree in O(N) time.
  *
  * The height is defined as the length of the longest path from the root to any
  * leaf of the tree.

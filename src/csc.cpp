@@ -1126,7 +1126,6 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
     }
 
     csint nz = 0;  // track total number of non-zeros in C
-
     bool fs = true;  // Exercise 2.19 -- first call to scatter
 
     for (csint j = 0; j < N; ++j) {
@@ -1134,25 +1133,21 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
             C.realloc(2 * C.nzmax() + M);  // double the size of C
         }
 
-        C.p_[j] = nz;  // column j of C starts here
-
         // Compute x = A @ B[:, j]
         for (auto [Bi, Bv] : B.column(j)) {
-            // Compute x += A[:, B.i_[p]] * B.v_[p]
+            // Compute x += A[:, Bi] * Bv
             nz = scatter(Bi, values ? Bv : 1, w, x, j+1, C, nz, fs);
             fs = false;
         }
 
-        // Gather values into the correct locations in C
+        C.p_[j+1] = nz;  // column j of C end here
+
         if (values) {
-            for (csint p = C.p_[j]; p < nz; ++p) {
-                C.v_[p] = x[C.i_[p]];
-            }
+            C.gather_(x, j);  // gather values into the correct locations in C
         }
     }
 
-    // Finalize and deallocate unused memory
-    C.p_[N] = nz;
+    // Deallocate unused memory
     C.realloc();
 
     return C;
@@ -1200,23 +1195,17 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
     bool fs = true;  // first call to scatter
 
     for (auto j : B.column_range()) {
-        C.p_[j] = nz;  // column j of C starts here
-
         // Compute x = A @ B[:, j]
         for (auto [Bi, Bv] : B.column(j)) {
             // Compute x += A[:, B.i_[p]] * B.v_[p]
             nz = scatter(Bi, Bv, w, x, j+1, C, nz, fs);
             fs = false;
         }
-
-        // Gather values into the correct locations in C
-        for (csint p = C.p_[j]; p < nz; ++p) {
-            C.v_[p] = x[C.i_[p]];
-        }
+        C.p_[j+1] = nz;   // column j of C ends here
+        C.gather_(x, j);  // gather values into the correct locations in C
     }
 
-    // Finalize and deallocate unused memory
-    C.p_[N] = nz;
+    // Deallocate unused memory
     C.realloc();
 
     return C;
@@ -1308,23 +1297,18 @@ CSCMatrix add_scaled(
     bool fs = true;  // Exercise 2.19 -- first call to scatter
 
     for (auto j : A.column_range()) {
-        C.p_[j] = nz;  // column j of C starts here
         nz = A.scatter(j, alpha, w, x, j+1, C, nz, fs);  // alpha * A(:, j)
         fs = false;
         nz = B.scatter(j,  beta, w, x, j+1, C, nz, fs);  //  beta * B(:, j)
 
-        // Gather results into the correct column of C
-        // TODO write C.gather(j, x, nz) as member function?
-        // nz == C.i_.size() - C.p_[j]
+        C.p_[j+1] = nz;  // column j of C ends here
+
         if (values) {
-            for (csint p = C.p_[j]; p < nz; ++p) {
-                C.v_[p] = x[C.i_[p]];
-            }
+            C.gather_(x, j);  // gather results into the correct column of C
         }
     }
 
-    // Finalize and deallocate unused memory
-    C.p_[N] = nz;
+    // Deallocate unused memory
     C.realloc();
 
     return C;
@@ -1452,6 +1436,30 @@ void CSCMatrix::scatter(csint k, std::span<double> x) const
 
     for (auto [i, v] : column(k)) {
         x[i] += v;  // accumulate duplicate entries
+    }
+}
+
+
+void CSCMatrix::gather_(std::span<const double> x, csint k)
+{
+    if (std::ssize(x) != M_) {
+        throw std::invalid_argument(
+            std::format(
+                "Input vector size must match number of matrix rows."
+                "Got {} and {}.",
+                x.size(), M_
+            )
+        );
+    }
+    
+    if (k < 0 || k >= N_) {
+        throw std::out_of_range(
+            std::format("Column index k = {} is out of range [0, {}).", k, N_)
+        );
+    }
+
+    for (auto [i, v] : column(k)) {
+        v = x[i];  // gather values from x into column k of C
     }
 }
 

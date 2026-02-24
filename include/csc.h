@@ -1203,6 +1203,12 @@ private:
      */
     void transpose_elems_(CSCMatrix& C, std::span<csint> w, bool values) const;
 
+    /** Gather values from a dense span into a column of the matrix.
+     *
+     * @param x  the dense vector from which to gather values. Must be length M.
+     * @param j  the column index into which to gather.
+     */
+    void gather_(std::span<const double> x, csint j);
 
 };  // class CSCMatrix
 

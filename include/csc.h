@@ -1188,10 +1188,8 @@ private:
      * @param i, j  the row and column indices of the element to access.
      * @param v  the value to be assigned.
      * @param p  the pointer to the column in the matrix.
-     *
-     * @return a reference to the inserted value.
      */
-    double& insert_(csint i, csint j, double v, csint p);
+    void insert_(csint i, csint j, double v, csint p);
 
     /** Helper function to actually transpose the values.
      *

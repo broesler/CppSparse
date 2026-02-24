@@ -391,7 +391,7 @@ CSCMatrix& CSCMatrix::assign(
 }
 
 
-double& CSCMatrix::insert_(csint i, csint j, double v, csint p)
+void CSCMatrix::insert_(csint i, csint j, double v, csint p)
 {
     i_.insert(i_.begin() + p, i);
     v_.insert(v_.begin() + p, v);
@@ -400,8 +400,6 @@ double& CSCMatrix::insert_(csint i, csint j, double v, csint p)
     for (csint k = j + 1; k < std::ssize(p_); ++k) {
         p_[k]++;
     }
-
-    return v_[p];
 }
 
 

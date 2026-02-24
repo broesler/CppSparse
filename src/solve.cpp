@@ -8,7 +8,6 @@
  *============================================================================*/
 
 #include <algorithm>   // fill
-#include <cassert>
 #include <format>
 #include <ranges>      // views::reverse
 #include <span>

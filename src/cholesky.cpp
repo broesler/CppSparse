@@ -58,8 +58,6 @@ std::vector<csint> etree(const CSCMatrix& A, bool ata)
 // TODO this algorithm is O(N * avg height), but needs to be O(N)
 csint etree_height(std::span<const csint> parent)
 {
-    assert(!parent.empty());
-
     csint height = 0;
     for (csint i = 0; i < std::ssize(parent); ++i) {
         csint h = 0;
@@ -720,10 +718,15 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 {
     // Ensure L has been allocated via symbolic_cholesky
-    assert(!L.p_.empty());
-    assert(!L.i_.empty());
-    assert(!L.v_.empty());
-    assert(L.has_sorted_indices_);
+    if (L.p_.empty() || L.i_.empty() || L.v_.empty()) {
+        throw std::invalid_argument(
+            "L must be allocated via symbolic_cholesky before calling rechol."
+        );
+    }
+
+    if (!L.has_sorted_indices_) {
+        throw std::invalid_argument("L must have sorted row indices for rechol.");
+    }
 
     auto N = A.shape()[1];
 

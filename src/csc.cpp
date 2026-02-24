@@ -441,6 +441,19 @@ std::vector<double> CSCMatrix::to_dense_vector(DenseOrder order) const
 }
 
 
+void CSCMatrix::transpose_elems_(CSCMatrix& C, std::span<csint> w, bool values) const
+{
+    for (auto [i, j, v] : elems()) {
+        // place this(i, j) as C(j, i)
+        csint q = w[i]++;
+        C.i_[q] = j;
+        if (values) {
+            C.v_[q] = v;
+        }
+    }
+}
+
+
 CSCMatrix CSCMatrix::transpose(bool values) const
 {
     std::vector<csint> w(M_);   // workspace
@@ -454,14 +467,8 @@ CSCMatrix CSCMatrix::transpose(bool values) const
     std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
-    for (auto [i, j, v] : elems()) {
-        // place A(i, j) as C(j, i)
-        auto q = w[i]++;
-        C.i_[q] = j;
-        if (values) {
-            C.v_[q] = v;
-        }
-    }
+    // Place the elements into the transposed matrix
+    transpose_elems_(C, w, values);
 
     return C;
 }
@@ -550,29 +557,15 @@ CSCMatrix& CSCMatrix::sort()
     std::partial_sum(w.cbegin(), w.cend(), C.p_.begin() + 1);
     w = C.p_;  // copy back into workspace
 
-    for (auto [i, j, v] : elems()) {
-        // place A(i, j) as C(j, i)
-        auto q = w[i]++;
-        C.i_[q] = j;
-        if (values) {
-            C.v_[q] = v;
-        }
-    }
+    // A(i, j) -> C(j, i)
+    transpose_elems_(C, w, values);
 
     // ----- second transpose
     // Copy column counts to avoid repeat work
     w = p_;
 
-    for (auto j : C.column_range()) {
-        for (auto [Ci, Cv] : C.column(j)) {
-            // place C(i, j) as A(j, i)
-            auto q = w[Ci]++;
-            i_[q] = j;
-            if (values) {
-                v_[q] = Cv;
-            }
-        }
-    }
+    // C(i, j) -> A(j, i)
+    C.transpose_elems_(*this, w, values);
 
     has_sorted_indices_ = true;
 

@@ -1193,6 +1193,16 @@ private:
      */
     double& insert_(csint i, csint j, double v, csint p);
 
+    /** Helper function to actually transpose the values.
+     *
+     * @param C[in,out]  reference to the matrix into which values will be placed
+     * @param w[in,out]  workspace containing row counts of calling object
+     * @param values     if true, copy values from the original matrix,
+     *       otherwise, only the structure is copied.
+     *
+     */
+    void transpose_elems_(CSCMatrix& C, std::span<csint> w, bool values) const;
+
 
 };  // class CSCMatrix
 

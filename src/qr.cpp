@@ -43,7 +43,7 @@ Householder house(std::span<const double> x)
         beta = 0;  // LAPACK DLARFG: H is just the identity
         v[0] = 1;
         //---------- Davis book code (cs_house)
-        // s = std::fabs(v[0]);         // s = |x(0)|
+        // s = std::abs(v[0]);         // s = |x(0)|
         // beta = (v[0] <= 0) ? 2 : 0;  // make direction positive if x(0) < 0
         // v[0] = 1;
     } else {

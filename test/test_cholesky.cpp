@@ -515,7 +515,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
 
                 // Only true for absolute drop tolerance
                 // for (const auto& x : L.data()) {
-                //     CHECK(std::fabs(x) > drop_tol);
+                //     CHECK(std::abs(x) > drop_tol);
                 // }
 
                 // Test the norm just on the pattern of A

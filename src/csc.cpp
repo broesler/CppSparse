@@ -8,7 +8,7 @@
  *============================================================================*/
 
 #include <algorithm>   // lower_bound
-#include <cmath>       // fabs
+#include <cmath>       // abs
 #include <format>
 #include <numeric>     // partial_sum, iota
 #include <stdexcept>
@@ -652,7 +652,7 @@ CSCMatrix& CSCMatrix::droptol(double tol)
 {
     return fkeep(
         [tol] ([[maybe_unused]] csint i, [[maybe_unused]] csint j, double Aij) {
-            return std::fabs(Aij) > tol; 
+            return std::abs(Aij) > tol; 
         }
     );
 }

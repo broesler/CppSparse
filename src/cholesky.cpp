@@ -1074,7 +1074,7 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
         auto d = x[k];  // d = C(k, k)
         x[k] = 0.0;       // clear x for k + 1st iteration
 
-        auto abs_diag = std::fabs(d);  // store diagonal for drop_tol check
+        auto abs_diag = std::abs(d);  // store diagonal for drop_tol check
 
         //--- Triangular Solve -------------------------------------------------
         // Solve L(0:k-1, 0:k-1) * x = C(0:k-1, k) == L[:k, :k] * x = C[:k, k]

@@ -147,7 +147,7 @@ void SparseMatrix::format_dense_to(
             csint idx = (order == DenseOrder::ColMajor) ? (i + j*M) : (i*N + j);
             auto val = A[idx];
 
-            if (val == 0.0 || (suppress && std::fabs(val) < suppress_tol)) {
+            if (val == 0.0 || (suppress && std::abs(val) < suppress_tol)) {
                 // Print zero with the same width for alignment
                 std::format_to(std::back_inserter(out), "{:>{}}", "0", w);
             } else {

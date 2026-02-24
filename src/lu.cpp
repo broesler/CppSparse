@@ -7,7 +7,7 @@
  *
  *============================================================================*/
 
-#include <cmath>    // fabs
+#include <cmath>    // abs
 #include <numeric>  // iota
 #include <ranges>   // views::reverse
 #include <span>
@@ -100,7 +100,7 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
         double a = -1;
         for (const auto& i : sol.xi) {
             if (p_inv[i] < 0) {  // row i is not yet pivotal
-                auto t = std::fabs(sol.x[i]);
+                auto t = std::abs(sol.x[i]);
                 if (t > a) {
                     a = t;  // largest pivot candidate so far
                     ipiv = i;
@@ -116,7 +116,7 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
         }
 
         // tol = 1 for partial pivoting; tol < 1 gives preference to diagonal
-        if (p_inv[col] < 0 && std::fabs(sol.x[col]) >= a * tol) {
+        if (p_inv[col] < 0 && std::abs(sol.x[col]) >= a * tol) {
             ipiv = col;
         }
 
@@ -295,7 +295,7 @@ LUResult lu(
         double a = -1;
         for (const auto& i : sol.xi) {
             if (p_inv[i] < 0) {  // row i is not yet pivotal
-                auto t = std::fabs(sol.x[i]);
+                auto t = std::abs(sol.x[i]);
                 if (t > a) {
                     a = t;  // largest pivot candidate so far
                     ipiv = i;
@@ -320,7 +320,7 @@ LUResult lu(
         }
 
         // tol = 1 for partial pivoting; tol < 1 gives preference to diagonal
-        if (p_inv[col] < 0 && std::fabs(sol.x[col]) >= a * tol) {
+        if (p_inv[col] < 0 && std::abs(sol.x[col]) >= a * tol) {
             ipiv = col;
         }
 
@@ -337,7 +337,7 @@ LUResult lu(
             pivot = sol.x[ipiv];  // the chosen pivot
 
             // Exercise 6.3: column pivoting
-            if ((std::fabs(pivot) < col_tol) && k < N - K) {
+            if ((std::abs(pivot) < col_tol) && k < N - K) {
                 // pivot column to the end of the matrix, preserving the order
                 auto v = std::move(q[k]);
                 q.erase(q.begin() + k);
@@ -520,7 +520,7 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
 
             auto a = A(k, j) - lu_dot;
 
-            if (std::fabs(a) > 0) {
+            if (std::abs(a) > 0) {
                 UT.i_[unz] = j;
                 UT.v_[unz++] = a;
             }
@@ -548,7 +548,7 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
                 throw std::runtime_error("Matrix is singular!");
             }
 
-            if (std::fabs(a) > 0) {
+            if (std::abs(a) > 0) {
                 L.i_[lnz] = i;
                 L.v_[lnz++] = a / pivot;
             }
@@ -624,7 +624,7 @@ LUResult ilutp(
         double a = -1;
         for (const auto& i : sol.xi) {
             if (p_inv[i] < 0) {  // row i is not yet pivotal
-                auto t = std::fabs(sol.x[i]);
+                auto t = std::abs(sol.x[i]);
                 if (t > a) {
                     a = t;  // largest pivot candidate so far
                     ipiv = i;
@@ -638,7 +638,7 @@ LUResult ilutp(
                 // the p_inv[ipiv] = k assignment, which needs to be done before
                 // the L update loop, but after the U update loop.
                 auto x = sol.x[i];
-                if (std::fabs(x) > drop_tol) {
+                if (std::abs(x) > drop_tol) {
                     U.i_[unz] = p_inv[i];
                     U.v_[unz++] = x;
                 }
@@ -650,7 +650,7 @@ LUResult ilutp(
         }
 
         // tol = 1 for partial pivoting; tol < 1 gives preference to diagonal
-        if (p_inv[col] < 0 && std::fabs(sol.x[col]) >= a * tol) {
+        if (p_inv[col] < 0 && std::abs(sol.x[col]) >= a * tol) {
             ipiv = col;
         }
 
@@ -666,7 +666,7 @@ LUResult ilutp(
         for (const auto& i : sol.xi) {          // L(k+1:n, k) = x / pivot
             if (p_inv[i] < 0) {                 // x(i) is an entry in L[:, k]
                 auto x = sol.x[i] / pivot;
-                if (std::fabs(x) > drop_tol) {  // ensure entry is large enough
+                if (std::abs(x) > drop_tol) {  // ensure entry is large enough
                     L.i_[lnz] = i;              // save unpermuted row in L
                     L.v_[lnz++] = x;            // scale pivot column
                 }

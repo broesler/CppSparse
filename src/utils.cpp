@@ -153,7 +153,7 @@ double norm(std::span<const double> x, double ord)
     constexpr auto inf = std::numeric_limits<double>::infinity();
     constexpr auto eps = std::numeric_limits<double>::epsilon();
 
-    auto abs_view = x | std::views::transform(std::fabs<>);
+    auto abs_view = x | std::views::transform([](auto v) { return std::abs(v); });
 
     if (ord == inf) {
         // infinity norm: max(|x_i|)
@@ -172,7 +172,7 @@ double norm(std::span<const double> x, double ord)
     } else {
         // General p-norm: (∑|x_i|^p)^(1/p)
         auto pow_view = x | std::views::transform(
-            [ord](auto val) { return std::pow(std::fabs(val), ord); }
+            [ord](auto val) { return std::pow(std::abs(val), ord); }
         );
         const auto sum_pow = std::ranges::fold_left(pow_view, 0.0, std::plus<>());
         return std::pow(sum_pow, 1.0 / ord);

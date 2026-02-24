@@ -29,18 +29,26 @@ jobs:
       - name: Install Compiler (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 21
           sudo apt-get update
-          sudo apt-get install -y g++-14
-          echo "CC=gcc-14" >> $GITHUB_ENV
-          echo "CXX=g++-14" >> $GITHUB_ENV
+          sudo apt-get install -y clang-21 libc++-21-dev libc++abi-21-dev
+          echo "CC=clang-21" >> $GITHUB_ENV
+          echo "CXX=clang++-21" >> $GITHUB_ENV
+          which clang++
+          which clang++-21
+          clang++ --version
+          clang++-21 --version
 
       - name: Install Compiler (MacOS)
         if: matrix.os == 'macos-latest'
         run: |
           brew install llvm@21
-          echo "CC=/opt/homebrew/opt/llvm@21/bin/clang" >> $GITHUB_ENV
-          echo "CXX=/opt/homebrew/opt/llvm@21/bin/clang++" >> $GITHUB_ENV
-          echo "LDFLAGS=-L/opt/homebrew/opt/llvm@21/lib" >> $GITHUB_ENV
+          LLVM_PREFIX=$(brew --prefix llvm@21)
+          echo "CC=$(LLVM_PREFIX)/bin/clang" >> $GITHUB_ENV
+          echo "CXX=$(LLVM_PREFIX)/bin/clang++" >> $GITHUB_ENV
+          echo "LDFLAGS=-L$(LLVM_PREFIX)/lib" >> $GITHUB_ENV
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -52,40 +60,17 @@ jobs:
           pip install --upgrade pip
           pip install pybind11
 
-      - name: Check python versions
-        run: |
-          which python
-          python --version
-          which python3
-          python3 --version
-
-      - name: Configure CMake (Linux/MacOS)
-        run: |
-          mkdir -p build
-          cmake -S . -B build \
-            -DCMAKE_PREFIX_PATH="$(python -m pybind11 --cmakedir)"
-
       - name: Build C++ Code
-        run: |
-          cmake --build build -j8 --target test_csparse
+        run: make tests
 
       - name: Run C++ unit tests
-        run: |
-          ./test_csparse
+        run: ./test_csparse
 
       - name: Build and Install Python C++ module
         run: |
-          cmake --build build -j8 --target csparse
-          cmake --install build
-
-      - name: Install Python dependencies and csparse module
-        run: |
+          make python
           pip install -e "${{ github.workspace }}/python[dev]"
           ls -l python/csparse
-
-      - name: List csparse package directory after install
-        run: |
-          ls -l "$(python -c 'import csparse; print(csparse.__path__[0])')"
 
       - name: Run Python unit tests with conditional reruns
         run: ./run_pytest.sh -v
@@ -103,20 +88,6 @@ jobs:
           path: ./test_figures/
           if-no-files-found: error
 
-      - name: Build C++ Demos
+      - name: Build and Run C++ Demos
         run: |
-          cmake --build build -j8 --target demo1 demo2 demo3
-
-      - name: Run C++ Demos
-        run: |
-          ./demo1 './data/t1'
-          ./demo2 './data/t1'
-          ./demo2 './data/ash219'
-          ./demo2 './data/bcsstk01'
-          ./demo2 './data/fs_183_1'
-          ./demo2 './data/mbeacxc'
-          ./demo2 './data/west0067'
-          ./demo2 './data/lp_afiro'
-          ./demo2 './data/bcsstk16'
-          ./demo3 './data/bcsstk01'
-          ./demo3 './data/bcsstk16'
+          make run_demos

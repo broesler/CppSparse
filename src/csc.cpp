@@ -29,7 +29,7 @@ CSCMatrix::CSCMatrix(
     std::span<const double> data,
     std::span<const csint> indices,
     std::span<const csint> indptr,
-    const Shape& shape
+    Shape shape
 ) : v_(data.begin(), data.end()),
     i_(indices.begin(), indices.end()),
     p_(indptr.begin(), indptr.end()),
@@ -38,7 +38,7 @@ CSCMatrix::CSCMatrix(
 {}
 
 
-CSCMatrix::CSCMatrix(const Shape& shape, csint nzmax, bool values)
+CSCMatrix::CSCMatrix(Shape shape, csint nzmax, bool values)
     : i_(nzmax),
       p_(shape[1] + 1),
       M_{shape[0]},
@@ -65,7 +65,7 @@ CSCMatrix::CSCMatrix(const COOMatrix& A) : CSCMatrix(A.compress())
 // Exercise 2.16
 CSCMatrix::CSCMatrix(
     std::span<const double> A,
-    const Shape& shape,
+    Shape shape,
     DenseOrder order
 ) : M_{shape[0]},
     N_{shape[1]}

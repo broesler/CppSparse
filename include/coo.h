@@ -64,7 +64,7 @@ public:
         std::span<const double> vals,
         std::span<const csint> rows,
         std::span<const csint> cols,
-        const Shape& shape=Shape{0, 0}
+        Shape shape=Shape{0, 0}
     );
 
     /** Allocate a COOMatrix for a given shape and number of non-zeros.
@@ -72,7 +72,7 @@ public:
      * @param shape  the dimensions of the matrix
      * @param nzmax  integer capacity of space to reserve for non-zeros
      */
-    explicit COOMatrix(const Shape& shape, csint nzmax=0);
+    explicit COOMatrix(Shape shape, csint nzmax=0);
 
     /** Convert a CSCMatrix to a COOMatrix, like Matlab's `find`.
      *

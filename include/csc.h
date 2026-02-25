@@ -94,7 +94,7 @@ public:
         std::span<const double> data,
         std::span<const csint> indices,
         std::span<const csint> indptr,
-        const Shape& shape
+        Shape shape
     );
 
     /** Allocate a CSCMatrix for a given shape and number of non-zeros.
@@ -103,7 +103,7 @@ public:
      * @param nzmax integer capacity of space to reserve for non-zeros
      * @param values if `true`, allocate space for the values array
      */
-    explicit CSCMatrix(const Shape& shape, csint nzmax=0, bool values=true);
+    explicit CSCMatrix(Shape shape, csint nzmax=0, bool values=true);
 
     /** Convert a coordinate format matrix to a compressed sparse column matrix in
      * canonical format.
@@ -132,7 +132,7 @@ public:
      */
     CSCMatrix(
         std::span<const double> A,
-        const Shape& shape,
+        Shape shape,
         DenseOrder order = DenseOrder::ColMajor
     );
 

@@ -454,13 +454,13 @@ PYBIND11_MODULE(csparse, m)
             const std::vector<double>&,
             const std::vector<cs::csint>&,
             const std::vector<cs::csint>&,
-            const cs::Shape>(),
+            cs::Shape>(),
             py::arg("data"),
             py::arg("row"),
             py::arg("col"),
             py::arg("shape")=cs::Shape{0, 0}
         )
-        .def(py::init<const cs::Shape&, cs::csint>(),
+        .def(py::init<cs::Shape, cs::csint>(),
             py::arg("shape"),
             py::arg("nzmax")=0
         )
@@ -703,13 +703,13 @@ PYBIND11_MODULE(csparse, m)
             const std::vector<double>&,
             const std::vector<cs::csint>&,
             const std::vector<cs::csint>&,
-            const cs::Shape&>(),
+            cs::Shape>(),
             py::arg("data"),
             py::arg("indices"),
             py::arg("indptr"),
             py::arg("shape")
         )
-        .def(py::init<const cs::Shape&, cs::csint, bool>(),
+        .def(py::init<cs::Shape, cs::csint, bool>(),
             py::arg("shape"),
             py::kw_only(),
             py::arg("nzmax")=0,
@@ -718,7 +718,7 @@ PYBIND11_MODULE(csparse, m)
         .def(py::init<const cs::COOMatrix&>())
         .def(py::init<
             const std::vector<double>&,
-            const cs::Shape&,
+            cs::Shape,
             cs::DenseOrder>(),
             py::arg("A"),
             py::arg("shape"),

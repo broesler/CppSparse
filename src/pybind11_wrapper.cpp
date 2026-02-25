@@ -553,9 +553,7 @@ PYBIND11_MODULE(csparse, m)
             )pbdoc"
         )
         .def("toscipy",
-            [](const cs::COOMatrix& self) {
-                return scipy_from_coo(self);
-            },
+            [](const cs::COOMatrix& self) { return scipy_from_coo(self); },
             R"pbdoc(
             Convert the COO matrix to a SciPy sparse matrix.
 
@@ -565,9 +563,7 @@ PYBIND11_MODULE(csparse, m)
                 The equivalent SciPy COO sparse matrix.
             )pbdoc"
         )
-        .def("to_dense_vector",
-            &cs::COOMatrix::to_dense_vector,
-            py::arg("order")="F",
+        .def("to_dense_vector", &cs::COOMatrix::to_dense_vector, py::arg("order")="F",
             R"pbdoc(
             Convert the COO matrix to a dense vector.
 
@@ -575,7 +571,7 @@ PYBIND11_MODULE(csparse, m)
             ----------
             order : {'C', 'F'}, optional
                 The order of the array, either 'C' for row-major or 'F' for
-                column-major order. Default is 'F'.
+                column-major order.
 
             Returns
             -------
@@ -583,7 +579,7 @@ PYBIND11_MODULE(csparse, m)
                 A dense array representation of the matrix.
             )pbdoc"
         )
-        .def("toarray", &sparse_to_ndarray<cs::COOMatrix>, py::arg("order")="C",
+        .def("toarray", &sparse_to_ndarray<cs::COOMatrix>, py::arg("order")="F",
             R"pbdoc(
             Convert the COO matrix to a dense vector.
 
@@ -591,7 +587,7 @@ PYBIND11_MODULE(csparse, m)
             ----------
             order : {'C', 'F'}, optional
                 The order of the array, either 'C' for row-major or 'F' for
-                column-major order. Default is 'F'.
+                column-major order.
 
             Returns
             -------
@@ -716,13 +712,17 @@ PYBIND11_MODULE(csparse, m)
             py::arg("values")=true
         )
         .def(py::init<const cs::COOMatrix&>())
-        .def(py::init<
-            const std::vector<double>&,
-            cs::Shape,
-            cs::DenseOrder>(),
+        .def(py::init(
+            [](const py::array_t<double>& A, cs::Shape shape, cs::DenseOrder order) {
+                // Take 2D array and flatten to 1D
+                const auto buf = A.request();
+                const auto ptr = static_cast<double*>(buf.ptr);
+                std::vector<double> data(ptr, ptr + buf.size);
+                return cs::CSCMatrix{data, shape, order};
+            }),
             py::arg("A"),
             py::arg("shape"),
-            py::arg("order")="F"
+            py::arg("order")="C"
         )
         //
         .def_property_readonly("nnz", &cs::CSCMatrix::nnz)
@@ -890,9 +890,7 @@ PYBIND11_MODULE(csparse, m)
                 A copy of the `CSCMatrix` in COO (triplet) format.
             )pbdoc"
         )
-        .def("to_dense_vector",
-            &cs::CSCMatrix::to_dense_vector,
-            py::arg("order")="F",
+        .def("to_dense_vector", &cs::CSCMatrix::to_dense_vector, py::arg("order")="F",
             R"pbdoc(
             Convert the CSC matrix to a dense vector.
 
@@ -912,9 +910,7 @@ PYBIND11_MODULE(csparse, m)
             toarray : Convert the CSC matrix to a dense array.
             )pbdoc"
         )
-        .def("toarray",
-            &sparse_to_ndarray<cs::CSCMatrix>,
-            py::arg("order")="C",
+        .def("toarray", &sparse_to_ndarray<cs::CSCMatrix>, py::arg("order")="F",
             R"pbdoc(
             Convert the CSC matrix to a dense vector.
 

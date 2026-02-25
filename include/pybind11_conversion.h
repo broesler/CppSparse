@@ -153,7 +153,7 @@ struct type_caster<std::vector<T>>
             try {
                 // Cast to a C-style array
                 auto arr = src.cast<py::array_t<T, py::array::c_style | py::array::forcecast>>();
-                py::buffer_info buf_info = arr.request();
+                auto buf_info = arr.request();
 
                 if (buf_info.ndim != 1) {
                     std::println(std::cerr, "  NumPy array is not 1D.");
@@ -170,10 +170,8 @@ struct type_caster<std::vector<T>>
                 }
 
                 // Assign data directly into the buffer
-                value.assign(
-                    static_cast<T*>(buf_info.ptr),
-                    static_cast<T*>(buf_info.ptr) + buf_info.shape[0]
-                );
+                const auto ptr = static_cast<T*>(buf_info.ptr);
+                value.assign(ptr, ptr + buf_info.shape[0]);
 
                 return true;
 
@@ -249,41 +247,31 @@ inline py::array_t<T> array_to_numpy(const std::array<T, N>& arr)
  * @return a NumPy array with the same data as the matrix
  */
 template <typename T>
-auto sparse_to_ndarray(const T& self, cs::DenseOrder order)
+auto sparse_to_ndarray(const T& self, cs::DenseOrder order = cs::DenseOrder::ColMajor)
 {
     // Get the matrix in dense row-major order
     const auto v = self.to_dense_vector(order);
     const auto [M, N] = self.shape();
 
-    // Create a NumPy array with specified dimensions
-    py::array_t<double> result({M, N});
-
-    // Get a pointer to the underlying data of the NumPy array.
-    auto buffer_info = result.request();
-    const auto ptr = static_cast<double*>(buffer_info.ptr);
-
     // Calculate strides based on order
+    constexpr auto elem_size = sizeof(double);
     std::vector<ssize_t> strides;
-    if (order == cs::DenseOrder::RowMajor) { // C-style (row-major)
-        strides = {
-            static_cast<ssize_t>(N * sizeof(double)),
-            sizeof(double)
-        };
-    } else if (order == cs::DenseOrder::ColMajor) { // Fortran-style (column-major)
-        strides = {
-            sizeof(double),
-            static_cast<ssize_t>(M * sizeof(double))
-        };
+
+    if (order == cs::DenseOrder::RowMajor) {  // C-style (row-major)
+        strides = {static_cast<ssize_t>(N * elem_size), elem_size};
+    } else if (order == cs::DenseOrder::ColMajor) {  // Fortran-style (column-major)
+        strides = {elem_size, static_cast<ssize_t>(M * elem_size)};
     } else {
         throw std::runtime_error("Invalid order specified. Use 'C' or 'F'.");
     }
 
-    // Assign strides to the buffer info. This is crucial!
-    buffer_info.strides = strides;
+    // Create a NumPy array with specified dimensions and strides
+    py::array_t<double> result({M, N}, strides);
 
     // Copy the data from the vector to the NumPy array.  This is the most
     // straightforward way.
-    std::ranges::copy(v, ptr);
+    auto buffer_info = result.request();
+    std::ranges::copy(v, static_cast<double*>(buffer_info.ptr));
 
     return result;
 };

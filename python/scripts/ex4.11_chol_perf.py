@@ -60,7 +60,7 @@ for N in Ns:
         A = LaplacianNd((N, N)).tosparse().tocsc().astype(float)
     else:
         # Create a random matrix
-        A = csparse.COOMatrix.random(N, N, density, SEED).tocsc().toscipy()
+        A = csparse.COOMatrix.random(N, N, density, seed=SEED).tocsc().toscipy()
 
     # Ensure all diagonals are non-zero so that L is non-singular
     for i in range(A.shape[0]):

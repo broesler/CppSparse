@@ -23,7 +23,7 @@ from tqdm import tqdm
 
 import csparse
 
-SAVE_FIGS = True
+SAVE_FIGS = False
 
 SEED = 565656
 

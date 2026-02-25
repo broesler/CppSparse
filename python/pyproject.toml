@@ -17,6 +17,7 @@ dependencies = [
     "pandas>=2.3",
     "pymatreader>=1.1",
     "Requests>=2.32",
+    "seaborn",
     "scipy>=1.15",
     "suitesparsegetpy",
     "toml",

@@ -62,14 +62,14 @@ for kind in ['regular', 'transpose']:
         # Create a large, random, sparse matrix with different dimensions
         M = int(0.9 * N)
         K = int(0.8 * N)
-        A = csparse.COOMatrix.random(M, N, density, SEED).tocsc().toscipy()
+        A = csparse.COOMatrix.random(M, N, density, seed=SEED).tocsc().toscipy()
 
         if kind == 'transpose':
             A = A.T
 
         # Create compatible random, dense matrix for multiplying and adding
-        X = csparse.COOMatrix.random(N, K, density, SEED)
-        Y = csparse.COOMatrix.random(M, K, density, SEED)
+        X = csparse.COOMatrix.random(N, K, density, seed=SEED)
+        Y = csparse.COOMatrix.random(M, K, density, seed=SEED)
 
         # Convert to row and column-major format
         X_col = X.to_dense_vector('F')

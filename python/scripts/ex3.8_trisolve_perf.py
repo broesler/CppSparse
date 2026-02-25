@@ -55,7 +55,7 @@ for density in densities:
     print(f"---------- Density = {density:6.2g} ----------")
 
     # Create a random matrix
-    A = csparse.COOMatrix.random(N, N, density, SEED).toscipy().todok()
+    A = csparse.COOMatrix.random(N, N, density, seed=SEED).toscipy().todok()
 
     # Ensure all diagonals are non-zero so that L is non-singular
     for i in range(N):

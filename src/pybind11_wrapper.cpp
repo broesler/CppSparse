@@ -637,7 +637,7 @@ PYBIND11_MODULE(csparse, m)
     // -------------------------------------------------------------------------
     //         ItemProxy Class
     // -------------------------------------------------------------------------
-    py::class_<cs::CSCMatrix::ItemProxy>(m, "ItemProxy")
+    py::class_<cs::CSCMatrix::ItemProxy>(m, "_ItemProxy")
         .def("__float__", [](const cs::CSCMatrix::ItemProxy& self) {
                 return static_cast<double>(self);
         })

@@ -252,15 +252,15 @@ template <typename T>
 auto sparse_to_ndarray(const T& self, cs::DenseOrder order)
 {
     // Get the matrix in dense row-major order
-    std::vector<double> v = self.to_dense_vector(order);
-    auto [M, N] = self.shape();
+    const auto v = self.to_dense_vector(order);
+    const auto [M, N] = self.shape();
 
     // Create a NumPy array with specified dimensions
     py::array_t<double> result({M, N});
 
     // Get a pointer to the underlying data of the NumPy array.
     auto buffer_info = result.request();
-    double* ptr = static_cast<double*>(buffer_info.ptr);
+    const auto ptr = static_cast<double*>(buffer_info.ptr);
 
     // Calculate strides based on order
     std::vector<ssize_t> strides;
@@ -345,8 +345,8 @@ auto make_vector_func(Func&& func)
         const std::vector<double>& x,
         const std::vector<double>& y
     ) {
-        cs::CSCMatrix A = csc_from_scipy(A_scipy);
-        std::vector<double> z = func(A, x, y);
+        const auto A = csc_from_scipy(A_scipy);
+        const auto z = func(A, x, y);
         return py::cast(z);
     };
 }
@@ -372,14 +372,14 @@ auto make_gaxpy_matrix_func(Func&& func)
         const py::object& X_obj,
         const py::object& Y_obj
     ) -> py::array {
-        cs::CSCMatrix A = csc_from_scipy(A_scipy);
+        const auto A = csc_from_scipy(A_scipy);
         // X and Y are dense matrices
-        py::module_ np = py::module_::import("numpy");
+        auto np = py::module_::import("numpy");
         py::array X_np = np.attr("asarray")(X_obj);
         py::array Y_np = np.attr("asarray")(Y_obj);
 
-        int X_ndim = X_np.attr("ndim").cast<int>();
-        int Y_ndim = Y_np.attr("ndim").cast<int>();
+        const auto X_ndim = X_np.attr("ndim").cast<int>();
+        const auto Y_ndim = Y_np.attr("ndim").cast<int>();
 
         if (X_ndim != 1 && X_ndim != 2) {
             throw std::invalid_argument("Input X must be a 1D or 2D array.");
@@ -398,15 +398,14 @@ auto make_gaxpy_matrix_func(Func&& func)
         X_np = X_np.attr("reshape")(-1, py::arg("order")=order);
         Y_np = Y_np.attr("reshape")(-1, py::arg("order")=order);
 
-        auto X = X_np.cast<std::vector<double>>();
-        auto Y = Y_np.cast<std::vector<double>>();
+        const auto X = X_np.cast<std::vector<double>>();
+        const auto Y = Y_np.cast<std::vector<double>>();
 
-        std::vector<double> Z = func(A, X, Y);
+        const auto Z = func(A, X, Y);
 
         // Reshape output to original shape of Y
         py::array Z_np = py::array(py::cast(Z));
-        Z_np = Z_np.attr("reshape")(Y_shape, py::arg("order")=order);
-        return Z_np;
+        return Z_np.attr("reshape")(Y_shape, py::arg("order")=order);
     };
 }
 
@@ -429,11 +428,11 @@ py::object permute_impl_(
 )
 {
     try {
-        auto b = b_obj.cast<std::vector<double>>();
+        const auto b = b_obj.cast<std::vector<double>>();
         return py::cast(func_double(p, b));
     } catch (const py::cast_error&) {
         try {
-            auto b = b_obj.cast<std::vector<cs::csint>>();
+            const auto b = b_obj.cast<std::vector<cs::csint>>();
             return py::cast(func_int(p, b));
         } catch (const py::cast_error&) {
             throw py::type_error("Input must be a vector of doubles or integers.");
@@ -463,13 +462,13 @@ py::object solver_dense_impl_(
     Args&&... solver_args  // actual C++ arguments
 )
 {
-    cs::CSCMatrix A = csc_from_scipy(A_scipy);
+    const auto A = csc_from_scipy(A_scipy);
 
     // Assume b is a dense vector, return a dense vector solution
-    py::module_ np = py::module_::import("numpy");
+    auto np = py::module_::import("numpy");
     py::array b_np = np.attr("asarray")(B_obj);
 
-    int b_ndim = b_np.attr("ndim").cast<int>();
+    const auto b_ndim = b_np.attr("ndim").cast<int>();
     if (b_ndim != 1 && b_ndim != 2) {
         throw std::invalid_argument("Input b must be a 1D or 2D array.");
     }
@@ -480,17 +479,16 @@ py::object solver_dense_impl_(
     // Flatten b to 1D column-major
     b_np = b_np.attr("reshape")(-1, py::arg("order")="F");
 
-    auto B = b_np.cast<std::vector<double>>();
+    const auto B = b_np.cast<std::vector<double>>();
 
     // Solve the system with the unpacked args
-    std::vector<double> X = dense_solver(A, B, std::forward<Args>(solver_args)...);
+    const auto X = dense_solver(A, B, std::forward<Args>(solver_args)...);
 
     if (b_ndim == 1) {
         return py::cast(X);
     } else {
         py::array X_np = py::array(py::cast(X));
-        X_np = X_np.attr("reshape")(b_shape, py::arg("order")="F");
-        return X_np;
+        return X_np.attr("reshape")(b_shape, py::arg("order")="F");
     }
 }
 
@@ -504,36 +502,36 @@ py::object solver_sparse_impl_(
     Args&&... solver_args  // actual C++ arguments
 )
 {
-    const cs::CSCMatrix A = csc_from_scipy(A_scipy);
-    py::object B_scipy = B_obj;
+    const auto A = csc_from_scipy(A_scipy);
+    auto B_scipy = B_obj;
 
-    int B_ndim = B_scipy.attr("ndim").cast<int>();
+    const auto B_ndim = B_scipy.attr("ndim").cast<int>();
     if (B_ndim > 2) {
         throw py::value_error("B must be a 1D or 2D matrix.");
     }
 
     // Get number of columns for output shape
-    const cs::csint N = A.shape()[1];
+    const auto N = A.shape()[1];
 
     // Convert (N,) -> (N, 1)
-    bool return_1D = B_ndim == 1;
+    const bool return_1D = B_ndim == 1;
 
     if (B_ndim == 1) {
         py::tuple B_shape = B_scipy.attr("shape");
-        int Mb = B_shape[0].cast<int>();
+        const auto Mb = B_shape[0].cast<int>();
         B_scipy = B_scipy.attr("reshape")(py::make_tuple(Mb, 1));
     }
 
-    const cs::CSCMatrix B = csc_from_scipy(B_scipy);
+    const auto B = csc_from_scipy(B_scipy);
 
     // Solve the system with the unpacked args
-    std::vector<double> X = sparse_solver(A, B, std::forward<Args>(solver_args)...);
+    const auto X = sparse_solver(A, B, std::forward<Args>(solver_args)...);
 
     // Output number of columns
-    const cs::csint K = B.shape()[1];
+    const auto K = B.shape()[1];
 
     // Return a sparse array
-    py::object X_py = scipy_from_csc(cs::CSCMatrix(X, {N, K}));
+    auto X_py = scipy_from_csc(cs::CSCMatrix(X, {N, K}));
 
     if (return_1D) {
         // X[:, 0] slice the only column so that output is (N,)
@@ -554,8 +552,8 @@ py::object solver_impl_(
     Args&&... args
 )
 {
-    py::module_ sparse = py::module_::import("scipy.sparse");
-    bool is_sparse_RHS = sparse.attr("issparse")(B_obj).cast<bool>();
+    auto sparse = py::module_::import("scipy.sparse");
+    const bool is_sparse_RHS = sparse.attr("issparse")(B_obj).cast<bool>();
 
     if (is_sparse_RHS) {
         return solver_sparse_impl_(

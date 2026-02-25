@@ -812,8 +812,8 @@ PYBIND11_MODULE(csparse, m)
                 if (t.size() != 2) {
                     throw py::index_error("Index must be a tuple of length 2.");
                 }
-                cs::csint i = t[0].cast<cs::csint>();
-                cs::csint j = t[1].cast<cs::csint>();
+                const auto i = t[0].cast<cs::csint>();
+                const auto j = t[1].cast<cs::csint>();
                 return self(i, j);
             },
             py::return_value_policy::reference_internal  // keep proxy alive
@@ -823,8 +823,8 @@ PYBIND11_MODULE(csparse, m)
                 if (t.size() != 2) {
                     throw py::index_error("Index must be a tuple of length 2.");
                 }
-                cs::csint i = t[0].cast<cs::csint>();
-                cs::csint j = t[1].cast<cs::csint>();
+                const auto i = t[0].cast<cs::csint>();
+                const auto j = t[1].cast<cs::csint>();
                 self(i, j) = v;
             }
         )

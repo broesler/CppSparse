@@ -7,12 +7,12 @@
  *
  *============================================================================*/
 
-#include <array>
 #include <format>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include <stdexcept>
+#include <span>
 #include <vector>
 
 #include "pybind11_conversion.h"
@@ -385,10 +385,10 @@ PYBIND11_MODULE(csparse, m)
         .def_readonly("r", &cs::DMPermResult::r)
         .def_readonly("s", &cs::DMPermResult::s)
         .def_property_readonly("cc",
-            [](const cs::DMPermResult& self) { return array_to_numpy(self.cc); }
+            [](const cs::DMPermResult& self) { return numpy_from_array(self.cc); }
         )
         .def_property_readonly("rr",
-            [](const cs::DMPermResult& self) { return array_to_numpy(self.rr); }
+            [](const cs::DMPermResult& self) { return numpy_from_array(self.rr); }
         )
         .def_readonly("Nb", &cs::DMPermResult::Nb)
         .def("__iter__", [](const cs::DMPermResult& res) {
@@ -397,8 +397,8 @@ PYBIND11_MODULE(csparse, m)
                 res.q,
                 res.r,
                 res.s,
-                array_to_numpy(res.cc),
-                array_to_numpy(res.rr)
+                numpy_from_array(res.cc),
+                numpy_from_array(res.rr)
             );
             return py::make_iterator(result);
         });
@@ -579,7 +579,7 @@ PYBIND11_MODULE(csparse, m)
                 A dense array representation of the matrix.
             )pbdoc"
         )
-        .def("toarray", &sparse_to_ndarray<cs::COOMatrix>, py::arg("order")="F",
+        .def("toarray", &ndarray_from_sparse<cs::COOMatrix>, py::arg("order")="F",
             R"pbdoc(
             Convert the COO matrix to a dense vector.
 
@@ -910,7 +910,7 @@ PYBIND11_MODULE(csparse, m)
             toarray : Convert the CSC matrix to a dense array.
             )pbdoc"
         )
-        .def("toarray", &sparse_to_ndarray<cs::CSCMatrix>, py::arg("order")="F",
+        .def("toarray", &ndarray_from_sparse<cs::CSCMatrix>, py::arg("order")="F",
             R"pbdoc(
             Convert the CSC matrix to a dense vector.
 

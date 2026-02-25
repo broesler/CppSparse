@@ -226,20 +226,20 @@ struct type_caster<std::vector<T>>
 //         Conversion Templates
 // -----------------------------------------------------------------------------
 
-/** Convert an array to a NumPy array.
+/** Create a NumPy array from a std::array.
  *
  * @param self  the array to convert
  *
  * @return a NumPy array with the same data as the array
  */
 template <typename T, std::size_t N>
-inline py::array_t<T> array_to_numpy(const std::array<T, N>& arr)
+inline py::array_t<T> numpy_from_array(const std::array<T, N>& arr)
 {
     return py::array_t<T>(arr.size(), arr.data());
 };
 
 
-/** Convert a dense matrix to a NumPy array.
+/** Create a NumPy array from a CSCMatrix or COOMatrix.
  *
  * @param self  the dense matrix to convert
  * @param order the order of the NumPy array ('C' or 'F')
@@ -247,7 +247,7 @@ inline py::array_t<T> array_to_numpy(const std::array<T, N>& arr)
  * @return a NumPy array with the same data as the matrix
  */
 template <typename T>
-auto sparse_to_ndarray(const T& self, cs::DenseOrder order = cs::DenseOrder::ColMajor)
+auto ndarray_from_sparse(const T& self, cs::DenseOrder order = cs::DenseOrder::ColMajor)
 {
     // Get the matrix in dense row-major order
     const auto v = self.to_dense_vector(order);

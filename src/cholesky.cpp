@@ -458,7 +458,7 @@ std::vector<csint> counts(
     }
 
     // Operate on the transpose
-    auto AT = A.transpose(false);  // do not copy values in the transpose
+    const auto AT = A.transpose(false);  // do not copy values in the transpose
 
     if (ata) {
         init_ata(AT, postorder, head, next);
@@ -503,10 +503,10 @@ std::vector<csint> counts(
 std::vector<csint> chol_rowcounts(const CSCMatrix& A)
 {
     // Compute the elimination tree of A
-    auto parent = etree(A);
+    const auto parent = etree(A);
 
     // Compute the post-order of the elimination tree
-    auto postorder = post(parent);
+    const auto postorder = post(parent);
 
     // Count the number of non-zeros in each row of L
     return rowcnt(A, parent, postorder);
@@ -516,10 +516,10 @@ std::vector<csint> chol_rowcounts(const CSCMatrix& A)
 std::vector<csint> chol_colcounts(const CSCMatrix& A, bool ata)
 {
     // Compute the elimination tree of A
-    auto parent = etree(A, ata);
+    const auto parent = etree(A, ata);
 
     // Compute the post-order of the elimination tree
-    auto postorder = post(parent);
+    const auto postorder = post(parent);
 
     // Count the number of non-zeros in each column of L
     return counts(A, parent, postorder, ata);
@@ -553,7 +553,7 @@ SymbolicChol schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
         postorder = post(S.parent);     // should be identity for natural order
     }
 
-    auto c = counts(C, S.parent, postorder);
+    const auto c = counts(C, S.parent, postorder);
 
     // Compute column pointers for L
     S.cp.resize(c.size() + 1);

@@ -42,17 +42,10 @@ if (USE_ASAN)
 endif()
 
 # Check for required packages
-find_package(Catch2 3 QUIET)
-
-if (NOT Catch2_FOUND)
-    message(STATUS "Catch2 not found in default paths, checking homebrew...")
-    set(CATCH2_ROOT_HINT "/opt/homebrew")
-    find_package(Catch2 3 QUIET
-        PATHS ${CATCH2_ROOT_HINT}
-        PATH_SUFFIXES lib/cmake/Catch2
-        NO_DEFAULT_PATH
-    )
-endif()
+find_package(Catch2 3 QUIET
+    HINTS $ENV{CONDA_PREFIX} /opt/homebrew
+    PATH_SUFFIXES lib/cmake/Catch2
+)
 
 if (NOT Catch2_FOUND)
     message(STATUS "Catch2 not found. Fetching with FetchContent...")
@@ -65,12 +58,13 @@ if (NOT Catch2_FOUND)
     FetchContent_MakeAvailable(Catch2)
 endif()
 
+message(STATUS "Catch2 version: ${Catch2_VERSION}")
+
 if (TARGET Catch2::Catch2WithMain)
     message(STATUS "Catch2::Catch2WithMain target exists.")
 else()
     message(FATAL_ERROR "Catch2::Catch2WithMain target not found.")
 endif()
-
 
 find_package(pybind11 CONFIG REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
@@ -152,6 +146,11 @@ target_link_libraries(test_csparse PRIVATE csparse_lib Catch2::Catch2WithMain)
 set_target_properties(test_csparse PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
+
+# Turn off noisy "__COUNTER__" Catch2 macro warnings
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(test_csparse PRIVATE -Wno-c2y-extensions)
+endif()
 
 # Register with CTest
 enable_testing()

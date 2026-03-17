@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <span>
 #include <vector>
+#include <utility>     // exchange
 
 #include "utils.h"
 #include "csc.h"
@@ -602,17 +603,19 @@ CSCMatrix& CSCMatrix::sum_duplicates()
 CSCMatrix& CSCMatrix::fkeep(KeepFunc fk)
 {
     csint nz = 0;  // count actual number of non-zeros
-    auto values = !v_.empty();
+    const auto has_values = !v_.empty();
 
     for (auto j : column_range()) {
-        auto p = p_[j];  // get current location of column j
-        p_[j] = nz;       // record new location of column j
-        for (; p < p_[j+1]; ++p) {
-            if (fk(i_[p], j, values ? v_[p] : 1.0)) {
-                if (values) {
-                    v_[nz] = v_[p];  // keep A(i, j)
+        // store old and record new location of column j
+        const auto col_start = std::exchange(p_[j], nz);
+        for (auto p = col_start; p < p_[j+1]; ++p) {
+            const auto i = i_[p];
+            const auto v = v_[p];
+            if (fk(i, j, has_values ? v : 1.0)) {
+                if (has_values) {
+                    v_[nz] = v;  // keep A(i, j)
                 }
-                i_[nz++] = i_[p];
+                i_[nz++] = i;
             }
         }
     }

@@ -406,7 +406,7 @@ void init_ata(
     auto [N, M] = AT.shape();
     head.assign(N + 1, -1);
     next.assign(M, -1);
-    std::vector<csint> w(M);
+    std::vector<csint> w(N);
 
     // Invert postorder
     for (auto k : AT.row_range()) {

@@ -88,6 +88,9 @@ clean:
 	rm -f test_csparse
 	rm -f $(DEMO_EXEC)
 	rm -rf build/
+	find ./python -name 'csparse.cpython-*.so' -delete
+	find ./python -type d -name '*.egg-info' -exec rm rf {} +
+	find ./python -type d -name '__pycache__' -exec rm rf {} +
 
 #==============================================================================
 #==============================================================================

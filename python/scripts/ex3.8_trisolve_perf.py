@@ -98,7 +98,7 @@ for density in densities:
 # -----------------------------------------------------------------------------
 fig, axs = plt.subplots(num=1, nrows=2, sharex=True, clear=True)
 fig.set_size_inches(6.4, 8, forward=True)
-fig.suptitle(f"{filestem.split('_')[0]}, N = {N}")
+fig.suptitle(f"{filestem.split('_', maxsplit=1)[0]}, N = {N}")
 
 colors = {
     'lsolve': 'C0',

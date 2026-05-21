@@ -109,7 +109,7 @@ for kind in ['regular', 'transpose']:
 #         Plot the data
 # -----------------------------------------------------------------------------
 fig, axs = plt.subplots(num=1, ncols=2, sharey=True, clear=True)
-fig.suptitle(f"{filestem.split('_')[0].upper()}, density {density}")
+fig.suptitle(f"{filestem.split('_', maxsplit=1)[0].upper()}, density {density}")
 fig.set_size_inches(10, 4.8, forward=True)
 
 for ax, kind in zip(axs, ['regular', 'transpose']):

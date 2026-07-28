@@ -27,6 +27,8 @@ namespace cs {
 
 // Helper functions for AMD ordering
 
+namespace {
+
 /** Flip the sign of an integer
  * 
  * This function flips the sign of an integer `i` and returns the result.
@@ -36,7 +38,7 @@ namespace cs {
  *
  * @return the flipped integer
  */
-static inline csint flip(csint i) {  return -i - 2; }
+inline csint flip(csint i) {  return -i - 2; }
 
 
 /** Clear the workspace
@@ -52,7 +54,7 @@ static inline csint flip(csint i) {  return -i - 2; }
  *
  * @return the updated mark
  */
-static csint wclear(csint mark, csint lemax, std::span<csint> w)
+csint wclear(csint mark, csint lemax, std::span<csint> w)
 {
     csint N = std::ssize(w) - 1;  // w has size N+1, but we only use w[0..N-1]
     if (mark < 2 || (mark + lemax < 0)) {
@@ -61,6 +63,8 @@ static csint wclear(csint mark, csint lemax, std::span<csint> w)
     }
     return mark;  // at this point, w [0..N-1] < mark holds
 }
+
+}  // namespace
 
 
 void drop_dense_cols_inplace(CSCMatrix& A, csint dense)
@@ -843,7 +847,9 @@ void bfs(
 }
 
 
-static void matched(
+namespace {  // local namespace for helper functions
+
+void matched(
     csint N,
     std::span<const csint> wj,
     std::span<const csint> imatch,
@@ -868,7 +874,7 @@ static void matched(
 }
 
 
-static void unmatched(
+void unmatched(
     csint M,
     std::span<const csint> wi,
     std::span<csint> p,
@@ -886,7 +892,7 @@ static void unmatched(
 }
 
 
-static void gather_scatter(
+void gather_scatter(
     std::span<csint> source,
     std::span<csint> temp,
     std::span<const csint> ps,
@@ -903,6 +909,8 @@ static void gather_scatter(
     std::ranges::copy_n(temp.begin(), nc, source.begin() + offset);
 }
 
+
+}  // namespace
 
 // Dulmage-Mendelsohn Permutation
 DMPermResult dmperm(const CSCMatrix& A, csint seed)

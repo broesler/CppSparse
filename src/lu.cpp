@@ -191,6 +191,8 @@ void lu_realloc(CSCMatrix& R, csint k, bool lower)
 }
 
 
+namespace {
+
 /** Assign missing values in the permutation vector.
  *
  * This function is used to assign missing values in the permutation vector
@@ -199,7 +201,7 @@ void lu_realloc(CSCMatrix& R, csint k, bool lower)
  *
  * @param p_inv  the permutation vector
  */
-static void make_valid_permutation(std::span<csint> p_inv)
+void make_valid_permutation(std::span<csint> p_inv)
 {
     const csint M = p_inv.size();
 
@@ -230,6 +232,8 @@ static void make_valid_permutation(std::span<csint> p_inv)
         }
     }
 }
+
+}  // namespace
 
 
 LUResult lu(

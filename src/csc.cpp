@@ -726,8 +726,10 @@ double CSCMatrix::structural_symmetry() const
 /*------------------------------------------------------------------------------
        Math Operations
 ----------------------------------------------------------------------------*/
+namespace {
+
 template <bool Transpose = false>
-static void gaxpy_check_(
+void gaxpy_check_(
     const CSCMatrix& A,
     std::span<const double> X,
     std::span<const double> Y
@@ -762,6 +764,8 @@ static void gaxpy_check_(
         );
     }
 }
+
+}  // namespace
 
 
 std::vector<double> gaxpy(

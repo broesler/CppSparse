@@ -1414,13 +1414,15 @@ std::vector<double> lu_tsolve(
 }
 
 
+namespace {
+
 /** Find the minimum index of all those where |x| == max(|x|).
  *
  * @param x  a vector of doubles
  *
  * @return j  the first index of the maximum absolute value
  */
-static inline auto min_argmaxabs(std::span<const double> x)
+inline auto min_argmaxabs(std::span<const double> x)
 {
     if (x.empty()) {
         throw std::runtime_error("Input vector cannot be empty!");
@@ -1431,6 +1433,8 @@ static inline auto min_argmaxabs(std::span<const double> x)
 
     return std::distance(x.begin(), it);
 }
+
+}  // namespace
 
 
 // Exercise 6.15

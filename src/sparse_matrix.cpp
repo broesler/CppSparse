@@ -45,8 +45,10 @@ void SparseMatrix::format_to(std::string& out, bool verbose, csint threshold) co
 }
 
 
+namespace {
+
 /** Return max(|x_i|) for x_i in data, ignoring non-finite values. */
-static inline auto get_max_abs_finite(std::span<const double> data)
+inline auto get_max_abs_finite(std::span<const double> data)
 {
     auto data_view = data
         | std::views::filter([](double v) { return std::isfinite(v); })
@@ -54,6 +56,7 @@ static inline auto get_max_abs_finite(std::span<const double> data)
     return data_view.empty() ? 0.0 : std::ranges::max(data_view);
 }
 
+}  // namespace
 
 void SparseMatrix::write_elems_(std::string& out, csint start, csint end) const
 {

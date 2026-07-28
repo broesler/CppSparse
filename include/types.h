@@ -125,6 +125,7 @@ struct MaxMatch;
 struct SCCResult;
 struct DMPermResult;
 
+class Vector;
 class SparseMatrix;
 class COOMatrix;
 class CSCMatrix;

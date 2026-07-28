@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=64", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["scikit-build-core>=0.10", "pybind11>=2.12"]
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "csparse"
@@ -34,11 +34,11 @@ dev = [
 [project.urls]
 "Github" = "https://github.com/broesler/CppSparse"
 
-[tool.setuptools]
-packages = ["csparse"]
+[tool.scikit-build]
+cmake.source-dir = ".."
+build-dir = "build/{wheel_tag}"
 
-[tool.setuptools.package-data]
-csparse = ["*.so"]
+ninja.make-fallback = true
 
 [tool.ruff]
 src = ["csparse", "scripts"]

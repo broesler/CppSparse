@@ -1,0 +1,30 @@
+[project]
+name = "csparse-workspace"
+version = "0.1.0"
+description = "Development workspace for the CSparse++ project"
+requires-python = ">=3.12"
+
+dependencies = [
+    "ninja>=1.11",
+    "pybind11>=2.12",
+    "scikit-build-core>=0.10",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[tool.uv.workspace]
+members = ["python"]
+
+[tool.uv.sources]
+csparse = { workspace = true }
+
+[tool.pytest.ini_options]
+pythonpath = ["python"]  # use the python directory as the source root for tests
+markers = """
+    random: marks tests as random (deselect with '-m "not random"')
+    suitesparse: marks tests as using SuiteSparse matrices
+"""

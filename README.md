@@ -22,6 +22,13 @@ can load into `scipy.sparse` matrices. It mimics the behavior of the `ssget`
 package built into the original CSparse library for use with MATLAB.
 
 ## Installation
+
+### Prerequisites
+* **C++ Compiler** with C++23 suppor (*e.g.* `clang++` or `g++`)
+* **CMake** (>= 3.25)
+* **[uv](https://astral.sh/uv/)** (Python package and environment manager)
+
+### Quickstart
 Clone the repository:
 
 ```bash
@@ -29,19 +36,23 @@ gh repo clone broesler/CppSparse C++Sparse
 cd C++Sparse
 ```
 
-To build the library, you will need to have CMake and a C++ compiler.
-First, build and test the C++ library:
+First, sync the environment with the `uv` package manager:
+
+```bash
+uv sync --extra dev
+```
+
+Then, build and test the C++ library:
 
 ```bash
 make tests
-./test_csparse
+./build/Release/test_csparse
 ```
 
 Then, build and test the Python interface:
 
 ```bash
-make python
-pytest
+uv run pytest
 ```
 
 The python tests roughly replicate the tests in the original CSparse library
@@ -51,14 +62,14 @@ the Python interface.
 To make the figures in the python tests (saved to the `test_figures/` directory),
 
 ```bash
-pytest --make-figures
+uv run pytest --make-figures
 ```
 
 **Warning:** Making the figures is slow. We recommend that you run the tests for
 individual modules or classes one at a time, *e.g.*
 
 ```bash
-pytest --make-figures -k 'test_amd'
+uv run pytest --make-figures -k 'test_amd'
 ```
 
 Note that figure windows may not be visible while the tests are running, but the
@@ -76,10 +87,9 @@ make run_demos
 To run the python demos:
 
 ```bash
-cd python/demo
-python demo1.py ../../data/t1
-python demo2.py
-python demo3.py
+uv run python python/demo/demo1.py ./data/t1
+uv run python python/demo/demo2.py
+uv run python python/demo/demo3.py
 ```
 
 Note that depending on your Matplotlib backend, you may need to close the figure

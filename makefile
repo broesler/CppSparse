@@ -41,10 +41,11 @@ DEMO_EXEC := demo1 demo2 demo3
 # -----------------------------------------------------------------------------
 all: lib tests python demos
 
+$(BUILD_DIR)/build.ninja: CmakeLists.txt
+	cmake -S . -B $(BUILD_DIR) -G Ninja $(CMAKE_CONFIG_ARGS)
+
 # Build the C++ library
-lib:
-	mkdir -p $(BUILD_DIR)
-	cmake -S . -B $(BUILD_DIR) $(CMAKE_CONFIG_ARGS)
+lib: $(BUILD_DIR)/build.ninja
 	cmake $(CMAKE_BUILD_ARGS) --target csparse_lib
 
 # Build the C++ tests
@@ -55,42 +56,34 @@ tests: lib
 # run_debug_tests: tests
 # 	LSAN_OPTIONS="suppressions=$(abspath suppressions.sup)" ./test_csparse
 
-# Build the python module
-python: lib
-	cmake $(CMAKE_BUILD_ARGS) --target csparse
-	cmake --install $(BUILD_DIR)
-
 # Build the C++ demos
 demos: lib
 	cmake $(CMAKE_BUILD_ARGS) --target $(DEMO_EXEC)
 
 .PHONY: run_demos
 run_demos: demos  # ensure demos are built before running
-	- ./demo1 './data/t1'
-	- ./demo2 './data/t1'
-	- ./demo2 './data/ash219'
-	- ./demo2 './data/bcsstk01'
-	- ./demo2 './data/fs_183_1'
-	- ./demo2 './data/mbeacxc'
-	- ./demo2 './data/west0067'
-	- ./demo2 './data/lp_afiro'
-	- ./demo2 './data/bcsstk16'
-	- ./demo3 './data/bcsstk01'
-	- ./demo3 './data/bcsstk16'
+	- ./$(BUILD_DIR)/demo1 './data/t1'
+	- ./$(BUILD_DIR)/demo2 './data/t1'
+	- ./$(BUILD_DIR)/demo2 './data/ash219'
+	- ./$(BUILD_DIR)/demo2 './data/bcsstk01'
+	- ./$(BUILD_DIR)/demo2 './data/fs_183_1'
+	- ./$(BUILD_DIR)/demo2 './data/mbeacxc'
+	- ./$(BUILD_DIR)/demo2 './data/west0067'
+	- ./$(BUILD_DIR)/demo2 './data/lp_afiro'
+	- ./$(BUILD_DIR)/demo2 './data/bcsstk16'
+	- ./$(BUILD_DIR)/demo3 './data/bcsstk01'
+	- ./$(BUILD_DIR)/demo3 './data/bcsstk16'
+
+# Build the python module
+python:
+	uv sync --extra dev
 
 # clean up
 clean:
-	rm -f *~
-	rm -f $(BUILD_DIR)/*.o
-	rm -f $(BUILD_DIR)/*.a
-	rm -f $(BUILD_DIR)/*.so
-	rm -rf $(BUILD_DIR)/*.dSYM
-	rm -f test_csparse
-	rm -f $(DEMO_EXEC)
 	rm -rf build/
-	find ./python -name 'csparse.cpython-*.so' -delete
-	find ./python -type d -name '*.egg-info' -exec rm rf {} +
-	find ./python -type d -name '__pycache__' -exec rm rf {} +
+	find . -type d -name '__pycache__' -exec rm -rf {} \+
+	find . -type d -name '*.egg-info' -exec rm -rf {} \+
+	find . -type f -name "*.so" -delete
 
 #==============================================================================
 #==============================================================================

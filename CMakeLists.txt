@@ -67,7 +67,6 @@ else()
 endif()
 
 find_package(pybind11 CONFIG REQUIRED)
-find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
 # -----------------------------------------------------------------------------
 #         Core Sources and Headers
@@ -126,11 +125,11 @@ set_target_properties(
     MODULE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build
 )
 
-# Install the python module in the package directory
+# Scikit-build install destination:
+# Target destination 'csparse' maps to site-packages/csparse/
 install(
     TARGETS csparse
-    LIBRARY DESTINATION ${CMAKE_SOURCE_DIR}/python/csparse
-    COMPONENT python
+    DESTINATION csparse
 )
 
 # -----------------------------------------------------------------------------
@@ -140,12 +139,9 @@ install(
 file(GLOB TEST_SOURCES test/test_*.cpp test/test_helpers.cpp)
 file(GLOB TEST_HEADERS test/test_helpers.h)
 
-add_executable(test_csparse ${TEST_SOURCES} ${TEST_HEADERS} ${SOURCES} ${HEADERS})
+add_executable(test_csparse ${TEST_SOURCES} ${TEST_HEADERS})
 target_include_directories(test_csparse PRIVATE include test)
 target_link_libraries(test_csparse PRIVATE csparse_lib Catch2::Catch2WithMain)
-set_target_properties(test_csparse PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
 
 # Turn off noisy "__COUNTER__" Catch2 macro warnings
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -158,7 +154,7 @@ include(CTest)
 add_test(NAME CppTests COMMAND test_csparse)
 # Ensure ./test_csparse is run from C++Sparse directory for relative paths
 set_tests_properties(CppTests PROPERTIES
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 # ------------------------------------------------------------------------------
@@ -173,9 +169,6 @@ foreach(DEMO_FILE ${DEMO_SRC})
     add_executable(${DEMO_NAME} ${DEMO_FILE} ${DEMO_HELPERS} ${SOURCES} ${HEADERS})
     target_include_directories(${DEMO_NAME} PRIVATE include demo)
     target_link_libraries(${DEMO_NAME} PRIVATE csparse_lib)
-    set_target_properties(${DEMO_NAME} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}
-    )
 endforeach()
 
 

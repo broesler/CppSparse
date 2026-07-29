@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <algorithm>        // transform
+#include <algorithm>        // accumulate, transform
 #include <functional>       // plus, etc.
 #include <initializer_list>
 #include <stdexcept>        // invalid_argument
@@ -218,8 +218,47 @@ public:
     Vector operator+() const { return *this; }
     Vector operator-() const { return (*this) * T(-1); }
 
+    // -------------------------------------------------------------------------
+    //         Methods
+    // -------------------------------------------------------------------------
+    T min() const {
+        check_empty();
+        return std::ranges::min_element(data_);
+    }
+
+    T max() const {
+        check_empty();
+        return std::ranges::max_element(data_);
+    }
+
+    T sum() const {
+        check_empty();
+        return std::accumulate(begin(), end(), T(0));
+    }
+
+    T mean() const {
+        check_empty();
+        return sum() / static_cast<T>(size());
+    }
+
+    // TODO ord (see src/utils.cpp)
+    T norm() const {
+        check_empty();
+        return std::sqrt(
+            std::accumulate(
+                begin(), end(), T(0), [](T acc, T x) { return acc + x * x; }
+            )
+        );
+    }
+
 private:
     std::vector<T> data_;
+
+    void check_empty() const {
+        if (empty()) {
+            throw std::runtime_error("Vector is empty");
+        }
+    }
 
     void check_same_size(const Vector& rhs) const {
         if (size() != rhs.size()) {

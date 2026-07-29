@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "csparse.h"
+#include "Vector.h"
 #include "test_helpers.h"
 
 using Catch::Matchers::WithinAbs;
@@ -24,29 +25,29 @@ namespace cs {
 
 TEST_CASE("Vector Operators", "[vector][ops]")
 {
-    std::vector<double> a{1, 2, 3};
+    Vector<double> a{1, 2, 3};
 
     SECTION("Scale a vector") {
-        std::vector<double> expect{2, 4, 6};
+        Vector<double> expect{2, 4, 6};
 
         REQUIRE((2 * a) == expect);
         REQUIRE((a * 2) == expect);
     }
 
     SECTION("Add two vectors") {
-        std::vector<double> b{4, 5, 6};
+        Vector<double> b{4, 5, 6};
 
-        REQUIRE((a + b) == std::vector<double>{5, 7, 9});
+        REQUIRE((a + b) == Vector<double>{5, 7, 9});
     }
 
     SECTION("Negate a vector") {
-        REQUIRE(-a == std::vector<double>{-1, -2, -3});
+        REQUIRE(-a == Vector<double>{-1, -2, -3});
     }
 
     SECTION("Subtract two vectors") {
-        std::vector<double> b{4, 5, 6};
+        Vector<double> b{4, 5, 6};
 
-        REQUIRE((a - b) == std::vector<double>{-3, -3, -3});
+        REQUIRE((a - b) == Vector<double>{-3, -3, -3});
     }
 }
 

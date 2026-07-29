@@ -85,7 +85,7 @@ set(BASENAMES
 )
 
 set(SOURCES "")
-set(HEADERS include/csparse.h include/types.h)
+set(HEADERS include/csparse.h include/types.h include/Vector.h)
 
 foreach(BASENAME ${BASENAMES})
     list(APPEND SOURCES src/${BASENAME}.cpp)

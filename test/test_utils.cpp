@@ -25,41 +25,41 @@ namespace cs {
 
 TEST_CASE("Vector Operators", "[vector][ops]")
 {
-    Vector<double> a{1, 2, 3};
+    VectorD a{1, 2, 3};
 
     SECTION("Scale a vector") {
-        Vector<double> expect{2, 4, 6};
+        VectorD expect{2, 4, 6};
 
         REQUIRE((2 * a) == expect);
         REQUIRE((a * 2) == expect);
     }
 
     SECTION("Add two vectors") {
-        Vector<double> b{4, 5, 6};
+        VectorD b{4, 5, 6};
 
-        REQUIRE((a + b) == Vector<double>{5, 7, 9});
+        REQUIRE((a + b) == VectorD{5, 7, 9});
     }
 
     SECTION("Negate a vector") {
-        REQUIRE(-a == Vector<double>{-1, -2, -3});
+        REQUIRE(-a == VectorD{-1, -2, -3});
     }
 
     SECTION("Subtract two vectors") {
-        Vector<double> b{4, 5, 6};
+        VectorD b{4, 5, 6};
 
-        REQUIRE((a - b) == Vector<double>{-3, -3, -3});
+        REQUIRE((a - b) == VectorD{-3, -3, -3});
     }
 }
 
 
 TEST_CASE("Vector permutations", "[vector][perm]")
 {
-    std::vector<double> b{0, 1, 2, 3, 4};
-    std::vector<csint> p{2, 0, 1, 4, 3};
+    VectorD b{0, 1, 2, 3, 4};
+    VectorI p{2, 0, 1, 4, 3};
 
-    REQUIRE(pvec(p, b) == std::vector<double>{2, 0, 1, 4, 3});
-    REQUIRE(ipvec(p, b) == std::vector<double>{1, 2, 0, 4, 3});
-    REQUIRE(inv_permute(p) == std::vector<csint>{1, 2, 0, 4, 3});
+    REQUIRE(pvec(p, b) == VectorD{2, 0, 1, 4, 3});
+    REQUIRE(ipvec(p, b) == VectorD{1, 2, 0, 4, 3});
+    REQUIRE(inv_permute(p) == VectorI{1, 2, 0, 4, 3});
     REQUIRE(pvec(inv_permute(p), b) == ipvec(p, b));
     REQUIRE(ipvec(inv_permute(p), b) == pvec(p, b));
 }
@@ -69,7 +69,7 @@ TEST_CASE("Random permutation", "[vector][randperm]")
 {
     csint N = 10;
     csint seed;
-    std::vector<csint> expect_p{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    VectorI expect_p{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
     SECTION("Identity permutation") {
         seed = 0;
@@ -94,7 +94,7 @@ TEST_CASE("Random permutation", "[vector][randperm]")
 
 TEST_CASE("Vector norms", "[vector][norm]")
 {
-    std::vector<double> v{3, -4};
+    VectorD v{3, -4};
 
     SECTION("L0 norm") {
         REQUIRE(norm(v, 0) == 2);

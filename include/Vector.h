@@ -18,17 +18,10 @@
 
 #include "types.h"
 
-// TODO 
-// in types.h:
-// template <typename T>
-// concept Arithmetic = std::integral<T> || std::floating_point<T>;
-// then, template <Arithmetic T> class Vector { ... } instead of requires
-// or can do same for CSCMatrix
 
 namespace cs {
 
-template <typename T>
-requires std::is_arithmetic_v<T>
+template <Arithmetic T>
 class Vector
 {
 

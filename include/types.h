@@ -22,6 +22,13 @@ namespace cs {
 using csint = std::int32_t;
 using Shape = std::array<csint, 2>;
 
+template <typename T>
+concept Arithmetic = std::integral<T> || std::floating_point<T>;
+
+using VectorD = std::vector<double>;
+using VectorI = std::vector<csint>;
+
+
 // Need full enum class definition for default arguments
 enum class DenseOrder
 {

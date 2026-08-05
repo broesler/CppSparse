@@ -77,6 +77,7 @@ run_demos: demos  # ensure demos are built before running
 # Build the python module
 python:
 	uv sync --extra dev
+	uv pip install --no-build-isolation -e ./python
 
 # clean up
 clean:

@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "Vector.h"
 #include "types.h"
 #include "utils.h"
 #include "csc.h"

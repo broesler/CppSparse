@@ -9,23 +9,38 @@
 
 #pragma once
 
-#include <algorithm>        // accumulate, transform
+#include <algorithm>        // transform
 #include <functional>       // plus, etc.
 #include <initializer_list>
+#include <numeric>          // accumulate
 #include <stdexcept>        // invalid_argument
 #include <type_traits>      // is_arithmetic_v
 #include <vector>
 
-#include "types.h"
-
 
 namespace cs {
+
+
+template <typename T>
+concept Arithmetic = std::integral<T> || std::floating_point<T>;
+
 
 template <Arithmetic T>
 class Vector
 {
 
 public:
+    // -------------------------------------------------------------------------
+    //         STL Container Type Aliases
+    // -------------------------------------------------------------------------
+    using value_type = T;
+    using reference = T&;
+    using const_reference = const T&;
+    using size_type = size_t;
+    using difference_type = ptrdiff_t;
+    using iterator = typename std::vector<T>::iterator;
+    using const_iterator = typename std::vector<T>::const_iterator;
+
     // -------------------------------------------------------------------------
     //         Constructors
     // -------------------------------------------------------------------------
@@ -34,6 +49,21 @@ public:
     Vector(std::initializer_list<T> init) : data_(init) {}
     Vector(const std::vector<T>& vec) : data_(vec) {}
     Vector(std::vector<T> vec) : data_(std::move(vec)) {}
+
+    template <std::input_iterator It>
+    Vector(It first, It last) : data_(first, last) {}
+
+    void assign(size_t count, const T& value) { data_.assign(count, value); }
+
+    template <std::input_iterator It>
+    void assign(It first, It last) { data_.assign(first, last); }
+
+    void assign(std::initializer_list<T> ilist) { data_.assign(ilist); }
+
+    Vector& operator=(std::initializer_list<T> ilist) {
+        data_ = ilist;
+        return *this;
+    }
 
     // -------------------------------------------------------------------------
     //         Accessors
@@ -83,15 +113,14 @@ public:
     // -------------------------------------------------------------------------
     void clear() noexcept { data_.clear(); }
 
-    using iterator = typename std::vector<T>::iterator;
-    using const_iterator = typename std::vector<T>::const_iterator;
-
     auto insert(const_iterator pos, const T& value) { return data_.insert(pos, value); }
     auto insert(const_iterator pos, T&& value) { return data_.insert(pos, std::move(value)); }
     auto insert(const_iterator pos, size_t count, const T& value) { return data_.insert(pos, count, value); }
 
-    template <typename InputIt>
-    auto insert(const_iterator pos, InputIt first, InputIt last) { return data_.insert(pos, first, last); }
+    template <typename It>
+    auto insert(const_iterator pos, It first, It last) {
+        return data_.insert(pos, first, last);
+    }
 
     auto insert(const_iterator pos, std::initializer_list<T> ilist) { return data_.insert(pos, ilist); }
 
@@ -155,17 +184,17 @@ public:
     // -------------------------------------------------------------------------
     //         Assignment Operators
     // -------------------------------------------------------------------------
-    // Vector-vector
-    Vector& operator+=(const Vector& rhs) { return apply_elementwise(rhs, std::plus<>()); }
-    Vector& operator-=(const Vector& rhs) { return apply_elementwise(rhs, std::minus<>()); }
-    Vector& operator*=(const Vector& rhs) { return apply_elementwise(rhs, std::multiplies<>()); }
-    Vector& operator/=(const Vector& rhs) { return apply_elementwise(rhs, std::divides<>()); }
+    // Vector-Vector
+    Vector& operator+=(const Vector& rhs) { return apply_elementwise_(rhs, std::plus<>()); }
+    Vector& operator-=(const Vector& rhs) { return apply_elementwise_(rhs, std::minus<>()); }
+    Vector& operator*=(const Vector& rhs) { return apply_elementwise_(rhs, std::multiplies<>()); }
+    Vector& operator/=(const Vector& rhs) { return apply_elementwise_(rhs, std::divides<>()); }
 
     // Vector-scalar
-    Vector& operator+=(T scalar) { return apply_scalar(scalar, std::plus<>()); }
-    Vector& operator-=(T scalar) { return apply_scalar(scalar, std::minus<>()); }
-    Vector& operator*=(T scalar) { return apply_scalar(scalar, std::multiplies<>()); }
-    Vector& operator/=(T scalar) { return apply_scalar(scalar, std::divides<>()); }
+    Vector& operator+=(T scalar) { return apply_scalar_(scalar, std::plus<>()); }
+    Vector& operator-=(T scalar) { return apply_scalar_(scalar, std::minus<>()); }
+    Vector& operator*=(T scalar) { return apply_scalar_(scalar, std::multiplies<>()); }
+    Vector& operator/=(T scalar) { return apply_scalar_(scalar, std::divides<>()); }
 
     // Binary operators (hidden friends)
     // LHS is passed by value, mutated, and returned
@@ -215,28 +244,28 @@ public:
     //         Methods
     // -------------------------------------------------------------------------
     T min() const {
-        check_empty();
+        check_empty_();
         return std::ranges::min_element(data_);
     }
 
     T max() const {
-        check_empty();
+        check_empty_();
         return std::ranges::max_element(data_);
     }
 
     T sum() const {
-        check_empty();
+        check_empty_();
         return std::accumulate(begin(), end(), T(0));
     }
 
     T mean() const {
-        check_empty();
+        check_empty_();
         return sum() / static_cast<T>(size());
     }
 
     // TODO ord (see src/utils.cpp)
     T norm() const {
-        check_empty();
+        check_empty_();
         return std::sqrt(
             std::accumulate(
                 begin(), end(), T(0), [](T acc, T x) { return acc + x * x; }
@@ -247,13 +276,13 @@ public:
 private:
     std::vector<T> data_;
 
-    void check_empty() const {
+    void check_empty_() const {
         if (empty()) {
             throw std::runtime_error("Vector is empty");
         }
     }
 
-    void check_same_size(const Vector& rhs) const {
+    void check_same_size_(const Vector& rhs) const {
         if (size() != rhs.size()) {
             throw std::invalid_argument(
                 std::format("Vector size mismatch: {} vs {}", size(), rhs.size())
@@ -262,7 +291,7 @@ private:
     }
 
     template <typename BinaryOp>
-    Vector& apply_scalar(T scalar, BinaryOp op) {
+    Vector& apply_scalar_(T scalar, BinaryOp op) {
         std::ranges::transform(
             data_, begin(), [scalar, op](T x) { return op(x, scalar); }
         );
@@ -270,8 +299,8 @@ private:
     }
 
     template <typename BinaryOp>
-    Vector& apply_elementwise(const Vector& rhs, BinaryOp op) {
-        check_same_size(rhs);
+    Vector& apply_elementwise_(const Vector& rhs, BinaryOp op) {
+        check_same_size_(rhs);
         std::ranges::transform(data_, rhs.data_, begin(), op);
         return *this;
     }

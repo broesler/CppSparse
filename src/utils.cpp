@@ -15,8 +15,8 @@
 #include <ranges>     // views::transform
 #include <span>
 #include <stdexcept>
-#include <vector>
 
+#include "Vector.h"
 #include "utils.h"
 
 namespace cs {
@@ -44,7 +44,7 @@ std::vector<double> operator+(
             auto [x, y] = vals;
             return x + y;
         })
-        | std::ranges::to<std::vector>();
+        | std::ranges::to<VectorD>();
 }
 
 
@@ -53,7 +53,7 @@ std::vector<double> operator-(std::span<const double> a)
 {
     return a
         | std::views::transform(std::negate<>()) 
-        | std::ranges::to<std::vector>();
+        | std::ranges::to<VectorD>();
 }
 
 
@@ -77,7 +77,7 @@ std::vector<double> operator-(
             auto [x, y] = vals;
             return x - y;
         })
-        | std::ranges::to<std::vector>();
+        | std::ranges::to<VectorD>();
 }
 
 
@@ -86,7 +86,7 @@ std::vector<double> operator*(double c, std::span<const double> vec)
 {
     return vec
         | std::views::transform([c](auto x) { return c * x; })
-        | std::ranges::to<std::vector>();
+        | std::ranges::to<VectorD>();
 }
 
 

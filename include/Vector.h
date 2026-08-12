@@ -35,12 +35,16 @@ public:
     //         STL Container Type Aliases
     // -------------------------------------------------------------------------
     using value_type = T;
-    using reference = T&;
-    using const_reference = const T&;
     using size_type = size_t;
     using difference_type = ptrdiff_t;
+    using reference = T&;
+    using const_reference = const T&;
+    using pointer = T*;
+    using const_pointer = const T*;
     using iterator = typename std::vector<T>::iterator;
     using const_iterator = typename std::vector<T>::const_iterator;
+    using reverse_iterator = typename std::vector<T>::reverse_iterator;
+    using const_reverse_iterator = typename std::vector<T>::const_reverse_iterator;
 
     // -------------------------------------------------------------------------
     //         Constructors

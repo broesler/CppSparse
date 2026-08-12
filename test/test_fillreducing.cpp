@@ -17,7 +17,6 @@
 #include "csparse.h"
 #include "test_helpers.h"
 
-using Catch::Matchers::UnorderedEquals;
 
 namespace cs {
 
@@ -424,8 +423,8 @@ TEST_CASE("Dulmage-Mendelsohn Permutation", "[dmperm]")
         CHECK(D.p == expect_p);
         CHECK(D.q == expect_q);
     } else {
-        CHECK_THAT(D.p, UnorderedEquals(expect_p));
-        CHECK_THAT(D.q, UnorderedEquals(expect_q));
+        CHECK(std::ranges::is_permutation(D.p, expect_p));
+        CHECK(std::ranges::is_permutation(D.q, expect_q));
     }
     CHECK(D.r == expect_r);
     CHECK(D.s == expect_s);

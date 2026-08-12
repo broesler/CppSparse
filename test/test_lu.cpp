@@ -22,7 +22,6 @@
 
 using Catch::Matchers::WithinAbs;
 using Catch::Matchers::RangeEquals;
-using Catch::Matchers::UnorderedEquals;
 
 
 namespace cs {
@@ -42,8 +41,8 @@ LUResult lu_test(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural)
     std::ranges::iota(row_perm, 0);
     std::ranges::iota(col_perm, 0);
 
-    CHECK_THAT(res.p_inv, UnorderedEquals(row_perm));
-    CHECK_THAT(res.q,     UnorderedEquals(col_perm));
+    CHECK(std::ranges::is_permutation(res.p_inv, row_perm));
+    CHECK(std::ranges::is_permutation(res.q,     col_perm));
 
     auto PAQ = A.permute(res.p_inv, res.q).to_canonical();
     check_sparse_allclose(LU, PAQ);

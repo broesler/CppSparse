@@ -359,7 +359,7 @@ TEST_CASE("Exercise 2.18: Sparse Vector-Vector Multiply", "[ex2.18][math]")
     double expect = 17.41;
 
     SECTION("Unsorted indices") {
-        CHECK_THAT(x.T() * y, WithinAbs(expect, tol));
+        CHECK_THAT(static_cast<double>(x.T() * y), WithinAbs(expect, tol));
         REQUIRE_THAT(x.vecdot(y), WithinAbs(expect, tol));
     }
 
@@ -367,7 +367,7 @@ TEST_CASE("Exercise 2.18: Sparse Vector-Vector Multiply", "[ex2.18][math]")
         x.sort();
         y.sort();
 
-        CHECK_THAT(x.T() * y, WithinAbs(expect, tol));
+        CHECK_THAT(static_cast<double>(x.T() * y), WithinAbs(expect, tol));
         REQUIRE_THAT(x.vecdot(y), WithinAbs(expect, tol));
     }
 }

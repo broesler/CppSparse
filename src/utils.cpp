@@ -15,118 +15,11 @@
 #include <ranges>     // views::transform
 #include <span>
 #include <stdexcept>
+#include <vector>
 
-#include "Vector.h"
 #include "utils.h"
 
 namespace cs {
-
-/*------------------------------------------------------------------------------
- *         Vector Operators 
- *----------------------------------------------------------------------------*/
-/** Vector-vector addition */
-std::vector<double> operator+(
-    std::span<const double> a,
-    std::span<const double> b
-)
-{
-    if (a.size() != b.size()) {
-        throw std::invalid_argument(
-            std::format(
-                "Vector size mismatch for addition: size a = {}, size b = {}",
-                a.size(), b.size()
-            )
-        );
-    }
-
-    return std::views::zip(a, b)
-        | std::views::transform([](auto&& vals) {
-            auto [x, y] = vals;
-            return x + y;
-        })
-        | std::ranges::to<VectorD>();
-}
-
-
-/** Unary minus operator for a vector */
-std::vector<double> operator-(std::span<const double> a)
-{
-    return a
-        | std::views::transform(std::negate<>()) 
-        | std::ranges::to<VectorD>();
-}
-
-
-/** Vector-vector subtraction */
-std::vector<double> operator-(
-    std::span<const double> a,
-    std::span<const double> b
-)
-{
-    if (a.size() != b.size()) {
-        throw std::invalid_argument(
-            std::format(
-                "Vector size mismatch for subtraction: size a = {}, size b = {}",
-                a.size(), b.size()
-            )
-        );
-    }
-
-    return std::views::zip(a, b)
-        | std::views::transform([] (auto&& vals) {
-            auto [x, y] = vals;
-            return x - y;
-        })
-        | std::ranges::to<VectorD>();
-}
-
-
-/** Scale a vector by a scalar */
-std::vector<double> operator*(double c, std::span<const double> vec)
-{
-    return vec
-        | std::views::transform([c](auto x) { return c * x; })
-        | std::ranges::to<VectorD>();
-}
-
-
-std::vector<double> operator*(std::span<const double> vec, double c)
-{
-    return c * vec;
-}
-
-
-std::span<double> operator*=(std::span<double> vec, double c)
-{
-    std::ranges::for_each(vec, [c](auto& x) { return x *= c; });
-    return vec;
-}
-
-
-std::span<double> operator+=(
-    std::span<double> a,
-    std::span<const double> b
-)
-{
-    if (a.size() != b.size()) {
-        throw std::invalid_argument(
-            std::format(
-                "Vector size mismatch for addition: size a = {}, size b = {}",
-                a.size(), b.size()
-            )
-        );
-    }
-
-    std::ranges::for_each(
-        std::views::zip(a, b),
-        [](auto&& vals) {
-            auto [x, y] = vals;
-            x += y;
-        }
-    );
-
-    return a;
-}
 
 
 /*------------------------------------------------------------------------------

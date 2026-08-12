@@ -14,7 +14,8 @@
 #include <span>
 #include <string>     // string_view
 #include <stdexcept>  // runtime_error
-#include <vector>
+
+#include "Vector.h"
 
 
 namespace cs {
@@ -22,8 +23,8 @@ namespace cs {
 using csint = std::int32_t;
 using Shape = std::array<csint, 2>;
 
-using VectorD = std::vector<double>;
-using VectorI = std::vector<csint>;
+using VectorI = Vector<csint>;
+
 
 // Need full enum class definition for default arguments
 enum class DenseOrder

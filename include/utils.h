@@ -17,25 +17,6 @@
 
 namespace cs {
 
-std::vector<double> operator+(
-    std::span<const double> a,
-    std::span<const double> b
-);
-
-std::vector<double> operator-(
-    std::span<const double> a,
-    std::span<const double> b
-);
-
-std::vector<double> operator-(std::span<const double> a);
-
-std::span<double> operator+=(std::span<double> a, std::span<const double> b);
-
-std::vector<double> operator*(double c, std::span<const double> x);
-std::vector<double> operator*(std::span<const double> x, double c);
-std::span<double> operator*=(std::span<double> x, double c);
-
-
 /** Compute the norm of a vector.
  *
  * @param x  the vector

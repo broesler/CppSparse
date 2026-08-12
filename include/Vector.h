@@ -13,6 +13,7 @@
 #include <functional>       // plus, etc.
 #include <initializer_list>
 #include <numeric>          // accumulate
+#include <ranges>           // views::transform
 #include <stdexcept>        // invalid_argument
 #include <type_traits>      // is_arithmetic_v
 #include <vector>
@@ -49,7 +50,7 @@ public:
     Vector(std::initializer_list<T> init) : data_(init) {}
     Vector(const std::vector<T>& vec) : data_(vec) {}
     Vector(std::vector<T> vec) : data_(std::move(vec)) {}
-
+    
     template <std::input_iterator It>
     Vector(It first, It last) : data_(first, last) {}
 
@@ -314,6 +315,119 @@ private:
     //     return result;
     // }
 };  // class Vector
+
+
+// Type aliases
+using VectorD = Vector<double>;
+
+
+/*------------------------------------------------------------------------------
+ *         Vector Operators 
+ *----------------------------------------------------------------------------*/
+/** Vector-vector addition */
+inline VectorD operator+(
+    std::span<const double> a,
+    std::span<const double> b
+)
+{
+    if (a.size() != b.size()) {
+        throw std::invalid_argument(
+            std::format(
+                "Vector size mismatch for addition: size a = {}, size b = {}",
+                a.size(), b.size()
+            )
+        );
+    }
+
+    return std::views::zip(a, b)
+        | std::views::transform([](auto&& vals) {
+            auto [x, y] = vals;
+            return x + y;
+        })
+        | std::ranges::to<VectorD>();
+}
+
+
+/** Unary minus operator for a vector */
+inline VectorD operator-(std::span<const double> a)
+{
+    return a
+        | std::views::transform(std::negate<>()) 
+        | std::ranges::to<VectorD>();
+}
+
+
+/** Vector-vector subtraction */
+inline VectorD operator-(
+    std::span<const double> a,
+    std::span<const double> b
+)
+{
+    if (a.size() != b.size()) {
+        throw std::invalid_argument(
+            std::format(
+                "Vector size mismatch for subtraction: size a = {}, size b = {}",
+                a.size(), b.size()
+            )
+        );
+    }
+
+    return std::views::zip(a, b)
+        | std::views::transform([] (auto&& vals) {
+            auto [x, y] = vals;
+            return x - y;
+        })
+        | std::ranges::to<VectorD>();
+}
+
+
+/** Scale a vector by a scalar */
+inline VectorD operator*(double c, std::span<const double> vec)
+{
+    return vec
+        | std::views::transform([c](auto x) { return c * x; })
+        | std::ranges::to<VectorD>();
+}
+
+
+inline VectorD operator*(std::span<const double> vec, double c)
+{
+    return c * vec;
+}
+
+
+inline std::span<double> operator*=(std::span<double> vec, double c)
+{
+    std::ranges::for_each(vec, [c](auto& x) { return x *= c; });
+    return vec;
+}
+
+
+inline std::span<double> operator+=(
+    std::span<double> a,
+    std::span<const double> b
+)
+{
+    if (a.size() != b.size()) {
+        throw std::invalid_argument(
+            std::format(
+                "Vector size mismatch for addition: size a = {}, size b = {}",
+                a.size(), b.size()
+            )
+        );
+    }
+
+    std::ranges::for_each(
+        std::views::zip(a, b),
+        [](auto&& vals) {
+            auto [x, y] = vals;
+            x += y;
+        }
+    );
+
+    return a;
+}
+
 
 }  // namespace cs
 

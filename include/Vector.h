@@ -275,16 +275,6 @@ public:
         return sum() / static_cast<T>(size());
     }
 
-    // TODO ord (see src/utils.cpp)
-    T norm() const {
-        check_empty_();
-        return std::sqrt(
-            std::accumulate(
-                begin(), end(), T(0), [](T acc, T x) { return acc + x * x; }
-            )
-        );
-    }
-
 private:
     std::vector<T> data_;
 

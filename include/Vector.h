@@ -70,6 +70,13 @@ public:
         return *this;
     }
 
+    Vector(const Vector&) = default;
+    Vector(Vector&&) = default;
+    ~Vector() = default;
+
+    Vector& operator=(const Vector&) = default;
+    Vector& operator=(Vector&&) = default;
+
     // -------------------------------------------------------------------------
     //         Accessors
     // -------------------------------------------------------------------------

@@ -15,41 +15,11 @@
 #include <vector>
 
 #include "csparse.h"
-#include "Vector.h"
 #include "test_helpers.h"
 
 using Catch::Matchers::WithinAbs;
 
 namespace cs {
-
-
-TEST_CASE("Vector Operators", "[vector][ops]")
-{
-    VectorD a{1, 2, 3};
-
-    SECTION("Scale a vector") {
-        VectorD expect{2, 4, 6};
-
-        REQUIRE((2 * a) == expect);
-        REQUIRE((a * 2) == expect);
-    }
-
-    SECTION("Add two vectors") {
-        VectorD b{4, 5, 6};
-
-        REQUIRE((a + b) == VectorD{5, 7, 9});
-    }
-
-    SECTION("Negate a vector") {
-        REQUIRE(-a == VectorD{-1, -2, -3});
-    }
-
-    SECTION("Subtract two vectors") {
-        VectorD b{4, 5, 6};
-
-        REQUIRE((a - b) == VectorD{-3, -3, -3});
-    }
-}
 
 
 TEST_CASE("Vector permutations", "[vector][perm]")

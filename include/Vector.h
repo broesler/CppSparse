@@ -80,17 +80,17 @@ public:
     // -------------------------------------------------------------------------
     //         Accessors
     // -------------------------------------------------------------------------
-    T& at(size_t i) noexcept { return data_.at(i); }
-    T& operator[](size_t i) noexcept { return data_[i]; }
-    const T& at(size_t i) const noexcept { return data_.at(i); }
-    const T& operator[](size_t i) const noexcept { return data_[i]; }
+    T& at(size_t i) { return data_.at(i); }
+    T& operator[](size_t i) { return data_[i]; }
+    const T& at(size_t i) const { return data_.at(i); }
+    const T& operator[](size_t i) const { return data_[i]; }
 
-    T& front() noexcept { return data_.front(); }
-    T& back() noexcept { return data_.back(); }
-    T* data() noexcept { return data_.data(); }
-    const T& front() const noexcept { return data_.front(); }
-    const T& back() const noexcept { return data_.back(); }
-    const T* data() const noexcept { return data_.data(); }
+    T& front() { return data_.front(); }
+    T& back() { return data_.back(); }
+    T* data() { return data_.data(); }
+    const T& front() const { return data_.front(); }
+    const T& back() const { return data_.back(); }
+    const T* data() const { return data_.data(); }
 
     bool empty() const noexcept { return data_.empty(); }
     size_t size() const noexcept { return data_.size(); }

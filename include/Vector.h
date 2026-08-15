@@ -53,7 +53,7 @@ public:
     explicit Vector(size_t count, const T& value = T()) : data_(count, value) {}
     Vector(std::initializer_list<T> init) : data_(init) {}
     Vector(const std::vector<T>& vec) : data_(vec) {}
-    Vector(std::vector<T> vec) : data_(std::move(vec)) {}
+    Vector(std::vector<T>&& vec) : data_(std::move(vec)) {}
     
     template <std::input_iterator It>
     Vector(It first, It last) : data_(first, last) {}
@@ -230,20 +230,16 @@ public:
     // Non-commutative
     friend Vector operator-(T scalar, const Vector& rhs) {
         Vector result(rhs.size());
-        std::transform(
-            rhs.data_,
-            result.begin(),
-            [scalar](T x) { return scalar - x; }
+        std::ranges::transform(
+            rhs.data_, result.begin(), [scalar](T x) { return scalar - x; }
         );
         return result;
     }
 
     friend Vector operator/(T scalar, const Vector& rhs) {
         Vector result(rhs.size());
-        std::transform(
-            rhs.data_,
-            result.begin(),
-            [scalar](T x) { return scalar / x; }
+        std::ranges::transform(
+            rhs.data_, result.begin(), [scalar](T x) { return scalar / x; }
         );
         return result;
     }
@@ -257,12 +253,12 @@ public:
     // -------------------------------------------------------------------------
     T min() const {
         check_empty_();
-        return std::ranges::min_element(data_);
+        return *std::ranges::min_element(data_);
     }
 
     T max() const {
         check_empty_();
-        return std::ranges::max_element(data_);
+        return *std::ranges::max_element(data_);
     }
 
     T sum() const {

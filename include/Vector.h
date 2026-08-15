@@ -10,10 +10,12 @@
 #pragma once
 
 #include <algorithm>        // transform
+#include <concepts>         // integral, floating_point
+#include <format>           // format
 #include <functional>       // plus, etc.
 #include <initializer_list>
 #include <numeric>          // accumulate
-#include <ranges>           // views::transform
+#include <ranges>           // from_range_t, views::transform
 #include <stdexcept>        // invalid_argument
 #include <type_traits>      // is_arithmetic_v
 #include <vector>
@@ -57,6 +59,11 @@ public:
     
     template <std::input_iterator It>
     Vector(It first, It last) : data_(first, last) {}
+
+    // Usage: Vector<T> v(std::from_range, some_range);
+    template <std::ranges::range R>
+    explicit Vector(std::from_range_t, R&& r)
+        : data_(std::ranges::begin(r), std::ranges::end(r)) {}
 
     void assign(size_t count, const T& value) { data_.assign(count, value); }
 

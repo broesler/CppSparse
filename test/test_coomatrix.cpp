@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-#include "csparse.h"
+#include "csparse.hpp"
 
 using Catch::Matchers::RangeEquals;
 

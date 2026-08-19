@@ -16,9 +16,9 @@
 #include <vector>
 #include <utility>     // exchange
 
-#include "utils.h"
-#include "csc.h"
-#include "coo.h"
+#include "utils.hpp"
+#include "csc.hpp"
+#include "coo.hpp"
 
 namespace cs {
 

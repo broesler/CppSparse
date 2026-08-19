@@ -14,9 +14,9 @@
 #include <iterator>   // std::back_inserter
 #include <numeric>    // std::iota, partial_sum
 
-#include "cholesky.h"
-#include "csc.h"
-#include "utils.h"
+#include "cholesky.hpp"
+#include "csc.hpp"
+#include "utils.hpp"
 
 namespace cs {
 

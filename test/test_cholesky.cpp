@@ -16,8 +16,8 @@
 #include <utility>    // as_const
 #include <vector>
 
-#include "csparse.h"
-#include "test_helpers.h"
+#include "csparse.hpp"
+#include "test_helpers.hpp"
 
 using Catch::Matchers::WithinAbs;
 using Catch::Matchers::RangeEquals;

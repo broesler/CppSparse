@@ -21,7 +21,7 @@
 #include <vector>
 #include <utility>  // forward
 
-#include "csparse.h"
+#include "csparse.hpp"
 
 namespace py = pybind11;
 

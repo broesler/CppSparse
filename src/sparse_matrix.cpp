@@ -13,7 +13,7 @@
 #include <ranges>
 #include <string>
 
-#include "sparse_matrix.h"
+#include "sparse_matrix.hpp"
 
 
 namespace cs {

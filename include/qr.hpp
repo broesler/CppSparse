@@ -13,8 +13,8 @@
 #include <span>
 #include <vector>
 
-#include "csc.h"
-#include "types.h"
+#include "csc.hpp"
+#include "types.hpp"
 
 
 namespace cs {

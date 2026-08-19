@@ -12,10 +12,10 @@
 #include <ranges>
 #include <vector>
 
-#include "types.h"
-#include "example_matrices.h"
-#include "csc.h"
-#include "coo.h"
+#include "types.hpp"
+#include "example_matrices.hpp"
+#include "csc.hpp"
+#include "coo.hpp"
 
 namespace cs {
 

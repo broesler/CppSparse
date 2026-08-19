@@ -15,9 +15,9 @@
 #include <ranges>     // views::reverse, span
 #include <vector>
 
-#include "cholesky.h"  // etree, post
-#include "qr.h"
-#include "utils.h"
+#include "cholesky.hpp"  // etree, post
+#include "qr.hpp"
+#include "utils.hpp"
 
 namespace cs {
 

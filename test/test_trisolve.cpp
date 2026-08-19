@@ -14,8 +14,8 @@
 #include <numeric>    // iota
 #include <vector>
 
-#include "csparse.h"
-#include "test_helpers.h"
+#include "csparse.hpp"
+#include "test_helpers.hpp"
 
 
 namespace cs {

@@ -14,12 +14,12 @@
 #include <stdexcept>
 #include <vector>
 
-#include "types.h"
-#include "cholesky.h"
-#include "lu.h"
-#include "qr.h"
-#include "solve.h"
-#include "utils.h"  // inv_permute
+#include "types.hpp"
+#include "cholesky.hpp"
+#include "lu.hpp"
+#include "qr.hpp"
+#include "solve.hpp"
+#include "utils.hpp"  // inv_permute
 
 namespace cs {
 

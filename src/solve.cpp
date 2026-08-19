@@ -13,12 +13,12 @@
 #include <span>
 #include <vector>
 
-#include "solve.h"
-#include "csc.h"
-#include "utils.h"
-#include "cholesky.h"
-#include "qr.h"
-#include "lu.h"
+#include "solve.hpp"
+#include "csc.hpp"
+#include "utils.hpp"
+#include "cholesky.hpp"
+#include "qr.hpp"
+#include "lu.hpp"
 
 namespace cs {
 

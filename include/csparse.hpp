@@ -10,17 +10,17 @@
 
 #pragma once
 
-#include "Vector.h"
-#include "types.h"
-#include "utils.h"
-#include "csc.h"
-#include "coo.h"
-#include "cholesky.h"
-#include "lu.h"
-#include "qr.h"
-#include "fillreducing.h"
-#include "solve.h"
-#include "example_matrices.h"
+#include "Vector.hpp"
+#include "types.hpp"
+#include "utils.hpp"
+#include "csc.hpp"
+#include "coo.hpp"
+#include "cholesky.hpp"
+#include "lu.hpp"
+#include "qr.hpp"
+#include "fillreducing.hpp"
+#include "solve.hpp"
+#include "example_matrices.hpp"
 
 
 //==============================================================================

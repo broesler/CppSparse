@@ -16,8 +16,8 @@
 #include <sstream>
 #include <vector>
 
-#include "types.h"
-#include "sparse_matrix.h"
+#include "types.hpp"
+#include "sparse_matrix.hpp"
 
 
 namespace cs {

@@ -13,8 +13,8 @@
 
 #include <ranges>  // from_range
 
-#include "Vector.h"
-#include "VectorView.h"
+#include "Vector.hpp"
+#include "VectorView.hpp"
 
 
 namespace cs {

@@ -13,8 +13,8 @@
 #include <functional>  // function, greater_equal, not_equal_to
 #include <span>
 
-#include "csparse.h"
-#include "test_helpers.h"
+#include "csparse.hpp"
+#include "test_helpers.hpp"
 
 using Catch::Matchers::WithinAbs;
 using Catch::Matchers::RangeEquals;

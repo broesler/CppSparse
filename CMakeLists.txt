@@ -85,11 +85,11 @@ set(BASENAMES
 )
 
 set(SOURCES "")
-set(HEADERS include/csparse.h include/types.h include/Vector.h)
+set(HEADERS include/csparse.hpp include/types.hpp include/Vector.hpp)
 
 foreach(BASENAME ${BASENAMES})
     list(APPEND SOURCES src/${BASENAME}.cpp)
-    list(APPEND HEADERS include/${BASENAME}.h)
+    list(APPEND HEADERS include/${BASENAME}.hpp)
 endforeach()
 
 # -----------------------------------------------------------------------------
@@ -137,7 +137,7 @@ install(
 # -----------------------------------------------------------------------------
 # Gather all test source files
 file(GLOB TEST_SOURCES test/test_*.cpp test/test_helpers.cpp)
-file(GLOB TEST_HEADERS test/test_helpers.h)
+file(GLOB TEST_HEADERS test/test_helpers.hpp)
 
 add_executable(test_csparse ${TEST_SOURCES} ${TEST_HEADERS})
 target_include_directories(test_csparse PRIVATE include test)

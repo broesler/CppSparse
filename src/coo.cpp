@@ -21,8 +21,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include "coo.h"
-#include "csc.h"
+#include "coo.hpp"
+#include "csc.hpp"
 
 namespace cs {
 

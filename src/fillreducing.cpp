@@ -15,12 +15,12 @@
 #include <tuple>      // tie
 #include <vector>
 
-#include "types.h"
-#include "fillreducing.h"
-#include "csc.h"
-#include "cholesky.h"  // tdfs
-#include "solve.h"     // dfs
-#include "utils.h"     // randperm
+#include "types.hpp"
+#include "fillreducing.hpp"
+#include "csc.hpp"
+#include "cholesky.hpp"  // tdfs
+#include "solve.hpp"     // dfs
+#include "utils.hpp"     // randperm
 
 namespace cs {
 

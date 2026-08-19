@@ -11,7 +11,7 @@
 
 #include <span>
 
-#include "types.h"
+#include "types.hpp"
 
 using Catch::Matchers::WithinAbs;
 

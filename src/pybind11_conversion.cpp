@@ -14,8 +14,8 @@
 #include <stdexcept>
 #include <vector>
 
-#include "pybind11_conversion.h"
-#include "csparse.h"
+#include "pybind11_conversion.hpp"
+#include "csparse.hpp"
 
 namespace py = pybind11;
 

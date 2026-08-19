@@ -17,7 +17,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "utils.h"
+#include "utils.hpp"
 
 namespace cs {
 

@@ -162,7 +162,7 @@ MaxMatch maxtrans_r(const CSCMatrix& A, csint seed);
 }  // namespace cs
 
 
-/** Custom formatter for DenseOrder enum to enable std::format support. */
+/// Custom formatter for DenseOrder enum to enable std::format support.
 template <>
 struct std::formatter<cs::DenseOrder> : std::formatter<std::string_view>
 {
@@ -175,7 +175,7 @@ struct std::formatter<cs::DenseOrder> : std::formatter<std::string_view>
 };
 
 
-/** Custom formatter for AMDOrder enum to enable std::format support. */
+/// Custom formatter for AMDOrder enum to enable std::format support.
 template <>
 struct std::formatter<cs::AMDOrder> : std::formatter<std::string_view>
 {
@@ -190,13 +190,13 @@ struct std::formatter<cs::AMDOrder> : std::formatter<std::string_view>
 
 namespace cs {
 
-/** Print DenseOrder to a stream */
+/// Print DenseOrder to a stream
 inline std::ostream& operator<<(std::ostream& os, DenseOrder order)
 {
     return os << std::format("{}", order);
 }
 
-/** Print AMDOrder to a stream */
+/// Print AMDOrder to a stream
 inline std::ostream& operator<<(std::ostream& os, AMDOrder order)
 {
     return os << std::format("{}", order);

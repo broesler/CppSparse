@@ -328,7 +328,7 @@ using VectorD = Vector<double>;
 /*------------------------------------------------------------------------------
  *         Vector Operators 
  *----------------------------------------------------------------------------*/
-/** Vector-vector addition */
+/// Vector-vector addition
 inline VectorD operator+(
     std::span<const double> a,
     std::span<const double> b
@@ -352,7 +352,7 @@ inline VectorD operator+(
 }
 
 
-/** Unary minus operator for a vector */
+/// Unary minus operator for a vector
 inline VectorD operator-(std::span<const double> a)
 {
     return a
@@ -361,7 +361,7 @@ inline VectorD operator-(std::span<const double> a)
 }
 
 
-/** Vector-vector subtraction */
+/// Vector-vector subtraction
 inline VectorD operator-(
     std::span<const double> a,
     std::span<const double> b
@@ -385,7 +385,7 @@ inline VectorD operator-(
 }
 
 
-/** Scale a vector by a scalar */
+/// Scale a vector by a scalar
 inline VectorD operator*(double c, std::span<const double> vec)
 {
     return vec

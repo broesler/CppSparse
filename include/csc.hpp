@@ -27,7 +27,7 @@ class CSCMatrix : public SparseMatrix
 private:
     // Declare indptr_range_ member first since its entire definition is needed
     // for the public iterators
-    /** Return an iterator over the index "pointers" of column j. */
+    /// Return an iterator over the index "pointers" of column j.
     auto indptr_range_(csint j) const
     {
         // If p_[j+1] < p_[j], then the column is empty, return an empty range.
@@ -155,25 +155,25 @@ public:
     auto indptr() const { return std::span<const csint>{p_}; }
     virtual std::span<const double> data() const override { return {v_}; }
 
-    /** Return the number of non-zeros in column j. */
+    /// Return the number of non-zeros in column j.
     csint col_length(csint j) const
     {
         return indptr_range_(j).size();
     }
 
-    /** Return a span over the row indices of column j. */
+    /// Return a span over the row indices of column j.
     auto row_indices(csint j) const
     {
         return std::span(i_).subspan(p_[j], col_length(j));
     }
 
-    /** Return a span over the values of column j. */
+    /// Return a span over the values of column j.
     auto col_values(csint j) const
     {
         return std::span(v_).subspan(p_[j], col_length(j));
     }
 
-    /** Return an iterator over the pointers and indices of column j. */
+    /// Return an iterator over the pointers and indices of column j.
     auto enum_row_indices(csint j) const
     {
         return std::views::zip(indptr_range_(j), row_indices(j));
@@ -182,7 +182,7 @@ public:
     // NOTE need to use the pair/tuple method instead of zip because
     // std::views::repeat(0.0) is a different type than a span, so zip won't
     // work if v_ is empty (i.e. symbolic matrix).
-    /** Return an iterator over the indices and values of column j. */
+    /// Return an iterator over the indices and values of column j.
     auto column(csint j) const
     {
         const bool has_values = !v_.empty();
@@ -193,7 +193,7 @@ public:
         );
     }
 
-    /** Return an iterator over the pointers, indices and values of column j. */
+    /// Return an iterator over the pointers, indices and values of column j.
     auto enum_column(csint j) const
     {
         const bool has_values = !v_.empty();
@@ -204,7 +204,7 @@ public:
         );
     }
 
-    /** Return an mutable iterator over the indices and values of column j. */
+    /// Return an mutable iterator over the indices and values of column j.
     auto column(csint j)
     {
         auto idx_view = std::span(i_).subspan(p_[j], col_length(j));
@@ -212,7 +212,7 @@ public:
         return std::views::zip(idx_view, val_view);
     }
 
-    /** Return a mutable iterator over the pointers, indices and values of column j. */
+    /// Return a mutable iterator over the pointers, indices and values of column j.
     auto enum_column(csint j)
     {
         auto idx_view = std::span(i_).subspan(p_[j], col_length(j));
@@ -679,7 +679,7 @@ public:
      */
     virtual std::vector<double> dot(std::span<const double> X) const override;
 
-    /** Scale a matrix by a scalar */
+    /// Scale a matrix by a scalar
     CSCMatrix dot(double c) const;
 
     /** Matrix-matrix multiplication
@@ -720,7 +720,7 @@ public:
      */
     double vecdot(const CSCMatrix& y) const;
 
-    /** Matrix-matrix add and subtract */
+    /// Matrix-matrix add and subtract
     CSCMatrix add(const CSCMatrix& B) const;
     CSCMatrix subtract(const CSCMatrix& B) const;
 
@@ -1087,7 +1087,7 @@ public:
     friend CSCMatrix operator-(const CSCMatrix& A);
 
 protected:
-    /** Return the format description of the matrix. */
+    /// Return the format description of the matrix.
     virtual std::string_view get_format_desc_() const override
     {
         return format_desc_;

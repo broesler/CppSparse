@@ -441,7 +441,7 @@ auto make_pvec_wrapper(FuncD&& func_double, FuncI&& func_int)
 }
 
 
-/** Wrap a solve function that takes a matrix, vector, and order. */
+/// Wrap a solve function that takes a matrix, vector, and order.
 template <typename DenseSolver, typename... Args>
 py::object solver_dense_impl_(
     DenseSolver&& dense_solver,
@@ -481,7 +481,7 @@ py::object solver_dense_impl_(
 }
 
 
-/** Wrap a sparse solve function. */
+/// Wrap a sparse solve function.
 template <typename SparseSolver, typename... Args>
 py::object solver_sparse_impl_(
     SparseSolver&& sparse_solver,
@@ -530,7 +530,7 @@ py::object solver_sparse_impl_(
 }
 
 
-/** Wrap a solve function that takes a matrix, vector, and order. */
+/// Wrap a solve function that takes a matrix, vector, and order.
 template <typename DenseSolver, typename SparseSolver, typename... Args>
 py::object solver_impl_(
     DenseSolver&& dense_solver,

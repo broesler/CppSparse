@@ -20,7 +20,7 @@
 namespace cs {
 
 
-/** Householder reflection return struct. */
+/// Householder reflection return struct.
 struct Householder {
     std::vector<double> v;  ///< the Householder vector
     double beta;            ///< the scaling factor
@@ -28,7 +28,7 @@ struct Householder {
 };
 
 
-/** Symbolic QR decomposition return struct (see: cs_symbolic aka css) */
+/// Symbolic QR decomposition return struct (see: cs_symbolic aka css)
 struct SymbolicQR
 {
     std::vector<csint> p_inv,     ///< inverse row permutation
@@ -42,7 +42,7 @@ struct SymbolicQR
 };
 
 
-/** Numeric QR decomposition return struct. */
+/// Numeric QR decomposition return struct.
 struct QRResult {
     CSCMatrix V;                  ///< the Householder vectors
     std::vector<double> beta;     ///< the scaling factors

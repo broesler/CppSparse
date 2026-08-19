@@ -43,7 +43,7 @@ struct CholCounts {
 };
 
 
-/** SymbolicChol Cholesky decomposition return struct (see cs_symbolic aka css) */
+/// SymbolicChol Cholesky decomposition return struct (see cs_symbolic aka css)
 struct SymbolicChol
 {
     std::vector<csint> p_inv,   ///< fill-reducing permutation
@@ -54,7 +54,7 @@ struct SymbolicChol
 };
 
 
-/** CholResult Cholesky decomposition return struct (see cs_chol aka csc) */
+/// CholResult Cholesky decomposition return struct (see cs_chol aka csc)
 struct CholResult
 {
     CSCMatrix L;               ///< Cholesky factor

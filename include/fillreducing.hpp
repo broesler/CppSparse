@@ -16,7 +16,7 @@
 namespace cs {
 
 
-/** Maximum matching permutation struct. */
+/// Maximum matching permutation struct.
 struct MaxMatch {
     std::vector<csint> jmatch;  ///< (M,) column matches for each row
     std::vector<csint> imatch;  ///< (N,) row matches for each column
@@ -26,7 +26,7 @@ struct MaxMatch {
 };
 
 
-/** Strongly connected components result struct. */
+/// Strongly connected components result struct.
 struct SCCResult {
     std::vector<csint> p,  ///< (M,) row permutation
                        r;  ///< (Nb+1,) block k is rows r[k] to r[k+1]-1 in A[p, q]
@@ -40,7 +40,7 @@ struct SCCResult {
 };
 
 
-/** Dulmage-Mendelsohn permutation result struct. */
+/// Dulmage-Mendelsohn permutation result struct.
 struct DMPermResult {
     std::vector<csint> p,     ///< (M,) row permutation
                        q,     ///< (N,) column permutation

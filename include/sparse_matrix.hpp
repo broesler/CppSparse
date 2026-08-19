@@ -24,7 +24,7 @@ using ElemFunc = std::function<void(csint i, csint j, double v)>;
 
 class SparseMatrix {
 protected:
-    /** Return the format description of the matrix. */
+    /// Return the format description of the matrix.
     virtual std::string_view get_format_desc_() const = 0;
 
     /** Print elements of the matrix between `start` and `end`.

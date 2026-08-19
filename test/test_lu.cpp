@@ -27,7 +27,7 @@ using Catch::Matchers::RangeEquals;
 namespace cs {
 
 
-/** Define a helper function to test LU decomposition */
+/// Define a helper function to test LU decomposition
 LUResult lu_test(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural)
 {
     auto S = slu(A, order);

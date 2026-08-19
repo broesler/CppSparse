@@ -258,7 +258,7 @@ public:
 
 
 protected:
-    /** Return the format description of the matrix. */
+    /// Return the format description of the matrix.
     virtual std::string_view get_format_desc_() const override
     {
         return format_desc_;

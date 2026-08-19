@@ -47,7 +47,7 @@ void SparseMatrix::format_to(std::string& out, bool verbose, csint threshold) co
 
 namespace {
 
-/** Return max(|x_i|) for x_i in data, ignoring non-finite values. */
+/// Return max(|x_i|) for x_i in data, ignoring non-finite values.
 inline auto get_max_abs_finite(std::span<const double> data)
 {
     auto data_view = data

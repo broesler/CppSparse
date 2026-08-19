@@ -1353,7 +1353,7 @@ void saxpy(
 }
 
 
-/** Add a matrix B. */
+/// Add a matrix B.
 CSCMatrix CSCMatrix::add(const CSCMatrix& B) const
 {
     return add_scaled(*this, B, 1.0, 1.0);

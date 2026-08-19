@@ -19,7 +19,7 @@
 namespace cs {
 
 
-/** Data structure to an Ax = b problem. */
+/// Data structure to an Ax = b problem.
 struct Problem
 {
     const CSCMatrix A,            ///< original matrix
@@ -44,7 +44,7 @@ struct Problem
 using Clock = std::chrono::steady_clock;  // never goes backwards
 using TimePoint = Clock::time_point;
 
-/** Start and stop a timer */
+/// Start and stop a timer
 TimePoint tic();
 double toc(TimePoint start_time);
 

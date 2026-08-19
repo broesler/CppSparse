@@ -19,7 +19,7 @@
 namespace cs {
 
 
-/** Symbolic LU decomposition return struct (see: cs_symbolic aka css) */
+/// Symbolic LU decomposition return struct (see: cs_symbolic aka css)
 struct SymbolicLU
 {
     std::vector<csint> q;  ///< fill-reducting column permutation
@@ -29,7 +29,7 @@ struct SymbolicLU
 };
 
 
-/** Numeric LU decomposition return struct (see: cs_numeric aka csn) */
+/// Numeric LU decomposition return struct (see: cs_numeric aka csn)
 struct LUResult
 {
     CSCMatrix L,               ///< lower triangular matrix

@@ -1073,7 +1073,7 @@ CSCMatrix CSCMatrix::scale(std::span<const double> r, std::span<const double> c)
 }
 
 
-std::vector<double> CSCMatrix::dot(std::span<const double> X) const
+VectorD CSCMatrix::dot(cVectorViewD X) const
 {
     csint NxK = std::ssize(X);
 
@@ -1107,7 +1107,7 @@ std::vector<double> CSCMatrix::dot(std::span<const double> X) const
 CSCMatrix CSCMatrix::dot(double c) const
 {
     CSCMatrix out{v_, i_, p_, shape()};
-    out.v_ *= c;
+    std::ranges::transform(out.v_, out.v_.begin(), [c](double v) { return v * c; });
     return out;
 }
 

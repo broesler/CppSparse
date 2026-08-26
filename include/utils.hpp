@@ -25,7 +25,7 @@ namespace cs {
  *
  * @return norm  the norm of the vector
  */
-double norm(std::span<const double> x, double ord=2.0);
+double norm(cVectorViewD x, double ord=2.0);
 
 /*------------------------------------------------------------------------------
  *          Vector Permutations

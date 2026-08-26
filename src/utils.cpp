@@ -38,7 +38,7 @@ std::vector<csint> inv_permute(std::span<const csint> p)
 }
 
 
-double norm(std::span<const double> x, double ord)
+double norm(cVectorViewD x, double ord)
 {
     if (x.empty()) {
         return 0.0;

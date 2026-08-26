@@ -361,7 +361,7 @@ COOMatrix COOMatrix::T() const { return this->transpose(); }
 
 
 // Exercise 2.10
-std::vector<double> COOMatrix::dot(std::span<const double> x) const
+VectorD COOMatrix::dot(cVectorViewD x) const
 {
     if (std::ssize(x) != N_) {
         throw std::invalid_argument(
@@ -373,7 +373,7 @@ std::vector<double> COOMatrix::dot(std::span<const double> x) const
         );
     }
 
-    std::vector<double> out(x.size());
+    VectorD out(x.size());
 
     for (auto [i, j, v] : elems()) {
         out[i] += v * x[j];

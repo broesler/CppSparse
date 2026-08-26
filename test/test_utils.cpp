@@ -24,12 +24,12 @@ namespace cs {
 
 TEST_CASE("Vector permutations", "[vector][perm]")
 {
-    VectorD b{0, 1, 2, 3, 4};
-    VectorI p{2, 0, 1, 4, 3};
+    std::vector<double> b{0, 1, 2, 3, 4};
+    std::vector<csint> p{2, 0, 1, 4, 3};
 
-    REQUIRE(pvec(p, b) == VectorD{2, 0, 1, 4, 3});
-    REQUIRE(ipvec(p, b) == VectorD{1, 2, 0, 4, 3});
-    REQUIRE(inv_permute(p) == VectorI{1, 2, 0, 4, 3});
+    REQUIRE(pvec(p, b) == std::vector<double>{2, 0, 1, 4, 3});
+    REQUIRE(ipvec(p, b) == std::vector<double>{1, 2, 0, 4, 3});
+    REQUIRE(inv_permute(p) == std::vector<csint>{1, 2, 0, 4, 3});
     REQUIRE(pvec(inv_permute(p), b) == ipvec(p, b));
     REQUIRE(ipvec(inv_permute(p), b) == pvec(p, b));
 }
@@ -39,7 +39,7 @@ TEST_CASE("Random permutation", "[vector][randperm]")
 {
     csint N = 10;
     csint seed;
-    VectorI expect_p{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    std::vector<csint> expect_p{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
     SECTION("Identity permutation") {
         seed = 0;

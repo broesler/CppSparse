@@ -40,7 +40,7 @@ TEST_CASE("Cholesky Solution", "[cholsol]")
     CAPTURE(order);
 
     // Create RHS for Ax = b
-    std::vector<double> expect(N);
+    VectorD expect(N);
     std::ranges::iota(expect, 1);
 
     const auto b = A * expect;
@@ -71,11 +71,11 @@ TEMPLATE_TEST_CASE(
 
     // Create RHS for Ax = b
     csint K = 3;  // arbitrary number of RHS columns
-    std::vector<double> expect_x(N * K);
+    VectorD expect_x(N * K);
     std::ranges::iota(expect_x, 1);
 
     const auto b = A * expect_x;
-    std::vector<double> x;
+    VectorD x;
 
     if constexpr (std::is_same_v<TestType, DenseRHS>) {
         x = chol_solve(A, b, order);  // solve Ax = b
@@ -99,10 +99,10 @@ TEST_CASE("QR Solution", "[qrsol]")
     );
     CAPTURE(order);
 
-    std::vector<double> expect(N);
+    VectorD expect(N);
     std::ranges::iota(expect, 1);
 
-    std::vector<double> b;
+    VectorD b;
     QRSolveResult res;
 
     SECTION("Square") {
@@ -123,7 +123,7 @@ TEST_CASE("QR Solution", "[qrsol]")
         A = A.slice(0, M, 0, N - k);
 
         // Take only the first N - k elements of expect
-        expect = std::vector<double>(expect.begin(), expect.end() - k);
+        expect = VectorD(expect.begin(), expect.end() - k);
 
         b = A * expect;
 
@@ -182,11 +182,11 @@ TEMPLATE_TEST_CASE(
 
     // Create RHS for Ax = b
     csint K = 3;  // arbitrary number of RHS columns
-    std::vector<double> expect(N * K);
+    VectorD expect(N * K);
     std::ranges::iota(expect, 1);
 
 
-    std::vector<double> b;
+    VectorD b;
     QRSolveResult res;
 
     SECTION("Square") {
@@ -276,7 +276,7 @@ TEST_CASE("LU Solution", "[lusol]") {
     CAPTURE(order);
 
     // Create RHS for Ax = b
-    std::vector<double> expect(N);
+    VectorD expect(N);
     std::ranges::iota(expect, 1);
 
     const auto b = A * expect;
@@ -309,7 +309,7 @@ TEST_CASE("LU with Iterative Refinement", "[lusol-ir]") {
     CAPTURE(order);
 
     // Create RHS for Ax = b
-    std::vector<double> expect(N);
+    VectorD expect(N);
     std::ranges::iota(expect, 1);
 
     const auto b = A * expect;
@@ -355,11 +355,11 @@ TEMPLATE_TEST_CASE(
 
     // Create RHS for Ax = b
     csint K = 3;  // arbitrary number of RHS columns
-    std::vector<double> expect_x(N * K);
+    VectorD expect_x(N * K);
     std::ranges::iota(expect_x, 1);
 
     const auto b = A * expect_x;
-    std::vector<double> x;
+    VectorD x;
 
     // Solve Ax = b
     if constexpr (std::is_same_v<TestType, DenseRHS>) {
@@ -400,7 +400,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Triangular", "[spsolve-tri]", RhsCombination
     const auto [M, N] = A.shape();
 
     // Create RHS for Lx = b
-    std::vector<double> expect_x(N * K);
+    VectorD expect_x(N * K);
     std::ranges::iota(expect_x, 1);
 
     const std::vector<csint> p{3, 0, 1, 2};
@@ -408,7 +408,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Triangular", "[spsolve-tri]", RhsCombination
 
     auto solve_and_check = [&](const CSCMatrix& A) {
         auto b = A * expect_x;
-        std::vector<double> x;
+        VectorD x;
         if constexpr (std::is_same_v<RhsType, DenseRHS>) {
             x = spsolve(A, b);
         } else {
@@ -465,7 +465,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Cholesky", "[spsolve-chol]", CholeskyCombina
     const auto [M, N] = A.shape();
 
     // Create RHS for Ax = b
-    std::vector<double> expect_x(N * K);
+    VectorD expect_x(N * K);
     std::ranges::iota(expect_x, 1);
 
     auto b = A * expect_x;
@@ -475,7 +475,7 @@ TEMPLATE_LIST_TEST_CASE("Backslash: Cholesky", "[spsolve-chol]", CholeskyCombina
         b = -b;
     }
 
-    std::vector<double> x;
+    VectorD x;
     if constexpr (std::is_same_v<RhsType, DenseRHS>) {
         x = spsolve(A, b);
     } else {
@@ -502,12 +502,12 @@ TEMPLATE_LIST_TEST_CASE("Backslash: LU Symmetric", "[spsolve-lu-sym]", RhsCombin
     CHECK(A.structural_symmetry() < 1.0);
 
     // Create RHS for Ax = b
-    std::vector<double> expect_x(N * K);
+    VectorD expect_x(N * K);
     std::ranges::iota(expect_x, 1);
 
     const auto b = A * expect_x;
 
-    std::vector<double> x;
+    VectorD x;
     if constexpr (std::is_same_v<RhsType, DenseRHS>) {
         x = spsolve(A, b);
     } else {
@@ -533,12 +533,12 @@ TEMPLATE_LIST_TEST_CASE("Backslash: LU Unsymmetric", "[spsolve-lu-unsym]", RhsCo
     CHECK(A.structural_symmetry() < 0.3);
 
     // Create RHS for Ax = b
-    std::vector<double> expect_x(N * K);
+    VectorD expect_x(N * K);
     std::ranges::iota(expect_x, 1);
 
     const auto b = A * expect_x;
 
-    std::vector<double> x;
+    VectorD x;
     if constexpr (std::is_same_v<RhsType, DenseRHS>) {
         x = spsolve(A, b);
     } else {
@@ -559,10 +559,10 @@ TEMPLATE_LIST_TEST_CASE("Backslash: QR", "[spsolve-qr]", RhsCombinations)
     const auto [M, N] = A.shape();
 
     // Create RHS for Ax = b
-    std::vector<double> expect_x(N * K);
+    VectorD expect_x(N * K);
     std::ranges::iota(expect_x, 1);
 
-    std::vector<double> b, x;
+    VectorD b, x;
 
     SECTION("Square") {
         b = A * expect_x;

@@ -27,6 +27,7 @@ namespace cs {
  */
 double norm(cVectorViewD x, double ord=2.0);
 
+
 /*------------------------------------------------------------------------------
  *          Vector Permutations
  *----------------------------------------------------------------------------*/
@@ -73,12 +74,16 @@ void pvec(std::span<const csint> p, std::span<const T> b, std::span<T> x)
  *
  * @return x  `x = Pb` the permuted vector, like `x = b(p)` in MATLAB.
  */
-template <typename T>
-std::vector<T> pvec(const std::vector<csint>& p, const std::vector<T>& b)
+template <std::ranges::random_access_range Range>
+auto pvec(std::span<const csint> p, const Range& b)
 {
-    std::vector<T> x(p.size());
-    pvec<T>(p, b, x);  // pass in workspace
-    return x;
+    using T = std::ranges::range_value_t<Range>;
+    using DecayRange = std::decay_t<Range>;
+    constexpr bool is_view_or_span =
+        std::ranges::enable_borrowed_range<DecayRange> || std::is_array_v<DecayRange>;
+    using OutputType = std::conditional_t<is_view_or_span, std::vector<T>, DecayRange>;
+    return p | std::views::transform([&b](auto k) { return b[k]; }) 
+             | std::ranges::to<OutputType>();
 }
 
 

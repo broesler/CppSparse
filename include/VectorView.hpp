@@ -51,6 +51,12 @@ public:
     //         Constructors
     // -------------------------------------------------------------------------
     VectorView() = default;
+    explicit VectorView(std::span<T> s) : data_(s) {}
+
+    VectorView(Vector<value_type>& v) : data_(v) {}
+    VectorView(const Vector<value_type>& v)
+        requires std::is_const_v<T>
+        : data_(v) {}
 
     template <std::contiguous_iterator It>
     VectorView(It first, size_t count) : data_(first, count) {}
@@ -88,7 +94,6 @@ public:
     auto rbegin() const noexcept { return data_.rbegin(); }
     auto rend() const noexcept { return data_.rend(); }
 
-    auto crbegin() const noexcept { return data_.crbegin(); }
     auto crend() const noexcept { return data_.crend(); }
 
     // -------------------------------------------------------------------------
@@ -153,6 +158,7 @@ private:
 
 
 using VectorViewD = VectorView<double>;
+using cVectorViewD = VectorView<const double>;
 
 
 }  // namespace cs

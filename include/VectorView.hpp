@@ -161,6 +161,36 @@ using VectorViewD = VectorView<double>;
 using cVectorViewD = VectorView<const double>;
 
 
+// -----------------------------------------------------------------------------
+//         Operators
+// -----------------------------------------------------------------------------
+template <typename T>
+Vector<T> operator+(VectorView<const T> a, VectorView<const T> b)
+{
+    Vector<T> x(a.begin(), a.end());
+    x += b;
+    return x;
+}
+
+
+template <typename T>
+Vector<T> operator-(VectorView<const T> a, VectorView<const T> b)
+{
+    Vector<T> x(a.begin(), a.end());
+    x -= b;
+    return x;
+};
+
+
+template <typename T>
+Vector<T> operator-(VectorView<const T> a)
+{
+    Vector<T> x(a.begin(), a.end());
+    return -x;
+}
+
+
+
 }  // namespace cs
 
 //==============================================================================

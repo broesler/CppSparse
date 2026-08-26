@@ -811,10 +811,10 @@ void CholResult::solve(std::span<double> b) const
     // Solve Ax = b ==> (P^T L L^T P) x = b
     std::vector<double> w(L.shape()[0]);  // workspace
 
-    ipvec<double>(p_inv, b, w);  // permute b -> w = Pb
-    lsolve_inplace(L, w);        // y = L \ b -> w = y
-    ltsolve_inplace(L, w);       // P^T x = L^T \ y -> w = P^T x
-    pvec<double>(p_inv, w, b);   // x = P P^T x
+    ipvec(p_inv, b, w);     // permute b -> w = Pb
+    lsolve_inplace(L, w);   // y = L \ b -> w = y
+    ltsolve_inplace(L, w);  // P^T x = L^T \ y -> w = P^T x
+    pvec(p_inv, w, b);      // x = P P^T x
 }
 
 
@@ -918,9 +918,9 @@ void CholResult::solve(
     //     w[p_inv[i]] = v;
     // }
 
-    // lsolve_inplace(L, w);       // y = L \ b -> w = y
-    // ltsolve_inplace(L, w);      // P^T x = L^T \ y -> w = P^T x
-    // pvec<double>(p_inv, w, x);  // x = P P^T x
+    // lsolve_inplace(L, w);   // y = L \ b -> w = y
+    // ltsolve_inplace(L, w);  // P^T x = L^T \ y -> w = P^T x
+    // pvec(p_inv, w, x);      // x = P P^T x
 
     // ----- Option 2: Solve as sparse column and scatter to dense at end
     auto b = B.slice(0, M, k, k+1);  // get single column
@@ -935,10 +935,10 @@ void CholResult::solve(
     std::vector<double> w(M);  // workspace
     b.scatter(0, w);
 
-    lsolve_(xi, w);             // y = L \ b -> w = y
-    std::ranges::reverse(xi);   // reverse the order for L^T
-    ltsolve_(xi, w);            // P^T x = L^T \ y -> w = P^T x
-    pvec<double>(p_inv, w, x);  // x = P P^T x
+    lsolve_(xi, w);            // y = L \ b -> w = y
+    std::ranges::reverse(xi);  // reverse the order for L^T
+    ltsolve_(xi, w);           // P^T x = L^T \ y -> w = P^T x
+    pvec(p_inv, w, x);         // x = P P^T x
 }
 
 
@@ -1092,10 +1092,10 @@ void QRResult::solve(
     // Solve P^T Q R E x = b
     auto M2 = V.shape()[0];
     std::vector<double> w(M2);
-    ipvec<double>(p_inv, b, w);  // permute b -> E b -> w = Eb
-    apply_qtleft(V, beta, w);    // y = Q^T E b -> w = y
-    usolve_inplace(R, w);        // E x = R \ y -> w = E x
-    ipvec<double>(q, w, x);      // x = E^T (E x)
+    ipvec(p_inv, b, w);        // permute b -> E b -> w = Eb
+    apply_qtleft(V, beta, w);  // y = Q^T E b -> w = y
+    usolve_inplace(R, w);      // E x = R \ y -> w = E x
+    ipvec(q, w, x);            // x = E^T (E x)
 }
 
 
@@ -1107,10 +1107,10 @@ void QRResult::tsolve(
     // Solve P^T R^T Q^T E x = b
     auto M2 = V.shape()[0];
     std::vector<double> w(M2);
-    pvec<double>(q, b, w);      // permute b -> E b -> w = Eb
-    utsolve_inplace(R, w);      // y = R^T \ E b -> w = y
-    apply_qleft(V, beta, w);    // P x = Q y -> w = P x
-    pvec<double>(p_inv, w, x);  // x = P^T (P x)
+    pvec(q, b, w);            // permute b -> E b -> w = Eb
+    utsolve_inplace(R, w);    // y = R^T \ E b -> w = y
+    apply_qleft(V, beta, w);  // P x = Q y -> w = P x
+    pvec(p_inv, w, x);        // x = P^T (P x)
 }
 
 
@@ -1244,10 +1244,10 @@ void LUResult::solve(std::span<double> b) const
     std::vector<double> w(N);
 
     // Solve A x = b == (P^T L U Q^T) x = b
-    ipvec<double>(p_inv, b, w);  // permute b -> w = Pb
-    lsolve_inplace(L, w);        // solve Ly = Pb -> w = y
-    usolve_inplace(U, w);        // solve U (Q^T x) = y -> w = Q^T x
-    ipvec<double>(q, w, b);      // Q (Q^T x) = x -> b = x
+    ipvec(p_inv, b, w);    // permute b -> w = Pb
+    lsolve_inplace(L, w);  // solve Ly = Pb -> w = y
+    usolve_inplace(U, w);  // solve U (Q^T x) = y -> w = Q^T x
+    ipvec(q, w, b);        // Q (Q^T x) = x -> b = x
 }
 
 
@@ -1268,10 +1268,10 @@ void LUResult::tsolve(std::span<double> b) const
     std::vector<double> w(N);
 
     // Solve A^T x = b == (P^T L U Q^T)^T x = b == (Q U^T L^T P) x = b
-    pvec<double>(q, b, w);      // permute b -> Q^T b -> w = Q^T b
-    utsolve_inplace(U, w);      // solve U^T y = Q^T b -> w = y
-    ltsolve_inplace(L, w);      // solve L^T P x = y -> w = P x
-    pvec<double>(p_inv, w, b);  // P^T (P x) = x -> b = x
+    pvec(q, b, w);          // permute b -> Q^T b -> w = Q^T b
+    utsolve_inplace(U, w);  // solve U^T y = Q^T b -> w = y
+    ltsolve_inplace(L, w);  // solve L^T P x = y -> w = P x
+    pvec(p_inv, w, b);      // P^T (P x) = x -> b = x
 }
 
 

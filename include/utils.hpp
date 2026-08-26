@@ -52,8 +52,11 @@ std::vector<csint> inv_permute(std::span<const csint> p);
  *
  * @return x  `x = Pb` the permuted vector, like `x = b(p)` in MATLAB.
  */
-template <typename T>
-void pvec(std::span<const csint> p, std::span<const T> b, std::span<T> x)
+template <std::ranges::contiguous_range InRange,
+          std::ranges::contiguous_range OutRange>
+requires std::same_as<std::ranges::range_value_t<InRange>,
+                      std::ranges::range_value_t<OutRange>>
+void pvec(std::span<const csint> p, InRange&& b, OutRange&& x)
 {
     for (size_t k = 0; k < p.size(); k++) {
         x[k] = b[p[k]];
@@ -79,9 +82,13 @@ auto pvec(std::span<const csint> p, const Range& b)
 {
     using T = std::ranges::range_value_t<Range>;
     using DecayRange = std::decay_t<Range>;
+
     constexpr bool is_view_or_span =
         std::ranges::enable_borrowed_range<DecayRange> || std::is_array_v<DecayRange>;
+
+    // If b is a view or span, return a vector; otherwise, return the same type as b
     using OutputType = std::conditional_t<is_view_or_span, std::vector<T>, DecayRange>;
+
     return p | std::views::transform([&b](auto k) { return b[k]; }) 
              | std::ranges::to<OutputType>();
 }
@@ -94,14 +101,16 @@ auto pvec(std::span<const csint> p, const Range& b)
  * @param b  vector of data to permute
  * @param x[out]  `x = P^T b` the permuted vector, like `x(p) = b` in MATLAB.
  */
-template <typename T>
-void ipvec(std::span<const csint> p, std::span<const T> b, std::span<T> x)
+template <std::ranges::contiguous_range InRange,
+          std::ranges::contiguous_range OutRange>
+requires std::same_as<std::ranges::range_value_t<InRange>,
+                      std::ranges::range_value_t<OutRange>>
+void ipvec(std::span<const csint> p, InRange&& b, OutRange&& x)
 {
     for (size_t k = 0; k < p.size(); k++) {
         x[p[k]] = b[k];
     }
 }
-
 
 /** Compute \f$ x = P^T b = P^{-1} b \f$ where P is a permutation matrix,
  * represented as a vector.
@@ -115,7 +124,7 @@ template <typename T>
 std::vector<T> ipvec(const std::vector<csint>& p, const std::vector<T>& b)
 {
     std::vector<T> x(p.size());
-    ipvec<T>(p, b, x);  // pass in workspace
+    ipvec(p, b, x);  // pass in workspace
     return x;
 }
 

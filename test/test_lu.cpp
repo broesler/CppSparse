@@ -156,12 +156,12 @@ TEST_CASE("Solve Ax = b with LU", "[lu_solve]")
     const auto A = davis_example_qr(10).to_canonical();
 
     // Create RHS for A x = b
-    const std::vector<double> expect{1, 2, 3, 4, 5, 6, 7, 8};
+    const VectorD expect{1, 2, 3, 4, 5, 6, 7, 8};
     const auto b = A * expect;
 
     auto order = AMDOrder::Natural;
     CSCMatrix Ap;
-    std::vector<double> bp;
+    VectorD bp;
 
     SECTION("Natural Order") {
         Ap = A;
@@ -192,8 +192,8 @@ TEST_CASE("Solve Ax = b with LU", "[lu_solve]")
     // Test overload
     auto S = slu(Ap, order);
     auto res = lu(Ap, S);
-    auto x_ov = bp;  // copy RHS
-    res.solve(x_ov);        // solve Ax = b
+    auto x_ov = bp;   // copy RHS
+    res.solve(x_ov);  // solve Ax = b
 
     check_vectors_allclose(x, x_ov, tol);
     check_vectors_allclose(x, expect, tol);
@@ -205,7 +205,7 @@ TEST_CASE("Exercise 6.1: Solve A^T x = b with LU", "[ex6.1][lu_tsolve]")
     const auto A = davis_example_qr(10).to_canonical();
 
     // Create RHS for A^T x = b
-    const std::vector<double> expect{1, 2, 3, 4, 5, 6, 7, 8};
+    const VectorD expect{1, 2, 3, 4, 5, 6, 7, 8};
     const auto b = A.T() * expect;
 
     auto row_perm = false;
@@ -363,10 +363,8 @@ TEST_CASE("Exercise 6.4: relu", "[ex6.4][relu]")
     std::ranges::iota(expect_q, 0);
 
     // Create new matrix with same sparsity pattern as A
-    std::vector<double> B_data(A.data().begin(), A.data().end());
-    for (auto& x : B_data) {
-        x += 1;
-    }
+    VectorD B_data(A.data().begin(), A.data().end());
+    B_data += 1;  // add 1 to each entry
     CSCMatrix B{B_data, A.indices(), A.indptr(), A.shape()};
 
     CSCMatrix Ap, Bp;

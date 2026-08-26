@@ -45,14 +45,15 @@ public:
     using const_pointer = const T*;
     using iterator = typename std::vector<T>::iterator;
     using const_iterator = typename std::vector<T>::const_iterator;
-    using reverse_iterator = typename std::vector<T>::reverse_iterator;
-    using const_reverse_iterator = typename std::vector<T>::const_reverse_iterator;
+    using reverse_iterator = std::reverse_iterator<iterator>;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
     // -------------------------------------------------------------------------
     //         Constructors
     // -------------------------------------------------------------------------
     Vector() = default;
-    explicit Vector(size_t count, const T& value = T()) : data_(count, value) {}
+    explicit Vector(size_t count) : data_(count) {}
+    Vector(size_t count, const T& value) : data_(count, value) {}
     Vector(std::initializer_list<T> init) : data_(init) {}
     Vector(const std::vector<T>& vec) : data_(vec) {}
     Vector(std::vector<T>&& vec) : data_(std::move(vec)) {}

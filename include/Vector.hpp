@@ -57,7 +57,7 @@ public:
     Vector(std::initializer_list<T> init) : data_(init) {}
     Vector(const std::vector<T>& vec) : data_(vec) {}
     Vector(std::vector<T>&& vec) : data_(std::move(vec)) {}
-    
+
     template <std::input_iterator It>
     Vector(It first, It last) : data_(first, last) {}
 
@@ -206,7 +206,12 @@ public:
     // -------------------------------------------------------------------------
     // Vector-Vector
     Vector& operator+=(const Vector& rhs) { return apply_elementwise_(rhs, std::plus<>()); }
-    Vector& operator-=(const Vector& rhs) { return apply_elementwise_(rhs, std::minus<>()); }
+
+    template <std::ranges::contiguous_range R>
+    Vector& operator-=(R&& rhs) {
+        return apply_elementwise_(std::forward<R>(rhs), std::minus<>());
+    }
+
     Vector& operator*=(const Vector& rhs) { return apply_elementwise_(rhs, std::multiplies<>()); }
     Vector& operator/=(const Vector& rhs) { return apply_elementwise_(rhs, std::divides<>()); }
 
@@ -239,7 +244,7 @@ public:
     friend Vector operator-(T scalar, const Vector& rhs) {
         Vector result(rhs.size());
         std::ranges::transform(
-            rhs.data_, result.begin(), [scalar](T x) { return scalar - x; }
+            rhs, result.begin(), [scalar](T x) { return scalar - x; }
         );
         return result;
     }
@@ -247,7 +252,7 @@ public:
     friend Vector operator/(T scalar, const Vector& rhs) {
         Vector result(rhs.size());
         std::ranges::transform(
-            rhs.data_, result.begin(), [scalar](T x) { return scalar / x; }
+            rhs, result.begin(), [scalar](T x) { return scalar / x; }
         );
         return result;
     }
@@ -288,7 +293,8 @@ private:
         }
     }
 
-    void check_same_size_(const Vector& rhs) const {
+    template <std::ranges::contiguous_range R>
+    void check_same_size_(R&& rhs) const {
         if (size() != rhs.size()) {
             throw std::invalid_argument(
                 std::format("Vector size mismatch: {} vs {}", size(), rhs.size())
@@ -304,10 +310,10 @@ private:
         return *this;
     }
 
-    template <typename BinaryOp>
-    Vector& apply_elementwise_(const Vector& rhs, BinaryOp op) {
+    template <std::ranges::contiguous_range R, typename BinaryOp>
+    Vector& apply_elementwise_(R&& rhs, BinaryOp op) {
         check_same_size_(rhs);
-        std::ranges::transform(data_, rhs.data_, begin(), op);
+        std::ranges::transform(data_, rhs, begin(), op);
         return *this;
     }
 
@@ -316,7 +322,7 @@ private:
     // Vector<bool> compare_elementwise(const Vector& rhs, BinaryOp op) const {
     //     check_same_size(rhs);
     //     Vector<bool> result(size());
-    //     std::ranges::transform(data_, rhs.data_, result.begin(), op);
+    //     std::ranges::transform(data_, rhs, result.begin(), op);
     //     return result;
     // }
 };  // class Vector

@@ -9,12 +9,11 @@
 
 #pragma once
 
-#include <span>
-#include <vector>
-
-#include "csc.hpp"
 #include "types.hpp"
+#include "Vector.hpp"
+#include "csc.hpp"
 
+#include <vector>
 
 namespace cs {
 

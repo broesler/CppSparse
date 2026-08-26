@@ -7,13 +7,13 @@
  *
  *============================================================================*/
 
+#include "sparse_matrix.hpp"
+
 #include <algorithm>  // fold_left, max
 #include <cmath>      // isfinite, fabs
 #include <format>
 #include <ranges>
 #include <string>
-
-#include "sparse_matrix.hpp"
 
 
 namespace cs {

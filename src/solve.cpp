@@ -7,18 +7,21 @@
  *
  *============================================================================*/
 
-#include <algorithm>   // fill
-#include <format>
-#include <ranges>      // views::reverse
-#include <span>
-#include <vector>
-
 #include "solve.hpp"
+
+#include "Vector.hpp"
+#include "VectorView.hpp"
 #include "csc.hpp"
 #include "utils.hpp"
 #include "cholesky.hpp"
 #include "qr.hpp"
 #include "lu.hpp"
+
+#include <algorithm>   // fill
+#include <format>
+#include <ranges>      // views::reverse
+#include <span>
+#include <vector>
 
 namespace cs {
 

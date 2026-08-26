@@ -7,19 +7,19 @@
  *
  *============================================================================*/
 
+#include "lu.hpp"
+
+#include "cholesky.hpp"
+#include "qr.hpp"
+#include "solve.hpp"
+#include "utils.hpp"  // inv_permute
+
 #include <cmath>    // abs
 #include <numeric>  // iota
 #include <ranges>   // views::reverse
 #include <span>
 #include <stdexcept>
 #include <vector>
-
-#include "types.hpp"
-#include "cholesky.hpp"
-#include "lu.hpp"
-#include "qr.hpp"
-#include "solve.hpp"
-#include "utils.hpp"  // inv_permute
 
 namespace cs {
 

@@ -7,15 +7,15 @@
  *
  *============================================================================*/
 
+#include "example_matrices.hpp"
+
+#include "csc.hpp"
+#include "coo.hpp"
+
 #include <algorithm>  // generate, fill
 #include <random>
 #include <ranges>
 #include <vector>
-
-#include "types.hpp"
-#include "example_matrices.hpp"
-#include "csc.hpp"
-#include "coo.hpp"
 
 namespace cs {
 

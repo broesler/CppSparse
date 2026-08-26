@@ -7,6 +7,13 @@
  *
  *============================================================================*/
 
+#include "fillreducing.hpp"
+
+#include "csc.hpp"
+#include "cholesky.hpp"  // tdfs
+#include "solve.hpp"     // dfs
+#include "utils.hpp"     // randperm
+
 #include <algorithm>  // min, max, fold_left
 #include <cmath>      // sqrt
 #include <numeric>    // iota, accumulate
@@ -14,13 +21,6 @@
 #include <stdexcept>
 #include <tuple>      // tie
 #include <vector>
-
-#include "types.hpp"
-#include "fillreducing.hpp"
-#include "csc.hpp"
-#include "cholesky.hpp"  // tdfs
-#include "solve.hpp"     // dfs
-#include "utils.hpp"     // randperm
 
 namespace cs {
 

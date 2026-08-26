@@ -7,17 +7,18 @@
  *
  *============================================================================*/
 
+#include "utils.hpp"
+
+#include "VectorView.hpp"
+
 #include <algorithm>  // fold_left, count_if
 #include <cmath>      // isfinite
-#include <format>
 #include <limits>     // numeric_limits
 #include <random>
 #include <ranges>     // views::transform
 #include <span>
 #include <stdexcept>
 #include <vector>
-
-#include "utils.hpp"
 
 namespace cs {
 

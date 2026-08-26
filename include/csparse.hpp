@@ -10,8 +10,9 @@
 
 #pragma once
 
-#include "Vector.hpp"
 #include "types.hpp"
+#include "Vector.hpp"
+#include "VectorView.hpp"
 #include "utils.hpp"
 #include "csc.hpp"
 #include "coo.hpp"

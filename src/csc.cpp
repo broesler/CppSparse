@@ -7,6 +7,13 @@
  *
  *============================================================================*/
 
+#include "csc.hpp"
+
+#include "coo.hpp"
+#include "utils.hpp"
+#include "Vector.hpp"
+#include "VectorView.hpp"
+
 #include <algorithm>   // lower_bound
 #include <cmath>       // abs
 #include <format>
@@ -15,10 +22,6 @@
 #include <span>
 #include <vector>
 #include <utility>     // exchange
-
-#include "utils.hpp"
-#include "csc.hpp"
-#include "coo.hpp"
 
 namespace cs {
 

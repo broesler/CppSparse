@@ -8,16 +8,17 @@
  *
  *============================================================================*/
 
+#include "qr.hpp"
+
+#include "cholesky.hpp"  // etree, post
+#include "utils.hpp"
+
 #include <algorithm>  // max
 #include <cassert>
 #include <cmath>      // copysign
 #include <numeric>    // accumulate
 #include <ranges>     // views::reverse, span
 #include <vector>
-
-#include "cholesky.hpp"  // etree, post
-#include "qr.hpp"
-#include "utils.hpp"
 
 namespace cs {
 

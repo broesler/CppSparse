@@ -7,6 +7,12 @@
  *
  *============================================================================*/
 
+#include "coo.hpp"
+
+#include "csc.hpp"
+#include "Vector.hpp"
+#include "VectorView.hpp"
+
 #include <algorithm>      // max
 #include <cassert>
 #include <iostream>
@@ -21,8 +27,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "coo.hpp"
-#include "csc.hpp"
 
 namespace cs {
 

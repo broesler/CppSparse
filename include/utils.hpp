@@ -9,11 +9,12 @@
 
 #pragma once
 
-#include <iostream>
-#include <span>
-#include <vector>
-
 #include "types.hpp"
+
+#include <ranges>       // views::transform
+#include <span>
+#include <type_traits>  // decay_t, conditional_t
+#include <vector>
 
 namespace cs {
 

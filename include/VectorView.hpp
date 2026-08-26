@@ -9,6 +9,9 @@
 
 #pragma once
 
+#include "types.hpp"
+#include "Vector.hpp"
+
 #include <algorithm>        // transform
 #include <concepts>         // integral, floating_point
 #include <format>           // format
@@ -18,9 +21,6 @@
 #include <stdexcept>        // invalid_argument
 #include <type_traits>      // is_same_v
 #include <iterator>         // const_iterator
-
-#include "Vector.hpp"
-
 
 namespace cs {
 
@@ -155,10 +155,6 @@ private:
     }
 
 };  // VectorView
-
-
-using VectorViewD = VectorView<double>;
-using cVectorViewD = VectorView<const double>;
 
 
 // -----------------------------------------------------------------------------

@@ -9,16 +9,14 @@
 
 #pragma once
 
-#include <functional>
-#include <ranges>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-#include <span>
-#include <vector>
-
 #include "types.hpp"
 #include "sparse_matrix.hpp"
+
+#include <format>      // formatter
+#include <functional>  // function
+#include <ranges>      // iota
+#include <string_view>
+#include <vector>
 
 namespace cs {
 
@@ -677,7 +675,7 @@ public:
      * @return Y  the dense matrix result. Y is size M x K, stored in
      *         column-major order.
      */
-    virtual std::vector<double> dot(std::span<const double> X) const override;
+    virtual VectorD dot(cVectorViewD X) const override;
 
     /// Scale a matrix by a scalar
     CSCMatrix dot(double c) const;

@@ -9,13 +9,15 @@
 
 #pragma once
 
+#include "types.hpp"
+
+#include "VectorView.hpp"
+
 #include <functional>
 #include <iostream>
 #include <ranges>
 #include <span>
 #include <vector>
-
-#include "types.hpp"
 
 namespace cs {
 
@@ -73,7 +75,7 @@ public:
     }
 
     /// Matrix-vector right-multiply (see cs_multiply)
-    virtual std::vector<double> dot(std::span<const double> x) const = 0;
+    virtual VectorD dot(cVectorViewD x) const = 0;
 
     /// Convert the matrix to a dense array.
     ///
@@ -120,7 +122,7 @@ public:
 
 
 // Exercise 2.10
-inline auto operator*(const SparseMatrix& A, std::span<const double> x)
+inline auto operator*(const SparseMatrix& A, cVectorViewD x)
 {
     return A.dot(x);
 }

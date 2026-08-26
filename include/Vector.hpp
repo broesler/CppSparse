@@ -9,8 +9,9 @@
 
 #pragma once
 
+#include "types.hpp"
+
 #include <algorithm>        // transform
-#include <concepts>         // integral, floating_point
 #include <format>           // format
 #include <functional>       // plus, etc.
 #include <initializer_list>
@@ -20,12 +21,7 @@
 #include <type_traits>      // is_arithmetic_v
 #include <vector>
 
-
 namespace cs {
-
-
-template <typename T>
-concept Arithmetic = std::integral<T> || std::floating_point<T>;
 
 
 template <Arithmetic T>
@@ -326,10 +322,6 @@ private:
     //     return result;
     // }
 };  // class Vector
-
-
-// Type aliases
-using VectorD = Vector<double>;
 
 
 }  // namespace cs

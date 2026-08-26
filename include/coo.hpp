@@ -10,15 +10,12 @@
 
 #pragma once
 
-#include <iostream>
-#include <string>
-#include <string_view>
-#include <sstream>
-#include <vector>
-
 #include "types.hpp"
 #include "sparse_matrix.hpp"
 
+#include <format>      // formatter
+#include <string_view>
+#include <vector>
 
 namespace cs {
 
@@ -254,7 +251,7 @@ public:
      *
      * @return y  the result of the matrix-vector multiplication.
      */
-    virtual std::vector<double> dot(std::span<const double> x) const override;
+    virtual VectorD dot(cVectorViewD x) const override;
 
 
 protected:

@@ -9,21 +9,18 @@
 
 #pragma once
 
+#include <concepts>   // integral, floating_point
 #include <cstdint>
 #include <format>
 #include <span>
 #include <string>     // string_view
 #include <stdexcept>  // runtime_error
 
-#include "Vector.hpp"
-
 
 namespace cs {
 
 using csint = std::int32_t;
 using Shape = std::array<csint, 2>;
-
-using VectorI = Vector<csint>;
 
 
 // Need full enum class definition for default arguments
@@ -128,6 +125,20 @@ struct LUResult;
 struct MaxMatch;
 struct SCCResult;
 struct DMPermResult;
+
+template <typename T>
+concept Arithmetic = std::integral<T> || std::floating_point<T>;
+
+template <Arithmetic T>
+class Vector;
+
+using VectorD = Vector<double>;
+
+template <Arithmetic T>
+class VectorView;
+
+using VectorViewD = VectorView<double>;
+using cVectorViewD = VectorView<const double>;
 
 class SparseMatrix;
 class COOMatrix;

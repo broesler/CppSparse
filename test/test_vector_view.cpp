@@ -27,9 +27,9 @@ TEST_CASE("VectorView Construction", "[vectorview][basic]")
         REQUIRE(a.empty());
     }
 
-    SECTION("Vector constructor") {
-        VectorD x{1, 2, 3};
-        VectorViewD a(x);
+    SECTION("Const Vector constructor") {
+        const VectorD x{1, 2, 3};
+        cVectorViewD a(x);
         REQUIRE(a.size() == 3);
         REQUIRE(!a.empty());
         for (size_t i = 0; i < a.size(); ++i) {
@@ -38,6 +38,25 @@ TEST_CASE("VectorView Construction", "[vectorview][basic]")
         }
         REQUIRE(a.front() == 1);
         REQUIRE(a.back() == 3);
+    }
+
+    SECTION("Construct from pointer and size") {
+        VectorD x{1, 2, 3, 4, 5};
+        VectorViewD a(x.begin(), 3);
+        REQUIRE(a.size() == 3);
+        for (size_t i = 0; i < a.size(); ++i) {
+            CAPTURE(i);
+            REQUIRE(a[i] == static_cast<double>(i + 1));
+        }
+    }
+
+    SECTION("Mutate via non-const view") {
+        VectorD x{1, 2, 3, 4, 5};
+        VectorViewD a(x);
+        int idx = 2;
+        double val = 99;
+        a[idx] = val;
+        REQUIRE(x[idx] == val);
     }
 }
 

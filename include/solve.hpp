@@ -19,7 +19,7 @@ namespace cs {
 
 struct SparseSolution {
     std::vector<csint> xi;  // non-zero indices of x
-    std::vector<double> x;  // (N,) dense solution vector
+    VectorD x;  // (N,) dense solution vector
 
     explicit SparseSolution(csint N) : x(N) {
         xi.reserve(N);  // do not initialize for dfs call!
@@ -42,9 +42,9 @@ public:
 
 
 struct QRSolveResult {
-    std::vector<double> x;  // solution vector
-    std::vector<double> r;  // residual b - A * x
-    double rnorm;           // residual 2-norm
+    VectorD x;     // solution vector
+    VectorD r;     // residual b - A * x
+    double rnorm;  // residual 2-norm
 };
 
 
@@ -593,9 +593,9 @@ std::vector<csint> topological_order(
  *
  * @see cs_cholsol
  */
-std::vector<double> chol_solve(
+VectorD chol_solve(
     const CSCMatrix& A,
-    std::span<const double> B,
+    cVectorViewD B,
     AMDOrder order=AMDOrder::Natural
 );
 
@@ -610,7 +610,7 @@ std::vector<double> chol_solve(
  *
  * @see cs_cholsol
  */
-std::vector<double> chol_solve(
+VectorD chol_solve(
     const CSCMatrix& A,
     const CSCMatrix& B,
     AMDOrder order=AMDOrder::Natural
@@ -641,7 +641,7 @@ std::vector<double> chol_solve(
  */
 QRSolveResult qr_solve(
     const CSCMatrix& A,
-    std::span<const double> B,
+    cVectorViewD B,
     AMDOrder order=AMDOrder::Natural
 );
 
@@ -688,9 +688,9 @@ QRSolveResult qr_solve(
  *
  * @return X  (N, K) the dense solution matrix, in column-major format.
  */
-std::vector<double> lu_solve(
+VectorD lu_solve(
     const CSCMatrix& A,
-    std::span<const double> B,
+    cVectorViewD B,
     AMDOrder order=AMDOrder::Natural,
     double tol=1.0,
     csint ir_steps=0
@@ -710,7 +710,7 @@ std::vector<double> lu_solve(
  *
  * @return X  (N, K) the dense solution matrix, in column-major format.
  */
-std::vector<double> lu_solve(
+VectorD lu_solve(
     const CSCMatrix& A,
     const CSCMatrix& B,
     AMDOrder order=AMDOrder::Natural,
@@ -731,9 +731,9 @@ std::vector<double> lu_solve(
  *
  * @return x  the solution vector
  */
-std::vector<double> lu_tsolve(
+VectorD lu_tsolve(
     const CSCMatrix& A,
-    std::span<const double> b,
+    cVectorViewD b,
     AMDOrder order=AMDOrder::Natural,
     double tol=1.0
 );
@@ -777,7 +777,7 @@ double cond1est(const CSCMatrix& A);
  *
  * @return x (N, K) the dense solution matrix
  */
-std::vector<double> spsolve(const CSCMatrix& A, std::span<const double> B);
+VectorD spsolve(const CSCMatrix& A, cVectorViewD B);
 
 
 /** Solve a sparse linear system Ax = b.
@@ -792,7 +792,7 @@ std::vector<double> spsolve(const CSCMatrix& A, std::span<const double> B);
  *
  * @return x (N, K) the dense solution vector
  */
-std::vector<double> spsolve(const CSCMatrix& A, const CSCMatrix& B);
+VectorD spsolve(const CSCMatrix& A, const CSCMatrix& B);
 
 
 

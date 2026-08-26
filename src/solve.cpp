@@ -1008,9 +1008,9 @@ SparseSolution CholResult::ltsolve(
 }
 
 
-std::vector<double> chol_solve(
+VectorD chol_solve(
     const CSCMatrix& A,
-    std::span<const double> B,
+    cVectorViewD B,
     AMDOrder order
 )
 {
@@ -1031,8 +1031,8 @@ std::vector<double> chol_solve(
     auto S = schol(A, order);
     auto res = chol(A, S);
 
-    std::vector<double> X(B.begin(), B.end());  // solution matrix
-    std::span<double> X_span(X);
+    VectorD X(B.begin(), B.end());  // solution matrix
+    VectorViewD X_span(X);
 
     // Exercise 8.7/8.9: solve each column of the system
     for (csint k = 0; k < K; ++k) {
@@ -1045,7 +1045,7 @@ std::vector<double> chol_solve(
 
 
 // Exercise 8.8/8.9
-std::vector<double> chol_solve(
+VectorD chol_solve(
     const CSCMatrix& A,
     const CSCMatrix& B,
     AMDOrder order
@@ -1068,8 +1068,8 @@ std::vector<double> chol_solve(
     auto S = schol(A, order);
     auto res = chol(A, S);
 
-    std::vector<double> X(N * K);  // dense solution matrix
-    std::span<double> X_span(X);
+    VectorD X(N * K);  // dense solution matrix
+    VectorViewD X_span(X);
 
     // Solve each column of the system
     for (csint k = 0; k < K; ++k) {
@@ -1085,8 +1085,8 @@ std::vector<double> chol_solve(
 //         QR Factorization Solvers
 // -----------------------------------------------------------------------------
 void QRResult::solve(
-    std::span<const double> b,
-    std::span<double> x
+    cVectorViewD b,
+    VectorViewD x
 ) const
 {
     // Solve P^T Q R E x = b
@@ -1100,8 +1100,8 @@ void QRResult::solve(
 
 
 void QRResult::tsolve(
-    std::span<const double> b,
-    std::span<double> x
+    cVectorViewD b,
+    VectorViewD x
 ) const
 {
     // Solve P^T R^T Q^T E x = b
@@ -1116,7 +1116,7 @@ void QRResult::tsolve(
 
 QRSolveResult qr_solve(
     const CSCMatrix& A,
-    std::span<const double> B,
+    cVectorViewD B,
     AMDOrder order
 )
 {
@@ -1142,9 +1142,9 @@ QRSolveResult qr_solve(
         res = qr(AT, S);
     }
 
-    std::vector<double> X(N * K);  // dense solution matrix
-    std::span<double> X_span(X);
-    std::span<const double> B_span(B);
+    VectorD X(N * K);  // dense solution matrix
+    VectorViewD X_span(X);
+    cVectorViewD B_span(B);
 
     for (csint k = 0; k < K; ++k) {
         // Solve for each RHS column
@@ -1161,7 +1161,7 @@ QRSolveResult qr_solve(
     }
 
     // Compute the residual
-    auto R = B - A * X;
+    auto R = B - cVectorViewD(A * X);
 
     return {.x = X, .r = R, .rnorm = norm(R, 2)};
 }
@@ -1276,9 +1276,9 @@ void LUResult::tsolve(std::span<double> b) const
 
 
 // Exercise 6.1
-std::vector<double> lu_solve(
+VectorD lu_solve(
     const CSCMatrix& A,
-    std::span<const double> B,
+    cVectorViewD B,
     AMDOrder order,
     double tol,
     csint ir_steps
@@ -1300,11 +1300,11 @@ std::vector<double> lu_solve(
     const auto S = slu(A, order);
     const auto res = lu(A, S, tol);
 
-    std::vector<double> X(B.begin(), B.end());  // solution matrix
-    std::span<const double> B_span(B);
-    std::span<double> X_span(X);
+    VectorD X(B.begin(), B.end());  // solution matrix
+    cVectorViewD B_span(B);
+    VectorViewD X_span(X);
 
-    std::vector<double> r;
+    VectorD r;
 
     if (ir_steps > 0) {
         // Preallocate workspace for iterative refinement
@@ -1322,9 +1322,9 @@ std::vector<double> lu_solve(
 
         // Exercise 8.5: Iterative refinement
         for (csint i = 0; i < ir_steps; ++i) {
-            r = B_k - A * X_k;     // r = b - Ax
-            res.solve(r);  // solve Ad = r
-            X_k += r;              // x += d
+            r = B_k - cVectorViewD(A * X_k);  // r = b - Ax
+            res.solve(r);       // solve Ad = r
+            X_k += r;           // x += d
         }
     }
 
@@ -1333,7 +1333,7 @@ std::vector<double> lu_solve(
 
 
 // Exercise 8.8
-std::vector<double> lu_solve(
+VectorD lu_solve(
     const CSCMatrix& A,
     const CSCMatrix& B,
     AMDOrder order,
@@ -1358,10 +1358,10 @@ std::vector<double> lu_solve(
     const auto S = slu(A, order);
     const auto res = lu(A, S, tol);
 
-    std::vector<double> X(N * K);  // dense solution matrix
-    std::span<double> X_span(X);
+    VectorD X(N * K);  // dense solution matrix
+    VectorViewD X_span(X);
 
-    std::vector<double> r, B_k;
+    VectorD r, B_k;
 
     if (ir_steps > 0) {
         r.resize(M);   // Preallocate workspaces for iterative refinement
@@ -1385,9 +1385,9 @@ std::vector<double> lu_solve(
 
         // Exercise 8.5: Iterative refinement
         for (csint i = 0; i < ir_steps; ++i) {
-            r = B_k - A * X_k;     // r = b - Ax
-            res.solve(r);  // solve Ad = r
-            X_k += r;              // x += d
+            r = B_k - A * X_k;  // r = b - Ax
+            res.solve(r);       // solve Ad = r
+            X_k += r;           // x += d
         }
     }
 
@@ -1396,9 +1396,9 @@ std::vector<double> lu_solve(
 
 
 // Exercise 6.1
-std::vector<double> lu_tsolve(
+VectorD lu_tsolve(
     const CSCMatrix& A,
-    std::span<const double> b,
+    cVectorViewD b,
     AMDOrder order,
     double tol
 )
@@ -1410,7 +1410,7 @@ std::vector<double> lu_tsolve(
     // Compute the numeric factorization
     auto S = slu(A, order);
     auto res = lu(A, S, tol);
-    std::vector<double> x(b.begin(), b.end());
+    VectorD x(b.begin(), b.end());
     res.tsolve(x);
 
     return x;
@@ -1527,11 +1527,11 @@ double cond1est(const CSCMatrix& A)
 
 // Exercise 8.1
 template <typename RHSType>
-std::vector<double> spsolve_impl_(const CSCMatrix& A, const RHSType& B)
+VectorD spsolve_impl_(const CSCMatrix& A, const RHSType& B)
 {
     const auto [M, N] = A.shape();
 
-    if constexpr (std::is_same_v<RHSType, std::span<const double>>) {
+    if constexpr (std::is_same_v<RHSType, cVectorViewD>) {
         csint MxK = std::ssize(B);
 
         if (MxK % M != 0) {
@@ -1671,13 +1671,13 @@ std::vector<double> spsolve_impl_(const CSCMatrix& A, const RHSType& B)
 }
 
 
-std::vector<double> spsolve(const CSCMatrix& A, std::span<const double> B)
+VectorD spsolve(const CSCMatrix& A, cVectorViewD B)
 {
-    return spsolve_impl_<std::span<const double>>(A, B);
+    return spsolve_impl_<cVectorViewD>(A, B);
 }
 
 
-std::vector<double> spsolve(const CSCMatrix& A, const CSCMatrix& B)
+VectorD spsolve(const CSCMatrix& A, const CSCMatrix& B)
 {
     return spsolve_impl_<CSCMatrix>(A, B);
 }

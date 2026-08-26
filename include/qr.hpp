@@ -57,8 +57,8 @@ struct QRResult {
     * @param x[out]  the output solution vector
     */
     void solve(
-        std::span<const double> b,
-        std::span<double> x
+        cVectorViewD b,
+        VectorViewD x
     ) const;
 
     /** Solve the linear system A^T x = b using QR factorization.
@@ -70,8 +70,8 @@ struct QRResult {
     * @param x[out]  the solution vector
     */
     void tsolve(
-        std::span<const double> b,
-        std::span<double> x
+        cVectorViewD b,
+        VectorViewD x
     ) const;
 };
 

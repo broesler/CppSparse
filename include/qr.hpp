@@ -21,9 +21,9 @@ namespace cs {
 
 /// Householder reflection return struct.
 struct Householder {
-    std::vector<double> v;  ///< the Householder vector
-    double beta;            ///< the scaling factor
-    double s;               ///< the first element of v
+    VectorD v;    ///< the Householder vector
+    double beta;  ///< the scaling factor
+    double s;     ///< the first element of v
 };
 
 
@@ -103,7 +103,7 @@ struct QRResult {
  * @return s  the first element of v, which is guaranteed to be
  *         \f$ \pm \|x\|_2 \f$
  */
-Householder house(std::span<const double> x);
+Householder house(cVectorViewD x);
 
 
 /** Apply a Householder reflection to a dense vector `x` with a sparse `v`.
@@ -125,7 +125,7 @@ void happly(
     const CSCMatrix& V,
 	csint j,
 	double beta,
-	std::span<double> x
+	VectorViewD x
 );
 
 
@@ -264,7 +264,7 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res);
 void apply_qleft(
     const CSCMatrix& V,
     std::span<const double> beta,
-    std::span<double> x
+    VectorViewD x
 );
 
 
@@ -284,7 +284,7 @@ void apply_qleft(
 void apply_qtleft(
     const CSCMatrix& V,
     std::span<const double> beta,
-    std::span<double> x
+    VectorViewD x
 );
 
 

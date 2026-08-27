@@ -26,10 +26,10 @@ namespace cs {
 inline auto sign(double x) { return std::copysign(1.0, x); }
 
 
-Householder house(std::span<const double> x)
+Householder house(cVectorViewD x)
 {
     double beta, s, sigma = 0.0;
-    std::vector<double> v(x.begin(), x.end());  // copy x into v
+    VectorD v(x.begin(), x.end());  // copy x into v
 
     // sigma is the sum of squares of all elements *except* the first
     auto v_view = v | std::views::drop(1);
@@ -89,7 +89,7 @@ void happly(
     const CSCMatrix& V,
 	csint j,
 	double beta,
-	std::span<double> x
+	VectorViewD x
 )
 {
     double tau = 0.0;
@@ -254,7 +254,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     std::vector<double> beta(Nv);  // scaling factors
 
     // Allocate workspaces
-    std::vector<double> x(M2);      // dense vector
+    VectorD x(M2);                  // dense vector
     std::vector<csint>  w(M2, -1),  // workspace for pattern of V[:, k]
                         s, t;       // stacks for pattern of R[:, k]
     s.reserve(Nv);
@@ -437,7 +437,7 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
     R.v_.resize(R.nnz());
 
     // Allocate workspaces
-    std::vector<double> x(M2);  // dense vector
+    VectorD x(M2);  // dense vector
 
     // Compute V and R
     for (csint k = 0; k < Nv; ++k) {
@@ -485,7 +485,7 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 void apply_qleft(
     const CSCMatrix& V,
     std::span<const double> beta,
-    std::span<double> x
+    VectorViewD x
 )
 {
     for (auto j : V.column_range() | std::views::reverse) {
@@ -497,7 +497,7 @@ void apply_qleft(
 void apply_qtleft(
     const CSCMatrix& V,
     std::span<const double> beta,
-    std::span<double> x
+    VectorViewD x
 )
 {
     for (auto j : V.column_range()) {
@@ -525,7 +525,7 @@ CSCMatrix apply_qtleft(
 
     X.permute_rows_inplace(p_inv);  // apply p_inv to Y
 
-    std::vector<double> x(M);
+    VectorD x(M);
     csint nz = 0;
 
     // Apply the Householder reflectors to each column of Y

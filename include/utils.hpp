@@ -56,18 +56,13 @@ template <std::ranges::contiguous_range InRange,
           std::ranges::contiguous_range OutRange>
 requires std::same_as<std::ranges::range_value_t<InRange>,
                       std::ranges::range_value_t<OutRange>>
-void pvec(std::span<const csint> p, InRange&& b, OutRange&& x)
+void pvec(std::span<const csint> p, const InRange& b, OutRange&& x)
 {
     for (size_t k = 0; k < p.size(); k++) {
         x[k] = b[p[k]];
     }
 }
 
-
-// NOTE the 2-argument versions cannot use std::span as input because the
-// compiler does not have a conversion between std::vector and std::span, so the
-// type T cannot be deduced. The solution is to either explicitly specify
-// a vector argument, or to accept b as a Container and deduce T from that.
 
 /** Compute \f$ x = Pb \f$ where P is a permutation matrix, represented as
  * a vector.
@@ -81,16 +76,13 @@ template <std::ranges::random_access_range Range>
 auto pvec(std::span<const csint> p, const Range& b)
 {
     using T = std::ranges::range_value_t<Range>;
-    using DecayRange = std::decay_t<Range>;
+    using OutputType = std::conditional_t<
+        dense_vector<Range>, Vector<T>, std::vector<T>
+    >;
 
-    constexpr bool is_view_or_span =
-        std::ranges::enable_borrowed_range<DecayRange> || std::is_array_v<DecayRange>;
-
-    // If b is a view or span, return a vector; otherwise, return the same type as b
-    using OutputType = std::conditional_t<is_view_or_span, std::vector<T>, DecayRange>;
-
-    return p | std::views::transform([&b](auto k) { return b[k]; }) 
-             | std::ranges::to<OutputType>();
+    OutputType x(p.size());
+    pvec(p, b, x);  // pass in workspace
+    return x;
 }
 
 
@@ -105,12 +97,13 @@ template <std::ranges::contiguous_range InRange,
           std::ranges::contiguous_range OutRange>
 requires std::same_as<std::ranges::range_value_t<InRange>,
                       std::ranges::range_value_t<OutRange>>
-void ipvec(std::span<const csint> p, InRange&& b, OutRange&& x)
+void ipvec(std::span<const csint> p, const InRange& b, OutRange&& x)
 {
     for (size_t k = 0; k < p.size(); k++) {
         x[p[k]] = b[k];
     }
 }
+
 
 /** Compute \f$ x = P^T b = P^{-1} b \f$ where P is a permutation matrix,
  * represented as a vector.
@@ -120,10 +113,15 @@ void ipvec(std::span<const csint> p, InRange&& b, OutRange&& x)
  *
  * @return x  `x = P^T b` the permuted vector, like `x(p) = b` in MATLAB.
  */
-template <typename T>
-std::vector<T> ipvec(const std::vector<csint>& p, const std::vector<T>& b)
+template <std::ranges::random_access_range Range>
+auto ipvec(std::span<const csint> p, const Range& b)
 {
-    std::vector<T> x(p.size());
+    using T = std::ranges::range_value_t<Range>;
+    using OutputType = std::conditional_t<
+        dense_vector<Range>, Vector<T>, std::vector<T>
+    >;
+
+    OutputType x(p.size());
     ipvec(p, b, x);  // pass in workspace
     return x;
 }

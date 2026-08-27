@@ -15,6 +15,7 @@
 #include <span>
 #include <string>     // string_view
 #include <stdexcept>  // runtime_error
+#include <type_traits>
 
 
 namespace cs {
@@ -112,20 +113,6 @@ constexpr std::string_view string_from_amdorder(AMDOrder order) noexcept
 // -----------------------------------------------------------------------------
 //         Forward declarations
 // -----------------------------------------------------------------------------
-struct CholCounts;
-struct CholResult;
-struct TriPerm;
-struct SparseSolution;
-struct SymbolicChol;
-struct SymbolicQR;
-struct SymbolicLU;
-struct QRResult;
-struct QRSolveResult;
-struct LUResult;
-struct MaxMatch;
-struct SCCResult;
-struct DMPermResult;
-
 template <typename T>
 concept Arithmetic = std::integral<T> || std::floating_point<T>;
 
@@ -139,6 +126,34 @@ class VectorView;
 
 using VectorViewD = VectorView<double>;
 using cVectorViewD = VectorView<const double>;
+
+// Define type trait -> concept to accept mathematical dense vectors
+template <typename T>
+struct is_dense_vector : std::false_type {};
+
+template <Arithmetic T>
+struct is_dense_vector<Vector<T>> : std::true_type {};
+
+template <Arithmetic T>
+struct is_dense_vector<VectorView<T>> : std::true_type {};
+
+template <typename T>
+concept dense_vector = is_dense_vector<std::remove_cvref_t<T>>::value;
+
+// Structs and classes
+struct CholCounts;
+struct CholResult;
+struct TriPerm;
+struct SparseSolution;
+struct SymbolicChol;
+struct SymbolicQR;
+struct SymbolicLU;
+struct QRResult;
+struct QRSolveResult;
+struct LUResult;
+struct MaxMatch;
+struct SCCResult;
+struct DMPermResult;
 
 class SparseMatrix;
 class COOMatrix;

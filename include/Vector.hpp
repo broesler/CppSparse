@@ -212,35 +212,6 @@ public:
     Vector& operator*=(T scalar) { return apply_scalar_(scalar, std::multiplies<>()); }
     Vector& operator/=(T scalar) { return apply_scalar_(scalar, std::divides<>()); }
 
-    // Binary operators
-    // Vector-scalar
-    friend Vector operator+(Vector lhs, T scalar) { return lhs += scalar; }
-    friend Vector operator-(Vector lhs, T scalar) { return lhs -= scalar; }
-    friend Vector operator*(Vector lhs, T scalar) { return lhs *= scalar; }
-    friend Vector operator/(Vector lhs, T scalar) { return lhs /= scalar; }
-
-    // Scalar-vector
-    // Commutative
-    friend Vector operator+(T scalar, Vector rhs) { return rhs += scalar; }
-    friend Vector operator*(T scalar, Vector rhs) { return rhs *= scalar; }
-
-    // Non-commutative
-    friend Vector operator-(T scalar, const Vector& rhs) {
-        Vector result(rhs.size());
-        std::ranges::transform(
-            rhs, result.begin(), [scalar](T x) { return scalar - x; }
-        );
-        return result;
-    }
-
-    friend Vector operator/(T scalar, const Vector& rhs) {
-        Vector result(rhs.size());
-        std::ranges::transform(
-            rhs, result.begin(), [scalar](T x) { return scalar / x; }
-        );
-        return result;
-    }
-
     // -------------------------------------------------------------------------
     //         Methods
     // -------------------------------------------------------------------------
@@ -297,14 +268,6 @@ private:
         return *this;
     }
 
-    // TODO
-    // template <typename BinaryOp>
-    // Vector<bool> compare_elementwise(const Vector& rhs, BinaryOp op) const {
-    //     check_same_size(rhs);
-    //     Vector<bool> result(size());
-    //     std::ranges::transform(data_, rhs, result.begin(), op);
-    //     return result;
-    // }
 };  // class Vector
 
 
@@ -361,11 +324,78 @@ auto operator-(const R& lhs)
 }
 
 
-// TODO boolean operators on Vector?
-// Vector<char> operator==(const Vector& lhs, const Vector& rhs) {
-//     return lhs.compare_elementwise(rhs, std::equal_to<>{});
-// }
+// ---------- Vector-scalar
+template <DenseVector R>
+auto operator+(const R& lhs, std::ranges::range_value_t<R> scalar)
+{
+    using T = std::ranges::range_value_t<R>;
+    Vector<T> result(std::from_range, lhs);
+    return result += scalar;
+}
 
+
+template <DenseVector R>
+auto operator-(const R& lhs, std::ranges::range_value_t<R> scalar)
+{
+    using T = std::ranges::range_value_t<R>;
+    Vector<T> result(std::from_range, lhs);
+    return result -= scalar;
+}
+
+
+template <DenseVector R>
+auto operator*(const R& lhs, std::ranges::range_value_t<R> scalar)
+{
+    using T = std::ranges::range_value_t<R>;
+    Vector<T> result(std::from_range, lhs);
+    return result *= scalar;
+}
+
+
+template <DenseVector R>
+auto operator/(const R& lhs, std::ranges::range_value_t<R> scalar)
+{
+    using T = std::ranges::range_value_t<R>;
+    Vector<T> result(std::from_range, lhs);
+    return result /= scalar;
+}
+
+// Scalar-vector
+// Commutative
+template <DenseVector R>
+auto operator+(std::ranges::range_value_t<R> scalar, const R& lhs)
+{
+    return lhs + scalar;
+}
+
+template <DenseVector R>
+auto operator*(std::ranges::range_value_t<R> scalar, const R& lhs)
+{
+    return lhs * scalar;
+}
+
+// Non-commutative
+template <DenseVector R>
+auto operator-(std::ranges::range_value_t<R> scalar, const R& lhs)
+{
+    using T = std::ranges::range_value_t<R>;
+    Vector<T> result(std::from_range, lhs);
+    std::ranges::transform(
+        result, result.begin(), [scalar](T x) { return scalar - x; }
+    );
+    return result;
+}
+
+template <DenseVector R>
+auto operator/(std::ranges::range_value_t<R> scalar, const R& lhs)
+{
+    using T = std::ranges::range_value_t<R>;
+    Vector<T> result(std::from_range, lhs);
+    std::ranges::transform(
+        result, result.begin(), [scalar](T x) { return scalar / x; }
+    );
+    return result;
+}
 
 }  // namespace cs
 

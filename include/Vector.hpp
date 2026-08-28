@@ -172,31 +172,6 @@ public:
     bool operator==(const Vector& rhs) const { return data_ == rhs.data_; }
     bool operator!=(const Vector& rhs) const { return !(*this == rhs); }
 
-    // TODO
-    // friend Vector<bool> operator==(const Vector& lhs, const Vector& rhs) {
-    //     return lhs.compare_elementwise(rhs, std::equal_to<>{});
-    // }
-
-    // friend Vector<bool> operator!=(const Vector& lhs, const Vector& rhs) {
-    //     return lhs.compare_elementwise(rhs, std::not_equal_to<>{});
-    // }
-
-    // friend Vector<bool> operator<(const Vector& lhs, const Vector& rhs) {
-    //     return lhs.compare_elementwise(rhs, std::less<>{});
-    // }
-
-    // friend Vector<bool> operator<=(const Vector& lhs, const Vector& rhs) {
-    //     return lhs.compare_elementwise(rhs, std::less_equal<>{});
-    // }
-
-    // friend Vector<bool> operator>(const Vector& lhs, const Vector& rhs) {
-    //     return lhs.compare_elementwise(rhs, std::greater<>{});
-    // }
-
-    // friend Vector<bool> operator>=(const Vector& lhs, const Vector& rhs) {
-    //     return lhs.compare_elementwise(rhs, std::greater_equal<>{});
-    // }
-
     // -------------------------------------------------------------------------
     //         Assignment Operators
     // -------------------------------------------------------------------------
@@ -366,6 +341,12 @@ auto operator-(const R& lhs)
     std::ranges::transform(result, result.begin(), std::negate<>());
     return result;
 }
+
+
+// TODO boolean operators on Vector?
+// Vector<char> operator==(const Vector& lhs, const Vector& rhs) {
+//     return lhs.compare_elementwise(rhs, std::equal_to<>{});
+// }
 
 
 }  // namespace cs

@@ -28,7 +28,7 @@ namespace cs {
 /*------------------------------------------------------------------------------
  *      Triangular Matrix Solutions
  *----------------------------------------------------------------------------*/
-void lsolve_inplace(const CSCMatrix& L, std::span<double> x)
+void lsolve_inplace(const CSCMatrix& L, VectorViewD x)
 {
     for (auto j : L.column_range()) {
         x[j] /= L.col_values(j).front();
@@ -39,19 +39,19 @@ void lsolve_inplace(const CSCMatrix& L, std::span<double> x)
 }
 
 
-std::vector<double> lsolve(const CSCMatrix& L, std::span<const double> B)
+VectorD lsolve(const CSCMatrix& L, cVectorViewD B)
 {
     return detail::trisolve_dense(L, B, lsolve_inplace);
 }
 
 
-std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& B)
+VectorD lsolve(const CSCMatrix& L, const CSCMatrix& B)
 {
     return detail::trisolve_sparse<true>(L, B);
 }
 
 
-void ltsolve_inplace(const CSCMatrix& L, std::span<double> x)
+void ltsolve_inplace(const CSCMatrix& L, VectorViewD x)
 {
     for (auto j : L.column_range() | std::views::reverse) {
         for (auto [i, v] : L.column(j) | std::views::drop(1)) {
@@ -62,13 +62,13 @@ void ltsolve_inplace(const CSCMatrix& L, std::span<double> x)
 }
 
 
-std::vector<double> ltsolve(const CSCMatrix& L, std::span<const double> B)
+VectorD ltsolve(const CSCMatrix& L, cVectorViewD B)
 {
     return detail::trisolve_dense(L, B, ltsolve_inplace);
 }
 
 
-void usolve_inplace(const CSCMatrix& U, std::span<double> x)
+void usolve_inplace(const CSCMatrix& U, VectorViewD x)
 {
     for (auto j : U.column_range() | std::views::reverse) {
         x[j] /= U.col_values(j).back();  // diagonal entry
@@ -79,19 +79,19 @@ void usolve_inplace(const CSCMatrix& U, std::span<double> x)
 }
 
 
-std::vector<double> usolve(const CSCMatrix& U, std::span<const double> B)
+VectorD usolve(const CSCMatrix& U, cVectorViewD B)
 {
     return detail::trisolve_dense(U, B, usolve_inplace);
 }
 
 
-std::vector<double> usolve(const CSCMatrix& U, const CSCMatrix& B)
+VectorD usolve(const CSCMatrix& U, const CSCMatrix& B)
 {
     return detail::trisolve_sparse<false>(U, B);
 }
 
 
-void utsolve_inplace(const CSCMatrix& U, std::span<double> x)
+void utsolve_inplace(const CSCMatrix& U, VectorViewD x)
 {
     for (auto j : U.column_range()) {
         for (auto [i, v] : U.column(j) | std::views::take(U.col_length(j) - 1)) {
@@ -102,14 +102,14 @@ void utsolve_inplace(const CSCMatrix& U, std::span<double> x)
 }
 
 
-std::vector<double> utsolve(const CSCMatrix& U, std::span<const double> B)
+VectorD utsolve(const CSCMatrix& U, cVectorViewD B)
 {
     return detail::trisolve_dense(U, B, utsolve_inplace);
 }
 
 
 // Exercise 3.8
-void lsolve_inplace_opt(const CSCMatrix& L, std::span<double> x)
+void lsolve_inplace_opt(const CSCMatrix& L, VectorViewD x)
 {
     for (auto j : L.column_range()) {
         auto& x_val = x[j];  // cache reference to value
@@ -124,14 +124,14 @@ void lsolve_inplace_opt(const CSCMatrix& L, std::span<double> x)
 }
 
 
-std::vector<double> lsolve_opt(const CSCMatrix& L, std::span<const double> b)
+VectorD lsolve_opt(const CSCMatrix& L, cVectorViewD b)
 {
     return detail::trisolve_dense(L, b, lsolve_inplace_opt);
 }
 
 
 // Exercise 3.8
-void usolve_inplace_opt(const CSCMatrix& U, std::span<double> x)
+void usolve_inplace_opt(const CSCMatrix& U, VectorViewD x)
 {
     for (auto j : U.column_range() | std::views::reverse) {
         auto& x_val = x[j];  // cache reference to value
@@ -145,7 +145,7 @@ void usolve_inplace_opt(const CSCMatrix& U, std::span<double> x)
 }
 
 
-std::vector<double> usolve_opt(const CSCMatrix& U, std::span<const double> b)
+VectorD usolve_opt(const CSCMatrix& U, cVectorViewD b)
 {
     return detail::trisolve_dense(U, b, usolve_inplace_opt);
 }
@@ -188,7 +188,7 @@ std::vector<csint> find_lower_diagonals(const CSCMatrix& A)
 
 
 // Exercise 3.3
-std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
+VectorD lsolve_rows(const CSCMatrix& A, cVectorViewD b)
 {
     auto [M, N] = A.shape();
 
@@ -216,8 +216,8 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
     }
 
     // Second (forward) pass to solve the system PL x = b -> L x = P^T b
-    std::vector<double> x(N);
-    std::vector<double> b_work(b.begin(), b.end());
+    VectorD x(N);
+    VectorD b_work(b.begin(), b.end());
 
     // Perform the permuted forward solve
     for (auto j : A.column_range()) {
@@ -242,7 +242,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& A, std::span<const double> b)
 
 
 // Exercise 3.5
-std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b)
+VectorD lsolve_cols(const CSCMatrix& A, cVectorViewD b)
 {
     auto [M, N] = A.shape();
 
@@ -281,8 +281,8 @@ std::vector<double> lsolve_cols(const CSCMatrix& A, std::span<const double> b)
     }
 
     // Second (forward) pass to solve the system LQ x = b
-    std::vector<double> x(N);
-    std::vector<double> b_work(b.begin(), b.end());
+    VectorD x(N);
+    VectorD b_work(b.begin(), b.end());
 
     // Perform the permuted forward solve
     for (const auto& j : q_inv) {
@@ -340,7 +340,7 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U)
 
 
 // Exercise 3.4
-std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b)
+VectorD usolve_rows(const CSCMatrix& A, cVectorViewD b)
 {
     auto [M, N] = A.shape();
 
@@ -368,8 +368,8 @@ std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b)
     }
 
     // Second (forward) pass to solve the system PU x = b -> U x = P^T b
-    std::vector<double> x(N);
-    std::vector<double> b_work(b.begin(), b.end());
+    VectorD x(N);
+    VectorD b_work(b.begin(), b.end());
 
     // Perform the permuted backward solve
     for (auto j : A.column_range() | std::views::reverse) {
@@ -392,7 +392,7 @@ std::vector<double> usolve_rows(const CSCMatrix& A, std::span<const double> b)
 }
 
 
-std::vector<double> usolve_cols(const CSCMatrix& A, std::span<const double> b)
+VectorD usolve_cols(const CSCMatrix& A, cVectorViewD b)
 {
     auto [M, N] = A.shape();
 
@@ -431,8 +431,8 @@ std::vector<double> usolve_cols(const CSCMatrix& A, std::span<const double> b)
     }
 
     // Second (forward) pass to solve the system UQ x = b
-    std::vector<double> x(N);
-    std::vector<double> b_work(b.begin(), b.end());
+    VectorD x(N);
+    VectorD b_work(b.begin(), b.end());
 
     // Perform the permuted backward solve
     for (auto j : q_inv | std::views::reverse) {
@@ -523,8 +523,8 @@ TriPerm find_tri_permutation(const CSCMatrix& A)
 void tri_solve_perm_inplace(
     const CSCMatrix& A,
     const TriPerm& tri_perm,
-    std::span<double> b,
-    std::span<double> x
+    VectorViewD b,
+    VectorViewD x
 )
 {
     // Extract the permutation vectors
@@ -554,7 +554,7 @@ void tri_solve_perm_inplace(
 }
 
 
-std::vector<double> tri_solve_perm(const CSCMatrix& A, std::span<const double> B)
+VectorD tri_solve_perm(const CSCMatrix& A, cVectorViewD B)
 {
     const auto [M, N] = A.shape();
     csint MxK = std::ssize(B);
@@ -573,11 +573,11 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, std::span<const double> B
     const auto tri_perm = find_tri_permutation(A);
 
     csint K = MxK / M;               // number of RHS columns
-    std::vector<double> X(N * K);    // solution vector
-    std::vector<double> B_work(B.begin(), B.end());  // copy the RHS vector
+    VectorD X(N * K);    // solution vector
+    VectorD B_work(B.begin(), B.end());  // copy the RHS vector
 
-    std::span<double> X_view(X);
-    std::span<double> B_work_span(B_work);
+    VectorViewD X_view(X);
+    VectorViewD B_work_span(B_work);
 
     // Solve each column of the system
     for (csint k = 0; k < K; ++k) {
@@ -590,7 +590,7 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, std::span<const double> B
 }
 
 
-std::vector<double> tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B)
+VectorD tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B)
 {
     const auto [M, N] = A.shape();
     auto [Mb, K] = B.shape();
@@ -608,10 +608,10 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B)
     // Get the permutation vectors and check if A is permuted triangular
     const auto tri_perm = find_tri_permutation(A);
 
-    std::vector<double> X(N * K);    // solution vector
-    std::span<double> X_view(X);
+    VectorD X(N * K);    // solution vector
+    VectorViewD X_view(X);
 
-    std::vector<double> B_k(M);  // single dense RHS column
+    VectorD B_k(M);  // single dense RHS column
 
     // Solve each column of the system
     for (csint k = 0; k < K; ++k) {
@@ -806,10 +806,10 @@ void dfs_r(
 // -----------------------------------------------------------------------------
 //         Cholesky Factorization Solvers
 // -----------------------------------------------------------------------------
-void CholResult::solve(std::span<double> b) const
+void CholResult::solve(VectorViewD b) const
 {
     // Solve Ax = b ==> (P^T L L^T P) x = b
-    std::vector<double> w(L.shape()[0]);  // workspace
+    VectorD w(L.shape()[0]);  // workspace
 
     ipvec(p_inv, b, w);     // permute b -> w = Pb
     lsolve_inplace(L, w);   // y = L \ b -> w = y
@@ -862,7 +862,7 @@ std::vector<csint> topological_order(
 
 void CholResult::lsolve_(
     std::span<const csint> xi,
-    std::span<double> x
+    VectorViewD x
 ) const
 {
     for (const auto& j : xi) {
@@ -877,7 +877,7 @@ void CholResult::lsolve_(
 
 void CholResult::ltsolve_(
     std::span<const csint> xi,
-    std::span<double> x
+    VectorViewD x
 ) const
 {
     for (const auto& j : xi) {
@@ -894,7 +894,7 @@ void CholResult::solve(
     const CSCMatrix& B,
     csint k,
     std::span<const csint> parent,
-    std::span<double> x
+    VectorViewD x
 ) const
 {
     if (B.shape()[0] != L.shape()[0]) {
@@ -910,7 +910,7 @@ void CholResult::solve(
 
     // ----- Option 1: scatter into dense column and solve dense
     // // Solve Ax = b ==> (P^T L L^T P) x = b
-    // std::vector<double> w(L.M_);  // workspace
+    // VectorD w(L.M_);  // workspace
 
     // // scatter permuted b -> w = Pb
     // assert(k < B.N_);
@@ -932,7 +932,7 @@ void CholResult::solve(
     auto xi = topological_order(b, parent);
 
     // Scatter b into w
-    std::vector<double> w(M);  // workspace
+    VectorD w(M);  // workspace
     b.scatter(0, w);
 
     lsolve_(xi, w);            // y = L \ b -> w = y
@@ -1091,7 +1091,7 @@ void QRResult::solve(
 {
     // Solve P^T Q R E x = b
     auto M2 = V.shape()[0];
-    std::vector<double> w(M2);
+    VectorD w(M2);
     ipvec(p_inv, b, w);        // permute b -> E b -> w = Eb
     apply_qtleft(V, beta, w);  // y = Q^T E b -> w = y
     usolve_inplace(R, w);      // E x = R \ y -> w = E x
@@ -1106,7 +1106,7 @@ void QRResult::tsolve(
 {
     // Solve P^T R^T Q^T E x = b
     auto M2 = V.shape()[0];
-    std::vector<double> w(M2);
+    VectorD w(M2);
     pvec(q, b, w);            // permute b -> E b -> w = Eb
     utsolve_inplace(R, w);    // y = R^T \ E b -> w = y
     apply_qleft(V, beta, w);  // P x = Q y -> w = P x
@@ -1196,10 +1196,10 @@ QRSolveResult qr_solve(
         res = qr(AT, S);
     }
 
-    std::vector<double> X(N * K);  // dense solution matrix
-    std::span<double> X_view(X);
+    VectorD X(N * K);  // dense solution matrix
+    VectorViewD X_view(X);
 
-    std::vector<double> B_k(M);
+    VectorD B_k(M);
 
     for (csint k = 0; k < K; ++k) {
         // Solve for each RHS column
@@ -1228,7 +1228,7 @@ QRSolveResult qr_solve(
 //         LU Factorization Solvers
 // -----------------------------------------------------------------------------
 // Exercise 6.1
-void LUResult::solve(std::span<double> b) const
+void LUResult::solve(VectorViewD b) const
 {
     const auto [M, N] = L.shape();
 
@@ -1241,7 +1241,7 @@ void LUResult::solve(std::span<double> b) const
     }
 
     // allocate workspace
-    std::vector<double> w(N);
+    VectorD w(N);
 
     // Solve A x = b == (P^T L U Q^T) x = b
     ipvec(p_inv, b, w);    // permute b -> w = Pb
@@ -1252,7 +1252,7 @@ void LUResult::solve(std::span<double> b) const
 
 
 // Exercise 6.1
-void LUResult::tsolve(std::span<double> b) const
+void LUResult::tsolve(VectorViewD b) const
 {
     const auto [M, N] = U.shape();
 
@@ -1265,7 +1265,7 @@ void LUResult::tsolve(std::span<double> b) const
     }
 
     // allocate workspace
-    std::vector<double> w(N);
+    VectorD w(N);
 
     // Solve A^T x = b == (P^T L U Q^T)^T x = b == (Q U^T L^T P) x = b
     pvec(q, b, w);          // permute b -> Q^T b -> w = Q^T b
@@ -1451,8 +1451,8 @@ double norm1est_inv(const LUResult& res)
     }
 
     double est = 0.0;
-    std::vector<double> x(N, 1.0 / N);  // sum(x) == 1.0
-    std::vector<double> s(N);
+    VectorD x(N, 1.0 / N);  // sum(x) == 1.0
+    VectorD s(N);
     csint jold = -1;
 
     constexpr csint MAX_ITER = 5;  // maximum number of iterations

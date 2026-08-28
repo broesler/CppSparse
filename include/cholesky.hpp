@@ -62,7 +62,7 @@ struct CholResult
      *
      * @param b[in,out]  right-hand side vector on input, solution on output.
      */
-    void solve(std::span<double> b) const; 
+    void solve(VectorViewD b) const; 
 
     /** Solve the linear system Ax = b in-place.
      *
@@ -75,7 +75,7 @@ struct CholResult
         const CSCMatrix& B,
         csint k,
         std::span<const csint> parent,
-        std::span<double> x
+        VectorViewD x
     ) const; 
 
     /** Solve \f$ Lx = b \f$ with sparse RHS `b`, where `L` is
@@ -124,7 +124,7 @@ private:
     *        topological_order.
     * @param x[in,out]  the RHS on input, solution on output
     */
-    void lsolve_(std::span<const csint> xi, std::span<double> x) const;
+    void lsolve_(std::span<const csint> xi, VectorViewD x) const;
 
     /** Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is
      * a lower-triangular Cholesky factor.
@@ -135,7 +135,7 @@ private:
     *        topological_order.
     * @param x[in,out]  the RHS on input, solution on output
     */
-    void ltsolve_(std::span<const csint> xi, std::span<double> x) const;
+    void ltsolve_(std::span<const csint> xi, VectorViewD x) const;
 
     /** Solve \f$ Lx = b \f$, or \f$ L^T x = b \f$, with sparse RHS `b`, where
      * `L` is a lower-triangular Cholesky factor.

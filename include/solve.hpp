@@ -62,7 +62,7 @@ struct QRSolveResult {
  * @param L  a lower-triangular matrix
  * @param x[in,out]  RHS vector on input, solution on output.
  */
-void lsolve_inplace(const CSCMatrix& L, std::span<double> x);
+void lsolve_inplace(const CSCMatrix& L, VectorViewD x);
 
 
 /** Forward solve a lower-triangular system \f$ Lx = b \f$.
@@ -76,8 +76,8 @@ void lsolve_inplace(const CSCMatrix& L, std::span<double> x);
  *
  * @return x  the solution matrix, in column-major order.
  */
-std::vector<double> lsolve(const CSCMatrix& L, std::span<const double> B);
-std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& B);
+VectorD lsolve(const CSCMatrix& L, cVectorViewD B);
+VectorD lsolve(const CSCMatrix& L, const CSCMatrix& B);
 
 
 /** Backsolve a lower-triangular system \f$ L^Tx = b \f$.
@@ -89,7 +89,7 @@ std::vector<double> lsolve(const CSCMatrix& L, const CSCMatrix& B);
  * @param L  a lower-triangular matrix
  * @param x[in,out]  RHS vector on input, solution on output.
  */
-void ltsolve_inplace(const CSCMatrix& L, std::span<double> x);
+void ltsolve_inplace(const CSCMatrix& L, VectorViewD x);
 
 
 /** Backsolve a lower-triangular system \f$ L^Tx = b \f$.
@@ -103,7 +103,7 @@ void ltsolve_inplace(const CSCMatrix& L, std::span<double> x);
  *
  * @return x  the solution vector
  */
-std::vector<double> ltsolve(const CSCMatrix& L, std::span<const double> b);
+VectorD ltsolve(const CSCMatrix& L, cVectorViewD b);
 
 
 /** Backsolve an upper-triangular system \f$ Ux = b \f$.
@@ -115,7 +115,7 @@ std::vector<double> ltsolve(const CSCMatrix& L, std::span<const double> b);
  * @param U  an upper-triangular matrix
  * @param x[in,out]  RHS vector on input, solution on output.
  */
-void usolve_inplace(const CSCMatrix& U, std::span<double> x);
+void usolve_inplace(const CSCMatrix& U, VectorViewD x);
 
 
 /** Backsolve an upper-triangular system \f$ Ux = b \f$.
@@ -129,8 +129,8 @@ void usolve_inplace(const CSCMatrix& U, std::span<double> x);
  *
  * @return x  the solution vector
  */
-std::vector<double> usolve(const CSCMatrix& U, std::span<const double> B);
-std::vector<double> usolve(const CSCMatrix& U, const CSCMatrix& B);
+VectorD usolve(const CSCMatrix& U, cVectorViewD B);
+VectorD usolve(const CSCMatrix& U, const CSCMatrix& B);
 
 
 /** Forward solve an upper-triangular system \f$ U^T x = b \f$.
@@ -142,7 +142,7 @@ std::vector<double> usolve(const CSCMatrix& U, const CSCMatrix& B);
  * @param U  an upper-triangular matrix
  * @param x[in,out]  RHS vector on input, solution on output.
  */
-void utsolve_inplace(const CSCMatrix& U, std::span<double> x);
+void utsolve_inplace(const CSCMatrix& U, VectorViewD x);
 
 
 /** Forward solve an upper-triangular system \f$ U^T x = b \f$.
@@ -156,7 +156,7 @@ void utsolve_inplace(const CSCMatrix& U, std::span<double> x);
  *
  * @return x  the solution vector
  */
-std::vector<double> utsolve(const CSCMatrix& U, std::span<const double> b);
+VectorD utsolve(const CSCMatrix& U, cVectorViewD b);
 
 
 /** Forward solve a lower-triangular system \f$ Lx = b \f$, but
@@ -171,7 +171,7 @@ std::vector<double> utsolve(const CSCMatrix& U, std::span<const double> b);
  * @param L  a lower-triangular matrix
  * @param x[in,out]  the RHS vector on input, solution on output.
  */
-void lsolve_inplace_opt(const CSCMatrix& A, std::span<double> x);
+void lsolve_inplace_opt(const CSCMatrix& A, VectorViewD x);
 
 
 /** Forward solve a lower-triangular system \f$ Lx = b \f$, but
@@ -188,7 +188,7 @@ void lsolve_inplace_opt(const CSCMatrix& A, std::span<double> x);
  *
  * @return x  the solution vector
  */
-std::vector<double> lsolve_opt(const CSCMatrix& L, std::span<const double> b);
+VectorD lsolve_opt(const CSCMatrix& L, cVectorViewD b);
 
 
 /** Backsolve an upper-triangular system \f$ Ux = b \f$, but optimized for cache
@@ -203,7 +203,7 @@ std::vector<double> lsolve_opt(const CSCMatrix& L, std::span<const double> b);
  * @param U  an upper-triangular matrix
  * @param x[in,out]  the RHS vector on input, solution on output.
  */
-void usolve_inplace_opt(const CSCMatrix& A, std::span<double> x);
+void usolve_inplace_opt(const CSCMatrix& A, VectorViewD x);
 
 
 /** Backsolve an upper-triangular system \f$ Ux = b \f$, but optimized for cache
@@ -220,7 +220,7 @@ void usolve_inplace_opt(const CSCMatrix& A, std::span<double> x);
  *
  * @return x  the solution vector
  */
-std::vector<double> usolve_opt(const CSCMatrix& U, std::span<const double> b);
+VectorD usolve_opt(const CSCMatrix& U, cVectorViewD b);
 
 
 /** Solve Lx = b with a row-permuted L. The permutation is unknown.
@@ -235,7 +235,7 @@ std::vector<double> usolve_opt(const CSCMatrix& U, std::span<const double> b);
  * @throws PermutedTriangularMatrixError if L is not a permuted lower triangular
  * matrix.
  */
-std::vector<double> lsolve_rows(const CSCMatrix& L, std::span<const double> b);
+VectorD lsolve_rows(const CSCMatrix& L, cVectorViewD b);
 
 
 /** Solve Ux = b with a row-permuted U. The permutation is unknown.
@@ -250,7 +250,7 @@ std::vector<double> lsolve_rows(const CSCMatrix& L, std::span<const double> b);
  * @throws PermutedTriangularMatrixError if U is not a permuted upper triangular
  * matrix.
  */
-std::vector<double> usolve_rows(const CSCMatrix& U, std::span<const double> b);
+VectorD usolve_rows(const CSCMatrix& U, cVectorViewD b);
 
 
 /** Solve Lx = b with a column-permuted L. The permutation is unknown.
@@ -265,7 +265,7 @@ std::vector<double> usolve_rows(const CSCMatrix& U, std::span<const double> b);
  * @throws PermutedTriangularMatrixError if L is not a permuted lower triangular
  * matrix.
  */
-std::vector<double> lsolve_cols(const CSCMatrix& L, std::span<const double> b);
+VectorD lsolve_cols(const CSCMatrix& L, cVectorViewD b);
 
 
 /** Solve Ux = b with a column-permuted U. The permutation is unknown.
@@ -280,7 +280,7 @@ std::vector<double> lsolve_cols(const CSCMatrix& L, std::span<const double> b);
  * #throws PermutedTriangularMatrixError if U is not a permuted upper triangular
  * matrix.
  */
-std::vector<double> usolve_cols(const CSCMatrix& U, std::span<const double> b);
+VectorD usolve_cols(const CSCMatrix& U, cVectorViewD b);
 
 
 /** Find the diagonal indices of a row-permuted lower triangular matrix.
@@ -327,8 +327,8 @@ std::vector<csint> find_upper_diagonals(const CSCMatrix& U);
 void tri_solve_perm_inplace(
     const CSCMatrix& A,
     const TriPerm& tri_perm,
-    std::span<double> b,
-    std::span<double> x
+    VectorViewD b,
+    VectorViewD x
 );
 
 
@@ -346,8 +346,8 @@ void tri_solve_perm_inplace(
  * @throws PermutedTriangularMatrixError if A is not a permuted triangular
  * matrix.
  */
-std::vector<double> tri_solve_perm(const CSCMatrix& A, std::span<const double> B);
-std::vector<double> tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B);
+VectorD tri_solve_perm(const CSCMatrix& A, cVectorViewD B);
+VectorD tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B);
 
 
 /** Find the permutation vectors of a permuted triangular matrix.
@@ -418,9 +418,9 @@ namespace detail {
  * @return X  the solution matrix with multiple columns, stored column-wise
  */
 template <typename InplaceTriSolve>
-std::vector<double> trisolve_dense(
+VectorD trisolve_dense(
     const CSCMatrix& L,
-    std::span<const double> B,
+    cVectorViewD B,
     InplaceTriSolve inplace_solver
 )
 {
@@ -432,8 +432,8 @@ std::vector<double> trisolve_dense(
     }
 
     csint K = MxK / M;                          // number of RHS columns
-    std::vector<double> X(B.begin(), B.end());  // NOTE only works if M >= N
-    std::span<double> X_span(X);                // view onto X
+    VectorD X(B.begin(), B.end());  // NOTE only works if M >= N
+    VectorViewD X_span(X);                // view onto X
 
     for (csint k = 0; k < K; k++) {
         auto X_k = X_span.subspan(k * N, N);
@@ -454,14 +454,14 @@ std::vector<double> trisolve_dense(
  * @return X  the solution matrix with multiple columns, stored column-wise
  */
 template <bool Lower>
-std::vector<double> trisolve_sparse(const CSCMatrix& L, const CSCMatrix& B)
+VectorD trisolve_sparse(const CSCMatrix& L, const CSCMatrix& B)
 {
     const auto [M, N] = L.shape();
     csint K = B.shape()[1];
 
     csint Nx = std::max(M, N);  // enough space for non-square solutions
-    std::vector<double> X(Nx * K);
-    std::span<double> X_span(X);
+    VectorD X(Nx * K);
+    VectorViewD X_span(X);
     SparseSolution sol(Nx);
 
     for (csint k = 0; k < K; k++) {

@@ -69,6 +69,12 @@ public:
 
     void assign(std::initializer_list<T> ilist) { data_.assign(ilist); }
 
+    template <std::ranges::input_range R>
+    requires std::convertible_to<std::ranges::range_reference_t<R>, T>
+    constexpr void assign_range(R&& range) {
+        data_.assign_range(std::forward<R>(range));
+    }
+
     Vector& operator=(std::initializer_list<T> ilist) {
         data_ = ilist;
         return *this;
@@ -140,6 +146,12 @@ public:
 
     auto insert(const_iterator pos, std::initializer_list<T> ilist) { return data_.insert(pos, ilist); }
 
+    template <std::ranges::input_range R>
+    requires std::convertible_to<std::ranges::range_reference_t<R>, T>
+    constexpr iterator insert_range(const_iterator pos, R&& range) {
+        return data_.insert_range(pos, std::forward<R>(range));
+    }
+
     template <typename... Args>
     auto emplace(const_iterator pos, Args&&... args) {
         return data_.emplace(pos, std::forward<Args>(args)...);
@@ -156,6 +168,12 @@ public:
     template <typename... Args>
     decltype(auto) emplace_back(Args&&... args) {
         data_.emplace_back(std::forward<Args>(args)...);
+    }
+
+    template <std::ranges::input_range R>
+    requires std::convertible_to<std::ranges::range_reference_t<R>, T>
+    constexpr void append_range(R&& range) {
+        data_.append_range(std::forward<R>(range));
     }
 
     void pop_back() { data_.pop_back(); }

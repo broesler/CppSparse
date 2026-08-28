@@ -140,6 +140,17 @@ struct IsDenseVector<VectorView<T>> : std::true_type {};
 template <typename T>
 concept DenseVector = IsDenseVector<std::remove_cvref_t<T>>::value;
 
+// Two vectors that can be added etc.
+template <typename L, typename R>
+concept ElementwiseCompatible =
+    DenseVector<L>
+    && DenseVector<R>
+    && std::same_as<
+        std::ranges::range_value_t<L>,
+        std::ranges::range_value_t<R>
+    >;
+
+
 // Structs and classes
 struct CholCounts;
 struct CholResult;

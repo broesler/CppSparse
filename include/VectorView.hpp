@@ -66,8 +66,18 @@ public:
 
     // NOTE the "requires" line prevents "hijacking" the copy constructor
     template <std::ranges::contiguous_range R>
-    requires (!std::is_same_v<std::remove_cvref_t<R>, VectorView>) 
+    requires (!std::same_as<std::remove_cvref_t<R>, VectorView>)
+        && std::constructible_from<std::span<T>, R&&>
     constexpr VectorView(R&& range) : data_(std::forward<R>(range)) {}
+
+    // Copy assignment from a contiguous range of the same value type
+    template <std::ranges::contiguous_range R>
+    requires std::same_as<std::ranges::range_value_t<R>, value_type>
+    constexpr VectorView& operator=(const R& range) {
+        check_same_size_(range);
+        std::ranges::copy(range, begin());
+        return *this;
+    }
 
     VectorView(const VectorView&) = default;
     VectorView(VectorView&&) = default;

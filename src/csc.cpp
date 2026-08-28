@@ -1385,7 +1385,7 @@ csint CSCMatrix::scatter(
 }
 
 
-void CSCMatrix::scatter(csint k, std::span<double> x) const
+void CSCMatrix::scatter(csint k, VectorViewD x) const
 {
     if (std::ssize(x) != M_) {
         throw std::invalid_argument(
@@ -1409,7 +1409,7 @@ void CSCMatrix::scatter(csint k, std::span<double> x) const
 }
 
 
-void CSCMatrix::gather_(std::span<const double> x, csint k)
+void CSCMatrix::gather_(cVectorViewD x, csint k)
 {
     if (std::ssize(x) != M_) {
         throw std::invalid_argument(

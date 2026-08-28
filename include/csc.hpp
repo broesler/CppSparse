@@ -776,7 +776,7 @@ public:
      * @param k  the column index to scatter
      * @param x  the dense vector to scatter into. Must be length M.
      */
-    void scatter(csint k, std::span<double> x) const;
+    void scatter(csint k, VectorViewD x) const;
 
     //--------------------------------------------------------------------------
     //        Permutations
@@ -1204,7 +1204,7 @@ private:
      * @param x  the dense vector from which to gather values. Must be length M.
      * @param j  the column index into which to gather.
      */
-    void gather_(std::span<const double> x, csint j);
+    void gather_(cVectorViewD x, csint j);
 
 };  // class CSCMatrix
 

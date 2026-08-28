@@ -227,7 +227,7 @@ public:
      *
      * @return a copy of the matrix as a dense array.
      */
-    virtual std::vector<double> to_dense_vector(
+    virtual VectorD to_dense_vector(
         DenseOrder order = DenseOrder::ColMajor
     ) const override;
 

@@ -325,7 +325,7 @@ CSCMatrix COOMatrix::compress() const
 CSCMatrix COOMatrix::tocsc() const { return CSCMatrix{*this}; }
 
 
-std::vector<double> COOMatrix::to_dense_vector(DenseOrder order) const
+VectorD COOMatrix::to_dense_vector(DenseOrder order) const
 {
     std::vector<double> arr(M_ * N_, 0.0);
     csint idx;

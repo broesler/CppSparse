@@ -492,7 +492,7 @@ public:
      *
      * @return a copy of the matrix as a dense column-major array.
      */
-    virtual std::vector<double> to_dense_vector(
+    virtual VectorD to_dense_vector(
         DenseOrder order = DenseOrder::ColMajor
     ) const override;
 
@@ -1229,11 +1229,7 @@ CSCMatrix operator*(double c, const CSCMatrix& A);
  *
  * @return y a copy of the updated vector
  */
-std::vector<double> gaxpy(
-    const CSCMatrix& A,
-    std::span<const double> x,
-    std::span<const double> y
-);
+VectorD gaxpy(const CSCMatrix& A, cVectorViewD x, cVectorViewD y);
 
 
 /** Matrix transpose-vector multiply `y = A.T x + y`.
@@ -1247,11 +1243,7 @@ std::vector<double> gaxpy(
  *
  * @return y a copy of the updated vector
  */
-std::vector<double> gatxpy(
-    const CSCMatrix& A,
-    std::span<const double> x,
-    std::span<const double> y
-);
+VectorD gatxpy(const CSCMatrix& A, cVectorViewD x, cVectorViewD y);
 
 
 /** Matrix-vector multiply `y = Ax + y` symmetric A (\f$ A = A^T \f$).
@@ -1264,11 +1256,7 @@ std::vector<double> gatxpy(
  *
  * @return y a copy of the updated vector
  */
-std::vector<double> sym_gaxpy(
-    const CSCMatrix& A,
-    std::span<const double> x,
-    std::span<const double> y
-);
+VectorD sym_gaxpy(const CSCMatrix& A, cVectorViewD x, cVectorViewD y);
 
 
 /** Matrix multiply `Y = AX + Y` column-major dense matrices `X` and `Y`.
@@ -1281,11 +1269,7 @@ std::vector<double> sym_gaxpy(
  *
  * @return Y a copy of the updated matrix
  */
-std::vector<double> gaxpy_col(
-    const CSCMatrix& A,
-    std::span<const double> X,
-    std::span<const double> Y
-);
+VectorD gaxpy_col(const CSCMatrix& A, cVectorViewD X, cVectorViewD Y);
 
 
 /** Matrix multiply `Y = AX + Y` for row-major dense matrices `X` and `Y`.
@@ -1298,11 +1282,7 @@ std::vector<double> gaxpy_col(
  *
  * @return Y a copy of the updated matrix
  */
-std::vector<double> gaxpy_row(
-    const CSCMatrix& A,
-    std::span<const double> X,
-    std::span<const double> Y
-);
+VectorD gaxpy_row(const CSCMatrix& A, cVectorViewD X, cVectorViewD Y);
 
 
 /** Matrix multiply `Y = AX + Y` column-major dense matrices `X` and
@@ -1316,11 +1296,7 @@ std::vector<double> gaxpy_row(
  *
  * @return Y a copy of the updated matrix
  */
-std::vector<double> gaxpy_block(
-    const CSCMatrix& A,
-    std::span<const double> X,
-    std::span<const double> Y
-);
+VectorD gaxpy_block(const CSCMatrix& A, cVectorViewD X, cVectorViewD Y);
 
 
 /** Matrix multiply `Y = A.T X + Y` column-major dense matrices `X` and `Y`.
@@ -1333,11 +1309,7 @@ std::vector<double> gaxpy_block(
  *
  * @return Y a copy of the updated matrix
  */
-std::vector<double> gatxpy_col(
-    const CSCMatrix& A,
-    std::span<const double> X,
-    std::span<const double> Y
-);
+VectorD gatxpy_col(const CSCMatrix& A, cVectorViewD X, cVectorViewD Y);
 
 
 /** Matrix multiply `Y = A.T X + Y` for row-major dense matrices `X` and `Y`.
@@ -1350,11 +1322,7 @@ std::vector<double> gatxpy_col(
  *
  * @return Y a copy of the updated matrix
  */
-std::vector<double> gatxpy_row(
-    const CSCMatrix& A,
-    std::span<const double> X,
-    std::span<const double> Y
-);
+VectorD gatxpy_row(const CSCMatrix& A, cVectorViewD X, cVectorViewD Y);
 
 
 /** Matrix multiply `Y = A.T X + Y` column-major dense matrices `X` and
@@ -1368,11 +1336,7 @@ std::vector<double> gatxpy_row(
  *
  * @return Y a copy of the updated matrix
  */
-std::vector<double> gatxpy_block(
-    const CSCMatrix& A,
-    std::span<const double> X,
-    std::span<const double> Y
-);
+VectorD gatxpy_block(const CSCMatrix& A, cVectorViewD X, cVectorViewD Y);
 
 
 /** Add two sparse column vectors \f$ x = a + b \f$.
@@ -1390,7 +1354,7 @@ void saxpy(
     const CSCMatrix& a,
     const CSCMatrix& b,
     std::span<char> w,
-    std::span<double> x
+    VectorViewD x
 );
 
 

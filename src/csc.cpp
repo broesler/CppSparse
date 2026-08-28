@@ -415,9 +415,9 @@ COOMatrix CSCMatrix::tocoo() const { return COOMatrix{*this}; }
 
 
 // Exercise 2.16
-std::vector<double> CSCMatrix::to_dense_vector(DenseOrder order) const
+VectorD CSCMatrix::to_dense_vector(DenseOrder order) const
 {
-    std::vector<double> A(M_ * N_, 0.0);
+    VectorD A(M_ * N_, 0.0);
     csint idx;
 
     for (auto [i, j, v] : elems()) {
@@ -732,11 +732,7 @@ double CSCMatrix::structural_symmetry() const
 namespace {
 
 template <bool Transpose = false>
-void gaxpy_check_(
-    const CSCMatrix& A,
-    std::span<const double> X,
-    std::span<const double> Y
-)
+void gaxpy_check_(const CSCMatrix& A, cVectorViewD X, cVectorViewD Y)
 {
     // (M, N) * (N, K) + (M, K) = (M, K) if Transpose = false
     // (N, M) * (M, K) + (N, K) = (N, K) if Transpose = true
@@ -771,15 +767,11 @@ void gaxpy_check_(
 }  // namespace
 
 
-std::vector<double> gaxpy(
-    const CSCMatrix& A,
-    std::span<const double> x,
-    std::span<const double> y
-)
+VectorD gaxpy(const CSCMatrix& A, cVectorViewD x, cVectorViewD y)
 {
     gaxpy_check_(A, x, y);
 
-    std::vector<double> out(y.begin(), y.end());  // copy the input vector
+    VectorD out(y.begin(), y.end());  // copy the input vector
 
     for (auto [i, j, v] : A.elems()) {
         out[i] += v * x[j];
@@ -790,15 +782,11 @@ std::vector<double> gaxpy(
 
 
 // Exercise 2.1
-std::vector<double> gatxpy(
-    const CSCMatrix& A,
-    std::span<const double> x,
-    std::span<const double> y
-)
+VectorD gatxpy(const CSCMatrix& A, cVectorViewD x, cVectorViewD y)
 {
     gaxpy_check_<true>(A, x, y);
 
-    std::vector<double> out(y.begin(), y.end());  // copy the input vector
+    VectorD out(y.begin(), y.end());  // copy the input vector
 
     for (auto [i, j, v] : A.elems()) {
         out[j] += v * x[i];
@@ -809,11 +797,7 @@ std::vector<double> gatxpy(
 
 
 // Exercise 2.3
-std::vector<double> sym_gaxpy(
-    const CSCMatrix& A,
-    std::span<const double> x,
-    std::span<const double> y
-)
+VectorD sym_gaxpy(const CSCMatrix& A, cVectorViewD x, cVectorViewD y)
 {
     const auto [M, N] = A.shape();
     if (M != N) {
@@ -822,7 +806,7 @@ std::vector<double> sym_gaxpy(
 
     gaxpy_check_(A, x, y);
 
-    std::vector<double> out(y.begin(), y.end());  // copy the input vector
+    VectorD out(y.begin(), y.end());  // copy the input vector
 
     for (auto [i, j, v] : A.elems()) {
         if (i > j)
@@ -842,16 +826,12 @@ std::vector<double> sym_gaxpy(
 
 
 // Exercise 2.27
-std::vector<double> gaxpy_col(
-    const CSCMatrix& A,
-    std::span<const double> X,
-    std::span<const double> Y
-)
+VectorD gaxpy_col(const CSCMatrix& A, cVectorViewD X, cVectorViewD Y)
 {
     gaxpy_check_(A, X, Y);
 
     const auto [M, N] = A.shape();
-    std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
+    VectorD out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / N;  // number of columns in X
 
@@ -876,16 +856,12 @@ std::vector<double> gaxpy_col(
 
 
 // Exercise 2.27
-std::vector<double> gaxpy_block(
-    const CSCMatrix& A,
-    std::span<const double> X,
-    std::span<const double> Y
-)
+VectorD gaxpy_block(const CSCMatrix& A, cVectorViewD X, cVectorViewD Y)
 {
     gaxpy_check_(A, X, Y);
 
     const auto [M, N] = A.shape();
-    std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
+    VectorD out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / N;  // number of columns in X
 
@@ -916,16 +892,12 @@ std::vector<double> gaxpy_block(
 
 
 // Exercise 2.27
-std::vector<double> gaxpy_row(
-    const CSCMatrix& A,
-    std::span<const double> X,
-    std::span<const double> Y
-)
+VectorD gaxpy_row(const CSCMatrix& A, cVectorViewD X, cVectorViewD Y)
 {
     gaxpy_check_(A, X, Y);
 
     const auto [M, N] = A.shape();
-    std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
+    VectorD out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / N;  // number of columns in X
 
@@ -950,16 +922,12 @@ std::vector<double> gaxpy_row(
 
 
 // Exercise 2.28
-std::vector<double> gatxpy_col(
-    const CSCMatrix& A,
-    std::span<const double> X,
-    std::span<const double> Y
-)
+VectorD gatxpy_col(const CSCMatrix& A, cVectorViewD X, cVectorViewD Y)
 {
     gaxpy_check_<true>(A, X, Y);
 
     const auto [M, N] = A.shape();
-    std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
+    VectorD out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / M;  // number of columns in X
 
@@ -977,16 +945,12 @@ std::vector<double> gatxpy_col(
 
 
 // Exercise 2.28
-std::vector<double> gatxpy_block(
-    const CSCMatrix& A,
-    std::span<const double> X,
-    std::span<const double> Y
-)
+VectorD gatxpy_block(const CSCMatrix& A, cVectorViewD X, cVectorViewD Y)
 {
     gaxpy_check_<true>(A, X, Y);
 
     const auto [M, N] = A.shape();
-    std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
+    VectorD out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / M;  // number of columns in X
 
@@ -1012,16 +976,12 @@ std::vector<double> gatxpy_block(
 
 
 // Exercise 2.28
-std::vector<double> gatxpy_row(
-    const CSCMatrix& A,
-    std::span<const double> X,
-    std::span<const double> Y
-)
+VectorD gatxpy_row(const CSCMatrix& A, cVectorViewD X, cVectorViewD Y)
 {
     gaxpy_check_<true>(A, X, Y);
 
     const auto [M, N] = A.shape();
-    std::vector<double> out(Y.begin(), Y.end());  // copy the input matrix
+    VectorD out(Y.begin(), Y.end());  // copy the input matrix
 
     csint K = X.size() / M;  // number of columns in X
 
@@ -1329,8 +1289,8 @@ void saxpy(
     const CSCMatrix& a,
     const CSCMatrix& b,
     std::span<char> w,
-    std::span<double> x
-    )
+    VectorViewD x
+)
 {
     if (a.shape() != b.shape()) {
         throw std::invalid_argument("Matrix dimensions do not agree.");

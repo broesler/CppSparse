@@ -51,23 +51,23 @@ public:
     //         Constructors
     // -------------------------------------------------------------------------
     VectorView() = default;
-    explicit VectorView(std::span<T> s) : data_(s) {}
+    explicit constexpr VectorView(std::span<T> s) : data_(s) {}
 
-    VectorView(Vector<value_type>& v) : data_(v) {}
-    VectorView(const Vector<value_type>& v)
+    constexpr VectorView(Vector<value_type>& v) : data_(v) {}
+    constexpr VectorView(const Vector<value_type>& v)
         requires std::is_const_v<T>
         : data_(v) {}
 
     template <std::contiguous_iterator It>
-    VectorView(It first, size_t count) : data_(first, count) {}
+    constexpr VectorView(It first, size_t count) : data_(first, count) {}
 
     template <std::contiguous_iterator It, std::sized_sentinel_for<It> End>
-    VectorView(It first, End last) : data_(first, last) {}
+    constexpr VectorView(It first, End last) : data_(first, last) {}
 
     // NOTE the "requires" line prevents "hijacking" the copy constructor
     template <std::ranges::contiguous_range R>
     requires (!std::is_same_v<std::remove_cvref_t<R>, VectorView>) 
-    VectorView(R&& range) : data_(std::forward<R>(range)) {}
+    constexpr VectorView(R&& range) : data_(std::forward<R>(range)) {}
 
     VectorView(const VectorView&) = default;
     VectorView(VectorView&&) = default;
@@ -79,44 +79,44 @@ public:
     // -------------------------------------------------------------------------
     //         Iterators
     // -------------------------------------------------------------------------
-    auto begin() noexcept { return data_.begin(); }
-    auto end() noexcept { return data_.end(); }
+    constexpr auto begin() noexcept { return data_.begin(); }
+    constexpr auto end() noexcept { return data_.end(); }
 
-    auto begin() const noexcept { return data_.begin(); }
-    auto end() const noexcept { return data_.end(); }
+    constexpr auto begin() const noexcept { return data_.begin(); }
+    constexpr auto end() const noexcept { return data_.end(); }
 
-    auto cbegin() const noexcept { return data_.cbegin(); }
-    auto cend() const noexcept { return data_.cend(); }
+    constexpr auto cbegin() const noexcept { return data_.cbegin(); }
+    constexpr auto cend() const noexcept { return data_.cend(); }
 
-    auto rbegin() noexcept { return data_.rbegin(); }
-    auto rend() noexcept { return data_.rend(); }
+    constexpr auto rbegin() noexcept { return data_.rbegin(); }
+    constexpr auto rend() noexcept { return data_.rend(); }
 
-    auto rbegin() const noexcept { return data_.rbegin(); }
-    auto rend() const noexcept { return data_.rend(); }
+    constexpr auto rbegin() const noexcept { return data_.rbegin(); }
+    constexpr auto rend() const noexcept { return data_.rend(); }
 
-    auto crend() const noexcept { return data_.crend(); }
+    constexpr auto crend() const noexcept { return data_.crend(); }
 
     // -------------------------------------------------------------------------
     //         Element Access
     // -------------------------------------------------------------------------
-    T& front() const { return data_.front(); }
-    T& back() const { return data_.back(); }
+    constexpr T& front() const { return data_.front(); }
+    constexpr T& back() const { return data_.back(); }
     // T& at(size_t i) const { return data_.at(i); }  // C++26 only
-    T& operator[](size_t i) const { return data_[i]; }
-    T* data() const noexcept { return data_.data(); }
+    constexpr T& operator[](size_t i) const { return data_[i]; }
+    constexpr T* data() const noexcept { return data_.data(); }
 
     // -------------------------------------------------------------------------
     //         Observers
     // -------------------------------------------------------------------------
-    size_t size() const noexcept { return data_.size(); }
-    bool empty() const noexcept { return data_.empty(); }
+    constexpr size_t size() const noexcept { return data_.size(); }
+    constexpr bool empty() const noexcept { return data_.empty(); }
 
     // -------------------------------------------------------------------------
     //         Subviews
     // -------------------------------------------------------------------------
-    VectorView first(size_t count) const { return VectorView(data_.first(count)); }
-    VectorView last(size_t count) const { return VectorView(data_.last(count)); }
-    VectorView subspan(size_t offset, size_t count = std::dynamic_extent) const {
+    constexpr VectorView first(size_t count) const { return VectorView(data_.first(count)); }
+    constexpr VectorView last(size_t count) const { return VectorView(data_.last(count)); }
+    constexpr VectorView subspan(size_t offset, size_t count = std::dynamic_extent) const {
         return VectorView(data_.subspan(offset, count));
     }
 
@@ -132,23 +132,23 @@ public:
     // -------------------------------------------------------------------------
     // Vector-Vector
     template <std::ranges::contiguous_range R>
-    VectorView& operator+=(const R& rhs) { return apply_elementwise_(rhs, std::plus<>()); }
+    constexpr VectorView& operator+=(const R& rhs) { return apply_elementwise_(rhs, std::plus<>()); }
 
     template <std::ranges::contiguous_range R>
-    VectorView& operator-=(const R& rhs) { return apply_elementwise_(rhs, std::minus<>()); }
+    constexpr VectorView& operator-=(const R& rhs) { return apply_elementwise_(rhs, std::minus<>()); }
 
     template <std::ranges::contiguous_range R>
-    VectorView& operator*=(const R& rhs) { return apply_elementwise_(rhs, std::multiplies<>()); }
+    constexpr VectorView& operator*=(const R& rhs) { return apply_elementwise_(rhs, std::multiplies<>()); }
 
     template <std::ranges::contiguous_range R>
-    VectorView& operator/=(const R& rhs) { return apply_elementwise_(rhs, std::divides<>()); }
+    constexpr VectorView& operator/=(const R& rhs) { return apply_elementwise_(rhs, std::divides<>()); }
 
 
 private:
     std::span<T> data_;
 
     template <std::ranges::contiguous_range R>
-    void check_same_size_(const R& rhs) const {
+    constexpr void check_same_size_(const R& rhs) const {
         if (size() != rhs.size()) {
             throw std::invalid_argument(
                 std::format("Vector size mismatch: {} vs {}", size(), rhs.size())
@@ -157,7 +157,7 @@ private:
     }
 
     template <std::ranges::contiguous_range R, typename BinaryOp>
-    VectorView& apply_elementwise_(const R& rhs, BinaryOp op) {
+    constexpr VectorView& apply_elementwise_(const R& rhs, BinaryOp op) {
         check_same_size_(rhs);
         std::ranges::transform(data_, rhs, begin(), op);
         return *this;

@@ -318,12 +318,8 @@ private:
 // -----------------------------------------------------------------------------
 //         Operators
 // -----------------------------------------------------------------------------
-template <std::ranges::contiguous_range L, std::ranges::contiguous_range R>
-requires Arithmetic<std::ranges::range_value_t<L>>
-    && std::same_as<
-        std::ranges::range_value_t<L>,
-        std::ranges::range_value_t<R>
-    >
+template <typename L, typename R>
+requires ElementwiseCompatible<L, R>
 auto operator+(const L& lhs, const R& rhs)
 {
     using T = std::ranges::range_value_t<L>;
@@ -332,12 +328,8 @@ auto operator+(const L& lhs, const R& rhs)
 }
 
 
-template <std::ranges::contiguous_range L, std::ranges::contiguous_range R>
-requires Arithmetic<std::ranges::range_value_t<L>>
-    && std::same_as<
-        std::ranges::range_value_t<L>,
-        std::ranges::range_value_t<R>
-    >
+template <typename L, typename R>
+requires ElementwiseCompatible<L, R>
 auto operator-(const L& lhs, const R& rhs)
 {
     using T = std::ranges::range_value_t<L>;
@@ -346,12 +338,8 @@ auto operator-(const L& lhs, const R& rhs)
 }
 
 
-template <std::ranges::contiguous_range L, std::ranges::contiguous_range R>
-requires Arithmetic<std::ranges::range_value_t<L>>
-    && std::same_as<
-        std::ranges::range_value_t<L>,
-        std::ranges::range_value_t<R>
-    >
+template <typename L, typename R>
+requires ElementwiseCompatible<L, R>
 auto operator*(const L& lhs, const R& rhs)
 {
     using T = std::ranges::range_value_t<L>;
@@ -360,12 +348,8 @@ auto operator*(const L& lhs, const R& rhs)
 }
 
 
-template <std::ranges::contiguous_range L, std::ranges::contiguous_range R>
-requires Arithmetic<std::ranges::range_value_t<L>>
-    && std::same_as<
-        std::ranges::range_value_t<L>,
-        std::ranges::range_value_t<R>
-    >
+template <typename L, typename R>
+requires ElementwiseCompatible<L, R>
 auto operator/(const L& lhs, const R& rhs)
 {
     using T = std::ranges::range_value_t<L>;
@@ -374,8 +358,7 @@ auto operator/(const L& lhs, const R& rhs)
 }
 
 
-template <std::ranges::contiguous_range R>
-requires Arithmetic<std::ranges::range_value_t<R>>
+template <DenseVector R>
 auto operator-(const R& lhs)
 {
     using T = std::ranges::range_value_t<R>;

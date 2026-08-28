@@ -129,16 +129,16 @@ using cVectorViewD = VectorView<const double>;
 
 // Define type trait -> concept to accept mathematical dense vectors
 template <typename T>
-struct is_dense_vector : std::false_type {};
+struct IsDenseVector : std::false_type {};
 
 template <Arithmetic T>
-struct is_dense_vector<Vector<T>> : std::true_type {};
+struct IsDenseVector<Vector<T>> : std::true_type {};
 
 template <Arithmetic T>
-struct is_dense_vector<VectorView<T>> : std::true_type {};
+struct IsDenseVector<VectorView<T>> : std::true_type {};
 
 template <typename T>
-concept dense_vector = is_dense_vector<std::remove_cvref_t<T>>::value;
+concept DenseVector = IsDenseVector<std::remove_cvref_t<T>>::value;
 
 // Structs and classes
 struct CholCounts;

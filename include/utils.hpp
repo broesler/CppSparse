@@ -77,7 +77,7 @@ auto pvec(std::span<const csint> p, const Range& b)
 {
     using T = std::ranges::range_value_t<Range>;
     using OutputType = std::conditional_t<
-        dense_vector<Range>, Vector<T>, std::vector<T>
+        DenseVector<Range>, Vector<T>, std::vector<T>
     >;
 
     OutputType x(p.size());
@@ -118,7 +118,7 @@ auto ipvec(std::span<const csint> p, const Range& b)
 {
     using T = std::ranges::range_value_t<Range>;
     using OutputType = std::conditional_t<
-        dense_vector<Range>, Vector<T>, std::vector<T>
+        DenseVector<Range>, Vector<T>, std::vector<T>
     >;
 
     OutputType x(p.size());

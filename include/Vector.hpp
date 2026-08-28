@@ -201,15 +201,17 @@ public:
     //         Assignment Operators
     // -------------------------------------------------------------------------
     // Vector-Vector
-    Vector& operator+=(const Vector& rhs) { return apply_elementwise_(rhs, std::plus<>()); }
+    template <std::ranges::contiguous_range R>
+    Vector& operator+=(const R& rhs) { return apply_elementwise_(rhs, std::plus<>()); }
 
     template <std::ranges::contiguous_range R>
-    Vector& operator-=(R&& rhs) {
-        return apply_elementwise_(std::forward<R>(rhs), std::minus<>());
-    }
+    Vector& operator-=(const R& rhs) { return apply_elementwise_(rhs, std::minus<>()); }
 
-    Vector& operator*=(const Vector& rhs) { return apply_elementwise_(rhs, std::multiplies<>()); }
-    Vector& operator/=(const Vector& rhs) { return apply_elementwise_(rhs, std::divides<>()); }
+    template <std::ranges::contiguous_range R>
+    Vector& operator*=(const R& rhs) { return apply_elementwise_(rhs, std::multiplies<>()); }
+
+    template <std::ranges::contiguous_range R>
+    Vector& operator/=(const R& rhs) { return apply_elementwise_(rhs, std::divides<>()); }
 
     // Vector-scalar
     Vector& operator+=(T scalar) { return apply_scalar_(scalar, std::plus<>()); }
@@ -217,14 +219,7 @@ public:
     Vector& operator*=(T scalar) { return apply_scalar_(scalar, std::multiplies<>()); }
     Vector& operator/=(T scalar) { return apply_scalar_(scalar, std::divides<>()); }
 
-    // Binary operators (hidden friends)
-    // LHS is passed by value, mutated, and returned
-    // Vector-vector
-    friend Vector operator+(Vector lhs, const Vector& rhs) { return lhs += rhs; }
-    friend Vector operator-(Vector lhs, const Vector& rhs) { return lhs -= rhs; }
-    friend Vector operator*(Vector lhs, const Vector& rhs) { return lhs *= rhs; }
-    friend Vector operator/(Vector lhs, const Vector& rhs) { return lhs /= rhs; }
-
+    // Binary operators
     // Vector-scalar
     friend Vector operator+(Vector lhs, T scalar) { return lhs += scalar; }
     friend Vector operator-(Vector lhs, T scalar) { return lhs -= scalar; }
@@ -252,10 +247,6 @@ public:
         );
         return result;
     }
-
-    // Unary operators
-    Vector operator+() const { return *this; }
-    Vector operator-() const { return (*this) * T(-1); }
 
     // -------------------------------------------------------------------------
     //         Methods
@@ -290,7 +281,7 @@ private:
     }
 
     template <std::ranges::contiguous_range R>
-    void check_same_size_(R&& rhs) const {
+    void check_same_size_(const R& rhs) const {
         if (size() != rhs.size()) {
             throw std::invalid_argument(
                 std::format("Vector size mismatch: {} vs {}", size(), rhs.size())
@@ -307,7 +298,7 @@ private:
     }
 
     template <std::ranges::contiguous_range R, typename BinaryOp>
-    Vector& apply_elementwise_(R&& rhs, BinaryOp op) {
+    Vector& apply_elementwise_(const R& rhs, BinaryOp op) {
         check_same_size_(rhs);
         std::ranges::transform(data_, rhs, begin(), op);
         return *this;
@@ -322,6 +313,76 @@ private:
     //     return result;
     // }
 };  // class Vector
+
+
+// -----------------------------------------------------------------------------
+//         Operators
+// -----------------------------------------------------------------------------
+template <std::ranges::contiguous_range L, std::ranges::contiguous_range R>
+requires Arithmetic<std::ranges::range_value_t<L>>
+    && std::same_as<
+        std::ranges::range_value_t<L>,
+        std::ranges::range_value_t<R>
+    >
+auto operator+(const L& lhs, const R& rhs)
+{
+    using T = std::ranges::range_value_t<L>;
+    Vector<T> result(std::from_range, lhs);
+    return result += rhs;
+}
+
+
+template <std::ranges::contiguous_range L, std::ranges::contiguous_range R>
+requires Arithmetic<std::ranges::range_value_t<L>>
+    && std::same_as<
+        std::ranges::range_value_t<L>,
+        std::ranges::range_value_t<R>
+    >
+auto operator-(const L& lhs, const R& rhs)
+{
+    using T = std::ranges::range_value_t<L>;
+    Vector<T> result(std::from_range, lhs);
+    return result -= rhs;
+}
+
+
+template <std::ranges::contiguous_range L, std::ranges::contiguous_range R>
+requires Arithmetic<std::ranges::range_value_t<L>>
+    && std::same_as<
+        std::ranges::range_value_t<L>,
+        std::ranges::range_value_t<R>
+    >
+auto operator*(const L& lhs, const R& rhs)
+{
+    using T = std::ranges::range_value_t<L>;
+    Vector<T> result(std::from_range, lhs);
+    return result *= rhs;
+}
+
+
+template <std::ranges::contiguous_range L, std::ranges::contiguous_range R>
+requires Arithmetic<std::ranges::range_value_t<L>>
+    && std::same_as<
+        std::ranges::range_value_t<L>,
+        std::ranges::range_value_t<R>
+    >
+auto operator/(const L& lhs, const R& rhs)
+{
+    using T = std::ranges::range_value_t<L>;
+    Vector<T> result(std::from_range, lhs);
+    return result /= rhs;
+}
+
+
+template <std::ranges::contiguous_range R>
+requires Arithmetic<std::ranges::range_value_t<R>>
+auto operator-(const R& lhs)
+{
+    using T = std::ranges::range_value_t<R>;
+    Vector<T> result(std::from_range, lhs);
+    std::ranges::transform(result, result.begin(), std::negate<>());
+    return result;
+}
 
 
 }  // namespace cs

@@ -576,13 +576,13 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, std::span<const double> B
     std::vector<double> X(N * K);    // solution vector
     std::vector<double> B_work(B.begin(), B.end());  // copy the RHS vector
 
-    std::span<double> X_span(X);
+    std::span<double> X_view(X);
     std::span<double> B_work_span(B_work);
 
     // Solve each column of the system
     for (csint k = 0; k < K; ++k) {
         auto B_work_k = B_work_span.subspan(k * M, M);
-        auto X_k = X_span.subspan(k * N, N);
+        auto X_k = X_view.subspan(k * N, N);
         tri_solve_perm_inplace(A, tri_perm, B_work_k, X_k);
     }
 
@@ -609,13 +609,13 @@ std::vector<double> tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B)
     const auto tri_perm = find_tri_permutation(A);
 
     std::vector<double> X(N * K);    // solution vector
-    std::span<double> X_span(X);
+    std::span<double> X_view(X);
 
     std::vector<double> B_k(M);  // single dense RHS column
 
     // Solve each column of the system
     for (csint k = 0; k < K; ++k) {
-        auto X_k = X_span.subspan(k * N, N);
+        auto X_k = X_view.subspan(k * N, N);
 
         // Scatter B[:, k] into B_k
         std::ranges::fill(B_k, 0.0);
@@ -1032,11 +1032,11 @@ VectorD chol_solve(
     auto res = chol(A, S);
 
     VectorD X(B.begin(), B.end());  // solution matrix
-    VectorViewD X_span(X);
+    VectorViewD X_view(X);
 
     // Exercise 8.7/8.9: solve each column of the system
     for (csint k = 0; k < K; ++k) {
-        auto X_k = X_span.subspan(k * N, N);
+        auto X_k = X_view.subspan(k * N, N);
         res.solve(X_k);
     }
 
@@ -1069,11 +1069,11 @@ VectorD chol_solve(
     auto res = chol(A, S);
 
     VectorD X(N * K);  // dense solution matrix
-    VectorViewD X_span(X);
+    VectorViewD X_view(X);
 
     // Solve each column of the system
     for (csint k = 0; k < K; ++k) {
-        auto X_k = X_span.subspan(k * N, N);
+        auto X_k = X_view.subspan(k * N, N);
         res.solve(B, k, S.parent, X_k);
     }
 
@@ -1143,13 +1143,13 @@ QRSolveResult qr_solve(
     }
 
     VectorD X(N * K);  // dense solution matrix
-    VectorViewD X_span(X);
-    cVectorViewD B_span(B);
+    VectorViewD X_view(X);
+    cVectorViewD B_view(B);
 
     for (csint k = 0; k < K; ++k) {
         // Solve for each RHS column
-        auto B_k = B_span.subspan(k * M, M);
-        auto X_k = X_span.subspan(k * N, N);
+        auto B_k = B_view.subspan(k * M, M);
+        auto X_k = X_view.subspan(k * N, N);
 
         if (M >= N) {
             // Compute the least-squares solution
@@ -1161,7 +1161,7 @@ QRSolveResult qr_solve(
     }
 
     // Compute the residual
-    auto R = B - cVectorViewD(A * X);
+    auto R = B - A * X;
 
     return {.x = X, .r = R, .rnorm = norm(R, 2)};
 }
@@ -1197,13 +1197,13 @@ QRSolveResult qr_solve(
     }
 
     std::vector<double> X(N * K);  // dense solution matrix
-    std::span<double> X_span(X);
+    std::span<double> X_view(X);
 
     std::vector<double> B_k(M);
 
     for (csint k = 0; k < K; ++k) {
         // Solve for each RHS column
-        auto X_k = X_span.subspan(k * N, N);
+        auto X_k = X_view.subspan(k * N, N);
         std::ranges::fill(B_k, 0.0);
 
         B.scatter(k, B_k);  // scatter B[:, k] into B_k
@@ -1301,8 +1301,8 @@ VectorD lu_solve(
     const auto res = lu(A, S, tol);
 
     VectorD X(B.begin(), B.end());  // solution matrix
-    cVectorViewD B_span(B);
-    VectorViewD X_span(X);
+    cVectorViewD B_view(B);
+    VectorViewD X_view(X);
 
     VectorD r;
 
@@ -1314,15 +1314,15 @@ VectorD lu_solve(
     // Solve for each RHS column
     for (csint k = 0; k < K; ++k) {
         // Create a view into the k-th columns of B and X
-        auto B_k = B_span.subspan(k * M, M);
-        auto X_k = X_span.subspan(k * N, N);
+        auto B_k = B_view.subspan(k * M, M);
+        auto X_k = X_view.subspan(k * N, N);
 
         // Solve Ax = B
         res.solve(X_k);
 
         // Exercise 8.5: Iterative refinement
         for (csint i = 0; i < ir_steps; ++i) {
-            r = B_k - cVectorViewD(A * X_k);  // r = b - Ax
+            r = B_k - A * X_k;  // r = b - Ax
             res.solve(r);       // solve Ad = r
             X_k += r;           // x += d
         }
@@ -1359,7 +1359,7 @@ VectorD lu_solve(
     const auto res = lu(A, S, tol);
 
     VectorD X(N * K);  // dense solution matrix
-    VectorViewD X_span(X);
+    VectorViewD X_view(X);
 
     VectorD r, B_k;
 
@@ -1371,7 +1371,7 @@ VectorD lu_solve(
     // Solve for each RHS column
     for (csint k = 0; k < K; ++k) {
         // Create a view into the k-th column of X
-        auto X_k = X_span.subspan(k * N, N);
+        auto X_k = X_view.subspan(k * N, N);
 
         B.scatter(k, X_k);  // scatter B[:, k] into X_k
 

@@ -131,15 +131,24 @@ public:
     //         Operators
     // -------------------------------------------------------------------------
     // Vector-Vector
-    VectorView& operator+=(VectorView<const T> rhs) { return apply_elementwise_(rhs, std::plus<>()); }
-    VectorView& operator-=(VectorView<const T> rhs) { return apply_elementwise_(rhs, std::minus<>()); }
-    VectorView& operator*=(VectorView<const T> rhs) { return apply_elementwise_(rhs, std::multiplies<>()); }
-    VectorView& operator/=(VectorView<const T> rhs) { return apply_elementwise_(rhs, std::divides<>()); }
+    template <std::ranges::contiguous_range R>
+    VectorView& operator+=(const R& rhs) { return apply_elementwise_(rhs, std::plus<>()); }
+
+    template <std::ranges::contiguous_range R>
+    VectorView& operator-=(const R& rhs) { return apply_elementwise_(rhs, std::minus<>()); }
+
+    template <std::ranges::contiguous_range R>
+    VectorView& operator*=(const R& rhs) { return apply_elementwise_(rhs, std::multiplies<>()); }
+
+    template <std::ranges::contiguous_range R>
+    VectorView& operator/=(const R& rhs) { return apply_elementwise_(rhs, std::divides<>()); }
+
 
 private:
     std::span<T> data_;
 
-    void check_same_size_(VectorView<const T> rhs) const {
+    template <std::ranges::contiguous_range R>
+    void check_same_size_(const R& rhs) const {
         if (size() != rhs.size()) {
             throw std::invalid_argument(
                 std::format("Vector size mismatch: {} vs {}", size(), rhs.size())
@@ -147,44 +156,14 @@ private:
         }
     }
 
-    template <typename BinaryOp>
-    VectorView& apply_elementwise_(VectorView<const T> rhs, BinaryOp op) {
+    template <std::ranges::contiguous_range R, typename BinaryOp>
+    VectorView& apply_elementwise_(const R& rhs, BinaryOp op) {
         check_same_size_(rhs);
-        std::ranges::transform((*this), rhs, begin(), op);
+        std::ranges::transform(data_, rhs, begin(), op);
         return *this;
     }
 
 };  // VectorView
-
-
-// -----------------------------------------------------------------------------
-//         Operators
-// -----------------------------------------------------------------------------
-template <typename T>
-Vector<T> operator+(VectorView<const T> a, VectorView<const T> b)
-{
-    Vector<T> x(a.begin(), a.end());
-    x += b;
-    return x;
-}
-
-
-template <typename T>
-Vector<T> operator-(VectorView<const T> a, VectorView<const T> b)
-{
-    Vector<T> x(a.begin(), a.end());
-    x -= b;
-    return x;
-};
-
-
-template <typename T>
-Vector<T> operator-(VectorView<const T> a)
-{
-    Vector<T> x(a.begin(), a.end());
-    return -x;
-}
-
 
 
 }  // namespace cs

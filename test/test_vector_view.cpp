@@ -61,7 +61,7 @@ TEST_CASE("VectorView Construction", "[vectorview][basic]")
 }
 
 
-TEST_CASE("Vector Operators", "[vectorview][ops]")
+TEST_CASE("VectorView Compound Assignment Operators", "[vectorview][ops]")
 {
     VectorD a{1, 2, 3};
 
@@ -126,7 +126,31 @@ TEST_CASE("Vector Operators", "[vectorview][ops]")
 }
 
 
+TEST_CASE("VectorView Copy Assignment", "[vectorview][assignment]")
+{
+    VectorD x { 0, 0, 0 };
+    const VectorD a { 1, 2, 3 };
+    const VectorD b { 4, 5, 6 };
+
+    VectorViewD x_view { x };
+
+    const VectorD expect { 5, 7, 9 };
+
+    SECTION("Copy assignment from temporary Vector") {
+        x_view = a + b;
+        REQUIRE(x_view == expect);
+    }
+
+    SECTION("Copy assignment from VectorView") {
+        cVectorViewD a_view { a };
+        cVectorViewD b_view { b };
+        x_view = a_view + b_view;
+        REQUIRE(x_view == expect);
+    }
+}
+
 }  // namespace cs
 
 /*==============================================================================
  *============================================================================*/
+

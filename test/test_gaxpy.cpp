@@ -25,13 +25,13 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
 {
     auto multiply_test = [](
         const CSCMatrix& A,
-        const std::vector<double>& x,
-        const std::vector<double>& y,
-        const std::vector<double>& expect_Ax,
-        const std::vector<double>& expect_Axpy
+        const VectorD& x,
+        const VectorD& y,
+        const VectorD& expect_Ax,
+        const VectorD& expect_Axpy
         )
     {
-        std::vector<double> zero(y.size());
+        VectorD zero(y.size());
         check_vectors_allclose(gaxpy(A, x, zero),   expect_Ax,   tol);
         check_vectors_allclose(gaxpy(A, x, y),      expect_Axpy, tol);
         check_vectors_allclose(gatxpy(A.T(), x, y), expect_Axpy, tol);
@@ -47,12 +47,12 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
             std::vector<csint>  {0, 1, 1}
         }.tocsc();
 
-        std::vector<double> x{1, 2};
-        std::vector<double> y{1, 2, 3};
+        VectorD x{1, 2};
+        VectorD y{1, 2, 3};
 
         // A @ x + y
-        std::vector<double> expect_Ax  {1, 2, 4};
-        std::vector<double> expect_Axpy{2, 4, 7};
+        VectorD expect_Ax  {1, 2, 4};
+        VectorD expect_Axpy{2, 4, 7};
 
         multiply_test(A, x, y, expect_Ax, expect_Axpy);
     }
@@ -64,12 +64,12 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
             std::vector<csint>  {0, 1, 2}
         }.compress();
 
-        std::vector<double> x{1, 2, 3};
-        std::vector<double> y{9, 6, 1};
+        VectorD x{1, 2, 3};
+        VectorD y{9, 6, 1};
 
         // A @ x + y
-        std::vector<double> expect_Ax  {1, 4, 9};
-        std::vector<double> expect_Axpy{10, 10, 10};
+        VectorD expect_Ax  {1, 4, 9};
+        VectorD expect_Axpy{10, 10, 10};
 
         multiply_test(A, x, y, expect_Ax, expect_Axpy);
         check_vectors_allclose(sym_gaxpy(A, x, y),  expect_Axpy, tol);
@@ -79,12 +79,12 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
         auto Ac = davis_example_small();
         auto A = Ac.compress();
 
-        std::vector<double> x{1, 2, 3, 4};
-        std::vector<double> y{1, 1, 1, 1};
+        VectorD x{1, 2, 3, 4};
+        VectorD y{1, 1, 1, 1};
 
         // A @ x + y
-        std::vector<double> expect_Ax  {14.1, 12.5, 12.4,  8.3};
-        std::vector<double> expect_Axpy{15.1, 13.5, 13.4,  9.3};
+        VectorD expect_Ax  {14.1, 12.5, 12.4,  8.3};
+        VectorD expect_Axpy{15.1, 13.5, 13.4,  9.3};
 
         multiply_test(A, x, y, expect_Ax, expect_Axpy);
 
@@ -100,11 +100,11 @@ TEST_CASE("gaxpy for dense vector x, y", "[math][gaxpy]")
         std::vector<double> v{4.5, 3.1, 3.5, 3.1, 2.9, 1.7, 1.7, 3.0, 3.5, 1.0};
         auto A = COOMatrix{v, i, j}.compress();
 
-        std::vector<double> x{1, 2, 3, 4};
-        std::vector<double> y{1, 1, 1, 1};
+        VectorD x{1, 2, 3, 4};
+        VectorD y{1, 1, 1, 1};
 
         // A @ x + y
-        std::vector<double> expect_Axpy{25.7, 15.0, 13.4,  8.5};
+        VectorD expect_Axpy{25.7, 15.0, 13.4,  8.5};
 
         check_vectors_allclose(sym_gaxpy(A, x, y), expect_Axpy, tol);
     }
@@ -116,14 +116,14 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
     auto A = davis_example_small().compress();
 
     SECTION("Identity op") {
-        std::vector<double> I{
+        VectorD I{
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1
         };
 
-        std::vector<double> Z(16, 0);
+        VectorD Z(16, 0);
 
         auto expect = A;
 
@@ -135,7 +135,7 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
         auto A_dense = A.to_dense_vector();
 
         // A.T @ A + A in column-major format
-        std::vector<double> expect{
+        VectorD expect{
             46.61, 13.49, 14.4 ,  9.79,
             10.39, 14.36,  6.8 ,  3.41,
             17.6 ,  5.1 , 22.24,  0.0 ,
@@ -157,7 +157,7 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
         auto A_dense = A.to_dense_vector(DenseOrder::RowMajor);
 
         // A.T @ A + A in row-major format
-        std::vector<double> expect{
+        VectorD expect{
             46.61, 10.39, 17.6 ,  6.29,
             13.49, 14.36,  5.1 ,  3.91,
             14.4 ,  6.8 , 22.24,  0.0 ,
@@ -177,7 +177,7 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
         auto A_dense = A.to_dense_vector();
 
         // Ab @ Ac + A in column-major format
-        std::vector<double> expect{
+        VectorD expect{
             24.75, 26.04,  5.27, 20.49,
              5.44, 11.31, 11.73,  1.56,
             27.2 ,  9.92, 12.0 , 11.2 ,
@@ -196,7 +196,7 @@ TEST_CASE("Exercise 2.27: gaxpy for dense matrix X, Y", "[ex2.27][math][gaxpy]")
         auto A_dense = A.to_dense_vector(DenseOrder::RowMajor);
 
         // Ab @ Ac + A in row-major format
-        std::vector<double> expect{
+        VectorD expect{
             24.75,  5.44, 27.2 ,  0.0 ,
             26.04, 11.31,  9.92,  3.51,
              5.27, 11.73, 12.0 ,  1.53,
@@ -400,8 +400,8 @@ TEST_CASE("Exercise 2.4: Scale rows and columns", "[ex2.4][math][scale]")
     auto A = davis_example_small().compress();
 
     // Diagonals of R and C to compute RAC
-    std::vector<double> r{1, 2, 3, 4},
-                        c = {1.0, 0.5, 0.25, 0.125};
+    std::vector<double> r {1, 2, 3, 4},
+                        c {1.0, 0.5, 0.25, 0.125};
 
     // expect_RAC = array([[ 4.5  ,  0.   ,  0.8  ,  0.   ],
     //                     [ 6.2  ,  2.9  ,  0.   ,  0.225],
@@ -532,7 +532,7 @@ TEST_CASE("Add sparse column vectors", "[math][add_scaled]")
 
         // Initialize workspaces
         std::vector<char> w(M);
-        std::vector<double> x(M);
+        VectorD x(M);
 
         saxpy(a, b, w, x);
 
@@ -548,12 +548,12 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
     SECTION("M < N, N > K") {
         A = A.slice(0, 3, 0, 4);  // 3 x 4
 
-        std::vector<double> X{
+        VectorD X{
             1, 2, 3, 4,
             2, 4, 6, 8
         };  // 4 x 2 in column-major format
 
-        std::vector<double> expect{
+        VectorD expect{
             14.1, 12.5, 12.4,
             28.2, 25. , 24.8
         };  // 3 x 2 in column-major format
@@ -566,7 +566,7 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
     SECTION("M < N, N < K") {
         A = A.slice(0, 3, 0, 4);  // 3 x 4
 
-        std::vector<double> X{
+        VectorD X{
             1, 2,   3,  4,
             2, 4,   6,  8,
             3, 6,   9, 12,
@@ -574,7 +574,7 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
             5, 10, 15, 20
         };  // 4 x 5 in column-major format
 
-        std::vector<double> expect{
+        VectorD expect{
             14.1, 12.5, 12.4,
             28.2, 25.0, 24.8,
             42.3, 37.5, 37.2,
@@ -590,7 +590,7 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
     SECTION("M > N, N < K") {
         A = A.slice(0, 4, 0, 3);  // 4 x 3
 
-        std::vector<double> X{
+        VectorD X{
             1, 2,   3,
             2, 4,   6,
             3, 6,   9,
@@ -598,7 +598,7 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
             5, 10, 15,
         };  // 3 x 5 in column-major format
 
-        std::vector<double> expect{
+        VectorD expect{
             14.1,  8.9, 12.4,  4.3,
             28.2, 17.8, 24.8,  8.6,
             42.3, 26.7, 37.2, 12.9,
@@ -614,12 +614,12 @@ TEST_CASE("Multiply Sparse by Dense Matrix", "[math][dot]")
     SECTION("M > N, N > K") {
         A = A.slice(0, 4, 0, 3);  // 4 x 3
 
-        std::vector<double> X{
+        VectorD X{
             1, 2,   3,
             2, 4,   6,
         };  // 3 x 2 in column-major format
 
-        std::vector<double> expect{
+        VectorD expect{
             14.1,  8.9, 12.4,  4.3,
             28.2, 17.8, 24.8,  8.6,
         };  // 4 x 2 in column-major format

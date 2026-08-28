@@ -52,11 +52,15 @@ std::vector<csint> inv_permute(std::span<const csint> p);
  *
  * @return x  `x = Pb` the permuted vector, like `x = b(p)` in MATLAB.
  */
-template <std::ranges::contiguous_range InRange,
+template <std::ranges::contiguous_range PRange,
+          std::ranges::contiguous_range InRange,
           std::ranges::contiguous_range OutRange>
-requires std::same_as<std::ranges::range_value_t<InRange>,
-                      std::ranges::range_value_t<OutRange>>
-void pvec(std::span<const csint> p, const InRange& b, OutRange&& x)
+requires std::same_as<std::ranges::range_value_t<PRange>, csint>
+    && std::same_as<
+        std::ranges::range_value_t<InRange>,
+        std::ranges::range_value_t<OutRange>
+    >
+void pvec(const PRange& p, const InRange& b, OutRange& x)
 {
     for (size_t k = 0; k < p.size(); k++) {
         x[k] = b[p[k]];
@@ -72,12 +76,14 @@ void pvec(std::span<const csint> p, const InRange& b, OutRange&& x)
  *
  * @return x  `x = Pb` the permuted vector, like `x = b(p)` in MATLAB.
  */
-template <std::ranges::random_access_range Range>
-auto pvec(std::span<const csint> p, const Range& b)
+template <std::ranges::contiguous_range PRange,
+          std::ranges::contiguous_range InRange>
+requires std::same_as<std::ranges::range_value_t<PRange>, csint>
+auto pvec(const PRange& p, const InRange& b)
 {
-    using T = std::ranges::range_value_t<Range>;
+    using T = std::ranges::range_value_t<InRange>;
     using OutputType = std::conditional_t<
-        DenseVector<Range>, Vector<T>, std::vector<T>
+        DenseVector<InRange>, Vector<T>, std::vector<T>
     >;
 
     OutputType x(p.size());
@@ -93,11 +99,15 @@ auto pvec(std::span<const csint> p, const Range& b)
  * @param b  vector of data to permute
  * @param x[out]  `x = P^T b` the permuted vector, like `x(p) = b` in MATLAB.
  */
-template <std::ranges::contiguous_range InRange,
+template <std::ranges::contiguous_range PRange,
+          std::ranges::contiguous_range InRange,
           std::ranges::contiguous_range OutRange>
-requires std::same_as<std::ranges::range_value_t<InRange>,
-                      std::ranges::range_value_t<OutRange>>
-void ipvec(std::span<const csint> p, const InRange& b, OutRange&& x)
+requires std::same_as<std::ranges::range_value_t<PRange>, csint>
+    && std::same_as<
+        std::ranges::range_value_t<InRange>,
+        std::ranges::range_value_t<OutRange>
+    >
+void ipvec(const PRange& p, const InRange& b, OutRange& x)
 {
     for (size_t k = 0; k < p.size(); k++) {
         x[p[k]] = b[k];
@@ -113,12 +123,14 @@ void ipvec(std::span<const csint> p, const InRange& b, OutRange&& x)
  *
  * @return x  `x = P^T b` the permuted vector, like `x(p) = b` in MATLAB.
  */
-template <std::ranges::random_access_range Range>
-auto ipvec(std::span<const csint> p, const Range& b)
+template <std::ranges::contiguous_range PRange,
+          std::ranges::contiguous_range InRange>
+requires std::same_as<std::ranges::range_value_t<PRange>, csint>
+auto ipvec(const PRange& p, const InRange& b)
 {
-    using T = std::ranges::range_value_t<Range>;
+    using T = std::ranges::range_value_t<InRange>;
     using OutputType = std::conditional_t<
-        DenseVector<Range>, Vector<T>, std::vector<T>
+        DenseVector<InRange>, Vector<T>, std::vector<T>
     >;
 
     OutputType x(p.size());

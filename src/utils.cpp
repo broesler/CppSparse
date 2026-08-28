@@ -31,8 +31,9 @@ std::vector<csint> inv_permute(std::span<const csint> p)
 {
     std::vector<csint> out(p.size());
 
-    for (size_t k = 0; k < p.size(); ++k)
+    for (size_t k = 0; k < p.size(); ++k) {
         out[p[k]] = k;
+    }
 
     return out;
 }

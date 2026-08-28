@@ -55,7 +55,7 @@ public:
 
     constexpr VectorView(Vector<value_type>& v) : data_(v) {}
     constexpr VectorView(const Vector<value_type>& v)
-        requires std::is_const_v<T>
+    requires std::is_const_v<T>
         : data_(v) {}
 
     template <std::contiguous_iterator It>
@@ -133,8 +133,10 @@ public:
     // -------------------------------------------------------------------------
     //         Comparison Operators
     // -------------------------------------------------------------------------
-    constexpr bool operator==(const VectorView& rhs) const {
-        return std::ranges::equal((*this), rhs);
+    template <std::ranges::contiguous_range R>
+    requires std::same_as<std::ranges::range_value_t<R>, value_type>
+    constexpr bool operator==(const R& rhs) const {
+        return std::ranges::equal(*this, rhs);
     }
 
     // -------------------------------------------------------------------------

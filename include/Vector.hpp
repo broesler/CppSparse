@@ -187,8 +187,9 @@ public:
     // -------------------------------------------------------------------------
     //         Comparison Operators
     // -------------------------------------------------------------------------
-    bool operator==(const Vector& rhs) const { return data_ == rhs.data_; }
-    bool operator!=(const Vector& rhs) const { return !(*this == rhs); }
+    template <std::ranges::contiguous_range R>
+    requires std::same_as<std::ranges::range_value_t<R>, value_type>
+    bool operator==(const R& rhs) const { return std::ranges::equal(*this, rhs); }
 
     // -------------------------------------------------------------------------
     //         Assignment Operators

@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-#include "csparse.h"
+#include "csparse.hpp"
 
 
 using namespace cs;

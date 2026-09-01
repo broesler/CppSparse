@@ -1,5 +1,5 @@
 //==============================================================================
-//     File: demo.h
+//     File: demo.hpp
 //  Created: 2025-05-15 10:16
 //   Author: Bernie Roesler
 //
@@ -13,7 +13,7 @@
 #include <iostream>
 #include <vector>
 
-#include "csparse.h"
+#include "csparse.hpp"
 
 
 namespace cs {
@@ -22,12 +22,12 @@ namespace cs {
 /// Data structure to an Ax = b problem.
 struct Problem
 {
-    const CSCMatrix A,            ///< original matrix
-                    C;            ///< symmetric version of original matrix
-    const csint is_sym = 0;       ///< -1 if lower, 1 if upper, 0 otherwise
-    const std::vector<double> b;  ///< rhs
-    std::vector<double> x,        ///< solution
-                        resid;    ///< residuals
+    const CSCMatrix A,       ///< original matrix
+                    C;       ///< symmetric version of original matrix
+    const csint is_sym = 0;  ///< -1 if lower, 1 if upper, 0 otherwise
+    const VectorD b;         ///< rhs
+    VectorD x,               ///< solution
+            resid;           ///< residuals
 
     /** Construct a Problem from an input matrix.
      *
@@ -76,9 +76,9 @@ CSCMatrix make_sym(const CSCMatrix& A);
  */
 double residual_norm(
     const CSCMatrix& A,
-    std::span<const double> x,
-    std::span<const double> b,
-    std::vector<double>& resid
+    cVectorViewD x,
+    cVectorViewD b,
+    VectorD& resid
 );
 
 

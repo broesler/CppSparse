@@ -12,8 +12,8 @@
 #include <limits>     // numeric_limits
 #include <vector>
 
-#include "csparse.h"
-#include "demo.h"
+#include "csparse.hpp"
+#include "demo.hpp"
 
 
 namespace cs {
@@ -44,12 +44,12 @@ CSCMatrix make_sym(const CSCMatrix& A)
 // Get a problem from the input stream
 Problem Problem::from_matrix(const COOMatrix& T, double droptol)
 {
-    auto A = T.tocsc();                   // convert to CSC format
-    A.sum_duplicates();                        // sum up duplicates
-    auto is_sym = A.is_triangular();          // determine if A is symmetric
+    auto A = T.tocsc();               // convert to CSC format
+    A.sum_duplicates();               // sum up duplicates
+    auto is_sym = A.is_triangular();  // determine if A is symmetric
     const auto [M, N] = A.shape();
     auto nz1 = A.nnz();
-    A.dropzeros();                             // drop zero entries
+    A.dropzeros();                    // drop zero entries
     auto nz2 = A.nnz();
 
     if (droptol > 0) {
@@ -78,7 +78,7 @@ Problem Problem::from_matrix(const COOMatrix& T, double droptol)
     }
 
     // Compute the RHS
-    std::vector<double> b(M);
+    VectorD b(M);
     for (auto i : A.row_range()) {
         b[i] = 1.0 + (double) i / M;
     }
@@ -89,9 +89,9 @@ Problem Problem::from_matrix(const COOMatrix& T, double droptol)
 
 double residual_norm(
     const CSCMatrix& A,
-    std::span<const double> x,
-    std::span<const double> b,
-    std::vector<double>& resid
+    cVectorViewD x,
+    cVectorViewD b,
+    VectorD& resid
 )
 {
     resid = A * x - b;

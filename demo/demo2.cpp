@@ -12,8 +12,8 @@
 #include <iostream>
 #include <print>
 
-#include "csparse.h"
-#include "demo.h"
+#include "csparse.hpp"
+#include "demo.hpp"
 
 
 using namespace cs;

@@ -1,5 +1,5 @@
 //==============================================================================
-//    File: csparse.h
+//    File: csparse.hpp
 // Created: 2024-10-09 21:01
 //  Author: Bernie Roesler
 //
@@ -11,8 +11,8 @@
 #pragma once
 
 #include "types.hpp"
-#include "Vector.hpp"
 #include "VectorView.hpp"
+#include "Vector.hpp"
 #include "utils.hpp"
 #include "csc.hpp"
 #include "coo.hpp"

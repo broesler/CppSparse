@@ -78,7 +78,7 @@ def test_solve_func(solve_func, K, is_sparse):
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
     'problem',
-    list(generate_suitesparse_matrices(square_only=True)),
+    generate_suitesparse_matrices(square_only=True),
     indirect=True
 )
 class TestCholLUSolve(BaseSuiteSparseTest):
@@ -151,7 +151,7 @@ FAIL_TRIALS = [6, 12, 18, 53, 71, 78, 91, 93]
         marks=pytest.mark.xfail(reason="Matrix is singular.")
     )
     if i in FAIL_TRIALS else param
-    for i, param in enumerate(list(generate_random_matrices(square_only=True)))
+    for i, param in enumerate(generate_random_matrices(square_only=True))
 ])
 def test_qr_solve(A):
     """Test QR solve on a random matrix."""
@@ -215,7 +215,7 @@ def test_qr_solve(A):
 #         Test 18
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
-    'problem', list(generate_suitesparse_matrices(square_only=True))
+    'problem', generate_suitesparse_matrices(square_only=True)
 )
 def test_iterative_refinement(problem):
     """Test iterative refinement with a known right-hand side."""

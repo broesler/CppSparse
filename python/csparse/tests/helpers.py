@@ -34,6 +34,8 @@ def generate_suitesparse_matrices(N=100, real_only=True, square_only=False):
 
     tf = tf[filters]
 
+    params = []
+
     for idx, row in tf.head(N).iterrows():
         try:
             problem = ssg.get_problem(row=row, fmt='mat')
@@ -41,11 +43,15 @@ def generate_suitesparse_matrices(N=100, real_only=True, square_only=False):
             print(f"Skipping matrix {idx} due to: {e}")
             continue
 
-        yield pytest.param(
-            problem,
-            id=f"{problem.id}::{problem.name}",
-            marks=pytest.mark.suitesparse
+        params.append(
+            pytest.param(
+                problem,
+                id=f"{problem.id}::{problem.name}",
+                marks=pytest.mark.suitesparse
+            )
         )
+
+    return params
 
 
 def generate_random_matrices(
@@ -57,6 +63,8 @@ def generate_random_matrices(
 ):
     """Generate a list of random sparse matrices of maximum size N x N."""
     rng = np.random.default_rng(seed)
+    params = []
+
     for trial in range(N_trials):
         # Generate a random sparse matrix
         if square_only:
@@ -73,11 +81,15 @@ def generate_random_matrices(
             rng=rng
         )
 
-        yield pytest.param(
-            A,
-            id=f"random_{trial:02d}::{A.shape}::{A.nnz}",
-            marks=pytest.mark.random
+        params.append(
+            pytest.param(
+                A,
+                id=f"random_{trial:02d}::{A.shape}::{A.nnz}",
+                marks=pytest.mark.random
+            )
         )
+
+    return params
 
 
 def generate_random_compatible_matrices(
@@ -85,6 +97,7 @@ def generate_random_compatible_matrices(
 ):
     """Generate a list of random sparse matrices with compatible shapes."""
     rng = np.random.default_rng(seed)
+    params = []
 
     for trial in range(N_trials):
         # Generate a random sparse matrix
@@ -113,16 +126,21 @@ def generate_random_compatible_matrices(
             data_sampler=rng.normal
         )
 
-        yield pytest.param(
-            A, B,
-            id=f"random_{trial:02d}::{A.shape}::{A.nnz}::{B.nnz}",
-            marks=pytest.mark.random
+        params.append(
+            pytest.param(
+                A, B,
+                id=f"random_{trial:02d}::{A.shape}::{A.nnz}::{B.nnz}",
+                marks=pytest.mark.random
+            )
         )
+
+    return params
 
 
 def generate_random_cholesky_matrices(seed=565656, N_trials=100, N_max=100):
     """Generate a list of random, square, lower-triangular matrices."""
     rng = np.random.default_rng(seed)
+    params = []
 
     for trial in range(N_trials):
         # Generate a random sparse matrix
@@ -150,25 +168,36 @@ def generate_random_cholesky_matrices(seed=565656, N_trials=100, N_max=100):
             data_sampler=rng.normal
         )
 
-        yield pytest.param(
-            L, b,
-            id=f"random_{trial:02d}::{L.shape}::{L.nnz}::{b.nnz}",
-            marks=pytest.mark.random
+        params.append(
+            pytest.param(
+                L, b,
+                id=f"random_{trial:02d}::{L.shape}::{L.nnz}::{b.nnz}",
+                marks=pytest.mark.random
+            )
         )
+
+    return params
 
 
 def generate_pvec_params(seed=565656, N_trials=100, N_max=10):
     """Generate random permutation vectors and values."""
     rng = np.random.default_rng(seed)
+    params = []
+
     for i in range(N_trials):
         M = rng.integers(1, N_max, endpoint=True)
         p = rng.permutation(M)
         x = rng.random(M)
-        yield pytest.param(
-            p, x,
-            id=f"trial_{i+1}_seed_{seed}",
-            marks=pytest.mark.random
+
+        params.append(
+            pytest.param(
+                p, x,
+                id=f"trial_{i+1}_seed_{seed}",
+                marks=pytest.mark.random
+            )
         )
+
+    return params
 
 
 # -----------------------------------------------------------------------------

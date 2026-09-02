@@ -156,7 +156,7 @@ def test_1norm_estimate(A):
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
     "problem",
-    list(generate_suitesparse_matrices(square_only=True)),
+    generate_suitesparse_matrices(square_only=True),
     indirect=True  # allow `problem` to be a fixture vs a parameter
 )
 class TestLU(BaseSuiteSparsePlot):
@@ -230,7 +230,7 @@ _N_trials = 200
 
 @pytest.mark.parametrize(
     'problem',
-    list(generate_suitesparse_matrices(N=_N_trials, square_only=True)),
+    generate_suitesparse_matrices(N=_N_trials, square_only=True),
     indirect=True
 )
 class TestCond1est(BaseSuiteSparsePlot):

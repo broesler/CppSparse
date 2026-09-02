@@ -109,7 +109,7 @@ def test_amd(A, request):
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
     'problem',
-    list(generate_suitesparse_matrices(N=200)),
+    generate_suitesparse_matrices(N=200),
     indirect=True
 )
 class TestAMD(BaseSuiteSparsePlot):
@@ -175,7 +175,7 @@ class TestAMD(BaseSuiteSparsePlot):
 @pytest.mark.parametrize('seed', [-1, 0, 1])
 @pytest.mark.parametrize(
     'problem',
-    list(generate_random_matrices(N_max=100, d_scale=0.1)),
+    generate_random_matrices(N_max=100, d_scale=0.1),
     indirect=True
 )
 class TestMaxTrans(BaseSuiteSparseTest):
@@ -211,7 +211,7 @@ class TestMaxTrans(BaseSuiteSparseTest):
 @pytest.mark.parametrize('seed', [-1, 0, 1])
 @pytest.mark.parametrize(
     'problem',
-    list(generate_random_matrices(N_max=100, d_scale=0.1)),
+    generate_random_matrices(N_max=100, d_scale=0.1),
     indirect=True
 )
 class TestDMPerm(BaseSuiteSparsePlot):
@@ -267,7 +267,7 @@ class TestDMPerm(BaseSuiteSparsePlot):
 @pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")
 @pytest.mark.parametrize(
     'problem',
-    list(generate_random_matrices(N_max=100, d_scale=0.1, square_only=True)),
+    generate_random_matrices(N_max=100, d_scale=0.1, square_only=True),
     indirect=True
 )
 class TestSCC(BaseSuiteSparsePlot):
@@ -322,7 +322,7 @@ class TestSCC(BaseSuiteSparsePlot):
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
     'problem',
-    list(generate_suitesparse_matrices(N=200, square_only=True)),
+    generate_suitesparse_matrices(N=200, square_only=True),
     indirect=True
 )
 class TestFiedler(BaseSuiteSparsePlot):
@@ -384,7 +384,7 @@ class TestFiedler(BaseSuiteSparsePlot):
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
     'problem',
-    list(generate_suitesparse_matrices(N=200, square_only=True)),
+    generate_suitesparse_matrices(N=200, square_only=True),
     indirect=True
 )
 class TestNestedDissection(BaseSuiteSparsePlot):
@@ -452,7 +452,7 @@ _N_trials = 100
 @pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")
 @pytest.mark.parametrize(
     'problem',
-    list(generate_random_matrices(N_trials=_N_trials, d_scale=0.1, N_max=100)),
+    generate_random_matrices(N_trials=_N_trials, d_scale=0.1, N_max=100),
     indirect=True
 )
 class TestDMSolve(BaseSuiteSparsePlot):

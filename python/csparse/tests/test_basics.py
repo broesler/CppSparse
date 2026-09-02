@@ -130,7 +130,7 @@ def test_symmetric_matrix_permutation(A):
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
     "A, B",
-    list(generate_random_compatible_matrices(N_max=100, kind='multiply'))
+    generate_random_compatible_matrices(N_max=100, kind='multiply')
 )
 def test_multiply(A, B):
     """Test the multiplication of a matrix with a vector."""
@@ -144,7 +144,7 @@ def test_multiply(A, B):
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
     "A, B",
-    list(generate_random_compatible_matrices(N_max=100, kind='add'))
+    generate_random_compatible_matrices(N_max=100, kind='add')
 )
 class TestAdd:
     """Test the addition of two matrices."""
@@ -180,7 +180,7 @@ class TestAdd:
 #         Test 14
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
-    "A", list(generate_random_matrices(N_max=100, d_scale=0.1))
+    "A", generate_random_matrices(N_max=100, d_scale=0.1)
 )
 def test_droptol(A):
     """Test the drop tolerance operation on a random matrix."""

@@ -93,12 +93,12 @@ def test_python_cholesky(A, chol_func):
 @pytest.mark.filterwarnings("ignore::scipy.sparse.SparseEfficiencyWarning")
 @pytest.mark.parametrize(
     'problem',
-    list(generate_random_matrices(
+    generate_random_matrices(
         N_trials=10,
         N_max=100,
         d_scale=0.1,
         square_only=True
-    )),
+    ),
     indirect=True
 )
 class TestCholeskyUpdate(BaseSuiteSparsePlot):
@@ -213,7 +213,7 @@ class TestCholeskyUpdate(BaseSuiteSparsePlot):
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
     "problem",
-    list(generate_suitesparse_matrices(square_only=True)),
+    generate_suitesparse_matrices(square_only=True),
     indirect=True
 )
 class TestTrisolveCholesky(BaseSuiteSparsePlot):
@@ -317,7 +317,7 @@ class TestTrisolveCholesky(BaseSuiteSparsePlot):
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
     "L, b",
-    list(generate_random_cholesky_matrices(N_trials=201, N_max=100))
+    generate_random_cholesky_matrices(N_trials=201, N_max=100)
 )
 @pytest.mark.parametrize("lower", [True, False])
 def test_reachability(L, b, lower, request):
@@ -375,7 +375,7 @@ def test_reachability(L, b, lower, request):
 @pytest.mark.parametrize("order", ['Natural', 'APlusAT'])
 @pytest.mark.parametrize(
     "problem",
-    list(generate_suitesparse_matrices(N=200, square_only=True))
+    generate_suitesparse_matrices(N=200, square_only=True)
 )
 def test_rowcnt(problem, order):
     """Test Cholesky row counts."""
@@ -430,12 +430,12 @@ def _cholmod_counts(A, ATA):
 @pytest.mark.skipif(not HAS_CHOLMOD, reason="scikit-sparse not installed")
 @pytest.mark.parametrize(
     "A",
-    list(generate_random_matrices(
+    generate_random_matrices(
         N_trials=100,
         N_max=100,
         d_scale=0.1,
         square_only=True
-    )),
+    ),
 )
 def test_chol_counts(A, subtests):
     A = A.copy()  # don't modify the original matrix

@@ -54,12 +54,16 @@ def categorize_shape(M, N):
 
 def generate_test_matrices():
     """Generate all matrices for testing."""
+    params = []
+
     # Fixed test matrices
     for case_name, A in TEST_MATRICES:
         M, N = A.shape
         shape_cat = categorize_shape(M, N)
         test_id = f"{shape_cat}::{case_name}"
-        yield pytest.param(shape_cat, case_name, A, id=test_id)
+        params.append(
+            pytest.param(shape_cat, case_name, A, id=test_id)
+        )
 
     # Random test matrices
     seed = 565656
@@ -79,9 +83,13 @@ def generate_test_matrices():
                 shape_cat = categorize_shape(M, N)
                 case_name = f"Random {M}x{N} ({seed=}, {i=})"
                 test_id = f"{shape_cat}::{case_name}"
-                yield pytest.param(shape_cat, case_name, A,
-                                   id=test_id,
-                                   marks=pytest.mark.random)
+                params.append(
+                    pytest.param(
+                        shape_cat, case_name, A, id=test_id, marks=pytest.mark.random
+                    )
+                )
+
+    return params
 
 
 @pytest.mark.parametrize("order", ['Natural', 'ATA'])
@@ -214,8 +222,8 @@ def test_qrightleft(shape_cat, case_name, A, qr_func):
 
 @pytest.mark.parametrize(
     "problem",
-    list(generate_suitesparse_matrices()) +
-    list(generate_random_matrices(N_max=100, d_scale=0.1))
+    generate_suitesparse_matrices() +
+    generate_random_matrices(N_max=100, d_scale=0.1)
 )
 def test_qr(request, problem):
     """Test CSparse QR decomposition."""

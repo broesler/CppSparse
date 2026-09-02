@@ -125,6 +125,8 @@ struct type_caster<std::span<T>>
 };
 
 
+// TODO Type Caster for cs::VectorView<T> -> py::array_t<T> (like span)
+
 // -----------------------------------------------------------------------------
 //         Type Caster for std::vector<T> <=> py::array_t<T>
 // -----------------------------------------------------------------------------
@@ -216,6 +218,35 @@ struct type_caster<std::vector<T>>
 
         return false;
     }  // load
+};
+
+
+// Type caster for cs::Vector<T> <=> py::array_t<T>
+template <cs::Arithmetic T>
+struct type_caster<cs::Vector<T>> {
+    PYBIND11_TYPE_CASTER(cs::Vector<T>, _("numpy.ndarray"));
+
+    bool load(handle src, bool convert) {
+        make_caster<std::vector<T>> vector_caster;
+        if (!vector_caster.load(src, convert)) {
+            return false;
+        }
+
+        value = cs::Vector<T>(
+            cast_op<std::vector<T>&&>(std::move(vector_caster))
+        );
+        return true;
+    }
+
+    static handle cast(
+        const cs::Vector<T>& src,
+        return_value_policy policy,
+        handle parent
+    ) {
+        return make_caster<std::vector<T>>::cast(
+            std::vector<T>(src.begin(), src.end()), policy, parent
+        );
+    }
 };
 
 
@@ -330,9 +361,9 @@ auto make_vector_func(Func&& func)
 {
     return [func = std::forward<Func>(func)](
         const py::object& A_scipy,
-        const std::vector<double>& x,
-        const std::vector<double>& y
-    ) {
+        const cs::VectorD& x,
+        const cs::VectorD& y
+    ) -> py::array {
         const auto A = csc_from_scipy(A_scipy);
         const auto z = func(A, x, y);
         return py::cast(z);
@@ -386,8 +417,8 @@ auto make_gaxpy_matrix_func(Func&& func)
         X_np = X_np.attr("reshape")(-1, py::arg("order")=order);
         Y_np = Y_np.attr("reshape")(-1, py::arg("order")=order);
 
-        const auto X = X_np.cast<std::vector<double>>();
-        const auto Y = Y_np.cast<std::vector<double>>();
+        const auto X = X_np.cast<cs::VectorD>();
+        const auto Y = Y_np.cast<cs::VectorD>();
 
         const auto Z = func(A, X, Y);
 
@@ -467,7 +498,7 @@ py::object solver_dense_impl_(
     // Flatten b to 1D column-major
     b_np = b_np.attr("reshape")(-1, py::arg("order")="F");
 
-    const auto B = b_np.cast<std::vector<double>>();
+    const auto B = b_np.cast<cs::VectorD>();
 
     // Solve the system with the unpacked args
     const auto X = dense_solver(A, B, std::forward<Args>(solver_args)...);

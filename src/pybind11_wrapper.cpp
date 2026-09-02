@@ -100,10 +100,9 @@ PYBIND11_MODULE(csparse, m)
             return py::make_iterator(result);
         })
         .def("solve",
-            [](const cs::CholResult& self, const std::vector<double>& b) {
-                std::vector<double> x(b);  // copy b to x
-                self.solve(x);
-                return x;
+            [](const cs::CholResult& self, cs::VectorD b) {
+                self.solve(b);  // passed by value == "copy", solve in-place
+                return b;
             },
             py::arg("b"),
             R"pbdoc(
@@ -220,9 +219,9 @@ PYBIND11_MODULE(csparse, m)
             return py::make_iterator(result);
         })
         .def("solve",
-            [](const cs::QRResult& self, const std::vector<double>& b) {
+            [](const cs::QRResult& self, cs::cVectorViewD b) {
                 auto N = self.R.shape()[1];
-                std::vector<double> x(N);  // create output vector
+                cs::VectorD x(N);  // create output vector
                 self.solve(b, x);
                 return x;
             },
@@ -242,9 +241,9 @@ PYBIND11_MODULE(csparse, m)
             )pbdoc"
         )
         .def("tsolve",
-            [](const cs::QRResult& self, const std::vector<double>& b) {
+            [](const cs::QRResult& self, cs::cVectorViewD b) {
                 auto M2 = self.V.shape()[0];
-                std::vector<double> x(M2);  // create output vector
+                cs::VectorD x(M2);  // create output vector
                 self.tsolve(b, x);
                 return x;
             },
@@ -294,10 +293,9 @@ PYBIND11_MODULE(csparse, m)
             return py::make_iterator(result);
         })
         .def("solve",
-            [](const cs::LUResult& self, const std::vector<double>& b) {
-                auto x(b);  // copy b to x
-                self.solve(x);
-                return x;
+            [](const cs::LUResult& self, cs::VectorD b) {
+                self.solve(b);  // passed by value == "copy", solve in-place
+                return b;
             },
             py::arg("b"),
             R"pbdoc(
@@ -315,10 +313,9 @@ PYBIND11_MODULE(csparse, m)
             )pbdoc"
         )
         .def("tsolve",
-            [](const cs::LUResult& self, const std::vector<double>& b) {
-                auto x(b);  // copy b to x
-                self.tsolve(x);
-                return x;
+            [](const cs::LUResult& self, cs::VectorD b) {
+                self.tsolve(b);  // passed by value == "copy", solve in-place
+                return b;
             },
             py::arg("b"),
             R"pbdoc(
@@ -997,7 +994,7 @@ PYBIND11_MODULE(csparse, m)
             )pbdoc"
         )
         .def("dot",
-            py::overload_cast<std::span<const double>>(&cs::CSCMatrix::dot, py::const_),
+            py::overload_cast<cs::cVectorViewD>(&cs::CSCMatrix::dot, py::const_),
             py::arg("other")
         )
         .def("dot",
@@ -1005,7 +1002,7 @@ PYBIND11_MODULE(csparse, m)
             py::arg("other")
         )
         .def("__matmul__", py::overload_cast<const double>(&cs::CSCMatrix::dot, py::const_))
-        .def("__matmul__", py::overload_cast<std::span<const double>>(&cs::CSCMatrix::dot, py::const_))
+        .def("__matmul__", py::overload_cast<cs::cVectorViewD>(&cs::CSCMatrix::dot, py::const_))
         .def("__matmul__", py::overload_cast<const cs::CSCMatrix&>(&cs::CSCMatrix::dot, py::const_))
         //
         .def("add", &cs::CSCMatrix::add,
@@ -1227,7 +1224,7 @@ PYBIND11_MODULE(csparse, m)
         )
         .def("scatter",
             [](const cs::CSCMatrix& self, const cs::csint k) {
-                std::vector<double> x(self.shape()[0]);  // (M,)
+                cs::VectorD x(self.shape()[0]);  // (M,)
                 if (k < 0 || k >= self.shape()[1]) {
                     throw py::index_error("Column index out of bounds.");
                 }
@@ -1453,11 +1450,11 @@ PYBIND11_MODULE(csparse, m)
     //--------------------------------------------------------------------------
     m.def("pvec",
         make_pvec_wrapper(
-            [](const std::vector<cs::csint>& p, const std::vector<double>& b) {
-                return cs::pvec<double>(p, b);
+            [](const std::vector<cs::csint>& p, cs::cVectorViewD b) {
+                return cs::pvec(p, b);
             },
             [](const std::vector<cs::csint>& p, const std::vector<cs::csint>& b) {
-                return cs::pvec<cs::csint>(p, b);
+                return cs::pvec(p, b);
             }
         ),
         py::arg("p"),
@@ -1482,11 +1479,11 @@ PYBIND11_MODULE(csparse, m)
     );
     m.def("ipvec",
         make_pvec_wrapper(
-            [](const std::vector<cs::csint>& p, const std::vector<double>& b) {
-                return cs::ipvec<double>(p, b);
+            [](const std::vector<cs::csint>& p, cs::cVectorViewD b) {
+                return cs::ipvec(p, b);
             },
             [](const std::vector<cs::csint>& p, const std::vector<cs::csint>& b) {
-                return cs::ipvec<cs::csint>(p, b);
+                return cs::ipvec(p, b);
             }
         ),
         py::arg("p"),
@@ -1536,10 +1533,10 @@ PYBIND11_MODULE(csparse, m)
 
     m.def("residual_norm",
         [](const py::object& A_scipy,
-           const std::vector<double>& x,
-           const std::vector<double>& b
+           cs::cVectorViewD& x,
+           cs::cVectorViewD& b
         ) {
-            std::vector<double> resid;
+            cs::VectorD resid;
             const auto A = csc_from_scipy(A_scipy);
             return cs::residual_norm(A, x, b, resid);
         },
@@ -2122,7 +2119,7 @@ PYBIND11_MODULE(csparse, m)
     m.def(
         "lsolve",
         make_simple_solver(
-            [](const cs::CSCMatrix& L, const std::vector<double>& B) {
+            [](const cs::CSCMatrix& L, cs::cVectorViewD B) {
                 return cs::lsolve(L, B);
             },
             [](const cs::CSCMatrix& L, const cs::CSCMatrix& B) {
@@ -2151,7 +2148,7 @@ PYBIND11_MODULE(csparse, m)
     m.def(
         "usolve",
         make_simple_solver(
-            [](const cs::CSCMatrix& U, const std::vector<double>& B) {
+            [](const cs::CSCMatrix& U, cs::cVectorViewD B) {
                 return cs::usolve(U, B);
             },
             [](const cs::CSCMatrix& U, const cs::CSCMatrix& B) {
@@ -2259,7 +2256,7 @@ PYBIND11_MODULE(csparse, m)
             // dense solver
             [](
                 const cs::CSCMatrix& A,
-                const std::vector<double>& B,
+                cs::cVectorViewD B,
                 cs::AMDOrder order
             ) {
                 return cs::chol_solve(A, B, order);
@@ -2301,7 +2298,7 @@ PYBIND11_MODULE(csparse, m)
             // dense solver
             [](
                 const cs::CSCMatrix& A,
-                const std::vector<double>& B,
+                cs::cVectorViewD B,
                 cs::AMDOrder order
             ) {
                 return cs::qr_solve(A, B, order).x;
@@ -2349,7 +2346,7 @@ PYBIND11_MODULE(csparse, m)
             // dense solver
             [](
                 const cs::CSCMatrix& A,
-                const std::vector<double>& B,
+                cs::cVectorViewD B,
                 cs::AMDOrder order,
                 double tol,
                 cs::csint ir_steps
@@ -2401,7 +2398,7 @@ PYBIND11_MODULE(csparse, m)
 
     m.def("spsolve",
         make_simple_solver(
-            [](const cs::CSCMatrix& A, const std::vector<double>& B) {
+            [](const cs::CSCMatrix& A, cs::cVectorViewD B) {
                 return cs::spsolve(A, B);
             },
             [](const cs::CSCMatrix& A, const cs::CSCMatrix& B) {

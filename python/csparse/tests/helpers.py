@@ -218,15 +218,15 @@ class BaseSuiteSparseTest:
     """An abstract base class for tests."""
 
     @pytest.fixture(scope='class')
-    def problem(self, request):
+    @classmethod
+    def problem(cls, request):
         """Fixture to provide the problem matrix."""
         return request.param
 
     @pytest.fixture(scope='class', autouse=True)
-    def base_setup_problem(self, request, problem):
+    @classmethod
+    def base_setup_problem(cls, problem):
         """Initialize the problem."""
-        cls = request.cls
-
         if isinstance(problem, ssg.MatrixProblem):
             cls.problem = problem
         elif isinstance(problem, sparse.sparray):
@@ -254,10 +254,9 @@ class BaseSuiteSparsePlot(BaseSuiteSparseTest):
     _fig_title_prefix = ''
 
     @pytest.fixture(scope='class', autouse=True)
-    def setup_plot(self, request, base_setup_problem):
+    @classmethod
+    def setup_plot(cls, request, base_setup_problem):
         """Set up the problem and figure for plotting across tests."""
-        cls = request.cls
-
         cls.make_figures = request.config.getoption('--make-figures')
 
         if not cls.make_figures:

@@ -424,7 +424,7 @@ def dm_solve(A, b):
 
 
 # Exercise 7.4
-def _lu_solve_btf(C, b, r, s, **kwargs):  # noqa:PLR0913
+def _lu_solve_btf(C, b, r, s, **kwargs):
     """Solve `Cx = b` using LU factorization with BTF ordering.
 
     Parameters

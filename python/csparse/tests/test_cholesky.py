@@ -117,9 +117,9 @@ class TestCholeskyUpdate(BaseSuiteSparsePlot):
     _fig_title_prefix = 'Cholesky Update for '
 
     @pytest.fixture(scope='class', autouse=True)
-    def setup_problem(self, request, base_setup_problem):
+    @classmethod
+    def setup_problem(cls, base_setup_problem):
         """Prepare the problem for testing."""
-        cls = request.cls
         A = cls.problem.A
         N = A.shape[0]
 
@@ -134,9 +134,9 @@ class TestCholeskyUpdate(BaseSuiteSparsePlot):
         assert_allclose(cls.L @ cls.L.T, cls.A, atol=ATOL)
 
     @pytest.fixture(scope='class', autouse=True)
-    def make_plot(self, request, setup_problem, setup_plot):
+    @classmethod
+    def make_plot(cls, setup_problem, setup_plot):
         """Make a plot for the Cholesky update tests."""
-        cls = request.cls
         if not cls.make_figures:
             return
 
@@ -225,9 +225,9 @@ class TestTrisolveCholesky(BaseSuiteSparsePlot):
     _fig_title_prefix = 'Cholesky Factors for '
 
     @pytest.fixture(scope='class', autouse=True)
-    def setup_problem(self, request, base_setup_problem):
+    @classmethod
+    def setup_problem(cls, base_setup_problem):
         """Prepare the problem for testing."""
-        cls = request.cls
         A = cls.problem.A
         cls.order = 'APlusAT'
         N = A.shape[1]

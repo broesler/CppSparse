@@ -121,10 +121,9 @@ class TestAMD(BaseSuiteSparsePlot):
     _fig_title_prefix = 'AMD for '
 
     @pytest.fixture(scope='class', autouse=True)
-    def setup_problem(self, request, base_setup_problem):
+    @classmethod
+    def setup_problem(cls, base_setup_problem):
         """Initialize the problem matrix."""
-        cls = request.cls
-
         A = cls.problem.A
         cls.A_orig = A.copy()
 

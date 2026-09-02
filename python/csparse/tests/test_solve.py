@@ -85,9 +85,9 @@ class TestCholLUSolve(BaseSuiteSparseTest):
     """Test Cholesky and LU solve functions on SuiteSparse matrices."""
 
     @pytest.fixture(scope='class', autouse=True)
-    def setup_problem(self, request, problem):
+    @classmethod
+    def setup_problem(cls, problem):
         """Set up the problem."""
-        cls = request.cls
         A = problem.A
         M, N = A.shape
         is_spd = False

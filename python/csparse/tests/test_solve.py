@@ -49,7 +49,7 @@ SOLVE_FUNCS = [
 def test_solve_func(solve_func, K, is_sparse):
     """Test the solve function with a known right-hand side."""
     A = csparse.davis_example_chol()
-    M, N = A.shape
+    _M, N = A.shape
 
     if K == 0:
         expect = np.arange(1, N + 1, dtype=float)
@@ -220,7 +220,7 @@ def test_qr_solve(A):
 def test_iterative_refinement(problem):
     """Test iterative refinement with a known right-hand side."""
     A = problem.A
-    M, N = A.shape
+    M, _N = A.shape
     rng = np.random.default_rng(565656)
     b = rng.random((M,))
 

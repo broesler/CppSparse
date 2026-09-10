@@ -321,11 +321,12 @@ class BaseSuiteSparsePlot(BaseSuiteSparseTest):
                 del cls.fig
                 del cls.axs
 
-        # Make sure to finalize the plot after all tests
-        request.addfinalizer(finalize_plot)
-
         # Run the tests
         yield
+
+        # Make sure to finalize the plot after all tests
+        finalize_plot()
+
 
 # =============================================================================
 # =============================================================================

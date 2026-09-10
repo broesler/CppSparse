@@ -68,7 +68,7 @@ def test_amd(A, request):
     if HAS_AMD:
         try:
             p_sk = amd(A)
-        except Exception:
+        except RuntimeError:
             p_sk = symamd(A)
 
         Cp_sk = C[p_sk[:, np.newaxis], p_sk]
@@ -283,8 +283,8 @@ class TestSCC(BaseSuiteSparsePlot):
         S = self.problem.A
         S += sparse.eye_array(S.shape[0])  # ensure diagonal is non-zero
 
-        p, q, r, s, cc, rr = csparse.dmperm(S)
-        ps, rc, Nb = csparse.scc(S)
+        p, q, r, s, _cc, _rr = csparse.dmperm(S)
+        ps, rc, _Nb = csparse.scc(S)
 
         assert rc.size == r.size
         assert is_valid_permutation(ps)

@@ -148,7 +148,7 @@ class TestCholeskyUpdate(BaseSuiteSparsePlot):
         # cls.axs[1].set_title('Tree plot of A')
         cls.axs[2].set_title('Cholesky Factor L')
 
-    @pytest.fixture(scope='function')
+    @pytest.fixture
     def setup_update(self, request, setup_problem):
         """Generate a new w and updated matrix for each test function call."""
         cls = request.cls
@@ -238,7 +238,7 @@ class TestTrisolveCholesky(BaseSuiteSparsePlot):
         # Get the Cholesky factorization using scipy (dense matrices only)
         try:
             cls.L0 = sparse.csc_array(la.cholesky(cls.A.toarray(), lower=True))
-        except Exception:
+        except RuntimeError:
             pytest.skip(f"Skipping {cls.problem.name}: Cholesky failure.")
 
         # RHS
@@ -316,7 +316,7 @@ class TestTrisolveCholesky(BaseSuiteSparsePlot):
 #         Test 6
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
-    "L, b",
+    ("L", "b"),
     generate_random_cholesky_matrices(N_trials=201, N_max=100)
 )
 @pytest.mark.parametrize("lower", [True, False])

@@ -93,7 +93,7 @@ def generate_test_matrices():
 
 
 @pytest.mark.parametrize("order", ['Natural', 'ATA'])
-@pytest.mark.parametrize("shape_cat, case_name, A", generate_test_matrices())
+@pytest.mark.parametrize(("shape_cat", "case_name", "A"), generate_test_matrices())
 def test_csparse_qr(shape_cat, case_name, A, order):
     """Test QR decomposition with various matrices using parametrization."""
     A_dense = A.toarray()
@@ -119,7 +119,7 @@ def test_csparse_qr(shape_cat, case_name, A, order):
     # ---------- scipy QR
     # Apply the row permutation to A_dense
     Apq = A_dense[p[:, np.newaxis], q]
-    (Qraw, tau), Rraw = la.qr(Apq, mode='raw')
+    (Qraw, tau), _Rraw = la.qr(Apq, mode='raw')
     Q_, R_ = la.qr(Apq)
     # Handle case when M < N
     V_ = np.tril(Qraw, -1)[:, :M] + np.eye(M, min(M, N))
@@ -141,7 +141,7 @@ def test_csparse_qr(shape_cat, case_name, A, order):
     assert_allclose(Q @ R, A_dense[:, q], atol=ATOL)
 
 
-@pytest.mark.parametrize("shape_cat, case_name, A", generate_test_matrices())
+@pytest.mark.parametrize(("shape_cat", "case_name", "A"), generate_test_matrices())
 def test_apply_q(shape_cat, case_name, A):
     """Test application of the Householder reflectors."""
     A = A.toarray()  # only test with dense matrices
@@ -172,7 +172,7 @@ def test_apply_q(shape_cat, case_name, A):
     assert_allclose(R_, Rraw, atol=ATOL)
 
 
-@pytest.mark.parametrize("shape_cat, case_name, A", generate_test_matrices())
+@pytest.mark.parametrize(("shape_cat", "case_name", "A"), generate_test_matrices())
 @pytest.mark.parametrize("qr_func", [csparse.qr_right, csparse.qr_left])
 def test_qrightleft(shape_cat, case_name, A, qr_func):
     """Test the python QR decomposition algorithms."""
@@ -189,7 +189,7 @@ def test_qrightleft(shape_cat, case_name, A, qr_func):
     Q = csparse.apply_qright(V, beta)
 
     # Compare to scipy
-    (Qraw, tau), Rraw = la.qr(A, mode='raw')
+    (Qraw, tau), _Rraw = la.qr(A, mode='raw')
     V = np.tril(Qraw, -1)[:, :M] + np.eye(M, min(M, N))
 
     assert_allclose(V, V, atol=ATOL)
@@ -213,10 +213,10 @@ def test_qrightleft(shape_cat, case_name, A, qr_func):
 # Test 9 uses SuiteSparse matrices.
 # Test 10 uses random matrices.
 # Test 12 uses random matrices.
-# Test 12 doesn’t make a plot.
+# Test 12 doesn't make a plot.
 #
 # Each tests compares the singular values of A with those of R. Since Q is
-# orthogonal, it doesn’t affect the singular values, so this comparison is
+# orthogonal, it doesn't affect the singular values, so this comparison is
 # a nice way to check the decomposition without forming the full matrix
 # Q (typically expensive).
 
@@ -249,7 +249,7 @@ def test_qr(request, problem):
     sig = la.svdvals(A.toarray())
 
     # Compute scipy R factor
-    (Qraw, tau), R_ = la.qr(A.toarray(), mode='raw')
+    (Qraw, _tau), R_ = la.qr(A.toarray(), mode='raw')
     V_ = np.tril(Qraw, -1)[:, :M] + np.eye(M, min(M, N))
 
     # TODO treeplot using csgraph?
@@ -257,7 +257,7 @@ def test_qr(request, problem):
     # only uses `parent` in treeplot.
 
     # Compute csparse QR
-    V, beta, R, p, q = csparse.qr(A)
+    V, _beta, R, p, q = csparse.qr(A)
 
     C = A.copy()
     M2 = V.shape[0]

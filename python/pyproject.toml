@@ -87,9 +87,9 @@ ignore = [
 known-first-party = ["csparse", "scripts"]
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ['I001', 'F403', 'F405']  # ignore import sorting, wildcard imports, and undefined names
-"test_*.py" = ['D101', 'D102', 'D103']    # ignore docstring checks in test files
-"scripts/*.py" = ['N999']                 # ignore names like "ex7.3_lu.py" in scripts
+"__init__.py" = ['I001', 'F403', 'F405']              # ignore import sorting, wildcard imports, and undefined names
+"csparse/tests/**" = ['ARG', 'D101', 'D102', 'D103']  # ignore docstring checks in test files
+"scripts/*.py" = ['N999']                             # ignore names like "ex7.3_lu.py" in scripts
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

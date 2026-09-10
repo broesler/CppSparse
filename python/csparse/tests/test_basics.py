@@ -92,7 +92,7 @@ def test_matrix_permutation(A):
     assert err < 1e-13
 
 
-@pytest.mark.parametrize("p, x", generate_pvec_params())
+@pytest.mark.parametrize(("p", "x"), generate_pvec_params())
 def test_vector_permutation(p, x):
     """Test vector permutation."""
     M = len(p)
@@ -129,7 +129,7 @@ def test_symmetric_matrix_permutation(A):
 #         Test 4
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
-    "A, B",
+    ("A", "B"),
     generate_random_compatible_matrices(N_max=100, kind='multiply')
 )
 def test_multiply(A, B):
@@ -143,7 +143,7 @@ def test_multiply(A, B):
 #         Test 5
 # -----------------------------------------------------------------------------
 @pytest.mark.parametrize(
-    "A, B",
+    ("A", "B"),
     generate_random_compatible_matrices(N_max=100, kind='add')
 )
 class TestAdd:

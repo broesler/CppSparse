@@ -18,6 +18,7 @@
 #include "lu.hpp"
 
 #include <algorithm>   // fill
+#include <cmath>       // copysign
 #include <format>
 #include <ranges>      // views::reverse
 #include <span>

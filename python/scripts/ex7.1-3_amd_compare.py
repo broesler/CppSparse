@@ -116,7 +116,7 @@ else:
                 )
 
         # Display a matrix
-        if N == max(Ns):
+        if max(Ns) == N:
             fig = plt.figure(num=2, clear=True, figsize=(10, 6))
             gs = fig.add_gridspec(
                 nrows=len(amd_funcs), ncols=1 + len(amd_funcs["sksparse"])

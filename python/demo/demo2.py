@@ -107,11 +107,11 @@ def demo2(problem, name='', axs=None):
         if is_sym:
             try:
                 # Cholesky
-                L, p = csparse.chol(C, order='APlusAT')
+                L, _p = csparse.chol(C, order='APlusAT')
                 csparse.cspy(L + sparse.triu(L.T, 1),
                              colorbar=False, norm='log', ax=ax)
                 ax.set_title('L + L.T')
-            except Exception:
+            except RuntimeError:
                 # LU
                 res = csparse.lu(C, tol=0.001, order='APlusAT')
                 L, U = res.L, res.U
@@ -127,10 +127,7 @@ def demo2(problem, name='', axs=None):
             ax.set_title('L + U')
     else:
         # QR
-        if M < N:
-            res = csparse.qr(C.T, order='ATA')
-        else:
-            res = csparse.qr(C, order='ATA')
+        res = csparse.qr(C.T, order='ATA') if M < N else csparse.qr(C, order='ATA')
 
         V, R = res.V, res.R
         csparse.cspy(V + R, colorbar=False, norm='log', ax=ax)

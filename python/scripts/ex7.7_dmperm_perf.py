@@ -65,7 +65,7 @@ else:
     for _idx, row in tqdm(sym_indef.iterrows(), total=len(sym_indef)):
         try:
             A = ssg.get_problem(index=ss_index, row=row).A
-        except Exception as e:
+        except RuntimeError as e:
             print(f"Error loading matrix {row['id']}: {e}")
             continue
 

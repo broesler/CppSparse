@@ -216,7 +216,7 @@ if SAVE_FIGS:
     full_fig_path = fig_path / f"{filestem}_density.pdf"
     try:
         fig.savefig(full_fig_path)
-    except Exception as e:
+    except FileNotFoundError as e:
         print(f"Failed to save figure to {full_fig_path}: {e}")
 
 # -----------------------------------------------------------------------------
@@ -270,7 +270,7 @@ if SAVE_FIGS:
     full_fig_path = fig_path / f"{filestem}_MN.pdf"
     try:
         fig.savefig(full_fig_path)
-    except Exception as e:
+    except FileNotFoundError as e:
         print(f"Failed to save figure to {full_fig_path}: {e}")
 
 plt.show()

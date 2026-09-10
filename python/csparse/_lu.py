@@ -381,10 +381,7 @@ def norm1est_inv(A):
     result : float
         An estimate of the 1-norm of the inverse of the matrix.
     """
-    if isinstance(A, spla.SuperLU):
-        lu = A
-    else:
-        lu = spla.splu(A)
+    lu = A if isinstance(A, spla.SuperLU) else spla.splu(A)
     return _norm1est_inv_lu(lu)
 
 

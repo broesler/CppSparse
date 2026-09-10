@@ -140,7 +140,7 @@ if SAVE_FIG:
         print(f"Saved figure to {fig_fullpath}.")
     except Exception as e:
         print(f"Could not save figure to {fig_fullpath}: {e}")
-        raise e
+        raise
 
 # =============================================================================
 # =============================================================================

@@ -4,3 +4,4 @@ repos:
     hooks:
       # Run the linter, but do not make any changes
       - id: ruff-check
+        args: [--output-format=concise]  # for vim errorformat

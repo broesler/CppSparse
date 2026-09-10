@@ -241,7 +241,7 @@ def node_from_edge_sep(A, a, b):
     a_s, b_s : ndarray of int
         The sets `a` and `b` with `s` removed.
     """
-    p, q, r, s, cc, rr = dmperm(A[a[:, np.newaxis], b])
+    p, q, _r, s, cc, rr = dmperm(A[a[:, np.newaxis], b])
     s = np.r_[a[p[:rr[1]]], b[q[cc[2]:cc[4]]]]
     w = np.ones(A.shape[1]).astype(bool)
     w[s] = False
@@ -355,10 +355,8 @@ def dm_solve(A, b):
     # Permute the matrix and the right-hand side
     C = A[p[:, np.newaxis], q]
 
-    if b_is_sparse and b.ndim == 1:
-        b = b.todok()[p]  # COO not subscriptable on scipy < v1.16 (Python < v3.11)
-    else:
-        b = b[p]
+    # NOTE COO not subscriptable on scipy < v1.16 (Python < v3.11)
+    b = b.todok()[p] if (b_is_sparse and b.ndim == 1) else b[p]
 
     x_shape = (N,) if b.ndim == 1 else (N, b.shape[1])
 
@@ -558,7 +556,7 @@ def spaugment(A):
     result : (M+N, M+N) ndarray
         The augmented matrix.
     """
-    M, N = A.shape
+    M, _N = A.shape
 
     I_M = sparse.eye_array(M)
 

@@ -46,7 +46,7 @@ else:
     for _idx, row in tqdm(tf.iterrows(), total=len(tf)):
         try:
             A = ssg.get_problem(index=tf, row=row).A
-        except Exception as e:
+        except RuntimeError as e:
             print(f"Error loading matrix {row['id']}: {e}")
             continue
 

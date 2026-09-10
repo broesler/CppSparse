@@ -54,7 +54,7 @@ def apply_qright(V, beta, p=None, Y=None):
     if Y is None:
         Y = sparse.eye_array(V.shape[0]).tocsc()
 
-    M, N = V.shape
+    _M, N = V.shape
     X = Y.copy()
     if p is not None:
         X = X[:, p]

@@ -27,10 +27,7 @@ SAVE_FIG = False
 
 SEED = 565656
 
-if LAPLACE:
-    filestem = 'chol_perf_laplace'
-else:
-    filestem = 'chol_perf_random'
+filestem = 'chol_perf_laplace' if LAPLACE else 'chol_perf_random'
 
 # -----------------------------------------------------------------------------
 #         Create the data
@@ -111,7 +108,7 @@ ax.legend()
 ax.set_xlabel('Number of Columns')
 ax.set_ylabel('Time (s)')
 
-title = f"{filestem.split('_')[0]}"
+title = f"{filestem.split('_', maxsplit=1)[0]}"
 
 if not LAPLACE:
     title += f", density {density}"
@@ -129,7 +126,7 @@ if SAVE_FIG:
         print(f"Saved figure to {fig_fullpath}.")
     except Exception as e:
         print(f"Could not save figure to {fig_fullpath}: {e}")
-        raise e
+        raise
 
 
 # Plot the spy of each matrix to see fill-in

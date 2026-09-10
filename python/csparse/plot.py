@@ -75,7 +75,7 @@ def cspy(A, *, cmap="viridis_r", colorbar=True, ticklabels=False, ax=None, **kwa
     if not issparse(A):
         try:
             A = np.asarray(A)
-        except Exception as e:
+        except TypeError as e:
             raise TypeError(f"Input must be convertible to a 2D array. Error: {e}")
 
     # Convert to sparse COOrdinate format
@@ -129,10 +129,7 @@ def cspy(A, *, cmap="viridis_r", colorbar=True, ticklabels=False, ax=None, **kwa
     ax.add_collection(p)
 
     # Add a colorbar
-    if colorbar:
-        cb = fig.colorbar(p, ax=ax, shrink=0.8)
-    else:
-        cb = None
+    cb = fig.colorbar(p, ax=ax, shrink=0.8) if colorbar else None
 
     return ax, cb
 
@@ -178,7 +175,6 @@ def dmspy(A, *, colored=True, seed=0, ax=None, **kwargs):
         cb = None
 
     # Set the title
-    M, N = A.shape
     sprank = rr[3]
     m = np.nonzero(np.diff(rr))[0].size
     n = np.nonzero(np.diff(cc))[0].size
@@ -202,7 +198,7 @@ def dmspy(A, *, colored=True, seed=0, ax=None, **kwargs):
     return ax, cb
 
 
-def ccspy(A, *, colored=True, seed=0, ax=None, **kwargs):
+def ccspy(A, *, colored=True, ax=None, **kwargs):
     """Plot the connected components of a sparse matrix.
 
     Parameters
@@ -211,8 +207,6 @@ def ccspy(A, *, colored=True, seed=0, ax=None, **kwargs):
         Matrix of M vectors in N dimensions.
     colored : bool, optional
         If True, color the points based on their values, by default True.
-    seed : int, optional
-        Random seed passed to `csparse.dmperm`, by default 0.
     ax : matplotlib.axes.Axes, optional
         Axes object to plot on. If `None`, the current axes are used.
     **kwargs
@@ -241,7 +235,6 @@ def ccspy(A, *, colored=True, seed=0, ax=None, **kwargs):
         ax.spy(S, **kwargs)
         cb = None
 
-    M, N = A.shape
     ax.set_title(f"strongly connected components: {Nb:d}")
 
     drawboxes(Nb, r, s, ax=ax)

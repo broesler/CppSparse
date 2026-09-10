@@ -122,7 +122,7 @@ except Exception as e:
     elif "square" in str(e):
         print("C++Sparse: Matrix is not square!")
     else:
-        raise e
+        raise
 
 # Scipy sparse -- fails if singular or non-square
 try:
@@ -142,7 +142,7 @@ except Exception as e:
     elif "failed" in str(e):
         print("scipy.sparse: Failed to factorize matrix!")
     else:
-        raise e
+        raise
 
 
 # -----------------------------------------------------------------------------

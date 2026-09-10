@@ -301,10 +301,7 @@ if __name__ == "__main__":
 
     for i, x in enumerate(xs):
         # Get the axes for the current plot
-        if x[1] == 0:
-            ax = axs2.flatten()[i]
-        else:
-            ax = axs3.flatten()[i-2]
+        ax = axs2.flatten()[i] if x[1] == 0 else axs3.flatten()[i - 2]
 
         # Create functions so we can loop over the xs array?
         #   * function to create overall plot and labels given x and ax

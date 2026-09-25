@@ -253,6 +253,14 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     CSCMatrix R{{M2, Nv}, S.rnz};  // R factor
     std::vector<double> beta(Nv);  // scaling factors
 
+    auto Vp = V.indptr();
+    auto Vi = V.indices();
+    auto Vv = V.data();
+
+    auto Rp = R.indptr();
+    auto Ri = R.indices();
+    auto Rv = R.data();
+
     // Allocate workspaces
     VectorD x(M2);                  // dense vector
     std::vector<csint>  w(M2, -1),  // workspace for pattern of V[:, k]
@@ -265,11 +273,11 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
           rnz = 0;
 
     for (csint k = 0; k < Nv; ++k) {
-        R.p_[k] = rnz;    // R[:, k] starts here
-        V.p_[k] = vnz;    // V[:, k] starts here
-        auto p1 = vnz;   // save start of V(:, k)
-        w[k] = k;         // add V(k, k) to pattern of V
-        V.i_[vnz++] = k;  // V(k, k) is non-zero
+        Rp[k] = rnz;    // R[:, k] starts here
+        Vp[k] = vnz;    // V[:, k] starts here
+        auto p1 = vnz;  // save start of V(:, k)
+        w[k] = k;       // add V(k, k) to pattern of V
+        Vi[vnz++] = k;  // V(k, k) is non-zero
 
         t.clear();
         auto col = S.q[k];  // permuted column of A
@@ -288,11 +296,11 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
             // Push path onto "output" stack
             std::ranges::reverse_copy(s, std::back_inserter(t));
 
-            i = S.p_inv[Ai];     // i = permuted row of A(:, col)
-            x[i] = Av;           // x(i) = A(:, col)
+            i = S.p_inv[Ai];  // i = permuted row of A(:, col)
+            x[i] = Av;        // x(i) = A(:, col)
 
             if (i > k && w[i] < k) {  // pattern of V(:, k) = x(k+1:m)
-                V.i_[vnz++] = i;      // add i to pattern of V(:, k)
+                Vi[vnz++] = i;        // add i to pattern of V(:, k)
                 w[i] = k;
             }
         }
@@ -300,8 +308,8 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
         // for each i in pattern of R[:, k] (R(i, k) is non-zero)
         for (csint i : t | std::views::reverse) {
             happly(V, i, beta[i], x);  // apply (V(i), Beta(i)) to x
-            R.i_[rnz] = i;                 // R(i, k) = x(i)
-            R.v_[rnz++] = x[i];
+            Ri[rnz] = i;               // R(i, k) = x(i)
+            Rv[rnz++] = x[i];
             x[i] = 0;
             if (S.parent[i] == k) {
                 // Scatter the non-zero pattern without changing the values
@@ -311,20 +319,20 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
 
         // gather V(:, k) = x
         for (csint p = p1; p < vnz; ++p) {
-            V.v_[p] = x[V.i_[p]];
-            x[V.i_[p]] = 0;  // clear x
+            Vv[p] = x[Vi[p]];
+            x[Vi[p]] = 0;  // clear x
         }
 
         // [v, beta, s] = house(x) == house(V[p1:vnz, k])
-        auto h = house(std::span(V.v_).subspan(p1, vnz - p1));
-        std::ranges::copy(h.v, V.v_.begin() + p1);
+        auto h = house(std::span(Vv).subspan(p1, vnz - p1));
+        std::ranges::copy(h.v, Vv.begin() + p1);
         beta[k] = h.beta;
-        R.i_[rnz] = k;      // R(k, k) = -sign(x[0]) * norm(x)
-        R.v_[rnz++] = h.s;
+        Ri[rnz] = k;      // R(k, k) = -sign(x[0]) * norm(x)
+        Rv[rnz++] = h.s;
     }
 
-    R.p_[Nv] = rnz;  // finalize R
-    V.p_[Nv] = vnz;  // finalize V
+    Rp[Nv] = rnz;  // finalize R
+    Vp[Nv] = vnz;  // finalize V
 
     auto q = S.q;
 
@@ -355,6 +363,12 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
     CSCMatrix V{{M2, Nv}, S.vnz, values};   // Householder vectors
     CSCMatrix R{{M2, Nv}, S.rnz, values};   // R factor
 
+    auto Vp = V.indptr();
+    auto Vi = V.indices();
+
+    auto Rp = R.indptr();
+    auto Ri = R.indices();
+
     // Allocate workspaces
     std::vector<csint> w(M2, -1),  // workspace for pattern of V[:, k]
                        s, t;       // stacks for pattern of R[:, k]
@@ -366,10 +380,10 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
           rnz = 0;
 
     for (csint k = 0; k < Nv; ++k) {
-        R.p_[k] = rnz;    // R[:, k] starts here
-        V.p_[k] = vnz;    // V[:, k] starts here
-        w[k] = k;         // add V(k, k) to pattern of V
-        V.i_[vnz++] = k;  // V(k, k) is non-zero
+        Rp[k] = rnz;    // R[:, k] starts here
+        Vp[k] = vnz;    // V[:, k] starts here
+        w[k] = k;       // add V(k, k) to pattern of V
+        Vi[vnz++] = k;  // V(k, k) is non-zero
 
         t.clear();
         auto col = S.q[k];  // permuted column of A
@@ -387,28 +401,28 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
             // Push path onto "output" stack
             std::ranges::reverse_copy(s, std::back_inserter(t));
 
-            i = S.p_inv[Ai];     // i = permuted row of A(:, col)
+            i = S.p_inv[Ai];          // i = permuted row of A(:, col)
 
             if (i > k && w[i] < k) {  // pattern of V(:, k)
-                V.i_[vnz++] = i;      // add i to pattern of V(:, k)
+                Vi[vnz++] = i;        // add i to pattern of V(:, k)
                 w[i] = k;
             }
         }
 
         // for each i in pattern of R[:, k] (R(i, k) is non-zero)
         for (csint i : t | std::views::reverse) {
-            R.i_[rnz++] = i;  // R(i, k)
+            Ri[rnz++] = i;  // R(i, k)
             if (S.parent[i] == k) {
                 // Scatter the non-zero pattern without changing the values
                 vnz = V.scatter(i, 0, w, {}, k, V, vnz, values);
             }
         }
 
-        R.i_[rnz++] = k;  // R(k, k)
+        Ri[rnz++] = k;  // R(k, k)
     }
 
-    R.p_[Nv] = rnz;  // finalize R
-    V.p_[Nv] = vnz;  // finalize V
+    Rp[Nv] = rnz;  // finalize R
+    Vp[Nv] = vnz;  // finalize V
 
     return {.V = V, .beta = {}, .R = R, .p_inv = S.p_inv, .q = S.q};
 }
@@ -427,14 +441,22 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
     auto& R = res.R;
     auto& beta = res.beta;
 
-    if (V.indices().empty() || R.indices().empty()) {
+    auto Vp = V.indptr();
+    auto Vi = V.indices();
+    auto& Vv = V.data_vector();
+
+    auto Rp = R.indptr();
+    auto Ri = R.indices();
+    auto& Rv = R.data_vector();
+
+    if (Vi.empty() || Ri.empty()) {
         throw std::runtime_error("V and R patterns have not been computed!");
     }
 
     // Allocate values in the result matrices
-    V.v_.resize(V.nnz());
-    beta.resize(V.N_);
-    R.v_.resize(R.nnz());
+    Vv.resize(V.nnz());
+    beta.resize(V.shape()[1]);
+    Rv.resize(R.nnz());
 
     // Allocate workspaces
     VectorD x(M2);  // dense vector
@@ -465,10 +487,10 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
         // [v, beta, s] = house(x) == house(V[:, k])
         auto h = house(V.col_values(k));
         // std::ranges::copy(h.v, V.col_values(k).begin());  // TODO non-const view
-        std::ranges::copy(h.v, V.v_.begin() + V.p_[k]);
+        std::ranges::copy(h.v, Vv.begin() + Vp[k]);
         beta[k] = h.beta;
         // R.col_values(k).back() = h.s;  // TODO non-const R(k, k) = -sign(x[0]) * norm(x)
-        R.v_[R.p_[k+1] - 1] = h.s;  // R(k, k) = -sign(x[0]) * norm(x)
+        Rv[Rp[k+1] - 1] = h.s;  // R(k, k) = -sign(x[0]) * norm(x)
     }
 
     if (M < N) {
@@ -519,6 +541,10 @@ CSCMatrix apply_qtleft(
     auto X = Y;  // copy Y into X, work in-place
     CSCMatrix C{{M, NY}, 2 * V.nnz()};  // allocate C for the result
 
+    auto Cp = C.indptr();
+    auto Ci = C.indices();
+    auto Cv = C.data();
+
     if (M2 > M) {
         X.add_empty_bottom(M2 - M);
     }
@@ -532,9 +558,12 @@ CSCMatrix apply_qtleft(
     for (auto k : Y.column_range()) {
         if (nz + M > C.nzmax()) {
             C.realloc(2 * C.nzmax() + M);
+            Cp = C.indptr();   // reset pointers after realloc
+            Ci = C.indices();
+            Cv = C.data();
         }
 
-        C.p_[k] = nz;  // column j of C starts here
+        Cp[k] = nz;  // column j of C starts here
 
         // Scatter X(:, k) into x
         X.scatter(k, x);
@@ -545,14 +574,14 @@ CSCMatrix apply_qtleft(
         // Gather x into X(:, k)
         for (auto i : X.row_range()) {
             if (x[i] != 0) {
-                C.i_[nz] = i;
-                C.v_[nz++] = x[i];
+                Ci[nz] = i;
+                Cv[nz++] = x[i];
                 x[i] = 0.0;  // clear x
             }
         }
     }
 
-    C.p_[NY] = nz;  // finalize C
+    Cp[NY] = nz;  // finalize C
     C.realloc();
 
     return C;

@@ -157,6 +157,9 @@ public:
     std::span<csint> indptr() noexcept { return p_; }
     std::span<double> data() noexcept { return v_; }
 
+    // If resize, etc. needed
+    std::vector<double>& data_vector() noexcept { return v_; }
+
     /// Return the number of non-zeros in column j.
     csint col_length(csint j) const
     {
@@ -1002,20 +1005,6 @@ public:
      * @return out  a vector of length `N` containing the sum of each column.
      */
     std::vector<double> sum_cols() const;
-
-    //--------------------------------------------------------------------------
-    //        QR Decomposition
-    //--------------------------------------------------------------------------
-    friend QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S);
-    friend QRResult qr(const CSCMatrix& A, const SymbolicQR& S);
-    friend void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res);
-
-    friend CSCMatrix apply_qtleft(
-        const CSCMatrix& V,
-        std::span<const double> beta,
-        std::span<const csint> p_inv,
-        const CSCMatrix& Y
-    );
 
     // -------------------------------------------------------------------------
     //         LU Decomposition

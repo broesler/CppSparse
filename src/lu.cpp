@@ -74,21 +74,41 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
     std::vector<csint> p_inv(N, -1);  // row permutation vector
     SparseSolution sol(N);            // workspace for triangular solves
 
+    auto Lp = L.indptr();
+    auto Li = L.indices();
+    auto Lv = L.data();
+
+    auto Up = U.indptr();
+    auto Ui = U.indices();
+    auto Uv = U.data();
+
     csint lnz = 0,
           unz = 0;
 
     for (auto k : L.column_range()) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
-        L.p_[k] = lnz;  // L[:, k] starts here
-        U.p_[k] = unz;  // U[:, k] starts here
+        Lp[k] = lnz;  // L[:, k] starts here
+        Up[k] = unz;  // U[:, k] starts here
 
         // Possibly reallocate L and U
         if (lnz + N > L.nzmax()) {
             L.realloc(2 * L.nzmax() + N);
+            Lp = L.indptr();
+            Li = L.indices();
+            Lv = L.data();
+            Up = U.indptr();
+            Ui = U.indices();
+            Uv = U.data();
         }
 
         if (unz + N > U.nzmax()) {
             U.realloc(2 * U.nzmax() + N);
+            Lp = L.indptr();
+            Li = L.indices();
+            Lv = L.data();
+            Up = U.indptr();
+            Ui = U.indices();
+            Uv = U.data();
         }
 
         // Solve Lx = A[:, k]
@@ -106,8 +126,8 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
                     ipiv = i;
                 }
             } else {  // x(i) is the entry U(pinv[i], k)
-                U.i_[unz] = p_inv[i];
-                U.v_[unz++] = sol.x[i];
+                Ui[unz] = p_inv[i];
+                Uv[unz++] = sol.x[i];
             }
         }
 
@@ -123,22 +143,22 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
         // --- Divide by pivot -------------------------------------------------
         auto pivot = sol.x[ipiv];  // the chosen pivot
         p_inv[ipiv] = k;      // ipiv is the kth pivot row
-        L.i_[lnz] = ipiv;  // first entry in L[:, k] is L(k, k) = 1
-        L.v_[lnz++] = 1;
-        U.i_[unz] = k;           // last entry in U[:, k] is U(k, k)
-        U.v_[unz++] = pivot;
+        Li[lnz] = ipiv;  // first entry in L[:, k] is L(k, k) = 1
+        Lv[lnz++] = 1;
+        Ui[unz] = k;           // last entry in U[:, k] is U(k, k)
+        Uv[unz++] = pivot;
 
         for (const auto& i : sol.xi) {           // L(k+1:n, k) = x / pivot
             if (p_inv[i] < 0) {                  // x(i) is an entry in L[:, k]
-                L.i_[lnz] = i;                   // save unpermuted row in L
-                L.v_[lnz++] = sol.x[i] / pivot;  // scale pivot column
+                Li[lnz] = i;                   // save unpermuted row in L
+                Lv[lnz++] = sol.x[i] / pivot;  // scale pivot column
             }
         }
     }
 
     // --- Finalize L and U ---------------------------------------------------
-    L.p_[N] = lnz;
-    U.p_[N] = unz;
+    Lp[N] = lnz;
+    Up[N] = unz;
 
     // permute row indices of L for final p_inv
     L.permute_rows_inplace(p_inv);
@@ -262,6 +282,14 @@ LUResult lu(
     std::vector<csint> p_inv(M, -1);  // row permutation vector
     SparseSolution sol(M);            // workspace for triangular solves
 
+    auto Lp = L.indptr();
+    auto Li = L.indices();
+    auto Lv = L.data();
+
+    auto Up = U.indptr();
+    auto Ui = U.indices();
+    auto Uv = U.data();
+
     // Exercise 6.3: modify to allow column pivoting
     auto q = S.q;  // column permutation vector
     csint K = 0;  // count small pivots
@@ -273,20 +301,32 @@ LUResult lu(
     for (csint k = 0; k < N; ++k) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
         if (k < M) {
-            L.p_[k] = lnz;  // L[:, k] starts here
+            Lp[k] = lnz;  // L[:, k] starts here
         }
 
         if (k < N) {
-            U.p_[k] = unz;  // U[:, k] starts here
+            Up[k] = unz;  // U[:, k] starts here
         }
 
         // Possibly reallocate L and U
         if (lnz + N > L.nzmax()) {
             lu_realloc(L, k, true);
+            Lp = L.indptr();
+            Li = L.indices();
+            Lv = L.data();
+            Up = U.indptr();
+            Ui = U.indices();
+            Uv = U.data();
         }
 
         if (unz + N > U.nzmax()) {
             lu_realloc(U, k, false);
+            Lp = L.indptr();
+            Li = L.indices();
+            Lv = L.data();
+            Up = U.indptr();
+            Ui = U.indices();
+            Uv = U.data();
         }
 
         // Solve Lx = A[:, k]
@@ -305,9 +345,9 @@ LUResult lu(
                     ipiv = i;
                 }
             } else {  // x(i) is the entry U(pinv[i], k)
-                if (i < U.M_) {  // if M > N, extra rows only in L
-                    U.i_[unz] = p_inv[i];
-                    U.v_[unz++] = sol.x[i];
+                if (i < U.shape()[0]) {  // if M > N, extra rows only in L
+                    Ui[unz] = p_inv[i];
+                    Uv[unz++] = sol.x[i];
                 }
             }
         }
@@ -355,26 +395,26 @@ LUResult lu(
         }
 
         p_inv[ipiv] = k;   // ipiv is the kth pivot row
-        L.i_[lnz] = ipiv;  // first entry in L[:, k] is L(k, k) = 1
-        L.v_[lnz++] = 1;
+        Li[lnz] = ipiv;  // first entry in L[:, k] is L(k, k) = 1
+        Lv[lnz++] = 1;
 
         // Exercise 6.5: modify to allow singular matrices
         if (pivot != 0) {
-            U.i_[unz] = k;           // last entry in U[:, k] is U(k, k)
-            U.v_[unz++] = pivot;
+            Ui[unz] = k;           // last entry in U[:, k] is U(k, k)
+            Uv[unz++] = pivot;
 
             for (const auto& i : sol.xi) {           // L(k+1:n, k) = x / pivot
                 if (p_inv[i] < 0) {                  // x(i) is an entry in L[:, k]
-                    L.i_[lnz] = i;                   // save unpermuted row in L
-                    L.v_[lnz++] = sol.x[i] / pivot;  // scale pivot column
+                    Li[lnz] = i;                   // save unpermuted row in L
+                    Lv[lnz++] = sol.x[i] / pivot;  // scale pivot column
                 }
             }
         }
     }
 
     // --- Finalize L and U ---------------------------------------------------
-    L.p_[min_MN] = lnz;
-    U.p_[N] = unz;
+    Lp[min_MN] = lnz;
+    Up[N] = unz;
 
     // Exercise 6.5: modify to allow singular matrices
     if (is_singular) {
@@ -411,8 +451,11 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     const auto [M, N] = A.shape();
 
     // Copy result matrices without values
-    CSCMatrix L{std::vector<double>(R.L.nnz()), R.L.i_, R.L.p_, R.L.shape()};
-    CSCMatrix U{std::vector<double>(R.U.nnz()), R.U.i_, R.U.p_, R.U.shape()};
+    CSCMatrix L{std::vector<double>(R.L.nnz()), R.L.indices(), R.L.indptr(), R.L.shape()};
+    CSCMatrix U{std::vector<double>(R.U.nnz()), R.U.indices(), R.U.indptr(), R.U.shape()};
+
+    auto Lv = L.data();
+    auto Uv = U.data();
 
     // Initialize row permutation vector
     // NOTE we need this initialization because the -1 values are used in
@@ -441,18 +484,18 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
         auto ipiv = R_p[k];
         for (const auto& i : sol.xi) {
             if (p_inv[i] >= 0) {
-                U.v_[unz++] = sol.x[i];  // x(i) is the entry U(p_inv[i], k)
+                Uv[unz++] = sol.x[i];  // x(i) is the entry U(p_inv[i], k)
             }
         }
 
         // --- Divide by pivot -------------------------------------------------
         auto pivot = sol.x[ipiv];  // the chosen pivot
         p_inv[ipiv] = k;             // ipiv is the kth pivot row
-        U.v_[unz++] = pivot;
-        L.v_[lnz++] = 1;                         // L(k, k) = 1
+        Uv[unz++] = pivot;
+        Lv[lnz++] = 1;                         // L(k, k) = 1
         for (const auto& i : sol.xi) {           // L(k+1:n, k) = x / pivot
             if (p_inv[i] < 0) {                  // x(i) is an entry in L[:, k]
-                L.v_[lnz++] = sol.x[i] / pivot;  // scale pivot column
+                Lv[lnz++] = sol.x[i] / pivot;  // scale pivot column
             }
         }
     }
@@ -480,20 +523,40 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
     // TODO implement partial pivoting
     std::ranges::iota(p_inv, 0);  // identity permutation
 
+    auto Lp = L.indptr();
+    auto Li = L.indices();
+    auto Lv = L.data();
+
+    auto UTp = UT.indptr();
+    auto UTi = UT.indices();
+    auto UTv = UT.data();
+
     csint lnz = 0,
           unz = 0;
 
     for (auto k : A.column_range()) {  // Compute L[:, k] and U[k, :]
-        L.p_[k] = lnz;   // L[:, k] starts here
-        UT.p_[k] = unz;  // U[k, :] starts here
+        Lp[k] = lnz;   // L[:, k] starts here
+        UTp[k] = unz;  // U[k, :] starts here
 
         // Possibly reallocate L and U
         if (lnz + N > L.nzmax()) {
             lu_realloc(L, k, true);
+            Lp = L.indptr();  // reset pointers
+            Li = L.indices();
+            Lv = L.data();
+            UTp = UT.indptr();
+            UTi = UT.indices();
+            UTv = UT.data();
         }
 
         if (unz + N > UT.nzmax()) {
             lu_realloc(UT, k, false);
+            Lp = L.indptr();
+            Li = L.indices();
+            Lv = L.data();
+            UTp = UT.indptr();
+            UTi = UT.indices();
+            UTv = UT.data();
         }
 
         // ---------- Compute the row of U
@@ -525,15 +588,15 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
             auto a = A(k, j) - lu_dot;
 
             if (std::abs(a) > 0) {
-                UT.i_[unz] = j;
-                UT.v_[unz++] = a;
+                UTi[unz] = j;
+                UTv[unz++] = a;
             }
         }
 
         // ---------- Compute the column of L
         // Place 1.0 on the diagonal
-        L.i_[lnz] = k;
-        L.v_[lnz++] = 1.0;
+        Li[lnz] = k;
+        Lv[lnz++] = 1.0;
 
         // Compute the rest of the column
         // L[k+1:n, k] = (A[k+1:n, k] - L[k+1:n, :k] @ U[:k, k]) / U[k, k]
@@ -546,22 +609,22 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
             }
 
             auto a = A(i, k) - lu_dot;
-            auto pivot = UT.v_[UT.p_[k]];  // first element in col == UT(k, k);
+            auto pivot = UTv[UTp[k]];  // first element in col == UT(k, k);
 
             if (pivot == 0.0) {
                 throw std::runtime_error("Matrix is singular!");
             }
 
             if (std::abs(a) > 0) {
-                L.i_[lnz] = i;
-                L.v_[lnz++] = a / pivot;
+                Li[lnz] = i;
+                Lv[lnz++] = a / pivot;
             }
         }
     }
 
     // Finalize L and U
-    L.p_[N] = lnz;
-    UT.p_[N] = unz;
+    Lp[N] = lnz;
+    UTp[N] = unz;
 
     L.realloc();  // trim excess storage
     UT.realloc();
@@ -571,8 +634,8 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
     //   * transpose of U on output also sorts
     //   * Numerically zero entries are excluded
     //   * A(i, k) sums duplicates
-    L.has_canonical_format_ = true;
-    UT.has_canonical_format_ = true;
+    L.set_canonical_format(true);
+    UT.set_canonical_format(true);
 
     return {.L = L, .U = UT.T(), .p_inv = p_inv, .q = S.q};
 }
@@ -602,21 +665,41 @@ LUResult ilutp(
     std::vector<csint> p_inv(N, -1);  // row permutation vector
     SparseSolution sol(M);            // workspace for triangular solves
 
+    auto Lp = L.indptr();
+    auto Li = L.indices();
+    auto Lv = L.data();
+
+    auto Up = U.indptr();
+    auto Ui = U.indices();
+    auto Uv = U.data();
+
     csint lnz = 0,
           unz = 0;
 
     for (auto k : A.column_range()) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
-        L.p_[k] = lnz;  // L[:, k] starts here
-        U.p_[k] = unz;  // U[:, k] starts here
+        Lp[k] = lnz;  // L[:, k] starts here
+        Up[k] = unz;  // U[:, k] starts here
 
         // Possibly reallocate L and U
         if (lnz + N > L.nzmax()) {
             lu_realloc(L, k, true);
+            Lp = L.indptr();
+            Li = L.indices();
+            Lv = L.data();
+            Up = U.indptr();
+            Ui = U.indices();
+            Uv = U.data();
         }
 
         if (unz + N > U.nzmax()) {
             lu_realloc(U, k, false);
+            Lp = L.indptr();
+            Li = L.indices();
+            Lv = L.data();
+            Up = U.indptr();
+            Ui = U.indices();
+            Uv = U.data();
         }
 
         // Solve Lx = A[:, k]
@@ -643,8 +726,8 @@ LUResult ilutp(
                 // the L update loop, but after the U update loop.
                 auto x = sol.x[i];
                 if (std::abs(x) > drop_tol) {
-                    U.i_[unz] = p_inv[i];
-                    U.v_[unz++] = x;
+                    Ui[unz] = p_inv[i];
+                    Uv[unz++] = x;
                 }
             }
         }
@@ -662,25 +745,25 @@ LUResult ilutp(
         // TODO modify to allow singular matrices (see Exercise 6.5)
         auto pivot = sol.x[ipiv];  // the chosen pivot
         p_inv[ipiv] = k;             // ipiv is the kth pivot row
-        L.i_[lnz] = ipiv;            // first entry in L[:, k] is L(k, k) = 1
-        L.v_[lnz++] = 1;
-        U.i_[unz] = k;               // last entry in U[:, k] is U(k, k)
-        U.v_[unz++] = pivot;
+        Li[lnz] = ipiv;            // first entry in L[:, k] is L(k, k) = 1
+        Lv[lnz++] = 1;
+        Ui[unz] = k;               // last entry in U[:, k] is U(k, k)
+        Uv[unz++] = pivot;
 
         for (const auto& i : sol.xi) {          // L(k+1:n, k) = x / pivot
             if (p_inv[i] < 0) {                 // x(i) is an entry in L[:, k]
                 auto x = sol.x[i] / pivot;
                 if (std::abs(x) > drop_tol) {  // ensure entry is large enough
-                    L.i_[lnz] = i;              // save unpermuted row in L
-                    L.v_[lnz++] = x;            // scale pivot column
+                    Li[lnz] = i;              // save unpermuted row in L
+                    Lv[lnz++] = x;            // scale pivot column
                 }
             }
         }
     }
 
     // --- Finalize L and U ---------------------------------------------------
-    L.p_[N] = lnz;
-    U.p_[N] = unz;
+    Lp[N] = lnz;
+    Up[N] = unz;
     L.permute_rows_inplace(p_inv);  // permute row indices of L for final p_inv
     L.realloc();                    // trim excess storage
     U.realloc();
@@ -708,13 +791,21 @@ LUResult ilu_nofill(
     std::vector<csint> w(N, -1);      // workspace for values
     SparseSolution sol(M);            // workspace for triangular solves
 
+    auto Lp = L.indptr();
+    auto Li = L.indices();
+    auto Lv = L.data();
+
+    auto Up = U.indptr();
+    auto Ui = U.indices();
+    auto Uv = U.data();
+
     csint lnz = 0,
           unz = 0;
 
     for (auto k : A.column_range()) {  // Compute L[:, k] and U[:, k]
         // --- Triangular solve ------------------------------------------------
-        L.p_[k] = lnz;  // L[:, k] starts here
-        U.p_[k] = unz;  // U[:, k] starts here
+        Lp[k] = lnz;  // L[:, k] starts here
+        Up[k] = unz;  // U[:, k] starts here
 
         // NOTE no need for reallocation!
 
@@ -734,8 +825,8 @@ LUResult ilu_nofill(
         for (const auto& i : sol.xi) {
             if (p_inv[i] >= 0 && w[i] == k) {
                 // x(i) is the entry U(pinv[i], k) in the pattern of A[:, col]
-                U.i_[unz] = p_inv[i];
-                U.v_[unz++] = sol.x[i];
+                Ui[unz] = p_inv[i];
+                Uv[unz++] = sol.x[i];
             }
         }
 
@@ -747,22 +838,22 @@ LUResult ilu_nofill(
         }
 
         p_inv[ipiv] = k;             // ipiv is the kth pivot row
-        L.i_[lnz] = ipiv;            // first entry in L[:, k] is L(k, k) = 1
-        L.v_[lnz++] = 1;
-        U.i_[unz] = k;               // last entry in U[:, k] is U(k, k)
-        U.v_[unz++] = pivot;
+        Li[lnz] = ipiv;            // first entry in L[:, k] is L(k, k) = 1
+        Lv[lnz++] = 1;
+        Ui[unz] = k;               // last entry in U[:, k] is U(k, k)
+        Uv[unz++] = pivot;
 
         for (const auto& i : sol.xi) {           // L(k+1:n, k) = x / pivot
             if (p_inv[i] < 0 && w[i] == k) {     // x(i) is an entry in L[:, k]
-                L.i_[lnz] = i;                   // save unpermuted row in L
-                L.v_[lnz++] = sol.x[i] / pivot;  // scale pivot column
+                Li[lnz] = i;                   // save unpermuted row in L
+                Lv[lnz++] = sol.x[i] / pivot;  // scale pivot column
             }
         }
     }
 
     // --- Finalize L and U ---------------------------------------------------
-    L.p_[N] = lnz;
-    U.p_[N] = unz;
+    Lp[N] = lnz;
+    Up[N] = unz;
     L.realloc();  // trim excess storage
     U.realloc();
 

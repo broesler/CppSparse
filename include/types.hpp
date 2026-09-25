@@ -154,8 +154,6 @@ concept ElementwiseCompatible =
 // Structs and classes
 struct TriPerm;
 struct SparseSolution;
-struct SymbolicLU;
-struct LUResult;
 struct MaxMatch;
 struct SCCResult;
 struct DMPermResult;

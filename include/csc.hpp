@@ -1007,26 +1007,6 @@ public:
     std::vector<double> sum_cols() const;
 
     // -------------------------------------------------------------------------
-    //         LU Decomposition
-    // -------------------------------------------------------------------------
-    friend LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol);
-    friend LUResult lu(
-        const CSCMatrix& A,
-        const SymbolicLU& S,
-        double tol,
-        double col_tol
-    );
-    friend LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S);
-    friend LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S);
-    friend LUResult ilutp(
-        const CSCMatrix& A,
-        const SymbolicLU& S,
-        double drop_tol,
-        double tol
-    );
-    friend LUResult ilu_nofill(const CSCMatrix& A, const SymbolicLU& S);
-
-    // -------------------------------------------------------------------------
     //         Fill-reducing Orderings
     // -------------------------------------------------------------------------
     friend void drop_dense_cols_inplace(CSCMatrix& A, csint dense);

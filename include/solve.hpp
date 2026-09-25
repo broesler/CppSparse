@@ -17,6 +17,9 @@
 
 namespace cs {
 
+struct LUResult;
+
+
 struct SparseSolution {
     std::vector<csint> xi;  // non-zero indices of x
     VectorD x;  // (N,) dense solution vector

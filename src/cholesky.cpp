@@ -679,8 +679,8 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
 
 CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 {
-    const auto Lp = L.indptr();
-    const auto Li = L.indices();
+    auto Lp = std::as_const(L).indptr();
+    auto Li = std::as_const(L).indices();
     auto Lv = L.data();
 
     // Ensure L has been allocated via symbolic_cholesky
@@ -863,8 +863,8 @@ CSCMatrix& chol_update(
         );
     }
 
-    const auto Lp = L.indptr();
-    const auto Li = L.indices();
+    auto Lp = std::as_const(L).indptr();
+    auto Li = std::as_const(L).indices();
     auto Lv = L.data();
 
     double α,
@@ -877,9 +877,9 @@ CSCMatrix& chol_update(
     std::vector<double> w(L.shape()[0]);  // sparse accumulator workspace
 
     // Find the minimum row index in the update vector
-    const auto Cp = C.indptr();
-    const auto Ci = C.indices();
-    const auto Cv = C.data();
+    auto Cp = C.indptr();
+    auto Ci = C.indices();
+    auto Cv = C.data();
     auto p = Cp[0];
     auto f = Ci[p];
     for (; p < Cp[1]; ++p) {

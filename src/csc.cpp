@@ -1275,9 +1275,11 @@ CSCMatrix add_scaled(
 
     const auto [M, N] = A.shape();
 
-    auto values = !A.v_.empty() && !B.v_.empty();
+    auto values = !A.data().empty() && !B.data().empty();
 
     CSCMatrix C{{M, N}, A.nnz() + B.nnz(), values};  // output
+
+    auto Cp = C.indptr();
 
     // Allocate workspaces
     std::vector<csint> w(M);
@@ -1294,7 +1296,7 @@ CSCMatrix add_scaled(
         fs = false;
         nz = B.scatter(j,  beta, w, x, j+1, C, nz, fs);  //  beta * B(:, j)
 
-        C.p_[j+1] = nz;  // column j of C ends here
+        Cp[j+1] = nz;  // column j of C ends here
 
         if (values) {
             C.gather(x, j);  // gather results into the correct column of C

@@ -745,24 +745,6 @@ public:
     CSCMatrix add(const CSCMatrix& B) const;
     CSCMatrix subtract(const CSCMatrix& B) const;
 
-    /** Add two matrices (and optionally scale them) `C = alpha * A + beta * B`.
-     *
-     * See: Davis, Section 2.9, `cs_add`, and Exercise 2.21 `cs_saxpy`.
-     *
-     * @note This function may *not* return a matrix with sorted columns!
-     *
-     * @param A, B  the CSC matrices
-     * @param alpha, beta  scalar multipliers
-     *
-     * @return out a CSC matrix
-     */
-    friend CSCMatrix add_scaled(
-        const CSCMatrix& A,
-        const CSCMatrix& B,
-        double alpha,
-        double beta
-    );
-
     /** Compute `x += beta * A(:, j)`.
      *
      * This function also updates `w`, sets the sparsity pattern in `C._i`,
@@ -1125,6 +1107,7 @@ CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B);
 CSCMatrix operator*(const CSCMatrix& A, double c);
 CSCMatrix operator*(double c, const CSCMatrix& A);
 
+
 /** Concatenate two matrices horizontally.
 *
 * See: Davis, Exercise 2.22 `cs_hcat`.
@@ -1151,6 +1134,25 @@ CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B);
 * @return C  the concatenated matrix.
 */
 CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B);
+
+
+/** Add two matrices (and optionally scale them) `C = alpha * A + beta * B`.
+*
+* See: Davis, Section 2.9, `cs_add`, and Exercise 2.21 `cs_saxpy`.
+*
+* @note This function may *not* return a matrix with sorted columns!
+*
+* @param A, B  the CSC matrices
+* @param alpha, beta  scalar multipliers
+*
+* @return out a CSC matrix
+*/
+CSCMatrix add_scaled(
+    const CSCMatrix& A,
+    const CSCMatrix& B,
+    double alpha,
+    double beta
+);
 
 
 /** Matrix-vector multiply `y = Ax + y`.

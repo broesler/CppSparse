@@ -10,7 +10,8 @@
 
 #include "qr.hpp"
 
-#include "cholesky.hpp"  // etree, post
+#include "cholesky.hpp"      // etree, post
+#include "fillreducing.hpp"  // amd
 #include "utils.hpp"
 
 #include <algorithm>  // max

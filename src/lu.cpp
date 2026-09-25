@@ -10,9 +10,10 @@
 #include "lu.hpp"
 
 #include "cholesky.hpp"
+#include "fillreducing.hpp"  // amd
 #include "qr.hpp"
 #include "solve.hpp"
-#include "utils.hpp"  // inv_permute
+#include "utils.hpp"         // inv_permute
 
 #include <cmath>    // abs
 #include <numeric>  // iota

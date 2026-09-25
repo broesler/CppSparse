@@ -154,39 +154,12 @@ concept ElementwiseCompatible =
 // Structs and classes
 struct TriPerm;
 struct SparseSolution;
-struct MaxMatch;
 struct SCCResult;
-struct DMPermResult;
 
 class SparseMatrix;
 class COOMatrix;
 class CSCMatrix;
 class TestCSCMatrix;
-
-// Internal functions not exposed in the public API
-namespace detail {
-
-std::vector<csint> reach_r(const CSCMatrix& A, const CSCMatrix& B);
-
-void dfs_r(
-    const CSCMatrix& A,
-    csint j,
-    std::span<char> marked,
-    std::vector<csint>& xi
-);
-
-bool augment_r(
-    csint k,
-    const CSCMatrix& A,
-    std::span<csint> jmatch,
-    std::span<csint> cheap,
-    std::span<csint> w,
-    csint j
-);
-
-MaxMatch maxtrans_r(const CSCMatrix& A, csint seed);
-
-}  // namespace detail
 
 }  // namespace cs
 

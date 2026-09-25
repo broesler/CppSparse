@@ -10,6 +10,7 @@
 #include "cholesky.hpp"
 
 #include "csc.hpp"
+#include "fillreducing.hpp"  // amd
 #include "utils.hpp"
 
 #include <algorithm>  // reverse_copy

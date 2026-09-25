@@ -149,6 +149,12 @@ public:
     virtual csint nzmax() const override;  // maximum number of non-zeros
     virtual Shape shape() const override;  // the dimensions of the matrix
 
+    void set_nrows(csint M) { M_ = M; }
+    void set_ncols(csint N) { N_ = N; }
+
+    csint nrows() const noexcept { return M_; }
+    csint ncols() const noexcept { return N_; }
+
     std::span<const csint> indices() const noexcept { return i_; }
     std::span<const csint> indptr() const noexcept { return p_; }
     virtual std::span<const double> data() const noexcept override { return v_; }
@@ -1005,34 +1011,6 @@ public:
      * @return out  a vector of length `N` containing the sum of each column.
      */
     std::vector<double> sum_cols() const;
-
-    // -------------------------------------------------------------------------
-    //         Fill-reducing Orderings
-    // -------------------------------------------------------------------------
-    friend void drop_dense_cols_inplace(CSCMatrix& A, csint dense);
-    friend std::vector<csint> amd(const CSCMatrix& A, AMDOrder order);
-
-    friend bool detail::augment_r(
-        csint k,
-        const CSCMatrix& A,
-        std::span<csint> jmatch,
-        std::span<csint> cheap,
-        std::span<csint> w,
-        csint j
-    );
-
-    friend void augment(
-        csint k,
-        const CSCMatrix& A,
-        std::span<csint> jmatch,
-        std::span<csint> cheap,
-        std::span<csint> w,
-        std::span<csint> js,
-        std::span<csint> is,
-        std::span<csint> ps
-    );
-
-    friend DMPermResult dmperm(const CSCMatrix& A, csint seed);
 
     // Unary minus operator
     friend CSCMatrix operator-(const CSCMatrix& A);

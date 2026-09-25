@@ -149,9 +149,13 @@ public:
     virtual csint nzmax() const override;  // maximum number of non-zeros
     virtual Shape shape() const override;  // the dimensions of the matrix
 
-    auto indices() const { return std::span<const csint>{i_}; }
-    auto indptr() const { return std::span<const csint>{p_}; }
-    virtual std::span<const double> data() const override { return {v_}; }
+    std::span<const csint> indices() const noexcept { return i_; }
+    std::span<const csint> indptr() const noexcept { return p_; }
+    virtual std::span<const double> data() const noexcept override { return v_; }
+
+    std::span<csint> indices() noexcept { return i_; }
+    std::span<csint> indptr() noexcept { return p_; }
+    std::span<double> data() noexcept { return v_; }
 
     /// Return the number of non-zeros in column j.
     csint col_length(csint j) const
@@ -283,6 +287,9 @@ public:
 
     bool has_sorted_indices() const;
     bool has_canonical_format() const;
+
+    void set_sorted_indices(bool sorted=true) { has_sorted_indices_ = sorted; }
+    void set_canonical_format(bool canonical=true) { has_canonical_format_ = canonical; }
 
     /** Returns true if `A(i, j) == A(i, j)` for all `i, j`.
      *

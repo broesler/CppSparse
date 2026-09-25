@@ -18,4 +18,3 @@ printmatrix_demo
 .clangd
 .cache/
 compile_commands.json
-.ctags.d

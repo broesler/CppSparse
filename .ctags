@@ -1,0 +1,4 @@
+--recurse
+--exclude=build
+--exclude=.venv
+--languages=C,C++,Matlab,Python

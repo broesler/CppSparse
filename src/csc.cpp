@@ -395,6 +395,30 @@ CSCMatrix& CSCMatrix::assign(
 }
 
 
+void CSCMatrix::gather(cVectorViewD x, csint k)
+{
+    if (std::ssize(x) != nrows()) {
+        throw std::invalid_argument(
+            std::format(
+                "Input vector size must match number of matrix rows."
+                "Got {} and {}.",
+                x.size(), nrows()
+            )
+        );
+    }
+    
+    if (k < 0 || k >= ncols()) {
+        throw std::out_of_range(
+            std::format("Column index k = {} is out of range [0, {}).", k, ncols())
+        );
+    }
+
+    for (auto [i, v] : column(k)) {
+        v = x[i];  // gather values from x into column k of C
+    }
+}
+
+
 void CSCMatrix::insert_(csint i, csint j, double v, csint p)
 {
     i_.insert(i_.begin() + p, i);
@@ -1113,7 +1137,7 @@ CSCMatrix CSCMatrix::dot(const CSCMatrix& B) const
         C.p_[j+1] = nz;  // column j of C end here
 
         if (values) {
-            C.gather_(x, j);  // gather values into the correct locations in C
+            C.gather(x, j);  // gather values into the correct locations in C
         }
     }
 
@@ -1172,7 +1196,7 @@ CSCMatrix CSCMatrix::dot_2x(const CSCMatrix& B) const
             fs = false;
         }
         C.p_[j+1] = nz;   // column j of C ends here
-        C.gather_(x, j);  // gather values into the correct locations in C
+        C.gather(x, j);  // gather values into the correct locations in C
     }
 
     // Deallocate unused memory
@@ -1273,7 +1297,7 @@ CSCMatrix add_scaled(
         C.p_[j+1] = nz;  // column j of C ends here
 
         if (values) {
-            C.gather_(x, j);  // gather results into the correct column of C
+            C.gather(x, j);  // gather results into the correct column of C
         }
     }
 
@@ -1405,30 +1429,6 @@ void CSCMatrix::scatter(csint k, VectorViewD x) const
 
     for (auto [i, v] : column(k)) {
         x[i] += v;  // accumulate duplicate entries
-    }
-}
-
-
-void CSCMatrix::gather_(cVectorViewD x, csint k)
-{
-    if (std::ssize(x) != M_) {
-        throw std::invalid_argument(
-            std::format(
-                "Input vector size must match number of matrix rows."
-                "Got {} and {}.",
-                x.size(), M_
-            )
-        );
-    }
-    
-    if (k < 0 || k >= N_) {
-        throw std::out_of_range(
-            std::format("Column index k = {} is out of range [0, {}).", k, N_)
-        );
-    }
-
-    for (auto [i, v] : column(k)) {
-        v = x[i];  // gather values from x into column k of C
     }
 }
 

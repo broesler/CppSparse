@@ -1358,10 +1358,9 @@ CSCMatrix CSCMatrix::subtract(const CSCMatrix& B) const
 CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B) { return A.add(B); }
 CSCMatrix operator-(const CSCMatrix& A, const CSCMatrix& B) { return A.subtract(B); }
 
-CSCMatrix operator-(const CSCMatrix& A) {
-    auto C = A;
-    std::ranges::transform(C.v_, C.v_.begin(), std::negate<>{});
-    return C;
+CSCMatrix operator-(CSCMatrix A) {
+    std::ranges::transform(A.data(), A.data().begin(), std::negate<>{});
+    return A;
 }
 
 

@@ -190,6 +190,7 @@ public:
         return std::views::zip(indptr_range_(j), row_indices(j));
     }
 
+    // TODO move these lengthier definitions to csc.cpp.
     // NOTE need to use the pair/tuple method instead of zip because
     // std::views::repeat(0.0) is a different type than a span, so zip won't
     // work if v_ is empty (i.e. symbolic matrix).
@@ -975,9 +976,6 @@ public:
      */
     std::vector<double> sum_cols() const;
 
-    // Unary minus operator
-    friend CSCMatrix operator-(const CSCMatrix& A);
-
 protected:
     /// Return the format description of the matrix.
     virtual std::string_view get_format_desc_() const override
@@ -1101,7 +1099,7 @@ private:
  *----------------------------------------------------------------------------*/
 CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B);
 CSCMatrix operator-(const CSCMatrix& A, const CSCMatrix& B);
-CSCMatrix operator-(const CSCMatrix& A);
+CSCMatrix operator-(CSCMatrix A);
 
 CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B);
 CSCMatrix operator*(const CSCMatrix& A, double c);

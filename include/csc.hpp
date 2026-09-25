@@ -905,32 +905,6 @@ public:
      */
     bool is_valid(const bool sorted=true, const bool values=true) const;
 
-    /** Concatenate two matrices horizontally.
-     *
-     * See: Davis, Exercise 2.22 `cs_hcat`.
-     *
-     * @note This function may *not* return a matrix with sorted columns!
-     *
-     * @param A, B  the CSC matrices to concatenate. They must have the same number
-     *        of rows.
-     *
-     * @return C  the concatenated matrix.
-     */
-    friend CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B);
-
-    /** Concatenate two matrices vertically.
-     *
-     * See: Davis, Exercise 2.22 `cs_hcat`.
-     *
-     * @note This function may *not* return a matrix with sorted columns!
-     *
-     * @param A, B  the CSC matrices to concatenate. They must have the same number
-     *        of columns.
-     *
-     * @return C  the concatenated matrix.
-     */
-    friend CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B);
-
     /** Slice a matrix by row and column with contiguous indices.
      *
      * See: Davis, Exercise 2.23.
@@ -1150,6 +1124,33 @@ CSCMatrix operator-(const CSCMatrix& A);
 CSCMatrix operator*(const CSCMatrix& A, const CSCMatrix& B);
 CSCMatrix operator*(const CSCMatrix& A, double c);
 CSCMatrix operator*(double c, const CSCMatrix& A);
+
+/** Concatenate two matrices horizontally.
+*
+* See: Davis, Exercise 2.22 `cs_hcat`.
+*
+* @note This function may *not* return a matrix with sorted columns!
+*
+* @param A, B  the CSC matrices to concatenate. They must have the same number
+*        of rows.
+*
+* @return C  the concatenated matrix.
+*/
+CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B);
+
+
+/** Concatenate two matrices vertically.
+*
+* See: Davis, Exercise 2.22 `cs_hcat`.
+*
+* @note This function may *not* return a matrix with sorted columns!
+*
+* @param A, B  the CSC matrices to concatenate. They must have the same number
+*        of columns.
+*
+* @return C  the concatenated matrix.
+*/
+CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B);
 
 
 /** Matrix-vector multiply `y = Ax + y`.

@@ -1652,29 +1652,33 @@ bool CSCMatrix::is_valid(const bool sorted, const bool values) const
 // Exercise 2.22
 CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
 {
-    if (A.M_ != B.M_) {
+    if (A.nrows() != B.nrows()) {
         throw std::invalid_argument("Matrix row dimensions do not agree.");
     }
 
     // Copy the first matrix
     auto C = A;
-    C.N_ += B.N_;
+    C.set_ncols(C.ncols() + B.ncols());
     C.realloc(A.nnz() + B.nnz());
+
+    auto Cp = C.indptr();
+    auto Bp = B.indptr();
 
     // Copy the second matrix
     for (auto j : B.column_range()) {
-        C.p_[A.N_ + j] = B.p_[j] + A.nnz();
+        Cp[A.ncols() + j] = Bp[j] + A.nnz();
     }
 
-    std::ranges::copy(B.i_, C.i_.begin() + A.nnz());
-    std::ranges::copy(B.v_, C.v_.begin() + A.nnz());
+    std::ranges::copy(B.indices(), C.indices().begin() + A.nnz());
+    std::ranges::copy(B.data(), C.data().begin() + A.nnz());
 
-    C.p_[C.N_] = A.nnz() + B.nnz();
+    Cp[C.ncols()] = A.nnz() + B.nnz();
 
-    if (!A.has_canonical_format_ || !B.has_canonical_format_) {
+    if (!A.has_canonical_format() || !B.has_canonical_format()) {
         C = C.to_canonical();
     }
-    C.has_canonical_format_ = true;
+
+    C.set_canonical_format(true);
 
     return C;
 }
@@ -1683,34 +1687,40 @@ CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
 // Exercise 2.22
 CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
 {
-    if (A.N_ != B.N_) {
+    if (A.ncols() != B.ncols()) {
         throw std::invalid_argument("Matrix column dimensions do not agree.");
     }
 
-    CSCMatrix C{{A.M_ + B.M_, A.N_}, A.nnz() + B.nnz()};
+    CSCMatrix C{{A.nrows() + B.nrows(), A.ncols()}, A.nnz() + B.nnz()};
+
+    auto Cp = C.indptr();
+    auto Ci = C.indices();
+    auto Cv = C.data();
 
     csint nz = 0;
 
+    auto App = A.indptr();
+
     for (auto j : C.column_range()) {
-        C.p_[j] = nz;  // column j of C starts here
+        Cp[j] = nz;  // column j of C starts here
 
         // Copy column j from the first matrix
         for (auto [Ai, Av] : A.column(j)) {
-            C.i_[nz] = Ai;
-            C.v_[nz] = Av;
+            Ci[nz] = Ai;
+            Cv[nz] = Av;
             ++nz;
         }
 
         // Copy column j from the second matrix
-        for (auto [Bp, Bi, Bv] : B.enum_column(j)) {
-            auto& Ap = A.p_[j+1];  // column j of A ends here
-            C.i_[Ap + Bp] = A.M_ + Bi;
-            C.v_[Ap + Bp] = Bv;
+        for (const auto [Bp, Bi, Bv] : B.enum_column(j)) {
+            const auto Ap = App[j+1];  // column j of A ends here
+            Ci[Ap + Bp] = A.nrows() + Bi;
+            Cv[Ap + Bp] = Bv;
             ++nz;
         }
     }
 
-    C.p_[C.N_] = nz;
+    Cp[C.ncols()] = nz;
 
     return C.to_canonical();
 }

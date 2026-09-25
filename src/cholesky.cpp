@@ -572,26 +572,29 @@ CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S)
     const auto [M, N] = A.shape();
     CSCMatrix L{{M, N}, S.lnz};        // allocate result
 
+    auto Lp = L.indptr();
+    auto Li = L.indices();
+
     std::vector<csint> c(S.cp);      // column pointers for L
 
     const auto C = A.symperm(S.p_inv);
 
-    L.p_ = S.cp;  // column pointers for L
+    std::ranges::copy(S.cp, Lp.begin());  // column pointers for L
 
     // Compute L(:, k) for L*L' = C
     for (auto k : L.column_range()) {
         // pattern of L(k, :) (order doesn't matter)
         for (auto j : ereach_queue(C, k, S.parent)) {
-            L.i_[c[j]++] = k;  // store L(k, j) in column j
+            Li[c[j]++] = k;  // store L(k, j) in column j
         }
 
         // Store the diagonal element
-        L.i_[c[k]++] = k;
+        Li[c[k]++] = k;
     }
 
     // Guaranteed by construction
-    L.has_sorted_indices_ = true;
-    L.has_canonical_format_ = true;
+    L.set_sorted_indices(true);
+    L.set_canonical_format(true);
 
     return {.L = L, .p_inv = S.p_inv};
 }
@@ -602,13 +605,17 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
     const auto [M, N] = A.shape();
     CSCMatrix L{{M, N}, S.lnz};  // allocate result
 
+    auto Lp = L.indptr();
+    auto Li = L.indices();
+    auto Lv = L.data();
+
     // Workspaces
     std::vector<csint> c(S.cp);  // column pointers for L
     std::vector<double> x(N);    // sparse accumulator
 
     const auto C = A.symperm(S.p_inv);
 
-    L.p_ = S.cp;  // column pointers for L
+    std::ranges::copy(S.cp, Lp.begin());  // column pointers for L
 
     // Compute L(k, :) for L*L' = C in up-looking order
     for (auto k : L.column_range()) {
@@ -631,11 +638,11 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
         //   => L[k, :k] := x.T
         // ereach gives the pattern of L(k, :) in topological order
         for (auto i : ereach(C, k, S.parent)) {
-            auto lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
+            auto lki = x[i] / Lv[Lp[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 
-            for (csint p = L.p_[i] + 1; p < c[i]; ++p) {
-                x[L.i_[p]] -= L.v_[p] * lki;    // x -= L(i, :) * L(k, i)
+            for (csint p = Lp[i] + 1; p < c[i]; ++p) {
+                x[Li[p]] -= Lv[p] * lki;    // x -= L(i, :) * L(k, i)
             }
 
             // subtract the sparse dot product from the diagonal
@@ -645,8 +652,8 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
             // i < k since they are reachable, so the diagonal is always the
             // first element in its column, and all other elements are in order.
             auto p = c[i]++;
-            L.i_[p] = k;                        // store L(k, i) in column i
-            L.v_[p] = lki;
+            Li[p] = k;                        // store L(k, i) in column i
+            Lv[p] = lki;
         }
 
         //--- Compute L(k, k) --------------------------------------------------
@@ -658,13 +665,13 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
 
         // store L(k, k) = sqrt(d) in column k
         auto p = c[k]++;
-        L.i_[p] = k;
-        L.v_[p] = std::sqrt(d);
+        Li[p] = k;
+        Lv[p] = std::sqrt(d);
     }
 
     // Guaranteed by construction
-    L.has_sorted_indices_ = true;
-    L.has_canonical_format_ = true;
+    L.set_sorted_indices(true);
+    L.set_canonical_format(true);
 
     return {.L = L, .p_inv = S.p_inv};
 }
@@ -672,14 +679,18 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
 
 CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 {
+    const auto Lp = L.indptr();
+    const auto Li = L.indices();
+    auto Lv = L.data();
+
     // Ensure L has been allocated via symbolic_cholesky
-    if (L.indptr().empty() || L.indices().empty() || L.data().empty()) {
+    if (Lp.empty() || Li.empty() || Lv.empty()) {
         throw std::invalid_argument(
             "L must be allocated via symbolic_cholesky before calling leftchol."
         );
     }
 
-    if (!L.has_sorted_indices_) {
+    if (!L.has_sorted_indices()) {
         throw std::invalid_argument(
             "L must have sorted row indices for leftchol."
         );
@@ -722,9 +733,9 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
             // Compute x[k:] -= L[k:, j] * L[k, j]
             //
             // Row indices and values in L[k:, j] are stored in:
-            //  L.i_ and L.v_[c[j] ... L.p_[j+1]-1]
+            //  Li and Lv[c[j] ... Lp[j+1]-1]
             //
-            auto lkj = L.v_[c[j]++];  // cache L(k, j)
+            auto lkj = Lv[c[j]++];  // cache L(k, j)
             for (auto [i, v] : L.column(j)) {
                 x[i] -= v * lkj;
             }
@@ -732,20 +743,20 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 
         //--- Compute L[k:, k] -------------------------------------------------
         auto Lkk = std::sqrt(x[k]);
-        L.v_[c[k]++] = Lkk;
+        Lv[c[k]++] = Lkk;
         x[k] = 0.0;  // clear x for k + 1st iteration
 
         // Compute the rest of the column L[k+1:, k] = x[k+1:] / L[k, k]
-        for (csint p = c[k]; p < L.p_[k+1]; ++p) {
-            auto i = L.i_[p];
-            L.v_[p] = x[i] / Lkk;
+        for (csint p = c[k]; p < Lp[k+1]; ++p) {
+            auto i = Li[p];
+            Lv[p] = x[i] / Lkk;
             x[i] = 0.0;  // clear x for k + 1st iteration
         }
     }
 
     // Guaranteed by construction
-    L.has_sorted_indices_ = true;
-    L.has_canonical_format_ = true;  // L retains numerically 0 entries
+    L.set_sorted_indices(true);
+    L.set_canonical_format(true);  // L retains numerically 0 entries
 
     return L;
 }
@@ -753,14 +764,18 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 
 CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 {
+    auto Lp = L.indptr();
+    auto Li = L.indices();
+    auto Lv = L.data();
+
     // Ensure L has been allocated via symbolic_cholesky
-    if (L.p_.empty() || L.i_.empty() || L.v_.empty()) {
+    if (Lp.empty() || Li.empty() || Lv.empty()) {
         throw std::invalid_argument(
             "L must be allocated via symbolic_cholesky before calling rechol."
         );
     }
 
-    if (!L.has_sorted_indices_) {
+    if (!L.has_sorted_indices()) {
         throw std::invalid_argument("L must have sorted row indices for rechol.");
     }
 
@@ -772,7 +787,7 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 
     const auto C = A.symperm(S.p_inv);
 
-    L.p_ = S.cp;  // column pointers for L
+    std::ranges::copy(S.cp, Lp.begin());  // column pointers for L
 
     // Compute L(:, k) for L*L' = C
     for (auto k : L.column_range()) {
@@ -794,11 +809,11 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
         //   => L[k, :k] := x.T == l_{12}.T
         // ereach gives the pattern of L(k, :) in topological order
         for (auto i : ereach(C, k, S.parent)) {
-            auto lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
+            auto lki = x[i] / Lv[Lp[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 
-            for (csint p = L.p_[i] + 1; p < c[i]; ++p) {
-                x[L.i_[p]] -= L.v_[p] * lki;    // x -= L(i, :) * L(k, i)
+            for (csint p = Lp[i] + 1; p < c[i]; ++p) {
+                x[Li[p]] -= Lv[p] * lki;    // x -= L(i, :) * L(k, i)
             }
 
             // subtract the sparse dot product from the diagonal
@@ -806,7 +821,7 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 
             // These pointers are incremented one at a time, guaranteeing that
             // the columns of L are sorted.
-            L.v_[c[i]++] = lki;                 // store L(k, i) in column i
+            Lv[c[i]++] = lki;                 // store L(k, i) in column i
         }
 
         //--- Compute L(k, k) --------------------------------------------------
@@ -814,12 +829,12 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
             throw std::runtime_error("Matrix not positive definite!");
         }
 
-        L.v_[c[k]++] = std::sqrt(d);  // store L(k, k) = sqrt(d) in column k
+        Lv[c[k]++] = std::sqrt(d);  // store L(k, k) = sqrt(d) in column k
     }
 
     // Guaranteed by construction
-    L.has_sorted_indices_ = true;
-    L.has_canonical_format_ = true;  // L retains numerically 0 entries
+    L.set_sorted_indices(true);
+    L.set_canonical_format(true);  // L retains numerically 0 entries
 
     return L;
 }
@@ -848,6 +863,10 @@ CSCMatrix& chol_update(
         );
     }
 
+    const auto Lp = L.indptr();
+    const auto Li = L.indices();
+    auto Lv = L.data();
+
     double α,
            β = 1.0,
            β2 = 1.0,
@@ -858,17 +877,20 @@ CSCMatrix& chol_update(
     std::vector<double> w(L.shape()[0]);  // sparse accumulator workspace
 
     // Find the minimum row index in the update vector
-    auto p = C.p_[0];
-    auto f = C.i_[p];
-    for (; p < C.p_[1]; ++p) {
-        f = std::min(f, C.i_[p]);
-        w[C.i_[p]] = C.v_[p];   // also scatter C into w
+    const auto Cp = C.indptr();
+    const auto Ci = C.indices();
+    const auto Cv = C.data();
+    auto p = Cp[0];
+    auto f = Ci[p];
+    for (; p < Cp[1]; ++p) {
+        f = std::min(f, Ci[p]);
+        w[Ci[p]] = Cv[p];   // also scatter C into w
     }
 
     // Walk path f up to root
     for (csint j = f; j != -1; j = parent[j]) {
-        p = L.p_[j];
-        α = w[j] / L.v_[p];  // α = w(j) / L(j, j)
+        p = Lp[j];
+        α = w[j] / Lv[p];  // α = w(j) / L(j, j)
         β2 = β*β + σ * α*α;
         if (β2 <= 0) {
             throw std::runtime_error("Matrix not positive definite!");
@@ -876,13 +898,13 @@ CSCMatrix& chol_update(
         β2 = std::sqrt(β2);
         δ = update ? (β / β2) : (β2 / β);
         γ = σ * α / (β2 * β);
-        L.v_[p] = δ * L.v_[p] + (update ? (γ * w[j]) : 0.0);
+        Lv[p] = δ * Lv[p] + (update ? (γ * w[j]) : 0.0);
         β = β2;
-        for (p++; p < L.p_[j+1]; ++p) {
-            auto w1 = w[L.i_[p]];
-            auto w2 = w1 - α * L.v_[p];
-            w[L.i_[p]] = w2;
-            L.v_[p] = δ * L.v_[p] + γ * (update ? w1 : w2);
+        for (p++; p < Lp[j+1]; ++p) {
+            auto w1 = w[Li[p]];
+            auto w2 = w1 - α * Lv[p];
+            w[Li[p]] = w2;
+            Lv[p] = δ * Lv[p] + γ * (update ? w1 : w2);
         }
     }
 
@@ -945,12 +967,18 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
 
     CSCMatrix L{{N, N}, C_tril.nnz()};  // allocate result
 
-    // Workspaces
-    std::vector<csint> c(C_tril.p_);  // column pointers for L
-    std::vector<csint> w(N, -1);      // row indices for column of C
-    std::vector<double> x(N);         // values for column of C
+    auto Lp = L.indptr();
+    auto Li = L.indices();
+    auto Lv = L.data();
 
-    L.p_ = C_tril.p_;  // column pointers for L (same pattern as A)
+    auto Cp = C_tril.indptr();  // column pointers for C
+
+    // Workspaces
+    std::vector<csint> c(Cp.begin(), Cp.end());  // column pointers for L
+    std::vector<csint> w(N, -1);                 // row indices for column of C
+    std::vector<double> x(N);                    // values for column of C
+
+    std::ranges::copy(Cp, Lp.begin());  // column pointers for L (same pattern as A)
 
     // Compute L(k, :) for L*L' = C in up-looking order
     for (auto k : L.column_range()) {
@@ -979,11 +1007,11 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
                 continue;
             }
 
-            auto lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
+            auto lki = x[i] / Lv[Lp[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 
-            for (csint p = L.p_[i] + 1; p < c[i]; ++p) {
-                x[L.i_[p]] -= L.v_[p] * lki;    // x -= L(i, :) * L(k, i)
+            for (csint p = Lp[i] + 1; p < c[i]; ++p) {
+                x[Li[p]] -= Lv[p] * lki;    // x -= L(i, :) * L(k, i)
             }
 
             // subtract the sparse dot product from the diagonal
@@ -993,8 +1021,8 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
             // i < k since they are reachable, so the diagonal is always the
             // first element in its column, and all other elements are in order.
             auto p = c[i]++;
-            L.i_[p] = k;                        // store L(k, i) in column i
-            L.v_[p] = lki;
+            Li[p] = k;                        // store L(k, i) in column i
+            Lv[p] = lki;
         }
 
         //--- Compute L(k, k) --------------------------------------------------
@@ -1003,13 +1031,13 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
         }
 
         auto p = c[k]++;
-        L.i_[p] = k;  // store L(k, k) = sqrt(d) in column k
-        L.v_[p] = std::sqrt(d);
+        Li[p] = k;  // store L(k, k) = sqrt(d) in column k
+        Lv[p] = std::sqrt(d);
     }
 
     // Guaranteed by construction
-    L.has_sorted_indices_ = true;
-    L.has_canonical_format_ = true;
+    L.set_sorted_indices(true);
+    L.set_canonical_format(true);
 
     return {.L = L, .p_inv = S.p_inv};
 }
@@ -1030,13 +1058,17 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
 
     CSCMatrix L{{M, N}, S.lnz};  // allocate result
 
+    auto Lp = L.indptr();
+    auto Li = L.indices();
+    auto Lv = L.data();
+
     // Workspaces
     std::vector<csint> c(S.cp);  // column pointers for L
     std::vector<double> x(N);    // sparse accumulator
 
     const auto C = A.symperm(S.p_inv);
 
-    L.p_ = S.cp;  // column pointers for L
+    std::ranges::copy(S.cp, Lp.begin());  // column pointers for L
 
     // Compute L(k, :) for L*L' = C in up-looking order
     for (auto k : L.column_range()) {
@@ -1084,11 +1116,11 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
         //   => L[k, :k] := x.T
         // ereach gives the pattern of L(k, :) in topological order
         for (auto i : ereach(C, k, S.parent)) {
-            auto lki = x[i] / L.v_[L.p_[i]];  // L(k, i) = x(i) / L(i, i)
+            auto lki = x[i] / Lv[Lp[i]];  // L(k, i) = x(i) / L(i, i)
             x[i] = 0.0;                         // clear x for k + 1st iteration
 
-            for (csint p = L.p_[i] + 1; p < c[i]; ++p) {
-                x[L.i_[p]] -= L.v_[p] * lki;    // x -= L(i, :) * L(k, i)
+            for (csint p = Lp[i] + 1; p < c[i]; ++p) {
+                x[Li[p]] -= Lv[p] * lki;    // x -= L(i, :) * L(k, i)
             }
 
             // We build L one *row* at a time, in topological order. All
@@ -1100,8 +1132,8 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
 
                 // store L(k, i) in column i
                 auto p = c[i]++;
-                L.i_[p] = k;
-                L.v_[p] = lki;
+                Li[p] = k;
+                Lv[p] = lki;
             }
         }
 
@@ -1112,8 +1144,8 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
 
         // store L(k, k) = sqrt(d) in column k
         auto p = c[k]++;
-        L.i_[p] = k;
-        L.v_[p] = std::sqrt(d);
+        Li[p] = k;
+        Lv[p] = std::sqrt(d);
     }
 
     if (drop_tol > 0) {
@@ -1121,8 +1153,8 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
     }
 
     // Guaranteed by construction
-    L.has_sorted_indices_ = true;
-    L.has_canonical_format_ = true;
+    L.set_sorted_indices(true);
+    L.set_canonical_format(true);
 
     return {.L = L, .p_inv = S.p_inv};
 }

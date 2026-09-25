@@ -152,11 +152,8 @@ concept ElementwiseCompatible =
 
 
 // Structs and classes
-struct CholCounts;
-struct CholResult;
 struct TriPerm;
 struct SparseSolution;
-struct SymbolicChol;
 struct SymbolicQR;
 struct SymbolicLU;
 struct QRResult;

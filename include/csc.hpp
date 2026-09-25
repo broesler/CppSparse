@@ -1004,29 +1004,6 @@ public:
     std::vector<double> sum_cols() const;
 
     //--------------------------------------------------------------------------
-    //        Cholesky Decomposition
-    //--------------------------------------------------------------------------
-    friend CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S);
-
-    friend CholResult chol(const CSCMatrix& A, const SymbolicChol& S);
-    friend CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
-    friend CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
-
-    friend CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S);
-    friend CholResult icholt(
-        const CSCMatrix& A,
-        const SymbolicChol& S,
-        double drop_tol
-    );
-
-    friend CSCMatrix& chol_update(
-        CSCMatrix& L,
-        bool update,
-        const CSCMatrix& w,
-        std::span<const csint> parent
-    );
-
-    //--------------------------------------------------------------------------
     //        QR Decomposition
     //--------------------------------------------------------------------------
     friend QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S);

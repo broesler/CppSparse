@@ -15,6 +15,8 @@
 
 namespace cs {
 
+class CSCMatrix;
+
 
 /// Maximum matching permutation struct.
 struct MaxMatch {

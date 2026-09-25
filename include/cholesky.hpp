@@ -16,6 +16,9 @@
 
 namespace cs {
 
+struct SparseSolution;
+
+
 // ---------- Enums
 enum class LeafStatus {
     NotLeaf,

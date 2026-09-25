@@ -9,9 +9,11 @@
 
 #pragma once
 
-#include "types.hpp"
 
 namespace cs {
+
+class COOMatrix;
+class CSCMatrix;
 
 
 /** Define the 4x4 matrix from Davis Equation (2.1) [p 7--8].

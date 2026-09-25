@@ -111,7 +111,7 @@ constexpr std::string_view string_from_amdorder(AMDOrder order) noexcept
 
 
 // -----------------------------------------------------------------------------
-//         Forward declarations
+//         Concepts
 // -----------------------------------------------------------------------------
 template <typename T>
 concept Arithmetic = std::integral<T> || std::floating_point<T>;
@@ -149,17 +149,6 @@ concept ElementwiseCompatible =
         std::ranges::range_value_t<L>,
         std::ranges::range_value_t<R>
     >;
-
-
-// Structs and classes
-struct TriPerm;
-struct SparseSolution;
-struct SCCResult;
-
-class SparseMatrix;
-class COOMatrix;
-class CSCMatrix;
-class TestCSCMatrix;
 
 }  // namespace cs
 

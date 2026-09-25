@@ -9,6 +9,7 @@
 
 #include "example_matrices.hpp"
 
+#include "types.hpp"
 #include "csc.hpp"
 #include "coo.hpp"
 

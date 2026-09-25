@@ -19,6 +19,9 @@
 
 namespace cs {
 
+class CSCMatrix;
+
+
 class COOMatrix : public SparseMatrix
 {
 public:

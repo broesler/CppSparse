@@ -37,7 +37,7 @@ dev = [
 [tool.scikit-build]
 cmake.source-dir = ".."
 build-dir = "build/{wheel_tag}"
-
+build.targets = ["csparse"]
 ninja.make-fallback = true
 
 [tool.ruff]

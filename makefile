@@ -10,12 +10,7 @@
 BUILD_TYPE ?= Release
 BUILD_DIR := build/$(BUILD_TYPE)
 
-BREW_LLVM := $(shell brew --prefix llvm 2>/dev/null)
-ifneq ($(BREW_LLVM),)
-	CXX := $(BREW_LLVM)/bin/clang++
-else
-	CXX ?= clang++
-endif
+CXX := clang++
 
 $(info >>> Using CXX = $(CXX))
 
@@ -83,6 +78,7 @@ python:
 # clean up
 clean:
 	rm -rf build/
+	rm -rf python/build/
 	find . -type d -name '__pycache__' -exec rm -rf {} \+
 	find . -type d -name '*.egg-info' -exec rm -rf {} \+
 	find . -type f -name "*.so" -delete

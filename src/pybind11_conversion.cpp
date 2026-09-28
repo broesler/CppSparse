@@ -24,7 +24,7 @@ py::object scipy_from_coo(const cs::COOMatrix& A)
 {
     py::module_ sparse = py::module_::import("scipy.sparse");
 
-    auto data = py::cast(A.data());
+    auto data = py::cast(A.values());
     auto row = py::cast(A.row());
     auto col = py::cast(A.col());
 
@@ -40,7 +40,7 @@ py::object scipy_from_csc(const cs::CSCMatrix& A)
 {
     py::module_ sparse = py::module_::import("scipy.sparse");
 
-    auto data = py::cast(A.data());
+    auto data = py::cast(A.values());
     auto indices = py::cast(A.indices());
     auto indptr = py::cast(A.indptr());
 

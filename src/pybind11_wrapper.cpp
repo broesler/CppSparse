@@ -500,7 +500,7 @@ PYBIND11_MODULE(csparse, m)
             }
         )
         //
-        .def_property_readonly("data", &cs::COOMatrix::data)
+        .def_property_readonly("data", &cs::COOMatrix::values)
         .def_property_readonly("row", &cs::COOMatrix::row)
         .def_property_readonly("col", &cs::COOMatrix::col)
         //
@@ -731,9 +731,9 @@ PYBIND11_MODULE(csparse, m)
             }
         )
         //
-        .def_property_readonly("indptr", &cs::CSCMatrix::indptr)
-        .def_property_readonly("indices", &cs::CSCMatrix::indices)
-        .def_property_readonly("data", &cs::CSCMatrix::data)
+        .def_property_readonly("indptr", py::overload_cast<>(&cs::CSCMatrix::indptr, py::const_))
+        .def_property_readonly("indices", py::overload_cast<>(&cs::CSCMatrix::indices, py::const_))
+        .def_property_readonly("data", py::overload_cast<>(&cs::CSCMatrix::values, py::const_))
         //
         .def("dropzeros", &cs::CSCMatrix::dropzeros,
             "Remove explicit zero entries from the matrix."

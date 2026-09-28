@@ -640,7 +640,7 @@ void spsolve(
 {
     auto& [xi, x] = sol;
 
-    if (std::ssize(x) < A.shape()[0]) {
+    if (std::ssize(x) < A.nrows()) {
         throw std::runtime_error("SparseSolution x vector not allocated!");
     }
 
@@ -716,7 +716,7 @@ void dfs(
     std::span<const csint> p_inv
 )
 {
-    csint N = A.shape()[1];
+    csint N = A.ncols();
     auto Ap = A.indptr();
     auto Ai = A.indices();
 
@@ -810,7 +810,7 @@ void dfs_r(
 void CholResult::solve(VectorViewD b) const
 {
     // Solve Ax = b ==> (P^T L L^T P) x = b
-    VectorD w(L.shape()[0]);  // workspace
+    VectorD w(L.nrows());  // workspace
 
     ipvec(p_inv, b, w);     // permute b -> w = Pb
     lsolve_inplace(L, w);   // y = L \ b -> w = y
@@ -898,16 +898,16 @@ void CholResult::solve(
     VectorViewD x
 ) const
 {
-    if (B.shape()[0] != L.shape()[0]) {
+    if (B.nrows() != L.nrows()) {
         throw std::invalid_argument(
             std::format(
                 "RHS row size {} does not match matrix size {}!",
-                B.shape()[0], L.shape()[0]
+                B.nrows(), L.nrows()
             )
         );
     }
 
-    auto M = B.shape()[0];
+    auto M = B.nrows();
 
     // ----- Option 1: scatter into dense column and solve dense
     // // Solve Ax = b ==> (P^T L L^T P) x = b
@@ -950,12 +950,12 @@ SparseSolution CholResult::lsolve_impl_(
     std::span<const csint> parent
 ) const
 {
-    const auto N = L.shape()[0];
+    const auto N = L.nrows();
     SparseSolution sol(N);
     auto& [xi, x] = sol;
 
     // Scatter b into x
-    if (b.shape()[1] != 1) {
+    if (b.ncols() != 1) {
         throw std::runtime_error("RHS matrix must have a single column!");
     }
     b.scatter(0, x);
@@ -1091,7 +1091,7 @@ void QRResult::solve(
 ) const
 {
     // Solve P^T Q R E x = b
-    auto M2 = V.shape()[0];
+    auto M2 = V.nrows();
     VectorD w(M2);
     ipvec(p_inv, b, w);        // permute b -> E b -> w = Eb
     apply_qtleft(V, beta, w);  // y = Q^T E b -> w = y
@@ -1106,7 +1106,7 @@ void QRResult::tsolve(
 ) const
 {
     // Solve P^T R^T Q^T E x = b
-    auto M2 = V.shape()[0];
+    auto M2 = V.nrows();
     VectorD w(M2);
     pvec(q, b, w);            // permute b -> E b -> w = Eb
     utsolve_inplace(R, w);    // y = R^T \ E b -> w = y
@@ -1404,7 +1404,7 @@ VectorD lu_tsolve(
     double tol
 )
 {
-    if (A.shape()[1] != std::ssize(b)) {
+    if (A.ncols() != std::ssize(b)) {
         throw std::runtime_error("Matrix and RHS vector sizes do not match!");
     }
 
@@ -1444,8 +1444,8 @@ inline auto min_argmaxabs(std::span<const double> x)
 // Exercise 6.15
 double norm1est_inv(const LUResult& res)
 {
-    auto M = res.L.shape()[0];
-    auto N = res.U.shape()[1];
+    auto M = res.L.nrows();
+    auto N = res.U.ncols();
 
     if (M != N) {
         throw std::runtime_error("Matrix must be square!");

@@ -1322,7 +1322,7 @@ void saxpy(
         throw std::invalid_argument("Matrix dimensions do not agree.");
     }
 
-    if ((a.shape()[1] != 1) || (b.shape()[1] != 1)) {
+    if ((a.ncols() != 1) || (b.ncols() != 1)) {
         throw std::invalid_argument("Both inputs must be column vectors.");
     }
 

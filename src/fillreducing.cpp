@@ -88,7 +88,7 @@ void drop_dense_cols_inplace(CSCMatrix& A, csint dense)
         }
     }
 
-    Ap[A.shape()[1]] = nz;  // finalize A
+    Ap[A.ncols()] = nz;  // finalize A
     A.realloc(nz);          // resize A to remove dense rows
 }
 
@@ -139,7 +139,7 @@ std::vector<csint> amd(const CSCMatrix& A, AMDOrder order)
 
     if (order == AMDOrder::Natural) {
         // Natural ordering (no permutation)
-        P.resize(A.shape()[1]);
+        P.resize(A.ncols());
         std::ranges::iota(P, 0);  // identity permutation
         return P;
     }
@@ -702,8 +702,8 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
 
     // transpose if needed
     const auto C = (m2 < n2) ? A.transpose(false) : A;
-    M = C.shape()[0];
-    N = C.shape()[1];
+    M = C.nrows();
+    N = C.ncols();
 
     // If we transposed, we need to swap the imatch and jmatch vectors
     auto& jmatch = (m2 < n2) ? jimatch.imatch : jimatch.jmatch;

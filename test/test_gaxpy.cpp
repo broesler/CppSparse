@@ -235,8 +235,8 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
         ) {
             const auto [M, N] = C.shape();
 
-            REQUIRE(M == E.shape()[0]);
-            REQUIRE(N == A.shape()[1]);
+            REQUIRE(M == E.nrows());
+            REQUIRE(N == A.ncols());
 
             for (auto i : C.row_range()) {
                 for (auto j : C.column_range()) {
@@ -294,8 +294,8 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
             auto C = A * B;
             const auto [M, N] = C.shape();
 
-            REQUIRE(M == A.shape()[0]);
-            REQUIRE(N == B.shape()[1]);
+            REQUIRE(M == A.nrows());
+            REQUIRE(N == B.ncols());
 
             check_sparse_allclose(C, expect);
         }
@@ -304,8 +304,8 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
             auto CT = B.T() * A.T();
             auto [N, M] = CT.shape();
 
-            REQUIRE(M == A.shape()[0]);
-            REQUIRE(N == B.shape()[1]);
+            REQUIRE(M == A.nrows());
+            REQUIRE(N == B.ncols());
 
             check_sparse_allclose(CT, expect.T());
         }
@@ -334,8 +334,8 @@ TEST_CASE("Sparse matrix-matrix multiply.", "[math][dot]")
         auto C = A * B;
         const auto [M, N] = C.shape();
 
-        REQUIRE(M == A.shape()[0]);
-        REQUIRE(N == B.shape()[1]);
+        REQUIRE(M == A.nrows());
+        REQUIRE(N == B.ncols());
         check_sparse_allclose(C, expect, false);
     }
 }

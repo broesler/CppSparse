@@ -220,7 +220,7 @@ PYBIND11_MODULE(csparse, m)
         })
         .def("solve",
             [](const cs::QRResult& self, cs::cVectorViewD b) {
-                auto N = self.R.shape()[1];
+                auto N = self.R.ncols();
                 cs::VectorD x(N);  // create output vector
                 self.solve(b, x);
                 return x;
@@ -242,7 +242,7 @@ PYBIND11_MODULE(csparse, m)
         )
         .def("tsolve",
             [](const cs::QRResult& self, cs::cVectorViewD b) {
-                auto M2 = self.V.shape()[0];
+                auto M2 = self.V.nrows();
                 cs::VectorD x(M2);  // create output vector
                 self.tsolve(b, x);
                 return x;
@@ -1224,8 +1224,8 @@ PYBIND11_MODULE(csparse, m)
         )
         .def("scatter",
             [](const cs::CSCMatrix& self, const cs::csint k) {
-                cs::VectorD x(self.shape()[0]);  // (M,)
-                if (k < 0 || k >= self.shape()[1]) {
+                cs::VectorD x(self.nrows());  // (M,)
+                if (k < 0 || k >= self.ncols()) {
                     throw py::index_error("Column index out of bounds.");
                 }
                 self.scatter(k, x);
@@ -2038,20 +2038,20 @@ PYBIND11_MODULE(csparse, m)
             const auto A = csc_from_scipy(A_scipy);
             const auto b = csc_from_scipy(b_scipy);
 
-            if (b.shape()[1] != 1) {
+            if (b.ncols() != 1) {
                 throw std::invalid_argument(
                     "b must be a column vector (shape (N, 1))."
                 );
             }
 
-            if (A.shape()[0] != b.shape()[0]) {
+            if (A.nrows() != b.nrows()) {
                 throw std::invalid_argument(
                     "Matrix A and vector b must have compatible shapes."
                 );
             }
 
             std::vector<cs::csint> xi;
-            xi.reserve(A.shape()[1]);
+            xi.reserve(A.ncols());
             cs::reach(A, b, 0, xi);
             return xi;
         },
@@ -2079,13 +2079,13 @@ PYBIND11_MODULE(csparse, m)
             const auto A = csc_from_scipy(A_scipy);
             const auto b = csc_from_scipy(b_scipy);
 
-            if (b.shape()[1] != 1) {
+            if (b.ncols() != 1) {
                 throw std::invalid_argument(
                     "b must be a column vector (shape (N, 1))."
                 );
             }
 
-            if (A.shape()[0] != b.shape()[0]) {
+            if (A.nrows() != b.nrows()) {
                 throw std::invalid_argument(
                     "Matrix A and vector b must have compatible shapes."
                 );

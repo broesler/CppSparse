@@ -111,7 +111,7 @@ void happly(
 
 std::vector<csint> find_leftmost(const CSCMatrix& A)
 {
-    const auto M = A.shape()[0];
+    const auto M = A.nrows();
     std::vector<csint> leftmost(M, -1);
 
     for (auto k : A.column_range() | std::views::reverse) {
@@ -456,7 +456,7 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 
     // Allocate values in the result matrices
     Vv.resize(V.nnz());
-    beta.resize(V.shape()[1]);
+    beta.resize(V.ncols());
     Rv.resize(R.nnz());
 
     // Allocate workspaces

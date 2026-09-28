@@ -530,7 +530,7 @@ py::object solver_sparse_impl_(
     }
 
     // Get number of columns for output shape
-    const auto N = A.shape()[1];
+    const auto N = A.ncols();
 
     // Convert (N,) -> (N, 1)
     const bool return_1D = B_ndim == 1;
@@ -547,7 +547,7 @@ py::object solver_sparse_impl_(
     const auto X = sparse_solver(A, B, std::forward<Args>(solver_args)...);
 
     // Output number of columns
-    const auto K = B.shape()[1];
+    const auto K = B.ncols();
 
     // Return a sparse array
     auto X_py = scipy_from_csc(cs::CSCMatrix(X, {N, K}));

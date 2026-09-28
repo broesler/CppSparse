@@ -30,7 +30,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
 {
     // Define the test matrix A (See Davis, Figure 4.2, p 39)
     auto A = davis_example_chol();
-    auto N = A.shape()[1];
+    auto N = A.ncols();
 
     CHECK(A.is_symmetric());
     // CHECK(A.has_canonical_format());
@@ -136,7 +136,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
     SECTION("Symbolic analysis") {
         auto S = schol(A, AMDOrder::Natural);
 
-        std::vector<csint> expect_p_inv(A.shape()[1]);
+        std::vector<csint> expect_p_inv(A.ncols());
         std::ranges::iota(expect_p_inv, 0);
 
         auto c = chol_colcounts(A);
@@ -208,7 +208,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         std::default_random_engine rng(56);
         std::uniform_real_distribution<double> unif(0.0, 1.0);
 
-        COOMatrix w{{L.shape()[0], 1}};
+        COOMatrix w{{L.nrows(), 1}};
 
         for (csint p = L.indptr()[k]; p < L.indptr()[k + 1]; ++p) {
             w.insert(L.indices()[p], 0, unif(rng));

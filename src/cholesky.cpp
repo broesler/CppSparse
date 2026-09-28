@@ -533,7 +533,7 @@ std::vector<csint> chol_colcounts(const CSCMatrix& A, bool ata)
 SymbolicChol schol(const CSCMatrix& A, AMDOrder order, bool use_postorder)
 {
     SymbolicChol S;
-    std::vector<csint> p(A.shape()[1]);    // the matrix permutation
+    std::vector<csint> p(A.ncols());    // the matrix permutation
 
     if (order == AMDOrder::Natural) {
         std::ranges::iota(p, 0);  // identity permutation TODO empty?
@@ -697,7 +697,7 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
         );
     }
 
-    auto N = A.shape()[1];
+    auto N = A.ncols();
 
     // Workspaces
     std::vector<csint> c(S.cp);  // column pointers for L
@@ -780,7 +780,7 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
         throw std::invalid_argument("L must have sorted row indices for rechol.");
     }
 
-    auto N = A.shape()[1];
+    auto N = A.ncols();
 
     // Workspaces
     std::vector<csint> c(S.cp);  // column pointers for L
@@ -848,19 +848,19 @@ CSCMatrix& chol_update(
     std::span<const csint> parent
 )
 {
-    if (L.shape()[0] != C.shape()[0]) {
+    if (L.nrows() != C.nrows()) {
         throw std::invalid_argument(
             std::format(
                 "L and C must have the same number of rows."
                 "Got {} and {}.",
-                L.shape()[0], C.shape()[0]
+                L.nrows(), C.nrows()
             )
         );
     }
 
-    if (C.shape()[1] != 1) {  // C must be a column vector
+    if (C.ncols() != 1) {  // C must be a column vector
         throw std::invalid_argument(
-            std::format("C must be a column vector. Got {} columns.", C.shape()[1])
+            std::format("C must be a column vector. Got {} columns.", C.ncols())
         );
     }
 
@@ -875,7 +875,7 @@ CSCMatrix& chol_update(
            γ,
            σ = (update) ? 1.0 : -1.0;
 
-    std::vector<double> w(L.shape()[0]);  // sparse accumulator workspace
+    std::vector<double> w(L.nrows());  // sparse accumulator workspace
 
     // Find the minimum row index in the update vector
     auto Cp = C.indptr();

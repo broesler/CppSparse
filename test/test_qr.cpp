@@ -207,7 +207,7 @@ TEST_CASE("QR factorization of the Identity Matrix", "[qr][identity]")
 TEST_CASE("Symbolic QR Decomposition of Square, Non-symmetric A", "[qr][M == N][symbolic]")
 {
     auto A = davis_example_qr();
-    auto N = A.shape()[1];  // == 8
+    auto N = A.ncols();  // == 8
 
     // See etree in Figure 5.1, p 74
     std::vector<csint> parent{3, 2, 3, 6, 5, 6, 7, -1};
@@ -250,7 +250,7 @@ TEST_CASE("Symbolic QR Decomposition of Square, Non-symmetric A", "[qr][M == N][
 TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][numeric]")
 {
     auto A = davis_example_qr();
-    auto N = A.shape()[1];  // == 8
+    auto N = A.ncols();  // == 8
     double tol = 1e-12;  // QR factorization is sensitive to numerical errors
 
     // CSparse only uses 2 possible orders for QR factorization:
@@ -373,7 +373,7 @@ TEST_CASE("Square, rank-deficient A", "[qr][rank-deficient][numeric]")
     // V and R will be size (M2, N), so Q will be (M2, M2), and QR (M2, N).
     // The last rows will just be zeros, so slice QR to (M, N) to match A.
 
-    auto M2 = res.V.shape()[0];
+    auto M2 = res.V.nrows();
 
     // Identity matrix for building Q
     std::vector<csint> idx(M2);
@@ -582,7 +582,7 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
     // V and R will be size (M2, N), so Q will be (M2, M2), and QR (M2, N).
     // The last rows will just be zeros, so slice QR to (M, N) to match A.
 
-    auto M2 = res.V.shape()[0];
+    auto M2 = res.V.nrows();
 
     // Create the identity matrix for testing
     std::vector<csint> idx(M2);

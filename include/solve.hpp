@@ -460,7 +460,7 @@ template <bool Lower>
 VectorD trisolve_sparse(const CSCMatrix& L, const CSCMatrix& B)
 {
     const auto [M, N] = L.shape();
-    csint K = B.shape()[1];
+    csint K = B.ncols();
 
     csint Nx = std::max(M, N);  // enough space for non-square solutions
     VectorD X(Nx * K);

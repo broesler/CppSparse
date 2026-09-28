@@ -321,13 +321,13 @@ TEST_CASE("Maximum Matching", "[maxmatch]")
     }
 
     // Check that the matchings are valid
-    for (csint i = 0; i < A.shape()[0]; ++i) {
+    for (csint i = 0; i < A.nrows(); ++i) {
         if (res.jmatch[i] >= 0) {
             CHECK(res.imatch[res.jmatch[i]] == i);
         }
     }
 
-    for (csint j = 0; j < A.shape()[1]; ++j) {
+    for (csint j = 0; j < A.ncols(); ++j) {
         if (res.imatch[j] >= 0) {
             CHECK(res.jmatch[res.imatch[j]] == j);
         }

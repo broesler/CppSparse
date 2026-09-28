@@ -346,7 +346,7 @@ LUResult lu(
                     ipiv = i;
                 }
             } else {  // x(i) is the entry U(pinv[i], k)
-                if (i < U.shape()[0]) {  // if M > N, extra rows only in L
+                if (i < U.nrows()) {  // if M > N, extra rows only in L
                     Ui[unz] = p_inv[i];
                     Uv[unz++] = sol.x[i];
                 }

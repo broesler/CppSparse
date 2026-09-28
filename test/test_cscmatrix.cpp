@@ -38,6 +38,8 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
         REQUIRE(C.nnz() == 10);
         REQUIRE(C.nzmax() >= 10);
         REQUIRE(C.shape() == Shape{4, 4});
+        REQUIRE(C.nrows() == 4);
+        REQUIRE(C.ncols() == 4);
         REQUIRE_THAT(C.indptr(), RangeEquals(indptr_expect));
         REQUIRE_THAT(C.indices(), RangeEquals(indices_expect));
         REQUIRE_THAT(C.data(), RangeEquals(data_expect));
@@ -99,6 +101,8 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
 
             REQUIRE(C.nnz() == C_T.nnz());
             REQUIRE(C_T.shape() == Shape{N, M});
+            REQUIRE(C_T.nrows() == N);
+            REQUIRE(C_T.ncols() == M);
 
             for (auto i : C.row_range()) {
                 for (auto j : C.column_range()) {
@@ -131,8 +135,8 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
 
             REQUIRE(C_T.data().empty());
             REQUIRE(C.nnz() == C_T.nnz());
-            REQUIRE(M == C_T.shape()[1]);
-            REQUIRE(N == C_T.shape()[0]);
+            REQUIRE(M == C_T.ncols());
+            REQUIRE(N == C_T.nrows());
         }
     }
 
@@ -818,7 +822,7 @@ TEST_CASE("Structural Symmetry")
     auto A = davis_example_small().tocsc();
 
     SECTION("Non-square") {
-        auto M = A.slice(0, A.shape()[0], 0, 2);
+        auto M = A.slice(0, A.nrows(), 0, 2);
         REQUIRE(M.structural_symmetry() == 0.0);
     }
 
@@ -985,7 +989,7 @@ TEST_CASE("Exercise 2.23: Slicing", "[ex2.23][slice]")
             std::vector<csint>  {  0,   1,   1,   2,   3}
         }.tocsc();
 
-        auto C = A.slice(1, 3, 0, A.shape()[1]);
+        auto C = A.slice(1, 3, 0, A.ncols());
         check_sparse_allclose(C, expect);
     }
 
@@ -996,7 +1000,7 @@ TEST_CASE("Exercise 2.23: Slicing", "[ex2.23][slice]")
             std::vector<csint>  {  0,   0,   0,   1,   1}
         }.tocsc();
 
-        auto C = A.slice(0, A.shape()[0], 1, 3);
+        auto C = A.slice(0, A.nrows(), 1, 3);
         check_sparse_allclose(C, expect);
     }
 
@@ -1247,8 +1251,8 @@ TEST_CASE("Exercise 2.29: Adding empty rows and columns to a CSCMatrix.", "[ex2.
         }
 
         REQUIRE(C.nnz() == A.nnz());
-        REQUIRE(C.shape()[0] == A.shape()[0] + k);
-        REQUIRE(C.shape()[1] == A.shape()[1]);
+        REQUIRE(C.nrows() == A.nrows() + k);
+        REQUIRE(C.ncols() == A.ncols());
         REQUIRE_THAT(C.indptr(), RangeEquals(A.indptr()));
         REQUIRE_THAT(C.indices(), RangeEquals(expect_indices));
     }
@@ -1257,8 +1261,8 @@ TEST_CASE("Exercise 2.29: Adding empty rows and columns to a CSCMatrix.", "[ex2.
         C.add_empty_bottom(k);
 
         REQUIRE(C.nnz() == A.nnz());
-        REQUIRE(C.shape()[0] == A.shape()[0] + k);
-        REQUIRE(C.shape()[1] == A.shape()[1]);
+        REQUIRE(C.nrows() == A.nrows() + k);
+        REQUIRE(C.ncols() == A.ncols());
         REQUIRE_THAT(C.indptr(), RangeEquals(A.indptr()));
         REQUIRE_THAT(C.indices(), RangeEquals(A.indices()));
     }
@@ -1275,8 +1279,8 @@ TEST_CASE("Exercise 2.29: Adding empty rows and columns to a CSCMatrix.", "[ex2.
         );
 
         REQUIRE(C.nnz() == A.nnz());
-        REQUIRE(C.shape()[0] == A.shape()[0]);
-        REQUIRE(C.shape()[1] == A.shape()[1] + k);
+        REQUIRE(C.nrows() == A.nrows());
+        REQUIRE(C.ncols() == A.ncols() + k);
         REQUIRE_THAT(C.indptr(), RangeEquals(expect_indptr));
         REQUIRE_THAT(C.indices(), RangeEquals(A.indices()));
     }
@@ -1293,8 +1297,8 @@ TEST_CASE("Exercise 2.29: Adding empty rows and columns to a CSCMatrix.", "[ex2.
         );
 
         REQUIRE(C.nnz() == A.nnz());
-        REQUIRE(C.shape()[0] == A.shape()[0]);
-        REQUIRE(C.shape()[1] == A.shape()[1] + k);
+        REQUIRE(C.nrows() == A.nrows());
+        REQUIRE(C.ncols() == A.ncols() + k);
         REQUIRE_THAT(C.indptr(), RangeEquals(expect_indptr));
         REQUIRE_THAT(C.indices(), RangeEquals(A.indices()));
     }

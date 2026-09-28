@@ -19,68 +19,63 @@ jobs:
       fail-fast: false  # continue testing other OSes even if one fails
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.12", "3.13", "3.14"]
 
     steps:
       - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
         with:
-          submodules: 'recursive'
+          enable-cache: true
 
-      - name: Install Compiler (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 21
-          sudo apt-get update
-          sudo apt-get install -y clang-21 libc++-21-dev libc++abi-21-dev
-          echo "CC=clang-21" >> $GITHUB_ENV
-          echo "CXX=clang++-21" >> $GITHUB_ENV
-          echo "CXXFLAGS=-stdlib=libc++" >> $GITHUB_ENV
-          echo "LDFLAGS=--stdlib=libc++ -lc++abi -L/usr/lib/llvm-21/lib" >> $GITHUB_ENV
-          which clang++
-          which clang++-21
-          clang++ --version
-          clang++-21 --version
+      # - name: Install Compiler (Ubuntu)
+      #   if: matrix.os == 'ubuntu-latest'
+      #   run: |
+      #     wget https://apt.llvm.org/llvm.sh
+      #     chmod +x llvm.sh
+      #     sudo ./llvm.sh 21
+      #     sudo apt-get update
+      #     sudo apt-get install -y clang-21 libc++-21-dev libc++abi-21-dev
+      #     echo "CC=clang-21" >> $GITHUB_ENV
+      #     echo "CXX=clang++-21" >> $GITHUB_ENV
+      #     echo "CXXFLAGS=-stdlib=libc++" >> $GITHUB_ENV
+      #     echo "LDFLAGS=--stdlib=libc++ -lc++abi -L/usr/lib/llvm-21/lib" >> $GITHUB_ENV
+      #     which clang++
+      #     which clang++-21
+      #     clang++ --version
+      #     clang++-21 --version
 
-      - name: Install Compiler (MacOS)
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew install llvm@21
-          LLVM_PREFIX=$(brew --prefix llvm@21)
-          echo "CC=${LLVM_PREFIX}/bin/clang" >> $GITHUB_ENV
-          echo "CXX=${LLVM_PREFIX}/bin/clang++" >> $GITHUB_ENV
-          echo "LDFLAGS=-L${LLVM_PREFIX}/lib/c++ -Wl,-rpath,$LLVM_PREFIX/lib/c++" >> $GITHUB_ENV
+      # - name: Install Compiler (MacOS)
+      #   if: matrix.os == 'macos-latest'
+      #   run: |
+      #     brew install llvm@21
+      #     LLVM_PREFIX=$(brew --prefix llvm@21)
+      #     echo "CC=${LLVM_PREFIX}/bin/clang" >> $GITHUB_ENV
+      #     echo "CXX=${LLVM_PREFIX}/bin/clang++" >> $GITHUB_ENV
+      #     echo "LDFLAGS=-L${LLVM_PREFIX}/lib/c++ -Wl,-rpath,$LLVM_PREFIX/lib/c++" >> $GITHUB_ENV
 
       - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
 
-      - name: Install pybind11
-        run: |
-          pip install --upgrade pip
-          pip install pybind11
+      - name: Sync workspace
+        run: uv sync --locked --all-packages --extra dev
 
       - name: Build C++ Code
-        run: make tests
+        run: uv run --no-sync make tests
 
       - name: Run C++ unit tests
-        run: ./test_csparse
+        run: ./build/Release/test_csparse
 
-      - name: Build and Install Python C++ module
-        run: |
-          make python
-          pip install -e "${{ github.workspace }}/python[dev]"
-          ls -l python/csparse
+      - name: Build and Install Python module
+        run: uv pip install --no-build-isolation -e ./python
 
       - name: Run Python unit tests with conditional reruns
-        run: ./run_pytest.sh -v
+        run: uv run --no-sync ./run_pytest.sh -v
 
       - name: Run Python unit tests with figures
         env:
           MPLBACKEND: agg  # use headless backend for matplotlib
-        run: ./run_pytest.sh --make-figures
+        run: uv run --no-sync ./run_pytest.sh --make-figures
 
       - name: Upload Test Figures
         uses: actions/upload-artifact@v4
@@ -91,5 +86,4 @@ jobs:
           if-no-files-found: error
 
       - name: Build and Run C++ Demos
-        run: |
-          make run_demos
+        run: uv run --no-sync make run_demos

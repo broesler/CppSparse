@@ -75,13 +75,13 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
     std::vector<csint> p_inv(N, -1);  // row permutation vector
     SparseSolution sol(N);            // workspace for triangular solves
 
-    auto Lp = L.indptr();
-    auto Li = L.indices();
-    auto Lv = L.data();
+    auto& Lp = L.indptr();
+    auto& Li = L.indices();
+    auto& Lv = L.data();
 
-    auto Up = U.indptr();
-    auto Ui = U.indices();
-    auto Uv = U.data();
+    auto& Up = U.indptr();
+    auto& Ui = U.indices();
+    auto& Uv = U.data();
 
     csint lnz = 0,
           unz = 0;
@@ -94,22 +94,10 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
         // Possibly reallocate L and U
         if (lnz + N > L.nzmax()) {
             L.realloc(2 * L.nzmax() + N);
-            Lp = L.indptr();
-            Li = L.indices();
-            Lv = L.data();
-            Up = U.indptr();
-            Ui = U.indices();
-            Uv = U.data();
         }
 
         if (unz + N > U.nzmax()) {
             U.realloc(2 * U.nzmax() + N);
-            Lp = L.indptr();
-            Li = L.indices();
-            Lv = L.data();
-            Up = U.indptr();
-            Ui = U.indices();
-            Uv = U.data();
         }
 
         // Solve Lx = A[:, k]
@@ -283,13 +271,13 @@ LUResult lu(
     std::vector<csint> p_inv(M, -1);  // row permutation vector
     SparseSolution sol(M);            // workspace for triangular solves
 
-    auto Lp = L.indptr();
-    auto Li = L.indices();
-    auto Lv = L.data();
+    auto& Lp = L.indptr();
+    auto& Li = L.indices();
+    auto& Lv = L.data();
 
-    auto Up = U.indptr();
-    auto Ui = U.indices();
-    auto Uv = U.data();
+    auto& Up = U.indptr();
+    auto& Ui = U.indices();
+    auto& Uv = U.data();
 
     // Exercise 6.3: modify to allow column pivoting
     auto q = S.q;  // column permutation vector
@@ -312,22 +300,10 @@ LUResult lu(
         // Possibly reallocate L and U
         if (lnz + N > L.nzmax()) {
             lu_realloc(L, k, true);
-            Lp = L.indptr();
-            Li = L.indices();
-            Lv = L.data();
-            Up = U.indptr();
-            Ui = U.indices();
-            Uv = U.data();
         }
 
         if (unz + N > U.nzmax()) {
             lu_realloc(U, k, false);
-            Lp = L.indptr();
-            Li = L.indices();
-            Lv = L.data();
-            Up = U.indptr();
-            Ui = U.indices();
-            Uv = U.data();
         }
 
         // Solve Lx = A[:, k]
@@ -455,8 +431,8 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     CSCMatrix L{std::vector<double>(R.L.nnz()), R.L.indices(), R.L.indptr(), R.L.shape()};
     CSCMatrix U{std::vector<double>(R.U.nnz()), R.U.indices(), R.U.indptr(), R.U.shape()};
 
-    auto Lv = L.data();
-    auto Uv = U.data();
+    auto& Lv = L.data();
+    auto& Uv = U.data();
 
     // Initialize row permutation vector
     // NOTE we need this initialization because the -1 values are used in
@@ -524,13 +500,13 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
     // TODO implement partial pivoting
     std::ranges::iota(p_inv, 0);  // identity permutation
 
-    auto Lp = L.indptr();
-    auto Li = L.indices();
-    auto Lv = L.data();
+    auto& Lp = L.indptr();
+    auto& Li = L.indices();
+    auto& Lv = L.data();
 
-    auto UTp = UT.indptr();
-    auto UTi = UT.indices();
-    auto UTv = UT.data();
+    auto& UTp = UT.indptr();
+    auto& UTi = UT.indices();
+    auto& UTv = UT.data();
 
     csint lnz = 0,
           unz = 0;
@@ -542,22 +518,10 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
         // Possibly reallocate L and U
         if (lnz + N > L.nzmax()) {
             lu_realloc(L, k, true);
-            Lp = L.indptr();  // reset pointers
-            Li = L.indices();
-            Lv = L.data();
-            UTp = UT.indptr();
-            UTi = UT.indices();
-            UTv = UT.data();
         }
 
         if (unz + N > UT.nzmax()) {
             lu_realloc(UT, k, false);
-            Lp = L.indptr();
-            Li = L.indices();
-            Lv = L.data();
-            UTp = UT.indptr();
-            UTi = UT.indices();
-            UTv = UT.data();
         }
 
         // ---------- Compute the row of U
@@ -666,13 +630,13 @@ LUResult ilutp(
     std::vector<csint> p_inv(N, -1);  // row permutation vector
     SparseSolution sol(M);            // workspace for triangular solves
 
-    auto Lp = L.indptr();
-    auto Li = L.indices();
-    auto Lv = L.data();
+    auto& Lp = L.indptr();
+    auto& Li = L.indices();
+    auto& Lv = L.data();
 
-    auto Up = U.indptr();
-    auto Ui = U.indices();
-    auto Uv = U.data();
+    auto& Up = U.indptr();
+    auto& Ui = U.indices();
+    auto& Uv = U.data();
 
     csint lnz = 0,
           unz = 0;
@@ -685,22 +649,10 @@ LUResult ilutp(
         // Possibly reallocate L and U
         if (lnz + N > L.nzmax()) {
             lu_realloc(L, k, true);
-            Lp = L.indptr();
-            Li = L.indices();
-            Lv = L.data();
-            Up = U.indptr();
-            Ui = U.indices();
-            Uv = U.data();
         }
 
         if (unz + N > U.nzmax()) {
             lu_realloc(U, k, false);
-            Lp = L.indptr();
-            Li = L.indices();
-            Lv = L.data();
-            Up = U.indptr();
-            Ui = U.indices();
-            Uv = U.data();
         }
 
         // Solve Lx = A[:, k]
@@ -792,13 +744,13 @@ LUResult ilu_nofill(
     std::vector<csint> w(N, -1);      // workspace for values
     SparseSolution sol(M);            // workspace for triangular solves
 
-    auto Lp = L.indptr();
-    auto Li = L.indices();
-    auto Lv = L.data();
+    auto& Lp = L.indptr();
+    auto& Li = L.indices();
+    auto& Lv = L.data();
 
-    auto Up = U.indptr();
-    auto Ui = U.indices();
-    auto Uv = U.data();
+    auto& Up = U.indptr();
+    auto& Ui = U.indices();
+    auto& Uv = U.data();
 
     csint lnz = 0,
           unz = 0;

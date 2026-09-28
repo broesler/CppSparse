@@ -158,16 +158,13 @@ public:
     csint nrows() const noexcept { return M_; }
     csint ncols() const noexcept { return N_; }
 
-    std::span<const csint> indices() const noexcept { return i_; }
-    std::span<const csint> indptr() const noexcept { return p_; }
-    virtual std::span<const double> data() const noexcept override { return v_; }
+    const std::vector<csint>& indices() const noexcept { return i_; }
+    const std::vector<csint>& indptr() const noexcept { return p_; }
+    virtual const std::vector<double>& data() const noexcept override { return v_; }
 
-    std::span<csint> indices() noexcept { return i_; }
-    std::span<csint> indptr() noexcept { return p_; }
-    std::span<double> data() noexcept { return v_; }
-
-    // If resize, etc. needed
-    std::vector<double>& data_vector() noexcept { return v_; }
+    std::vector<csint>& indices() noexcept { return i_; }
+    std::vector<csint>& indptr() noexcept { return p_; }
+    std::vector<double>& data() noexcept { return v_; }
 
     /// Return the number of non-zeros in column j.
     csint col_length(csint j) const

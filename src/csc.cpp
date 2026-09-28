@@ -1279,7 +1279,7 @@ CSCMatrix add_scaled(
 
     CSCMatrix C{{M, N}, A.nnz() + B.nnz(), values};  // output
 
-    auto Cp = C.indptr();
+    auto& Cp = C.indptr();
 
     // Allocate workspaces
     std::vector<csint> w(M);
@@ -1662,8 +1662,8 @@ CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
     C.set_ncols(C.ncols() + B.ncols());
     C.realloc(A.nnz() + B.nnz());
 
-    auto Cp = C.indptr();
-    auto Bp = B.indptr();
+    auto& Cp = C.indptr();
+    auto& Bp = B.indptr();
 
     // Copy the second matrix
     for (auto j : B.column_range()) {
@@ -1694,9 +1694,9 @@ CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
 
     CSCMatrix C{{A.nrows() + B.nrows(), A.ncols()}, A.nnz() + B.nnz()};
 
-    auto Cp = C.indptr();
-    auto Ci = C.indices();
-    auto Cv = C.data();
+    auto& Cp = C.indptr();
+    auto& Ci = C.indices();
+    auto& Cv = C.data();
 
     csint nz = 0;
 

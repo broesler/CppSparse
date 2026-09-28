@@ -69,8 +69,8 @@ csint wclear(csint mark, csint lemax, std::span<csint> w)
 
 void drop_dense_cols_inplace(CSCMatrix& A, csint dense)
 {
-    auto Ap = A.indptr();
-    auto Ai = A.indices();
+    auto& Ap = A.indptr();
+    auto& Ai = A.indices();
 
     csint nz = 0;
 
@@ -159,8 +159,8 @@ std::vector<csint> amd(const CSCMatrix& A, AMDOrder order)
     csint t = cnz + cnz / 5 + 2 * N;
     C.realloc(t);
 
-    auto Cp = C.indptr();
-    auto Ci = C.indices();
+    auto& Cp = C.indptr();
+    auto& Ci = C.indices();
 
     // --- Allocate result + workspaces ----------------------------------------
     std::vector<csint> len(N + 1);
@@ -534,8 +534,8 @@ void augment(
     std::span<csint> ps
 )
 {
-    auto Ap = A.indptr();
-    auto Ai = A.indices();
+    auto& Ap = A.indptr();
+    auto& Ai = A.indices();
 
     bool found = false;
     csint head = 0;
@@ -607,8 +607,8 @@ bool augment_r(
     csint j
 )
 {
-    auto Ap = A.indptr();
-    auto Ai = A.indices();
+    auto& Ap = A.indptr();
+    auto& Ai = A.indices();
 
     bool found = false;
 
@@ -652,7 +652,7 @@ MaxMatch maxtrans_r(const CSCMatrix& A, [[maybe_unused]] csint seed)
     MaxMatch jimatch(M, N, -1);  // allocate result
     auto& [jmatch, imatch] = jimatch;  // reference to jmatch and imatch
 
-    auto Ap = A.indptr();
+    auto& Ap = A.indptr();
     std::vector<csint> w(N, -1),  // mark all nodes as unvisited
                        cheap(Ap.begin(), Ap.end());
 
@@ -713,7 +713,7 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed)
     w.resize(N);
     std::ranges::fill(w, -1);  // mark all nodes as unvisited
 
-    auto Cp = C.indptr();
+    auto& Cp = C.indptr();
     std::vector<csint> cheap(Cp.begin(), Cp.end()),
                        is(N),  // row indices stack
                        js(N),  // col indices stack
@@ -954,8 +954,8 @@ DMPermResult dmperm(const CSCMatrix& A, csint seed)
     // C = A(p, q) will hold A(R2, C2)
     auto C = A.permute(p_inv, D.q, false);
 
-    auto Cp = C.indptr();
-    auto Ci = C.indices();
+    auto& Cp = C.indptr();
+    auto& Ci = C.indices();
 
     // delete cols C0, C1, and C3 from C
     csint nc = D.cc[3] - D.cc[2];

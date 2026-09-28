@@ -207,8 +207,8 @@ VectorD lsolve_rows(const CSCMatrix& A, cVectorViewD b)
     // p_diags is a vector of pointers to the diagonal entries
     auto p_diags = find_lower_diagonals(A);
 
-    auto Ai = A.indices();
-    auto Av = A.data();
+    auto& Ai = A.indices();
+    auto& Av = A.data();
 
     // Compute the row permutation vector
     std::vector<csint> p_inv(N);
@@ -257,9 +257,9 @@ VectorD lsolve_cols(const CSCMatrix& A, cVectorViewD b)
         );
     }
 
-    auto Ap = A.indptr();
-    auto Ai = A.indices();
-    auto Av = A.data();
+    auto& Ap = A.indptr();
+    auto& Ai = A.indices();
+    auto& Av = A.data();
 
     // First O(N) pass to find the diagonal entries
     // Assume that the first entry in each column has the smallest row index
@@ -359,8 +359,8 @@ VectorD usolve_rows(const CSCMatrix& A, cVectorViewD b)
     // p_diags is a vector of pointers to the diagonal entries
     auto p_diags = find_upper_diagonals(A);
 
-    auto Ai = A.indices();
-    auto Av = A.data();
+    auto& Ai = A.indices();
+    auto& Av = A.data();
 
     // Compute the row permutation vector
     std::vector<csint> p_inv(N);
@@ -407,9 +407,9 @@ VectorD usolve_cols(const CSCMatrix& A, cVectorViewD b)
         );
     }
 
-    auto Ap = A.indptr();
-    auto Ai = A.indices();
-    auto Av = A.data();
+    auto& Ap = A.indptr();
+    auto& Ai = A.indices();
+    auto& Av = A.data();
 
     // First O(N) pass to find the diagonal entries
     // Assume that the last entry in each column has the largest row index
@@ -531,7 +531,7 @@ void tri_solve_perm_inplace(
     // Extract the permutation vectors
     auto [p_inv, q_inv, p_diags] = tri_perm;
 
-    auto Av = A.data();
+    auto& Av = A.data();
 
     // Solve the system (PTQ) x = b => T (Q x) = (P^T b)
     for (auto k : A.column_range()) {
@@ -717,8 +717,8 @@ void dfs(
 )
 {
     csint N = A.ncols();
-    auto Ap = A.indptr();
-    auto Ai = A.indices();
+    auto& Ap = A.indptr();
+    auto& Ai = A.indices();
 
     // Ensure the stacks are reserved and cleared
     if (static_cast<csint>(pstack.capacity()) < N) { pstack.reserve(N); }

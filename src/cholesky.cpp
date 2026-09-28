@@ -573,8 +573,8 @@ CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S)
     const auto [M, N] = A.shape();
     CSCMatrix L{{M, N}, S.lnz};        // allocate result
 
-    auto Lp = L.indptr();
-    auto Li = L.indices();
+    auto& Lp = L.indptr();
+    auto& Li = L.indices();
 
     std::vector<csint> c(S.cp);      // column pointers for L
 
@@ -606,9 +606,9 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
     const auto [M, N] = A.shape();
     CSCMatrix L{{M, N}, S.lnz};  // allocate result
 
-    auto Lp = L.indptr();
-    auto Li = L.indices();
-    auto Lv = L.data();
+    auto& Lp = L.indptr();
+    auto& Li = L.indices();
+    auto& Lv = L.data();
 
     // Workspaces
     std::vector<csint> c(S.cp);  // column pointers for L
@@ -680,9 +680,9 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
 
 CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 {
-    auto Lp = std::as_const(L).indptr();
-    auto Li = std::as_const(L).indices();
-    auto Lv = L.data();
+    const auto& Lp = L.indptr();
+    const auto& Li = L.indices();
+    auto& Lv = L.data();
 
     // Ensure L has been allocated via symbolic_cholesky
     if (Lp.empty() || Li.empty() || Lv.empty()) {
@@ -765,9 +765,9 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 
 CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 {
-    auto Lp = L.indptr();
-    auto Li = L.indices();
-    auto Lv = L.data();
+    auto& Lp = L.indptr();
+    auto& Li = L.indices();
+    auto& Lv = L.data();
 
     // Ensure L has been allocated via symbolic_cholesky
     if (Lp.empty() || Li.empty() || Lv.empty()) {
@@ -864,9 +864,9 @@ CSCMatrix& chol_update(
         );
     }
 
-    auto Lp = std::as_const(L).indptr();
-    auto Li = std::as_const(L).indices();
-    auto Lv = L.data();
+    const auto& Lp = L.indptr();
+    const auto& Li = L.indices();
+    auto& Lv = L.data();
 
     double α,
            β = 1.0,
@@ -878,9 +878,9 @@ CSCMatrix& chol_update(
     std::vector<double> w(L.nrows());  // sparse accumulator workspace
 
     // Find the minimum row index in the update vector
-    auto Cp = C.indptr();
-    auto Ci = C.indices();
-    auto Cv = C.data();
+    auto& Cp = C.indptr();
+    auto& Ci = C.indices();
+    auto& Cv = C.data();
     auto p = Cp[0];
     auto f = Ci[p];
     for (; p < Cp[1]; ++p) {
@@ -968,11 +968,11 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
 
     CSCMatrix L{{N, N}, C_tril.nnz()};  // allocate result
 
-    auto Lp = L.indptr();
-    auto Li = L.indices();
-    auto Lv = L.data();
+    auto& Lp = L.indptr();
+    auto& Li = L.indices();
+    auto& Lv = L.data();
 
-    auto Cp = C_tril.indptr();  // column pointers for C
+    auto& Cp = C_tril.indptr();  // column pointers for C
 
     // Workspaces
     std::vector<csint> c(Cp.begin(), Cp.end());  // column pointers for L
@@ -1059,9 +1059,9 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
 
     CSCMatrix L{{M, N}, S.lnz};  // allocate result
 
-    auto Lp = L.indptr();
-    auto Li = L.indices();
-    auto Lv = L.data();
+    auto& Lp = L.indptr();
+    auto& Li = L.indices();
+    auto& Lv = L.data();
 
     // Workspaces
     std::vector<csint> c(S.cp);  // column pointers for L

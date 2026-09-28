@@ -254,13 +254,13 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
     CSCMatrix R{{M2, Nv}, S.rnz};  // R factor
     std::vector<double> beta(Nv);  // scaling factors
 
-    auto Vp = V.indptr();
-    auto Vi = V.indices();
-    auto Vv = V.data();
+    auto& Vp = V.indptr();
+    auto& Vi = V.indices();
+    auto& Vv = V.data();
 
-    auto Rp = R.indptr();
-    auto Ri = R.indices();
-    auto Rv = R.data();
+    auto& Rp = R.indptr();
+    auto& Ri = R.indices();
+    auto& Rv = R.data();
 
     // Allocate workspaces
     VectorD x(M2);                  // dense vector
@@ -364,11 +364,11 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S)
     CSCMatrix V{{M2, Nv}, S.vnz, values};   // Householder vectors
     CSCMatrix R{{M2, Nv}, S.rnz, values};   // R factor
 
-    auto Vp = V.indptr();
-    auto Vi = V.indices();
+    auto& Vp = V.indptr();
+    auto& Vi = V.indices();
 
-    auto Rp = R.indptr();
-    auto Ri = R.indices();
+    auto& Rp = R.indptr();
+    auto& Ri = R.indices();
 
     // Allocate workspaces
     std::vector<csint> w(M2, -1),  // workspace for pattern of V[:, k]
@@ -442,13 +442,13 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
     auto& R = res.R;
     auto& beta = res.beta;
 
-    auto Vp = V.indptr();
-    auto Vi = V.indices();
-    auto& Vv = V.data_vector();
+    auto& Vp = V.indptr();
+    auto& Vi = V.indices();
+    auto& Vv = V.data();
 
-    auto Rp = R.indptr();
-    auto Ri = R.indices();
-    auto& Rv = R.data_vector();
+    auto& Rp = R.indptr();
+    auto& Ri = R.indices();
+    auto& Rv = R.data();
 
     if (Vi.empty() || Ri.empty()) {
         throw std::runtime_error("V and R patterns have not been computed!");
@@ -542,9 +542,9 @@ CSCMatrix apply_qtleft(
     auto X = Y;  // copy Y into X, work in-place
     CSCMatrix C{{M, NY}, 2 * V.nnz()};  // allocate C for the result
 
-    auto Cp = C.indptr();
-    auto Ci = C.indices();
-    auto Cv = C.data();
+    auto& Cp = C.indptr();
+    auto& Ci = C.indices();
+    auto& Cv = C.data();
 
     if (M2 > M) {
         X.add_empty_bottom(M2 - M);
@@ -559,9 +559,6 @@ CSCMatrix apply_qtleft(
     for (auto k : Y.column_range()) {
         if (nz + M > C.nzmax()) {
             C.realloc(2 * C.nzmax() + M);
-            Cp = C.indptr();   // reset pointers after realloc
-            Ci = C.indices();
-            Cv = C.data();
         }
 
         Cp[k] = nz;  // column j of C starts here

@@ -66,7 +66,7 @@ void SparseMatrix::write_elems_(std::string& out, csint start, csint end) const
     auto col_width = std::to_string(N - 1).size();
 
     // Determine whether to use scientific notation
-    auto max_abs_val = get_max_abs_finite(data());
+    auto max_abs_val = get_max_abs_finite(values());
     bool use_scientific = (max_abs_val < 1e-4 || max_abs_val > 1e4);
 
     // Leading space aligns for "-" signs
@@ -118,7 +118,7 @@ void SparseMatrix::format_dense_to(
 
     if (fmt == '\0') {
         // Use scientific notation if extremum value is very small or very large
-        auto max_abs_val = get_max_abs_finite(data());
+        auto max_abs_val = get_max_abs_finite(values());
         bool use_scientific = !suppress || (max_abs_val < 1e-4 || max_abs_val > 1e4);
         fmt = use_scientific ? 'e' : 'f';
     }

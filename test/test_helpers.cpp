@@ -39,7 +39,7 @@ void check_canonical_allclose(
     if (values) {
         for (csint p = 0; p < A.nnz(); ++p) {
             CAPTURE(p);
-            CHECK_THAT(A.data()[p], WithinAbs(expect.data()[p], tol));
+            CHECK_THAT(A.values()[p], WithinAbs(expect.values()[p], tol));
         }
     }
 }

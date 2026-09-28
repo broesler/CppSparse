@@ -160,11 +160,11 @@ public:
 
     const std::vector<csint>& indices() const noexcept { return i_; }
     const std::vector<csint>& indptr() const noexcept { return p_; }
-    virtual const std::vector<double>& data() const noexcept override { return v_; }
+    virtual const std::vector<double>& values() const noexcept override { return v_; }
 
     std::vector<csint>& indices() noexcept { return i_; }
     std::vector<csint>& indptr() noexcept { return p_; }
-    std::vector<double>& data() noexcept { return v_; }
+    std::vector<double>& values() noexcept { return v_; }
 
     /// Return the number of non-zeros in column j.
     csint col_length(csint j) const

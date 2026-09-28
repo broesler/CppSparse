@@ -77,11 +77,11 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
 
     auto& Lp = L.indptr();
     auto& Li = L.indices();
-    auto& Lv = L.data();
+    auto& Lv = L.values();
 
     auto& Up = U.indptr();
     auto& Ui = U.indices();
-    auto& Uv = U.data();
+    auto& Uv = U.values();
 
     csint lnz = 0,
           unz = 0;
@@ -273,11 +273,11 @@ LUResult lu(
 
     auto& Lp = L.indptr();
     auto& Li = L.indices();
-    auto& Lv = L.data();
+    auto& Lv = L.values();
 
     auto& Up = U.indptr();
     auto& Ui = U.indices();
-    auto& Uv = U.data();
+    auto& Uv = U.values();
 
     // Exercise 6.3: modify to allow column pivoting
     auto q = S.q;  // column permutation vector
@@ -431,8 +431,8 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S)
     CSCMatrix L{std::vector<double>(R.L.nnz()), R.L.indices(), R.L.indptr(), R.L.shape()};
     CSCMatrix U{std::vector<double>(R.U.nnz()), R.U.indices(), R.U.indptr(), R.U.shape()};
 
-    auto& Lv = L.data();
-    auto& Uv = U.data();
+    auto& Lv = L.values();
+    auto& Uv = U.values();
 
     // Initialize row permutation vector
     // NOTE we need this initialization because the -1 values are used in
@@ -502,11 +502,11 @@ LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S)
 
     auto& Lp = L.indptr();
     auto& Li = L.indices();
-    auto& Lv = L.data();
+    auto& Lv = L.values();
 
     auto& UTp = UT.indptr();
     auto& UTi = UT.indices();
-    auto& UTv = UT.data();
+    auto& UTv = UT.values();
 
     csint lnz = 0,
           unz = 0;
@@ -632,11 +632,11 @@ LUResult ilutp(
 
     auto& Lp = L.indptr();
     auto& Li = L.indices();
-    auto& Lv = L.data();
+    auto& Lv = L.values();
 
     auto& Up = U.indptr();
     auto& Ui = U.indices();
-    auto& Uv = U.data();
+    auto& Uv = U.values();
 
     csint lnz = 0,
           unz = 0;
@@ -746,11 +746,11 @@ LUResult ilu_nofill(
 
     auto& Lp = L.indptr();
     auto& Li = L.indices();
-    auto& Lv = L.data();
+    auto& Lv = L.values();
 
     auto& Up = U.indptr();
     auto& Ui = U.indices();
-    auto& Uv = U.data();
+    auto& Uv = U.values();
 
     csint lnz = 0,
           unz = 0;

@@ -59,7 +59,7 @@ TEST_CASE("COOMatrix Constructors", "[COOMatrix][constructor]")
         CHECK(A.shape() == Shape{4, 4});
         CHECK_THAT(A.row(), RangeEquals(i));
         CHECK_THAT(A.col(), RangeEquals(j));
-        CHECK_THAT(A.data(), RangeEquals(v));
+        CHECK_THAT(A.values(), RangeEquals(v));
     }
 }
 
@@ -160,7 +160,7 @@ TEST_CASE("COOMatrix methods", "[COOMatrix][methods]")
 
         REQUIRE_THAT(A.row(), RangeEquals(F.row()));
         REQUIRE_THAT(A.col(), RangeEquals(F.col()));
-        REQUIRE_THAT(A.data(), RangeEquals(F.data()));
+        REQUIRE_THAT(A.values(), RangeEquals(F.values()));
     }
 
     SECTION("Conversion to dense array: Column-major") {

@@ -76,7 +76,7 @@ TEST_CASE("Build Graph", "[amd][build_graph]")
 
     const auto C = build_graph(A, order, dense);
 
-    CHECK(C.data().empty());
+    CHECK(C.values().empty());
     check_sparse_allclose(C, expect_C, values);
 }
 

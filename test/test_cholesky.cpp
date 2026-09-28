@@ -369,7 +369,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
         CHECK(Ls.shape() == L.shape());
         CHECK_THAT(Ls.indptr(), RangeEquals(L.indptr()));
         CHECK_THAT(Ls.indices(), RangeEquals(L.indices()));
-        CHECK(Ls.data().size() == L.data().size());  // allocation only
+        CHECK(Ls.values().size() == L.values().size());  // allocation only
     }
 
     SECTION("Exercise 4.11: Left-looking Cholesky") {
@@ -514,7 +514,7 @@ TEST_CASE("Cholesky Factorization", "[cholesky]")
                 CHECK(L.nnz() == Lf.nnz() - expect_drops);
 
                 // Only true for absolute drop tolerance
-                // for (const auto& x : L.data()) {
+                // for (const auto& x : L.values()) {
                 //     CHECK(std::abs(x) > drop_tol);
                 // }
 

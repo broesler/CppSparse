@@ -256,11 +256,11 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S)
 
     auto& Vp = V.indptr();
     auto& Vi = V.indices();
-    auto& Vv = V.data();
+    auto& Vv = V.values();
 
     auto& Rp = R.indptr();
     auto& Ri = R.indices();
-    auto& Rv = R.data();
+    auto& Rv = R.values();
 
     // Allocate workspaces
     VectorD x(M2);                  // dense vector
@@ -444,11 +444,11 @@ void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res)
 
     auto& Vp = V.indptr();
     auto& Vi = V.indices();
-    auto& Vv = V.data();
+    auto& Vv = V.values();
 
     auto& Rp = R.indptr();
     auto& Ri = R.indices();
-    auto& Rv = R.data();
+    auto& Rv = R.values();
 
     if (Vi.empty() || Ri.empty()) {
         throw std::runtime_error("V and R patterns have not been computed!");
@@ -544,7 +544,7 @@ CSCMatrix apply_qtleft(
 
     auto& Cp = C.indptr();
     auto& Ci = C.indices();
-    auto& Cv = C.data();
+    auto& Cv = C.values();
 
     if (M2 > M) {
         X.add_empty_bottom(M2 - M);

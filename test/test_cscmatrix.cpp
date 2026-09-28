@@ -42,7 +42,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
         REQUIRE(C.ncols() == 4);
         REQUIRE_THAT(C.indptr(), RangeEquals(indptr_expect));
         REQUIRE_THAT(C.indices(), RangeEquals(indices_expect));
-        REQUIRE_THAT(C.data(), RangeEquals(data_expect));
+        REQUIRE_THAT(C.values(), RangeEquals(data_expect));
     }
 
     SECTION ("Printing") {
@@ -133,7 +133,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
 
             const auto [M, N] = C.shape();
 
-            REQUIRE(C_T.data().empty());
+            REQUIRE(C_T.values().empty());
             REQUIRE(C.nnz() == C_T.nnz());
             REQUIRE(M == C_T.ncols());
             REQUIRE(N == C_T.nrows());
@@ -154,7 +154,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
             CHECK(Cs.has_sorted_indices());
             CHECK_THAT(Cs.indptr(), RangeEquals(indptr_expect));
             CHECK_THAT(Cs.indices(), RangeEquals(indices_expect));
-            REQUIRE_THAT(Cs.data(), RangeEquals(data_expect));
+            REQUIRE_THAT(Cs.values(), RangeEquals(data_expect));
         };
 
         SECTION("Two transposes") {
@@ -193,7 +193,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
 
         REQUIRE(C.nnz() == 6);
         REQUIRE(C.shape() == Shape{4, 4});
-        check_all_greater_equal(C.data(), 2.0);
+        check_all_greater_equal(C.values(), 2.0);
     }
 
     SECTION("Dropzeros") {
@@ -209,7 +209,7 @@ TEST_CASE("CSCMatrix Constructor", "[CSCMatrix]")
         C.dropzeros();
 
         REQUIRE(C.nnz() == 10);
-        check_all_not_equal(C.data(), 0.0);
+        check_all_not_equal(C.values(), 0.0);
     }
 
     SECTION("1-norm") {
@@ -251,12 +251,12 @@ TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
     REQUIRE_THAT(C(2, 1), WithinAbs(101.7, tol));
 
     // No non-zeros
-    check_all_not_equal(C.data(), 0.0);
+    check_all_not_equal(C.values(), 0.0);
 
     // Sorted entries
     REQUIRE_THAT(C.indptr(), RangeEquals(indptr_expect));
     REQUIRE_THAT(C.indices(), RangeEquals(indices_expect));
-    REQUIRE_THAT(C.data(), RangeEquals(data_expect));
+    REQUIRE_THAT(C.values(), RangeEquals(data_expect));
 
     // Flags set
     REQUIRE(C.has_sorted_indices());
@@ -267,13 +267,13 @@ TEST_CASE("Canonical format", "[CSCMatrix][COOMatrix]")
         CSCMatrix B{A};
         REQUIRE_THAT(C.indptr(), RangeEquals(B.indptr()));
         REQUIRE_THAT(C.indices(), RangeEquals(B.indices()));
-        REQUIRE_THAT(C.data(), RangeEquals(B.data()));
+        REQUIRE_THAT(C.values(), RangeEquals(B.values()));
     }
 
     SECTION("Indexing") {
         auto indptr = C.indptr();
         auto indices = C.indices();
-        auto data = C.data();
+        auto data = C.values();
 
         for (auto j : C.column_range()) {
             for (csint p = indptr[j]; p < indptr[j+1]; ++p) {
@@ -464,7 +464,7 @@ TEST_CASE("Exercise 2.2: Conversion to COOMatrix") {
         REQUIRE(A.shape() == Shape{4, 4});
         REQUIRE_THAT(A.row(), RangeEquals(expect_i));
         REQUIRE_THAT(A.col(), RangeEquals(expect_j));
-        REQUIRE_THAT(A.data(), RangeEquals(expect_v));
+        REQUIRE_THAT(A.values(), RangeEquals(expect_v));
     };
 
     SECTION("As constructor") {
@@ -598,8 +598,8 @@ TEST_CASE("Matrix permutation", "[permute]")
         SECTION("Symbolic permutation") {
             auto Cs = A.permute(inv_permute(p), q, false);  // no values
             auto Cs2 = A.permute_rows(p_inv, false).permute_cols(q, false);
-            CHECK(Cs.data().empty());
-            CHECK(Cs2.data().empty());
+            CHECK(Cs.values().empty());
+            CHECK(Cs2.values().empty());
             check_sparse_allclose(Cs, expect, false);
             check_sparse_allclose(Cs2, expect, false);
         }
@@ -628,7 +628,7 @@ TEST_CASE("Matrix permutation", "[permute]")
 
         SECTION("Symbolic permutation") {
             auto Cs = A.symperm(inv_permute(p), false);  // no values
-            CHECK(Cs.data().empty());
+            CHECK(Cs.values().empty());
             check_sparse_allclose(Cs, expect, false);
         }
     }
@@ -698,7 +698,7 @@ TEST_CASE("Exercise 2.26: permuted transpose", "[ex2.26][permute_transpose]")
 
         SECTION("Symbolic permutation") {
             auto Cs = A.permute_transpose(inv_permute(p), inv_permute(q), false);
-            CHECK(Cs.data().empty());
+            CHECK(Cs.values().empty());
             check_sparse_allclose(Cs, expect, false);
         }
     }
@@ -725,7 +725,7 @@ TEST_CASE("Exercise 2.15: Band function", "[ex2.15][band]")
         CHECK(Ab.nnz() == N);
         CHECK_THAT(Ab.row(), RangeEquals(expect_rows));
         CHECK_THAT(Ab.col(), RangeEquals(expect_cols));
-        REQUIRE_THAT(Ab.data(), RangeEquals(expect_data));
+        REQUIRE_THAT(Ab.values(), RangeEquals(expect_data));
     }
 
     SECTION("Arbitrary diagonals") {
@@ -743,7 +743,7 @@ TEST_CASE("Exercise 2.15: Band function", "[ex2.15][band]")
         CHECK(Ab.nnz() == 27);
         CHECK_THAT(Ab.row(), RangeEquals(expect_rows));
         CHECK_THAT(Ab.col(), RangeEquals(expect_cols));
-        REQUIRE_THAT(Ab.data(), RangeEquals(expect_data));
+        REQUIRE_THAT(Ab.values(), RangeEquals(expect_data));
     }
 }
 

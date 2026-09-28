@@ -1275,7 +1275,7 @@ CSCMatrix add_scaled(
 
     const auto [M, N] = A.shape();
 
-    auto values = !A.data().empty() && !B.data().empty();
+    auto values = !A.values().empty() && !B.values().empty();
 
     CSCMatrix C{{M, N}, A.nnz() + B.nnz(), values};  // output
 
@@ -1359,7 +1359,7 @@ CSCMatrix operator+(const CSCMatrix& A, const CSCMatrix& B) { return A.add(B); }
 CSCMatrix operator-(const CSCMatrix& A, const CSCMatrix& B) { return A.subtract(B); }
 
 CSCMatrix operator-(CSCMatrix A) {
-    std::ranges::transform(A.data(), A.data().begin(), std::negate<>{});
+    std::ranges::transform(A.values(), A.values().begin(), std::negate<>{});
     return A;
 }
 
@@ -1671,7 +1671,7 @@ CSCMatrix hstack(const CSCMatrix& A, const CSCMatrix& B)
     }
 
     std::ranges::copy(B.indices(), C.indices().begin() + A.nnz());
-    std::ranges::copy(B.data(), C.data().begin() + A.nnz());
+    std::ranges::copy(B.values(), C.values().begin() + A.nnz());
 
     Cp[C.ncols()] = A.nnz() + B.nnz();
 
@@ -1696,7 +1696,7 @@ CSCMatrix vstack(const CSCMatrix& A, const CSCMatrix& B)
 
     auto& Cp = C.indptr();
     auto& Ci = C.indices();
-    auto& Cv = C.data();
+    auto& Cv = C.values();
 
     csint nz = 0;
 

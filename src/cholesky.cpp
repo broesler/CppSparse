@@ -608,7 +608,7 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S)
 
     auto& Lp = L.indptr();
     auto& Li = L.indices();
-    auto& Lv = L.data();
+    auto& Lv = L.values();
 
     // Workspaces
     std::vector<csint> c(S.cp);  // column pointers for L
@@ -682,7 +682,7 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 {
     const auto& Lp = L.indptr();
     const auto& Li = L.indices();
-    auto& Lv = L.data();
+    auto& Lv = L.values();
 
     // Ensure L has been allocated via symbolic_cholesky
     if (Lp.empty() || Li.empty() || Lv.empty()) {
@@ -767,7 +767,7 @@ CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L)
 {
     auto& Lp = L.indptr();
     auto& Li = L.indices();
-    auto& Lv = L.data();
+    auto& Lv = L.values();
 
     // Ensure L has been allocated via symbolic_cholesky
     if (Lp.empty() || Li.empty() || Lv.empty()) {
@@ -866,7 +866,7 @@ CSCMatrix& chol_update(
 
     const auto& Lp = L.indptr();
     const auto& Li = L.indices();
-    auto& Lv = L.data();
+    auto& Lv = L.values();
 
     double α,
            β = 1.0,
@@ -880,7 +880,7 @@ CSCMatrix& chol_update(
     // Find the minimum row index in the update vector
     auto& Cp = C.indptr();
     auto& Ci = C.indices();
-    auto& Cv = C.data();
+    auto& Cv = C.values();
     auto p = Cp[0];
     auto f = Ci[p];
     for (; p < Cp[1]; ++p) {
@@ -970,7 +970,7 @@ CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S)
 
     auto& Lp = L.indptr();
     auto& Li = L.indices();
-    auto& Lv = L.data();
+    auto& Lv = L.values();
 
     auto& Cp = C_tril.indptr();  // column pointers for C
 
@@ -1061,7 +1061,7 @@ CholResult icholt(const CSCMatrix& A, const SymbolicChol& S, double drop_tol)
 
     auto& Lp = L.indptr();
     auto& Li = L.indices();
-    auto& Lv = L.data();
+    auto& Lv = L.values();
 
     // Workspaces
     std::vector<csint> c(S.cp);  // column pointers for L

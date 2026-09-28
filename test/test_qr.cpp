@@ -283,11 +283,11 @@ TEST_CASE("Numeric QR Decomposition of Square, Non-symmetric A", "[qr][M == N][n
 
         CHECK_THAT(sym_res.V.indptr(), RangeEquals(res.V.indptr()));
         CHECK_THAT(sym_res.V.indices(), RangeEquals(res.V.indices()));
-        CHECK(sym_res.V.data().empty());
+        CHECK(sym_res.V.values().empty());
         CHECK(sym_res.beta.empty());
         CHECK_THAT(sym_res.R.indptr(), RangeEquals(res.R.indptr()));
         CHECK_THAT(sym_res.R.indices(), RangeEquals(res.R.indices()));
-        REQUIRE(sym_res.R.data().empty());
+        REQUIRE(sym_res.R.values().empty());
     }
 
     SECTION("Exercise 5.3: Re-QR factorization") {
@@ -483,11 +483,11 @@ TEST_CASE("Numeric QR factorization of overdetermined matrix M > N", "[qr][M > N
 
         CHECK_THAT(sym_res.V.indptr(), RangeEquals(res.V.indptr()));
         CHECK_THAT(sym_res.V.indices(), RangeEquals(res.V.indices()));
-        CHECK(sym_res.V.data().empty());
+        CHECK(sym_res.V.values().empty());
         CHECK(sym_res.beta.empty());
         CHECK_THAT(sym_res.R.indptr(), RangeEquals(res.R.indptr()));
         CHECK_THAT(sym_res.R.indices(), RangeEquals(res.R.indices()));
-        REQUIRE(sym_res.R.data().empty());
+        REQUIRE(sym_res.R.values().empty());
     }
 
     SECTION("Exercise 5.3: Re-QR factorization") {
@@ -605,7 +605,7 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
 
         CHECK_THAT(sym_res.V.indptr(), RangeEquals(res.V.indptr()));
         CHECK_THAT(sym_res.V.indices(), RangeEquals(res.V.indices()));
-        CHECK(sym_res.V.data().empty());
+        CHECK(sym_res.V.values().empty());
         CHECK(sym_res.beta.empty());
 
         // sym_res does not include the last N - M columns of R
@@ -621,7 +621,7 @@ TEST_CASE("Numeric QR Factorization of Underdetermined Matrix M < N", "[qr][M < 
         sym_res.R.sort();  // sort columns in-place
         CHECK_THAT(sym_res.R.indices(), RangeEquals(res_indices));
 
-        REQUIRE(sym_res.R.data().empty());
+        REQUIRE(sym_res.R.values().empty());
     }
 
     SECTION("Exercise 5.3: Re-QR factorization") {

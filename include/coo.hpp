@@ -133,7 +133,7 @@ public:
 
     std::span<const csint> row() const noexcept { return i_; }
     std::span<const csint> col() const noexcept { return j_; }
-    virtual const std::vector<double>& data() const noexcept override { return v_; }
+    virtual const std::vector<double>& values() const noexcept override { return v_; }
 
     /** Return a view of the row indices, column indices, and values of the
      * non-zero elements in the matrix. */

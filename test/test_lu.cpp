@@ -363,7 +363,7 @@ TEST_CASE("Exercise 6.4: relu", "[ex6.4][relu]")
     std::ranges::iota(expect_q, 0);
 
     // Create new matrix with same sparsity pattern as A
-    VectorD B_data(A.data().begin(), A.data().end());
+    VectorD B_data(A.values().begin(), A.values().end());
     B_data += 1;  // add 1 to each entry
     CSCMatrix B{B_data, A.indices(), A.indptr(), A.shape()};
 
@@ -785,8 +785,8 @@ TEST_CASE("Exercise 6.13: Incomplete LU Decomposition", "[ex6.13][ilu]")
             CHECK(ires.L.nnz() == res.L.nnz() - expect_L_drops);
             CHECK(ires.U.nnz() == res.U.nnz() - expect_U_drops);
             // NOTE only true to absolute tolerance
-            check_all_greater_equal(ires.L.data(), drop_tol);
-            check_all_greater_equal(ires.U.data(), drop_tol);
+            check_all_greater_equal(ires.L.values(), drop_tol);
+            check_all_greater_equal(ires.U.values(), drop_tol);
             REQUIRE((iLU - A).fronorm() / A.fronorm() < drop_tol);
         }
     }

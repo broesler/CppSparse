@@ -28,31 +28,31 @@ jobs:
         with:
           enable-cache: true
 
-      # - name: Install Compiler (Ubuntu)
-      #   if: matrix.os == 'ubuntu-latest'
-      #   run: |
-      #     wget https://apt.llvm.org/llvm.sh
-      #     chmod +x llvm.sh
-      #     sudo ./llvm.sh 21
-      #     sudo apt-get update
-      #     sudo apt-get install -y clang-21 libc++-21-dev libc++abi-21-dev
-      #     echo "CC=clang-21" >> $GITHUB_ENV
-      #     echo "CXX=clang++-21" >> $GITHUB_ENV
-      #     echo "CXXFLAGS=-stdlib=libc++" >> $GITHUB_ENV
-      #     echo "LDFLAGS=--stdlib=libc++ -lc++abi -L/usr/lib/llvm-21/lib" >> $GITHUB_ENV
-      #     which clang++
-      #     which clang++-21
-      #     clang++ --version
-      #     clang++-21 --version
+      - name: Install Compiler (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 21
+          sudo apt-get update
+          sudo apt-get install -y clang-21 libc++-21-dev libc++abi-21-dev
+          echo "CC=clang-21" >> $GITHUB_ENV
+          echo "CXX=clang++-21" >> $GITHUB_ENV
+          echo "CXXFLAGS=-stdlib=libc++" >> $GITHUB_ENV
+          echo "LDFLAGS=--stdlib=libc++ -lc++abi -L/usr/lib/llvm-21/lib" >> $GITHUB_ENV
+          which clang++
+          which clang++-21
+          clang++ --version
+          clang++-21 --version
 
-      # - name: Install Compiler (MacOS)
-      #   if: matrix.os == 'macos-latest'
-      #   run: |
-      #     brew install llvm@21
-      #     LLVM_PREFIX=$(brew --prefix llvm@21)
-      #     echo "CC=${LLVM_PREFIX}/bin/clang" >> $GITHUB_ENV
-      #     echo "CXX=${LLVM_PREFIX}/bin/clang++" >> $GITHUB_ENV
-      #     echo "LDFLAGS=-L${LLVM_PREFIX}/lib/c++ -Wl,-rpath,$LLVM_PREFIX/lib/c++" >> $GITHUB_ENV
+      - name: Install Compiler (MacOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install llvm@21
+          LLVM_PREFIX=$(brew --prefix llvm@21)
+          echo "CC=${LLVM_PREFIX}/bin/clang" >> $GITHUB_ENV
+          echo "CXX=${LLVM_PREFIX}/bin/clang++" >> $GITHUB_ENV
+          echo "LDFLAGS=-L${LLVM_PREFIX}/lib/c++ -Wl,-rpath,$LLVM_PREFIX/lib/c++" >> $GITHUB_ENV
 
       - name: Set up Python
         run: uv python install ${{ matrix.python-version }}

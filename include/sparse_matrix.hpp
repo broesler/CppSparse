@@ -29,7 +29,7 @@ protected:
     /// Return the format description of the matrix.
     virtual std::string_view get_format_desc_() const = 0;
 
-    /** Print elements of the matrix between `start` and `end`.
+    /** @brief Print elements of the matrix between `start` and `end`.
      *
      * The element will be printed as: "(i, j): v" where `i` is the row index,
      * `j` is the column index, and `v` is the value of the element. This
@@ -56,7 +56,7 @@ public:
     // taking the `kth` element for `k ∈ [0, nnz())`.
     virtual void for_each_in_range(csint start, csint end, ElemFunc func) const = 0;
 
-    /** Return a range for iterating over the columns.
+    /** @brief Return a range for iterating over the columns.
      *
      * @return a range 0, 1, ..., N-1 where N is the number of columns.
      */
@@ -65,7 +65,7 @@ public:
         return std::views::iota(0, N);
     }
 
-    /** Return a range for iterating over the rows.
+    /** @brief Return a range for iterating over the rows.
      *
      * @return a range 0, 1, ..., N-1 where N is the number of columns.
      */

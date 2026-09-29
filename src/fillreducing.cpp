@@ -29,7 +29,7 @@ namespace cs {
 
 namespace {
 
-/** Flip the sign of an integer
+/** @brief Flip the sign of an integer
  * 
  * This function flips the sign of an integer `i` and returns the result.
  * It is used to mark elements as dead in the AMD algorithm.
@@ -41,7 +41,7 @@ namespace {
 inline csint flip(csint i) {  return -i - 2; }
 
 
-/** Clear the workspace
+/** @brief Clear the workspace
  * 
  * This function clears the workspace `w` and returns the updated mark.
  * If `mark` is less than 2 or if `mark + lemax` is less than 0, it clears

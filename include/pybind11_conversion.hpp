@@ -257,7 +257,7 @@ struct type_caster<cs::Vector<T>> {
 //         Conversion Templates
 // -----------------------------------------------------------------------------
 
-/** Create a NumPy array from a std::array.
+/** @brief Create a NumPy array from a std::array.
  *
  * @param self  the array to convert
  *
@@ -270,7 +270,7 @@ inline py::array_t<T> numpy_from_array(const std::array<T, N>& arr)
 };
 
 
-/** Create a NumPy array from a CSCMatrix or COOMatrix.
+/** @brief Create a NumPy array from a CSCMatrix or COOMatrix.
  *
  * @param self  the dense matrix to convert
  * @param order the order of the NumPy array ('C' or 'F')
@@ -308,7 +308,7 @@ auto ndarray_from_sparse(const T& self, cs::DenseOrder order = cs::DenseOrder::C
 };
 
 
-/** Convert a COOMatrix to a scipy.sparse.coo_array
+/** @brief Convert a COOMatrix to a scipy.sparse.coo_array
  *
  * @param A  the COOMatrix to convert
  *
@@ -317,7 +317,7 @@ auto ndarray_from_sparse(const T& self, cs::DenseOrder order = cs::DenseOrder::C
 py::object scipy_from_coo(const cs::COOMatrix& A);
 
 
-/** Convert a CSCMatrix to a scipy.sparse.csc_array
+/** @brief Convert a CSCMatrix to a scipy.sparse.csc_array
  *
  * @param A  the CSCMatrix to convert
  *
@@ -326,7 +326,7 @@ py::object scipy_from_coo(const cs::COOMatrix& A);
 py::object scipy_from_csc(const cs::CSCMatrix& A);
 
 
-/** Convert a scipy.sparse.sparray to a CSCMatrix.
+/** @brief Convert a scipy.sparse.sparray to a CSCMatrix.
  *
  * @param A  the scipy.sparse.sparray to convert
  *
@@ -335,7 +335,7 @@ py::object scipy_from_csc(const cs::CSCMatrix& A);
 cs::CSCMatrix csc_from_scipy(const py::object& obj);
 
 
-/** Convert a scipy.sparse.sparray to a COOMatrix.
+/** @brief Convert a scipy.sparse.sparray to a COOMatrix.
  *
  * @param A  the scipy.sparse.sparray to convert
  *
@@ -344,7 +344,7 @@ cs::CSCMatrix csc_from_scipy(const py::object& obj);
 cs::COOMatrix coo_from_scipy(const py::object& obj);
 
 
-/** Wrap a function to convert a scipy.sparse.sparray on input. 
+/** @brief Wrap a function to convert a scipy.sparse.sparray on input. 
  *
  * This function takes a function that operates on a CSCMatrix as the first
  * argument, and a variable number of other arguments. It converts the first
@@ -371,7 +371,7 @@ auto make_vector_func(Func&& func)
 }
 
 
-/** Wrap a function to convert a scipy.sparse.sparray on input. 
+/** @brief Wrap a function to convert a scipy.sparse.sparray on input. 
  *
  * This function takes a function that operates on a CSCMatrix as the first
  * argument, and a variable number of other arguments. It converts the first
@@ -429,7 +429,7 @@ auto make_gaxpy_matrix_func(Func&& func)
 }
 
 
-/** Dispatch the vector permutation functions for appropriate types.
+/** @brief Dispatch the vector permutation functions for appropriate types.
  *
  * @param p  the permutation vector
  * @param b_obj  the vector to permute, can be a vector of doubles or integers

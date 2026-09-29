@@ -48,7 +48,7 @@ struct QRResult {
     CSCMatrix R;                  ///< the upper triangular matrix
     std::vector<csint> p_inv, q;  ///< row and column permutations
 
-    /** Solve the linear system Ax = b using QR factorization.
+    /** @brief Solve the linear system Ax = b using QR factorization.
     *
     * If A is tall (m >= n), compute the least-squares solution.
     * If A is wide (m < n), compute the minimum-norm solution.
@@ -61,7 +61,7 @@ struct QRResult {
         VectorViewD x
     ) const;
 
-    /** Solve the linear system A^T x = b using QR factorization.
+    /** @brief Solve the linear system A^T x = b using QR factorization.
     *
     * Assume A is wide (m < n), and compute the minimum-norm solution by solving
     * A^T X = B.
@@ -76,7 +76,7 @@ struct QRResult {
 };
 
 
-/** Compute the Householder reflection matrix for a given vector.
+/** @brief Compute the Householder reflection matrix for a given vector.
  *
  * The Householder reflection matrix is defined as
  * \f[
@@ -106,7 +106,7 @@ struct QRResult {
 Householder house(cVectorViewD x);
 
 
-/** Apply a Householder reflection to a dense vector `x` with a sparse `v`.
+/** @brief Apply a Householder reflection to a dense vector `x` with a sparse `v`.
  *
  * The Householder reflection is applied as
  * \f[
@@ -129,7 +129,7 @@ void happly(
 );
 
 
-/** Compute the leftmost non-zero row index of each row in `A`.
+/** @brief Compute the leftmost non-zero row index of each row in `A`.
  *
  * @param A  a CSCMatrix
  *
@@ -138,7 +138,7 @@ void happly(
 std::vector<csint> find_leftmost(const CSCMatrix& A);
 
 
-/** Compute the column counts of the matrix V containing Householder vectors.
+/** @brief Compute the column counts of the matrix V containing Householder vectors.
  *
  * This function also computes a row permutation vector `S.p_inv`, so that the
  * diagonal entries of PA are all structurally non-zero.
@@ -157,7 +157,7 @@ std::vector<csint> find_leftmost(const CSCMatrix& A);
 void vcount(const CSCMatrix& A, SymbolicQR& S);
 
 
-/** Perform symbolic analysis for the QR decomposition of a matrix.
+/** @brief Perform symbolic analysis for the QR decomposition of a matrix.
  *
  * This function calls `vcount` to compute the column counts of the matrix `V`;
  * the total non-zeros in `V`, `S.lnz`; the row permutation vector `S.p_inv`;
@@ -191,7 +191,7 @@ SymbolicQR sqr(
 );
 
 
-/** Perform the symbolic QR decomposition of a matrix.
+/** @brief Perform the symbolic QR decomposition of a matrix.
  *
  * See: Davis, Exercise 5.1.
  *
@@ -210,7 +210,7 @@ SymbolicQR sqr(
 QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S);
 
 
-/** Perform the numeric QR decomposition of a matrix.
+/** @brief Perform the numeric QR decomposition of a matrix.
  *
  * This function computes the Householder vectors `V`, the scaling factors
  * `beta`, and the upper triangular matrix `R` of the full QR decomposition of `A`.
@@ -233,7 +233,7 @@ QRResult symbolic_qr(const CSCMatrix& A, const SymbolicQR& S);
 QRResult qr(const CSCMatrix& A, const SymbolicQR& S);
 
 
-/** Perform the numeric QR decomposition of a matrix, given the non-zero pattern
+/** @brief Perform the numeric QR decomposition of a matrix, given the non-zero pattern
  * of V and R.
  *
  * See: Davis, Exercise 5.3.
@@ -248,7 +248,7 @@ QRResult qr(const CSCMatrix& A, const SymbolicQR& S);
 void reqr(const CSCMatrix& A, const SymbolicQR& S, QRResult& res);
 
 
-/** Apply \f$ Q \f$ to a dense vector `y`.
+/** @brief Apply \f$ Q \f$ to a dense vector `y`.
  *
  * This function computes \f$ x = H_1 \dots H_N y = Q y \f$ where 
  * `Q` is represented by the Householder vectors `V`, the scaling factors
@@ -268,7 +268,7 @@ void apply_qleft(
 );
 
 
-/** Apply \f$ Q^T \f$ to a dense vector `y`.
+/** @brief Apply \f$ Q^T \f$ to a dense vector `y`.
  *
  * This function computes \f$ x = H_N \dots H_1 y = Q^T y \f$ where 
  * `Q` is represented by the Householder vectors `V`, the scaling factors
@@ -288,7 +288,7 @@ void apply_qtleft(
 );
 
 
-/** Apply \f$ Q^T \f$ to a sparse matrix `Y`.
+/** @brief Apply \f$ Q^T \f$ to a sparse matrix `Y`.
  *
  * This function computes \f$ X = H_N \dots H_1 P Y = Q^T Y \f$ where 
  * `Q` is represented by the Householder vectors `V`, the scaling factors

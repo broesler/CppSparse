@@ -35,7 +35,7 @@ struct LUResult
     std::vector<csint> p_inv,  ///< row permutation of A
                        q;      ///< column permutation of A
 
-    /** Solve the linear system Ax = b in-place.
+    /** @brief Solve the linear system Ax = b in-place.
      *
      * See also: Davis, Exercise 6.1.
      *
@@ -43,7 +43,7 @@ struct LUResult
      */
     void solve(VectorViewD b) const; 
 
-    /** Solve the linear system A^T x = b.
+    /** @brief Solve the linear system A^T x = b.
      *
      * See: Davis, Exercise 6.1.
      *
@@ -53,7 +53,7 @@ struct LUResult
 };
 
 
-/** Compute the symolic LU decomposition of A.
+/** @brief Compute the symolic LU decomposition of A.
  *
  * This function computes the column permutation `q` and the non-zero counts of
  * the matrices `L` and `U` in the LU decomposition of `A`. If `order` is
@@ -80,7 +80,7 @@ SymbolicLU slu(
 );
 
 
-/** Compute the numeric LU decomposition of A, such that \f$PA = LU\f$.
+/** @brief Compute the numeric LU decomposition of A, such that \f$PA = LU\f$.
  *
  * The implementation of `cs_lu` from CSparse (Davis, pp 86-87). This function
  * does not support non-square matrices or singular matrices, and does not do
@@ -102,7 +102,7 @@ SymbolicLU slu(
 LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol=1.0);
 
 
-/** Compute the numeric LU decomposition of A, such that \f$PAQ = LU\f$.
+/** @brief Compute the numeric LU decomposition of A, such that \f$PAQ = LU\f$.
  *
  * This function computes the LU decomposition of `A` using the symbolic
  * factorization `S`.
@@ -129,7 +129,7 @@ LUResult lu(
 );
 
 
-/** Reallocate memory for L or U in the LU decomposition.
+/** @brief Reallocate memory for L or U in the LU decomposition.
  *
  * This function reallocates memory for the L or U matrix in the LU
  * decomposition. It is used to ensure that the matrix has enough space for
@@ -146,7 +146,7 @@ LUResult lu(
 void lu_realloc(CSCMatrix& R, csint k, bool lower);
 
 
-/** Compute the numeric LU decomposition of A with known sparsity pattern.
+/** @brief Compute the numeric LU decomposition of A with known sparsity pattern.
  *
  * See: Davis, Exercise 6.4.
  *
@@ -164,7 +164,7 @@ void lu_realloc(CSCMatrix& R, csint k, bool lower);
 LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S);
 
 
-/** Compute the numeric LU decomposition of A, such that \f$PA = LU\f$.
+/** @brief Compute the numeric LU decomposition of A, such that \f$PA = LU\f$.
  *
  * See: Davis, Exercise 6.7.
  *
@@ -180,7 +180,7 @@ LUResult relu(const CSCMatrix& A, const LUResult& R, const SymbolicLU& S);
 LUResult lu_crout(const CSCMatrix& A, const SymbolicLU& S);
 
 
-/** Incomplete LU decomposition using a drop threshold and pivoting.
+/** @brief Incomplete LU decomposition using a drop threshold and pivoting.
  *
  * See: Davis, Exercise 6.13, and MATLAB `ilu` with option `type = 'ilutp'`.
  *
@@ -215,7 +215,7 @@ LUResult ilutp(
 );
 
 
-/** Incomplete LU decomposition with zero fill-in.
+/** @brief Incomplete LU decomposition with zero fill-in.
  *
  * See: Davis, Exercise 6.13, and MATLAB `ilu` with option `type = 'nofill'`.
  *

@@ -29,7 +29,7 @@ struct Problem
     VectorD x,               ///< solution
             resid;           ///< residuals
 
-    /** Construct a Problem from an input matrix.
+    /** @brief Construct a Problem from an input matrix.
      *
      * @param T  The input matrix in COO format.
      * @param droptol  The tolerance for dropping small entries.
@@ -49,7 +49,7 @@ TimePoint tic();
 double toc(TimePoint start_time);
 
 
-/** Make a matrix symmetric.
+/** @brief Make a matrix symmetric.
  *
  * This function takes a matrix stored as either a lower or upper triangular,
  * and creates a symmetric matrix by adding the transpose of the matrix to
@@ -62,7 +62,7 @@ double toc(TimePoint start_time);
 CSCMatrix make_sym(const CSCMatrix& A);
 
 
-/** Compute the norm of the residuals of the solution to `Ax = b`.
+/** @brief Compute the norm of the residuals of the solution to `Ax = b`.
  *
  * This function computes the following:
  *      `norm(A*x - b, inf) / (norm(A, 1) * norm(x, inf) + norm(b, inf))`.

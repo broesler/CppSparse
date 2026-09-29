@@ -44,7 +44,7 @@ enum class AMDOrder
 // -----------------------------------------------------------------------------
 //        String Conversions for Enums
 // -----------------------------------------------------------------------------
-/** Convert a string to a DenseOrder enum.
+/** @brief Convert a string to a DenseOrder enum.
  *
  * @param order  the string to convert ("C" or "F")
  *
@@ -60,7 +60,7 @@ inline auto denseorder_from_string(std::string_view order)
 }
 
 
-/** Convert a DenseOrder enum to a string.
+/** @brief Convert a DenseOrder enum to a string.
  *
  * @param order  the DenseOrder enum to convert
  *
@@ -76,7 +76,7 @@ constexpr std::string_view string_from_denseorder(DenseOrder order) noexcept
 }
 
 
-/** Convert a string to an AMDOrder enum.
+/** @brief Convert a string to an AMDOrder enum.
  *
  * @param order  the string to convert
  *
@@ -92,7 +92,7 @@ inline auto amdorder_from_string(std::string_view order)
 }
 
 
-/** Convert an AMDOrder enum to a string.
+/** @brief Convert an AMDOrder enum to a string.
  *
  * @param order  the AMDOrder enum to convert
  *

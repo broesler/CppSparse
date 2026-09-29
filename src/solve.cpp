@@ -1420,7 +1420,7 @@ VectorD lu_tsolve(
 
 namespace {
 
-/** Find the minimum index of all those where |x| == max(|x|).
+/** @brief Find the minimum index of all those where |x| == max(|x|).
  *
  * @param x  a vector of doubles
  *

@@ -18,7 +18,7 @@
 
 namespace cs {
 
-/** Compute the norm of a vector.
+/** @brief Compute the norm of a vector.
  *
  * @param x  the vector
  * @param ord  the order of the norm
@@ -31,7 +31,7 @@ double norm(cVectorViewD x, double ord=2.0);
 /*------------------------------------------------------------------------------
  *          Vector Permutations
  *----------------------------------------------------------------------------*/
-/** Compute the inverse (or transpose) of a permutation vector.
+/** @brief Compute the inverse (or transpose) of a permutation vector.
  *
  * @note This function is named `cs_pinv` in CSparse, but we have changed the
  * name to avoid conflict with similarly named variables, and the well-known
@@ -44,7 +44,7 @@ double norm(cVectorViewD x, double ord=2.0);
 std::vector<csint> inv_permute(std::span<const csint> p);
 
 
-/** Compute \f$ x = Pb \f$ where P is a permutation matrix, represented as
+/** @brief Compute \f$ x = Pb \f$ where P is a permutation matrix, represented as
  * a vector.
  *
  * @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
@@ -68,7 +68,7 @@ void pvec(const PRange& p, const InRange& b, OutRange& x)
 }
 
 
-/** Compute \f$ x = Pb \f$ where P is a permutation matrix, represented as
+/** @brief Compute \f$ x = Pb \f$ where P is a permutation matrix, represented as
  * a vector.
  *
  * @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
@@ -92,7 +92,7 @@ auto pvec(const PRange& p, const InRange& b)
 }
 
 
-/** Compute \f$ x = P^T b = P^{-1} b \f$ where P is a permutation matrix,
+/** @brief Compute \f$ x = P^T b = P^{-1} b \f$ where P is a permutation matrix,
  * represented as a vector.
  *
  * @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
@@ -115,7 +115,7 @@ void ipvec(const PRange& p, const InRange& b, OutRange& x)
 }
 
 
-/** Compute \f$ x = P^T b = P^{-1} b \f$ where P is a permutation matrix,
+/** @brief Compute \f$ x = P^T b = P^{-1} b \f$ where P is a permutation matrix,
  * represented as a vector.
  *
  * @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
@@ -139,7 +139,7 @@ auto ipvec(const PRange& p, const InRange& b)
 }
 
 
-/** Create a random permutation of integers [0, N-1].
+/** @brief Create a random permutation of integers [0, N-1].
  *
  * @param N  the size of the permutation
  * @param seed  the seed for the random number generator. If `seed` is 0, no

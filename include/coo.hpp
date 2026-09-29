@@ -45,7 +45,7 @@ public:
     //--------------------------------------------------------------------------
     //        Constructors
     //--------------------------------------------------------------------------
-    /** Construct a COOMatrix from arrays of values and coordinates.
+    /** @brief Construct a COOMatrix from arrays of values and coordinates.
      *
      * The entries are *not* sorted in any order, and duplicates are allowed. Any
      * duplicates will be summed.
@@ -67,14 +67,14 @@ public:
         Shape shape=Shape{0, 0}
     );
 
-    /** Allocate a COOMatrix for a given shape and number of non-zeros.
+    /** @brief Allocate a COOMatrix for a given shape and number of non-zeros.
      *
      * @param shape  the dimensions of the matrix
      * @param nzmax  integer capacity of space to reserve for non-zeros
      */
     explicit COOMatrix(Shape shape, csint nzmax=0);
 
-    /** Convert a CSCMatrix to a COOMatrix, like Matlab's `find`.
+    /** @brief Convert a CSCMatrix to a COOMatrix, like Matlab's `find`.
      *
      * @see CSCMatrix::tocoo(), cs_find (Davis, Exercise 2.2)
      *
@@ -83,7 +83,7 @@ public:
      */
     explicit COOMatrix(const CSCMatrix& A);  // Exercise 2.2, Matlab's find
 
-    /** Read a COOMatrix matrix from a file.
+    /** @brief Read a COOMatrix matrix from a file.
      *
      * The file is expected to be in "triplet format" `(i, j, v)`, where
      * `(i, j)` are the index coordinates, and `v` is the value to be
@@ -97,7 +97,7 @@ public:
      */
     static COOMatrix from_file(const std::string& filename);
 
-    /** Read a COOMatrix matrix from a file stream
+    /** @brief Read a COOMatrix matrix from a file stream
      *
      * The input is expected to be in "triplet format" `(i, j, v)`, where
      * `(i, j)` are the index coordinates, and `v` is the value to be
@@ -111,7 +111,7 @@ public:
      */
     static COOMatrix from_stream(std::istream& fp);
 
-    /** Create a random sparse matrix.
+    /** @brief Create a random sparse matrix.
      *
      * See: Exercise 2.27 performance testing
      *
@@ -135,7 +135,7 @@ public:
     std::span<const csint> col() const noexcept { return j_; }
     virtual const std::vector<double>& values() const noexcept override { return v_; }
 
-    /** Return a view of the row indices, column indices, and values of the
+    /** @brief Return a view of the row indices, column indices, and values of the
      * non-zero elements in the matrix. */
     auto elems() const
     {
@@ -147,7 +147,7 @@ public:
         );
     }
 
-    /** Operate on the non-zero elements of the matrix, as (i, j, v) tuples.
+    /** @brief Operate on the non-zero elements of the matrix, as (i, j, v) tuples.
      *
      * @param start, end operate on the `kth` element(s) for `k ∈ [start, end)`.
      * @param func       a function that takes the row index `i`, column index
@@ -168,7 +168,7 @@ public:
         }
     }
 
-    /** Insert triplet entry into the matrix.
+    /** @brief Insert triplet entry into the matrix.
      *
      * Note that there is no argument checking other than for positive indices.
      * Inserting with an index that is outside of the dimensions of the matrix
@@ -187,7 +187,7 @@ public:
      */
     COOMatrix& insert(csint i, csint j, double v);
 
-    /** Insert a dense submatrix.
+    /** @brief Insert a dense submatrix.
      *
      * See: Davis, Exercise 2.5.
      *
@@ -207,7 +207,7 @@ public:
     //--------------------------------------------------------------------------
     //        Format Conversions
     //--------------------------------------------------------------------------
-    /** Convert a coordinate format matrix to a compressed sparse column matrix.
+    /** @brief Convert a coordinate format matrix to a compressed sparse column matrix.
      *
      * The columns are not guaranteed to be sorted, and duplicates are allowed.
      *
@@ -215,13 +215,13 @@ public:
      */
     CSCMatrix compress() const;
 
-    /** Create a canonical format CSCMatrix from a COOMatrix.
+    /** @brief Create a canonical format CSCMatrix from a COOMatrix.
      *
      * See: Davis, Exercise 2.9
      */
     CSCMatrix tocsc() const;
 
-    /** Convert the matrix to a dense array.
+    /** @brief Convert the matrix to a dense array.
      *
      * The array is in column-major order, like Fortran.
      *
@@ -237,7 +237,7 @@ public:
     //--------------------------------------------------------------------------
     //        Math Operations
     //--------------------------------------------------------------------------
-    /** Transpose the matrix as a copy.
+    /** @brief Transpose the matrix as a copy.
      *
      * See: Davis, Exercise 2.6.
      *
@@ -246,7 +246,7 @@ public:
     COOMatrix transpose() const;
     COOMatrix T() const;
 
-    /** Multiply a COOMatrix by a dense vector.
+    /** @brief Multiply a COOMatrix by a dense vector.
      *
      * See: Davis, Exercise 2.10.
      *

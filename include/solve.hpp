@@ -35,7 +35,7 @@ struct TriPerm {
 };
 
 
-/** Exception raised when a matrix is *not* permuted triangular.
+/** @brief Exception raised when a matrix is *not* permuted triangular.
  */
 class PermutedTriangularMatrixError : public std::runtime_error {
 public:
@@ -56,7 +56,7 @@ struct QRSolveResult {
 //------------------------------------------------------------------------------
 
 
-/** Forward solve a lower-triangular system \f$ Lx = b \f$, in-place.
+/** @brief Forward solve a lower-triangular system \f$ Lx = b \f$, in-place.
  *
  * @note This function assumes that the diagonal entry of `L` is always
  * present and is the first entry in each column. Otherwise, the row
@@ -68,7 +68,7 @@ struct QRSolveResult {
 void lsolve_inplace(const CSCMatrix& L, VectorViewD x);
 
 
-/** Forward solve a lower-triangular system \f$ Lx = b \f$.
+/** @brief Forward solve a lower-triangular system \f$ Lx = b \f$.
  *
  * @note This function assumes that the diagonal entry of `L` is always
  * present and is the first entry in each column. Otherwise, the row
@@ -83,7 +83,7 @@ VectorD lsolve(const CSCMatrix& L, cVectorViewD B);
 VectorD lsolve(const CSCMatrix& L, const CSCMatrix& B);
 
 
-/** Backsolve a lower-triangular system \f$ L^Tx = b \f$.
+/** @brief Backsolve a lower-triangular system \f$ L^Tx = b \f$.
  *
  * @note This function assumes that the diagonal entry of `L` is always
  * present and is the first entry in each column. Otherwise, the row
@@ -95,7 +95,7 @@ VectorD lsolve(const CSCMatrix& L, const CSCMatrix& B);
 void ltsolve_inplace(const CSCMatrix& L, VectorViewD x);
 
 
-/** Backsolve a lower-triangular system \f$ L^Tx = b \f$.
+/** @brief Backsolve a lower-triangular system \f$ L^Tx = b \f$.
  *
  * @note This function assumes that the diagonal entry of `L` is always
  * present and is the first entry in each column. Otherwise, the row
@@ -109,7 +109,7 @@ void ltsolve_inplace(const CSCMatrix& L, VectorViewD x);
 VectorD ltsolve(const CSCMatrix& L, cVectorViewD b);
 
 
-/** Backsolve an upper-triangular system \f$ Ux = b \f$.
+/** @brief Backsolve an upper-triangular system \f$ Ux = b \f$.
  *
  * @note This function assumes that the diagonal entry of `U` is always
  * present and is the last entry in each column. Otherwise, the row
@@ -121,7 +121,7 @@ VectorD ltsolve(const CSCMatrix& L, cVectorViewD b);
 void usolve_inplace(const CSCMatrix& U, VectorViewD x);
 
 
-/** Backsolve an upper-triangular system \f$ Ux = b \f$.
+/** @brief Backsolve an upper-triangular system \f$ Ux = b \f$.
  *
  * @note This function assumes that the diagonal entry of `U` is always
  * present and is the last entry in each column. Otherwise, the row
@@ -136,7 +136,7 @@ VectorD usolve(const CSCMatrix& U, cVectorViewD B);
 VectorD usolve(const CSCMatrix& U, const CSCMatrix& B);
 
 
-/** Forward solve an upper-triangular system \f$ U^T x = b \f$.
+/** @brief Forward solve an upper-triangular system \f$ U^T x = b \f$.
  *
  * @note This function assumes that the diagonal entry of `U` is always present
  * and is the last entry in each column. Otherwise, the row indices in each
@@ -148,7 +148,7 @@ VectorD usolve(const CSCMatrix& U, const CSCMatrix& B);
 void utsolve_inplace(const CSCMatrix& U, VectorViewD x);
 
 
-/** Forward solve an upper-triangular system \f$ U^T x = b \f$.
+/** @brief Forward solve an upper-triangular system \f$ U^T x = b \f$.
  *
  * @note This function assumes that the diagonal entry of `U` is always present
  * and is the last entry in each column. Otherwise, the row indices in each
@@ -162,7 +162,7 @@ void utsolve_inplace(const CSCMatrix& U, VectorViewD x);
 VectorD utsolve(const CSCMatrix& U, cVectorViewD b);
 
 
-/** Forward solve a lower-triangular system \f$ Lx = b \f$, but
+/** @brief Forward solve a lower-triangular system \f$ Lx = b \f$, but
  * optimized for cache efficiency.
  *
  * See: Davis, Exercise 3.8
@@ -177,7 +177,7 @@ VectorD utsolve(const CSCMatrix& U, cVectorViewD b);
 void lsolve_inplace_opt(const CSCMatrix& A, VectorViewD x);
 
 
-/** Forward solve a lower-triangular system \f$ Lx = b \f$, but
+/** @brief Forward solve a lower-triangular system \f$ Lx = b \f$, but
  * optimized for cache efficiency.
  *
  * See: Davis, Exercise 3.8
@@ -194,7 +194,7 @@ void lsolve_inplace_opt(const CSCMatrix& A, VectorViewD x);
 VectorD lsolve_opt(const CSCMatrix& L, cVectorViewD b);
 
 
-/** Backsolve an upper-triangular system \f$ Ux = b \f$, but optimized for cache
+/** @brief Backsolve an upper-triangular system \f$ Ux = b \f$, but optimized for cache
  * efficiency.
  *
  * See: Davis, Exercise 3.8
@@ -209,7 +209,7 @@ VectorD lsolve_opt(const CSCMatrix& L, cVectorViewD b);
 void usolve_inplace_opt(const CSCMatrix& A, VectorViewD x);
 
 
-/** Backsolve an upper-triangular system \f$ Ux = b \f$, but optimized for cache
+/** @brief Backsolve an upper-triangular system \f$ Ux = b \f$, but optimized for cache
  * efficiency.
  *
  * See: Davis, Exercise 3.8
@@ -226,7 +226,7 @@ void usolve_inplace_opt(const CSCMatrix& A, VectorViewD x);
 VectorD usolve_opt(const CSCMatrix& U, cVectorViewD b);
 
 
-/** Solve Lx = b with a row-permuted L. The permutation is unknown.
+/** @brief Solve Lx = b with a row-permuted L. The permutation is unknown.
  *
  * See: Davis, Exercise 3.3
  *
@@ -241,7 +241,7 @@ VectorD usolve_opt(const CSCMatrix& U, cVectorViewD b);
 VectorD lsolve_rows(const CSCMatrix& L, cVectorViewD b);
 
 
-/** Solve Ux = b with a row-permuted U. The permutation is unknown.
+/** @brief Solve Ux = b with a row-permuted U. The permutation is unknown.
  *
  * See: Davis, Exercise 3.4
  *
@@ -256,7 +256,7 @@ VectorD lsolve_rows(const CSCMatrix& L, cVectorViewD b);
 VectorD usolve_rows(const CSCMatrix& U, cVectorViewD b);
 
 
-/** Solve Lx = b with a column-permuted L. The permutation is unknown.
+/** @brief Solve Lx = b with a column-permuted L. The permutation is unknown.
  *
  * See: Davis, Exercise 3.5
  *
@@ -271,7 +271,7 @@ VectorD usolve_rows(const CSCMatrix& U, cVectorViewD b);
 VectorD lsolve_cols(const CSCMatrix& L, cVectorViewD b);
 
 
-/** Solve Ux = b with a column-permuted U. The permutation is unknown.
+/** @brief Solve Ux = b with a column-permuted U. The permutation is unknown.
  *
  * See: Davis, Exercise 3.6
  *
@@ -286,7 +286,7 @@ VectorD lsolve_cols(const CSCMatrix& L, cVectorViewD b);
 VectorD usolve_cols(const CSCMatrix& U, cVectorViewD b);
 
 
-/** Find the diagonal indices of a row-permuted lower triangular matrix.
+/** @brief Find the diagonal indices of a row-permuted lower triangular matrix.
  *
  * See: Davis, Exercise 3.3
  *
@@ -300,7 +300,7 @@ VectorD usolve_cols(const CSCMatrix& U, cVectorViewD b);
 std::vector<csint> find_lower_diagonals(const CSCMatrix& L);
 
 
-/** Find the diagonal indices of a row-permuted upper triangular matrix.
+/** @brief Find the diagonal indices of a row-permuted upper triangular matrix.
  *
  * See: Davis, Exercise 3.4
  *
@@ -314,7 +314,7 @@ std::vector<csint> find_lower_diagonals(const CSCMatrix& L);
 std::vector<csint> find_upper_diagonals(const CSCMatrix& U);
 
 
-/** Solve a row- and column-permuted triangular system P A Q x = b, for unknown
+/** @brief Solve a row- and column-permuted triangular system P A Q x = b, for unknown
  * P and Q.
  *
  * See: Davis, Exercise 3.7
@@ -335,7 +335,7 @@ void tri_solve_perm_inplace(
 );
 
 
-/** Solve a row- and column-permuted triangular system P A Q X = B, for unknown
+/** @brief Solve a row- and column-permuted triangular system P A Q X = B, for unknown
  * P and Q.
  *
  * See: Davis, Exercise 3.7
@@ -353,7 +353,7 @@ VectorD tri_solve_perm(const CSCMatrix& A, cVectorViewD B);
 VectorD tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B);
 
 
-/** Find the permutation vectors of a permuted triangular matrix.
+/** @brief Find the permutation vectors of a permuted triangular matrix.
  *
  * See: Davis, Exercise 3.7
  *
@@ -368,7 +368,7 @@ VectorD tri_solve_perm(const CSCMatrix& A, const CSCMatrix& B);
 TriPerm find_tri_permutation(const CSCMatrix& A);
 
 
-/** Solve a triangular system \f$ Lx = b_k \f$ for column `k` of `B`,
+/** @brief Solve a triangular system \f$ Lx = b_k \f$ for column `k` of `B`,
  * where `L` and `B` are sparse.
  *
  * @note If `lower` is true, this function assumes that the diagonal entry of
@@ -408,7 +408,7 @@ void spsolve(
 
 namespace detail {
 
-/** Solve a triangular linear system \f$ Tx = B \f$ for multiple RHS columns.
+/** @brief Solve a triangular linear system \f$ Tx = B \f$ for multiple RHS columns.
  *
  * @tparam InplaceTriSolve  a function that performs an in-place triangular
  *         solve on a single RHS vector.
@@ -447,7 +447,7 @@ VectorD trisolve_dense(
 };
 
 
-/** Solve a triangular linear system \f$ Tx = B \f$ for multiple RHS columns.
+/** @brief Solve a triangular linear system \f$ Tx = B \f$ for multiple RHS columns.
  *
  * @tparam Lower  True if input is lower triangular, otherwise upper.
  *
@@ -479,7 +479,7 @@ VectorD trisolve_sparse(const CSCMatrix& L, const CSCMatrix& B)
 }
 
 
-/** Compute the reachability indices of a column `k` in a sparse matrix `B`,
+/** @brief Compute the reachability indices of a column `k` in a sparse matrix `B`,
  * given a sparse matrix `A` that defines the graph.
  *
  * This function is a recursive version of `cs::reach`. It is not intended to be
@@ -494,7 +494,7 @@ VectorD trisolve_sparse(const CSCMatrix& L, const CSCMatrix& B)
 std::vector<csint> reach_r(const CSCMatrix& A, const CSCMatrix& B);
 
 
-/** Perform depth-first search on the matrix graph.
+/** @brief Perform depth-first search on the matrix graph.
  *
  * This function is a recursive version of `cs::dfs`. It is not intended to be
  * used directly, but rather as a demonstration.
@@ -517,7 +517,7 @@ void dfs_r(
 }  // namespace detail
 
 
-/** Compute the reachability indices of a column `k` in a sparse matrix `B`,
+/** @brief Compute the reachability indices of a column `k` in a sparse matrix `B`,
  * given a sparse matrix `A` that defines the graph.
  *
  * @param A  a sparse system matrix
@@ -538,7 +538,7 @@ void reach(
 );
 
 
-/** Perform depth-first search on the matrix graph.
+/** @brief Perform depth-first search on the matrix graph.
  *
  * @param A  a sparse matrix
  * @param j  the starting node
@@ -567,7 +567,7 @@ void dfs(
 // -----------------------------------------------------------------------------
 //        Cholesky Factorization Solutions
 // -----------------------------------------------------------------------------
-/** Find the topological order of the nodes in the elimination tree.
+/** @brief Find the topological order of the nodes in the elimination tree.
  *
  * @param b  a sparse matrix
  * @param parent  the parent vector of the elimination tree
@@ -586,7 +586,7 @@ std::vector<csint> topological_order(
 );
 
 
-/** Solve the system Ax = b using the Cholesky factorization.
+/** @brief Solve the system Ax = b using the Cholesky factorization.
  *
  * @param A  (N, N) a symmetric, positive-definite matrix
  * @param B  (N, K) a dense matrix, in column-major format
@@ -603,7 +603,7 @@ VectorD chol_solve(
 );
 
 
-/** Solve the system AX = B using the Cholesky factorization.
+/** @brief Solve the system AX = B using the Cholesky factorization.
  *
  * @param A  (N, N) a symmetric, positive-definite matrix
  * @param B  (N, K) a sparse matrix
@@ -624,7 +624,7 @@ VectorD chol_solve(
 //         QR Factorization Solvers
 // -----------------------------------------------------------------------------
 
-/** Solve the system AX = B using the QR factorization.
+/** @brief Solve the system AX = B using the QR factorization.
  *
  * This method is useful for solving least-squares problems where the matrix `A`
  * is `M`-by-`N` and `M` > `N`. It can also be used to solve under-determined
@@ -649,7 +649,7 @@ QRSolveResult qr_solve(
 );
 
 
-/** Solve the system AX = B using the QR factorization.
+/** @brief Solve the system AX = B using the QR factorization.
  *
  * This method is useful for solving least-squares problems where the matrix `A`
  * is `M`-by-`N` and `M` > `N`. It can also be used to solve under-determined
@@ -678,7 +678,7 @@ QRSolveResult qr_solve(
 //         LU Factorization Solutions
 // -----------------------------------------------------------------------------
 
-/** Solve a system \f$ A X = B \f$ using the LU factorization of `A`.
+/** @brief Solve a system \f$ A X = B \f$ using the LU factorization of `A`.
  *
  * See also: Davis, Exercise 6.1.
  *
@@ -700,7 +700,7 @@ VectorD lu_solve(
 );
 
 
-/** Solve a system \f$ A X = B \f$ using the LU factorization of `A`.
+/** @brief Solve a system \f$ A X = B \f$ using the LU factorization of `A`.
  *
  * See also: Davis, Exercise 6.1.
  *
@@ -722,7 +722,7 @@ VectorD lu_solve(
 );
 
 
-/** Solve a system \f$ A^T x = b \f$ using the LU factorization of `A`.
+/** @brief Solve a system \f$ A^T x = b \f$ using the LU factorization of `A`.
  *
  * See: Davis, Exercise 6.1.
  *
@@ -742,7 +742,7 @@ VectorD lu_tsolve(
 );
 
 
-/** Estimate the 1-norm of the *inverse* of a sparse matrix.
+/** @brief Estimate the 1-norm of the *inverse* of a sparse matrix.
  *
  * See: Davis, Exercise 6.15.
  *
@@ -753,7 +753,7 @@ VectorD lu_tsolve(
 double norm1est_inv(const LUResult& res);
 
 
-/** Estimate the 1-norm condition number of a sparse matrix.
+/** @brief Estimate the 1-norm condition number of a sparse matrix.
  *
  * The condition number for a non-symmetric matrix is defined as:
  * \f$ \kappa_p(A) = ||A||_p ||A^{-1}||_p \f$.
@@ -768,7 +768,7 @@ double norm1est_inv(const LUResult& res);
 double cond1est(const CSCMatrix& A);
 
 
-/** Solve a sparse linear system AX = B.
+/** @brief Solve a sparse linear system AX = B.
  *
  * See: Davis, Exercise 8.1 and 8.10.
  *
@@ -783,7 +783,7 @@ double cond1est(const CSCMatrix& A);
 VectorD spsolve(const CSCMatrix& A, cVectorViewD B);
 
 
-/** Solve a sparse linear system Ax = b.
+/** @brief Solve a sparse linear system Ax = b.
  *
  * See: Davis, Exercise 8.1.
  *

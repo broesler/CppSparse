@@ -16,7 +16,7 @@ class COOMatrix;
 class CSCMatrix;
 
 
-/** Define the 4x4 matrix from Davis Equation (2.1) [p 7--8].
+/** @brief Define the 4x4 matrix from Davis Equation (2.1) [p 7--8].
  *
  *  A = [[4.5,   0, 3.2,   0],
  *       [3.1, 2.9,   0, 0.9],
@@ -31,7 +31,7 @@ class CSCMatrix;
 COOMatrix davis_example_small();
 
 
-/** Define the 11x11 matrix in Davis, Figure 4.2, p 39.
+/** @brief Define the 11x11 matrix in Davis, Figure 4.2, p 39.
  *
  * This matrix is sparse and symmetric positive definite. We arbitrarily assign
  * the diagonal to the 0-based index values + 10, and the off-diagonals to 1.
@@ -56,7 +56,7 @@ COOMatrix davis_example_small();
 CSCMatrix davis_example_chol();
 
 
-/** Define the 8x8 matrix in Davis, Figure 5.1, p 74.
+/** @brief Define the 8x8 matrix in Davis, Figure 5.1, p 74.
  *
  * This matrix is sparse, unsymmetric positive definite. We arbitrarily assign
  * the diagonal to the 1-based index values (except 8), and off-diagonals to 1.
@@ -83,7 +83,7 @@ CSCMatrix davis_example_chol();
 CSCMatrix davis_example_qr(double add_diag=0.0, bool random_vals=false);
 
 
-/** Build the 10 x 10 symmetric, positive definite AMD example matrix.
+/** @brief Build the 10 x 10 symmetric, positive definite AMD example matrix.
  *
  * A = [[10.,  0.,  0.,  1.,  0.,  1.,  0.,  0.,  0.,  0.],
  *      [ 0., 11.,  0.,  0.,  1.,  1.,  0.,  0.,  1.,  0.],
@@ -103,7 +103,7 @@ CSCMatrix davis_example_qr(double add_diag=0.0, bool random_vals=false);
 CSCMatrix davis_example_amd();
 
 
-/** Define the 3x3 matrix E from Strang, p 25.
+/** @brief Define the 3x3 matrix E from Strang, p 25.
  *
  * E = [[ 1, 0, 0],
  *      [-2, 1, 0],
@@ -114,7 +114,7 @@ CSCMatrix davis_example_amd();
 CSCMatrix E_mat();
 
 
-/** Define the 3x3 matrix A from Strang, p 25.
+/** @brief Define the 3x3 matrix A from Strang, p 25.
  *
  * A = [[ 2, 1, 1],
  *      [ 4,-6, 0],

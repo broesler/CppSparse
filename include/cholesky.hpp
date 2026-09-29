@@ -61,13 +61,13 @@ struct CholResult
     CSCMatrix L;               ///< Cholesky factor
     std::vector<csint> p_inv;  ///< fill-reducing permutation (symmetric)
 
-    /** Solve the linear system Ax = b in-place.
+    /** @brief Solve the linear system Ax = b in-place.
      *
      * @param b[in,out]  right-hand side vector on input, solution on output.
      */
     void solve(VectorViewD b) const; 
 
-    /** Solve the linear system Ax = b in-place.
+    /** @brief Solve the linear system Ax = b in-place.
      *
      * @param B  right-hand side matrix
      * @param k  the column index of `b` to solve
@@ -81,7 +81,7 @@ struct CholResult
         VectorViewD x
     ) const; 
 
-    /** Solve \f$ Lx = b \f$ with sparse RHS `b`, where `L` is
+    /** @brief Solve \f$ Lx = b \f$ with sparse RHS `b`, where `L` is
      * a lower-triangular Cholesky factor.
     *
     * See: Davis, Exercise 4.3.
@@ -100,7 +100,7 @@ struct CholResult
         std::span<const csint> parent = {}
     ) const;
 
-    /** Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is
+    /** @brief Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is
      * a lower-triangular Cholesky factor.
     *
     * See: Davis, Exercise 4.4.
@@ -118,7 +118,7 @@ struct CholResult
     ) const;
 
 private:
-    /** Solve \f$ Lx = b \f$ with sparse RHS `b`, where `L` is a lower-triangular
+    /** @brief Solve \f$ Lx = b \f$ with sparse RHS `b`, where `L` is a lower-triangular
     * Cholesky factor.
     *
     * See: Davis, Exercise 4.3.
@@ -129,7 +129,7 @@ private:
     */
     void lsolve_(std::span<const csint> xi, VectorViewD x) const;
 
-    /** Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is
+    /** @brief Solve \f$ L^T x = b \f$ with sparse RHS `b`, where `L` is
      * a lower-triangular Cholesky factor.
     *
     * See: Davis, Exercise 4.3.
@@ -140,7 +140,7 @@ private:
     */
     void ltsolve_(std::span<const csint> xi, VectorViewD x) const;
 
-    /** Solve \f$ Lx = b \f$, or \f$ L^T x = b \f$, with sparse RHS `b`, where
+    /** @brief Solve \f$ Lx = b \f$, or \f$ L^T x = b \f$, with sparse RHS `b`, where
      * `L` is a lower-triangular Cholesky factor.
     *
     * See: Davis, Exercise 4.3 and 4.4.
@@ -160,7 +160,7 @@ private:
 };
 
 
-/** Exception raised when a matrix is not positive definite for Cholesky
+/** @brief Exception raised when a matrix is not positive definite for Cholesky
  * factorization.
  */
 class CholeskyNotPositiveDefiniteError : public std::runtime_error {
@@ -174,7 +174,7 @@ public:
  *          Cholesky Decomposition
  *----------------------------------------------------------------------------*/
 // ---------- Helpers
-/** Post-order a tree non-recursively, in O(N) time.
+/** @brief Post-order a tree non-recursively, in O(N) time.
  *
  * @param parent  the parent vector of the elimination tree
  *
@@ -183,7 +183,7 @@ public:
 std::vector<csint> post(std::span<const csint> parent);
 
 
-/** Depth-first search in a tree.
+/** @brief Depth-first search in a tree.
  *
  * @param j  the starting node
  * @param[in,out] head  the head of the linked list
@@ -200,7 +200,7 @@ void tdfs(
 
 // NOTE firstdesc and rowcnt are *not* officially part of CSparse, but are in
 // the book for demonstrative purposes.
-/** Find the first descendent of a node in a tree.
+/** @brief Find the first descendent of a node in a tree.
  *
  * @note The *first descendent* of a node `j` is the smallest postordering of
  * any descendant of `j`.
@@ -217,7 +217,7 @@ FirstDesc firstdesc(
 );
 
 
-/** Compute the least common ancestor of j_prev and j, if j is a leaf of the ith
+/** @brief Compute the least common ancestor of j_prev and j, if j is a leaf of the ith
  * row subtree.
  *
  * @param i  the row index
@@ -244,7 +244,7 @@ LCAStatus least_common_ancestor(
 
 
 // ---------- Matrix operations
-/** Compute the elimination tree of A.
+/** @brief Compute the elimination tree of A.
  *
  * @param A  the matrix to factorize
  * @param ata  if True, compute the elimination tree of A^T A
@@ -254,7 +254,7 @@ LCAStatus least_common_ancestor(
 std::vector<csint> etree(const CSCMatrix& A, bool ata=false);
 
 
-/** Compute the height of the elimination tree in O(N) time.
+/** @brief Compute the height of the elimination tree in O(N) time.
  *
  * The height is defined as the length of the longest path from the root to any
  * leaf of the tree.
@@ -268,7 +268,7 @@ std::vector<csint> etree(const CSCMatrix& A, bool ata=false);
 csint etree_height(std::span<const csint> parent);
 
 
-/** Compute the reachability set for the *k*th row of *L*, the Cholesky faxtcor
+/** @brief Compute the reachability set for the *k*th row of *L*, the Cholesky faxtcor
  * of `A`, in topological order.
  *
  * @param A  the matrix to factorize
@@ -284,7 +284,7 @@ std::vector<csint> ereach(
 );
 
 
-/** Compute the reachability set for the *k*th row of *L*, the Cholesky faxtcor
+/** @brief Compute the reachability set for the *k*th row of *L*, the Cholesky faxtcor
  * of this matrix.
  *
  * `A` and `parent` are assumed to be postordered, and `A` is assumed to have
@@ -303,7 +303,7 @@ std::vector<csint> ereach_post(
 );
 
 
-/** Compute the reachability set for the *k*th row of *L*, the Cholesky faxtcor
+/** @brief Compute the reachability set for the *k*th row of *L*, the Cholesky faxtcor
  * of `A`, in no particular order.
  *
  * @param A  the matrix to factorize
@@ -319,7 +319,7 @@ std::vector<csint> ereach_queue(
 );
 
 
-/** Count the number of non-zeros in each row of the Cholesky factor L of A.
+/** @brief Count the number of non-zeros in each row of the Cholesky factor L of A.
  *
  * @param A  the matrix to factorize
  * @param parent  the parent vector of the elimination tree
@@ -334,7 +334,7 @@ std::vector<csint> rowcnt(
 );
 
 
-/** Initialize the linked list structure for the column counts of A^T A.
+/** @brief Initialize the linked list structure for the column counts of A^T A.
  *
  * @param AT  the transpose of the matrix to factorize
  * @param post  the post-order of the elimination tree
@@ -349,7 +349,7 @@ void init_ata(
 );
 
 
-/** Count the number of non-zeros in each column of the Cholesky factor L of A.
+/** @brief Count the number of non-zeros in each column of the Cholesky factor L of A.
  *
  * @param A  the matrix to factorize
  * @param parent  the parent vector of the elimination tree
@@ -366,7 +366,7 @@ std::vector<csint> counts(
 );
 
 
-/** Count the number of non-zeros in each row of the Cholesky factor L of A.
+/** @brief Count the number of non-zeros in each row of the Cholesky factor L of A.
  *
  * @param A  the matrix to factorize
  *
@@ -375,7 +375,7 @@ std::vector<csint> counts(
 std::vector<csint> chol_rowcounts(const CSCMatrix& A);
 
 
-/** Count the number of non-zeros in each column of the Cholesky factor L of A.
+/** @brief Count the number of non-zeros in each column of the Cholesky factor L of A.
  *
  * @param A  the matrix to factorize
  * @param ata  if True, compute the counts for A^T A, otherwise A
@@ -385,7 +385,7 @@ std::vector<csint> chol_rowcounts(const CSCMatrix& A);
 std::vector<csint> chol_colcounts(const CSCMatrix& A, bool ata=false);
 
 
-/** Compute the symbolic Cholesky factorization of a sparse matrix.
+/** @brief Compute the symbolic Cholesky factorization of a sparse matrix.
  *
  * @note This function assumes that `A` is symmetric and positive definite.
  *
@@ -409,7 +409,7 @@ SymbolicChol schol(
 );
 
 
-/** Compute the complete symbolic Cholesky factorization of a sparse matrix.
+/** @brief Compute the complete symbolic Cholesky factorization of a sparse matrix.
  *
  * This functions computes the entire sparsity pattern of `L` in *O(|L|)* time.
  * It returns the matrix with sorted columns.
@@ -433,7 +433,7 @@ SymbolicChol schol(
 CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S);
 
 
-/** Compute the up-looking Cholesky factorization of a sparse matrix.
+/** @brief Compute the up-looking Cholesky factorization of a sparse matrix.
  *
  * @note This function assumes that `A` is symmetric and positive definite.
  *
@@ -446,7 +446,7 @@ CholResult symbolic_cholesky(const CSCMatrix& A, const SymbolicChol& S);
 CholResult chol(const CSCMatrix& A, const SymbolicChol& S);
 
 
-/** Compute the left-looking Cholesky factorization of a sparse matrix, given
+/** @brief Compute the left-looking Cholesky factorization of a sparse matrix, given
  * the non-zero pattern.
  *
  * See: Davis, Exercise 4.11.
@@ -466,7 +466,7 @@ CholResult chol(const CSCMatrix& A, const SymbolicChol& S);
 CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
 
 
-/** Compute the up-looking Cholesky factorization of a sparse matrix, given the
+/** @brief Compute the up-looking Cholesky factorization of a sparse matrix, given the
  * non-zero pattern.
  *
  * See: Davis, Exercise 4.12.
@@ -486,7 +486,7 @@ CSCMatrix& leftchol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
 CSCMatrix& rechol(const CSCMatrix& A, const SymbolicChol& S, CSCMatrix& L);
 
 
-/** Update the Cholesky factor for \f$ A = A + σ w w^T \f$.
+/** @brief Update the Cholesky factor for \f$ A = A + σ w w^T \f$.
  *
  * @param L  the Cholesky factor of A
  * @param update  true for update, false for downdate
@@ -504,7 +504,7 @@ CSCMatrix& chol_update(
 );
 
 
-/** Compute the elimination tree of L and row and column counts using ereach.
+/** @brief Compute the elimination tree of L and row and column counts using ereach.
  *
  * This function takes O(|L|) time and O(N) space.
  *
@@ -525,7 +525,7 @@ CSCMatrix& chol_update(
 CholCounts chol_etree_counts(const CSCMatrix& A);
 
 
-/** Compute the incomplete Cholesky factorization with no fill-in.
+/** @brief Compute the incomplete Cholesky factorization with no fill-in.
  *
  * See: Davis, Exercise 4.13.
  *
@@ -546,7 +546,7 @@ CholCounts chol_etree_counts(const CSCMatrix& A);
 CholResult ichol_nofill(const CSCMatrix& A, const SymbolicChol& S);
 
 
-/** Compute the incomplete Cholesky factorization with drop tolerance.
+/** @brief Compute the incomplete Cholesky factorization with drop tolerance.
  *
  * See: Davis, Exercise 4.13.
  *

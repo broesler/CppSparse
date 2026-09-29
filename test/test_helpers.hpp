@@ -22,7 +22,7 @@ namespace cs {
 constexpr double tol = 1e-14;
 
 
-/** Check that a sparse matrix is equal to a dense matrix.
+/** @brief Check that a sparse matrix is equal to a dense matrix.
  *
  * We use a template function so that the function can be used with both
  * const and non-const matrices.
@@ -57,7 +57,7 @@ void check_sparse_eq_dense(
 }
 
 
-/** Compare two matrices for equality.
+/** @brief Compare two matrices for equality.
  *
  * @note This function expects the matrices to be in canonical form.
  *
@@ -72,7 +72,7 @@ void check_canonical_allclose(
 );
 
 
-/** Compare two matrices for equality.
+/** @brief Compare two matrices for equality.
  *
  * @note This function does not require the matrices to be in canonical form.
  *
@@ -87,7 +87,7 @@ void check_noncanonical_allclose(
 );
 
 
-/** Compare two matrices for equality.
+/** @brief Compare two matrices for equality.
  *
  * @note This function does not require the matrices to be in canonical form.
  *
@@ -105,7 +105,7 @@ void check_sparse_allclose(
 );
 
 
-/** Check that all elements of a vector compare to a double.
+/** @brief Check that all elements of a vector compare to a double.
  *
  * @param vec  a vector of doubles
  * @param c    the double to compare to
@@ -120,7 +120,7 @@ void check_all_compare(std::span<const T> vec, const T& c, Compare comp)
 }
 
 
-/** Check that all elements of a vector are greater than or equal to a double.
+/** @brief Check that all elements of a vector are greater than or equal to a double.
  *
  * @param vec  a vector of doubles
  * @param c    the double to compare to
@@ -128,7 +128,7 @@ void check_all_compare(std::span<const T> vec, const T& c, Compare comp)
 void check_all_greater_equal(std::span<const double> vec, double c);
 
 
-/** Check that all elements of a vector are not equal to a double.
+/** @brief Check that all elements of a vector are not equal to a double.
  *
  * @param vec  a vector of doubles
  * @param c    the double to compare to
@@ -136,7 +136,7 @@ void check_all_greater_equal(std::span<const double> vec, double c);
 void check_all_not_equal(std::span<const double> vec, double c);
 
 
-/** Check that all elements of two vectors are within a given tolerance.
+/** @brief Check that all elements of two vectors are within a given tolerance.
  *
  * @param a     a vector of doubles
  * @param b     a vector of doubles

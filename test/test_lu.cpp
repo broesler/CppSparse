@@ -599,7 +599,7 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
             }
         }
 
-        /** Override realloc to log the number of attempts.
+        /** @brief Override realloc to log the number of attempts.
          * @param request  new capacity of the matrix
          */
         void realloc(csint request) override {
@@ -612,7 +612,7 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
             }
         }
 
-        /** Get the number of realloc attempts.
+        /** @brief Get the number of realloc attempts.
          * @return vector of realloc attempts
          */
         std::vector<csint> get_realloc_attempts() const {

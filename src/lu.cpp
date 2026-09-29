@@ -159,7 +159,7 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
 }
 
 
-/** Allocate more space for the next column.
+/** @brief Allocate more space for the next column.
  *
  * See: Davis, Exercise 6.11.
  *
@@ -202,7 +202,7 @@ void lu_realloc(CSCMatrix& R, csint k, bool lower)
 
 namespace {
 
-/** Assign missing values in the permutation vector.
+/** @brief Assign missing values in the permutation vector.
  *
  * This function is used to assign missing values in the permutation vector
  * `p_inv` to valid indices. The missing values are indicated by "-1" entries

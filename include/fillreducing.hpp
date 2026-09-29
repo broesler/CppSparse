@@ -60,7 +60,7 @@ struct DMPermResult {
 };
 
 
-/** Build the adjacency matrix C for use in AMD ordering.
+/** @brief Build the adjacency matrix C for use in AMD ordering.
  *
  * @param A  the matrix to reorder
  * @param order  the ordering method to use
@@ -71,7 +71,7 @@ struct DMPermResult {
 CSCMatrix build_graph(const CSCMatrix& A, AMDOrder order, csint dense);
 
 
-/** Compute the approximate minimum degree ordering of a matrix.
+/** @brief Compute the approximate minimum degree ordering of a matrix.
  *
  * This function computes the approximate minimum degree ordering of a matrix
  * using the AMD algorithm. The ordering is used to reduce the fill-in in the LU
@@ -102,7 +102,7 @@ std::vector<csint> amd(const CSCMatrix& A, AMDOrder order=AMDOrder::Natural);
 
 namespace detail {
 
-/** Find an augmenting path starting at column k and extend the match if found.
+/** @brief Find an augmenting path starting at column k and extend the match if found.
  *
  * This function uses a recursive depth-first search (DFS) to find an augmenting
  * path in the bipartite graph represented by the CSCMatrix A. If an augmenting
@@ -128,7 +128,7 @@ bool augment_r(
 );
 
 
-/** Find the maximum matching permutation of a matrix, recursively.
+/** @brief Find the maximum matching permutation of a matrix, recursively.
  *
  * This function finds the maximum matching permutation of a matrix using
  * the augmenting path algorithm. The matching is also known as a "maximum
@@ -144,7 +144,7 @@ MaxMatch maxtrans_r(const CSCMatrix& A, csint seed=0);
 }  // namespace detail
 
 
-/** Find an augmenting path starting at column k and extend the match if found.
+/** @brief Find an augmenting path starting at column k and extend the match if found.
  *
  * This function uses a depth-first search (DFS) to find an augmenting path
  * in the bipartite graph represented by the CSCMatrix A. If an augmenting
@@ -172,7 +172,7 @@ void augment(
 );
 
 
-/** Find the maximum matching permutation of a matrix.
+/** @brief Find the maximum matching permutation of a matrix.
  *
  * This function finds the maximum matching permutation of a matrix using
  * the augmenting path algorithm. The matching is also known as a "maximum
@@ -188,7 +188,7 @@ void augment(
 MaxMatch maxtrans(const CSCMatrix& A, csint seed=0);
 
 
-/** Find the strongly connected components of a matrix.
+/** @brief Find the strongly connected components of a matrix.
  *
  * @param A  the matrix to reorder
  *
@@ -197,7 +197,7 @@ MaxMatch maxtrans(const CSCMatrix& A, csint seed=0);
 SCCResult scc(const CSCMatrix& A);
 
 
-/** Breadth-first search for Dulmage-Mendelsohn permutation.
+/** @brief Breadth-first search for Dulmage-Mendelsohn permutation.
  *
  * This function performs a breadth-first search (BFS) on the bipartite graph
  * represented by the CSCMatrix A. It finds the unmatched nodes and marks them
@@ -227,7 +227,7 @@ void bfs(
 );
 
 
-/** Compute the Dulmage-Mendelsohn permutation of a matrix.
+/** @brief Compute the Dulmage-Mendelsohn permutation of a matrix.
  *
  * @param A  the matrix to reorder
  * @param seed  the seed for the random number generator. If `seed` is 0, no

@@ -41,15 +41,15 @@ inline auto get_max_abs_finite(std::span<const double> data)
 
 
 /// @brief Print elements of the matrix between `start` and `end`.
-/// 
+///
 /// The element will be printed as: "(i, j): v" where `i` is the row index,
 /// `j` is the column index, and `v` is the value of the element. This
 /// function sets the format specifiers for `std::format` depending on the
 /// values of the entire matrix, so that the output is consistent.
-/// 
+///
 /// @param out         the output string
 /// @param start, end  print the `kth` element(s) for `k ∈ [start, end)`.
-/// 
+///
 template<PrintableSparseMatrix Matrix>
 void write_elems(std::string& out, const Matrix& A, csint start, csint end)
 {
@@ -93,7 +93,7 @@ void write_elems(std::string& out, const Matrix& A, csint start, csint end)
 
 
 /// @brief Write the matrix to a string.
-/// 
+///
 /// @param out         the output string into which to write.
 /// @param verbose     if True, print all non-zeros and their coordinates.
 /// @param threshold   if `nnz > threshold`, print only the first and last

@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: csc.cpp
- *  Created: 2024-10-09 20:58
- *   Author: Bernie Roesler
- *
- *  Description: Implements the compressed sparse column matrix class
- *
+///     File: csc.cpp
+///  Created: 2024-10-09 20:58
+///   Author: Bernie Roesler
+///
+///  Description: Implements the compressed sparse column matrix class
+///
  *============================================================================*/
 
 #include "csc.hpp"
@@ -27,7 +27,7 @@
 namespace cs {
 
 /*------------------------------------------------------------------------------
- *     Constructors
+///     Constructors
  *----------------------------------------------------------------------------*/
 
 CSCMatrix::CSCMatrix(
@@ -139,7 +139,7 @@ void CSCMatrix::realloc(csint nzmax)
 
 
 /*------------------------------------------------------------------------------
- *         Accessors
+///         Accessors
  *----------------------------------------------------------------------------*/
 csint CSCMatrix::nnz() const { return i_.size(); }
 csint CSCMatrix::nzmax() const { return i_.capacity(); }
@@ -433,7 +433,7 @@ void CSCMatrix::insert_(csint i, csint j, double v, csint p)
 
 
 /*------------------------------------------------------------------------------
- *     Format Operations
+///     Format Operations
  *----------------------------------------------------------------------------*/
 // Exercise 2.2
 COOMatrix CSCMatrix::tocoo() const { return COOMatrix{*this}; }
@@ -1436,7 +1436,7 @@ void CSCMatrix::scatter(csint k, VectorViewD x) const
 
 
 /*------------------------------------------------------------------------------
- *         Permutations 
+///         Permutations 
  *----------------------------------------------------------------------------*/
 CSCMatrix CSCMatrix::permute(
     std::span<const csint> p_inv,

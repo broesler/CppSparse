@@ -1,11 +1,11 @@
 /*==============================================================================
- *     File: qr.cpp
- *  Created: 2025-02-11 12:52
- *   Author: Bernie Roesler
- *
- *  Description: Implements QR decomposition using Householder reflections and
- *    Givens rotations.
- *
+///     File: qr.cpp
+///  Created: 2025-02-11 12:52
+///   Author: Bernie Roesler
+///
+///  Description: Implements QR decomposition using Householder reflections and
+///    Givens rotations.
+///
  *============================================================================*/
 
 #include "qr.hpp"

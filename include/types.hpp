@@ -46,12 +46,12 @@ enum class AMDOrder
 // -----------------------------------------------------------------------------
 //        String Conversions for Enums
 // -----------------------------------------------------------------------------
-/** @brief Convert a string to a DenseOrder enum.
- *
- * @param order  the string to convert ("C" or "F")
- *
- * @return the DenseOrder enum
- */
+/// @brief Convert a string to a DenseOrder enum.
+///
+/// @param order  the string to convert ("C" or "F")
+///
+/// @return the DenseOrder enum
+///
 inline auto denseorder_from_string(std::string_view order)
 {
     if (order == "C") { return cs::DenseOrder::RowMajor; }
@@ -62,12 +62,12 @@ inline auto denseorder_from_string(std::string_view order)
 }
 
 
-/** @brief Convert a DenseOrder enum to a string.
- *
- * @param order  the DenseOrder enum to convert
- *
- * @return the string representation of the DenseOrder enum ("C" or "F")
- */
+/// @brief Convert a DenseOrder enum to a string.
+///
+/// @param order  the DenseOrder enum to convert
+///
+/// @return the string representation of the DenseOrder enum ("C" or "F")
+///
 constexpr std::string_view string_from_denseorder(DenseOrder order) noexcept
 {
     switch (order) {
@@ -78,12 +78,12 @@ constexpr std::string_view string_from_denseorder(DenseOrder order) noexcept
 }
 
 
-/** @brief Convert a string to an AMDOrder enum.
- *
- * @param order  the string to convert
- *
- * @return the AMDOrder enum
- */
+/// @brief Convert a string to an AMDOrder enum.
+///
+/// @param order  the string to convert
+///
+/// @return the AMDOrder enum
+///
 inline auto amdorder_from_string(std::string_view order)
 {
     if (order == "Natural") { return AMDOrder::Natural; }
@@ -94,12 +94,12 @@ inline auto amdorder_from_string(std::string_view order)
 }
 
 
-/** @brief Convert an AMDOrder enum to a string.
- *
- * @param order  the AMDOrder enum to convert
- *
- * @return the string representation of the AMDOrder enum
- */
+/// @brief Convert an AMDOrder enum to a string.
+///
+/// @param order  the AMDOrder enum to convert
+///
+/// @return the string representation of the AMDOrder enum
+///
 constexpr std::string_view string_from_amdorder(AMDOrder order) noexcept
 {
     switch (order) {

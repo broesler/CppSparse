@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: test_gaxpy.cpp
- *  Created: 2025-05-08 12:36
- *   Author: Bernie Roesler
- *
- *  Description: Test matrix/vector multiplication and addition.
- *
+///     File: test_gaxpy.cpp
+///  Created: 2025-05-08 12:36
+///   Author: Bernie Roesler
+///
+///  Description: Test matrix/vector multiplication and addition.
+///
  *============================================================================*/
 
 #include <catch2/catch_test_macros.hpp>

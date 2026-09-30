@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: test_cscmatrix.cpp
- *  Created: 2025-05-08 12:03
- *   Author: Bernie Roesler
- *
- *  Description: Test CSCMatrix constructors and other basic functions.
- *
+///     File: test_cscmatrix.cpp
+///  Created: 2025-05-08 12:03
+///   Author: Bernie Roesler
+///
+///  Description: Test CSCMatrix constructors and other basic functions.
+///
  *============================================================================*/
 
 #include <catch2/catch_test_macros.hpp>

@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: test_csparse.cpp
- *  Created: 2024-10-01 21:07
- *   Author: Bernie Roesler
- *
- *  Description: The main test runner for C++Sparse.
- *
+///     File: test_csparse.cpp
+///  Created: 2024-10-01 21:07
+///   Author: Bernie Roesler
+///
+///  Description: The main test runner for C++Sparse.
+///
  *============================================================================*/
 
 #define CATCH_CONFIG_MAIN  // tell the compiler to define `main()`

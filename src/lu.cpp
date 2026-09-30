@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: lu.cpp
- *  Created: 2025-03-19 12:32
- *   Author: Bernie Roesler
- *
- *  Description: Implementations for LU decomposition.
- *
+///     File: lu.cpp
+///  Created: 2025-03-19 12:32
+///   Author: Bernie Roesler
+///
+///  Description: Implementations for LU decomposition.
+///
  *============================================================================*/
 
 #include "lu.hpp"
@@ -160,17 +160,17 @@ LUResult lu_original(const CSCMatrix& A, const SymbolicLU& S, double tol)
 }
 
 
-/** @brief Allocate more space for the next column.
- *
- * See: Davis, Exercise 6.11.
- *
- * @param R  the matrix to reallocate
- * @param k  the current column index
- * @param lower  if `true`, allocate space for the lower triangular matrix
- *       `L`, otherwise allocate space for the upper triangular matrix `U`.
- *
- * @throws std::bad_alloc if memory cannot be allocated.
- */
+/// @brief Allocate more space for the next column.
+///
+/// See: Davis, Exercise 6.11.
+///
+/// @param R  the matrix to reallocate
+/// @param k  the current column index
+/// @param lower  if `true`, allocate space for the lower triangular matrix
+///       `L`, otherwise allocate space for the upper triangular matrix `U`.
+///
+/// @throws std::bad_alloc if memory cannot be allocated.
+///
 void lu_realloc(CSCMatrix& R, csint k, bool lower)
 {
     const auto [M, N] = R.shape();
@@ -203,14 +203,14 @@ void lu_realloc(CSCMatrix& R, csint k, bool lower)
 
 namespace {
 
-/** @brief Assign missing values in the permutation vector.
- *
- * This function is used to assign missing values in the permutation vector
- * `p_inv` to valid indices. The missing values are indicated by "-1" entries
- * in the vector.
- *
- * @param p_inv  the permutation vector
- */
+/// @brief Assign missing values in the permutation vector.
+///
+/// This function is used to assign missing values in the permutation vector
+/// `p_inv` to valid indices. The missing values are indicated by "-1" entries
+/// in the vector.
+///
+/// @param p_inv  the permutation vector
+///
 void make_valid_permutation(std::span<csint> p_inv)
 {
     const csint M = p_inv.size();

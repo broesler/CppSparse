@@ -46,21 +46,21 @@ public:
     //--------------------------------------------------------------------------
     //        Constructors
     //--------------------------------------------------------------------------
-    /** @brief Construct a COOMatrix from arrays of values and coordinates.
-     *
-     * The entries are *not* sorted in any order, and duplicates are allowed. Any
-     * duplicates will be summed.
-     *
-     * The matrix shape `(M, N)` will be inferred from the maximum indices given.
-     *
-     * @param vals  the values of the entries in the matrix. This vector may
-     *        be empty to create a symbolic matrix of just nonzero indices.
-     * @param rows, cols  the non-negative integer row and column indices of
-     *        the values
-     * @param shape  the dimensions of the matrix
-     *
-     * @return a new COOMatrix object
-     */
+    /// @brief Construct a COOMatrix from arrays of values and coordinates.
+    ///
+    /// The entries are *not* sorted in any order, and duplicates are allowed. Any
+    /// duplicates will be summed.
+    ///
+    /// The matrix shape `(M, N)` will be inferred from the maximum indices given.
+    ///
+    /// @param vals  the values of the entries in the matrix. This vector may
+    ///        be empty to create a symbolic matrix of just nonzero indices.
+    /// @param rows, cols  the non-negative integer row and column indices of
+    ///        the values
+    /// @param shape  the dimensions of the matrix
+    ///
+    /// @return a new COOMatrix object
+    ///
     COOMatrix(
         std::span<const double> vals,
         std::span<const csint> rows,
@@ -68,60 +68,60 @@ public:
         Shape shape=Shape{0, 0}
     );
 
-    /** @brief Allocate a COOMatrix for a given shape and number of non-zeros.
-     *
-     * @param shape  the dimensions of the matrix
-     * @param nzmax  integer capacity of space to reserve for non-zeros
-     */
+    /// @brief Allocate a COOMatrix for a given shape and number of non-zeros.
+    ///
+    /// @param shape  the dimensions of the matrix
+    /// @param nzmax  integer capacity of space to reserve for non-zeros
+    ///
     explicit COOMatrix(Shape shape, csint nzmax=0);
 
-    /** @brief Convert a CSCMatrix to a COOMatrix, like Matlab's `find`.
-     *
-     * @see CSCMatrix::tocoo(), cs_find (Davis, Exercise 2.2)
-     *
-     * @param A a CSCMatrix.
-     * @return C the equivalent matrix in triplet form.
-     */
+    /// @brief Convert a CSCMatrix to a COOMatrix, like Matlab's `find`.
+    ///
+    /// @see CSCMatrix::tocoo(), cs_find (Davis, Exercise 2.2)
+    ///
+    /// @param A a CSCMatrix.
+    /// @return C the equivalent matrix in triplet form.
+    ///
     explicit COOMatrix(const CSCMatrix& A);  // Exercise 2.2, Matlab's find
 
-    /** @brief Read a COOMatrix matrix from a file.
-     *
-     * The file is expected to be in "triplet format" `(i, j, v)`, where
-     * `(i, j)` are the index coordinates, and `v` is the value to be
-     * inserted.
-     *
-     * @param filename  the filename as a string
-     *
-     * @return A  a new COOMatrix object
-     *
-     * @throws std::runtime_error if file is not in triplet format
-     */
+    /// @brief Read a COOMatrix matrix from a file.
+    ///
+    /// The file is expected to be in "triplet format" `(i, j, v)`, where
+    /// `(i, j)` are the index coordinates, and `v` is the value to be
+    /// inserted.
+    ///
+    /// @param filename  the filename as a string
+    ///
+    /// @return A  a new COOMatrix object
+    ///
+    /// @throws std::runtime_error if file is not in triplet format
+    ///
     static COOMatrix from_file(const std::string& filename);
 
-    /** @brief Read a COOMatrix matrix from a file stream
-     *
-     * The input is expected to be in "triplet format" `(i, j, v)`, where
-     * `(i, j)` are the index coordinates, and `v` is the value to be
-     * inserted.
-     *
-     * @param fp  a reference to the file stream.
-     *
-     * @return A  a new COOMatrix object
-     *
-     * @throws std::runtime_error if file is not in triplet format
-     */
+    /// @brief Read a COOMatrix matrix from a file stream
+    ///
+    /// The input is expected to be in "triplet format" `(i, j, v)`, where
+    /// `(i, j)` are the index coordinates, and `v` is the value to be
+    /// inserted.
+    ///
+    /// @param fp  a reference to the file stream.
+    ///
+    /// @return A  a new COOMatrix object
+    ///
+    /// @throws std::runtime_error if file is not in triplet format
+    ///
     static COOMatrix from_stream(std::istream& fp);
 
-    /** @brief Create a random sparse matrix.
-     *
-     * See: Exercise 2.27 performance testing
-     *
-     * @param M, N  the dimensions of the matrix
-     * @param density  the fraction of non-zero elements
-     * @param seed  the random seed
-     *
-     * @return a random sparse matrix
-     */
+    /// @brief Create a random sparse matrix.
+    ///
+    /// See: Exercise 2.27 performance testing
+    ///
+    /// @param M, N  the dimensions of the matrix
+    /// @param density  the fraction of non-zero elements
+    /// @param seed  the random seed
+    ///
+    /// @return a random sparse matrix
+    ///
     static COOMatrix random(csint M, csint N, double density=0.1,
                             unsigned int seed=0);
 
@@ -136,8 +136,8 @@ public:
     std::span<const csint> col() const noexcept { return j_; }
     const std::vector<double>& values() const noexcept { return v_; }
 
-    /** @brief Return a view of the row indices, column indices, and values of the
-     * non-zero elements in the matrix. */
+    /// @brief Return a view of the row indices, column indices, and values of the
+    /// non-zero elements in the matrix. */
     auto elems() const
     {
         const bool has_values = !v_.empty();
@@ -148,12 +148,12 @@ public:
         );
     }
 
-    /** @brief Operate on the non-zero elements of the matrix, as (i, j, v) tuples.
-     *
-     * @param start, end operate on the `kth` element(s) for `k ∈ [start, end)`.
-     * @param func       a function that takes the row index `i`, column index
-     *                   `j`, and value `v`.
-     */
+    /// @brief Operate on the non-zero elements of the matrix, as (i, j, v) tuples.
+    ///
+    /// @param start, end operate on the `kth` element(s) for `k ∈ [start, end)`.
+    /// @param func       a function that takes the row index `i`, column index
+    ///                   `j`, and value `v`.
+    ///
     void for_each_in_range(csint start, csint end, ElemFunc func) const
     {
         csint actual_end = std::min(end, nnz());
@@ -169,36 +169,36 @@ public:
         }
     }
 
-    /** @brief Insert triplet entry into the matrix.
-     *
-     * Note that there is no argument checking other than for positive indices.
-     * Inserting with an index that is outside of the dimensions of the matrix
-     * will just increase the size of the matrix accordingly.
-     *
-     * Duplicate entries are allowed to ease incremental construction of
-     * matrices from files, or, e.g., finite element applications. Duplicates
-     * will be summed upon compression to sparse column/row form.
-     *
-     * @param i, j  integer indices of the matrix
-     * @param v     the value to be inserted
-     *
-     * @return A    a reference to itself for method chaining.
-     *
-     * @see cs_entry Davis p 12.
-     */
+    /// @brief Insert triplet entry into the matrix.
+    ///
+    /// Note that there is no argument checking other than for positive indices.
+    /// Inserting with an index that is outside of the dimensions of the matrix
+    /// will just increase the size of the matrix accordingly.
+    ///
+    /// Duplicate entries are allowed to ease incremental construction of
+    /// matrices from files, or, e.g., finite element applications. Duplicates
+    /// will be summed upon compression to sparse column/row form.
+    ///
+    /// @param i, j  integer indices of the matrix
+    /// @param v     the value to be inserted
+    ///
+    /// @return A    a reference to itself for method chaining.
+    ///
+    /// @see cs_entry Davis p 12.
+    ///
     COOMatrix& insert(csint i, csint j, double v);
 
-    /** @brief Insert a dense submatrix.
-     *
-     * See: Davis, Exercise 2.5.
-     *
-     * @param i, j  vectors of integer indices
-     * @param v     dense submatrix of size `M`-by-`N`, in column-major order.
-     *
-     * @return A    a reference to itself for method chaining.
-     *
-     * @see cs_entry Davis p 12.
-     */
+    /// @brief Insert a dense submatrix.
+    ///
+    /// See: Davis, Exercise 2.5.
+    ///
+    /// @param i, j  vectors of integer indices
+    /// @param v     dense submatrix of size `M`-by-`N`, in column-major order.
+    ///
+    /// @return A    a reference to itself for method chaining.
+    ///
+    /// @see cs_entry Davis p 12.
+    ///
     COOMatrix& insert(
         std::span<const csint> i,
         std::span<const csint> j,
@@ -208,51 +208,51 @@ public:
     //--------------------------------------------------------------------------
     //        Format Conversions
     //--------------------------------------------------------------------------
-    /** @brief Convert a coordinate format matrix to a compressed sparse column matrix.
-     *
-     * The columns are not guaranteed to be sorted, and duplicates are allowed.
-     *
-     * @return a copy of the `COOMatrix` in CSC format.
-     */
+    /// @brief Convert a coordinate format matrix to a compressed sparse column matrix.
+    ///
+    /// The columns are not guaranteed to be sorted, and duplicates are allowed.
+    ///
+    /// @return a copy of the `COOMatrix` in CSC format.
+    ///
     CSCMatrix compress() const;
 
-    /** @brief Create a canonical format CSCMatrix from a COOMatrix.
-     *
-     * See: Davis, Exercise 2.9
-     */
+    /// @brief Create a canonical format CSCMatrix from a COOMatrix.
+    ///
+    /// See: Davis, Exercise 2.9
+    ///
     CSCMatrix tocsc() const;
 
-    /** @brief Convert the matrix to a dense array.
-     *
-     * The array is in column-major order, like Fortran.
-     *
-     * @param order  the order of the array, either DenseOrder::RowMajor or
-     *        DenseOrder::ColMajor (default).
-     *
-     * @return a copy of the matrix as a dense array.
-     */
+    /// @brief Convert the matrix to a dense array.
+    ///
+    /// The array is in column-major order, like Fortran.
+    ///
+    /// @param order  the order of the array, either DenseOrder::RowMajor or
+    ///        DenseOrder::ColMajor (default).
+    ///
+    /// @return a copy of the matrix as a dense array.
+    ///
     VectorD to_dense_vector(DenseOrder order = DenseOrder::ColMajor) const;
 
     //--------------------------------------------------------------------------
     //        Math Operations
     //--------------------------------------------------------------------------
-    /** @brief Transpose the matrix as a copy.
-     *
-     * See: Davis, Exercise 2.6.
-     *
-     * @return new COOMatrix object with transposed rows and columns.
-     */
+    /// @brief Transpose the matrix as a copy.
+    ///
+    /// See: Davis, Exercise 2.6.
+    ///
+    /// @return new COOMatrix object with transposed rows and columns.
+    ///
     COOMatrix transpose() const;
     COOMatrix T() const;
 
-    /** @brief Multiply a COOMatrix by a dense vector.
-     *
-     * See: Davis, Exercise 2.10.
-     *
-     * @param x  the dense vector to multiply by.
-     *
-     * @return y  the result of the matrix-vector multiplication.
-     */
+    /// @brief Multiply a COOMatrix by a dense vector.
+    ///
+    /// See: Davis, Exercise 2.10.
+    ///
+    /// @param x  the dense vector to multiply by.
+    ///
+    /// @return y  the result of the matrix-vector multiplication.
+    ///
     VectorD dot(cVectorViewD x) const;
 
     // Exercise 2.10

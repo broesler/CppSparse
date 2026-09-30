@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: solve.cpp
- *  Created: 2025-01-30 13:52
- *   Author: Bernie Roesler
- *
- *  Description: Implementations of various matrix solvers.
- *
+///     File: solve.cpp
+///  Created: 2025-01-30 13:52
+///   Author: Bernie Roesler
+///
+///  Description: Implementations of various matrix solvers.
+///
  *============================================================================*/
 
 #include "solve.hpp"
@@ -27,7 +27,7 @@
 namespace cs {
 
 /*------------------------------------------------------------------------------
- *      Triangular Matrix Solutions
+///      Triangular Matrix Solutions
  *----------------------------------------------------------------------------*/
 void lsolve_inplace(const CSCMatrix& L, VectorViewD x)
 {
@@ -1420,12 +1420,12 @@ VectorD lu_tsolve(
 
 namespace {
 
-/** @brief Find the minimum index of all those where |x| == max(|x|).
- *
- * @param x  a vector of doubles
- *
- * @return j  the first index of the maximum absolute value
- */
+/// @brief Find the minimum index of all those where |x| == max(|x|).
+///
+/// @param x  a vector of doubles
+///
+/// @return j  the first index of the maximum absolute value
+///
 inline auto min_argmaxabs(std::span<const double> x)
 {
     if (x.empty()) {

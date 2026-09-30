@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: example_matrices.cpp
- *  Created: 2025-03-20 15:11
- *   Author: Bernie Roesler
- *
- *  Description: Definitions of example matrices for testing.
- *
+///     File: example_matrices.cpp
+///  Created: 2025-03-20 15:11
+///   Author: Bernie Roesler
+///
+///  Description: Definitions of example matrices for testing.
+///
  *============================================================================*/
 
 #include "example_matrices.hpp"

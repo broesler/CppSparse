@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: printmatrix_demo.cpp
- *  Created: 2025-04-09 10:23
- *   Author: Bernie Roesler
- *
- *  Description: Test printing functions.
- *
+///     File: printmatrix_demo.cpp
+///  Created: 2025-04-09 10:23
+///   Author: Bernie Roesler
+///
+///  Description: Test printing functions.
+///
  *============================================================================*/
 
 #include <cmath>    // nan

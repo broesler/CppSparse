@@ -29,13 +29,13 @@ struct Problem
     VectorD x,               ///< solution
             resid;           ///< residuals
 
-    /** @brief Construct a Problem from an input matrix.
-     *
-     * @param T  The input matrix in COO format.
-     * @param droptol  The tolerance for dropping small entries.
-     *
-     * @return  A Problem object containing the matrix and other data.
-     */
+    /// @brief Construct a Problem from an input matrix.
+    ///
+    /// @param T  The input matrix in COO format.
+    /// @param droptol  The tolerance for dropping small entries.
+    ///
+    /// @return  A Problem object containing the matrix and other data.
+    ///
     static Problem from_matrix(const COOMatrix& T, double droptol=0);
 };
 
@@ -49,31 +49,31 @@ TimePoint tic();
 double toc(TimePoint start_time);
 
 
-/** @brief Make a matrix symmetric.
- *
- * This function takes a matrix stored as either a lower or upper triangular,
- * and creates a symmetric matrix by adding the transpose of the matrix to
- * itself.
- *
- * @param A  The input matrix to be made symmetric.
- *
- * @return  A symmetric matrix.
- */
+/// @brief Make a matrix symmetric.
+///
+/// This function takes a matrix stored as either a lower or upper triangular,
+/// and creates a symmetric matrix by adding the transpose of the matrix to
+/// itself.
+///
+/// @param A  The input matrix to be made symmetric.
+///
+/// @return  A symmetric matrix.
+///
 CSCMatrix make_sym(const CSCMatrix& A);
 
 
-/** @brief Compute the norm of the residuals of the solution to `Ax = b`.
- *
- * This function computes the following:
- *      `norm(A*x - b, inf) / (norm(A, 1) * norm(x, inf) + norm(b, inf))`.
- *
- * @param A  The coefficient matrix
- * @param x  The solution vector
- * @param b  The right-hand side vector
- * @param[out] resid  A reference to the (empty) residual vector.
- *
- * @return  The relative norm of the residuals.
- */
+/// @brief Compute the norm of the residuals of the solution to `Ax = b`.
+///
+/// This function computes the following:
+///      `norm(A*x - b, inf) / (norm(A, 1) * norm(x, inf) + norm(b, inf))`.
+///
+/// @param A  The coefficient matrix
+/// @param x  The solution vector
+/// @param b  The right-hand side vector
+/// @param[out] resid  A reference to the (empty) residual vector.
+///
+/// @return  The relative norm of the residuals.
+///
 double residual_norm(
     const CSCMatrix& A,
     cVectorViewD x,

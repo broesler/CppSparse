@@ -257,12 +257,12 @@ struct type_caster<cs::Vector<T>> {
 //         Conversion Templates
 // -----------------------------------------------------------------------------
 
-/** @brief Create a NumPy array from a std::array.
- *
- * @param self  the array to convert
- *
- * @return a NumPy array with the same data as the array
- */
+/// @brief Create a NumPy array from a std::array.
+///
+/// @param self  the array to convert
+///
+/// @return a NumPy array with the same data as the array
+///
 template <typename T, std::size_t N>
 inline py::array_t<T> numpy_from_array(const std::array<T, N>& arr)
 {
@@ -270,13 +270,13 @@ inline py::array_t<T> numpy_from_array(const std::array<T, N>& arr)
 };
 
 
-/** @brief Create a NumPy array from a CSCMatrix or COOMatrix.
- *
- * @param self  the dense matrix to convert
- * @param order the order of the NumPy array ('C' or 'F')
- *
- * @return a NumPy array with the same data as the matrix
- */
+/// @brief Create a NumPy array from a CSCMatrix or COOMatrix.
+///
+/// @param self  the dense matrix to convert
+/// @param order the order of the NumPy array ('C' or 'F')
+///
+/// @return a NumPy array with the same data as the matrix
+///
 template <typename T>
 auto ndarray_from_sparse(const T& self, cs::DenseOrder order = cs::DenseOrder::ColMajor)
 {
@@ -308,54 +308,54 @@ auto ndarray_from_sparse(const T& self, cs::DenseOrder order = cs::DenseOrder::C
 };
 
 
-/** @brief Convert a COOMatrix to a scipy.sparse.coo_array
- *
- * @param A  the COOMatrix to convert
- *
- * @return a scipy.sparse.coo_array with the same data as the COOMatrix
- */
+/// @brief Convert a COOMatrix to a scipy.sparse.coo_array
+///
+/// @param A  the COOMatrix to convert
+///
+/// @return a scipy.sparse.coo_array with the same data as the COOMatrix
+///
 py::object scipy_from_coo(const cs::COOMatrix& A);
 
 
-/** @brief Convert a CSCMatrix to a scipy.sparse.csc_array
- *
- * @param A  the CSCMatrix to convert
- *
- * @return a scipy.sparse.csc_array with the same data as the CSCMatrix
- */
+/// @brief Convert a CSCMatrix to a scipy.sparse.csc_array
+///
+/// @param A  the CSCMatrix to convert
+///
+/// @return a scipy.sparse.csc_array with the same data as the CSCMatrix
+///
 py::object scipy_from_csc(const cs::CSCMatrix& A);
 
 
-/** @brief Convert a scipy.sparse.sparray to a CSCMatrix.
- *
- * @param A  the scipy.sparse.sparray to convert
- *
- * @return a CSCMatrix with the same data as the scipy.sparse.sparray
- */
+/// @brief Convert a scipy.sparse.sparray to a CSCMatrix.
+///
+/// @param A  the scipy.sparse.sparray to convert
+///
+/// @return a CSCMatrix with the same data as the scipy.sparse.sparray
+///
 cs::CSCMatrix csc_from_scipy(const py::object& obj);
 
 
-/** @brief Convert a scipy.sparse.sparray to a COOMatrix.
- *
- * @param A  the scipy.sparse.sparray to convert
- *
- * @return a COOMatrix with the same data as the scipy.sparse.sparray
- */
+/// @brief Convert a scipy.sparse.sparray to a COOMatrix.
+///
+/// @param A  the scipy.sparse.sparray to convert
+///
+/// @return a COOMatrix with the same data as the scipy.sparse.sparray
+///
 cs::COOMatrix coo_from_scipy(const py::object& obj);
 
 
-/** @brief Wrap a function to convert a scipy.sparse.sparray on input. 
- *
- * This function takes a function that operates on a CSCMatrix as the first
- * argument, and a variable number of other arguments. It converts the first
- * argument from a python object to a CSCMatrix, and forwards the rest of the
- * arguments to the function.
- *
- * @param f  the function to wrap
- *
- * @return a lambda function that takes a `scipy.sparse.sparray` and 
- *         forwards the rest of the arguments to the wrapped function.
- */
+/// @brief Wrap a function to convert a scipy.sparse.sparray on input. 
+///
+/// This function takes a function that operates on a CSCMatrix as the first
+/// argument, and a variable number of other arguments. It converts the first
+/// argument from a python object to a CSCMatrix, and forwards the rest of the
+/// arguments to the function.
+///
+/// @param f  the function to wrap
+///
+/// @return a lambda function that takes a `scipy.sparse.sparray` and 
+///         forwards the rest of the arguments to the wrapped function.
+///
 template <typename Func>
 auto make_vector_func(Func&& func)
 {
@@ -371,18 +371,18 @@ auto make_vector_func(Func&& func)
 }
 
 
-/** @brief Wrap a function to convert a scipy.sparse.sparray on input. 
- *
- * This function takes a function that operates on a CSCMatrix as the first
- * argument, and a variable number of other arguments. It converts the first
- * argument from a python object to a CSCMatrix, and forwards the rest of the
- * arguments to the function.
- *
- * @param f  the function to wrap
- *
- * @return a lambda function that takes a `scipy.sparse.sparray` and 
- *         forwards the rest of the arguments to the wrapped function.
- */
+/// @brief Wrap a function to convert a scipy.sparse.sparray on input. 
+///
+/// This function takes a function that operates on a CSCMatrix as the first
+/// argument, and a variable number of other arguments. It converts the first
+/// argument from a python object to a CSCMatrix, and forwards the rest of the
+/// arguments to the function.
+///
+/// @param f  the function to wrap
+///
+/// @return a lambda function that takes a `scipy.sparse.sparray` and 
+///         forwards the rest of the arguments to the wrapped function.
+///
 template <bool ColMajor = true, typename Func>
 auto make_gaxpy_matrix_func(Func&& func)
 {
@@ -429,15 +429,15 @@ auto make_gaxpy_matrix_func(Func&& func)
 }
 
 
-/** @brief Dispatch the vector permutation functions for appropriate types.
- *
- * @param p  the permutation vector
- * @param b_obj  the vector to permute, can be a vector of doubles or integers
- * @param func_double  function to handle double vectors, e.g. &cs::pvec<double>
- * @param func_int  function to handle double vectors, e.g. &cs::pvec<csint>
- *
- * @return  a new vector with the elements of `b_obj` permuted according to `p`
- */
+/// @brief Dispatch the vector permutation functions for appropriate types.
+///
+/// @param p  the permutation vector
+/// @param b_obj  the vector to permute, can be a vector of doubles or integers
+/// @param func_double  function to handle double vectors, e.g. &cs::pvec<double>
+/// @param func_int  function to handle double vectors, e.g. &cs::pvec<csint>
+///
+/// @return  a new vector with the elements of `b_obj` permuted according to `p`
+///
 template <typename FuncD, typename FuncI>
 py::object permute_impl_(
     FuncD&& func_double,

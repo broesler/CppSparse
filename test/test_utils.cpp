@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: test_utils.cpp
- *  Created: 2025-05-08 11:01
- *   Author: Bernie Roesler
- *
- *  Description: Test CSparse utility functions
- *
+///     File: test_utils.cpp
+///  Created: 2025-05-08 11:01
+///   Author: Bernie Roesler
+///
+///  Description: Test CSparse utility functions
+///
  *============================================================================*/
 
 #include <catch2/catch_test_macros.hpp>

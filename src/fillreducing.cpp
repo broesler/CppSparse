@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: fillreducing.cpp
- *  Created: 2025-04-18 08:53
- *   Author: Bernie Roesler
- *
- *  Description: Implementations for AMD ordering.
- *
+///     File: fillreducing.cpp
+///  Created: 2025-04-18 08:53
+///   Author: Bernie Roesler
+///
+///  Description: Implementations for AMD ordering.
+///
  *============================================================================*/
 
 #include "fillreducing.hpp"
@@ -29,31 +29,31 @@ namespace cs {
 
 namespace {
 
-/** @brief Flip the sign of an integer
- * 
- * This function flips the sign of an integer `i` and returns the result.
- * It is used to mark elements as dead in the AMD algorithm.
- *
- * @param i  the integer to flip
- *
- * @return the flipped integer
- */
+/// @brief Flip the sign of an integer
+///
+/// This function flips the sign of an integer `i` and returns the result.
+/// It is used to mark elements as dead in the AMD algorithm.
+///
+/// @param i  the integer to flip
+///
+/// @return the flipped integer
+///
 inline csint flip(csint i) {  return -i - 2; }
 
 
-/** @brief Clear the workspace
- * 
- * This function clears the workspace `w` and returns the updated mark.
- * If `mark` is less than 2 or if `mark + lemax` is less than 0, it clears
- * the workspace and sets `mark` to 2.
- *
- * @param mark  the current mark
- * @param lemax  the maximum length of the workspace
- * @param w  the workspace vector
- * @param N  the size of the matrix
- *
- * @return the updated mark
- */
+/// @brief Clear the workspace
+///
+/// This function clears the workspace `w` and returns the updated mark.
+/// If `mark` is less than 2 or if `mark + lemax` is less than 0, it clears
+/// the workspace and sets `mark` to 2.
+///
+/// @param mark  the current mark
+/// @param lemax  the maximum length of the workspace
+/// @param w  the workspace vector
+/// @param N  the size of the matrix
+///
+/// @return the updated mark
+///
 csint wclear(csint mark, csint lemax, std::span<csint> w)
 {
     csint N = std::ssize(w) - 1;  // w has size N+1, but we only use w[0..N-1]

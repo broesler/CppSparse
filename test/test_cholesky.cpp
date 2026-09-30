@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: test_cholesky.cpp
- *  Created: 2025-05-08 13:19
- *   Author: Bernie Roesler
- *
- *  Description: Test Chapter 4: Cholesky Factorization.
- *
+///     File: test_cholesky.cpp
+///  Created: 2025-05-08 13:19
+///   Author: Bernie Roesler
+///
+///  Description: Test Chapter 4: Cholesky Factorization.
+///
  *============================================================================*/
 
 #include <catch2/catch_test_macros.hpp>

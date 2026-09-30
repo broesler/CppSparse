@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: test_solve.cpp
- *  Created: 2025-05-08 13:40
- *   Author: Bernie Roesler
- *
- *  Description: Test Chapter 8: Solving Sparse Linear Systems.
- *
+///     File: test_solve.cpp
+///  Created: 2025-05-08 13:40
+///   Author: Bernie Roesler
+///
+///  Description: Test Chapter 8: Solving Sparse Linear Systems.
+///
  *============================================================================*/
 
 #include <catch2/catch_test_macros.hpp>
@@ -374,7 +374,7 @@ TEMPLATE_TEST_CASE(
 
 
 /*------------------------------------------------------------------------------
- *         Exercise 8.1: General Sparse Solver
+///         Exercise 8.1: General Sparse Solver
  *----------------------------------------------------------------------------*/
 struct SingleRHS { static constexpr csint K = 1; };
 struct MultipleRHS { static constexpr csint K = 3; };

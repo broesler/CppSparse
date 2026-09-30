@@ -1,11 +1,11 @@
 /*==============================================================================
- *     File: demo2.cpp
- *  Created: 2025-05-06 12:45
- *   Author: Bernie Roesler
- *
- *  Description: Solve a linear system using Cholesky, LU, and QR, with various
- *  orderings.
- *
+///     File: demo2.cpp
+///  Created: 2025-05-06 12:45
+///   Author: Bernie Roesler
+///
+///  Description: Solve a linear system using Cholesky, LU, and QR, with various
+///  orderings.
+///
  *============================================================================*/
 
 #include <array>

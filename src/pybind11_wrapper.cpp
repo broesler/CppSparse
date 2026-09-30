@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: pybind11_wrapper.cpp
- *  Created: 2025-02-05 14:05
- *   Author: Bernie Roesler
- *
- *  Description: Wrap the CSparse module with pybind11.
- *
+///     File: pybind11_wrapper.cpp
+///  Created: 2025-02-05 14:05
+///   Author: Bernie Roesler
+///
+///  Description: Wrap the CSparse module with pybind11.
+///
  *============================================================================*/
 
 #include <format>
@@ -1910,17 +1910,17 @@ PYBIND11_MODULE(csparse, m)
         order : str, optional
             The form of the matrix to use for ordering. Options are:
 
-            * `Natural`: natural ordering (no permutation)
-            * `APlusAT`: AMD ordering of :math:`A + A^T`. This option is
+           /// `Natural`: natural ordering (no permutation)
+           /// `APlusAT`: AMD ordering of :math:`A + A^T`. This option is
               appropriate for Cholesky factorization, or LU factorization with
               substantial entries on the diagonal and a roughly symmetric
               nonzero pattern. If `lu` is used, `tol < 1.0` should be used to
               prefer the diagonal entries for partial pivoting.
-            * `ATANoDenseRows`: AMD ordering of :math:`A^T A`, with "dense"
+           /// `ATANoDenseRows`: AMD ordering of :math:`A^T A`, with "dense"
               rows removed from `A`. This option is appropriate for LU
               factorization of unsymmetric matrices and produces a similar
               ordering to that of `COLAMD`.
-            * `ATA`: AMD ordering of :math:`A^T A`. This option is appropriate
+           /// `ATA`: AMD ordering of :math:`A^T A`. This option is appropriate
               for QR factorization, or for LU factorization if `A` has no
               "dense" rows. A "dense" row is defined as a row with more than
               :math:`10 \sqrt{N}` nonzeros, where `N` is the number of columns

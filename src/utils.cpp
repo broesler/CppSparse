@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: utils.cpp
- *  Created: 2024-11-02 17:32
- *   Author: Bernie Roesler
- *
- *  Description: Utility functions.
- *
+///     File: utils.cpp
+///  Created: 2024-11-02 17:32
+///   Author: Bernie Roesler
+///
+///  Description: Utility functions.
+///
  *============================================================================*/
 
 #include "utils.hpp"
@@ -24,7 +24,7 @@ namespace cs {
 
 
 /*------------------------------------------------------------------------------
- *          Vector Functions
+///          Vector Functions
  *----------------------------------------------------------------------------*/
 
 std::vector<csint> inv_permute(std::span<const csint> p)

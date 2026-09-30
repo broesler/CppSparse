@@ -22,16 +22,16 @@ namespace cs {
 constexpr double tol = 1e-14;
 
 
-/** @brief Check that a sparse matrix is equal to a dense matrix.
- *
- * We use a template function so that the function can be used with both
- * const and non-const matrices.
- *
- * @param A       a sparse matrix
- * @param expect  the expected dense matrix in column-major format
- * @param shape   shape of the expected matrix
- * @param tol     tolerance for comparison
- */
+/// @brief Check that a sparse matrix is equal to a dense matrix.
+///
+/// We use a template function so that the function can be used with both
+/// const and non-const matrices.
+///
+/// @param A       a sparse matrix
+/// @param expect  the expected dense matrix in column-major format
+/// @param shape   shape of the expected matrix
+/// @param tol     tolerance for comparison
+///
 template <typename MatrixT>
 void check_sparse_eq_dense(
     MatrixT& A,
@@ -57,13 +57,13 @@ void check_sparse_eq_dense(
 }
 
 
-/** @brief Compare two matrices for equality.
- *
- * @note This function expects the matrices to be in canonical form.
- *
- * @param A       the matrix to test
- * @param expect  the expected matrix
- */
+/// @brief Compare two matrices for equality.
+///
+/// @note This function expects the matrices to be in canonical form.
+///
+/// @param A       the matrix to test
+/// @param expect  the expected matrix
+///
 void check_canonical_allclose(
     const CSCMatrix& A,
 	const CSCMatrix& expect,
@@ -72,13 +72,13 @@ void check_canonical_allclose(
 );
 
 
-/** @brief Compare two matrices for equality.
- *
- * @note This function does not require the matrices to be in canonical form.
- *
- * @param A       the matrix to test
- * @param expect  the expected matrix
- */
+/// @brief Compare two matrices for equality.
+///
+/// @note This function does not require the matrices to be in canonical form.
+///
+/// @param A       the matrix to test
+/// @param expect  the expected matrix
+///
 void check_noncanonical_allclose(
     const CSCMatrix& A,
 	const CSCMatrix& expect,
@@ -87,16 +87,16 @@ void check_noncanonical_allclose(
 );
 
 
-/** @brief Compare two matrices for equality.
- *
- * @note This function does not require the matrices to be in canonical form.
- *
- * If both matrices are in canonical form, then the canonical comparison is
- * used, which is faster.
- *
- * @param A       the matrix to test
- * @param expect  the expected matrix
- */
+/// @brief Compare two matrices for equality.
+///
+/// @note This function does not require the matrices to be in canonical form.
+///
+/// If both matrices are in canonical form, then the canonical comparison is
+/// used, which is faster.
+///
+/// @param A       the matrix to test
+/// @param expect  the expected matrix
+///
 void check_sparse_allclose(
     const CSCMatrix& A,
 	const CSCMatrix& expect,
@@ -105,11 +105,11 @@ void check_sparse_allclose(
 );
 
 
-/** @brief Check that all elements of a vector compare to a double.
- *
- * @param vec  a vector of doubles
- * @param c    the double to compare to
- */
+/// @brief Check that all elements of a vector compare to a double.
+///
+/// @param vec  a vector of doubles
+/// @param c    the double to compare to
+///
 template <typename T, typename Compare>
 void check_all_compare(std::span<const T> vec, const T& c, Compare comp)
 {
@@ -120,28 +120,28 @@ void check_all_compare(std::span<const T> vec, const T& c, Compare comp)
 }
 
 
-/** @brief Check that all elements of a vector are greater than or equal to a double.
- *
- * @param vec  a vector of doubles
- * @param c    the double to compare to
- */
+/// @brief Check that all elements of a vector are greater than or equal to a double.
+///
+/// @param vec  a vector of doubles
+/// @param c    the double to compare to
+///
 void check_all_greater_equal(std::span<const double> vec, double c);
 
 
-/** @brief Check that all elements of a vector are not equal to a double.
- *
- * @param vec  a vector of doubles
- * @param c    the double to compare to
- */
+/// @brief Check that all elements of a vector are not equal to a double.
+///
+/// @param vec  a vector of doubles
+/// @param c    the double to compare to
+///
 void check_all_not_equal(std::span<const double> vec, double c);
 
 
-/** @brief Check that all elements of two vectors are within a given tolerance.
- *
- * @param a     a vector of doubles
- * @param b     a vector of doubles
- * @param tol   the tolerance for comparison
- */
+/// @brief Check that all elements of two vectors are within a given tolerance.
+///
+/// @param a     a vector of doubles
+/// @param b     a vector of doubles
+/// @param tol   the tolerance for comparison
+///
 void check_vectors_allclose(
     std::span<const double> a,
     std::span<const double> b,

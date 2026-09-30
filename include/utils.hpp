@@ -18,40 +18,40 @@
 
 namespace cs {
 
-/** @brief Compute the norm of a vector.
- *
- * @param x  the vector
- * @param ord  the order of the norm
- *
- * @return norm  the norm of the vector
- */
+/// @brief Compute the norm of a vector.
+///
+/// @param x  the vector
+/// @param ord  the order of the norm
+///
+/// @return norm  the norm of the vector
+///
 double norm(cVectorViewD x, double ord=2.0);
 
 
 /*------------------------------------------------------------------------------
- *          Vector Permutations
+///          Vector Permutations
  *----------------------------------------------------------------------------*/
-/** @brief Compute the inverse (or transpose) of a permutation vector.
- *
- * @note This function is named `cs_pinv` in CSparse, but we have changed the
- * name to avoid conflict with similarly named variables, and the well-known
- * Matlab funvtion to compute the pseudo-inverse of a matrix.
- *
- * @param p  permutation vector
- *
- * @return pinv  inverse permutation vector
- */
+/// @brief Compute the inverse (or transpose) of a permutation vector.
+///
+/// @note This function is named `cs_pinv` in CSparse, but we have changed the
+/// name to avoid conflict with similarly named variables, and the well-known
+/// Matlab funvtion to compute the pseudo-inverse of a matrix.
+///
+/// @param p  permutation vector
+///
+/// @return pinv  inverse permutation vector
+///
 std::vector<csint> inv_permute(std::span<const csint> p);
 
 
-/** @brief Compute \f$ x = Pb \f$ where P is a permutation matrix, represented as
- * a vector.
- *
- * @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
- * @param b  vector of data to permute
- *
- * @return x  `x = Pb` the permuted vector, like `x = b(p)` in MATLAB.
- */
+/// @brief Compute \f$ x = Pb \f$ where P is a permutation matrix, represented as
+/// a vector.
+///
+/// @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
+/// @param b  vector of data to permute
+///
+/// @return x  `x = Pb` the permuted vector, like `x = b(p)` in MATLAB.
+///
 template <std::ranges::contiguous_range PRange,
           std::ranges::contiguous_range InRange,
           std::ranges::contiguous_range OutRange>
@@ -68,14 +68,14 @@ void pvec(const PRange& p, const InRange& b, OutRange& x)
 }
 
 
-/** @brief Compute \f$ x = Pb \f$ where P is a permutation matrix, represented as
- * a vector.
- *
- * @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
- * @param b  vector of data to permute
- *
- * @return x  `x = Pb` the permuted vector, like `x = b(p)` in MATLAB.
- */
+/// @brief Compute \f$ x = Pb \f$ where P is a permutation matrix, represented as
+/// a vector.
+///
+/// @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
+/// @param b  vector of data to permute
+///
+/// @return x  `x = Pb` the permuted vector, like `x = b(p)` in MATLAB.
+///
 template <std::ranges::contiguous_range PRange,
           std::ranges::contiguous_range InRange>
 requires std::same_as<std::ranges::range_value_t<PRange>, csint>
@@ -92,13 +92,13 @@ auto pvec(const PRange& p, const InRange& b)
 }
 
 
-/** @brief Compute \f$ x = P^T b = P^{-1} b \f$ where P is a permutation matrix,
- * represented as a vector.
- *
- * @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
- * @param b  vector of data to permute
- * @param x[out]  `x = P^T b` the permuted vector, like `x(p) = b` in MATLAB.
- */
+/// @brief Compute \f$ x = P^T b = P^{-1} b \f$ where P is a permutation matrix,
+/// represented as a vector.
+///
+/// @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
+/// @param b  vector of data to permute
+/// @param x[out]  `x = P^T b` the permuted vector, like `x(p) = b` in MATLAB.
+///
 template <std::ranges::contiguous_range PRange,
           std::ranges::contiguous_range InRange,
           std::ranges::contiguous_range OutRange>
@@ -115,14 +115,14 @@ void ipvec(const PRange& p, const InRange& b, OutRange& x)
 }
 
 
-/** @brief Compute \f$ x = P^T b = P^{-1} b \f$ where P is a permutation matrix,
- * represented as a vector.
- *
- * @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
- * @param b  vector of data to permute
- *
- * @return x  `x = P^T b` the permuted vector, like `x(p) = b` in MATLAB.
- */
+/// @brief Compute \f$ x = P^T b = P^{-1} b \f$ where P is a permutation matrix,
+/// represented as a vector.
+///
+/// @param p  permutation vector, where `p[k] = i` means `p_{ki} = 1`.
+/// @param b  vector of data to permute
+///
+/// @return x  `x = P^T b` the permuted vector, like `x(p) = b` in MATLAB.
+///
 template <std::ranges::contiguous_range PRange,
           std::ranges::contiguous_range InRange>
 requires std::same_as<std::ranges::range_value_t<PRange>, csint>
@@ -139,15 +139,15 @@ auto ipvec(const PRange& p, const InRange& b)
 }
 
 
-/** @brief Create a random permutation of integers [0, N-1].
- *
- * @param N  the size of the permutation
- * @param seed  the seed for the random number generator. If `seed` is 0, no
- *        permutation is applied. If `seed` is -1, the permutation is the
- *        reverse of the identity. Otherwise, a random permutation is generated.
- *
- * @return p  the random permutation vector
- */
+/// @brief Create a random permutation of integers [0, N-1].
+///
+/// @param N  the size of the permutation
+/// @param seed  the seed for the random number generator. If `seed` is 0, no
+///        permutation is applied. If `seed` is -1, the permutation is the
+///        reverse of the identity. Otherwise, a random permutation is generated.
+///
+/// @return p  the random permutation vector
+///
 std::vector<csint> randperm(csint N, csint seed=0);
 
 

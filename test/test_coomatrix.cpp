@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: test_coomatrix.cpp
- *  Created: 2025-05-08 11:38
- *   Author: Bernie Roesler
- *
- *  Description: Test COOMatrix constructors and other basic functions.
- *
+///     File: test_coomatrix.cpp
+///  Created: 2025-05-08 11:38
+///   Author: Bernie Roesler
+///
+///  Description: Test COOMatrix constructors and other basic functions.
+///
  *============================================================================*/
 
 #include <catch2/catch_test_macros.hpp>

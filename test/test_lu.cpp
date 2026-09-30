@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: test_lu.cpp
- *  Created: 2025-05-08 13:28
- *   Author: Bernie Roesler
- *
- *  Description: Test Chapter 6: LU Factorization.
- *
+///     File: test_lu.cpp
+///  Created: 2025-05-08 13:28
+///   Author: Bernie Roesler
+///
+///  Description: Test Chapter 6: LU Factorization.
+///
  *============================================================================*/
 
 #include <catch2/catch_test_macros.hpp>
@@ -599,9 +599,9 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
             }
         }
 
-        /** @brief Override realloc to log the number of attempts.
-         * @param request  new capacity of the matrix
-         */
+        /// @brief Override realloc to log the number of attempts.
+        /// @param request  new capacity of the matrix
+        ///
         void realloc(csint request) override {
             realloc_attempts_.push_back(request);
 
@@ -612,9 +612,9 @@ TEST_CASE("Exercise 6.11: lu_realloc", "[ex6.11][lu_realloc]")
             }
         }
 
-        /** @brief Get the number of realloc attempts.
-         * @return vector of realloc attempts
-         */
+        /// @brief Get the number of realloc attempts.
+        /// @return vector of realloc attempts
+        ///
         std::vector<csint> get_realloc_attempts() const {
             return realloc_attempts_;
         }

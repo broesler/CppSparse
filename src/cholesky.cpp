@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: cholesky.cpp
- *  Created: 2025-01-27 13:14
- *   Author: Bernie Roesler
- *
- *  Description: Implements the symbolic factorization for a sparse matrix.
- *
+///     File: cholesky.cpp
+///  Created: 2025-01-27 13:14
+///   Author: Bernie Roesler
+///
+///  Description: Implements the symbolic factorization for a sparse matrix.
+///
  *============================================================================*/
 
 #include "cholesky.hpp"
@@ -25,7 +25,7 @@
 namespace cs {
 
 /*------------------------------------------------------------------------------
- *         Cholesky Decomposition
+///         Cholesky Decomposition
  *----------------------------------------------------------------------------*/
 std::vector<csint> etree(const CSCMatrix& A, bool ata)
 {

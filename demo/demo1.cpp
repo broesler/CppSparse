@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: demo1.cpp
- *  Created: 2025-05-06 11:20
- *   Author: Bernie Roesler
- *
- *  Description: Demonstration of basic CSparse library functions.
- *
+///     File: demo1.cpp
+///  Created: 2025-05-06 11:20
+///   Author: Bernie Roesler
+///
+///  Description: Demonstration of basic CSparse library functions.
+///
  *============================================================================*/
 
 #include <iostream>

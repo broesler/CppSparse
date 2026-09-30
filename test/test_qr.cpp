@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: test_qr.cpp
- *  Created: 2025-05-08 13:23
- *   Author: Bernie Roesler
- *
- *  Description: Test Chapter 5: QR Factorization.
- *
+///     File: test_qr.cpp
+///  Created: 2025-05-08 13:23
+///   Author: Bernie Roesler
+///
+///  Description: Test Chapter 5: QR Factorization.
+///
  *============================================================================*/
 
 #include <catch2/catch_test_macros.hpp>

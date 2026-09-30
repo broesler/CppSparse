@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: coo.cpp
- *  Created: 2024-10-01 21:07
- *   Author: Bernie Roesler
- *
- *  Description: Implements the sparse matrix classes
- *
+///     File: coo.cpp
+///  Created: 2024-10-01 21:07
+///   Author: Bernie Roesler
+///
+///  Description: Implements the sparse matrix classes
+///
  *============================================================================*/
 
 #include "coo.hpp"
@@ -31,7 +31,7 @@
 namespace cs {
 
 /*------------------------------------------------------------------------------
- *     Constructors
+///     Constructors
  *----------------------------------------------------------------------------*/
 
 COOMatrix::COOMatrix(
@@ -214,7 +214,7 @@ COOMatrix COOMatrix::random(csint M, csint N, double density, unsigned int seed)
 
 
 /*------------------------------------------------------------------------------
- *         Setters and Getters
+///         Setters and Getters
  *----------------------------------------------------------------------------*/
 csint COOMatrix::nnz() const { return i_.size(); }
 csint COOMatrix::nzmax() const { return i_.capacity(); }
@@ -291,7 +291,7 @@ COOMatrix& COOMatrix::insert(
 
 
 /*------------------------------------------------------------------------------
- *          Format Conversions 
+///          Format Conversions 
  *----------------------------------------------------------------------------*/
 CSCMatrix COOMatrix::compress() const 
 {
@@ -348,7 +348,7 @@ VectorD COOMatrix::to_dense_vector(DenseOrder order) const
 
 
 /*------------------------------------------------------------------------------
- *          Math Operations
+///          Math Operations
  *----------------------------------------------------------------------------*/
 // Exercise 2.6
 COOMatrix COOMatrix::transpose() const

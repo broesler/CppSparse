@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: test_trisolve.cpp
- *  Created: 2025-05-08 13:14
- *   Author: Bernie Roesler
- *
- *  Description: Test Chapter 3: Triangular Matrix Solutions.
- *
+///     File: test_trisolve.cpp
+///  Created: 2025-05-08 13:14
+///   Author: Bernie Roesler
+///
+///  Description: Test Chapter 3: Triangular Matrix Solutions.
+///
  *============================================================================*/
 
 #include <catch2/catch_test_macros.hpp>

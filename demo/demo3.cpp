@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: demo3.cpp
- *  Created: 2025-05-15 11:00
- *   Author: Bernie Roesler
- *
- *  Description: Cholesky update/downdate demo for C++Sparse.
- *
+///     File: demo3.cpp
+///  Created: 2025-05-15 11:00
+///   Author: Bernie Roesler
+///
+///  Description: Cholesky update/downdate demo for C++Sparse.
+///
  *============================================================================*/
 
 #include <algorithm>  // generate

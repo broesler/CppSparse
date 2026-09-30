@@ -1,10 +1,10 @@
 /*==============================================================================
- *     File: test_helpers.cpp
- *  Created: 2025-05-08 10:06
- *   Author: Bernie Roesler
- *
- *  Description: Helpers for testing the csparse library.
- *
+///     File: test_helpers.cpp
+///  Created: 2025-05-08 10:06
+///   Author: Bernie Roesler
+///
+///  Description: Helpers for testing the csparse library.
+///
  *============================================================================*/
 
 #include <catch2/matchers/catch_matchers_all.hpp>

@@ -11,7 +11,8 @@
 #pragma once
 
 #include "types.hpp"
-#include "sparse_matrix.hpp"
+#include "VectorView.hpp"
+#include "print_sparse.hpp"
 
 #include <format>      // formatter
 #include <string_view>
@@ -22,7 +23,7 @@ namespace cs {
 class CSCMatrix;
 
 
-class COOMatrix : public SparseMatrix
+class COOMatrix
 {
 public:
     friend class CSCMatrix;
@@ -40,7 +41,7 @@ public:
     COOMatrix& operator=(COOMatrix&& other) noexcept = default;
 
     // Destructor
-    virtual ~COOMatrix() noexcept = default;
+    ~COOMatrix() noexcept = default;
 
     //--------------------------------------------------------------------------
     //        Constructors
@@ -127,13 +128,13 @@ public:
     //--------------------------------------------------------------------------
     //        Setters and Getters
     //--------------------------------------------------------------------------
-    virtual csint nnz() const override;    // number of non-zeros
-    virtual csint nzmax() const override;  // maximum number of non-zeros
-    virtual Shape shape() const override;  // the dimensions of the matrix
+    csint nnz() const;    // number of non-zeros
+    csint nzmax() const;  // maximum number of non-zeros
+    Shape shape() const;  // the dimensions of the matrix
 
     std::span<const csint> row() const noexcept { return i_; }
     std::span<const csint> col() const noexcept { return j_; }
-    virtual const std::vector<double>& values() const noexcept override { return v_; }
+    const std::vector<double>& values() const noexcept { return v_; }
 
     /** @brief Return a view of the row indices, column indices, and values of the
      * non-zero elements in the matrix. */
@@ -153,7 +154,7 @@ public:
      * @param func       a function that takes the row index `i`, column index
      *                   `j`, and value `v`.
      */
-    virtual void for_each_in_range(csint start, csint end, ElemFunc func) const override
+    void for_each_in_range(csint start, csint end, ElemFunc func) const
     {
         csint actual_end = std::min(end, nnz());
         if (start >= actual_end) {
@@ -230,9 +231,7 @@ public:
      *
      * @return a copy of the matrix as a dense array.
      */
-    virtual VectorD to_dense_vector(
-        DenseOrder order = DenseOrder::ColMajor
-    ) const override;
+    VectorD to_dense_vector(DenseOrder order = DenseOrder::ColMajor) const;
 
     //--------------------------------------------------------------------------
     //        Math Operations
@@ -254,34 +253,32 @@ public:
      *
      * @return y  the result of the matrix-vector multiplication.
      */
-    virtual VectorD dot(cVectorViewD x) const override;
+    VectorD dot(cVectorViewD x) const;
 
-
-protected:
-    /// Return the format description of the matrix.
-    virtual std::string_view get_format_desc_() const override
-    {
-        return format_desc_;
-    }
+    // Exercise 2.10
+    friend auto operator*(const COOMatrix& A, cVectorViewD x) { return A.dot(x); }
 
 private:
-    static constexpr std::string_view format_desc_ = "C++Sparse COOrdinate Sparse";
     std::vector<double> v_;  // numerical values, size nzmax (auto doubles)
     std::vector<csint> i_;   // row indices, size nzmax
     std::vector<csint> j_;   // column indices, size nzmax
     csint M_ = 0;            // number of rows
     csint N_ = 0;            // number of columns
 
-
 };  // class COOMatrix
 
+
+template <>
+inline constexpr std::string_view matrix_format_name<COOMatrix> =
+    "C++Sparse COOrdinate Sparse";
 
 }  // namespace cs
 
 
-// Printing specialization for COOMatrix
+// Printing specializations for COOMatrix
 template <>
-struct std::formatter<cs::COOMatrix> : std::formatter<cs::SparseMatrix> {};
+struct std::formatter<cs::COOMatrix> :
+    cs::detail::SparseMatrixFormatter<cs::COOMatrix> {};
 
 
 //==============================================================================

@@ -15,9 +15,10 @@
 #include "solve.hpp"
 #include "utils.hpp"         // inv_permute
 
-#include <cmath>    // abs
-#include <numeric>  // iota
-#include <ranges>   // views::reverse
+#include <cmath>     // abs
+#include <iostream>  // println, cerr
+#include <numeric>   // iota
+#include <ranges>    // views::reverse
 #include <span>
 #include <stdexcept>
 #include <vector>

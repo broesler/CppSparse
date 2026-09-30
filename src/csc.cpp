@@ -17,6 +17,7 @@
 #include <algorithm>   // lower_bound
 #include <cmath>       // abs
 #include <format>
+#include <iostream>    // println, cerr
 #include <numeric>     // partial_sum, iota
 #include <stdexcept>
 #include <span>

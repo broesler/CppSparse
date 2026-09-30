@@ -12,6 +12,7 @@
 #include <concepts>   // integral, floating_point
 #include <cstdint>
 #include <format>
+#include <functional>  // function
 #include <span>
 #include <string>     // string_view
 #include <stdexcept>  // runtime_error
@@ -23,6 +24,7 @@ namespace cs {
 using csint = std::int32_t;
 using Shape = std::array<csint, 2>;
 
+using ElemFunc = std::function<void(csint i, csint j, double v)>;
 
 // Need full enum class definition for default arguments
 enum class DenseOrder
@@ -149,6 +151,16 @@ concept ElementwiseCompatible =
         std::ranges::range_value_t<L>,
         std::ranges::range_value_t<R>
     >;
+
+template <typename T>
+concept PrintableSparseMatrix = requires(T A)
+{
+    { A.shape() } -> std::same_as<Shape>;
+    { A.nnz() } -> std::same_as<csint>;
+    { A.values() } -> std::convertible_to<std::span<const double>>;
+    { A.to_dense_vector() } -> DenseVector;
+    { A.for_each_in_range(0, 1, ElemFunc{}) } -> std::same_as<void>;
+};
 
 }  // namespace cs
 

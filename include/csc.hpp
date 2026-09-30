@@ -10,7 +10,8 @@
 #pragma once
 
 #include "types.hpp"
-#include "sparse_matrix.hpp"
+#include "VectorView.hpp"
+#include "print_sparse.hpp"
 
 #include <format>      // formatter
 #include <functional>  // function
@@ -23,7 +24,7 @@ namespace cs {
 class COOMatrix;
 
 
-class CSCMatrix : public SparseMatrix
+class CSCMatrix
 {
 private:
     // Declare indptr_range_ member first since its entire definition is needed
@@ -148,9 +149,9 @@ public:
     // --------------------------------------------------------------------------
     //          Accessors
     // --------------------------------------------------------------------------
-    virtual csint nnz() const override;    // number of non-zeros
-    virtual csint nzmax() const override;  // maximum number of non-zeros
-    virtual Shape shape() const override;  // the dimensions of the matrix
+    csint nnz() const;    // number of non-zeros
+    csint nzmax() const;  // maximum number of non-zeros
+    Shape shape() const;  // the dimensions of the matrix
 
     void set_nrows(csint M) { M_ = M; }
     void set_ncols(csint N) { N_ = N; }
@@ -160,7 +161,7 @@ public:
 
     const std::vector<csint>& indices() const noexcept { return i_; }
     const std::vector<csint>& indptr() const noexcept { return p_; }
-    virtual const std::vector<double>& values() const noexcept override { return v_; }
+    const std::vector<double>& values() const noexcept { return v_; }
 
     std::vector<csint>& indices() noexcept { return i_; }
     std::vector<csint>& indptr() noexcept { return p_; }
@@ -232,6 +233,18 @@ public:
         return std::views::zip(indptr_range_(j), idx_view, val_view);
     }
 
+    /** @brief Return a range for iterating over the columns.
+     *
+     * @return a range 0, 1, ..., N-1 where N is the number of columns.
+     */
+    auto column_range() const { return std::views::iota(0, ncols()); }
+
+    /** @brief Return a range for iterating over the rows.
+     *
+     * @return a range 0, 1, ..., N-1 where N is the number of columns.
+     */
+    auto row_range() const { return std::views::iota(0, nrows()); }
+
     /** @brief Return an iterator over the indices and values of the matrix, in order
      * of the columns. */
     auto elems() const
@@ -255,7 +268,7 @@ public:
      * @param func       a function that takes the row index `i`, column index
      *                   `j`, and value `v`.
      */
-    virtual void for_each_in_range(csint start, csint end, ElemFunc func) const override
+    void for_each_in_range(csint start, csint end, ElemFunc func) const
     {
         csint k = 0;
 
@@ -516,9 +529,7 @@ public:
      *
      * @return a copy of the matrix as a dense column-major array.
      */
-    virtual VectorD to_dense_vector(
-        DenseOrder order = DenseOrder::ColMajor
-    ) const override;
+    VectorD to_dense_vector(DenseOrder order = DenseOrder::ColMajor) const;
 
     /** @brief Convert a CSCMatrix to a double if it is a 1x1 matrix.
      *
@@ -699,7 +710,7 @@ public:
      * @return Y  the dense matrix result. Y is size M x K, stored in
      *         column-major order.
      */
-    virtual VectorD dot(cVectorViewD X) const override;
+    VectorD dot(cVectorViewD X) const;
 
     /// Scale a matrix by a scalar
     CSCMatrix dot(double c) const;
@@ -729,6 +740,9 @@ public:
      *         C.nnz() <= A.nnz() + B.nnz().
      */
     CSCMatrix dot_2x(const CSCMatrix& B) const;  // Exercise 2.20
+
+    // Exercise 2.10
+    friend auto operator*(const CSCMatrix& A, cVectorViewD x) { return A.dot(x); }
 
     /** @brief Multiply two sparse column vectors \f$ c = x^T y \f$.
      *
@@ -976,15 +990,7 @@ public:
      */
     std::vector<double> sum_cols() const;
 
-protected:
-    /// Return the format description of the matrix.
-    virtual std::string_view get_format_desc_() const override
-    {
-        return format_desc_;
-    }
-
 private:
-    static constexpr std::string_view format_desc_ = "C++Sparse Compressed Sparse Column";
     std::vector<double> v_;  // numerical values, size nzmax
     std::vector<csint> i_;   // row indices, size nzmax
     std::vector<csint> p_;   // column pointers (CSC size N_);
@@ -1290,12 +1296,17 @@ void saxpy(
 );
 
 
+template <>
+inline constexpr std::string_view matrix_format_name<CSCMatrix> =
+    "C++Sparse Compressed Sparse Column";
+
 }  // namespace cs
 
 
 // Printing specialization for CSCMatrix
 template <>
-struct std::formatter<cs::CSCMatrix> : std::formatter<cs::SparseMatrix> {};
+struct std::formatter<cs::CSCMatrix> :
+    cs::detail::SparseMatrixFormatter<cs::CSCMatrix> {};
 
 
 //==============================================================================

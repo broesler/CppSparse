@@ -73,7 +73,6 @@ find_package(pybind11 CONFIG REQUIRED)
 # -----------------------------------------------------------------------------
 set(BASENAMES
     utils
-    sparse_matrix
     coo
     csc
     fillreducing
@@ -85,7 +84,13 @@ set(BASENAMES
 )
 
 set(SOURCES "")
-set(HEADERS include/csparse.hpp include/types.hpp include/Vector.hpp)
+set(
+    HEADERS
+    include/csparse.hpp
+    include/types.hpp
+    include/Vector.hpp
+    include/print_sparse.hpp
+)
 
 foreach(BASENAME ${BASENAMES})
     list(APPEND SOURCES src/${BASENAME}.cpp)

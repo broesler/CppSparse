@@ -22,6 +22,7 @@
 #include "fillreducing.hpp"
 #include "solve.hpp"
 #include "example_matrices.hpp"
+#include "print_sparse.hpp"
 
 
 //==============================================================================

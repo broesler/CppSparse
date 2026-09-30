@@ -167,35 +167,34 @@ public:
     std::vector<csint>& indptr() noexcept { return p_; }
     std::vector<double>& values() noexcept { return v_; }
 
-    /// Return the number of non-zeros in column j.
+    /// @brief Return the number of non-zeros in column j.
     csint col_length(csint j) const
     {
         return indptr_range_(j).size();
     }
 
-    /// Return a span over the row indices of column j.
+    /// @brief Return a span over the row indices of column j.
     auto row_indices(csint j) const
     {
         return std::span(i_).subspan(p_[j], col_length(j));
     }
 
-    /// Return a span over the values of column j.
+    /// @brief Return a span over the values of column j.
     auto col_values(csint j) const
     {
         return std::span(v_).subspan(p_[j], col_length(j));
     }
 
-    /// Return an iterator over the pointers and indices of column j.
+    /// @brief Return an iterator over the pointers and indices of column j.
     auto enum_row_indices(csint j) const
     {
         return std::views::zip(indptr_range_(j), row_indices(j));
     }
 
-    // TODO move these lengthier definitions to csc.cpp.
     // NOTE need to use the pair/tuple method instead of zip because
     // std::views::repeat(0.0) is a different type than a span, so zip won't
     // work if v_ is empty (i.e. symbolic matrix).
-    /// Return an iterator over the indices and values of column j.
+    /// @brief Return an iterator over the indices and values of column j.
     auto column(csint j) const
     {
         const bool has_values = !v_.empty();
@@ -206,7 +205,7 @@ public:
         );
     }
 
-    /// Return an iterator over the pointers, indices and values of column j.
+    /// @brief Return an iterator over the pointers, indices and values of column j.
     auto enum_column(csint j) const
     {
         const bool has_values = !v_.empty();
@@ -217,7 +216,7 @@ public:
         );
     }
 
-    /// Return an mutable iterator over the indices and values of column j.
+    /// @brief Return an mutable iterator over the indices and values of column j.
     auto column(csint j)
     {
         auto idx_view = std::span(i_).subspan(p_[j], col_length(j));
@@ -225,7 +224,7 @@ public:
         return std::views::zip(idx_view, val_view);
     }
 
-    /// Return a mutable iterator over the pointers, indices and values of column j.
+    /// @brief Return a mutable iterator over the pointers, indices and values of column j.
     auto enum_column(csint j)
     {
         auto idx_view = std::span(i_).subspan(p_[j], col_length(j));

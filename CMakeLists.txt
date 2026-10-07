@@ -5,7 +5,7 @@
 #
 #  Description: Build makefile for CSparse++ with pybind11 bindings.
 #==============================================================================
-# CMakeLists.txt
+
 cmake_minimum_required(VERSION 3.31)  # Or higher
 
 project(CSparse LANGUAGES CXX)

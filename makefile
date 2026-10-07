@@ -37,7 +37,7 @@ DEMO_EXEC := demo1 demo2 demo3
 # -----------------------------------------------------------------------------
 all: lib tests python demos
 
-$(BUILD_DIR)/build.ninja: CmakeLists.txt
+$(BUILD_DIR)/build.ninja: CMakeLists.txt
 	cmake -S . -B $(BUILD_DIR) -G Ninja $(CMAKE_CONFIG_ARGS)
 
 # Build the C++ library

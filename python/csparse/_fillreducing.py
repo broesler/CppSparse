@@ -174,14 +174,16 @@ def fiedler(A):
             "The Laplacian matrix is empty; the graph may not be connected."
         )
 
-    # Get the eigenvalues and eigenvectors of the Laplacian matrix
-    try:
-        λ, x = spla.eigsh(L, k=2, which="SA", tol=np.sqrt(np.finfo(float).eps))
-    except TypeError:
+    k = 2  # number of eigenvalues to compute
+
+    # Get k eigenvalues and eigenvectors of the Laplacian matrix
+    if k < N:
+        λ, x = spla.eigsh(L, k=k, which="SA", tol=np.sqrt(np.finfo(float).eps))
+    else:
         # k must be < N for sparse.linalg.eigsh
         λ, x = la.eigh(L.toarray())
-        λ = λ[:2]     # take the two smallest eigenvalues
-        x = x[:, :2]  # and their corresponding eigenvectors
+        λ = λ[:k]     # take the k smallest eigenvalues
+        x = x[:, :k]  # and their corresponding eigenvectors
 
     # Take the second smallest eigenvalue and its corresponding eigenvector
     d = λ[1]

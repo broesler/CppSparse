@@ -40,19 +40,19 @@ jobs:
           echo "CXX=clang++-21" >> $GITHUB_ENV
           echo "CXXFLAGS=-stdlib=libc++" >> $GITHUB_ENV
           echo "LDFLAGS=--stdlib=libc++ -lc++abi -L/usr/lib/llvm-21/lib" >> $GITHUB_ENV
-          which clang++
-          which clang++-21
-          clang++ --version
-          clang++-21 --version
+          # echo "CXXFLAGS=-stdlib=libc++ -nostdinc++ -isystem ${LLVM_PREFIX}/include/c++/v1" >> $GITHUB_ENV
+          # echo "LDFLAGS=-stdlib=libc++ -L${LLVM_PREFIX}/lib -Wl,-rpath,${LLVM_PREFIX}/lib" >> $GITHUB_ENV
 
       - name: Install Compiler (MacOS)
         if: matrix.os == 'macos-latest'
         run: |
           brew install llvm@21
           LLVM_PREFIX=$(brew --prefix llvm@21)
+          echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
           echo "CC=${LLVM_PREFIX}/bin/clang" >> $GITHUB_ENV
           echo "CXX=${LLVM_PREFIX}/bin/clang++" >> $GITHUB_ENV
-          echo "LDFLAGS=-L${LLVM_PREFIX}/lib/c++ -Wl,-rpath,$LLVM_PREFIX/lib/c++" >> $GITHUB_ENV
+          echo "CXXFLAGS=-stdlib=libc++ -nostdinc++ -isystem ${LLVM_PREFIX}/include/c++/v1 -isysroot ${SDKROOT}" >> $GITHUB_ENV
+          echo "LDFLAGS=-stdlib=libc++ -L${LLVM_PREFIX}/lib -Wl,-rpath,${LLVM_PREFIX}/lib -isysroot ${SDKROOT}" >> $GITHUB_ENV
 
       - name: Set up Python
         run: uv python install ${{ matrix.python-version }}
@@ -65,6 +65,9 @@ jobs:
 
       - name: Run C++ unit tests
         run: ./build/Release/test_csparse
+
+      - name: Build and Run C++ Demos
+        run: uv run --no-sync make run_demos
 
       - name: Build and Install Python module
         run: uv pip install --no-build-isolation -e ./python
@@ -84,6 +87,3 @@ jobs:
           name: test-figures-${{ matrix.os }}-${{ matrix.python-version }}
           path: ./test_figures/
           if-no-files-found: error
-
-      - name: Build and Run C++ Demos
-        run: uv run --no-sync make run_demos
